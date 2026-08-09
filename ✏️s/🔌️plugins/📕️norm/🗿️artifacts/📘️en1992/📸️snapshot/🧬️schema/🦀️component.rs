@@ -6,27 +6,10 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 pub mod part_1_2 {
-    use super::*;
-
-    /// 🏗️ Fire resistance rating.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-    pub enum FireRating {
-        R30,
-        R60,
-        R90,
-        R120,
-    }
+    pub use crate::artifacts::en1992::part_1_2::FireRating;
 }
 pub mod part_3 {
-    use super::*;
-
-    /// 💧️ Tightness class per EN 1992-3 Table 7.105: required degree of protection against leakage.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-    pub enum TightnessClass {
-        Tc0,
-        Tc1,
-        Tc2,
-    }
+    pub use crate::artifacts::en1992::part_3::TightnessClass;
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
@@ -34,63 +17,98 @@ pub mod part_3 {
 #[dsl(id = "norm.en1992", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Snapshot {
+    #[state(persistent)]
     pub annex: AnnexChoice,
+    #[state(persistent)]
     pub m_ed_knm: f64,
     #[dsl(unit = "kN")]
+    #[state(persistent)]
     pub v_ed_kn: f64,
+    #[state(persistent)]
     pub f_ck: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub b_mm: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub d_mm: f64,
     #[dsl(unit = "mm2")]
+    #[state(persistent)]
     pub a_s_mm2: f64,
+    #[state(persistent)]
     pub f_yk: f64,
+    #[state(persistent)]
     pub rho_l: f64,
     #[dsl(unit = "kN")]
+    #[state(persistent)]
     pub n_ed_kn: f64,
     #[dsl(unit = "kN")]
+    #[state(persistent)]
     pub p_kn: f64,
     #[dsl(unit = "mm2")]
+    #[state(persistent)]
     pub a_c_mm2: f64,
+    #[state(persistent)]
     pub use_fem: bool,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub span_m: f64,
+    #[state(persistent)]
     pub udl_kn_m: f64,
+    #[state(persistent)]
     pub fire_rating: part_1_2::FireRating,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub provided_axis_distance_mm: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub bridge_sigma_c_mpa: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub bridge_delta_sigma_s_mpa: f64,
+    #[state(persistent)]
     pub tightness_class: part_3::TightnessClass,
+    #[state(persistent)]
     pub hd_over_h: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub liquid_sigma_s_mpa: f64,
+    #[state(persistent)]
     pub liquid_rho_p_eff: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub liquid_f_ct_eff_mpa: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub liquid_e_s_mpa: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub liquid_s_r_max_mm: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub anchor_h_ef_mm: f64,
+    #[state(persistent)]
     pub anchor_cracked: bool,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub anchor_f_uk_mpa: f64,
     #[dsl(unit = "MPa")]
+    #[state(persistent)]
     pub anchor_f_yk_mpa: f64,
     #[dsl(unit = "mm2")]
+    #[state(persistent)]
     pub anchor_a_s_mm2: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub anchor_d_mm: f64,
     #[dsl(unit = "mm")]
+    #[state(persistent)]
     pub anchor_c1_mm: f64,
     #[dsl(unit = "kN")]
+    #[state(persistent)]
     pub anchor_n_ed_kn: f64,
     #[dsl(unit = "kN")]
+    #[state(persistent)]
     pub anchor_v_ed_kn: f64,
 }
 //#region 🔖️HandcraftedDocumentCodecs

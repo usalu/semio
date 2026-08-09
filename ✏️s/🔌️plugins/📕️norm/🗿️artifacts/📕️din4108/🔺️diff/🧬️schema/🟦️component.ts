@@ -6,7 +6,7 @@ export interface Din4108Diff {
   /** @state persistent */
   category?: string;
   /** @state persistent */
-  layers?: Din4108StringList;
+  layers?: Din4108LayerList;
   /** @state persistent */
   climate?: string;
   /** @state persistent */

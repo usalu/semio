@@ -198,6 +198,75 @@ pub enum StateClass {
 }
 //#endregion 🔖️StateClass
 
+//#region 🔖️ArtifactSchemaCatalog
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
+
+/// 🍃 Five handcrafted leaf bodies for one artifact schema facet.
+#[derive(Clone, Debug)]
+pub struct KernelFacetLeaves {
+    pub rust: &'static str,
+    pub typescript: &'static str,
+    pub graphql: &'static str,
+    pub json_schema: &'static str,
+    pub proto: &'static str,
+}
+
+/// 🧬️ Registered descriptor for one artifact's three schema facets.
+#[derive(Clone, Debug)]
+pub struct KernelArtifactSchemaDescriptor {
+    pub id: &'static str,
+    pub artifact: KernelFacetLeaves,
+    pub snapshot: KernelFacetLeaves,
+    pub diff: KernelFacetLeaves,
+}
+
+struct KernelArtifactSchemaCatalog {
+    by_id: HashMap<&'static str, KernelArtifactSchemaDescriptor>,
+}
+
+static KERNEL_ARTIFACT_SCHEMA_CATALOG: OnceLock<Mutex<KernelArtifactSchemaCatalog>> = OnceLock::new();
+
+fn kernel_artifact_schema_catalog() -> &'static Mutex<KernelArtifactSchemaCatalog> {
+    KERNEL_ARTIFACT_SCHEMA_CATALOG.get_or_init(|| Mutex::new(KernelArtifactSchemaCatalog { by_id: HashMap::new() }))
+}
+
+/// 📎 Registers one artifact's handcrafted schema descriptor into the OS-wide catalog.
+pub fn register_kernel_artifact_schema_descriptor(descriptor: KernelArtifactSchemaDescriptor) {
+    kernel_artifact_schema_catalog()
+        .lock()
+        .expect("kernel artifact schema catalog lock")
+        .by_id
+        .insert(descriptor.id, descriptor);
+}
+
+/// 🔎 Whether `id` is registered in the OS-wide artifact schema catalog.
+pub fn kernel_artifact_schema_descriptor_registered(id: &str) -> bool {
+    kernel_artifact_schema_catalog()
+        .lock()
+        .expect("kernel artifact schema catalog lock")
+        .by_id
+        .contains_key(id)
+}
+
+/// 🔢 Count of registered artifact schema ids.
+pub fn kernel_artifact_schema_catalog_len() -> usize {
+    kernel_artifact_schema_catalog()
+        .lock()
+        .expect("kernel artifact schema catalog lock")
+        .by_id
+        .len()
+}
+
+/// 📚 Invokes `visit` with every registered kernel descriptor.
+pub fn with_kernel_artifact_schema_catalog<R>(visit: impl FnOnce(&[KernelArtifactSchemaDescriptor]) -> R) -> R {
+    let guard = kernel_artifact_schema_catalog().lock().expect("kernel artifact schema catalog lock");
+    let mut entries: Vec<KernelArtifactSchemaDescriptor> = guard.by_id.values().cloned().collect();
+    entries.sort_by_key(|entry| entry.id);
+    visit(&entries)
+}
+//#endregion 🔖️ArtifactSchemaCatalog
+
 //#region 🔖️WireCodec
 /// @emoji 🎞️ Shared primitive codec for `protocol_causal`'s envelope records and `protocol_wire`'s
 /// frame bodies (W5) — hand-rolled, not `crate::os_pack::value::encode_record_body`, because the TS twin on

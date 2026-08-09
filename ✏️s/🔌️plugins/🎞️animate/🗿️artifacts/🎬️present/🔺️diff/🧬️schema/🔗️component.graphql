@@ -1,0 +1,25 @@
+# 🔺️ Present diff schema.
+type PresentDiff {
+  artifact: PresentArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  source: FigureTileSource @state(class: PERSISTENT)
+  tiles: PresentTilesDelta @state(class: PERSISTENT)
+  selectedIds: PresentStringList @state(class: SHARED_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+type PresentStringList { values: [String!]! }
+type PresentTilesDelta { added: [FigureTileDraft!]! removed: [String!]! patched: [PresentTilePatchEntry!]! reordered: [String!] }
+type PresentTilePatchEntry { id: String! patch: FigureTileDraftPatch! }
+type FigureTileDraftPatch { name: String crop: FigureTileFrame }
+type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
+type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
+type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }
+type PresentArtifact {
+  schema: String!
+  source: FigureTileSource!
+  tiles: [FigureTileDraft!]!
+  selectedIds: [String!]!
+  engagementInput: String!
+  locale: String!
+}

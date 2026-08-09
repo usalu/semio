@@ -39,16 +39,9 @@ pub fn register() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA);
 }
 
-static FLOW_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 🧬️ Registers this artifact's fifteen schema leaves with the framework table.
 pub fn register_artifact_schema() {
-    let registry = FLOW_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::flow::schema::flow_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::flow::schema::flow_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

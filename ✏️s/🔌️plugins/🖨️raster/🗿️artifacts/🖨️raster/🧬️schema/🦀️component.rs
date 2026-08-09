@@ -1,0 +1,118 @@
+//! 🧬️ Raster artifact schema — every field of the artifact with its state class.
+
+use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+//#region 🔖️Artifact
+/// 🧬️ Full raster artifact state across persistent, shared-ui, local-ui and preview classes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.raster.raster")]
+pub struct RasterArtifact {
+    #[state(persistent)] pub schema: String,
+    #[state(persistent)] pub id: String,
+    #[state(persistent)] pub title: Option<String>,
+    #[state(persistent)] pub layers: Vec<RasterLayerNode>,
+    #[state(persistent)] pub assets: BTreeMap<String, RasterImageAsset>,
+    #[state(shared_ui)] pub selected_ids: Vec<String>,
+    #[state(shared_ui)] pub active_utility_id: String,
+    #[state(local_ui)] pub brush_size: f64,
+    #[state(local_ui)] pub brush_opacity: f64,
+    #[state(local_ui)] pub composite_viewport: Option<RasterViewportSize>,
+    #[state(local_ui)] pub camera_x: f64,
+    #[state(local_ui)] pub camera_y: f64,
+    #[state(local_ui)] pub camera_zoom: f64,
+    #[state(local_ui)] pub locale: String,
+    #[state(preview)] pub hovered_id: Option<String>,
+}
+//#endregion 🔖️Artifact
+
+//#region 🔖️Conversions
+impl Default for RasterArtifact {
+    fn default() -> Self {
+        Self {
+            schema: RASTER_DOCUMENT_SCHEMA.into(),
+            id: String::new(),
+            title: None,
+            layers: Vec::new(),
+            assets: BTreeMap::new(),
+            selected_ids: Vec::new(),
+            active_utility_id: "selectMarquee".into(),
+            brush_size: 24.0,
+            brush_opacity: 1.0,
+            composite_viewport: None,
+            camera_x: 0.0,
+            camera_y: 0.0,
+            camera_zoom: 1.0,
+            locale: "en-US".into(),
+            hovered_id: None,
+        }
+    }
+}
+
+impl RasterArtifact {
+    /// 📸️ Persisted subset.
+    pub fn to_snapshot(&self) -> crate::artifacts::raster::RasterSnapshot {
+        crate::artifacts::raster::RasterSnapshot {
+            schema: self.schema.clone(),
+            id: self.id.clone(),
+            title: self.title.clone(),
+            layers: self.layers.clone(),
+            assets: self.assets.clone(),
+        }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    pub fn from_snapshot(snapshot: crate::artifacts::raster::RasterSnapshot) -> Self {
+        Self {
+            schema: snapshot.schema,
+            id: snapshot.id,
+            title: snapshot.title,
+            layers: snapshot.layers,
+            assets: snapshot.assets,
+            ..Self::default()
+        }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::raster::RasterSnapshot) {
+        self.schema = snapshot.schema;
+        self.id = snapshot.id;
+        self.title = snapshot.title;
+        self.layers = snapshot.layers;
+        self.assets = snapshot.assets;
+    }
+}
+//#endregion 🔖️Conversions
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.raster.raster` — fifteen handcrafted schema leaves.
+pub fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+    schema::ArtifactSchemaDescriptor {
+        id: "s.raster.raster",
+        artifact: schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        snapshot: schema::FacetLeaves {
+            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+        },
+        diff: schema::FacetLeaves {
+            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor

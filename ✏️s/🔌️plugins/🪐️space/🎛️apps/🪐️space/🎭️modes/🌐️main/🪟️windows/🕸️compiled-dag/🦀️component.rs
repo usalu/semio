@@ -3,7 +3,7 @@
 
 use crate::apps::space::engine::compiled_dag_wire_literal;
 use crate::demo_space_projection;
-use semio_framework_os::WorkflowDocument;
+use semio_framework_os::WorkflowSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -13,7 +13,7 @@ pub const S_PLAY_SURFACE_COMPILED_DAG: &str = "s.play.compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
-fn compiled_dag_engagement(projection: &WorkflowDocument) -> WindowEngagement {
+fn compiled_dag_engagement(projection: &WorkflowSnapshot) -> WindowEngagement {
     let wire = compiled_dag_wire_literal(projection);
     WindowEngagement {
         session_active: Some(false),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowDocument) -> UiNode {
+pub fn render(projection: &WorkflowSnapshot) -> UiNode {
     let wire = compiled_dag_wire_literal(projection);
     build_text_editor_scene(S_PLAY_SURFACE_COMPILED_DAG, crate::apps::space::S_PLAY_CONTROLLER_ID, TextEditorScene::base(wire, Some("wire".into()), None))
 }
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn renders_compiled_dag_editor() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
+        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
         let wire = compiled_dag_wire_literal(&demo_space_projection());

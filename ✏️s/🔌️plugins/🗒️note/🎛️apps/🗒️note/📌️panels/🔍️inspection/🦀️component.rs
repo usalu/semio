@@ -2,7 +2,7 @@
 
 use crate::apps::note::terminology::NotePlayLabels;
 use crate::artifacts::note::engine::{block_bounds, block_id, block_name, block_visible, find_block, flatten_blocks};
-use crate::artifacts::note::{NoteBlockNode, NoteDocument};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -77,7 +77,7 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: impl Into
     })
 }
 
-pub fn render(document: &NoteDocument, selected_ids: &[String], active_utility_id: &str, labels: &NotePlayLabels) -> UiNode {
+pub fn render(document: &NoteSnapshot, selected_ids: &[String], active_utility_id: &str, labels: &NotePlayLabels) -> UiNode {
     let blocks: Vec<&NoteBlockNode> = selected_ids.iter().filter_map(|id| find_block(&document.blocks, id)).collect();
     if blocks.is_empty() {
         return ui_stack_vertical(vec![

@@ -232,16 +232,9 @@ pub fn procedural2d_document_from_dwg(_drawing: &semio_framework::DwgDrawing) ->
 
 /// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec, mesh/svg export
 /// bridges. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
-static PROCEDURAL2D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the procedural2d artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = PROCEDURAL2D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
 }
 
 pub fn register() {

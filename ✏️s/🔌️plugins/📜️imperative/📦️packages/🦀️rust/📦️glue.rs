@@ -14,6 +14,8 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
+extern crate imperative_extension_sdk;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
@@ -31,8 +33,27 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/📜️imperative/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/📜️imperative/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/📜️imperative/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/📜️imperative/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
         #[path = "../../🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -54,8 +75,6 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/📜️imperative/⚙️engine/🦀️component.rs"]
@@ -120,6 +139,22 @@ pub mod apps {
     }
 }
 //#endregion 🎛️Apps
+
+//#region 🧩️Extensions
+#[path = "."]
+pub mod extensions {
+    #[path = "../../🧩️extensions/📣️effect/🦀️component.rs"]
+    pub mod effect;
+    #[path = "../../🧩️extensions/🧮️math/🦀️component.rs"]
+    pub mod math;
+    #[path = "../../🧩️extensions/📝️text/🦀️component.rs"]
+    pub mod text;
+    #[path = "../../🧩️extensions/🧠️logic/🦀️component.rs"]
+    pub mod logic;
+    #[path = "../../🧩️extensions/🎮️control/🦀️component.rs"]
+    pub mod control;
+}
+//#endregion 🧩️Extensions
 
 //#region 🕸️Wasm
 #[cfg(target_arch = "wasm32")]

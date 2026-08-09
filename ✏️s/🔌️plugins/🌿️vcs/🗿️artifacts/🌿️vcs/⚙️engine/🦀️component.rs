@@ -1,28 +1,29 @@
 //! ⚙️ VCS artifact — headless compute (was: constitutional `engine`).
 
-use crate::artifacts::vcs::{VcsDemoProjection, VCS_DEMO_SCHEMA};
+use crate::artifacts::vcs::{VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 
 //#region 🔖️DocumentHelpers
-pub fn empty_vcs_demo_projection() -> VcsDemoProjection {
-    VcsDemoProjection { schema: VCS_DEMO_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new() }
+pub fn empty_vcs_snapshot() -> VcsSnapshot {
+    VcsSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
-/// 🗂️ Registers `VcsDemoProjection`'s pack<->dsl codec under its real `document_schema()` string so
+/// 🗂️ Registers `VcsSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse vcs-play
-/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called by
+/// documents without depending on this crate's concrete snapshot/mutation types. Called by
 /// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DEMO_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "vcs.document",
-        extension: Some("vcsdemo"),
+        extension: Some("vcs"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_PATH),
@@ -74,48 +75,63 @@ pub fn register_pilot_languages() {
 
 //#endregion 🔖️Register
 
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.vcs.vcs`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn empty_projection_matches_schema() {
-        let projection = empty_vcs_demo_projection();
-        assert_eq!(projection.schema, VCS_DEMO_SCHEMA);
-        assert_eq!(projection.status, "new");
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_vcs_snapshot();
+        assert_eq!(snapshot.schema, VCS_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.status, "new");
     }
 }
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
 pub struct VcsDemoEngine {
-    projection: VcsDemoProjection,
+    artifact: crate::artifacts::vcs::schema::VcsArtifact,
+    snapshot: VcsSnapshot,
 }
 
 impl VcsDemoEngine {
-    pub fn new(projection: VcsDemoProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: VcsSnapshot) -> Self {
+        let artifact = crate::artifacts::vcs::schema::VcsArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for VcsDemoEngine {
-    type Projection = VcsDemoProjection;
+    type Artifact = crate::artifacts::vcs::schema::VcsArtifact;
+    type Snapshot = VcsSnapshot;
     type Mutation = crate::artifacts::vcs::mutations::VcsDemoMutation;
-    type Diff = crate::artifacts::vcs::diff::VcsDemoDiff;
+    type Diff = crate::artifacts::vcs::diff::VcsDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::vcs::mutations::apply_vcs_demo_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

@@ -10,12 +10,12 @@ use crate::apps::home::commands::studio::{bind_space_file, create_studio, import
 use crate::apps::home::commands::vfs::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::apps::home::config::HomeConfig;
 use crate::apps::home::terminology::SHomeLabels;
-use crate::artifacts::home::SHomeDocument;
+use crate::artifacts::home::SHomeSnapshot;
 use crate::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
-    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
-    export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody, CollectionMutation, CollectionProjection, DraftCatalog,
-    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, WorkflowDocument, WorkflowMutation,
+    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_snapshot, empty_workflow_snapshot, encode_backbone_payload,
+    export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, ArtifactBody, CollectionMutation, CollectionSnapshot, DraftCatalog,
+    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceSnapshot, SpaceRole, SpaceUser, SpaceVisibility, WorkflowSnapshot, WorkflowMutation,
     S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
@@ -46,14 +46,14 @@ fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
     let port = Arc::new(LocalStorageBackbonePort::new());
     let os_port: Arc<dyn OsBackbonePort> = port.clone();
     if list_os_space_catalog_entries(os_port.clone()).map_or(true, |entries| entries.is_empty()) {
-        // 🧬️ `parse_demo_space_document` yields a `workflow::WorkflowDocument` (the dissolved
+        // 🧬️ `parse_demo_space_document` yields a `workflow::WorkflowSnapshot` (the dissolved
         // `OsProjection`'s workflow-graph half) — the space CATALOG this boot seed populates needs a
-        // `space::SpaceProjection` manifest instead. `demo_name` still comes from the bundled fixture's
+        // `space::SpaceSnapshot` manifest instead. `demo_name` still comes from the bundled fixture's
         // own name; the manifest itself is a fresh space with no workflow artifact wired in yet
         // (`create_os_space`'s own doc: a space only auto-creates its default collection, never a
         // workflow artifact — that stays a later, explicit user action).
         let demo_name = { let demo = parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
-        let mut projection = empty_space_projection(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
+        let mut projection = empty_space_snapshot(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
         let _ = seed_os_space_catalog_if_empty(seed, os_port);
@@ -64,7 +64,10 @@ fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
 /// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()` — every draft
 /// space a user creates from Home lives here at `space::draft_uri(id)` until it's promoted (bound to a
 /// file or a real catalog), matching the "never persisted" semantics of a pure ephemeral registry.
-fn temp_catalog_port_concrete() -> Arc<MemoryBackbonePort> { Arc::new(MemoryBackbonePort::new()) }
+fn temp_catalog_port_concrete() -> Arc<MemoryBackbonePort> {
+    static PORT: OnceLock<Arc<MemoryBackbonePort>> = OnceLock::new();
+    PORT.get_or_init(|| Arc::new(MemoryBackbonePort::new())).clone()
+}
 
 fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
     static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
@@ -79,18 +82,18 @@ pub fn catalog_port() -> Arc<dyn OsBackbonePort> {
 }
 
 pub(crate) fn temp_catalog_port() -> Arc<dyn OsBackbonePort> {
-    TEMP_catalog_port_concrete().clone()
+    temp_catalog_port_concrete().clone()
 }
 
 /// 🔌️ `space::SpaceBackbonePort` view over the SAME ephemeral port `temp_catalog_port` uses — the port
 /// every draft studio's real envelope bytes are relocated through by `space::DraftCatalog`.
 pub(crate) fn draft_backbone_port() -> Arc<dyn SpaceBackbonePort> {
-    TEMP_catalog_port_concrete().clone()
+    temp_catalog_port_concrete().clone()
 }
 
 /// 🗄️ The port-keyed `space::DraftCatalog` for `draft_backbone_port` — every draft studio's
 /// bookkeeping (id, kind, TTL) lives here; `space::draft_catalog_for` guarantees the SAME instance is
-/// returned every call since `draft_backbone_port` always unsizes the SAME `TEMP_catalog_port_concrete()`
+/// returned every call since `draft_backbone_port` always unsizes the SAME `temp_catalog_port_concrete()`
 /// allocation.
 pub(crate) fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
     draft_catalog_for(&draft_backbone_port())
@@ -107,18 +110,18 @@ pub(crate) fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>
     register_studio_port_for(&HomeApp::default(), space_id, port)
 }
 
-pub(crate) fn register_studio_port_for(app: &HomeApp, space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    if let Ok(mut guard) = app.studio_ports.lock() {
+pub(crate) fn register_studio_port_for(_app: &HomeApp, space_id: &str, port: Arc<dyn OsBackbonePort>) {
+    if let Ok(mut guard) = shared_studio_ports().lock() {
         guard.insert(space_id.into(), port);
     }
 }
 
 /// @emoji 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path — a
-/// `space::SpaceProjection` document registered as a draft (`kind_id = "s.space"`) at `space::draft_uri(id)`
+/// `space::SpaceSnapshot` document registered as a draft (`kind_id = "s.space"`) at `space::draft_uri(id)`
 /// on the ephemeral port, never on the real catalog port, never tracked as a `space://` catalog entry.
 pub(crate) fn create_and_register_ephemeral_studio(name: &str) -> String {
     let owner = SpaceUser { id: "local".into(), name: name.into(), avatar: None, role: SpaceRole::Author };
-    let mut projection = empty_space_projection(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
+    let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
     projection.users.push(owner);
     let draft = ephemeral_draft_catalog().create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms(), None);
     let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &draft.artifact_id, name.trim(), projection);
@@ -140,12 +143,12 @@ pub fn resolve_studio_document_for(app: &HomeApp, space_id: &str) -> Option<OsSp
     let draft_port = draft_backbone_port();
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
         if !payload.is_empty() {
-            if let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
+            if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
                 return Some(document);
             }
         }
     }
-    if let Ok(guard) = app.studio_ports.lock() {
+    if let Ok(guard) = shared_studio_ports().lock() {
         if let Some(port) = guard.get(space_id) {
             if let Ok(document) = load_os_space_document(space_id, port.clone()) {
                 return Some(document);
@@ -181,7 +184,7 @@ fn resolve_backbone_bytes(app: &HomeApp, uri: &str) -> Option<Vec<u8>> {
             return Some(payload);
         }
     }
-    if let Ok(guard) = app.studio_ports.lock() {
+    if let Ok(guard) = shared_studio_ports().lock() {
         for port in guard.values() {
             if let Ok(payload) = port.read(uri) {
                 if !payload.is_empty() {
@@ -205,21 +208,21 @@ pub fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpa
 }
 
 pub fn resolve_workflow_artifact_document_for(app: &HomeApp, space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
-    let projection = materialize_backbone_projection(space_document, &space_document.applied_edit_ids).ok()?;
+    let projection = materialize_backbone_snapshot(space_document, &space_document.applied_edit_ids).ok()?;
     for collection_ref in &projection.collections {
         let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
         let Some(collection_payload) = resolve_backbone_bytes(app, &collection_uri) else { continue };
-        let Ok(collection_document) = decode_backbone_payload::<CollectionProjection, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
-        let Ok(collection_projection) = materialize_backbone_projection(&collection_document, &collection_document.applied_edit_ids) else { continue };
+        let Ok(collection_document) = decode_backbone_payload::<CollectionSnapshot, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
+        let Ok(collection_projection) = materialize_backbone_snapshot(&collection_document, &collection_document.applied_edit_ids) else { continue };
         for entry in &collection_projection.entries {
             let ArtifactBody::Document { schema, document_id } = entry.body.as_ref() else { continue };
             if schema != S_WORKFLOW_SCHEMA {
                 continue;
             }
-            let artifact_uri = artifact_backbone_uri(space_id, document_id);
+            let artifact_uri = artifact_backbone_uri(space_id, &document_id);
             let Some(artifact_payload) = resolve_backbone_bytes(app, &artifact_uri) else { continue };
-            if let Ok(workflow_document) = decode_backbone_payload::<WorkflowDocument, WorkflowMutation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
-                return Some(workflow_document);
+            if let Ok(workflow_snapshot) = decode_backbone_payload::<WorkflowSnapshot, WorkflowMutation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
+                return Some(workflow_snapshot);
             }
         }
     }
@@ -230,15 +233,15 @@ pub fn resolve_workflow_artifact_document_for(app: &HomeApp, space_id: &str, spa
 /// yet — the "genuinely new/default space" leg of `resolve_workflow_artifact_document`'s three-way
 /// fallback (existing registered artifact / demo fixture / fresh empty document). Not persisted as a
 /// `CollectionEntry` (real artifact-registration UI is a later wave) — the studio editor still gets a
-/// real, decodable `WorkflowDocument` pack instead of a broken placeholder, it just starts from a blank
+/// real, decodable `WorkflowSnapshot` pack instead of a broken placeholder, it just starts from a blank
 /// canvas each time until persistence is wired.
 pub fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsWorkflowArtifactDocument {
-    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_document())
+    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_snapshot())
 }
 
 /// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
 /// `HostEffect::LoadDocument` / host `loadAppDocumentPack`, sized to what `apps::space`'s
-/// `DocumentApp::Projection` (`WorkflowDocument`) actually decodes.
+/// `DocumentApp::Projection` (`WorkflowSnapshot`) actually decodes.
 pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::DocumentPackFiles> {
     export_backbone_pack(document).ok()
 }
@@ -283,8 +286,8 @@ pub(crate) fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpac
         if payload.is_empty() {
             continue;
         }
-        let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
-        let projection = &document.vcs.initial_projection;
+        let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
+        let projection = &document.vcs.initial_snapshot;
         entries.push(semio_framework_os::OsSpaceCatalogEntry {
             id: draft.artifact_id,
             name: document.name.clone(),
@@ -303,7 +306,7 @@ pub(crate) fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpac
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
-    pub enum HomeCommand for SHomeDocument, crate::artifacts::home::op::SHomeMutation, HomeConfig, crate::apps::home::config::HomeConfigMutation {
+    pub enum HomeCommand for SHomeSnapshot, crate::artifacts::home::op::SHomeMutation, HomeConfig, crate::apps::home::config::HomeConfigMutation {
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
         "importSpace" as "import-space" => import_space::ImportSpace,
@@ -323,7 +326,22 @@ app_commands! {
 pub struct HomeApp;
 
 impl DocumentApp for HomeApp {
-    fn command_id(command: &HomeCommand) -> &str {
+    type Snapshot = SHomeSnapshot;
+    type Mutation = crate::artifacts::home::op::SHomeMutation;
+    type Config = HomeConfig;
+    type ConfigMutation = crate::apps::home::config::HomeConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Command = HomeCommand;
+
+    const APP_ID: &'static str = S_HOME_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+
+    fn initial_snapshot() -> SHomeSnapshot {
+        SHomeSnapshot::default()
+    }
+
+    fn command_id(command: &HomeCommand) -> &'static str {
         command.command_id()
     }
 
@@ -362,12 +380,12 @@ impl DocumentApp for HomeApp {
         }
     }
 
-    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.projection.locale);
+    fn render(body_key: &str, _doc: &DocumentView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.snapshot.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
@@ -429,12 +447,12 @@ mod tests {
 
     #[test]
     fn space_document_persists_through_backbone_port() {
-        // 🕳️ `parse_demo_space_document()` yields a `workflow::WorkflowDocument` (the demo fixture's own
-        // artifact content), not a `space::SpaceProjection`-backed catalog entry
+        // 🕳️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot` (the demo fixture's own
+        // artifact content), not a `space::SpaceSnapshot`-backed catalog entry
         // `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest persistence
         // path specifically, so it mints its own manifest instead.
         let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
-        let projection = empty_space_projection("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
+        let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
         let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
         let _ = seed_os_space_catalog_if_empty(demo, port.clone()).expect("seed");
         let loaded = load_os_space_document("persist-test", port.clone()).expect("load");
@@ -446,11 +464,11 @@ mod tests {
     fn home_labels_resolve_native_english_by_default() {
         let history = empty_history();
         let home = HomeApp;
-        let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = DocumentView { projection: &home_doc, history: &history };
+        let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
+        let home_view = DocumentView { snapshot: &home_doc, history: &history };
         let config = HomeConfig::default();
-        let cfg = ConfigView { projection: &config };
-        let home_node = home.render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
+        let cfg = ConfigView { snapshot: &config };
+        let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
         assert!(serde_json::to_string(&home_node).unwrap().contains("No studios yet. Create one from the navbar."));
     }
 
@@ -458,11 +476,11 @@ mod tests {
     fn home_labels_resolve_native_german_locale() {
         let history = empty_history();
         let home = HomeApp;
-        let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = DocumentView { projection: &home_doc, history: &history };
+        let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
+        let home_view = DocumentView { snapshot: &home_doc, history: &history };
         let config = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
-        let cfg = ConfigView { projection: &config };
-        let home_node = home.render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
+        let cfg = ConfigView { snapshot: &config };
+        let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
         assert!(serde_json::to_string(&home_node).unwrap().contains("Noch keine Studios vorhanden"));
     }
 }

@@ -300,17 +300,9 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 
-use std::sync::{Mutex, OnceLock};
-
-static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
-
 /// Registers the fifteen handcrafted schema leaves for `s.gis.gisterrain`.
 pub fn register_artifact_schema() {
-    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor());
 }
 
 pub fn register_pilot_languages() {

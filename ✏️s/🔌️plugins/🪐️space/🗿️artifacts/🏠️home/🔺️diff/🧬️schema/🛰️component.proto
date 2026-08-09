@@ -1,0 +1,24 @@
+syntax = "proto3";
+package semio.s.space.home.diff;
+
+// 🧬️ S Home diff schema — sparse field delta over the artifact.
+
+message SHomeDiff {
+  // @state persistent
+  optional SHomeArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional uint64 catalog_generation = 3;
+  // @state local-ui
+  optional string active_panel_tab = 4;
+  // @state local-ui
+  optional string locale = 5;
+}
+
+message SHomeArtifact {
+  string schema = 1;
+  uint64 catalog_generation = 2;
+  string active_panel_tab = 3;
+  string locale = 4;
+}

@@ -16,7 +16,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Document) -> UiNode {
+pub fn render(document: &En1990Snapshot) -> UiNode {
     crate::app_surface::render_document_json(document)
 }
 //#endregion 🔖️Render

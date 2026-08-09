@@ -1,0 +1,5 @@
+# 🧬️ Playground artifact schema — every field with its state class.
+
+type PlaygroundArtifact {
+  schema: String! @state(class: PERSISTENT)
+}

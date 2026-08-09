@@ -31,3 +31,4 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 serde.workspace = true
 serde_json.workspace = true
 blake3 = "1"
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }

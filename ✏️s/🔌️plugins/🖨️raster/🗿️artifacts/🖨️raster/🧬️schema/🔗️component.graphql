@@ -1,0 +1,38 @@
+# 🧬️ Raster artifact schema — every field with its state class.
+
+type RasterArtifact {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: [RasterLayerNode!]! @state(class: PERSISTENT)
+  assets: [RasterImageAssetEntry!]! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  brushSize: Float! @state(class: LOCAL_UI)
+  brushOpacity: Float! @state(class: LOCAL_UI)
+  compositeViewport: RasterViewportSize @state(class: LOCAL_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type RasterLayerNode {
+  kind: String!
+}
+
+type RasterImageAssetEntry {
+  key: String!
+  value: RasterImageAsset!
+}
+
+type RasterImageAsset {
+  mime: String!
+  data: String!
+}
+
+type RasterViewportSize {
+  width: Float!
+  height: Float!
+}

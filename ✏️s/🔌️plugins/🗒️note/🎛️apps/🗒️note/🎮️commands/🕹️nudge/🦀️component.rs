@@ -4,7 +4,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, flatten_blocks, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteBlockNode, NoteDocument};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -15,7 +15,7 @@ const NUDGE_STEP: f64 = 1.0;
 const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — the shared body of every nudge command.
-fn nudge(document: &NoteDocument, config: &NoteConfig, dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
+fn nudge(document: &NoteSnapshot, config: &NoteConfig, dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
     if config.selected_block_ids.is_empty() {
         return Emit::default();
     }
@@ -69,8 +69,8 @@ pub mod nudge_selection {
         pub dy: f64,
     }
 
-    pub fn handle(payload: &NudgeSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(nudge(doc.projection, cfg.projection, payload.dx, payload.dy))
+    pub fn handle(payload: &NudgeSelection, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(nudge(doc.snapshot, cfg.snapshot, payload.dx, payload.dy))
     }
 }
 //#endregion 🔖️NudgeSelection
@@ -85,8 +85,8 @@ macro_rules! directional_nudge {
             #[dsl(keyword = $key)]
             pub struct $Payload {}
 
-            pub fn handle(_payload: &$Payload, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-                Ok(nudge(doc.projection, cfg.projection, $dx, $dy))
+            pub fn handle(_payload: &$Payload, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+                Ok(nudge(doc.snapshot, cfg.snapshot, $dx, $dy))
             }
         }
     };
@@ -122,9 +122,9 @@ mod tests {
             // `addBlock` selects the freshly added block, so the nudge below has something in
             // `cfg.selected_block_ids` to move.
             dispatch(&mut app, NoteCommand::AddBlock(crate::apps::note::commands::block::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
-            let operations = dispatch(&mut app, command.clone()).operations.len();
+            let operations = dispatch(&mut app, command.clone()).mutations.len();
             assert_eq!(operations, 1, "{command:?} should emit one operation");
-            let projection = app.projection().expect("projection");
+            let projection = app.snapshot().expect("snapshot");
             let (x, y, ..) = block_bounds(&projection.blocks[0]);
             assert_eq!((x, y), (expected_dx, expected_dy), "{command:?} moved block to unexpected position");
         }
@@ -135,7 +135,7 @@ mod tests {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::AddBlock(crate::apps::note::commands::block::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
         dispatch(&mut app, NoteCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         let (x, y, ..) = block_bounds(&projection.blocks[0]);
         assert_eq!((x, y), (10.0, 0.0));
     }

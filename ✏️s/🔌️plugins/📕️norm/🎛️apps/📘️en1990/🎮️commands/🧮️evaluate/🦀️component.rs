@@ -20,7 +20,7 @@ pub struct Evaluate {}
 
 //#region 🔖️Handler
 pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1990Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_document(doc.projection.clone(), "evaluate")
+    crate::app_surface::commit_snapshot(En1990Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
 }
 //#endregion 🔖️Handler
 
@@ -28,15 +28,14 @@ pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, En1990Snapshot>, _cfg:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::SetDocumentMutation;
-    use semio_framework_plugin::HistoryView;
+        use semio_framework_plugin::HistoryView;
 
     #[test]
     fn handle_recommits_the_current_projection_under_its_action_id() {
         let projection = En1990Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(&Evaluate {}, &DocumentView { projection: &projection, history: &HistoryView::empty() }, &ConfigView { projection: &config }).expect("handle");
-        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: En1990Snapshot::default() }]);
+        let emit = handle(&Evaluate {}, &DocumentView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
+        assert_eq!(emit.document_mutations, vec![En1990Mutation::SetSnapshot { snapshot: En1990Snapshot::default() }]);
         assert_eq!(emit.description.as_deref(), Some("evaluate"));
     }
 }

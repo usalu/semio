@@ -12,7 +12,7 @@ pub mod compiler {
 
     use crate::artifacts::present::engine::animate::{AnimateConfig, QualityPreset};
     use crate::artifacts::present::engine::animate_video::{render_scene, scene_for_hash, OutputFormat};
-    use crate::artifacts::present::PresentDeck;
+    use crate::artifacts::present::PresentSnapshot;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::fs;
@@ -55,7 +55,7 @@ pub mod compiler {
     }
 
     /// 📦️ Writes `🌐️index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
-    pub fn compile_present_site(deck: &PresentDeck, output_dir: &Path) -> Result<()> {
+    pub fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -66,7 +66,7 @@ pub mod compiler {
         Ok(())
     }
 
-    fn site_manifest(deck: &PresentDeck) -> serde_json::Value {
+    fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
         json!({
             "schema": "animate.present.site",
             "deckSchema": deck.schema,
@@ -206,14 +206,14 @@ pub mod compiler {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::default_present_deck;
+        use crate::artifacts::present::default_present_snapshot;
         use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 
         #[test]
         fn compile_present_site_writes_static_bundle() {
-            let deck = default_present_deck();
+            let deck = default_present_snapshot();
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-            let deck = PresentDeck { tiles, ..deck };
+            let deck = PresentSnapshot { tiles, ..deck };
             let output = std::env::temp_dir().join(format!("animate-present-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
             compile_present_site(&deck, &output).expect("compile site");
@@ -225,7 +225,7 @@ pub mod compiler {
             let manifest: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
             assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
-            let deck_file: PresentDeck = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
+            let deck_file: PresentSnapshot = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
             assert_eq!(deck_file.tiles.len(), 4);
             let _ = fs::remove_dir_all(&output);
         }
@@ -246,7 +246,7 @@ pub mod slide {
     //! 🎭️ Scene-based presentation document types for slide/section timelines.
 
     use crate::artifacts::present::engine::animate::Section;
-    use crate::artifacts::present::PresentDeck;
+    use crate::artifacts::present::PresentSnapshot;
     use serde::{Deserialize, Serialize};
 
     pub const PRESENT_SCENE_SCHEMA: &str = "animate.present.scene";
@@ -280,7 +280,7 @@ pub mod slide {
         pub title: String,
         pub sections: Vec<PresentSection>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub deck: Option<PresentDeck>,
+        pub deck: Option<PresentSnapshot>,
     }
 
     impl PresentScene {
@@ -336,15 +336,16 @@ pub mod slide {
 pub use compiler::{compile_present_site, compile_scene_to_assets, PresentCompileError, SceneAssetBundle};
 pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA};
 
-use crate::artifacts::present::PRESENT_DECK_SCHEMA;
+use crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA;
 
 //#region 🔖️Register
 /// 🔌️ Called by the plugin-root `📦️glue.rs`'s `semio_plugin!{}` `setup:` field.
 pub fn register() {
     register_pilot_languages();
-    semio_framework_os::register_2d_export_handlers(PRESENT_DECK_SCHEMA, "animate", animate_present_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler(PRESENT_DECK_SCHEMA, animate_present_document_json_from_dwg);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DECK_SCHEMA);
+    register_artifact_schema();
+    semio_framework_os::register_2d_export_handlers(PRESENT_DOCUMENT_SCHEMA, "animate", animate_present_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler(PRESENT_DOCUMENT_SCHEMA, animate_present_document_json_from_dwg);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DOCUMENT_SCHEMA);
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -355,8 +356,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::present::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("present.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -385,8 +386,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::present::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("present.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -409,7 +410,7 @@ pub fn register_pilot_languages() {
 /// port (Wave-2 port recipe).
 pub fn present_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
-        document_schema: PRESENT_DECK_SCHEMA.into(),
+        document_schema: PRESENT_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Presentation, form: semio_framework::MediaForm::Deck },
         ports: vec![semio_framework::MediaPortSpec {
             id: "frames:in".into(),
@@ -422,11 +423,11 @@ pub fn present_io() -> semio_framework::AppIo {
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework::ArtifactPresentation { id: PRESENT_DECK_SCHEMA.into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
+        artifact: semio_framework::ArtifactPresentation { id: PRESENT_DOCUMENT_SCHEMA.into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
     }
 }
 
-/// 🎞️ `frames:in` placement (Wave-2 port recipe) — `PresentDeck` models one shared background
+/// 🎞️ `frames:in` placement (Wave-2 port recipe) — `PresentSnapshot` models one shared background
 /// `source` image with named crop-`tiles` over it; there is no per-tile independent raster payload in
 /// this schema, so an incoming `2d.image` frame becomes a new tile positioned in a deterministic
 /// contact-sheet grid (4 columns) rather than replacing `source` — exactly the surface `seedGrid`/
@@ -468,8 +469,8 @@ pub enum PresentError {
 
 //#region 🔖️Domain
 /// 📄️ Empty presentation deck — the wasm VCS bridge's default projection for a fresh envelope.
-pub fn empty_present_deck() -> crate::artifacts::present::PresentDeck {
-    crate::artifacts::present::PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: crate::artifacts::present::default_figure_tile_source(), tiles: Vec::new() }
+pub fn empty_present_snapshot() -> crate::artifacts::present::PresentSnapshot {
+    crate::artifacts::present::PresentSnapshot { schema: PRESENT_DOCUMENT_SCHEMA.into(), source: crate::artifacts::present::default_figure_tile_source(), tiles: Vec::new() }
 }
 //#endregion 🔖️Domain
 
@@ -615,8 +616,8 @@ pub fn animate_present_document_json_from_dwg(drawing: &semio_framework::DwgDraw
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
     let frame = crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
-    let deck = crate::artifacts::present::PresentDeck {
-        schema: PRESENT_DECK_SCHEMA.into(),
+    let deck = crate::artifacts::present::PresentSnapshot {
+        schema: PRESENT_DOCUMENT_SCHEMA.into(),
         source: crate::artifacts::present::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None },
         tiles: vec![crate::artifacts::present::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }],
     };
@@ -680,8 +681,8 @@ mod tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg");
-        let deck: crate::artifacts::present::PresentDeck = serde_json::from_value(document).expect("deck");
-        assert_eq!(deck.schema, PRESENT_DECK_SCHEMA);
+        let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");
+        assert_eq!(deck.schema, PRESENT_DOCUMENT_SCHEMA);
         assert_eq!(deck.tiles.len(), 1);
         assert_eq!(deck.tiles[0].name, "Imported Drawing");
         assert!(deck.source.src.starts_with("data:image/png;base64,"));
@@ -691,7 +692,7 @@ mod tests {
     fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_framework::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
-        let deck: crate::artifacts::present::PresentDeck = serde_json::from_value(document).expect("deck");
+        let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");
         assert_eq!(deck.tiles.len(), 1);
     }
 
@@ -699,7 +700,7 @@ mod tests {
     #[test]
     fn present_io_declares_the_frames_in_port() {
         let io = present_io();
-        assert_eq!(io.document_schema, PRESENT_DECK_SCHEMA);
+        assert_eq!(io.document_schema, PRESENT_DOCUMENT_SCHEMA);
         assert_eq!(io.ports.len(), 1);
         let port = &io.ports[0];
         assert_eq!(port.id, "frames:in");
@@ -726,37 +727,52 @@ mod tests {
 //#region 🔖️ArtifactEngine
 /// 🧬️ UI-independent document engine — every transition is a `PresentMutation`.
 pub struct PresentEngine {
-    projection: crate::artifacts::present::PresentDeck,
+    artifact: crate::artifacts::present::schema::PresentArtifact,
+    snapshot: crate::artifacts::present::PresentSnapshot,
 }
 
 impl PresentEngine {
-    pub fn new(projection: crate::artifacts::present::PresentDeck) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::present::PresentSnapshot) -> Self {
+        let artifact = crate::artifacts::present::schema::PresentArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::present::PresentDeck {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::present::PresentSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for PresentEngine {
-    type Projection = crate::artifacts::present::PresentDeck;
+    type Artifact = crate::artifacts::present::schema::PresentArtifact;
+    type Snapshot = crate::artifacts::present::PresentSnapshot;
     type Mutation = crate::artifacts::present::mutations::PresentMutation;
     type Diff = crate::artifacts::present::diff::PresentDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = crate::artifacts::present::mutations::apply_present_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.animate.present`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::present::schema::present_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
 

@@ -2,7 +2,7 @@
 
 use crate::apps::present::animate_present_action;
 use crate::apps::present::terminology::AnimatePresentLabels;
-use crate::artifacts::present::PresentDeck;
+use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -38,7 +38,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
     }
 }
 
-pub fn render(deck: &PresentDeck, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
+pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = deck
         .tiles
         .iter()

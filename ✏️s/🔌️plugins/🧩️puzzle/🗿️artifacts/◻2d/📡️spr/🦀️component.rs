@@ -38,11 +38,11 @@ mod tests {
 
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle2d::engine::empty_puzzle2d_projection;
+        use crate::artifacts::puzzle2d::engine::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
+        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None));
         store
             .dispatch(DocumentCommand::Apply {
                 mutations: vec![Puzzle2dMutation::SetNode {
@@ -81,7 +81,7 @@ mod wire_format_guard {
             Puzzle2dMutation::SetEdge { index: 1, edge },
             Puzzle2dMutation::RemoveEdge { id: "e1".into() },
             Puzzle2dMutation::SetMeta { meta },
-            Puzzle2dMutation::SetDocument { snapshot: document },
+            Puzzle2dMutation::SetSnapshot { snapshot: document },
         ]
     }
 
@@ -95,7 +95,7 @@ mod wire_format_guard {
         "setEdge index=1 edge { id=e1 source=\"n1:h0\" target=\"n2:h0\" edge-kind=wire.link source-tip=none target-tip=arrow visible=true locked=false } | 69 | 010206056172726f77026531056e313a6830056e323a6830046e6f6e6509776972652e6c696e6b02000401010e0d0800060101060202060303060504060405060006020701",
         "removeEdge id=e1 | 10 | 01030102653101000600",
         "setMeta meta { manifest-id=nakagin kind-compatibility [bidirectional:BOOL specificity:ENUM source:TEXT target:TEXT] { true handle a b } } | 43 | 01040301610162076e616b6167696e01000e0d020006020114010400000101010006030200050003000501",
-        "setDocument snapshot { schema=puzzle.2d.fixture camera { x=0 y=0 zoom=1 } meta { kind-compatibility [bidirectional:BOOL specificity:ENUM source:TEXT target:TEXT] { } } nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT icon-kind:TEXT root:BOOL scale:NUM visible:BOOL locked:BOOL handles:LIST] { } edges [id:TEXT source:REF target:REF edge-kind:TEXT source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL] { } } | 160 | 0105011170757a7a6c652e32642e6669787475726501000e0d05000600010e0d0300050000000000000000010500000000000000000205000000000000f03f0214000f0000050100050200050300040400040500040600040700040800050900050a00010b00040c00010d00010e000003140008000005010005020005030005040005050005060001070001040e0d0101140004000001010006020005030005",
+        "setSnapshot snapshot { schema=puzzle.2d.fixture camera { x=0 y=0 zoom=1 } meta { kind-compatibility [bidirectional:BOOL specificity:ENUM source:TEXT target:TEXT] { } } nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT icon-kind:TEXT root:BOOL scale:NUM visible:BOOL locked:BOOL handles:LIST] { } edges [id:TEXT source:REF target:REF edge-kind:TEXT source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL] { } } | 160 | 0105011170757a7a6c652e32642e6669787475726501000e0d05000600010e0d0300050000000000000000010500000000000000000205000000000000f03f0214000f0000050100050200050300040400040500040600040700040800050900050a00010b00040c00010d00010e000003140008000005010005020005030005040005050005060001070001040e0d0101140004000001010006020005030005",
     ];
 
     /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still

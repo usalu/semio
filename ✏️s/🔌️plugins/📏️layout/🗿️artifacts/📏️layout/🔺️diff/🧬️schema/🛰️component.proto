@@ -1,0 +1,99 @@
+syntax = "proto3";
+package semio.s.layout.layout.diff;
+
+message LayoutDiff {
+  optional LayoutArtifact artifact = 1; // @state persistent
+  optional string schema = 2; // @state persistent
+  optional string name = 3; // @state persistent
+  optional GridSettings grid = 4; // @state persistent
+  optional LayoutParagraphStylesDelta paragraph_styles = 5; // @state persistent
+  optional LayoutCharacterStylesDelta character_styles = 6; // @state persistent
+  optional LayoutStoriesDelta stories = 7; // @state persistent
+  optional LayoutLinksDelta links = 8; // @state persistent
+  optional LayoutParentPagesDelta parent_pages = 9; // @state persistent
+  optional LayoutSpreadsDelta spreads = 10; // @state persistent
+  optional LayoutPagesDelta pages = 11; // @state persistent
+  optional string print_target = 12; // @state persistent
+  optional string data_fields_json = 13; // @state persistent
+  optional LayoutStringList selected_ids = 14; // @state shared-ui
+  optional string active_page_id = 15; // @state local-ui
+  optional string engagement_input = 16; // @state local-ui
+  optional double camera_x = 17; // @state local-ui
+  optional double camera_y = 18; // @state local-ui
+  optional double camera_zoom = 19; // @state local-ui
+  optional double preview_camera_x = 20; // @state local-ui
+  optional double preview_camera_y = 21; // @state local-ui
+  optional double preview_camera_zoom = 22; // @state local-ui
+  optional LayoutDropPreviewState drop_preview = 23; // @state local-ui
+  optional string locale = 24; // @state local-ui
+  optional string hovered_id = 25; // @state preview
+}
+
+message LayoutStringList { repeated string values = 1; }
+message LayoutPagesDelta {
+  repeated Page added = 1;
+  repeated string removed = 2;
+  repeated LayoutPagePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutPagePatchEntry { string id = 1; PagePatch patch = 2; }
+message LayoutStoriesDelta {
+  repeated TextStory added = 1;
+  repeated string removed = 2;
+  repeated LayoutStoryPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutStoryPatchEntry { string id = 1; TextStoryPatch patch = 2; }
+message LayoutLinksDelta {
+  repeated ImageLink added = 1;
+  repeated string removed = 2;
+  repeated LayoutLinkPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutLinkPatchEntry { string id = 1; ImageLinkPatch patch = 2; }
+message LayoutParagraphStylesDelta {
+  repeated ParagraphStyle added = 1;
+  repeated string removed = 2;
+  repeated LayoutParagraphStylePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutParagraphStylePatchEntry { string id = 1; ParagraphStylePatch patch = 2; }
+message LayoutCharacterStylesDelta {
+  repeated CharacterStyle added = 1;
+  repeated string removed = 2;
+  repeated LayoutCharacterStylePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutCharacterStylePatchEntry { string id = 1; CharacterStylePatch patch = 2; }
+message LayoutParentPagesDelta {
+  repeated ParentPage added = 1;
+  repeated string removed = 2;
+  repeated LayoutParentPagePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutParentPagePatchEntry { string id = 1; ParentPagePatch patch = 2; }
+message LayoutSpreadsDelta {
+  repeated Spread added = 1;
+  repeated string removed = 2;
+  repeated LayoutSpreadPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message LayoutSpreadPatchEntry { string id = 1; SpreadPatch patch = 2; }
+
+message GridSettings { double baseline_grid = 1; double baseline_offset = 2; bool snap_to_baseline = 3; }
+message LayoutDropPreviewState { string kind = 1; double x = 2; double y = 3; }
+message LayoutArtifact { string schema = 1; }
+message ParagraphStyle { string id = 1; }
+message CharacterStyle { string id = 1; }
+message TextStory { string id = 1; }
+message ImageLink { string id = 1; }
+message ParentPage { string id = 1; }
+message Spread { string id = 1; }
+message Page { string id = 1; }
+message PagePatch { optional string name = 1; }
+message TextStoryPatch { optional string content = 1; }
+message ImageLinkPatch { optional string path = 1; }
+message ParagraphStylePatch { optional string name = 1; }
+message CharacterStylePatch { optional string name = 1; }
+message ParentPagePatch { optional string name = 1; }
+message SpreadPatch { optional string name = 1; }

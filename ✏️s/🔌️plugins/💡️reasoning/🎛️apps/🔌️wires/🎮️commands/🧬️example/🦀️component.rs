@@ -1,9 +1,9 @@
 //! 🧬️ Wires play app commands — loading a named example fixture (currently just "metabolism").
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::empty_mindmap_wires_document;
-use crate::artifacts::wires::engine::metabolism_wires_example_document;
-use crate::artifacts::wires::op::MindmapWiresMutation;
+use crate::artifacts::wires::empty_wires_snapshot;
+use crate::artifacts::wires::engine::metabolism_wires_example_snapshot;
+use crate::artifacts::wires::op::WiresMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,10 +21,10 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, crate::artifacts::wires::MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
-        let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_document() } else { empty_mindmap_wires_document() };
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+        let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_snapshot() } else { empty_wires_snapshot() };
         Ok(Emit {
-            document_mutations: vec![MindmapWiresMutation::ReplaceDocument { wires_fixture: next.wires_fixture, board_fixture: next.board_fixture }],
+            document_mutations: vec![WiresMutation::SetSnapshot { snapshot: next }],
             config_mutations: vec![WiresConfigMutation::SetSelection { ids: Vec::new() }, WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
             ..Default::default()
         })
@@ -44,14 +44,14 @@ mod tests {
     fn set_active_example_metabolism_loads_seven_nodes() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() }));
-        assert_eq!(fixture_nodes(&app.projection().expect("projection").board_fixture).len(), 7);
+        assert_eq!(fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).len(), 7);
     }
 
     #[test]
     fn set_active_example_unknown_id_loads_empty_document() {
         let mut app = metabolism_app();
         dispatch(&mut app, WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "nope".into() }));
-        assert!(fixture_nodes(&app.projection().expect("projection").board_fixture).is_empty());
+        assert!(fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).is_empty());
     }
 }
 //#endregion 🧪️Tests

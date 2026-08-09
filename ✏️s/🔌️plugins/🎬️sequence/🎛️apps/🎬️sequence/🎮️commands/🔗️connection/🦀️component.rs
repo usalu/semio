@@ -3,7 +3,7 @@
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::SequenceFixture;
+use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub mod connect_steps {
         pub target_node_id: String,
     }
 
-    pub fn handle(payload: &ConnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
+    pub fn handle(payload: &ConnectSteps, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
             let _ = host.connect_steps(&payload.source_node_id, &payload.target_node_id);
         })))
     }
@@ -37,8 +37,8 @@ pub mod disconnect_steps {
         pub to_id: String,
     }
 
-    pub fn handle(payload: &DisconnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
+    pub fn handle(payload: &DisconnectSteps, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
             host.disconnect_steps(&payload.from_id, &payload.to_id);
         })))
     }
@@ -58,9 +58,9 @@ mod tests {
     fn disconnect_then_reconnect_round_trips_the_edge() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::DisconnectSteps(DisconnectSteps { from_id: "step-1".into(), to_id: "step-2".into() }));
-        assert!(app.projection().expect("projection").edges.is_empty());
+        assert!(app.snapshot().expect("projection").edges.is_empty());
         dispatch(&mut app, SequenceCommand::ConnectSteps(ConnectSteps { source_node_id: "step-1".into(), target_node_id: "step-2".into() }));
-        assert_eq!(app.projection().expect("projection").edges.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").edges.len(), 1);
     }
 }
 //#endregion 🧪️Tests

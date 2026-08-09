@@ -1,3 +1,2 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio s.home.dsl v1
+schema=s.home gen=0

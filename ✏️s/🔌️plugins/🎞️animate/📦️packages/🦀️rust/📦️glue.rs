@@ -12,6 +12,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<PresentMutation, PresentConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
@@ -29,8 +30,27 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/🎬️present/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🎬️present/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🎬️present/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
         #[path = "../../🗿️artifacts/🎬️present/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -67,20 +87,18 @@ pub mod artifacts {
                 pub mod diff;
             }
             #[path = "."]
-            pub mod set_deck {
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
             }
         }
 
         #[path = "../../🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/🎬️present/📡️spr/🦀️component.rs"]
         pub mod spr;
 
@@ -105,13 +123,66 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎛️config/🦀️component.rs"]
             pub mod config;
             pub mod animate {
-                pub use super::animation::*;
-                pub use super::scene::*;
-                pub use super::geometry::*;
-                pub use super::camera::*;
-                pub use super::text::*;
-                pub use super::rate::*;
-                pub use super::config::*;
+                pub mod animation {
+                    pub use super::super::animation::animation::*;
+                }
+                pub mod animations_catalog {
+                    pub use super::super::animation::animations_catalog::*;
+                }
+                pub mod scene {
+                    pub use super::super::scene::scene::*;
+                }
+                pub mod section {
+                    pub use super::super::scene::section::*;
+                }
+                pub mod sobject {
+                    pub use super::super::scene::sobject::*;
+                }
+                pub mod geometry {
+                    pub use super::super::geometry::geometry::*;
+                }
+                pub mod three_d {
+                    pub use super::super::geometry::three_d::*;
+                }
+                pub mod axes {
+                    pub use super::super::geometry::axes::*;
+                }
+                pub mod camera {
+                    pub use super::super::camera::camera::*;
+                }
+                pub mod matrix {
+                    pub use super::super::camera::matrix::*;
+                }
+                pub mod text {
+                    pub use super::super::text::text::*;
+                }
+                pub mod color {
+                    pub use super::super::text::color::*;
+                }
+                pub mod rate {
+                    pub use super::super::rate::rate::*;
+                }
+                pub mod updater {
+                    pub use super::super::rate::updater::*;
+                }
+                pub mod config {
+                    pub use super::super::config::config::*;
+                }
+                pub mod hash {
+                    pub use super::super::config::hash::*;
+                }
+                pub mod graph {
+                    pub use super::super::config::graph::*;
+                }
+                pub use super::config::config::{AnimateConfig, QualityPreset};
+                pub use super::scene::section::Section;
+                pub use super::scene::scene::{Scene, SceneFrame, preview_scene_loop};
+                pub use super::scene::section::SectionList;
+                pub use super::animation::animation::{compile_animations, interpolate_at, Animation, Wait};
+                pub use super::scene::sobject::{Sobject, VSobject};
+                pub use super::camera::camera::Camera;
+                pub use super::text::color::Color;
+                pub use super::scene::scene::BasicStage;
             }
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
             pub mod animate_video;

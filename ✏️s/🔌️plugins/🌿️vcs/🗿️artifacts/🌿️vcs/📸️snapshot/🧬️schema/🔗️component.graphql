@@ -1,0 +1,10 @@
+# 🧬️ VCS snapshot schema — persistent fields only.
+
+type VcsSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  title: String! @state(class: PERSISTENT)
+  counter: Long! @state(class: PERSISTENT)
+  notes: String! @state(class: PERSISTENT)
+  status: String! @state(class: PERSISTENT)
+  tags: [String!]! @state(class: PERSISTENT)
+}

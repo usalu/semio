@@ -1,6 +1,6 @@
 //! ⚙️ Note artifact — headless compute (constitutional: engine).
 
-use crate::artifacts::note::{NoteBlockNode, NoteDocument, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Register
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_os::register_2d_export_handlers("2d.note", "note", note_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.note", note_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::note::NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
@@ -22,8 +23,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -52,8 +53,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -69,10 +70,15 @@ pub fn register_pilot_languages() {
 }
 
 
+/// 📎 Registers the note artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::note::schema::note_artifact_schema_descriptor());
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Constants
-/// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_document}/
+/// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
 const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::dsl::SEMIO_NOTE_EXAMPLE_TEXT;
 
@@ -80,29 +86,28 @@ const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::dsl::SEMIO_NOTE_EX
 
 //#region 🔖️DocumentHelpers
 pub fn create_note_id(prefix: &str) -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{next}")
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    let serial = NEXT.fetch_add(1, Ordering::Relaxed);
+    format!("{prefix}-{serial}")
 }
 
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_document() -> NoteDocument {
-    <NoteDocument as store::DocumentDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_document())
+pub fn semio_example_snapshot() -> NoteSnapshot {
+    <NoteSnapshot as store::DocumentDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
-/// 📄️ JSON re-serialization of {@link semio_example_document}, for the framework-generic call sites that
+/// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
 /// contractually require JSON text (`PluginApp::render`'s `projection_override_json`, `App::example`'s
 /// manifest `document_json`).
 pub fn semio_example_json() -> String {
-    serde_json::to_string(&semio_example_document()).expect("serialize semio example document")
+    serde_json::to_string(&semio_example_snapshot()).expect("serialize semio example document")
 }
 
-pub fn empty_note_document() -> NoteDocument {
-    NoteDocument {
+pub fn empty_note_snapshot() -> NoteSnapshot {
+    NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
         title: None,
@@ -362,7 +367,7 @@ pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
     }
 }
 
-pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, value: &Value) -> NoteDocument {
+pub fn patch_block_field(document: &NoteSnapshot, block_id: &str, field: &str, value: &Value) -> NoteSnapshot {
     let Some(block) = find_block(&document.blocks, block_id).cloned() else {
         return document.clone();
     };
@@ -548,7 +553,7 @@ fn escape_svg_text(value: &str) -> String {
     value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
-pub fn note_document_bounds(document: &NoteDocument) -> (u32, u32) {
+pub fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
     let mut max_x = 1024.0_f64;
     let mut max_y = 1024.0_f64;
     for block in flatten_blocks(&document.blocks) {
@@ -569,7 +574,7 @@ pub fn note_document_bounds(document: &NoteDocument) -> (u32, u32) {
     (max_x.max(1.0).round() as u32, max_y.max(1.0).round() as u32)
 }
 
-fn note_block_to_svg(block: &NoteBlockNode, document: &NoteDocument) -> String {
+fn note_block_to_svg(block: &NoteBlockNode, document: &NoteSnapshot) -> String {
     let (x, y, rotation, width, height) = match block {
         NoteBlockNode::Text { x, y, rotation, width, height, .. }
         | NoteBlockNode::Image { x, y, rotation, width, height, .. }
@@ -606,7 +611,7 @@ fn note_block_to_svg(block: &NoteBlockNode, document: &NoteDocument) -> String {
     }
 }
 
-pub fn note_document_to_svg(document: &NoteDocument) -> (String, u32, u32) {
+pub fn note_document_to_svg(document: &NoteSnapshot) -> (String, u32, u32) {
     let (width, height) = note_document_bounds(document);
     let body = flatten_blocks(&document.blocks).into_iter().filter(|block| block_visible(block)).map(|block| note_block_to_svg(block, document)).collect::<Vec<_>>().join("");
     let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#);
@@ -614,7 +619,7 @@ pub fn note_document_to_svg(document: &NoteDocument) -> (String, u32, u32) {
 }
 
 pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document: NoteDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let document: NoteSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     Ok(note_document_to_svg(&document))
 }
 //#endregion 🔖️MediaExport
@@ -668,7 +673,7 @@ fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str)
 }
 
 pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
-    let mut document = empty_note_document();
+    let mut document = empty_note_snapshot();
     document.id = create_note_id("dwg-import");
     document.title = Some("Imported Drawing".into());
     for entity in &drawing.entities {
@@ -726,7 +731,7 @@ mod tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let value = note_document_json_from_dwg(&drawing).unwrap();
-        let document: NoteDocument = serde_json::from_value(value).unwrap();
+        let document: NoteSnapshot = serde_json::from_value(value).unwrap();
         assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
         assert_eq!(document.blocks.len(), 2);
         let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
@@ -746,10 +751,10 @@ mod tests {
     }
 
     #[test]
-    fn imports_empty_dwg_drawing_as_valid_empty_note_document() {
+    fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
         let drawing = DwgDrawing::default();
         let value = note_document_json_from_dwg(&drawing).unwrap();
-        let document: NoteDocument = serde_json::from_value(value).unwrap();
+        let document: NoteSnapshot = serde_json::from_value(value).unwrap();
         assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
         assert!(document.blocks.is_empty());
     }
@@ -758,32 +763,40 @@ mod tests {
 
 //#region 🔖️ArtifactEngine
 pub struct NoteEngine {
-    projection: NoteDocument,
+    artifact: crate::artifacts::note::schema::NoteArtifact,
+    snapshot: NoteSnapshot,
 }
 
 impl NoteEngine {
-    pub fn new(projection: NoteDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: NoteSnapshot) -> Self {
+        let artifact = crate::artifacts::note::schema::NoteArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for NoteEngine {
-    type Projection = NoteDocument;
+    type Artifact = crate::artifacts::note::schema::NoteArtifact;
+    type Snapshot = NoteSnapshot;
     type Mutation = crate::artifacts::note::mutations::NoteMutation;
     type Diff = crate::artifacts::note::diff::NoteDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = crate::artifacts::note::mutations::apply_note_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

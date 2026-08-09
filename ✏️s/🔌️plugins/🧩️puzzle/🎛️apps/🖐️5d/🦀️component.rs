@@ -6,7 +6,7 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/{◻2d,🧊️3d}`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Projection` is the `Puzzle5dPlayProjection` newtype over a bare
+//! 🌉️ `DocumentApp::Projection` is the `Puzzle5dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` document (see `crate::artifacts::puzzle5d::op`'s `🔖️ValueBridge`), not the
 //! typed `Puzzle5dSnapshot` — the `Puzzle5dDocument` model below is this app's own structural twin
 //! of it, and each action emits the granular typed operation delta
@@ -19,7 +19,7 @@ use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::panels::{catalogue, document as document_panel, inspection};
 use crate::apps::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::artifacts::puzzle5d::engine::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlayProjection};
+use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
@@ -1442,7 +1442,7 @@ impl Puzzle5dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let before = doc.snapshot.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
@@ -1541,7 +1541,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
 impl DocumentApp for Puzzle5dPlayApp {
     const APP_ID: &'static str = PUZZLE5D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
-    type Snapshot = Puzzle5dPlayProjection;
+    type Snapshot = Puzzle5dPlaySnapshot;
     type Mutation = Puzzle5dMutation;
     type Config = Puzzle5dConfig;
     type ConfigMutation = Puzzle5dConfigMutation;
@@ -1551,15 +1551,15 @@ impl DocumentApp for Puzzle5dPlayApp {
 
 
 
-    fn initial_snapshot() -> Puzzle5dPlayProjection {
-        Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
+    fn initial_snapshot() -> Puzzle5dPlaySnapshot {
+        Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(Value::Null))
     }
 
     fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let selection = &cfg.snapshot.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
@@ -1582,7 +1582,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    fn cut_operations( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
+    fn cut_operations( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
         let before = doc.snapshot.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
@@ -1604,7 +1604,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
-    fn paste_operations( doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
+    fn paste_operations( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
         let expected = Self::clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
@@ -1629,7 +1629,7 @@ impl DocumentApp for Puzzle5dPlayApp {
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
         with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot)))
     }
 
@@ -1674,7 +1674,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// fan-in from several producers), then bridges the before/after document through
     /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
     /// this never mutates anything directly, only real, undoable operations.
-    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -1738,7 +1738,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render( body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
+    fn render( body_key: &str, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
         with_puzzle5d_app(|app| {
                     let config = cfg.snapshot;
                     let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
@@ -1756,7 +1756,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             })
     }
 
-    fn window_engagements( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle5d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -1774,7 +1774,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             .collect()
     }
 
-    fn window_measures( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+    fn window_measures( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
         with_puzzle5d_app(|app| {
                     let config = cfg.snapshot;
                     let labels = puzzle5d_labels(config);
@@ -1798,7 +1798,7 @@ impl DocumentApp for Puzzle5dPlayApp {
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle5dPlayProjection>,
+        doc: &DocumentView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
@@ -1931,7 +1931,7 @@ fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Resu
     serde_json::to_value(empty_document()).map_err(|error| error.to_string())
 }
 
-/// 🗂️ Registers `Puzzle5dPlayProjection`'s pack<->dsl codec under its real `document_schema()` string
+/// 🗂️ Registers `Puzzle5dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents without
 /// depending on this crate's concrete `Projection`/`Mutation` types, plus the 5d mesh export/import
 /// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
@@ -2040,7 +2040,7 @@ mod tests {
     }
 
     #[test]
-    fn initial_projection_is_the_concrete_forest_document() {
+    fn initial_snapshot_is_the_concrete_forest_document() {
         let app = app();
         assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
         assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
@@ -2078,7 +2078,7 @@ mod tests {
     //#endregion 🔖️ContextMenu
 
     //#region 🔖️Pack
-    /// 📦️ `Puzzle5dPlayProjection`'s pack encoding round-trips through the same `(RecordSpec,
+    /// 📦️ `Puzzle5dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
     /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
     /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture.
     #[test]
@@ -2156,7 +2156,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
     /// `Puzzle5dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s. Deliberately
     /// dispatches through a standalone typed `Puzzle5dStore` — NOT through `Puzzle5dPlayApp`/
-    /// `Puzzle5dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
+    /// `Puzzle5dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
     /// `DocumentApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dSnapshot>`
     /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
@@ -2563,7 +2563,7 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
         for _ in 0..2 {
-            let doc_projection = Puzzle5dPlayProjection(current.clone());
+            let doc_projection = Puzzle5dPlaySnapshot(current.clone());
             let doc = DocumentView { snapshot: &doc_projection, history: &history };
             let emit = Puzzle5dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.document_mutations {

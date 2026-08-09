@@ -3,7 +3,7 @@
 use crate::apps::note::config::NoteConfig;
 use crate::apps::note::modes::edit::windows::navigator::options;
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::{NoteCamera, NoteDocument};
+use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(document: &NoteDocument, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![options::zoom::measure(camera, labels), options::grid_visible::measure(document, labels)]
 }
 
@@ -62,7 +62,7 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &NoteDocument, cfg: &NoteConfig) -> UiNode {
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
     crate::apps::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, &cfg.selected_block_ids, cfg.hovered_block_id.as_deref(), &cfg.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
 }
 //#endregion 🔖️Render

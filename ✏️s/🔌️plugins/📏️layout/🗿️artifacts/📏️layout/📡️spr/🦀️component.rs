@@ -363,25 +363,25 @@ impl OpBinary for LayoutMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::LayoutDocument;
+    use crate::artifacts::layout::LayoutSnapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = crate::artifacts::layout::engine::default_document();
         let page_id = document.pages[0].id.clone();
         let operation = LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } });
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_applied_operations() {
-        use crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA;
+        use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
         let initial = crate::artifacts::layout::engine::default_document();
-        let envelope = store::create_document_envelope(LAYOUT_FIXTURE_SCHEMA, "layout-doc-text-test", initial, None);
-        let mut doc_store: store::DocumentStore<LayoutDocument, LayoutMutation> = store::DocumentStore::new(envelope);
+        let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-text-test", initial, None);
+        let mut doc_store: store::DocumentStore<LayoutSnapshot, LayoutMutation> = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
                 mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
@@ -394,9 +394,9 @@ mod tests {
                 description: Some("rename page".into()),
             })
             .expect("apply patch page");
-        store::test_support::assert_document_text_round_trip(&doc_store);
-        store::test_support::assert_document_pack_round_trip(&doc_store);
-        store::test_support::assert_live_equals_replay(&doc_store);
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
+        store::os_store::test_support::assert_live_equals_replay(&doc_store);
     }
 
     #[test]
@@ -405,27 +405,27 @@ mod tests {
 
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-3".into();
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Add { index: 1, item: page_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Remove { id: "page-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Move { id: "page-1".into(), to_index: 1 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Add { index: 1, item: page_2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Remove { id: "page-1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Move { id: "page-1".into(), to_index: 1 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
 
         let mut story_2 = doc.stories[0].clone();
         story_2.id = "story-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Add { index: 1, item: story_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Remove { id: "story-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Move { id: "story-1".into(), to_index: 0 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Add { index: 1, item: story_2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Remove { id: "story-1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Move { id: "story-1".into(), to_index: 0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
 
         let mut link_2 = doc.links[0].clone();
         link_2.id = "link-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Add { index: 1, item: link_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Remove { id: "link-missing".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Move { id: "link-missing".into(), to_index: 0 }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Add { index: 1, item: link_2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Remove { id: "link-missing".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Move { id: "link-missing".into(), to_index: 0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
 
         let rect_frame = Frame::Rect {
             id: "frame-new".into(),
@@ -436,30 +436,30 @@ mod tests {
             fill: Some([0.1, 0.2, 0.3, 1.0]),
             stroke: None,
         };
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
         let image_frame =
             Frame::Image { id: "frame-img".into(), layer_id: "layer-1".into(), bounds: crate::artifacts::layout::LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }, locked: Some(false), visible: None, link_id: "link-missing".into() };
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame {
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame {
             page_id: "page-1".into(),
             frame_id: "frame-text-1".into(),
             patch: FramePatch { x: Some(10.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), stroke: Some(None), ..Default::default() },
         });
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_full_page_and_frame_patch_fields() {
         let full_page_patch =
             PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: full_page_patch }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: full_page_patch }));
 
         let full_frame_patch = FramePatch { x: Some(1.0), y: Some(2.0), width: Some(3.0), height: Some(4.0), fill: Some(Some([0.1, 0.2, 0.3, 0.4])), stroke: Some(None), wrap_mode: Some("column".into()), columns: Some(3) };
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
 
         let clearing_frame_patch = FramePatch { fill: Some(None), stroke: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() };
-        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
     }
 
     #[test]

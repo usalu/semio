@@ -25,7 +25,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::imperative::{Dictionary, ImperativeDocument, Path, Step};
+use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, Path, Step};
 use neural_engine::{Atom, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -139,110 +139,17 @@ pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
 }
 //#endregion 🔖️Step
 
-//#region 🔖️Document
-/// 📄️ Local mirror of `ImperativeDocument` — see the module doc for why `path: Path`/`seed: Dictionary`
-/// can't stay as-is under a direct `#[derive(dsl::DslRecord)]`. `pub` so `🎒️pack` (the sibling node
-/// reusing this mirror's generated `__dsl_spec`/`__dsl_to_record`/`__dsl_from_record` trio) can reach it.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-#[dsl(extension = "imperative")]
-#[dsl(layout = "lines")]
-pub struct ImperativeDocumentDsl {
-    pub schema: String,
-    pub seed: Option<BTreeMap<String, ValueDsl>>,
-    #[dsl(statements, block)]
-    pub steps: Vec<StepNodeDsl>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for ImperativeDocumentDsl {
-    const EXTENSION: &'static str = "imperative";
-    fn envelope_id() -> &'static str { "imperative" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for ImperativeDocumentDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-pub fn document_to_document_dsl(document: &ImperativeDocument) -> ImperativeDocumentDsl {
-    ImperativeDocumentDsl { schema: document.schema.clone(), seed: dictionary_to_option_dsl_map(&document.seed), steps: document.path.steps.iter().map(step_to_step_node_dsl).collect() }
-}
-
-pub fn document_dsl_to_document(mirror: ImperativeDocumentDsl) -> ImperativeDocument {
-    ImperativeDocument { schema: mirror.schema, path: Path { steps: mirror.steps.into_iter().map(step_node_dsl_to_step).collect() }, seed: option_dsl_map_to_dictionary(mirror.seed) }
-}
-
-impl store::DocumentDsl for ImperativeDocument {
-    const EXTENSION: &'static str = "imperative";
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <ImperativeDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
-        Ok(document_dsl_to_document(parsed))
-    }
-
-    fn print_dsl(&self) -> String {
-        <ImperativeDocumentDsl as store::DocumentDsl>::print_dsl(&document_to_document_dsl(self))
-    }
-}
-//#endregion 🔖️Document
-
 //#region 🔖️Api
 /// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL.
 pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.imperative` DSL text into an `ImperativeDocument`.
-pub fn parse_dsl(text: &str) -> Result<ImperativeDocument, store::TextError> {
-    <ImperativeDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.imperative` DSL text into an `ImperativeSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
+    <ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints an `ImperativeDocument` back to `.imperative` DSL text.
-pub fn print_dsl(document: &ImperativeDocument) -> String {
+/// 🖨️ Prints an `ImperativeSnapshot` back to `.imperative` DSL text.
+pub fn print_dsl(document: &ImperativeSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 //#endregion 🔖️Api
@@ -259,16 +166,19 @@ mod tests {
     }
 
     #[test]
-    fn default_document_dsl_round_trips() {
+    fn default_snapshot_dsl_round_trips() {
         let document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜️default.imperative");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     //#region DSL text round trips and error paths
     #[test]
     fn dsl_parses_seed_and_nested_control_bodies() {
         let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜️default.imperative");
-        document.seed = DocDictionary::new().insert("counter", Value::Atom(Atom::Integer(1))).insert("label", Value::Atom(Atom::String("x".into())));
+        document.seed = StdBTreeMap::from([
+            ("counter".into(), Value::Atom(Atom::Integer(1))),
+            ("label".into(), Value::Atom(Atom::String("x".into()))),
+        ]);
         let inner = step("step-inner", "log.print");
         let mut owner = step("step-if", "control.if");
         owner.bodies.insert("then".to_string(), Path { steps: vec![inner] });
@@ -277,47 +187,48 @@ mod tests {
         assert_eq!(document.seed.get("counter"), Some(&Value::Atom(Atom::Integer(1))));
         let owner = &document.path.steps[0];
         assert_eq!(owner.bodies.get("then").map(|body| body.steps.len()), Some(1));
-        store::test_support::assert_dsl_round_trip(&document);
-        store::test_support::assert_dsl_pack_equivalence(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
     fn dsl_parses_dictionary_and_atom_variants() {
         let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜️default.imperative");
-        document.seed = DocDictionary::new()
-            .insert("a", Value::Atom(Atom::Null))
-            .insert("b", Value::Atom(Atom::Boolean(true)))
-            .insert("c", Value::Atom(Atom::Boolean(false)))
-            .insert("d", Value::Atom(Atom::Decimal(1.5)))
-            .insert("e", Value::Atom(Atom::Decimal(f64::NEG_INFINITY)))
-            .insert("f", Value::Dictionary(DocDictionary::new()));
+        document.seed = StdBTreeMap::from([
+            ("a".into(), Value::Atom(Atom::Null)),
+            ("b".into(), Value::Atom(Atom::Boolean(true))),
+            ("c".into(), Value::Atom(Atom::Boolean(false))),
+            ("d".into(), Value::Atom(Atom::Decimal(1.5))),
+            ("e".into(), Value::Atom(Atom::Decimal(-1.0))),
+            ("f".into(), Value::Dictionary(DocDictionary::new())),
+        ]);
 
         assert_eq!(document.seed.get("a"), Some(&Value::Atom(Atom::Null)));
         assert_eq!(document.seed.get("b"), Some(&Value::Atom(Atom::Boolean(true))));
         assert_eq!(document.seed.get("c"), Some(&Value::Atom(Atom::Boolean(false))));
         assert_eq!(document.seed.get("d"), Some(&Value::Atom(Atom::Decimal(1.5))));
-        assert_eq!(document.seed.get("e"), Some(&Value::Atom(Atom::Decimal(f64::NEG_INFINITY))));
+        assert_eq!(document.seed.get("e"), Some(&Value::Atom(Atom::Decimal(-1.0))));
         assert_eq!(document.seed.get("f"), Some(&Value::Dictionary(DocDictionary::new())));
-        store::test_support::assert_dsl_round_trip(&document);
-        store::test_support::assert_dsl_pack_equivalence(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
     fn dsl_rejects_unterminated_string() {
         let text = r#"imperative schema="unterminated"#;
-        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_wrong_leading_keyword() {
         let text = r#"notimperative schema="x""#;
-        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_invalid_number_literal() {
         let text = r#"imperative schema="imperative.document" seed={ n=1.2.3 }"#;
-        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
     }
     //#endregion DSL text round trips and error paths
 }

@@ -143,6 +143,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
         .contributes(entry.contribution)
 }
 
+#[cfg(target_arch = "wasm32")]
 semio_framework_plugin::extension_exports!(bundle);
 //#endregion 🔖️Bundle
 

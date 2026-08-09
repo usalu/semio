@@ -26,6 +26,7 @@ path = "📦️glue.rs"
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde.workspace = true
 serde_json.workspace = true
 blake3 = "1"

@@ -1,11 +1,14 @@
-//! ⚙️ Layout artifact — headless compute over the `LayoutDocument` projection (constitutional: engine).
+//! ⚙️ Layout artifact — headless compute over the `LayoutSnapshot` projection (constitutional: engine).
 //!
 //! This node (plus its `🦀️scene.rs` sibling) is pure over `crate::artifacts::layout` types. The rule for
 //! what lands here rather than next to a single caller: a helper with MORE THAN ONE consumer across the
 //! taxonomy tree lives here; a helper with exactly one consumer lives in that consumer's component file.
 //! View state (`LayoutConfig`) is an APP concern — see `crate::apps::layout::config`.
 
-use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutDocument, Page, PageColumns, PageMargins, Spread, LAYOUT_FIXTURE_SCHEMA};
+use crate::artifacts::layout::{
+    Frame, GridSettings, ImageLink, Layer, LayoutBounds, LayoutRect, LayoutSnapshot, Page, PageColumns,
+    PageMargins, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA,
+};
 use serde_json::Value;
 
 //#region ⚠️Errors
@@ -29,14 +32,15 @@ pub enum LayoutError {
 //#endregion ⚠️Errors
 
 //#region 🔖️Register
-/// 🗂️ Registers `LayoutDocument`'s pack<->dsl codec under its real `document_schema()` string so
+/// 🗂️ Registers `LayoutSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse layout
 /// documents without depending on this crate's concrete `Projection`/`Mutation` types. Also registers
 /// the 2D export handler and the DWG import handler. Called from the plugin root's `semio_plugin!{
 /// setup: … }`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::layout::LayoutPlayApp>(LAYOUT_FIXTURE_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::layout::LayoutPlayApp>(LAYOUT_DOCUMENT_SCHEMA);
     semio_framework_os::register_2d_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.layout", layout_document_json_from_dwg);
 }
@@ -49,8 +53,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::layout::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("layout.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -79,8 +83,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::layout::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("layout.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -101,11 +105,11 @@ pub fn register_pilot_languages() {
 /// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two
 /// WORKFLOWS-END-TO-END-TYPED-PORTS ports: `fields:in` (a `form.dictionary` this layout binds as a new
-/// named data source — see `crate::artifacts::layout::LayoutDocument::data_fields_json`) and `layout:out`
+/// named data source — see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`) and `layout:out`
 /// (the current layout re-exported as `2d.layout` vector/SVG for a downstream consumer).
 pub fn layout_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: "layout.fixture".into(),
+        document_schema: "layout.layout".into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
@@ -135,9 +139,9 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 📄️Document
-pub fn parse_layout_document(json: &str) -> Result<LayoutDocument, LayoutError> {
-    let doc: LayoutDocument = serde_json::from_str(json)?;
-    if doc.schema != LAYOUT_FIXTURE_SCHEMA {
+pub fn parse_layout_document(json: &str) -> Result<LayoutSnapshot, LayoutError> {
+    let doc: LayoutSnapshot = serde_json::from_str(json)?;
+    if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
         return Err(LayoutError::UnexpectedSchema(doc.schema));
     }
     Ok(doc)
@@ -148,7 +152,7 @@ pub struct ResolvedFrame {
     pub inherited: bool,
 }
 
-pub fn resolve_page<'a>(doc: &'a LayoutDocument, page: &'a Page) -> Vec<ResolvedFrame> {
+pub fn resolve_page<'a>(doc: &'a LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
     let mut frames = Vec::new();
     if let Some(parent_id) = &page.parent_page_id {
         if let Some(parent) = doc.parent_pages.iter().find(|p| p.id == *parent_id) {
@@ -166,10 +170,139 @@ pub fn resolve_page<'a>(doc: &'a LayoutDocument, page: &'a Page) -> Vec<Resolved
 //#endregion 📄️Document
 
 //#region 🔖️DocumentHelpers
-/// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_projection`
+/// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_snapshot`
 /// and the app manifest's `.example(...)` document.
-pub fn default_document() -> LayoutDocument {
-    <LayoutDocument as store::DocumentDsl>::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample layout fixture")
+pub fn default_document() -> LayoutSnapshot {
+    build_demo_layout_snapshot()
+}
+
+fn build_demo_layout_snapshot() -> LayoutSnapshot {
+    LayoutSnapshot {
+        schema: LAYOUT_DOCUMENT_SCHEMA.into(),
+        name: "Demo".into(),
+        grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
+        paragraph_styles: vec![ParagraphStyle {
+            id: "paragraph.body".into(),
+            name: "Body".into(),
+            font_family: "Layout Sans".into(),
+            font_size: 12.0,
+            font_weight: 400,
+            leading: 14.4,
+            tracking: 0.0,
+            alignment: "left".into(),
+        }],
+        character_styles: Vec::new(),
+        stories: vec![TextStory {
+            id: "story-1".into(),
+            content: "Hello layout".into(),
+            style_runs: Vec::new(),
+        }],
+        links: vec![ImageLink {
+            id: "link-missing".into(),
+            path: "assets/missing.png".into(),
+            hash: "sha256:missing".into(),
+            width: 100,
+            height: 100,
+            dpi: 300,
+            color_profile: None,
+            state: Some("missing".into()),
+            proxy_data_url: None,
+        }],
+        parent_pages: vec![ParentPage {
+            id: "parent-1".into(),
+            name: "Master".into(),
+            width: 400.0,
+            height: 500.0,
+            layer_ids: vec!["layer-parent".into()],
+            layers: vec![Layer {
+                id: "layer-parent".into(),
+                name: "Master".into(),
+                visible: true,
+                locked: false,
+                object_ids: vec!["frame-inherited".into()],
+            }],
+            frames: vec![Frame::Rect {
+                id: "frame-inherited".into(),
+                layer_id: "layer-parent".into(),
+                bounds: LayoutBounds { x: 50.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 },
+                locked: None,
+                visible: None,
+                fill: None,
+                stroke: Some([0.4, 0.5, 0.7, 0.8]),
+            }],
+        }],
+        spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids: vec!["page-1".into(), "page-2".into()] }],
+        pages: vec![
+            Page {
+                id: "page-1".into(),
+                name: "Page 1".into(),
+                spread_id: "spread-1".into(),
+                parent_page_id: Some("parent-1".into()),
+                width: 400.0,
+                height: 500.0,
+                margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: PageColumns { count: 1, gutter: 0.0 },
+                guides: Vec::new(),
+                layer_ids: vec!["layer-1".into()],
+                layers: vec![Layer {
+                    id: "layer-1".into(),
+                    name: "Content".into(),
+                    visible: true,
+                    locked: false,
+                    object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()],
+                }],
+                frames: vec![
+                    Frame::Text {
+                        id: "frame-text-1".into(),
+                        layer_id: "layer-1".into(),
+                        bounds: LayoutBounds { x: 156.0, y: 220.0, width: 80.0, height: 40.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        story_id: "story-1".into(),
+                        thread_next: None,
+                        columns: 1,
+                        inset: LayoutRect { x: 0.0, y: 0.0, width: 80.0, height: 40.0 },
+                        wrap_mode: "box".into(),
+                    },
+                    Frame::Image {
+                        id: "frame-image-1".into(),
+                        layer_id: "layer-1".into(),
+                        bounds: LayoutBounds { x: 136.0, y: 435.0, width: 60.0, height: 40.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        link_id: "link-missing".into(),
+                    },
+                    Frame::Rect {
+                        id: "frame-1".into(),
+                        layer_id: "layer-1".into(),
+                        bounds: LayoutBounds { x: 10.0, y: 10.0, width: 40.0, height: 40.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        fill: Some([1.0, 1.0, 1.0, 1.0]),
+                        stroke: None,
+                    },
+                ],
+                overrides: Vec::new(),
+            },
+            Page {
+                id: "page-2".into(),
+                name: "Page 2".into(),
+                spread_id: "spread-1".into(),
+                parent_page_id: None,
+                width: 400.0,
+                height: 500.0,
+                margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: PageColumns { count: 1, gutter: 0.0 },
+                guides: Vec::new(),
+                layer_ids: Vec::new(),
+                layers: Vec::new(),
+                frames: Vec::new(),
+                overrides: Vec::new(),
+            },
+        ],
+        print_target: None,
+        data_fields_json: None,
+    }
 }
 
 /// 🌉️ JSON bridge for `semio_framework_plugin::App::example`, which hardcodes `serde_json::from_str`
@@ -245,8 +378,8 @@ pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
         })
         .collect();
     let page_ids = pages.iter().map(|page| page.id.clone()).collect();
-    let document = LayoutDocument {
-        schema: LAYOUT_FIXTURE_SCHEMA.into(),
+    let document = LayoutSnapshot {
+        schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         name: "Imported DWG".into(),
         grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
         paragraph_styles: Vec::new(),
@@ -268,9 +401,9 @@ pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
 mod tests {
     use super::*;
 
-    fn base_doc() -> LayoutDocument {
-        LayoutDocument {
-            schema: LAYOUT_FIXTURE_SCHEMA.into(),
+    fn base_doc() -> LayoutSnapshot {
+        LayoutSnapshot {
+            schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "t".into(),
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
@@ -356,7 +489,7 @@ mod tests {
             geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] },
         });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutDocument = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         assert_eq!(document.pages.len(), 1);
         assert_eq!(document.pages[0].width, 100.0);
         assert_eq!(document.pages[0].height, 50.0);
@@ -369,7 +502,7 @@ mod tests {
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [200.0, 150.0, 0.0];
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutDocument = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         assert_eq!(document.pages.len(), 1);
         assert_eq!(document.pages[0].width, 200.0);
         assert_eq!(document.pages[0].height, 150.0);
@@ -386,39 +519,56 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
-/// 🧬️ UI-independent document engine — every transition is a `LayoutMutation`.
-pub struct LayoutEngine {
-    projection: crate::artifacts::layout::LayoutDocument,
+/// @emoji ⚙️ UI-independent layout artifact engine — owns the full artifact; every transition is a mutation.
+pub struct LayoutArtifactEngine {
+    artifact: crate::artifacts::layout::schema::LayoutArtifact,
+    snapshot: crate::artifacts::layout::LayoutSnapshot,
 }
 
-impl LayoutEngine {
-    pub fn new(projection: crate::artifacts::layout::LayoutDocument) -> Self {
-        Self { projection }
+impl LayoutArtifactEngine {
+    /// 🏗️ Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: crate::artifacts::layout::LayoutSnapshot) -> Self {
+        let artifact = crate::artifacts::layout::schema::LayoutArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::layout::LayoutDocument {
-        self.projection
+    /// 📸️ Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> crate::artifacts::layout::LayoutSnapshot {
+        self.snapshot
     }
 }
 
-impl protocol::ArtifactEngine for LayoutEngine {
-    type Projection = crate::artifacts::layout::LayoutDocument;
+impl protocol::ArtifactEngine for LayoutArtifactEngine {
+    type Artifact = crate::artifacts::layout::schema::LayoutArtifact;
+    type Snapshot = crate::artifacts::layout::LayoutSnapshot;
     type Mutation = crate::artifacts::layout::mutations::LayoutMutation;
     type Diff = crate::artifacts::layout::diff::LayoutDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::layout::mutations::apply_layout_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.layout.layout`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::layout::schema::layout_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
 

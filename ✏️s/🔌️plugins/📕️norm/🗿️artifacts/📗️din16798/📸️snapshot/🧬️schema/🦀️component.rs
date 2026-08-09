@@ -12,89 +12,151 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.din16798", layout = "lines")]
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Snapshot {
+    #[state(persistent)]
     pub annex: AnnexChoice,
+    #[state(persistent)]
     pub occupancy: String,
+    #[state(persistent)]
     pub comfort_category: String,
+    #[state(persistent)]
     pub t_op_c: f64,
     #[dsl(unit = "pct")]
+    #[state(persistent)]
     pub rh_percent: f64,
     #[dsl(unit = "m/s")]
+    #[state(persistent)]
     pub air_speed_m_s: f64,
+    #[state(persistent)]
     pub theta_rm_c: f64,
+    #[state(persistent)]
     pub co2_ppm: f64,
     #[dsl(unit = "pct")]
+    #[state(persistent)]
     pub df_percent: f64,
+    #[state(persistent)]
     pub l_aeq_db: f64,
 
+    #[state(persistent)]
     pub persons: u32,
     // Not `#[dsl(ident)]`: values like `"2"` are bare digits, which the lexer always tokenizes as
     // an integer, never as an identifier — quoted `Text` (the default String shape) has no such
     // ambiguity.
+    #[state(persistent)]
     pub ida_class: String,
+    #[state(persistent)]
     pub ventilation_m3_h: f64,
     #[dsl(unit = "m2")]
+    #[state(persistent)]
     pub floor_area_m2: f64,
+    #[state(persistent)]
     pub bedrooms: u32,
+    #[state(persistent)]
     pub dwelling_ventilation_m3_h: f64,
+    #[state(persistent)]
     pub occupants: u32,
+    #[state(persistent)]
     pub residential_ventilation_m3_h: f64,
+    #[state(persistent)]
     pub sfp_w_m3_s: f64,
+    #[state(persistent)]
     pub sfp_required_class: u8,
+    #[state(persistent)]
     pub heat_recovery_eta: f64,
+    #[state(persistent)]
     pub heat_recovery_eta_min: f64,
+    #[state(persistent)]
     pub system_type: String,
+    #[state(persistent)]
     pub years_since_inspection: u32,
+    #[state(persistent)]
     pub humidification_required_kg_h: f64,
+    #[state(persistent)]
     pub humidification_provided_kg_h: f64,
 
+    #[state(persistent)]
     pub fan_q_v_m3_s: f64,
     #[dsl(unit = "h")]
+    #[state(persistent)]
     pub fan_t_run_h: f64,
+    #[state(persistent)]
     pub fan_energy_reference_kwh: f64,
     #[dsl(unit = "K")]
+    #[state(persistent)]
     pub night_setback_k: f64,
 
+    #[state(persistent)]
     pub hr_m_dot_kg_s: f64,
+    #[state(persistent)]
     pub hr_cp_j_kgk: f64,
+    #[state(persistent)]
     pub hr_delta_t_c: f64,
     #[dsl(unit = "h")]
+    #[state(persistent)]
     pub hr_t_h: f64,
+    #[state(persistent)]
     pub hr_savings_reference_kwh: f64,
 
+    #[state(persistent)]
     pub n50_h_inv: f64,
     #[dsl(unit = "m3")]
+    #[state(persistent)]
     pub volume_m3: f64,
+    #[state(persistent)]
     pub infiltration_allowance_m3_h: f64,
     #[dsl(unit = "m2")]
+    #[state(persistent)]
     pub cellar_area_m2: f64,
+    #[state(persistent)]
     pub cellar_ventilation_m3_h: f64,
 
+    #[state(persistent)]
     pub h_tr_w_k: f64,
+    #[state(persistent)]
     pub h_ve_w_k: f64,
+    #[state(persistent)]
     pub theta_e_c: f64,
+    #[state(persistent)]
     pub theta_set_c: f64,
+    #[state(persistent)]
     pub cooling_delta_t_h: f64,
+    #[state(persistent)]
     pub cooling_gains_kwh: f64,
+    #[state(persistent)]
     pub cooling_utilization_factor: f64,
+    #[state(persistent)]
     pub cooling_reference_kwh: f64,
 
+    #[state(persistent)]
     pub chiller_type: String,
+    #[state(persistent)]
     pub eer_actual: f64,
+    #[state(persistent)]
     pub q_c_kwh: f64,
+    #[state(persistent)]
     pub generation_reference_kwh: f64,
+    #[state(persistent)]
     pub data_center_supply_c: f64,
 
+    #[state(persistent)]
     pub h_st_w_k: f64,
+    #[state(persistent)]
     pub theta_st_c: f64,
+    #[state(persistent)]
     pub theta_amb_c: f64,
     #[dsl(unit = "h")]
+    #[state(persistent)]
     pub storage_t_h: f64,
+    #[state(persistent)]
     pub storage_allowance_kwh: f64,
+    #[state(persistent)]
     pub dhw_delivery_c: f64,
 
+    #[state(persistent)]
     pub duct_class: String,
     #[dsl(unit = "Pa")]
+    #[state(persistent)]
     pub duct_test_pressure_pa: f64,
+    #[state(persistent)]
     pub duct_leakage_m3_s_m2: f64,
 }
 //#region 🔖️HandcraftedDocumentCodecs

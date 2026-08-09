@@ -1,1 +1,1 @@
-// stub
+//! 🔺️ Playground `NoMutation` 🔺️diff leaf.

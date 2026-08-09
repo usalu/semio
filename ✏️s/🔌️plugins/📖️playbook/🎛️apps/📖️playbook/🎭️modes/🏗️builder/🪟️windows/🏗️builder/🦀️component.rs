@@ -1,7 +1,7 @@
 //! 🏗️ Playbook play app — the builder window: the drag/drop Blockly-like form authoring surface.
 
 use crate::apps::playbook::config::PlaybookConfig;
-use crate::artifacts::playbook::{PlaybookSpec, PLAYBOOK_BUILTIN_KINDS};
+use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
 use semio_framework::{parse_contributions, Contribution};
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -58,8 +58,9 @@ fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
-pub fn render(spec: &PlaybookSpec, config: &PlaybookConfig) -> UiNode {
-    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, spec, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
+pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
+    let kernel = spec.as_kernel();
+    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, &kernel, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
 }
 //#endregion 🔖️Render
 

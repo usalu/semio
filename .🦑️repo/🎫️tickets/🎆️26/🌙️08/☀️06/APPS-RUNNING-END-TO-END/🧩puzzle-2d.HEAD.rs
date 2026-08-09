@@ -39,7 +39,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         actions: actions::ids(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

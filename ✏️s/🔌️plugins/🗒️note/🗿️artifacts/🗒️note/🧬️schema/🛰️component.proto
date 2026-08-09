@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.s.note.note;
+
+message NoteArtifact {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated NoteBlockNode blocks = 4;
+  optional bool grid_visible = 5;
+  optional double grid_spacing = 6;
+  optional double grid_subdivisions = 7;
+  optional double grid_opacity = 8;
+  optional bool snap_enabled = 9;
+  optional double snap_grid_spacing = 10;
+  optional double pencil_width = 11;
+  optional double eraser_radius = 12;
+  map<string, NoteImageAsset> assets = 13;
+  repeated string selected_block_ids = 14;
+  string active_utility_id = 15;
+  string engagement_input = 16;
+  double camera_x = 17;
+  double camera_y = 18;
+  double camera_zoom = 19;
+  string locale = 20;
+  optional string hovered_block_id = 21;
+}
+
+message NoteBlockNode {
+  string kind = 1;
+}
+
+message NoteImageAsset {
+  string mime = 1;
+  string data = 2;
+  optional double width = 3;
+  optional double height = 4;
+}

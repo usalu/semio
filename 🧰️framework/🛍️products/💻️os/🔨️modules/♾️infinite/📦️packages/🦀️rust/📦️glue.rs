@@ -84,7 +84,7 @@ pub use board::ports::directed::force_graph;
 
 //#region 🔖️DirectedDagSurface
 pub use board::ports::directed_dag::{
-  dag_document_from_fixture, dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDiff, DagDocument, DagEdgePatch, DagFixture,
+  dag_document_from_fixture, dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDiff, DagSnapshot, DagEdgePatch, DagFixture,
   DagFixtureEdge, DagHost, DagLayoutOptions, DagLayoutOrientation, DagMutation, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec, PortShape, DAG_DOCUMENT_SCHEMA,
 };
 //#endregion 🔖️DirectedDagSurface

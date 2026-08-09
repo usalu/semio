@@ -1,0 +1,96 @@
+norm artifact-schema breaches: 0
+norm total policy breaches: 246
+byKind {
+  "app-plugin/app-coupling": 1,
+  "taxonomy/dead-example-leaf": 30,
+  "taxonomy/emoji-prefix": 15,
+  "pack-migration/completeness": 15,
+  "protocol-migration/command-envelope-completeness": 24,
+  "dsl-migration/diff-completeness": 17,
+  "mutation-migration/impl-presence": 15,
+  "handcrafted-grammar/spec-distinctness": 15,
+  "handcrafted-grammar/declared-use": 60,
+  "handcrafted-grammar/spec-wiring-include": 15,
+  "handcrafted-grammar/empty-example": 24,
+  "os-state-authority/item-scope-global": 15
+}
+* app-plugin/app-coupling ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust depends directly on another plugin's crate (fem -> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tri
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tri
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🎚️config/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip

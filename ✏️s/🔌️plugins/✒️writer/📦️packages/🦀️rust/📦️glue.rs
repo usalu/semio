@@ -14,6 +14,7 @@ extern crate semio_framework_os_kernel as dsl_lsp;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<WriterMutation, WriterConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -30,8 +31,28 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/✒️writer/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/✒️writer/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+
+            #[path = "../../🗿️artifacts/✒️writer/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/✒️writer/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/✒️writer/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/✒️writer/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -45,27 +66,21 @@ pub mod artifacts {
             pub mod set_text {
                 #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/✍️set-text/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/✍️set-text/🔺️diff/🦀️component.rs"]
-                pub mod diff;
                 #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/✍️set-text/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/✒️writer/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/✒️writer/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/✒️writer/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/✒️writer/⚙️engine/🦀️component.rs"]

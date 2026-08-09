@@ -14,17 +14,17 @@ use crate::artifacts::en1991::En1991Snapshot;
 /// (`store::DocumentDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
 /// hydrocarbon fire curve and a full set of the other action sub-scenarios (snow, wind, thermal,
 /// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
-/// from `Document::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
+/// from `En1991Snapshot::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
 /// non-default branches (category, annex, fire curve) are exercised too.
 pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🗣️retail-hydrocarbon-fire.dsl.semio");
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, store::TextError> {
+    <En1991Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1991` DSL text.
-pub fn print_dsl(document: &Document) -> String {
+pub fn print_dsl(document: &En1991Snapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -36,12 +36,12 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::os_store::test_support::assert_dsl_round_trip(&En1991Snapshot::default());
     }
 
     #[test]
     fn dsl_round_trip_agrees_with_print_parse_wrappers() {
-        let document = Document::default();
+        let document = En1991Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
@@ -52,6 +52,6 @@ mod tests {
         assert_eq!(document.category, ImposedCategory::D);
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.fire_curve, FireCurve::Hydrocarbon);
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }

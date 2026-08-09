@@ -2,7 +2,7 @@
 
 use crate::apps::vcs::terminology::VcsPlayLabels;
 use crate::apps::vcs::vcs_action;
-use crate::artifacts::vcs::VcsDemoProjection;
+use crate::artifacts::vcs::VcsSnapshot;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiButtonNode, UiNode, UiPresence, UiStackNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -45,7 +45,7 @@ fn editor_button(id: &str, icon_id: &str, label: impl Into<Label>, action: &str)
 /// their label width, so a wide/growing label overflows and overlaps its neighbor in the (narrower)
 /// Editor panel of the default layout. A leading heading clears the window's Action/Viewport tab chrome,
 /// which otherwise overlaps content placed flush at the panel top.
-pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode {
+pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
     let heading = ui_text(labels.actions);
     let increment_row = ui_stack_horizontal(vec![editor_button("increment", "plus", Label::data(format!("+ {} ({})", labels.counter.as_str(), projection.counter)), "incrementCounter")]);
     let commit_row = ui_stack_horizontal(vec![editor_button("commit", "git-commit", labels.commit, "commitCheckpoint"), editor_button("new-alternative", "git-branch", labels.branch, "createAlternative")]);

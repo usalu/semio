@@ -4,7 +4,7 @@
 use crate::apps::layout::canvas::canvas_layers;
 use crate::apps::layout::config::LayoutConfig;
 use crate::apps::layout::LAYOUT_PLAY_APP_ID;
-use crate::artifacts::layout::LayoutDocument;
+use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(engine: &mut crate::artifacts::layout::engine::scene::LayoutEngine, doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
+pub fn render(engine: &mut crate::artifacts::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
     let camera = &config.preview_camera;
     build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, false) })
 }

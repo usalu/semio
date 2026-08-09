@@ -320,7 +320,7 @@ pub(crate) fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> Strin
 //#endregion 🔖️Model
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle3d_projection() -> Puzzle3dSnapshot {
+pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers

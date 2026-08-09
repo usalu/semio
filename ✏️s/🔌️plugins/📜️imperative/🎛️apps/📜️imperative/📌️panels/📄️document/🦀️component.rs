@@ -2,7 +2,7 @@
 
 use crate::apps::imperative::terminology::ImperativeLabels;
 use crate::apps::imperative::imperative_action;
-use crate::artifacts::imperative::ImperativeDocument;
+use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("imperative-play-document");
     let step_items: Vec<UiTreeItemNode> = document
         .path

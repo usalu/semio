@@ -36,7 +36,7 @@ impl MonthlyClimate {
 }
 
 /// 📋️ Inputs for annual energy balancing.
-pub type Document = BalancingInputs;
+// BalancingInputs remains the nested persistent payload type; snapshot is Din18599Snapshot.
 
 // 📌️ Deviation from the original monolith: `BalancingInputs::reference_residential(..)` (the
 // physically-computed reference-building constructor, needing `norm_din4108_engine`'s
@@ -51,6 +51,8 @@ pub type Document = BalancingInputs;
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::artifacts::din18599::snapshot::schema::Din18599Snapshot;
+
+pub type BalancingInputs = Din18599Snapshot;
 //#endregion 🔖️Types
 
 // `)` so the

@@ -871,17 +871,9 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("process3d.spr"),
     });
 }
-
-
-static SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> = std::sync::OnceLock::new();
-
 /// 🧬️ Registers the fifteen handcrafted schema leaves for `s.process.process3d`.
 pub fn register_artifact_schema() {
-    let registry = SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
 }
 
 //#region 🔖️ArtifactEngine

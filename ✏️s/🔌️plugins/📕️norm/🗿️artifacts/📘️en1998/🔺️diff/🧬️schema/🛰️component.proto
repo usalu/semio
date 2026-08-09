@@ -4,7 +4,7 @@ package semio.s.norm.en1998.diff;
 
 message En1998Diff {
   // @state persistent
-  En1998Artifact artifact = 1;
+  optional En1998Artifact artifact = 1;
   // @state persistent
   optional uint32 seismic_zone = 2;
   // @state persistent

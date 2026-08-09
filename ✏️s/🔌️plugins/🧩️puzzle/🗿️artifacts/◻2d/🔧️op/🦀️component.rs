@@ -2,7 +2,7 @@
 
 pub use crate::artifacts::puzzle2d::mutations::{
     apply_puzzle2d_mutation, inverse_puzzle2d_mutation, puzzle2d_document_delta_operations, Puzzle2dMutation,
-    Puzzle2dPlayProjection,
+    Puzzle2dPlaySnapshot,
 };
 
 //#region 📖️SemioGrammar

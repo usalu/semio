@@ -1,0 +1,10 @@
+dialect grammar
+grammar energy.model
+extension energy
+start document
+
+artifact-mark = "energy.model"
+document = artifact-mark doc-body
+doc-body = schema-line model-line
+schema-line = "schema" "=" TEXT
+model-line = "modelJson" "=" TEXT

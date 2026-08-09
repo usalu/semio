@@ -3,7 +3,7 @@
 
 use crate::apps::dag::config::{DagConfig, DagConfigMutation};
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: payload.ids.clone() }]))
     }
 }
@@ -33,7 +33,7 @@ pub mod select_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: vec![payload.node_id.clone()] }]))
     }
 }
@@ -49,7 +49,7 @@ pub mod node_graph_select {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
     }
 }
@@ -63,7 +63,7 @@ pub mod node_graph_hover {
     #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -81,7 +81,7 @@ pub mod node_graph_viewport {
         pub zoom: f64,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetCamera { x: payload.x, y: payload.y, zoom: payload.zoom }]))
     }
 }
@@ -95,7 +95,7 @@ pub mod graph_pointer_down {
     #[dsl(keyword = "graph-pointer-down")]
     pub struct GraphPointerDown {}
 
-    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: Vec::new() }]))
     }
 }
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn set_selection_select_node_and_node_graph_select_all_drive_config_selection() {
         let mut app = testkit::new_app();
-        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
         assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render")).unwrap().contains(&node_id));
@@ -143,7 +143,7 @@ mod tests {
     fn node_graph_hover_is_a_pure_no_op() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(DagCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {}), &semio_framework_plugin::testkit::meta("local")).expect("hover");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     /// 🧪️ `selection` is `skip_serializing_if = Vec::is_empty` on `NodeGraphScene`, so an empty selection
@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn graph_pointer_down_clears_the_selection() {
         let mut app = testkit::new_app();
-        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         app.dispatch_typed(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}), &semio_framework_plugin::testkit::meta("local")).expect("clear");
         let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");

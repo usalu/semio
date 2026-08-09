@@ -621,6 +621,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "cross-fem")]
     fn evaluate_fem_path() {
         let doc = En1992Snapshot { use_fem: true, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
@@ -737,10 +738,11 @@ mod tests {
 //#region 🔖️Register
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "en1992.document",
         extension: Some("en1992"),
-        role: dsl::LanguageRole::En1992Snapshot,
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
@@ -789,3 +791,13 @@ pub fn register_pilot_languages() {
     });
 }
 //#endregion 🔖️Register
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.en1992`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::en1992::schema::en1992_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

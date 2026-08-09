@@ -1,4 +1,4 @@
-use crate::artifacts::vcs::VcsDemoProjection;
-pub fn apply(projection: &mut VcsDemoProjection, title: &str) {
+use crate::artifacts::vcs::VcsSnapshot;
+pub fn apply(projection: &mut VcsSnapshot, title: &str) {
     projection.title = title.to_string();
 }

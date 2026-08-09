@@ -32,16 +32,9 @@ pub fn register_architect_exports() {
 }
 
 
-static PROGRAM_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the program artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = PROGRAM_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::program::schema::program_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::program::schema::program_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

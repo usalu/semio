@@ -672,7 +672,9 @@ mod tests {
         let out = reg.dispatch("draw.shape.rect", &input).unwrap();
         let drawing = out.get("draw.drawing").and_then(|v| v.as_dictionary()).expect("drawing channel");
         assert_eq!(drawing.schema(), Some("draw.drawing"));
-        assert!(drawing.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or("").starts_with("drawing-"));
+        let handle = drawing.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or("");
+        assert_eq!(handle.len(), 64, "drawing handles are the hex-encoded 32-byte content key, not a prefixed counter");
+        assert!(handle.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     #[test]
@@ -982,7 +984,7 @@ mod tests {
 
     #[test]
     fn dispose_drawing_removes_the_handle() {
-        let _guard = kernel_read_guard();
+        let _guard = kernel_write_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
         dispose_drawing(&handle);
         let json: serde_json::Value = serde_json::from_str(&render_scene_json(&handle)).unwrap();
@@ -1093,7 +1095,8 @@ mod tests {
                 let request: EvaluateRequest = serde_json::from_slice(req).unwrap();
                 Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
             });
-        let installed = install_extension_bundle(bundle).expect("install");
+        install_extension_bundle(bundle);
+        let installed = extension_manifest();
         assert_eq!(installed.contributions.len(), 2);
         assert!(matches!(installed.contributions[0], Contribution::FlowExtension { .. }));
         assert!(matches!(installed.contributions[1], Contribution::FlowExtension { .. }));

@@ -1,0 +1,12 @@
+# 🧬️ DAG artifact schema.
+type DagArtifact {
+  schema: String! @state(class: PERSISTENT)
+  nodes: [DagNodeSpec!]! @state(class: PERSISTENT)
+  edges: [DagFixtureEdge!]! @state(class: PERSISTENT)
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  camera: DagCamera! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+type DagNodeSpec { id: String! }
+type DagFixtureEdge { id: String! source: String! target: String! }
+type DagCamera { x: Float! y: Float! zoom: Float! }

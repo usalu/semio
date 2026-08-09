@@ -1,6 +1,10 @@
 /** space facet WASM facades */
+export * as home_schema from "../../🗿️artifacts/🏠️home/🧬️schema/🟦️component.ts";
+export * as home_snapshot_schema from "../../🗿️artifacts/🏠️home/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as home_diff from "../../🗿️artifacts/🏠️home/🔺️diff/🟦️component.ts";
+export * as home_diff_schema from "../../🗿️artifacts/🏠️home/🔺️diff/🧬️schema/🟦️component.ts";
 export * as home_dsl from "../../🗿️artifacts/🏠️home/🗣️dsl/🟦️component.ts";
-export * as home_pack from "../../🗿️artifacts/🏠️home/🎒️pack/🟦️component.ts";
+export * as home_pack from "../../🗿️artifacts/🏠️home/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as home_op from "../../🗿️artifacts/🏠️home/🔧️op/🟦️component.ts";
 export * as home_spr from "../../🗿️artifacts/🏠️home/📡️spr/🟦️component.ts";
+export * as home_mutations from "../../🗿️artifacts/🏠️home/🧬️mutations/🟦️component.ts";

@@ -1,0 +1,50 @@
+{
+  "$id": "https://semio.tech/schema/s/sequence/sequence/snapshot.json",
+  "title": "SequenceSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "steps", "edges"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/SequenceStep" }, "x-semio-state": "persistent" },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdge" }, "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "SequenceStep": {
+      "title": "SequenceStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "params", "x", "y", "collapsed"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "params": { "type": "object" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "slot": { "$ref": "#/$defs/SlotRef" },
+        "collapsed": { "type": "boolean" }
+      }
+    },
+    "SequenceEdge": {
+      "title": "SequenceEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "SlotRef": {
+      "title": "SlotRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name"],
+      "properties": {
+        "owner": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

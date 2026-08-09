@@ -1,3 +1,10 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio animate.present.dsl v1
+schema=animate.present
+source {
+  src="/🖼️bauteilbörse.png" kind=figure source-aspect=1.3638392857142858
+  frame {
+    x=0.127 y=0.1 width=0.746 height=0.75
+  }
+}
+tiles [id:TEXT name:TEXT crop:BLOCK] {
+}

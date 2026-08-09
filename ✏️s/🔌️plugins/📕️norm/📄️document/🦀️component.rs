@@ -671,6 +671,97 @@ where
         Ok(SetDocumentMutation::SetDocument { document })
     }
 }
+
+// #region 🔖️SetSnapshotOps
+/// ⚡️ Op-line keyword for whole-snapshot replace mutations across all norm families.
+pub const SET_SNAPSHOT_OP_KEYWORD: &str = "set-snapshot";
+
+/// 🖨️ Shared `set-snapshot "<dsl>"` printer.
+pub fn print_set_snapshot_op<D: DocumentDsl>(snapshot: &D) -> String {
+    format!("{SET_SNAPSHOT_OP_KEYWORD} \"{}\"", escape_op_text_field(&snapshot.print_dsl()))
+}
+
+/// 📖️ Shared `set-snapshot "<dsl>"` parser.
+pub fn parse_set_snapshot_op<D: DocumentDsl>(line: &str) -> Result<D, TextError> {
+    let trimmed = line.trim();
+    let rest = trimmed
+        .strip_prefix(SET_SNAPSHOT_OP_KEYWORD)
+        .ok_or_else(|| TextError::new("expected 'set-snapshot \"<snapshot>\"'", TextSpan::at(1, 1)))?
+        .trim();
+    let quoted = rest
+        .strip_prefix('"')
+        .and_then(|value| value.strip_suffix('"'))
+        .ok_or_else(|| TextError::new("expected a double-quoted snapshot text field", TextSpan::at(1, 15)))?;
+    D::parse_dsl(&unescape_op_text_field(quoted))
+}
+
+/// 📦 Shared binary encode for set-snapshot ops.
+pub fn encode_set_snapshot_op<D: DocumentPack>(snapshot: &D) -> Result<Vec<u8>, ProtocolError> {
+    let mut out = vec![1u8];
+    out.extend(snapshot.encode_pack());
+    Ok(out)
+}
+
+/// 📦 Shared binary decode for set-snapshot ops.
+pub fn decode_set_snapshot_op<D: DocumentPack>(bytes: &[u8]) -> Result<D, ProtocolError> {
+    let format = *bytes.first().ok_or(ProtocolError::Malformed {
+        what: "set-snapshot operation",
+        offset: 0,
+        detail: "empty payload".to_string(),
+    })?;
+    if format != 1 {
+        return Err(ProtocolError::Malformed {
+            what: "set-snapshot operation",
+            offset: 0,
+            detail: format!("unsupported format {format}"),
+        });
+    }
+    D::decode_pack(&bytes[1..]).map_err(|error| ProtocolError::Malformed {
+        what: "set-snapshot operation",
+        offset: 1,
+        detail: error.to_string(),
+    })
+}
+
+/// 🧩 Implements `OpText` + `OpBinary` for a norm family's sole `SetSnapshot` mutation enum.
+#[macro_export]
+macro_rules! impl_norm_set_snapshot_ops {
+    ($Mutation:ty, $Snapshot:ty) => {
+        impl protocol::OpText for $Mutation
+        where
+            $Snapshot: store::DocumentDsl,
+        {
+            fn parse_op(line: &str) -> Result<Self, store::TextError> {
+                Ok(Self::SetSnapshot {
+                    snapshot: $crate::document::parse_set_snapshot_op::<$Snapshot>(line)?,
+                })
+            }
+            fn print_op(&self) -> String {
+                match self {
+                    Self::SetSnapshot { snapshot } => $crate::document::print_set_snapshot_op(snapshot),
+                }
+            }
+        }
+
+        impl protocol::OpBinary for $Mutation
+        where
+            $Snapshot: store::DocumentPack,
+        {
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                match self {
+                    Self::SetSnapshot { snapshot } => $crate::document::encode_set_snapshot_op(snapshot),
+                }
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                Ok(Self::SetSnapshot {
+                    snapshot: $crate::document::decode_set_snapshot_op::<$Snapshot>(bytes)?,
+                })
+            }
+        }
+    };
+}
+// #endregion 🔖️SetSnapshotOps
+
 // #endregion 🔖️OpText
 
 #[cfg(test)]
@@ -698,7 +789,7 @@ mod tests {
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-    #[dsl(extension = "demo-norm", layout = "lines")]
+    #[dsl(id = "norm.demo", extension = "demo-norm", layout = "lines")]
     struct DemoDocument {
         value: f64,
     }
@@ -793,13 +884,13 @@ impl store::DocumentPack for DemoDocument {
 
     #[test]
     fn demo_document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
-        store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
+        store::os_store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
+        store::os_store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
     }
 
     #[test]
     fn set_document_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&SetDocumentMutation::SetDocument { document: DemoDocument { value: 4.5 } });
+        store::os_store::test_support::assert_op_line_round_trip(&SetDocumentMutation::SetDocument { document: DemoDocument { value: 4.5 } });
     }
 
     #[test]
@@ -808,7 +899,7 @@ impl store::DocumentPack for DemoDocument {
         // `\n` escape (not just the general round-trip law already covered above).
         let printed = SetDocumentMutation::SetDocument { document: DemoDocument { value: 7.0 } }.print_op();
         assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
-        assert_eq!(printed, "set-document \"value=7\\n\"");
+        assert_eq!(printed, "set-document \"semio norm.demo.dsl v1\\nvalue=7\\n\"");
         let parsed = <SetDocumentMutation<DemoDocument> as OpText>::parse_op(&printed).expect("parse_op");
         assert_eq!(parsed, SetDocumentMutation::SetDocument { document: DemoDocument { value: 7.0 } });
     }
@@ -818,8 +909,8 @@ impl store::DocumentPack for DemoDocument {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::DocumentStore::new(envelope);
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![SetDocumentMutation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -837,7 +928,7 @@ impl store::DocumentPack for DemoDocument {
         let mut store = store::DocumentStore::new(envelope);
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![SetDocumentMutation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
         let edit: &Edit<SetDocumentMutation<DemoDocument>> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetDocumentMutation<DemoDocument>>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetDocumentMutation<DemoDocument>>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

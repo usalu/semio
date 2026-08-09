@@ -1,24 +1,41 @@
 //! 📖️ Playbook artifact — the document entity this plugin's app edits.
 //!
-//! `PlaybookSpec`'s fields and every step/block/expr type are NOT owned here — they live in the shared
-//! `playbook` kernel crate (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook`), the same domain model
-//! `📋️forms` builds on (see its `🗿️artifacts/📋️forms/🦀️component.rs` for the sibling precedent). This
-//! plugin owns only its own document schema id, the `ArtifactKindSpec`, and its app-facing wrappers —
-//! this component re-exports the app-facing surface so every sibling taxonomy node (`🔺️diff`, `🔧️op`,
-//! `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`) names one artifact-owned symbol instead of reaching into the
-//! kernel path directly.
+//! Step/block/expr records live in the shared kernel `playbook` crate; this plugin owns
+//! `PlaybookSnapshot`, `PlaybookArtifact`, facet schemas, and app-facing wrappers.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️Types
-pub use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
+pub use crate::playbook::{
+    PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS,
+    PLAYBOOK_DOCUMENT_SCHEMA,
+};
+pub use crate::artifacts::playbook::diff::{
+    PlaybookBlockPatch, PlaybookBlockPatchEntry, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch,
+    PlaybookStepPatchEntry, PlaybookStepsDelta, PlaybookStringList,
+};
+pub use crate::artifacts::playbook::schema::PlaybookArtifact;
+pub use crate::artifacts::playbook::snapshot::schema::PlaybookSnapshot;
+
+pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
+
+/// 📸️ Default persisted playbook document for new stores and demos.
+pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
+    PlaybookSnapshot::default()
+}
+
+/// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
+pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
+    crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel())
+        .into_iter()
+        .cloned()
+        .collect()
+}
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::playbook::create_playbook_play_app`'s `🔖️Manifest` region. Lifted out of the old
-/// `playbook_ui::create_playbook_play_app`'s inline builder call, unchanged (`"text.playbook"` as both
-/// the media catalogue id and the store schema — playbook keeps the two distinct, unlike forms).
+/// `crate::apps::playbook::create_playbook_play_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),

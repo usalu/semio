@@ -1582,7 +1582,7 @@ mod tests {
     }
 
     #[test]
-    fn initial_projection_is_cut_concrete_forest_not_placeholder_box() {
+    fn initial_snapshot_is_cut_concrete_forest_not_placeholder_box() {
         let app = CadPlayApp::default();
         let scene = CadPlayApp::initial_snapshot();
         assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);

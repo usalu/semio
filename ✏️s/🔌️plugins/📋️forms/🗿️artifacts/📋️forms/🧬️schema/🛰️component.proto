@@ -1,0 +1,28 @@
+syntax = "proto3";
+package semio.s.forms.forms.artifact;
+
+message FormsArtifact {
+  string schema = 1;
+  string id = 2;
+  string version = 3;
+  optional string title = 4;
+  repeated FormStep steps = 5;
+  repeated string selected_ids = 6;
+  uint32 current_step_index = 7;
+  string try_values_json = 8;
+  string locale = 9;
+  string contributions_json = 10;
+}
+
+message FormStep {
+  string id = 1;
+  string title = 2;
+  optional string description = 3;
+  repeated FormQuestion blocks = 4;
+}
+
+message FormQuestion {
+  string id = 1;
+  string label = 2;
+  string kind = 3;
+}

@@ -1,2 +1,2 @@
 semio norm.en1994.dsl v1
-annex=en m-ed-knm=330 v-ed-kn=180kN m-pla=120 m-pl-rd=380 eta=0.9 v-l-rd=220 insulation-thickness-mm=32mm fire-rating=r90 deck-type=re-entrant delta-sigma-mpa=60MPa fatigue-detail=shear_connector d-mm=22mm h-sc-mm=100mm f-ck-mpa=35MPa f-u-mpa=450MPa e-cm-mpa=34000MPa v-ed-per-stud-kn=45kN span-m=20m f-y-mpa=355MPa n-cycles-stud=2000000 delta-tau-stud-mpa=50MPa
+annex=en m-ed-knm=330 v-ed-kn=180 m-pla=120 m-pl-rd=380 eta=0.9 v-l-rd=220 insulation-thickness-mm=32 fire-rating=r90 deck-type=re-entrant delta-sigma-mpa=60 fatigue-detail=shear_connector d-mm=22 h-sc-mm=100 f-ck-mpa=35 f-u-mpa=450 e-cm-mpa=34000 v-ed-per-stud-kn=45 span-m=20 f-y-mpa=355 n-cycles-stud=2000000 delta-tau-stud-mpa=50

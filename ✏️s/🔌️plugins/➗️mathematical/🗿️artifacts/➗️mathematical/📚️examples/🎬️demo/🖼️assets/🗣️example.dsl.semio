@@ -1,3 +1,19 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio mathematical.mathematical.dsl v1
+graph {
+  directed=true algorithm=topo
+  nodes [id:TEXT label:TEXT x:NUM y:NUM] {
+    a A 40 60
+    b B 240 20
+    c C 240 180
+    d D 440 100
+  }
+  edges [id:TEXT wire:WIRE] {
+    e1 a->b
+    e2 a->c
+    e3 b->d
+    e4 c->d
+  }
+}
+geometry {
+  points=[ x=40 y=220 x=260 y=40 x=360 y=140 x=300 y=260 x=140 y=300 x=180 y=160 ]
+}

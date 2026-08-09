@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.space.home.artifact;
+
+// 🧬️ S Home artifact schema — every field with its state class.
+
+message SHomeArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  uint64 catalog_generation = 2;
+  // @state local-ui
+  string active_panel_tab = 3;
+  // @state local-ui
+  string locale = 4;
+}

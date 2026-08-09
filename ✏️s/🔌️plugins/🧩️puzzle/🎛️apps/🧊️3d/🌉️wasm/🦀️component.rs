@@ -7,7 +7,7 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-use crate::artifacts::puzzle3d::engine::empty_puzzle3d_projection;
+use crate::artifacts::puzzle3d::engine::empty_puzzle3d_snapshot;
 use crate::artifacts::puzzle3d::spr::{Puzzle3dEnvelope, Puzzle3dStore};
 use crate::artifacts::puzzle3d::{Puzzle3dSnapshot, PUZZLE_3D_SCHEMA};
 use std::cell::RefCell;
@@ -28,7 +28,7 @@ impl Puzzle3dDocumentVcs {
                 let envelope: Puzzle3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Puzzle3dStore::new(envelope)
             }
-            None => Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None)),
+            None => Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None)),
         };
         Ok(Self { store: RefCell::new(store) })
     }

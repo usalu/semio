@@ -4,7 +4,7 @@ use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, tile_morph_prompt_effect};
 use crate::artifacts::present::engine::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentDeck};
+use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub mod engagement_submit {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        let deck = doc.projection;
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        let deck = doc.snapshot;
         let trimmed = payload.value.trim();
         if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
@@ -62,7 +62,7 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::config(vec![PresentConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
@@ -81,7 +81,7 @@ mod tests {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() }));
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "2x3".into() }));
-        assert_eq!(app.projection().expect("projection").tiles.len(), 6, "2x3 grid pattern seeds 6 tiles");
+        assert_eq!(app.snapshot().expect("projection").tiles.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
     #[test]
@@ -89,10 +89,10 @@ mod tests {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "add".into() }));
-        assert_eq!(app.projection().expect("projection").tiles.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").tiles.len(), 1);
 
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "clear".into() }));
-        assert!(app.projection().expect("projection").tiles.is_empty());
+        assert!(app.snapshot().expect("projection").tiles.is_empty());
 
         app.dispatch_typed(PresentCommand::AddTile(crate::apps::present::commands::tile::add_tile::AddTile { crop: None }), &meta("local")).expect("seed for copy");
         let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "copy prompt".into() }), &meta("local")).expect("copy keyword");
@@ -104,7 +104,7 @@ mod tests {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         let result = app.dispatch_typed(PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "gibberish".into() }), &meta("local")).expect("unrecognized");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
 }

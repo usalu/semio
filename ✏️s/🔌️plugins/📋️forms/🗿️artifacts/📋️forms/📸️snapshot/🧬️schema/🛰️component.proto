@@ -1,0 +1,23 @@
+syntax = "proto3";
+package semio.s.forms.forms.snapshot;
+
+message FormsSnapshot {
+  string schema = 1;
+  string id = 2;
+  string version = 3;
+  optional string title = 4;
+  repeated FormStep steps = 5;
+}
+
+message FormStep {
+  string id = 1;
+  string title = 2;
+  optional string description = 3;
+  repeated FormQuestion blocks = 4;
+}
+
+message FormQuestion {
+  string id = 1;
+  string label = 2;
+  string kind = 3;
+}

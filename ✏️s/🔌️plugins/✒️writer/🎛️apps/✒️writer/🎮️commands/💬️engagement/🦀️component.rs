@@ -2,7 +2,7 @@
 
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,8 +16,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         if payload.value != config.engagement_input {
             Ok(Emit::config(vec![WriterConfigMutation::SetEngagementInput { value: payload.value.clone() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
         } else {
@@ -90,9 +90,9 @@ pub mod engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
         let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
         Ok(Emit { document_mutations: outcome.text.map(|text| vec![WriterMutation::SetText { text }]).unwrap_or_default(), config_mutations: outcome.config_mutations, ..Default::default() })
@@ -113,7 +113,7 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("submit");
         // Font size is ephemeral config state — no history entry.
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
         let measures = app.window_measures();
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));

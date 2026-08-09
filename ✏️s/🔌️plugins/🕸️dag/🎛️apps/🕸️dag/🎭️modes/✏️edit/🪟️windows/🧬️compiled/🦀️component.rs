@@ -5,7 +5,7 @@
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
 use crate::apps::dag::DAG_PLAY_APP_ID;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::{dag_fixture_from_document, dag_fixture_to_wire_literal, DagCamera};
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -36,8 +36,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagDocument, camera: &DagCamera) -> UiNode {
-    let fixture = dag_fixture_from_document(document, camera.clone());
+pub fn render(document: &DagSnapshot, camera: &DagCamera) -> UiNode {
+    let fixture = dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera.clone());
     build_text_editor_scene(DAG_PLAY_SURFACE_COMPILED, DAG_PLAY_APP_ID, TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None))
 }
 //#endregion 🔖️Render

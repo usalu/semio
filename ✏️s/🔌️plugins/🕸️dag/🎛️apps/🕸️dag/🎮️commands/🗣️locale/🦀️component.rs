@@ -7,7 +7,7 @@
 
 use crate::apps::dag::config::{DagConfig, DagConfigMutation};
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +21,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::config(vec![DagConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

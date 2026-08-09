@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "imperativecfg")]
+#[dsl(extension = "imperative.config")]
+#[dsl(id = "imperative.config")]
 #[dsl(layout = "lines")]
 pub struct ImperativeConfig {
     /// 👁️ Selected step ids — was `ImperativePlayRuntime::selected_step_ids`.
@@ -91,7 +92,7 @@ impl store::DocumentPack for ImperativeConfig {
 
 
 fn default_contributions_json() -> String {
-    "[]".into()
+    crate::artifacts::imperative::engine::default_imperative_contributions_json()
 }
 
 impl Default for ImperativeConfig {
@@ -238,9 +239,9 @@ mod tests {
 
     #[test]
     fn imperative_config_dsl_round_trips() {
-        let config = ImperativeConfig { selected_step_ids: vec!["step-1".into(), "step-2".into()], run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into() };
-        store::test_support::assert_dsl_round_trip(&config);
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        let config = ImperativeConfig { selected_step_ids: vec!["step-1".into(), "step-2".into()], run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
+        store::os_store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
@@ -260,13 +261,13 @@ mod tests {
         assert_eq!(next.selected_step_ids, vec!["step-1".to_string(), "step-2".to_string()]);
         let backwards = protocol::Mutation::inverse(&operation, &base);
         assert_eq!(backwards, vec![ImperativeConfigMutation::Snapshot { config: base }]);
-        store::test_support::assert_op_line_round_trip(&operation);
+        store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn config_operation_set_run_output_and_locale_round_trip() {
-        store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput { json: r#"{"counter":1}"#.into() });
-        store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput { json: r#"{"counter":1}"#.into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

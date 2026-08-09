@@ -4,7 +4,7 @@
 //! `🔖️SpaceCommand` region, which `use`s each of these modules flat).
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️SpawnApp
@@ -21,7 +21,7 @@ pub mod spawn_app {
         pub y: f64,
     }
 
-    pub fn handle(payload: &SpawnApp, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SpawnApp, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match crate::apps::space::engine::add_workflow_node_operation(&payload.plugin_id, &payload.app_id, None, payload.x, payload.y) {
             Some((operation, node_id)) => Ok(Emit { document_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() }),
             None => Ok(Emit::default()),
@@ -43,7 +43,7 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::amend(vec![WorkflowMutation::MoveNode { node_id: payload.node_id.clone(), x: payload.x, y: payload.y }], format!("moveMediaNode:{}", payload.node_id)))
     }
 }
@@ -60,8 +60,8 @@ pub mod remove_app_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &RemoveAppInstance, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveAppInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         match payload.node_id.clone().or_else(|| crate::apps::space::primary_selected_node_id(config)) {
             Some(node_id) => {
                 let mut config_mutations = Vec::new();
@@ -88,8 +88,8 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(_payload: &DeleteSelection, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let document_mutations = config.selected_node_ids.iter().cloned().map(|node_id| WorkflowMutation::RemoveNode { node_id }).collect();
         Ok(Emit {
             document_mutations,
@@ -109,8 +109,8 @@ pub mod copy_app_instance {
     #[dsl(keyword = "copy-app-instance")]
     pub struct CopyAppInstance {}
 
-    pub fn handle(_payload: &CopyAppInstance, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: cfg.projection.selected_node_ids.clone() }]))
+    pub fn handle(_payload: &CopyAppInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: cfg.snapshot.selected_node_ids.clone() }]))
     }
 }
 //#endregion 🔖️CopyAppInstance
@@ -118,7 +118,7 @@ pub mod copy_app_instance {
 //#region 🔖️DuplicateAndPaste
 /// 🔁️ Shared body for `duplicate_app_instance` (sources = selection) and `paste_app_instance` (sources
 /// = clipboard) — both mint a fresh node per source id, offset from the original.
-fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowDocument) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let mut document_mutations = Vec::new();
     let mut new_active_node_id = None;
     for node_id in source_ids {
@@ -141,8 +141,8 @@ pub mod duplicate_app_instance {
     #[dsl(keyword = "duplicate-app-instance")]
     pub struct DuplicateAppInstance {}
 
-    pub fn handle(_payload: &DuplicateAppInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        Ok(duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
+    pub fn handle(_payload: &DuplicateAppInstance, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(duplicate_nodes(cfg.snapshot.selected_node_ids.clone(), doc.snapshot))
     }
 }
 
@@ -154,8 +154,8 @@ pub mod paste_app_instance {
     #[dsl(keyword = "paste-app-instance")]
     pub struct PasteAppInstance {}
 
-    pub fn handle(_payload: &PasteAppInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        Ok(duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
+    pub fn handle(_payload: &PasteAppInstance, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(duplicate_nodes(cfg.snapshot.clipboard_node_ids.clone(), doc.snapshot))
     }
 }
 //#endregion 🔖️DuplicateAndPaste
@@ -171,10 +171,10 @@ pub mod rename_app_instance {
         pub label: Option<String>,
     }
 
-    pub fn handle(payload: &RenameAppInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        match crate::apps::space::primary_selected_node_id(cfg.projection) {
+    pub fn handle(payload: &RenameAppInstance, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        match crate::apps::space::primary_selected_node_id(cfg.snapshot) {
             Some(node_id) => {
-                let next_label = payload.label.clone().or_else(|| doc.projection.graph.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
+                let next_label = payload.label.clone().or_else(|| doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
                 match next_label {
                     Some(next_label) => Ok(Emit::mutations(vec![WorkflowMutation::PatchNode { node_id, label: next_label }])),
                     None => Ok(Emit::default()),
@@ -200,8 +200,8 @@ pub mod patch_media_nodes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchMediaNodes, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let projection = doc.projection;
+    pub fn handle(payload: &PatchMediaNodes, doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let projection = doc.snapshot;
         let numeric = payload.value.parse::<f64>().ok();
         if payload.field == "position" {
             let Some(numeric) = numeric else { return Ok(Emit::default()) };
@@ -236,7 +236,7 @@ pub mod patch_app_instances {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchAppInstances, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchAppInstances, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         if payload.field == "label" {
             Ok(Emit::mutations(payload.node_ids.iter().cloned().map(|node_id| WorkflowMutation::PatchNode { node_id, label: payload.value.clone() }).collect()))
         } else {
@@ -255,9 +255,9 @@ pub mod reorganize_workflow {
     #[dsl(keyword = "reorganize-workflow")]
     pub struct ReorganizeWorkflow {}
 
-    pub fn handle(_payload: &ReorganizeWorkflow, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let config = cfg.projection;
-        let node_ids: Vec<String> = if config.selected_node_ids.is_empty() { doc.projection.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { config.selected_node_ids.clone() };
+    pub fn handle(_payload: &ReorganizeWorkflow, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let config = cfg.snapshot;
+        let node_ids: Vec<String> = if config.selected_node_ids.is_empty() { doc.snapshot.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { config.selected_node_ids.clone() };
         let document_mutations = node_ids
             .iter()
             .enumerate()
@@ -283,18 +283,18 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: None }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes { node_ids: vec!["n1".into()], field: "position".into(), axis: Some("x".into()), value: "120".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec!["n1".into()], field: "label".into(), value: "Batch Label".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(reorganize_workflow::ReorganizeWorkflow {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes { node_ids: vec!["n1".into()], field: "position".into(), axis: Some("x".into()), value: "120".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec!["n1".into()], field: "label".into(), value: "Batch Label".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(reorganize_workflow::ReorganizeWorkflow {}));
     }
 
     #[test]
@@ -365,12 +365,12 @@ mod tests {
     fn undo_redo_round_trip_on_spawn() {
         use semio_framework_plugin::{testkit, VcsDocumentApp};
         seed_draw_plugin();
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
-        let before = app.projection().expect("projection").graph.nodes.len();
+        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
+        let before = app.snapshot().expect("projection").graph.nodes.len();
         testkit::assert_undo_redo_round_trip(
             &mut app,
             SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }),
-            |app| app.projection().expect("projection").graph.nodes.len(),
+            |app| app.snapshot().expect("projection").graph.nodes.len(),
             before,
             before + 1,
         );

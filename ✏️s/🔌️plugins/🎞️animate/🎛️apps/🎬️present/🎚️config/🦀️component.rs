@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "presentcfg")]
+#[dsl(id = "present.config")]
 #[dsl(layout = "lines")]
 pub struct PresentConfig {
     /// 👁️ Selected tile ids — was `AnimatePresentPlayRuntime::selected_ids`.
@@ -273,10 +274,10 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::Snapshot { config: PresentConfig::default() });
-        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
-        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
-        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::Snapshot { config: PresentConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });
     }
     //#endregion 🔖️ConfigMutationTests
 }

@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sequencecfg")]
+#[dsl(id = "sequence.config")]
 #[dsl(layout = "lines")]
 pub struct SequenceConfig {
     /// 👁️ Selected step ids — was `SequencePlayRuntime::selected_step_ids`.
@@ -310,12 +311,12 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] });
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation { value: "leftRight".into() });
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation { value: "leftRight".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLocale { value: "en-US".into() });
     }
     //#endregion 🔖️ConfigMutationTests
 }

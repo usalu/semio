@@ -1,7 +1,7 @@
 //! 🧭️ S Studio app — shell navigation + app-registry push commands.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{register_app_io, AppDefinition, WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{register_app_io, AppDefinition, WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::Deserialize;
 
@@ -16,7 +16,7 @@ pub mod set_active_panel_tab {
         pub tab_id: String,
     }
 
-    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SpaceConfigMutation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ pub mod go_home {
     #[dsl(keyword = "go-home")]
     pub struct GoHome {}
 
-    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
     }
 }
@@ -48,7 +48,7 @@ pub mod navigate_virtual_file_system_node {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
     }
 }
@@ -91,7 +91,7 @@ pub mod set_app_registrations {
 
     /// 🪐️ Pure host-hint side effect; no document/config mutation, so the default full-refresh `Emit`
     /// is enough to pick up the newly-registered apps on the next catalogue render.
-    pub fn handle(payload: &SetAppRegistrations, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAppRegistrations, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         apply_app_registrations(&payload.json);
         Ok(Emit::default())
     }
@@ -106,10 +106,10 @@ mod tests {
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
         use crate::apps::space::SpaceCommand;
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(go_home::GoHome {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: "[]".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(go_home::GoHome {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: "[]".into() }));
     }
 
     /// 🪐️ End-to-end proof of the catalogue-empty bugfix: registers an app with an EMPTY `document`
@@ -119,7 +119,7 @@ mod tests {
     fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
         use crate::apps::space::testkit::studio_emit;
         use crate::apps::space::SpaceCommand;
-        use semio_framework_os::{empty_workflow_document, os_app_registration, workflow_palette, ArtifactPresentation, MediaClass, MediaForm, MediaType};
+        use semio_framework_os::{empty_workflow_snapshot, os_app_registration, workflow_palette, ArtifactPresentation, MediaClass, MediaForm, MediaType};
         use semio_framework_plugin::{App, AppIo, LocalizedLabel, SurfaceKind};
         use serde_json::json;
         // 🌉️ `AppBuilder::build_definition` itself hard-asserts a non-empty `document` — so the
@@ -135,7 +135,7 @@ mod tests {
         let mut app_json = serde_json::to_value(&definition).expect("serialize AppDefinition");
         app_json["document"] = json!([]);
         let wire = json!([{ "pluginId": "root", "app": app_json }]).to_string();
-        let projection = empty_workflow_document();
+        let projection = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: wire })).expect("handle");
         assert!(os_app_registration("root", "root-tool").is_some(), "SetAppRegistrations must populate this wasm instance's own registry");

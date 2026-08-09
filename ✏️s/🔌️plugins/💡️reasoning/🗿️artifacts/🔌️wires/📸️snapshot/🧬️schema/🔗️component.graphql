@@ -1,0 +1,12 @@
+# 🧬️ Wires snapshot schema — every field with its state class.
+
+scalar DslValue
+
+type WiresSnapshot {
+  wiresFixture: DslValue! @state(class: PERSISTENT)
+  boardFixture: DslValue! @state(class: PERSISTENT)
+}
+
+type WiresStringList {
+  values: [String!]!
+}

@@ -1,0 +1,1 @@
+  - 📐️cad: 🧩️extensions/🔥️aec-building-energy/🦀️component.rs is not declared by any #[path] in 📦️glue.rs

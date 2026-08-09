@@ -2,7 +2,7 @@
 
 use crate::apps::note::terminology::NotePlayLabels;
 use crate::artifacts::note::engine::{block_icon, block_kind, block_name, block_tree_row_id, block_visible, find_block};
-use crate::artifacts::note::{NoteBlockNode, NoteDocument};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -33,7 +33,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     }
 }
 
-pub fn render(document: &NoteDocument, selected_ids: &[String], labels: &NotePlayLabels) -> UiNode {
+pub fn render(document: &NoteSnapshot, selected_ids: &[String], labels: &NotePlayLabels) -> UiNode {
     let action_rows: Vec<UiTreeItemNode> = [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")]
         .into_iter()
         .map(|(kind, label, icon)| UiTreeItemNode {

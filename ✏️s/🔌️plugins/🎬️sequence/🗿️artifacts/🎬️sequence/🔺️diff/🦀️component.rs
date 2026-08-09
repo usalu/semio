@@ -1,5 +1,8 @@
-//! 🔺️ Sequence artifact — the operation diff (constitutional: diff).
+//! 🔺️ Sequence artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::sequence::schema::SequenceArtifact;
+use crate::artifacts::sequence::{SequenceEdge, SequenceEdgePatch, SequenceSnapshot, SequenceStep, SequenceStepPatch};
+use protocol::{CollectionMutation, MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,84 +10,255 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::sequence::{SequenceEdge, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
-use protocol::{CollectionDiff, MutationDiff};
-use serde::{Deserialize, Serialize};
+//#region 🔖️Apply
+pub fn apply_steps_delta(items: &[SequenceStep], delta: &SequenceStepsDelta) -> Vec<SequenceStep> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &SequenceStepPatchEntry| {
+        (&entry.id, &entry.patch)
+    })
+}
 
-//#region 🔖️Collections
-fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
+pub fn apply_edges_delta(items: &[SequenceEdge], delta: &SequenceEdgesDelta) -> Vec<SequenceEdge> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &SequenceEdgePatchEntry| {
+        (&entry.id, &entry.patch)
+    })
+}
+
+fn apply_identified_delta<T, P, E, F>(
+    items: &[T],
+    removed: &[String],
+    added: &[T],
+    patched: &[E],
+    reordered: Option<&Vec<String>>,
+    entry_parts: F,
+) -> Vec<T>
 where
-    TId: PartialEq,
-    TItem: protocol::Identified<TId> + Clone + protocol::Patchable<TPatch>,
+    T: Clone + protocol::Identified<String> + Patchable<P>,
+    P: Clone,
+    F: Fn(&E) -> (&String, &P),
 {
-    for id in &diff.removed {
-        items.retain(|item| item.id() != id);
+    let mut next = items.to_vec();
+    for id in removed {
+        next.retain(|item| item.id() != id);
     }
-    for patch in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
-            item.apply_patch(&patch.patch);
+    for item in added {
+        next.push(item.clone());
+    }
+    for entry in patched {
+        let (id, patch) = entry_parts(entry);
+        if let Some(item) = next.iter_mut().find(|item| item.id() == id) {
+            item.apply_patch(patch);
         }
     }
-    for added in &diff.added {
-        items.push(added.clone());
-    }
-}
-
-fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
-    if let Some(b) = incoming {
-        match target {
-            Some(a) => {
-                a.removed.extend(b.removed);
-                a.modified.extend(b.modified);
-                a.added.extend(b.added);
+    if let Some(order) = reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (item.id().clone(), item)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(item) = by_id.remove(id) {
+                ordered.push(item);
             }
-            None => *target = Some(b),
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+fn absorb_steps_delta(target: &mut Option<SequenceStepsDelta>, incoming: Option<SequenceStepsDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            None => *target = Some(src),
         }
     }
 }
-//#endregion 🔖️Collections
 
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SequenceDiff {
-    pub steps: Option<CollectionDiff<String, SequenceStepPatch, SequenceStep>>,
-    pub edges: Option<CollectionDiff<String, SequenceEdgePatch, SequenceEdge>>,
+fn absorb_edges_delta(target: &mut Option<SequenceEdgesDelta>, incoming: Option<SequenceEdgesDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            None => *target = Some(src),
+        }
+    }
 }
 
-impl MutationDiff<SequenceFixture> for SequenceDiff {
-    fn apply(&self, projection: &SequenceFixture) -> SequenceFixture {
-        let mut next = projection.clone();
-        if let Some(diff) = &self.steps {
-            apply_collection_diff(&mut next.steps, diff);
+impl SequenceDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> SequenceArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
         }
-        if let Some(diff) = &self.edges {
-            apply_collection_diff(&mut next.edges, diff);
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.steps {
+            next.steps = apply_steps_delta(&next.steps, delta);
+        }
+        if let Some(delta) = &self.edges {
+            next.edges = apply_edges_delta(&next.edges, delta);
+        }
+        if let Some(list) = &self.selected_step_ids {
+            next.selected_step_ids = list.values.clone();
+        }
+        if let Some(value) = &self.last_run_json {
+            next.last_run_json = value.clone();
+        }
+        if let Some(value) = &self.orientation {
+            next.orientation = value.clone();
+        }
+        if let Some(value) = &self.camera {
+            next.camera = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
+}
+
+impl MutationDiff<SequenceSnapshot> for SequenceDiff {
+    fn apply(&self, snapshot: &SequenceSnapshot) -> SequenceSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.steps {
+            next.steps = apply_steps_delta(&next.steps, delta);
+        }
+        if let Some(delta) = &self.edges {
+            next.edges = apply_edges_delta(&next.edges, delta);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        absorb_collection_diff(&mut self.steps, other.steps);
-        absorb_collection_diff(&mut self.edges, other.edges);
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        absorb_steps_delta(&mut self.steps, other.steps);
+        absorb_edges_delta(&mut self.edges, other.edges);
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(selected_step_ids);
+        take!(last_run_json);
+        take!(orientation);
+        take!(camera);
+        take!(locale);
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+pub fn steps_delta_from_collection_mutation(
+    base: &[SequenceStep],
+    op: &CollectionMutation<String, SequenceStep, SequenceStepPatch>,
+) -> SequenceStepsDelta {
+    match op {
+        CollectionMutation::Add { item, .. } => SequenceStepsDelta {
+            added: vec![item.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Remove { id } => SequenceStepsDelta {
+            removed: vec![id.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Patch { id, patch } => SequenceStepsDelta {
+            patched: vec![SequenceStepPatchEntry { id: id.clone(), patch: patch.clone() }],
+            ..Default::default()
+        },
+        CollectionMutation::Move { id, to_index } => {
+            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
+            if let Some(from) = ids.iter().position(|x| x == id) {
+                let item = ids.remove(from);
+                let to = (*to_index).min(ids.len());
+                ids.insert(to, item);
+            }
+            SequenceStepsDelta {
+                reordered: Some(ids),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+pub fn edges_delta_from_collection_mutation(
+    base: &[SequenceEdge],
+    op: &CollectionMutation<String, SequenceEdge, SequenceEdgePatch>,
+) -> SequenceEdgesDelta {
+    match op {
+        CollectionMutation::Add { item, .. } => SequenceEdgesDelta {
+            added: vec![item.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Remove { id } => SequenceEdgesDelta {
+            removed: vec![id.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Patch { id, patch } => SequenceEdgesDelta {
+            patched: vec![SequenceEdgePatchEntry { id: id.clone(), patch: patch.clone() }],
+            ..Default::default()
+        },
+        CollectionMutation::Move { id, to_index } => {
+            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
+            if let Some(from) = ids.iter().position(|x| x == id) {
+                let item = ids.remove(from);
+                let to = (*to_index).min(ids.len());
+                ids.insert(to, item);
+            }
+            SequenceEdgesDelta {
+                reordered: Some(ids),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+/// 🖼️ Whole-snapshot replacement diff.
+pub fn diff_set_snapshot(snapshot: &SequenceSnapshot) -> SequenceDiff {
+    SequenceDiff {
+        artifact: Some(Box::new(SequenceArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::sequence::mutations::SequenceMutation;
-    use crate::artifacts::sequence::{default_fixture, StepParams};
+    use crate::artifacts::sequence::{default_snapshot, StepParams};
     use protocol::Mutation;
 
-    /// ⚖️ LAW: `op.diff(base)` applied to `base` equals applying the operation, and the diff carries
-    /// only the touched slot.
     #[test]
-    fn steps_add_diff_applies_onto_the_base_projection() {
-        let base = default_fixture();
+    fn steps_add_diff_applies_onto_the_base_snapshot() {
+        let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let operation = SequenceMutation::StepsAdd { index: 2, item: step };
         let diff: SequenceDiff = operation.diff(&base);

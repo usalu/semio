@@ -1,0 +1,34 @@
+# 🧬️ Writer artifact schema.
+
+type WriterArtifact {
+  schema: String!
+  id: String!
+  languageId: String!
+  uri: String!
+  text: String!
+  selectedAstIds: [String!]!
+  editorSelection: WriterEditorSelection
+  editorSettings: WriterEditorSettings!
+  formatSignal: Int!
+  lintSignal: Int!
+  revision: Int!
+  engagementInput: String!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+  treeHoveredAstId: String
+  editorHoverOffset: Int
+}
+
+type WriterEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type WriterEditorSettings {
+  showLineNumbers: Boolean!
+  fontPx: Int!
+  lineHeight: Int!
+  tabSize: Int!
+}

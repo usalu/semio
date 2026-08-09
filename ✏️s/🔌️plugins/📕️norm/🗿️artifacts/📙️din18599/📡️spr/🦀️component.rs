@@ -25,23 +25,23 @@ pub fn decode_op(bytes: &[u8]) -> Result<Din18599Mutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din18599::Document;
+    use crate::artifacts::din18599::Din18599Snapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let mutation = Din18599Mutation::SetDocument { document: Document::default() };
-        store::test_support::assert_op_text_binary_equivalence(&mutation);
+        let mutation = Din18599Mutation::SetSnapshot { snapshot: Din18599Snapshot::default() };
+        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
 
     #[test]
     fn document_text_round_trips_through_store() {
-        let envelope = store::create_document_envelope("norm.din18599/v1", "din18599", Document::default(), None);
+        let envelope = store::create_document_envelope("norm.din18599/v1", "din18599", Din18599Snapshot::default(), None);
         let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Din18599Mutation::SetDocument { document: Document::default() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Din18599Mutation::SetSnapshot { snapshot: Din18599Snapshot::default() }], description: None }).expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

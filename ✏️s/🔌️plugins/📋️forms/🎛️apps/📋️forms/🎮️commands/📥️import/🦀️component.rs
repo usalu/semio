@@ -4,11 +4,11 @@
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::reset_try_config_mutations;
-use crate::artifacts::forms::engine::{default_example_spec, empty_forms_projection, onboarding_example_spec};
+use crate::artifacts::forms::engine::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
 // 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it.
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{op::FormMutation, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// ✏️ Emits the operations that replace the current form spec's title + steps with those of `next` — a
 /// legitimate whole-document swap for import/example-switch, expressed granularly through the existing
 /// `FormMutation` vocabulary so it still records a true inverse.
-fn replace_spec_operations(current: &FormSpec, next: &FormSpec) -> Vec<FormMutation> {
+fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
     let mut operations: Vec<FormMutation> = current.steps.iter().map(|step| FormMutation::RemoveStep { step_id: step.id.clone() }).collect();
     if next.title != current.title {
         operations.push(FormMutation::UpdatePlaybook { title: next.title.clone() });
@@ -38,13 +38,13 @@ pub mod set_spec_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetSpecJson, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let Ok(next) = serde_json::from_str::<FormSpec>(&payload.json) else {
+    pub fn handle(payload: &SetSpecJson, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let Ok(next) = serde_json::from_str::<FormsSnapshot>(&payload.json) else {
             return Ok(Emit::default());
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_mutations: replace_spec_operations(doc.projection, &next), config_mutations, ..Default::default() })
+        Ok(Emit { document_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetSpecJson
@@ -59,9 +59,9 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let next = match payload.example_id.as_str() {
-            "" => Some(empty_forms_projection()),
+            "" => Some(empty_forms_snapshot()),
             "building-component" => forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
             "default" => Some(default_example_spec()),
             "onboarding" => Some(onboarding_example_spec()),
@@ -72,7 +72,7 @@ pub mod set_active_example {
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_mutations: replace_spec_operations(doc.projection, &next), config_mutations, ..Default::default() })
+        Ok(Emit { document_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -93,7 +93,7 @@ mod tests {
         // steps/title it does replace, not on `id`.
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "onboarding".into() }));
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         assert_eq!(spec.steps.len(), 3);
         assert_eq!(spec.title, onboarding_example_spec().title);
     }
@@ -102,7 +102,7 @@ mod tests {
     fn set_active_example_with_blank_id_clears_the_document() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() }));
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         assert!(crate::artifacts::forms::engine::flatten_questions(&spec).is_empty());
     }
 
@@ -111,7 +111,7 @@ mod tests {
         let mut app = forms_app();
         let onboarding = serde_json::to_string(&onboarding_example_spec()).unwrap();
         dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding }));
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         assert_eq!(spec.steps.len(), 3);
         assert_eq!(spec.title, onboarding_example_spec().title);
     }
@@ -119,9 +119,9 @@ mod tests {
     #[test]
     fn set_spec_json_with_invalid_json_is_a_no_operation() {
         let mut app = forms_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: "not json".into() }));
-        assert_eq!(app.projection().expect("projection"), before);
+        assert_eq!(app.snapshot().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

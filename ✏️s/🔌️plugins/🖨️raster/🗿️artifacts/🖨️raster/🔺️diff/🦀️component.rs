@@ -1,5 +1,12 @@
-//! 🔺️ Raster artifact — diff surface + laws (constitutional: diff).
+//! 🔺️ Raster artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::raster::diff::schema::{
+    RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta, RasterStringList,
+};
+use crate::artifacts::raster::engine::{layer_node_id, locate_layer};
+use crate::artifacts::raster::schema::RasterArtifact;
+use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,18 +14,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterProjection};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
+#[allow(unused_imports)]
+pub use super::schema::*;
 
 //#region 🔖️Tree
-/// 🌳️ Tree mutation helpers shared by {@link apply_step} (diff application) and
-/// `crate::artifacts::raster::op::RasterMutation::backwards` (which needs {@link patch_layer_in_tree}
-/// to compute a `PatchLayer` inverse from the pre-operation projection) — `pub`, not `pub(crate)`, so the
-/// sibling `🔧️op` node can reach them via `crate::artifacts::raster::diff::…`.
 pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
-    if let Some(index) = layers.iter().position(|layer| crate::artifacts::raster::engine::layer_node_id(layer) == target_id) {
+    if let Some(index) = layers.iter().position(|layer| layer_node_id(layer) == target_id) {
         return Some(layers.remove(index));
     }
     for layer in layers.iter_mut() {
@@ -143,7 +144,7 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
 
 pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patch: &RasterLayerPatch) -> Option<RasterLayerPatch> {
     for layer in layers.iter_mut() {
-        if crate::artifacts::raster::engine::layer_node_id(layer) == target_id {
+        if layer_node_id(layer) == target_id {
             return Some(apply_layer_patch(layer, patch));
         }
         if let RasterLayerNode::Group { children, .. } = layer {
@@ -156,61 +157,234 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
 }
 //#endregion 🔖️Tree
 
-//#region 🔖️Types
-/// 🧩️ One atomic tree mutation — the building block of {@link RasterDiff}, kept ordered so a diff can
-/// coalesce several edits (e.g. a multi-layer patch) while still inverting each mechanically.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "step", rename_all = "camelCase")]
-pub enum RasterStep {
-    AddLayer { parent_id: Option<String>, index: usize, layer: RasterLayerNode },
-    RemoveLayer { layer_id: String },
-    PatchLayer { layer_id: String, patch: RasterLayerPatch },
-    MoveLayer { layer_id: String, parent_id: Option<String>, index: usize },
-}
-
-pub fn apply_step(layers: &mut Vec<RasterLayerNode>, step: &RasterStep) {
-    match step {
-        RasterStep::AddLayer { parent_id, index, layer } => insert_layer(layers, parent_id.as_deref(), *index, layer.clone()),
-        RasterStep::RemoveLayer { layer_id } => {
-            remove_layer_from_tree(layers, layer_id);
+//#region 🔖️Apply
+impl RasterDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> RasterArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
         }
-        RasterStep::PatchLayer { layer_id, patch } => {
-            patch_layer_in_tree(layers, layer_id, patch);
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
         }
-        RasterStep::MoveLayer { layer_id, parent_id, index } => {
-            if let Some(node) = remove_layer_from_tree(layers, layer_id) {
-                insert_layer(layers, parent_id.as_deref(), *index, node);
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta);
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
             }
         }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = self.brush_size {
+            next.brush_size = value;
+        }
+        if let Some(value) = self.brush_opacity {
+            next.brush_opacity = value;
+        }
+        if let Some(value) = &self.composite_viewport {
+            next.composite_viewport = value.clone();
+        }
+        if let Some(value) = self.camera_x {
+            next.camera_x = value;
+        }
+        if let Some(value) = self.camera_y {
+            next.camera_y = value;
+        }
+        if let Some(value) = self.camera_zoom {
+            next.camera_zoom = value;
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.hovered_id {
+            next.hovered_id = value.clone();
+        }
+        next
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RasterDiff {
-    pub steps: Vec<RasterStep>,
-    pub replace: Option<Box<RasterProjection>>,
+pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> Vec<RasterLayerNode> {
+    let mut next = layers.to_vec();
+    for id in &delta.removed {
+        remove_layer_from_tree(&mut next, id);
+    }
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        apply_layer_patch_entry(&mut next, entry);
+    }
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|layer| (layer_node_id(&layer).to_string(), layer)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(layer) = by_id.remove(id) {
+                ordered.push(layer);
+            }
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
 }
 
-impl MutationDiff<RasterProjection> for RasterDiff {
-    fn apply(&self, projection: &RasterProjection) -> RasterProjection {
-        let mut next = self.replace.as_ref().map_or_else(|| projection.clone(), |document| (**document).clone());
-        for step in &self.steps {
-            apply_step(&mut next.layers, step);
+fn apply_layer_patch_entry(layers: &mut Vec<RasterLayerNode>, entry: &RasterLayerPatchEntry) {
+    patch_layer_in_tree(layers, &entry.id, &entry.patch);
+}
+
+impl MutationDiff<RasterSnapshot> for RasterDiff {
+    fn apply(&self, snapshot: &RasterSnapshot) -> RasterSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta);
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if let Some(replace) = other.replace {
-            self.replace = Some(replace);
-            self.steps.clear();
+        if other.artifact.is_some() {
+            *self = other;
+            return;
         }
-        self.steps.extend(other.steps);
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(title);
+        take!(selected_ids);
+        take!(active_utility_id);
+        take!(brush_size);
+        take!(brush_opacity);
+        take!(composite_viewport);
+        take!(camera_x);
+        take!(camera_y);
+        take!(camera_zoom);
+        take!(locale);
+        take!(hovered_id);
+        match (&mut self.layers, other.layers) {
+            (Some(dst), Some(src)) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            (None, Some(src)) => self.layers = Some(src),
+            _ => {}
+        }
+        match (&mut self.assets, other.assets) {
+            (Some(dst), Some(src)) => {
+                dst.entries.extend(src.entries);
+            }
+            (None, Some(src)) => self.assets = Some(src),
+            _ => {}
+        }
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Builders
+pub fn diff_set_snapshot(snapshot: &RasterSnapshot) -> RasterDiff {
+    RasterDiff {
+        artifact: Some(Box::new(RasterArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
     }
 }
 
-pub fn step_diff(step: RasterStep) -> RasterDiff {
-    RasterDiff { steps: vec![step], ..Default::default() }
+pub fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
+    diff_set_snapshot(&snapshot)
 }
-//#endregion 🔖️Types
+
+pub fn diff_add_layer(layer: RasterLayerNode) -> RasterDiff {
+    RasterDiff {
+        layers: Some(RasterLayersDelta {
+            added: vec![layer],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_remove_layer(layer_id: &str) -> RasterDiff {
+    RasterDiff {
+        layers: Some(RasterLayersDelta {
+            removed: vec![layer_id.to_string()],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
+    RasterDiff {
+        layers: Some(RasterLayersDelta {
+            patched: vec![RasterLayerPatchEntry {
+                id: layer_id.to_string(),
+                patch,
+            }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_move_layer(snapshot: &RasterSnapshot, layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
+    let mut probe = snapshot.clone();
+    if let Some(node) = remove_layer_from_tree(&mut probe.layers, layer_id) {
+        insert_layer(&mut probe.layers, parent_id.as_deref(), index, node);
+        diff_from_snapshot(probe)
+    } else {
+        RasterDiff::default()
+    }
+}
+//#endregion 🔖️Builders

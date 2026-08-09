@@ -24,8 +24,7 @@ use crate::apps::dag::modes::edit::windows::{compiled, main};
 use crate::apps::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::dag::terminology::{dag_play_labels, is_de_locale};
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagDocument, DAG_DOCUMENT_SCHEMA};
-use infinite_board_port_directed_dag::default_dag_document;
+use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode,
 };
@@ -56,7 +55,7 @@ semio_framework_plugin::app_commands! {
     /// where they happen to coincide (e.g. `"reorganize" as "reorganize"`). `"setLocale" as "locale"` is
     /// the row that proves it. **Row order is the binary variant ordinal: appending is safe, reordering
     /// is a wire-format break.**
-    pub enum DagCommand for DagDocument, DagMutation, DagConfig, DagConfigMutation {
+    pub enum DagCommand for DagSnapshot, DagMutation, DagConfig, DagConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "removeNode" as "remove-node" => remove_node::RemoveNode,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -112,7 +111,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::apps::da
 pub struct DagPlayApp;
 
 impl DocumentApp for DagPlayApp {
-    type Projection = DagDocument;
+    type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
     type Config = DagConfig;
     type ConfigMutation = DagConfigMutation;
@@ -124,12 +123,12 @@ impl DocumentApp for DagPlayApp {
     const APP_ID: &'static str = DAG_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> DagDocument {
-        default_dag_document()
+    fn initial_snapshot() -> DagSnapshot {
+        crate::artifacts::dag::default_snapshot()
     }
 
-    fn whole_document_operation(projection: DagDocument) -> Option<DagMutation> {
-        Some(DagMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: DagSnapshot) -> Option<DagMutation> {
+        Some(DagMutation::SetSnapshot { snapshot: snapshot })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -138,13 +137,13 @@ impl DocumentApp for DagPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let selected = &config.selected_node_ids;
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(config);
@@ -158,10 +157,10 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let labels = dag_play_labels(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        let selected = &cfg.projection.selected_node_ids;
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let labels = dag_play_labels(cfg.snapshot);
+        let is_de = is_de_locale(cfg.snapshot);
+        let selected = &cfg.snapshot.selected_node_ids;
         dag_context_menu_items(registry, labels, is_de, selected, request)
     }
 }
@@ -273,7 +272,7 @@ mod tests {
             DagCommand::RemoveNode(remove_node::RemoveNode { node_id: "n1".into() }),
             DagCommand::DeleteSelection(delete_selection::DeleteSelection {}),
             DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                mutations: vec![
+                operations: vec![
                     node_graph_edit::DagNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
                     node_graph_edit::DagNodeGraphEditOp::DeleteSelection,
                     node_graph_edit::DagNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
@@ -311,7 +310,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -351,11 +350,11 @@ mod tests {
     /// real format break, not a test-fixture mismatch.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let cases: [(DagCommand, &str, &str); 1] = [(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }), "add-node kind=slider x=10", "01000106736c696465720200060001050000000000002440")];
+        let cases: [(DagCommand, &str, &str); 1] = [(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }), "add-node add-node kind=slider x=10", "01000106736c696465720200060001050000000000002440")];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
     //#endregion 🔖️CommandSurface
@@ -390,7 +389,7 @@ mod tests {
         }
         let mut app: DagApp = new_app_with_registry();
         let result = app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
-        assert!(result.document_mutations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
+        assert!(result.mutations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -404,7 +403,7 @@ mod tests {
         use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app: DagApp = new_app_with_registry();
-        let node_ids: Vec<String> = app.projection().expect("projection").nodes.iter().map(|node| node.id.clone()).collect();
+        let node_ids: Vec<String> = app.snapshot().expect("projection").nodes.iter().map(|node| node.id.clone()).collect();
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: node_ids.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "nodeGraph".into(), args: None },
@@ -436,11 +435,11 @@ mod tests {
     }
 
     #[test]
-    fn whole_document_operation_replaces_the_projection() {
+    fn whole_document_operation_replaces_the_snapshot() {
         let app = DagPlayApp;
-        let replacement = default_dag_document();
-        let operation = app.whole_document_operation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, DagMutation::SetDocument { document: replacement });
+        let replacement = crate::artifacts::dag::default_snapshot();
+        let operation = DagPlayApp::whole_document_operation(replacement.clone()).expect("whole document operation");
+        assert_eq!(operation, DagMutation::SetSnapshot { snapshot: replacement });
     }
 
     /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
@@ -452,7 +451,7 @@ mod tests {
             DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
             DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
             |app| {
-                let projection = app.projection().expect("projection");
+                let projection = app.snapshot().expect("projection");
                 (projection.nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Note { .. })), projection.nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Slider { .. })))
             },
         );
@@ -460,7 +459,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_dag() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.projection().expect("projection").nodes.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes.len());
     }
     //#endregion 🔖️CrossCutting
 }

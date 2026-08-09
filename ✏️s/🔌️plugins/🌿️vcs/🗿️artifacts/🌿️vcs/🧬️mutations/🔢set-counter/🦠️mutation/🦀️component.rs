@@ -1,2 +1,2 @@
-use crate::artifacts::vcs::VcsDemoProjection;
-pub fn apply(projection: &mut VcsDemoProjection, counter: i64) { projection.counter = counter; }
+use crate::artifacts::vcs::VcsSnapshot;
+pub fn apply(projection: &mut VcsSnapshot, counter: i64) { projection.counter = counter; }

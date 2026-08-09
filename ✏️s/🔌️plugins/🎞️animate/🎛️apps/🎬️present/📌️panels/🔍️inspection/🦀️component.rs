@@ -2,7 +2,7 @@
 
 use crate::apps::present::animate_present_action;
 use crate::apps::present::terminology::AnimatePresentLabels;
-use crate::artifacts::present::{FigureTileDraft, PresentDeck};
+use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -47,7 +47,7 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: impl Into<Label
     })
 }
 
-pub fn render(deck: &PresentDeck, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
+pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.empty".into(),

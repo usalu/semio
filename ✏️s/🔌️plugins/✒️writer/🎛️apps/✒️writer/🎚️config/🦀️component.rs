@@ -11,33 +11,7 @@ use crate::artifacts::writer::WriterCamera;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Types
-/// 📐️ Editor text selection range.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct WriterEditorSelection {
-    pub start: usize,
-    pub end: usize,
-}
-
-/// ⚙️ Editor chrome settings (line numbers, font/line/tab size).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
-pub struct WriterEditorSettings {
-    pub show_line_numbers: bool,
-    pub font_px: u32,
-    pub line_height: u32,
-    pub tab_size: u32,
-}
-
-impl Default for WriterEditorSettings {
-    fn default() -> Self {
-        Self { show_line_numbers: true, font_px: 14, line_height: 22, tab_size: 2 }
-    }
-}
-//#endregion 🔖️Types
-
-//#region 🔖️Config
+pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};
 /// 🧮️ B1: writer's real `DocumentApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
 /// field (selection, editor selection, format/lint signals, revision, editor settings, AST hover,
 /// engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc comment) plus
@@ -46,7 +20,7 @@ impl Default for WriterEditorSettings {
 /// B1 shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "writer.writercfg")]
+#[dsl(extension = "writer.config")]
 #[dsl(layout = "lines")]
 pub struct WriterConfig {
     /// 👁️ Selected AST node ids — was `WriterPlayRuntime::selected_ast_ids`.
@@ -312,7 +286,7 @@ mod tests {
 
     #[test]
     fn writer_config_dsl_round_trips_default_and_populated() {
-        store::test_support::assert_config_round_trip(&WriterConfig::default());
+        store::os_store::test_support::assert_config_round_trip(&WriterConfig::default());
         let populated = WriterConfig {
             selected_ast_ids: vec!["jack-ast-1".into()],
             editor_selection: Some(WriterEditorSelection { start: 3, end: 7 }),
@@ -323,21 +297,21 @@ mod tests {
             locale: "de-DE".into(),
             ..WriterConfig::default()
         };
-        store::test_support::assert_config_round_trip(&populated);
+        store::os_store::test_support::assert_config_round_trip(&populated);
     }
 
     #[test]
     fn writer_config_operation_backwards_restores_pre_state() {
         let pre = WriterConfig::default();
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetSelectedAstIds { ids: vec!["a".into()] });
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetSelectedAstIds { ids: vec!["a".into()] });
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
     }
 
     #[test]
     fn writer_config_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::Snapshot { config: WriterConfig::default() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::Snapshot { config: WriterConfig::default() });
     }
 
     #[test]

@@ -1,0 +1,762 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ConflictRule`, `DocumentId`, `DocumentVersion`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+255 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:260:9
+    |
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:261:25
+    |
+261 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21
+    |
+333 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2283:19
+     |
+2177 | / impl<P, Mutation> DocumentStore<P, Mutation>
+2178 | | where
+2179 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2180 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2283 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 45 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 22 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3881:61
+     |
+3881 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3881 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3881 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:41
+     |
+5594 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5594 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5594 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:96
+     |
+5594 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5594 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5594 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+     |
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5432:34
+     |
+5432 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5446:34
+     |
+5446 |             let VcsDocumentApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5456:34
+     |
+5456 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5471:34
+     |
+5471 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5132:38
+     |
+5132 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5048:42
+     |
+5048 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5168:38
+     |
+5168 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5390:34
+     |
+5390 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5421:34
+     |
+5421 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1847:17
+     |
+1847 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: `semio-framework-plugin` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+   Compiling semio-s-plugin-energy v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust)
+warning: unused import: `schema::*`
+   --> ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs:206:21
+    |
+206 |             pub use schema::*;
+    |                     ^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-energy` (lib test) generated 1 warning (run `cargo fix --lib -p semio-s-plugin-energy --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 30.88s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_energy-cea130d1f85a9749)
+
+running 244 tests
+test air_exchange::tests::heat_recovery_reduces_load ... ok
+test air_exchange::tests::hybrid_uses_natural_when_favorable ... ok
+test air_exchange::tests::ventilation_load_positive_when_outdoor_colder ... ok
+test air_exchange::tests::ach_infiltration_scales_with_volume ... ok
+test airflow_network::tests::stack_pressure_positive_when_outdoor_colder ... ok
+test air_system::tests::doas_conditions_outdoor_air ... ok
+test air_system::tests::vav_system_cools_mixed_air ... ok
+test air_system::tests::economizer_detected_when_oa_cooler ... ok
+test artifacts::model::diff::component::tests::empty_diff_is_a_no_operation ... ok
+test airflow_network::tests::network_solves_pressures ... ok
+test artifacts::model::engine::tests::engine_owns_artifact_not_snapshot_alias ... ok
+test airflow_network::tests::infiltration_flow_when_zone_warmer ... ok
+test artifacts::model::diff::component::tests::preview_results_do_not_enter_snapshot ... ok
+test calendar::tests::day_of_week_known_date ... ok
+test calendar::tests::hours_iterator_count ... ok
+test calendar::tests::leap_year_feb_has_29_days ... ok
+test calendar::tests::run_period_jan_week_is_168_hours ... ok
+test artifacts::model::engine::tests::empty_snapshot_matches_schema ... ok
+test artifacts::model::dsl::tests::semio_example_dsl_round_trips ... ok
+test artifacts::model::spr::tests::set_snapshot_round_trips ... ok
+test coils::tests::bypass_factor_reduces_effect ... ok
+test coils::tests::dx_cooling_removes_sensible_and_latent ... ok
+test coils::tests::electric_heating_raises_temperature ... ok
+test comfort::tests::adaptive_range_centers_on_outdoor ... ok
+test comfort::tests::mrt_from_surfaces ... ok
+test artifacts::model::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test comfort::tests::pmv_increases_when_too_warm ... ok
+test artifacts::model::engine::tests::example_fixture_parses ... ok
+test comfort::tests::pmv_near_zero_at_neutral ... ok
+test comfort::tests::ppd_minimum_at_zero_pmv ... ok
+test comfort::tests::operative_equals_air_when_equal_mrt ... ok
+test controls::tests::cooling_fraction_when_warm ... ok
+test controls::tests::equipment_priority_allocates_in_order ... ok
+test controls::tests::heating_fraction_full_when_cold ... ok
+test artifacts::model::snapshot::pack::tests::pack_round_trips_and_agrees_with_dsl ... ok
+test controls::tests::predict_heating_load_when_negative_residual ... ok
+test curves::tests::biquadratic_at_origin ... ok
+test curves::tests::linear_curve_midpoint ... ok
+test curves::tests::lookup_wrapper_evaluates ... ok
+test curves::tests::part_load_clamps ... ok
+test curves::tests::quadratic_curve_evaluates ... ok
+test curves::tests::triquadratic_includes_cross_terms ... ok
+test curves::tests::validate_accepts_valid_quadratic ... ok
+test curves::tests::validate_rejects_degenerate_linear ... ok
+test daylight::tests::dimming_full_when_dark ... ok
+test daylight::tests::dimming_reduces_at_high_daylight ... ok
+test daylight::tests::glare_high_for_bright_window ... ok
+test daylight::tests::illuminance_increases_with_sun ... ok
+test daylight::tests::zone_average_illuminance ... ok
+test dispatch::tests::optimal_delegates_to_uniform ... ok
+test dispatch::tests::sequential_fills_first_unit ... ok
+test dispatch::tests::unhandled_scheme_falls_back_to_sequential ... ok
+test dispatch::tests::uniform_splits_proportionally_to_capacity ... ok
+test dispatch::tests::uniform_with_no_capacity_returns_empty ... ok
+test economics::tests::lcca_computes_payback ... ok
+test economics::tests::present_value_positive ... ok
+test electrical::tests::battery_soc_bounds ... ok
+test electrical::tests::end_use_scales_with_schedule ... ok
+test electrical::tests::generator_respects_minimum_load ... ok
+test electrical::tests::grid_balance_import_when_load_exceeds_supply ... ok
+test electrical::tests::pv_zero_at_night ... ok
+test electrical::tests::wind_cubic_below_rated ... ok
+test envelope::tests::ctf_flux_sign_correct ... ok
+test envelope::tests::exterior_h_increases_with_wind ... ok
+test envelope::tests::interior_h_increases_with_delta_t ... ok
+test envelope::tests::interior_surface_balance_near_air ... ok
+test envelope::tests::steady_flux_cold_outside ... ok
+test error::tests::diagnostics_push_has_fatal_and_merge ... ok
+test error::tests::display_includes_context_when_present ... ok
+test error::tests::fatal_has_correct_severity ... ok
+test error::tests::severe_and_warning_severities ... ok
+test error::tests::with_context_sets_context ... ok
+test evaporative::tests::direct_cooling_lowers_dry_bulb ... ok
+test evaporative::tests::disabled_no_effect ... ok
+test evaporative::tests::indirect_preserves_humidity_ratio ... ok
+test fans::tests::fan_laws_cubic_power ... ok
+test fans::tests::full_load_positive_power ... ok
+test fans::tests::zero_flow_zero_power ... ok
+test faults::tests::damper_stuck_open_increases_flow ... ok
+test faults::tests::fault_set_compounds_sensor_offsets ... ok
+test faults::tests::fouling_reduces_ua ... ok
+test faults::tests::sensor_offset_biases_reading ... ok
+test faults::tests::severity_schedule_constant ... ok
+test faults::tests::undercharge_reduces_capacity ... ok
+test fenestration::tests::condensation_when_surface_cold ... ok
+test fenestration::tests::conduction_cold_outside_negative_into_zone ... ok
+test fenestration::tests::double_glazing_u_below_single ... ok
+test fenestration::tests::shade_reduces_shgc ... ok
+test gains::tests::datacenter_total_matches_it_load ... ok
+test gains::tests::equipment_latent_reduces_sensible ... ok
+test gains::tests::lighting_return_air_reduces_convective ... ok
+test gains::tests::people_gain_scales_with_count ... ok
+test geometry::tests::box_volume ... ok
+test geometry::tests::horizontal_roof_tilt_zero ... ok
+test geometry::tests::identity_transform_preserves_vertices ... ok
+test geometry::tests::planar_validation_ok ... ok
+test geometry::tests::unit_square_area ... ok
+test geometry::tests::vertical_wall_tilt_ninety ... ok
+test heat_recovery::tests::effectiveness_ntu_counterflow ... ok
+test heat_recovery::tests::frost_reduces_effectiveness ... ok
+test hvac_topo::tests::branch_with_identical_inlet_outlet_is_severe ... ok
+test heat_recovery::tests::winter_recovery_heats_supply ... ok
+test humidity_eq::tests::at_target_no_humidification ... ok
+test humidity_eq::tests::refrigerant_dehumidifier_removes_moisture ... ok
+test humidity_eq::tests::steam_humidifier_adds_moisture ... ok
+test hvac_topo::tests::air_loop_validate_flags_invalid_zone_outlet ... ok
+test hvac_topo::tests::branch_pressure_drop_for_each_component_kind ... ok
+test hvac_topo::tests::splitter_fraction_mismatch_warns ... ok
+test hvac_topo::tests::branch_with_invalid_node_index_is_fatal ... ok
+test hvac_topo::tests::mixer_blend_with_zero_flow_returns_default_node ... ok
+test hvac_topo::tests::mixer_blends_by_mass_flow ... ok
+test hvac_topo::tests::mixer_invalid_inlet_and_outlet_are_fatal ... ok
+test hvac_topo::tests::plant_loop_validate_delegates_to_validate_topology ... ok
+test hvac_topo::tests::splitter_invalid_inlet_is_fatal ... ok
+test hvac_topo::tests::splitter_preserves_mass ... ok
+test hvac_topo::tests::valid_topology_passes ... ok
+test iaq::tests::co2_rises_with_occupancy_at_low_ventilation ... ok
+test iaq::tests::contaminant_transient_approaches_steady_state ... ok
+test iaq::tests::dcv_increases_flow_at_high_co2 ... ok
+test ideal_hvac::tests::capacity_limits_cooling ... ok
+test ideal_hvac::tests::economizer_active_when_oa_cooler ... ok
+test kernel::tests::advance_timestep_applies_fault_severity_to_ideal_loads ... ok
+test ideal_hvac::tests::heating_meets_demand ... ok
+test kernel::tests::advance_timestep_handles_ground_and_adiabatic_surfaces ... ok
+test kernel::tests::advance_timestep_with_airflow_network ... ok
+test kernel::tests::energy_balance_near_zero_for_steady_state ... ok
+test kernel::tests::advance_timestep_with_baseboard_zone_equipment_and_humidistat ... ok
+test kernel::tests::advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment ... ok
+test kernel::tests::initialize_creates_zone_states ... ok
+test kernel::tests::run_period_from_config ... ok
+test material::tests::resistance_adds_film_terms ... ok
+test material::tests::thermal_mass_positive ... ok
+test material::tests::wall_u_value_reasonable ... ok
+test meters::tests::end_use_breakdown_aggregates_by_category ... ok
+test meters::tests::meter_accumulates_energy ... ok
+test meters::tests::meter_tracks_peak_demand_hour ... ok
+test meters::tests::store_get_or_create_is_idempotent_and_totals_by_fuel ... ok
+test metrics::tests::resilience_counts_extremes ... ok
+test model::tests::adjacency_pair_unknown_surface_fails ... ok
+test model::tests::air_loop_unknown_zone_fails ... ok
+test model::tests::construction_empty_layers_fails ... ok
+test model::tests::construction_unknown_material_fails ... ok
+test model::tests::daylight_zone_unknown_zone_fails ... ok
+test model::tests::duplicate_zone_name_fails ... ok
+test model::tests::empty_model_fails_validation ... ok
+test model::tests::humidistat_unknown_zone_fails ... ok
+test model::tests::fenestration_unknown_surface_fails ... ok
+test model::tests::ideal_loads_unknown_zone_fails ... ok
+test model::tests::interzone_missing_pair_fails ... ok
+test model::tests::lookup_helpers_find_entities ... ok
+test model::tests::material_invalid_thermal_properties_fails ... ok
+test model::tests::mechanical_ventilation_unknown_zone_fails ... ok
+test model::tests::non_positive_volume_fails ... ok
+test model::tests::surface_too_few_vertices_fails ... ok
+test model::tests::surface_unknown_construction_fails ... ok
+test model::tests::surface_unknown_zone_fails ... ok
+test model::tests::thermostat_unknown_zone_fails ... ok
+test model::tests::valid_model_passes_validation ... ok
+test model::tests::zone_equipment_unknown_zone_fails ... ok
+test model::tests::zone_only_still_fails_without_construction ... ok
+test num::tests::lerp_endpoints ... ok
+test num::tests::newton_finds_sqrt ... ok
+test num::tests::simpson_integrates_x_squared ... ok
+test output::tests::registry_matches_exact_and_wildcard ... ok
+test output::tests::store_record_get_and_csv ... ok
+test output::tests::time_series_average ... ok
+test output::tests::time_series_average_of_empty_is_zero ... ok
+test output::tests::time_series_sum_and_min_max ... ok
+test plant::tests::boiler_meets_partial_load ... ok
+test plant::tests::chiller_eir_cooling ... ok
+test plant::tests::cooling_tower_rejects_heat ... ok
+test plant::tests::gshp_penalty_increases_with_ground_load ... ok
+test plant::tests::heat_exchanger_transfers_positive ... ok
+test plant::tests::pump_power_scales_with_flow ... ok
+test plant::tests::thermal_storage_changes_temperature ... ok
+test precompute::tests::fenestration_precompute_derives_from_host_surface ... ok
+test precompute::tests::precompute_builds_surface_ctf ... ok
+test precompute::tests::solar_at_returns_altitude_and_azimuth ... ok
+test precompute::tests::surface_incidence_is_zero_for_unknown_surface ... ok
+test precompute::tests::surface_incidence_matches_known_surface_normal ... ok
+test precompute::tests::thermostat_overrides_default_setpoints ... ok
+test props::tests::rh_roundtrip ... ok
+test props::tests::saturation_at_zero_c ... ok
+test props::tests::water_density_near_room_temp ... ok
+test refrigeration::tests::compressor_rack_part_load ... ok
+test refrigeration::tests::condenser_approach_temperature ... ok
+test refrigeration::tests::display_case_cooling_positive ... ok
+test refrigeration::tests::saturation_pressure_increases_with_temperature ... ok
+test refrigeration::tests::secondary_loop_return_rises_with_load ... ok
+test refrigeration::tests::walk_in_freezer_higher_compressor_ratio ... ok
+test results::tests::summary_tables_accumulate ... ok
+test room_air::tests::displacement_cooler_at_occupancy ... ok
+test room_air::tests::fully_mixed_uniform ... ok
+test room_air::tests::ufad_occupied_between_supply_and_zone ... ok
+test room_air::tests::vertical_gradient_stratifies ... ok
+test schedule::tests::constant_schedule_lookup ... ok
+test schedule::tests::daily_schedule_respects_limits ... ok
+test shw::tests::drain_recovery_preheats_mains ... ok
+test shw::tests::fixture_demand_positive ... ok
+test shw::tests::hpwh_cop_reduces_electrical ... ok
+test shw::tests::mixed_tank_recovers_after_draw ... ok
+test shw::tests::standby_loss_increases_with_temperature ... ok
+test shw::tests::stratified_tank_top_hotter_than_bottom ... ok
+test site::tests::solar_noon_altitude_positive ... ok
+test sim::tests::ashrae_140_case600_base ... ok
+test sim::tests::energy_conservation_order_of_magnitude ... ok
+test sim::tests::engine_runs_single_zone ... ok
+test sim::tests::invalid_model_rejected ... ok
+test sim::tests::hvac_bestest_heating_day ... ok
+test site::tests::epw_parses_minimal ... ok
+test sizing::tests::coincident_peak_sums_all_loads ... ok
+test sizing::tests::non_coincident_peak_takes_maximum ... ok
+test sizing::tests::sizes_equipment_for_ideal_loads_zone ... ok
+test solar::tests::absorption_positive_at_noon ... ok
+test sizing::tests::sizes_zone_with_surfaces ... ok
+test sim::tests::engine_deterministic_repeatability ... ok
+test solar::tests::shading_reduces_with_overhang ... ok
+test solar::tests::split_flux_allocates_floor_share ... ok
+test sim::tests::full_topology_e2e ... ok
+test solar::tests::vertical_south_wall_noon_incidence ... ok
+test solar_thermal::tests::flat_plate_gain_positive_at_noon ... ok
+test solar_thermal::tests::ics_raises_storage_temperature ... ok
+test solar_thermal::tests::pvt_splits_electric_and_thermal ... ok
+test solar_thermal::tests::zero_irradiance_zero_gain ... ok
+test solar_thermal::tests::unglazed_preheats_air ... ok
+test terminal::tests::cav_constant_flow ... ok
+test terminal::tests::dual_duct_mixes_temperatures ... ok
+test terminal::tests::vav_reheat_adds_heat ... ok
+test units::tests::celsius_kelvin_roundtrip ... ok
+test water::tests::cooling_makeup_increases_with_load ... ok
+test water::tests::fixture_flow_scales_with_schedule ... ok
+test water::tests::rainwater_harvest_reduces_with_first_flush ... ok
+test water::tests::irrigation_demand_scales_with_et0 ... ok
+test water::tests::tank_level_rises_with_inflow ... ok
+test water::tests::water_balance_mains_import ... ok
+test zone_air::tests::analytical_temp_rises_with_gain ... ok
+test zone_air::tests::floating_zone_uses_steady_analytical ... ok
+test zone_air::tests::conditioned_bdf3_warms_zone ... ok
+test zone_air::tests::bdf3_rate_constant_history ... ok
+test zone_hvac::tests::baseboard_delivers_heat ... ok
+test zone_air::tests::humidity_analytical_increases_with_latent_gain ... ok
+test zone_hvac::tests::fan_coil_runs_coils_and_fan ... ok
+test zone_hvac::tests::vrf_respects_capacity ... ok
+test sim::tests::run_period_honors_calendar ... ok
+
+test result: ok. 244 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

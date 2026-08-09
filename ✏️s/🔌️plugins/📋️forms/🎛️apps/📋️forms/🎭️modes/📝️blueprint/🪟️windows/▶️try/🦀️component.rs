@@ -30,7 +30,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -253,7 +253,7 @@ fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::artifacts::forms::engine::dsl_to_value(&default_value_for_question(question))
 }
 
-pub fn render(spec: &crate::artifacts::forms::FormSpec, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     if spec.steps.is_empty() {
         return semio_framework_plugin::ui_text(labels.no_steps_in_form);
     }

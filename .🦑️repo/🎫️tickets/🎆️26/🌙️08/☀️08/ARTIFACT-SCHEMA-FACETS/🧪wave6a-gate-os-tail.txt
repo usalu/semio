@@ -1,0 +1,2 @@
+warning: `semio-framework-os` (lib) generated 36 warnings (run `cargo fix --lib -p semio-framework-os` to apply 4 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.34s

@@ -1,0 +1,71 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/snapshot.json",
+  "title": "ImperativeSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "path",
+    "seed"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "path": {
+      "$ref": "#/$defs/ImperativePath",
+      "x-semio-state": "persistent"
+    },
+    "seed": {
+      "type": "object",
+      "additionalProperties": true,
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "ImperativePath": {
+      "title": "ImperativePath",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImperativeStep"
+          }
+        }
+      }
+    },
+    "ImperativeStep": {
+      "title": "ImperativeStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "bodies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ImperativePath"
+          }
+        }
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@
 use crate::apps::layout::config::LayoutConfig;
 use crate::apps::layout::layout_action;
 use crate::apps::layout::terminology::LayoutLabels;
-use crate::artifacts::layout::{Frame, LayoutDocument, LAYOUT_FIXTURE_SCHEMA};
+use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -91,7 +91,7 @@ fn layout_tree_item_hoverable(id: impl Into<String>, label: impl Into<Label>, de
     item
 }
 
-pub fn render(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)).collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
@@ -180,7 +180,7 @@ pub fn render(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels
 
     let highlighted_ids: Vec<String> = config.hovered_id.as_ref().map(|id| vec![page_row_id(id), frame_row_id(id)]).unwrap_or_default();
     let mut builder = PanelTreeBuilder::new("layout-document")
-        .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)])
+        .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])
         .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
         .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, page_items)
         .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)

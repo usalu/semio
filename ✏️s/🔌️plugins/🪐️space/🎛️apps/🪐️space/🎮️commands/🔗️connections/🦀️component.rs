@@ -1,7 +1,7 @@
 //! 🔗️ S Studio app — media port connect/disconnect commands.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️ConnectMediaPorts
@@ -18,8 +18,8 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        match crate::apps::space::negotiate_connect_or_notify(doc.projection, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
+    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        match crate::apps::space::negotiate_connect_or_notify(doc.snapshot, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
             Ok(contract) => Ok(Emit::mutations(vec![crate::apps::space::connect_edge_operation(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id, contract)])),
             Err(effect) => Ok(Emit::effect(effect)),
         }
@@ -38,7 +38,7 @@ pub mod disconnect_media_edge {
         pub edge_id: String,
     }
 
-    pub fn handle(payload: &DisconnectMediaEdge, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &DisconnectMediaEdge, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WorkflowMutation::DisconnectEdge { edge_id: payload.edge_id.clone() }]))
     }
 }
@@ -55,8 +55,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
     }
 
     #[test]

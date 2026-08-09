@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "vcscfg")]
+#[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
 pub struct VcsDemoConfig {
     /// 👁️ Multi-selected checkpoint ids in the document tree — was `VcsPlayApp::selected_checkpoint_ids`.
@@ -220,16 +221,16 @@ mod tests {
     #[test]
     fn vcs_demo_config_dsl_pack_round_trips() {
         let config = VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()], locale: "de-DE".into() };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     /// 🧮️ Round-trip law per `VcsDemoConfigMutation` variant (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-
     /// SCHEMA-FLOW-CONFIG-ON-NODE).
     #[test]
     fn vcs_demo_config_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` always returns a `Snapshot` of the pre-operation config, so applying it after

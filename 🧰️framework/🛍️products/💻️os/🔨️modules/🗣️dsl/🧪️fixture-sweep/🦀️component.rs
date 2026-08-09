@@ -32,8 +32,8 @@ mod tests {
     use block::artifacts::block2d::Block2dDefinition;
     use block::artifacts::block3d::Block3dDefinition;
     use block::artifacts::block5d::Block5dDefinition;
-    use cad_document::artifacts::cad::CadProjection;
-    use dag_app::DagDocument;
+    use cad_document::artifacts::cad::CadSnapshot;
+    use dag_app::DagSnapshot;
     use norm::artifacts::din16798::Document as Din16798Document;
     use norm::artifacts::din18599::Document as Din18599Document;
     use norm::artifacts::din4108::Document as Din4108Document;
@@ -62,30 +62,30 @@ mod tests {
     use imperative::artifacts::imperative::ImperativeDocument;
     use norm::artifacts::iso16757::Document as Iso16757Document;
     use layout::artifacts::layout::LayoutDocument;
-    use lowpoly::artifacts::lowpoly::LowpolyProjection;
-    use mathematical::artifacts::mathematical::MathProjection;
+    use lowpoly::artifacts::lowpoly::LowpolySnapshot;
+    use mathematical::artifacts::mathematical::MathematicalSnapshot;
     use note_app::artifacts::note::NoteDocument;
     use playbook::PlaybookSpec;
     use present::artifacts::present::PresentDeck;
     use procedural::artifacts::procedural2d::Procedural2dDocument;
     use procedural::artifacts::procedural3d::Procedural3dDocument;
     use process_3d::artifacts::process3d::Process3dDocument;
-    use puzzle::artifacts::puzzle2d::Puzzle2dProjection;
-    use puzzle::artifacts::puzzle3d::Puzzle3dProjection;
-    use puzzle::artifacts::puzzle5d::Puzzle5dProjection;
-    use raster::artifacts::raster::RasterProjection;
+    use puzzle::artifacts::puzzle2d::Puzzle2dSnapshot;
+    use puzzle::artifacts::puzzle3d::Puzzle3dSnapshot;
+    use puzzle::artifacts::puzzle5d::Puzzle5dSnapshot;
+    use raster::artifacts::raster::RasterSnapshot;
     use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
-    use remodel::artifacts::remodel::RemodelProjection;
+    use remodel::artifacts::remodel::RemodelSnapshot;
     use trinity::artifacts::rewrite::RewriteRuleModel;
-    use semio_framework_os::WorkflowDocument;
+    use semio_framework_os::WorkflowSnapshot;
     use sequence::artifacts::sequence::SequenceFixture;
     use shooting::artifacts::shooting::ShootingFixture;
     use sourcing::artifacts::curate::CurateDocument;
     use space::{CollectionSnapshot, SpaceSnapshot};
     use trinity::artifacts::jack::GraphFixture;
-    use vcs_app::artifacts::vcs::VcsDemoProjection;
+    use vcs_app::artifacts::vcs::VcsSnapshot;
     use norm::artifacts::vdi3805::Document as Vdi3805Document;
-    use writer::artifacts::writer::WriterProjection;
+    use writer::artifacts::writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
 
     //#region 🔖️Registry
@@ -94,24 +94,24 @@ mod tests {
 
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
-            ("writer", <WriterProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterProjection>),
-            ("mathematical", <MathProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathProjection>),
+            ("writer", <WriterSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
+            ("mathematical", <MathematicalSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
             ("procedural_2d", <Procedural2dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
             ("procedural_3d", <Procedural3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
             ("flow_app", <FlowFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
             ("gis2d", "gis.gismap", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
             ("gis3d", "gis.gisterrain", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
-            ("vcs_app", <VcsDemoProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsDemoProjection>),
+            ("vcs_app", <VcsSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),
             ("present", <PresentDeck as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
             ("shooting", <ShootingFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
             ("sequence", <SequenceFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
             ("fem2d", <Fem2dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
             ("fem3d", <Fem3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
             ("process_3d", <Process3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
-            ("lowpoly", <LowpolyProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolyProjection>),
+            ("lowpoly", <LowpolySnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolySnapshot>),
             ("reasoning_wires", <MindmapWiresDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
             ("layout", <LayoutDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
-            ("cad_document", <CadProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadProjection>),
+            ("cad_document", <CadSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadSnapshot>),
             ("iso16757", <Iso16757Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
             ("vdi3805", <Vdi3805Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
             ("din4108", <Din4108Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
@@ -129,21 +129,21 @@ mod tests {
             ("din18599", <Din18599Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
             ("playbook", <PlaybookSpec as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
             ("imperative", <ImperativeDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelProjection>),
+            ("remodel", <RemodelSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelSnapshot>),
             ("rewrite", <RewriteRuleModel as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
             ("trinity_ram", <GraphFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
-            ("dag_app", <DagDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagDocument>),
+            ("dag_app", <DagSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),
             ("draw", <DrawDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
-            ("raster", <RasterProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RasterProjection>),
+            ("raster", <RasterSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),
             ("note_app", <NoteDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
-            ("puzzle_2d", <Puzzle2dProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dProjection>),
-            ("puzzle_5d", <Puzzle5dProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dProjection>),
-            ("puzzle_3d", <Puzzle3dProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dProjection>),
+            ("puzzle_2d", <Puzzle2dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),
+            ("puzzle_5d", <Puzzle5dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dSnapshot>),
+            ("puzzle_3d", <Puzzle3dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dSnapshot>),
             ("block_2d", <Block2dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
             ("block_5d", <Block5dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
             ("block_3d", <Block3dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
             ("home", <SHomeDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
-            ("semio_framework_os", <WorkflowDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowDocument>),
+            ("semio_framework_os", <WorkflowSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
             ("sourcing", <CurateDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
             // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
             // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so

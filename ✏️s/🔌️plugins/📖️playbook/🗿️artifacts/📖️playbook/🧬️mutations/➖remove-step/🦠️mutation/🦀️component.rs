@@ -1,7 +1,7 @@
 //! ➖remove-step `PlaybookMutation` apply leaf.
-use crate::artifacts::playbook::PlaybookSpec;
+use crate::artifacts::playbook::PlaybookSnapshot;
 use crate::artifacts::playbook::mutations::PlaybookMutation;
 
-pub fn apply(projection: &mut PlaybookSpec, mutation: &PlaybookMutation) {
-    *projection = crate::artifacts::playbook::mutations::apply_playbook_edit_mutation(projection, mutation);
+pub fn apply(snapshot: &mut PlaybookSnapshot, mutation: &PlaybookMutation) {
+    *snapshot = crate::artifacts::playbook::mutations::apply_playbook_mutation(snapshot, mutation);
 }

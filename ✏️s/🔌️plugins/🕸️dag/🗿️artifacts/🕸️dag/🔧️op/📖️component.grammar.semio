@@ -5,7 +5,7 @@ use family-graph
 start mutation
 
 mutation = op-line+
-op-line = nodes-add | nodes-remove | nodes-move | nodes-patch | edges-add | edges-remove | edges-move | edges-patch | set-nodes | set-edges | set-document
+op-line = nodes-add | nodes-remove | nodes-move | nodes-patch | edges-add | edges-remove | edges-move | edges-patch | set-nodes | set-edges | set-snapshot
 nodes-add = "nodes-add" "index" "=" INT node-block
 nodes-remove = "nodes-remove" "id" "=" IDENT
 nodes-move = "nodes-move" "id" "=" IDENT "to" "=" INT
@@ -16,7 +16,7 @@ edges-move = "edges-move" "id" "=" IDENT "to" "=" INT
 edges-patch = "edges-patch" "id" "=" IDENT edge-patch-block
 set-nodes = "set-nodes" nodes-table
 set-edges = "set-edges" edges-table
-set-document = "set-document" document-block
+set-snapshot = "set-snapshot" snapshot-block
 node-block = "node" node-kind
 node-patch-block = "patch" node-patch-fields
 node-patch-fields = ("name" "=" TEXT)? ("x" "=" FLOAT)? ("y" "=" FLOAT)? ("width" "=" FLOAT)? ("height" "=" FLOAT)?

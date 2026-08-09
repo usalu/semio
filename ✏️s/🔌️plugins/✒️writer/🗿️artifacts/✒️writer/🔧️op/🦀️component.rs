@@ -1,6 +1,6 @@
 //! 🔧 Writer artifact — OpText/OpBinary codecs + grammar for serializing `WriterMutation`.
 
-pub use crate::artifacts::writer::mutations::{apply_writer_mutation, inverse_writer_mutation, WriterMutation, SetDocument, SetText, set_document, set_text};
+pub use crate::artifacts::writer::mutations::{apply_writer_mutation, inverse_writer_mutation, WriterMutation, SetSnapshot, SetText, set_snapshot, set_text};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -51,14 +51,14 @@ mod tests {
     use crate::artifacts::writer::engine;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_projection() -> crate::artifacts::writer::WriterProjection {
-        crate::artifacts::writer::WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+    fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
+        crate::artifacts::writer::WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]
     fn writer_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&WriterMutation::SetText { text: "line one\nline two".into() });
-        store::test_support::assert_op_line_round_trip(&WriterMutation::SetDocument { document: jack_projection() });
+        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::SetText { text: "line one\nline two".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::SetSnapshot { snapshot: jack_snapshot() });
     }
 }
 //#endregion 🧪️Tests

@@ -6,13 +6,13 @@
 
 use crate::apps::layout::config::LayoutConfig;
 use crate::artifacts::layout::engine::scene::{LayoutEngine, build_display_list_for_page};
-use crate::artifacts::layout::{LayoutDocument, Page};
+use crate::artifacts::layout::{LayoutSnapshot, Page};
 use serde_json::{json, Value};
 
 //#region 🔖️ActivePage
 /// 👁️ The page shown/edited on the Blueprint surface — the config's `active_page_id`, falling back to
 /// the document's first page when that id no longer resolves.
-pub fn active_page<'a>(doc: &'a LayoutDocument, config: &LayoutConfig) -> Option<&'a Page> {
+pub fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutConfig) -> Option<&'a Page> {
     doc.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| doc.pages.first())
 }
 //#endregion 🔖️ActivePage
@@ -71,7 +71,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &crate::artifacts::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::apps::layout::config::LayoutDropPreviewState) -> Vec<Value> {
+fn display_list_to_host_layers(list: &crate::artifacts::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::artifacts::layout::LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -146,7 +146,7 @@ fn display_list_to_host_layers(list: &crate::artifacts::layout::engine::scene::D
 
 /// 🖼️ Builds the host canvas-2d layer JSON for the given surface (`blueprint` or `preview`) — the
 /// single shared render path both `🎭️modes/✏️edit/🪟️windows/📐️blueprint` and `…/👁️preview` call.
-pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutDocument, config: &LayoutConfig, blueprint: bool) -> String {
+pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),

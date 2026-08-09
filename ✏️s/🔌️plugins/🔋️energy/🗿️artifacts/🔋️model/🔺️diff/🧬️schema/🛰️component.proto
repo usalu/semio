@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.energy.model;
+
+message EnergyModelDiff {
+  optional EnergyModelArtifact artifact = 1;
+  optional string schema = 2;
+  optional string model_json = 3;
+  optional string results_json = 4;
+}
+
+message EnergyModelArtifact {
+  string schema = 1;
+  string model_json = 2;
+  string results_json = 3;
+}

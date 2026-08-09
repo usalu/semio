@@ -1,7 +1,7 @@
 //! 🔍️ Imperative play app panel — inspection: read-only detail fields for the selected step.
 
 use crate::apps::imperative::terminology::ImperativeLabels;
-use crate::artifacts::imperative::{ImperativeDocument, Step};
+use crate::artifacts::imperative::{ImperativeSnapshot, Step};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "imperative-play-inspector.empty".into(),

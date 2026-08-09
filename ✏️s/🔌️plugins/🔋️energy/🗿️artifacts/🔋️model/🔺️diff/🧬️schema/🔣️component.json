@@ -1,0 +1,48 @@
+{
+  "$id": "https://semio.tech/schema/s/energy/model/diff.json",
+  "title": "EnergyModelDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "$ref": "#/$defs/EnergyModelArtifact",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "modelJson": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "resultsJson": {
+      "type": "string",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "EnergyModelArtifact": {
+      "title": "EnergyModelArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "modelJson",
+        "resultsJson"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "modelJson": {
+          "type": "string"
+        },
+        "resultsJson": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

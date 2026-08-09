@@ -1,0 +1,23 @@
+# 🧬️ Raster snapshot schema — persistent fields only.
+
+type RasterSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: [RasterLayerNode!]! @state(class: PERSISTENT)
+  assets: [RasterImageAssetEntry!]! @state(class: PERSISTENT)
+}
+
+type RasterLayerNode {
+  kind: String!
+}
+
+type RasterImageAssetEntry {
+  key: String!
+  value: RasterImageAsset!
+}
+
+type RasterImageAsset {
+  mime: String!
+  data: String!
+}

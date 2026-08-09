@@ -8,7 +8,7 @@
 
 use crate::artifacts::dag::engine;
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use crate::apps::dag::config::{DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{DagFixtureEdge, DagNodeSpec};
 use protocol::CollectionMutation;
@@ -27,8 +27,8 @@ pub mod add_node {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let id = engine::next_node_id(document);
         let node = engine::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
         Ok(Emit {
@@ -50,9 +50,9 @@ pub mod remove_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &RemoveNode, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveNode, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let removes = engine::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
         if removes.is_empty() {
             Ok(Emit::default())
@@ -74,8 +74,8 @@ pub mod rename_dag_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameDagNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &RenameDagNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let trimmed = payload.value.trim();
         if trimmed.is_empty() || trimmed == payload.old_id.as_str() || document.nodes.iter().any(|node| node.id == trimmed) {
             return Ok(Emit::default());
@@ -111,8 +111,8 @@ pub mod patch_dag_nodes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchDagNodes, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &PatchDagNodes, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let operations: Vec<DagMutation> = document
             .nodes
             .iter()
@@ -141,7 +141,7 @@ mod tests {
     fn add_node_action_updates_document_and_selects_the_new_node() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add node");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         assert!(document.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
         let added_id = document.nodes.last().expect("added node").id.clone();
         let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
@@ -151,9 +151,9 @@ mod tests {
     #[test]
     fn rename_dag_node_rewrites_nodes_and_edges() {
         let mut app = testkit::new_app();
-        let old_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let old_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: old_id.clone(), value: "renamed-node".into() }), &semio_framework_plugin::testkit::meta("local")).expect("rename");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         assert!(document.nodes.iter().any(|node| node.id == "renamed-node"));
         assert!(document.nodes.iter().all(|node| node.id != old_id));
     }
@@ -162,22 +162,22 @@ mod tests {
     fn rename_dag_node_is_a_no_op_for_an_empty_or_duplicate_id() {
         let mut app = testkit::new_app();
         let (first_id, second_id) = {
-            let projection = app.projection().expect("projection");
+            let projection = app.snapshot().expect("projection");
             (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
         };
         let result = app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: first_id.clone(), value: "   ".into() }), &semio_framework_plugin::testkit::meta("local")).expect("rename blank");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
         let result = app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: first_id, value: second_id }), &semio_framework_plugin::testkit::meta("local")).expect("rename duplicate");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]
     fn remove_node_deletes_node_and_connected_edges_and_prunes_selection() {
         let mut app = testkit::new_app();
-        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::SetSelection(crate::apps::dag::commands::selection::set_selection::SetSelection { ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         app.dispatch_typed(DagCommand::RemoveNode(remove_node::RemoveNode { node_id: node_id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("remove");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         assert!(document.nodes.iter().all(|node| node.id != node_id));
         assert!(document.edges.iter().all(|edge| {
             let (from, _) = engine::split_endpoint(&edge.source);
@@ -191,23 +191,23 @@ mod tests {
     #[test]
     fn add_node_then_undo_restores_document() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection").nodes.len();
+        let before = app.snapshot().expect("projection").nodes.len();
         app.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add");
-        assert_eq!(app.projection().expect("projection").nodes.len(), before + 1);
+        assert_eq!(app.snapshot().expect("projection").nodes.len(), before + 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").nodes.len(), before);
+        assert_eq!(app.snapshot().expect("projection").nodes.len(), before);
     }
 
     #[test]
     fn patch_slider_value_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
-        let node_id = app.projection().expect("projection").nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Slider { .. })).map(|node| node.id.clone()).expect("slider");
+        let node_id = app.snapshot().expect("projection").nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Slider { .. })).map(|node| node.id.clone()).expect("slider");
         for value in [1.0, 2.0, 5.0] {
             app.dispatch_typed(DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec![node_id.clone()], field: "value".into(), value: value.to_string() }), &semio_framework_plugin::testkit::meta("local")).expect("patch slider");
         }
         let slider_value = app
-            .projection()
+            .snapshot()
             .expect("projection")
             .nodes
             .iter()

@@ -1,6 +1,8 @@
 //! 🧬️ Iso16757 diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
+use std::collections::BTreeMap;
+use crate::artifacts::iso16757::CatalogueValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff

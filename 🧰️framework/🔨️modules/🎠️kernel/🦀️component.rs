@@ -506,14 +506,14 @@ pub struct InvocationResult {
 #[serde(rename_all = "camelCase")]
 pub struct ActionContext {
     pub invocation: ActionInvocation,
-    pub document_projection: DslValue,
+    pub document_snapshot: DslValue,
     pub view_state: super::ViewModel,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
 
 /// @emoji 🎛️ Context for a dispatched `CommandInvocation` — the command mirror of `ActionContext`.
-/// No `document_projection`/`granted_capabilities`: `VcsDocumentApp` owns the store directly and
+/// No `document_snapshot`/`granted_capabilities`: `VcsDocumentApp` owns the store directly and
 /// commands don't yet carry a capability grant model (mirrors actions' current state).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -559,7 +559,7 @@ pub struct ActionRequest {
 pub struct WindowKindDef {
     pub id: WindowKindId,
     pub params_schema: SchemaId,
-    pub document_projection_schema: SchemaId,
+    pub document_snapshot_schema: SchemaId,
     pub input_event_schema: SchemaId,
     pub output_schema: SchemaId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -571,7 +571,7 @@ pub struct WindowKindDef {
 pub struct WindowInput {
     pub window: WindowHandle,
     pub params: DslValue,
-    pub document_projection: DslValue,
+    pub document_snapshot: DslValue,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<WindowEvent>,
     pub size: PhysicalSize,

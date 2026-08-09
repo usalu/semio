@@ -1,8 +1,17 @@
-import { policyArtifactSchemaBreaches, policy } from "/Users/ueli/Documents/semio/📜️script.ts";
-const asb = policyArtifactSchemaBreaches("/Users/ueli/Documents/semio").filter((b) =>
-  JSON.stringify(b).toLowerCase().includes("lowpoly"),
-);
-console.log("lowpoly artifact-schema breaches:", asb.length);
-const all = (policy as any)({});
-const low = all.filter((b: any) => JSON.stringify(b).toLowerCase().includes("lowpoly"));
-console.log("lowpoly total policy breaches:", low.length);
+import {
+  policyExtractGraphqlSchemaFields,
+  policyExtractProtobufSchemaFields,
+} from "../../../../../../📜️script.ts";
+
+const proto = `syntax = "proto3";
+message WiresArtifact {
+  // @state persistent
+  DslValue wires_fixture = 1;
+}
+message DslValue {}`;
+const gql = `type WiresArtifact {
+  wiresFixture: DslValue! @state(class: PERSISTENT)
+}
+scalar DslValue`;
+console.log("proto", policyExtractProtobufSchemaFields(proto).fields[0]);
+console.log("gql", policyExtractGraphqlSchemaFields(gql).fields[0]);

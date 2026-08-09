@@ -1,6 +1,6 @@
 //! ⚙️ DIN 4108 app — headless compute (constitutional: engine).
 
-use crate::artifacts::din4108::Document;
+use crate::artifacts::din4108::Din4108Snapshot;
 use crate::artifacts::din4108::mutations::Din4108Mutation;
 use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
@@ -702,7 +702,7 @@ fn parse_category(category: &str) -> part_2::BuildingCategory {
     }
 }
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     let layers: Vec<part_2::Layer> = document.layers.iter().map(|layer| part_2::Layer { thickness_m: layer.thickness_m, lambda_w_mk: layer.lambda_w_mk }).collect();
     check_full_envelope(
         parse_category(&document.category),
@@ -734,56 +734,66 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct Din4108Family;
 
 impl NormFamily for Din4108Family {
-    type Document = Document;
+    type Document = Din4108Snapshot;
     type Mutation = Din4108Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::Din4108
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &Din4108Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
 
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent Din4108 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent Din4108 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Din4108Engine {
-    projection: Document,
+    artifact: crate::artifacts::din4108::schema::Din4108Artifact,
+    snapshot: crate::artifacts::din4108::Din4108Snapshot,
 }
 
 impl Din4108Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::din4108::Din4108Snapshot) -> Self {
+        let artifact = crate::artifacts::din4108::schema::Din4108Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::din4108::Din4108Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Din4108Engine {
-    type Projection = Document;
-    type Mutation = Din4108Mutation;
-    type Diff = crate::artifacts::din4108::diff::Diff;
+    type Artifact = crate::artifacts::din4108::schema::Din4108Artifact;
+    type Snapshot = crate::artifacts::din4108::Din4108Snapshot;
+    type Mutation = crate::artifacts::din4108::mutations::Din4108Mutation;
+    type Diff = crate::artifacts::din4108::diff::Din4108Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
 
 pub type Host = NormHost<Din4108Family>;
 // #endregion 🔖️Session
@@ -905,7 +915,7 @@ mod tests {
     fn host_updates_report_after_document_replace() {
         let mut host = Host::default();
         assert!(host.report().all_pass());
-        let mut document = Document::default();
+        let mut document = Din4108Snapshot::default();
         document.layers.clear();
         host.replace_document(document);
         assert!(!host.report().all_pass());
@@ -913,7 +923,7 @@ mod tests {
 
     #[test]
     fn full_envelope_evaluate_covers_all_eight_parts() {
-        let document = Document::default();
+        let document = Din4108Snapshot::default();
         let report = evaluate(&document);
         assert!(report.checks.len() >= 15, "expected parts 1–8 checks, got {}", report.checks.len());
         assert!(report.all_pass(), "checks: {:?}", report.checks);
@@ -968,14 +978,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "din4108.document",
         extension: Some("din4108"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::din4108::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::din4108::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::din4108::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din4108::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din4108::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din4108::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din4108.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1004,8 +1015,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::din4108::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din4108::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din4108::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din4108::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din4108.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1019,3 +1030,13 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("din4108.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.din4108`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::din4108::schema::din4108_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

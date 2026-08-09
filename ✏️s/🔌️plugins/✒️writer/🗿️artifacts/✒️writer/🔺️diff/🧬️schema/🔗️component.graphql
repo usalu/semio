@@ -1,0 +1,71 @@
+# 🧬️ Writer diff schema.
+
+type WriterDiff {
+  artifact: WriterArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  languageId: String @state(class: PERSISTENT)
+  uri: String @state(class: PERSISTENT)
+  text: WriterTextDelta @state(class: PERSISTENT)
+  selectedAstIds: WriterStringList @state(class: SHARED_UI)
+  editorSelection: WriterEditorSelection @state(class: SHARED_UI)
+  editorSettings: WriterEditorSettings @state(class: SHARED_UI)
+  formatSignal: Int @state(class: LOCAL_UI)
+  lintSignal: Int @state(class: LOCAL_UI)
+  revision: Int @state(class: LOCAL_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  treeHoveredAstId: String @state(class: PREVIEW)
+  editorHoverOffset: Int @state(class: PREVIEW)
+}
+
+type WriterArtifact {
+  schema: String!
+  id: String!
+  languageId: String!
+  uri: String!
+  text: String!
+  selectedAstIds: [String!]!
+  editorSelection: WriterEditorSelection
+  editorSettings: WriterEditorSettings!
+  formatSignal: Int!
+  lintSignal: Int!
+  revision: Int!
+  engagementInput: String!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+  treeHoveredAstId: String
+  editorHoverOffset: Int
+}
+
+type WriterEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type WriterEditorSettings {
+  showLineNumbers: Boolean!
+  fontPx: Int!
+  lineHeight: Int!
+  tabSize: Int!
+}
+
+type WriterStringList {
+  values: [String!]!
+}
+
+type WriterTextDelta {
+  replacement: String
+  edits: [WriterTextRangeEdit!]!
+}
+
+type WriterTextRangeEdit {
+  start: Int!
+  end: Int!
+  insert: String!
+}

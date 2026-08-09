@@ -18,15 +18,15 @@ impl Vdi3805Diff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-        if let Some(value) = self.manufacturer_file { next.manufacturer_file = value; }
-        if let Some(value) = self.catalog { next.catalog = value; }
-        if let Some(value) = self.edition_profile { next.edition_profile = value; }
-        if let Some(value) = self.correction_as_of { next.correction_as_of = value; }
-        if let Some(value) = self.strict_mode { next.strict_mode = value; }
-        if let Some(value) = self.index { next.index = value; }
-        if let Some(value) = self.geometry { next.geometry = value; }
-        if let Some(value) = self.curves { next.curves = value; }
-        if let Some(value) = self.limits { next.limits = value; }
+        if let Some(value) = &self.manufacturer_file { next.manufacturer_file = value.clone(); }
+        if let Some(value) = &self.catalog { next.catalog = value.clone(); }
+        if let Some(value) = &self.edition_profile { next.edition_profile = value.clone(); }
+        if let Some(value) = &self.correction_as_of { next.correction_as_of = value.clone(); }
+        if let Some(value) = &self.strict_mode { next.strict_mode = value.clone(); }
+        if let Some(value) = &self.index { next.index = value.clone(); }
+        if let Some(value) = &self.geometry { next.geometry = value.clone(); }
+        if let Some(value) = &self.curves { next.curves = value.clone(); }
+        if let Some(value) = &self.limits { next.limits = value.clone(); }
         if let Some(value) = &self.selected_check_index {
             next.selected_check_index = *value;
         }
@@ -40,15 +40,15 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             return replacement.to_snapshot();
         }
         let mut next = snapshot.clone();
-        if let Some(value) = self.manufacturer_file { next.manufacturer_file = value; }
-        if let Some(value) = self.catalog { next.catalog = value; }
-        if let Some(value) = self.edition_profile { next.edition_profile = value; }
-        if let Some(value) = self.correction_as_of { next.correction_as_of = value; }
-        if let Some(value) = self.strict_mode { next.strict_mode = value; }
-        if let Some(value) = self.index { next.index = value; }
-        if let Some(value) = self.geometry { next.geometry = value; }
-        if let Some(value) = self.curves { next.curves = value; }
-        if let Some(value) = self.limits { next.limits = value; }
+        if let Some(value) = &self.manufacturer_file { next.manufacturer_file = value.clone(); }
+        if let Some(value) = &self.catalog { next.catalog = value.clone(); }
+        if let Some(value) = &self.edition_profile { next.edition_profile = value.clone(); }
+        if let Some(value) = &self.correction_as_of { next.correction_as_of = value.clone(); }
+        if let Some(value) = &self.strict_mode { next.strict_mode = value.clone(); }
+        if let Some(value) = &self.index { next.index = value.clone(); }
+        if let Some(value) = &self.geometry { next.geometry = value.clone(); }
+        if let Some(value) = &self.curves { next.curves = value.clone(); }
+        if let Some(value) = &self.limits { next.limits = value.clone(); }
         next
     }
 

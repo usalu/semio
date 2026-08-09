@@ -6,10 +6,13 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum En1990Mutation {
-    SetSnapshot { snapshot: En1990Snapshot },
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: En1990Snapshot,
+    },
 }
 
 impl Mutation<En1990Snapshot> for En1990Mutation {
@@ -26,3 +29,5 @@ impl Mutation<En1990Snapshot> for En1990Mutation {
     }
 }
 //#endregion 🔖️Mutation
+
+crate::impl_norm_set_snapshot_ops!(En1990Mutation, En1990Snapshot);

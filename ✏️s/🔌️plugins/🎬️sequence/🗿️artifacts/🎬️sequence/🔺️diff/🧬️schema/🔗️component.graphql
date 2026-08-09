@@ -1,0 +1,28 @@
+# 🧬️ Sequence diff schema.
+type SequenceDiff {
+  artifact: SequenceArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  steps: SequenceStepsDelta @state(class: PERSISTENT)
+  edges: SequenceEdgesDelta @state(class: PERSISTENT)
+  selectedStepIds: SequenceStringList @state(class: SHARED_UI)
+  lastRunJson: String @state(class: LOCAL_UI)
+  orientation: String @state(class: LOCAL_UI)
+  camera: SequenceCamera @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+type SequenceStringList { values: [String!]! }
+type SequenceStepsDelta { added: [SequenceStep!]! removed: [String!]! patched: [SequenceStepPatchEntry!]! reordered: [String!] }
+type SequenceEdgesDelta { added: [SequenceEdge!]! removed: [String!]! patched: [SequenceEdgePatchEntry!]! reordered: [String!] }
+type SequenceStepPatchEntry { id: String! patch: SequenceStepPatch! }
+type SequenceEdgePatchEntry { id: String! patch: SequenceEdgePatch! }
+type SequenceStep { id: String! kind: String! params: JSON! x: Float! y: Float! slot: SlotRef collapsed: Boolean! }
+type SequenceEdge { id: String! from: String! to: String! }
+type SlotRef { owner: String! name: String! }
+type SequenceStepPatch { params: JSON x: Float y: Float collapsed: Boolean }
+type SequenceEdgePatch { from: String to: String }
+type SequenceCamera { x: Float! y: Float! zoom: Float! }
+type SequenceArtifact {
+  schema: String! steps: [SequenceStep!]! edges: [SequenceEdge!]!
+  selectedStepIds: [String!]! lastRunJson: String! orientation: String! camera: SequenceCamera! locale: String!
+}
+scalar JSON

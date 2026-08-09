@@ -4,12 +4,12 @@
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::engine::{curate_delta, curate_set};
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::CurateDocument;
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-fn set_document(document: CurateDocument) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
-    Emit::mutations(vec![SourcingMutation::SetDocument { document }])
+fn set_snapshot(snapshot: CurateSnapshot) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+    Emit::mutations(vec![SourcingMutation::SetSnapshot { snapshot }])
 }
 
 //#region 🔖️CurateAdd
@@ -22,10 +22,10 @@ pub mod curate_add {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateAdd, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.projection.clone();
+    pub fn handle(payload: &CurateAdd, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut document = doc.snapshot.clone();
         curate_delta(&mut document, &payload.object_id, 1);
-        Ok(set_document(document))
+        Ok(set_snapshot(document))
     }
 }
 //#endregion 🔖️CurateAdd
@@ -44,14 +44,14 @@ pub mod curate_set_count {
 
     /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
     /// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first.
-    pub fn handle(payload: &CurateSetCount, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.projection.clone();
+    pub fn handle(payload: &CurateSetCount, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut document = doc.snapshot.clone();
         if let Some(delta) = payload.delta {
             curate_delta(&mut document, &payload.object_id, delta as i64);
         } else if let Some(value) = payload.value {
             curate_set(&mut document, &payload.object_id, value.max(0.0) as u32);
         }
-        Ok(set_document(document))
+        Ok(set_snapshot(document))
     }
 }
 //#endregion 🔖️CurateSetCount
@@ -66,10 +66,10 @@ pub mod curate_remove {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateRemove, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.projection.clone();
+    pub fn handle(payload: &CurateRemove, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut document = doc.snapshot.clone();
         curate_set(&mut document, &payload.object_id, 0);
-        Ok(set_document(document))
+        Ok(set_snapshot(document))
     }
 }
 //#endregion 🔖️CurateRemove
@@ -85,10 +85,10 @@ pub mod drop_on_pool {
     }
 
     /// 🪂️ Dropping a curated row back onto the pool mirrors `curate_remove`: zero its curated count.
-    pub fn handle(payload: &DropOnPool, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.projection.clone();
+    pub fn handle(payload: &DropOnPool, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut document = doc.snapshot.clone();
         curate_set(&mut document, &payload.object_id, 0);
-        Ok(set_document(document))
+        Ok(set_snapshot(document))
     }
 }
 //#endregion 🔖️DropOnPool
@@ -103,10 +103,10 @@ pub mod drop_on_curated {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DropOnCurated, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.projection.clone();
+    pub fn handle(payload: &DropOnCurated, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut document = doc.snapshot.clone();
         curate_delta(&mut document, &payload.object_id, 1);
-        Ok(set_document(document))
+        Ok(set_snapshot(document))
     }
 }
 //#endregion 🔖️DropOnCurated
@@ -122,37 +122,37 @@ mod tests {
     #[test]
     fn curate_add_and_remove_round_trip_through_operations() {
         let mut app = new_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
         let object_id = document.stock[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::CurateAdd(curate_add::CurateAdd { object_id: object_id.clone() }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 1);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
         dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id: object_id.clone() }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 0);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
     }
 
     #[test]
     fn curate_set_count_supports_both_delta_and_absolute_value() {
         let mut app = new_app();
-        let object_id = app.projection().expect("projection").stock[2].id.clone();
+        let object_id = app.snapshot().expect("snapshot").stock[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: Some(3.0), value: None }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 3);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 3);
         dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: None, value: Some(2.0) }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 2);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 2);
     }
 
     #[test]
     fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
         let mut app = new_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
         let object_id = document.stock[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id.clone() }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 1);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
         dispatch(&mut app, SourcingCurateCommand::DropOnPool(drop_on_pool::DropOnPool { object_id: object_id.clone() }));
-        assert_eq!(curated_count(&app.projection().expect("projection"), &object_id), 0);
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
     }
 }
 //#endregion 🧪️Tests

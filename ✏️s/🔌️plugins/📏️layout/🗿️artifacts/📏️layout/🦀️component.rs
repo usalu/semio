@@ -5,11 +5,24 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
-pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture";
+pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 //#endregion 🔖️Constants
 
+pub use crate::artifacts::layout::snapshot::schema::LayoutSnapshot;
+
+//#region 🔖️DropPreview
+/// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct LayoutDropPreviewState {
+    pub kind: String,
+    pub x: f64,
+    pub y: f64,
+}
+//#endregion 🔖️DropPreview
+
 //#region 🔖️Types
-/// 📷️ Ephemeral per-surface camera pose (blueprint/preview). Never part of `LayoutDocument` — lives
+/// 📷️ Ephemeral per-surface camera pose (blueprint/preview). Never part of `LayoutSnapshot` — lives
 /// in the layout app's `LayoutConfig` instead, so it stays out of undo history and off the wire.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct LayoutCamera {
@@ -302,96 +315,6 @@ pub struct GridSettings {
     pub snap_to_baseline: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(extension = "layout", layout = "lines")]
-pub struct LayoutDocument {
-    pub schema: String,
-    pub name: String,
-    #[dsl(block)]
-    pub grid: GridSettings,
-    #[serde(rename = "paragraphStyles")]
-    #[dsl(table)]
-    pub paragraph_styles: Vec<ParagraphStyle>,
-    #[serde(rename = "characterStyles")]
-    #[dsl(table)]
-    pub character_styles: Vec<CharacterStyle>,
-    #[dsl(table)]
-    pub stories: Vec<TextStory>,
-    #[dsl(table)]
-    pub links: Vec<ImageLink>,
-    #[serde(rename = "parentPages")]
-    pub parent_pages: Vec<ParentPage>,
-    #[dsl(table)]
-    pub spreads: Vec<Spread>,
-    pub pages: Vec<Page>,
-    #[serde(rename = "printTarget")]
-    pub print_target: Option<String>,
-    /// 🔠️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: the last dictionary imported through the
-    /// `fields:in` workflow port (JSON object text, `{ "key": value, ... }`). Layout has no existing
-    /// text-interpolation/field-binding concept for frames/stories, so this is a new named data source
-    /// the layout can reference later (e.g. a future `{{key}}` story-content binding) rather than
-    /// wiring it into rendering today — see `crate::artifacts::layout::mutations::LayoutMutation::SetDataFields`/
-    /// `crate::apps::layout::commands::author::import_media`.
-    #[serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
-    pub data_fields_json: Option<String>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for LayoutDocument {
-    const EXTENSION: &'static str = "layout";
-    fn envelope_id() -> &'static str { "layout" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for LayoutDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind
@@ -401,12 +324,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
         name: "Layout".into(),
-        source_format: LAYOUT_FIXTURE_SCHEMA.into(),
+        source_format: LAYOUT_DOCUMENT_SCHEMA.into(),
         component_kind: "layout".into(),
         dimension: "2d".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        schema: LAYOUT_FIXTURE_SCHEMA.into(),
+        schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
         import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
     }
@@ -618,8 +541,8 @@ mod tests {
     /// (unlike e.g. flow, layout uses the same string for both).
     #[test]
     fn artifact_kind_uses_the_fixture_schema() {
-        assert_eq!(artifact_kind().schema, LAYOUT_FIXTURE_SCHEMA);
-        assert_eq!(artifact_kind().source_format, LAYOUT_FIXTURE_SCHEMA);
+        assert_eq!(artifact_kind().schema, LAYOUT_DOCUMENT_SCHEMA);
+        assert_eq!(artifact_kind().source_format, LAYOUT_DOCUMENT_SCHEMA);
     }
 }
 //#endregion 🧪️Tests

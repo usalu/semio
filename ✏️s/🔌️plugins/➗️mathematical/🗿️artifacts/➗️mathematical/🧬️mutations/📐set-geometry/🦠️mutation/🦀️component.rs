@@ -1,5 +1,5 @@
-use crate::artifacts::mathematical::{MathGeometry, MathProjection};
+use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 
-pub fn apply(projection: &mut MathProjection, geometry: &MathGeometry) {
-    projection.geometry = geometry.clone();
+pub fn apply(snapshot: &mut MathematicalSnapshot, geometry: &MathematicalGeometry) {
+    snapshot.geometry = geometry.clone();
 }

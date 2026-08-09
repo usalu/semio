@@ -8,17 +8,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::din16798::Document;
+use crate::artifacts::din16798::Din16798Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
-pub fn encode(document: &Document) -> Vec<u8> {
+pub fn encode(document: &Din16798Snapshot) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Document, PackError> {
-    <Document as store::DocumentPack>::decode_pack(bytes)
+pub fn decode(bytes: &[u8]) -> Result<Din16798Snapshot, PackError> {
+    <Din16798Snapshot as store::DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -28,12 +28,12 @@ mod tests {
 
     #[test]
     fn document_dsl_pack_equivalence() {
-        store::test_support::assert_dsl_pack_equivalence(&Document::default());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&Din16798Snapshot::default());
     }
 
     #[test]
     fn pack_round_trips() {
-        let document = Document::default();
+        let document = Din16798Snapshot::default();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }

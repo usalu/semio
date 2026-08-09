@@ -2,8 +2,8 @@
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::fixture_nodes;
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -18,8 +18,8 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
         let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
         let node = dsl::to_dsl_value(&json!({
@@ -33,7 +33,7 @@ pub mod add_node {
             "handles": []
         }))
         .expect("node serializes");
-        Ok(Emit { document_mutations: vec![MindmapWiresMutation::AddNode { node }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![WiresMutation::AddNode { node }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddNode
@@ -50,7 +50,7 @@ mod tests {
     fn add_node_appends_and_selects() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(fixture_nodes(&projection.board_fixture).len(), 1);
         assert!(find_board_node(&projection, "node-1").is_some());
     }

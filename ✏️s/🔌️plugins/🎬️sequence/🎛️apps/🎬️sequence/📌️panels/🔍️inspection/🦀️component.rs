@@ -1,7 +1,7 @@
 //! 🔍️ Sequence play app panel — inspection: the selected step's kind and params.
 
 use crate::apps::sequence::terminology::SequenceLabels;
-use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
+use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, selected: &[String], labels: &SequenceLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "sequence-play-inspector.empty".into(),

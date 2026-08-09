@@ -2,7 +2,7 @@
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_camera {
         pub camera: NoteCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -34,8 +34,8 @@ pub mod set_camera_zoom {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let mut camera = cfg.projection.camera.clone();
+    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let mut camera = cfg.snapshot.camera.clone();
         camera.zoom = payload.value;
         Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera }]))
     }
@@ -56,10 +56,10 @@ mod tests {
     #[test]
     fn set_camera_writes_config_and_emits_no_document_mutations() {
         let mut app = note_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, NoteCommand::SetCamera(set_camera::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));
-        assert!(result.document_mutations.is_empty(), "camera is config-only and emits no document operations");
-        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        assert!(result.mutations.is_empty(), "camera is config-only and emits no document operations");
+        assert_eq!(app.snapshot().expect("snapshot"), before, "camera never mutates the document");
         let json = render(&mut app, NOTE_PLAY_BODY_COMPOSITE);
         assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects config state: {json}");
         assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects config state: {json}");
@@ -70,7 +70,7 @@ mod tests {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::SetCamera(set_camera::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
         let result = dispatch(&mut app, NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }));
-        assert!(result.document_mutations.is_empty(), "camera zoom is config-only and emits no document operations");
+        assert!(result.mutations.is_empty(), "camera zoom is config-only and emits no document operations");
         let json = render(&mut app, NOTE_PLAY_BODY_COMPOSITE);
         assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
         assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");

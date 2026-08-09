@@ -1897,7 +1897,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagDocument as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagDocument text");
+        let document = <DagSnapshot as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagSnapshot text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -7280,7 +7280,7 @@ fn dag_document_schema() -> String {
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DagDocument {
+pub struct DagSnapshot {
     #[serde(default = "dag_document_schema")]
     pub schema: String,
     #[serde(default)]
@@ -7289,23 +7289,23 @@ pub struct DagDocument {
     pub edges: Vec<DagFixtureEdge>,
 }
 
-pub fn empty_dag_document() -> DagDocument {
-    DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+pub fn empty_dag_document() -> DagSnapshot {
+    DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }
 
 /// 🌱️ The demo document seed (nodes/edges from `🕸️demo.dag`), sharing the fixture's example.
-pub fn default_dag_document() -> DagDocument {
+pub fn default_dag_document() -> DagSnapshot {
     dag_document_from_fixture(&DagFixture::default())
 }
 
-/// 🔁️ Projects a {@link DagFixture} (which also carries a camera) down to the persistent {@link DagDocument}.
-pub fn dag_document_from_fixture(fixture: &DagFixture) -> DagDocument {
-    DagDocument { schema: fixture.schema.clone(), nodes: fixture.nodes.clone(), edges: fixture.edges.clone() }
+/// 🔁️ Projects a {@link DagFixture} (which also carries a camera) down to the persistent {@link DagSnapshot}.
+pub fn dag_document_from_fixture(fixture: &DagFixture) -> DagSnapshot {
+    DagSnapshot { schema: fixture.schema.clone(), nodes: fixture.nodes.clone(), edges: fixture.edges.clone() }
 }
 
-/// 🔁️ Rehydrates a full {@link DagFixture} from a {@link DagDocument} plus a runtime `camera`, so the
+/// 🔁️ Rehydrates a full {@link DagFixture} from a {@link DagSnapshot} plus a runtime `camera`, so the
 /// existing fixture-shaped helpers (`dag_fixture_to_wire_literal`, `DagHost`, …) can be reused.
-pub fn dag_fixture_from_document(document: &DagDocument, camera: DagCamera) -> DagFixture {
+pub fn dag_fixture_from_document(document: &DagSnapshot, camera: DagCamera) -> DagFixture {
     DagFixture { schema: document.schema.clone(), camera, nodes: document.nodes.clone(), edges: document.edges.clone() }
 }
 
@@ -7432,7 +7432,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 //#endregion 🔖️CollectionSupport
 
 /// 📦️ Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionMutation}
-/// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetDocument`
+/// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetSnapshot`
 /// replaces the whole snapshot (import/reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
@@ -7445,21 +7445,21 @@ pub enum DagMutation {
     Edges(CollectionMutation<String, DagFixtureEdge, DagEdgePatch>),
     SetNodes { nodes: Vec<DagNodeSpec> },
     SetEdges { edges: Vec<DagFixtureEdge> },
-    SetDocument { document: DagDocument },
+    SetSnapshot { snapshot: DagSnapshot },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagDiff {
-    pub document: Option<DagDocument>,
+    pub document: Option<DagSnapshot>,
     pub nodes: Option<CollectionDiff<String, DagNodePatch, DagNodeSpec>>,
     pub edges: Option<CollectionDiff<String, DagEdgePatch, DagFixtureEdge>>,
     pub set_nodes: Option<Vec<DagNodeSpec>>,
     pub set_edges: Option<Vec<DagFixtureEdge>>,
 }
 
-impl MutationDiff<DagDocument> for DagDiff {
-    fn apply(&self, snapshot: &DagDocument) -> DagDocument {
+impl MutationDiff<DagSnapshot> for DagDiff {
+    fn apply(&self, snapshot: &DagSnapshot) -> DagSnapshot {
         if let Some(document) = &self.document {
             return document.clone();
         }
@@ -7495,36 +7495,36 @@ impl MutationDiff<DagDocument> for DagDiff {
     }
 }
 
-impl Mutation<DagDocument> for DagMutation {
+impl Mutation<DagSnapshot> for DagMutation {
     type Diff = DagDiff;
 
-    fn diff(&self, snapshot: &DagDocument) -> DagDiff {
+    fn diff(&self, snapshot: &DagSnapshot) -> DagDiff {
         match self {
             DagMutation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_mutation(&snapshot.nodes, operation)), ..Default::default() },
             DagMutation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_mutation(&snapshot.edges, operation)), ..Default::default() },
             DagMutation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
             DagMutation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
-            DagMutation::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
+            DagMutation::SetSnapshot { snapshot } => DagDiff { document: Some(snapshot.clone()), ..Default::default() },
         }
     }
 
-    fn inverse(&self, snapshot: &DagDocument) -> Vec<Self> {
+    fn inverse(&self, snapshot: &DagSnapshot) -> Vec<Self> {
         match self {
             DagMutation::Nodes(operation) => vec![DagMutation::Nodes(inverse_collection_mutation(&snapshot.nodes, operation))],
             DagMutation::Edges(operation) => vec![DagMutation::Edges(inverse_collection_mutation(&snapshot.edges, operation))],
             DagMutation::SetNodes { .. } => vec![DagMutation::SetNodes { nodes: snapshot.nodes.clone() }],
             DagMutation::SetEdges { .. } => vec![DagMutation::SetEdges { edges: snapshot.edges.clone() }],
-            DagMutation::SetDocument { .. } => vec![DagMutation::SetDocument { document: snapshot.clone() }],
+            DagMutation::SetSnapshot { .. } => vec![DagMutation::SetSnapshot { snapshot: snapshot.clone() }],
         }
     }
 }
 
-pub type DagEnvelope = DocumentEnvelope<DagDocument, DagMutation>;
-pub type DagStore = DocumentStore<DagDocument, DagMutation>;
+pub type DagEnvelope = DocumentEnvelope<DagSnapshot, DagMutation>;
+pub type DagStore = DocumentStore<DagSnapshot, DagMutation>;
 
 //#region 🔖️Dsl
 // 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
-// type (`DagDocument`/`DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`/`IoPortSpec`/`DagMedia`/
+// type (`DagSnapshot`/`DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`/`IoPortSpec`/`DagMedia`/
 // `DagPreviewContent`/`PortShape`/`EdgeRouteStyle`/`DagMediaKind`/patches) either derives a
 // `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
 // (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
@@ -7541,7 +7541,7 @@ pub type DagStore = DocumentStore<DagDocument, DagMutation>;
 // (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
 // outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagMutationDsl` are
+// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagSnapshotDsl`/`DagMutationDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
@@ -7716,29 +7716,29 @@ fn dag_node_patch_from_dsl(mirror: DagNodePatchDsl) -> DagNodePatch {
     DagNodePatch { name: mirror.name, x: mirror.x, y: mirror.y, width: mirror.width, height: mirror.height, kind: mirror.kind.map(dag_node_kind_from_dsl) }
 }
 
-/// 🧬️ Mirror of {@link DagDocument} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
+/// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
 /// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
 #[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
 #[dsl(extension = "dag")]
 #[dsl(layout = "lines")]
-struct DagDocumentDsl {
+struct DagSnapshotDsl {
     schema: String,
     nodes: Vec<DagNodeSpecDsl>,
     #[dsl(table)]
     edges: Vec<DagFixtureEdge>,
 }
 
-fn dag_document_to_dsl(document: &DagDocument) -> DagDocumentDsl {
-    DagDocumentDsl { schema: document.schema.clone(), nodes: document.nodes.iter().map(dag_node_spec_to_dsl).collect(), edges: document.edges.clone() }
+fn dag_snapshot_to_dsl(document: &DagSnapshot) -> DagSnapshotDsl {
+    DagSnapshotDsl { schema: document.schema.clone(), nodes: document.nodes.iter().map(dag_node_spec_to_dsl).collect(), edges: document.edges.clone() }
 }
 
-fn dag_document_from_dsl(mirror: DagDocumentDsl) -> DagDocument {
-    DagDocument { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
+fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
+    DagSnapshot { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
 }
 
 
 /// 📜️ Handcrafted DocumentDsl (P6): derive no longer emits DocumentDsl/DocumentPack.
-impl crate::os_store::DocumentDsl for DagDocumentDsl {
+impl crate::os_store::DocumentDsl for DagSnapshotDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -7768,7 +7768,7 @@ impl crate::os_store::DocumentDsl for DagDocumentDsl {
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl crate::os_store::DocumentPack for DagDocumentDsl {
+impl crate::os_store::DocumentPack for DagSnapshotDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
@@ -7796,28 +7796,28 @@ impl crate::os_store::DocumentPack for DagDocumentDsl {
     }
 }
 
-impl crate::os_store::DocumentDsl for DagDocument {
+impl crate::os_store::DocumentDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_document_from_dsl(<DagDocumentDsl as crate::os_store::DocumentDsl>::parse_dsl(text)?))
+        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::DocumentDsl>::parse_dsl(text)?))
     }
 
     fn print_dsl(&self) -> String {
-        <DagDocumentDsl as crate::os_store::DocumentDsl>::print_dsl(&dag_document_to_dsl(self))
+        <DagSnapshotDsl as crate::os_store::DocumentDsl>::print_dsl(&dag_snapshot_to_dsl(self))
     }
 }
 
-/// 📦️ Binary counterpart of the `DocumentDsl` impl above — `DagDocument` can't `#[derive(crate::os_dsl::
+/// 📦️ Binary counterpart of the `DocumentDsl` impl above — `DagSnapshot` can't `#[derive(crate::os_dsl::
 /// DslDocument)]` directly (see this region's opening doc comment), so `DocumentPack` is hand-routed
-/// through the same `DagDocumentDsl` mirror, which does derive it.
-impl crate::os_store::DocumentPack for DagDocument {
+/// through the same `DagSnapshotDsl` mirror, which does derive it.
+impl crate::os_store::DocumentPack for DagSnapshot {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <DagDocumentDsl as crate::os_store::DocumentPack>::encode_pack_with(&dag_document_to_dsl(self), options)
+        <DagSnapshotDsl as crate::os_store::DocumentPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        Ok(dag_document_from_dsl(<DagDocumentDsl as crate::os_store::DocumentPack>::decode_pack_with(bytes, options)?))
+        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::DocumentPack>::decode_pack_with(bytes, options)?))
     }
 }
 //#endregion 🔖️DslMirror
@@ -7871,8 +7871,8 @@ enum DagMutationDsl {
         #[dsl(table)]
         edges: Vec<DagFixtureEdge>,
     },
-    SetDocument {
-        document: DagDocumentDsl,
+    SetSnapshot {
+        snapshot: DagSnapshotDsl,
     },
 }
 
@@ -7888,7 +7888,7 @@ fn dag_mutation_to_dsl(operation: &DagMutation) -> DagMutationDsl {
         DagMutation::Edges(CollectionMutation::Patch { id, patch }) => DagMutationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
         DagMutation::SetNodes { nodes } => DagMutationDsl::SetNodes { nodes: nodes.iter().map(dag_node_spec_to_dsl).collect() },
         DagMutation::SetEdges { edges } => DagMutationDsl::SetEdges { edges: edges.clone() },
-        DagMutation::SetDocument { document } => DagMutationDsl::SetDocument { document: dag_document_to_dsl(document) },
+        DagMutation::SetSnapshot { snapshot } => DagMutationDsl::SetSnapshot { snapshot: dag_snapshot_to_dsl(snapshot) },
     }
 }
 
@@ -7907,7 +7907,7 @@ fn dag_mutation_from_dsl(mirror: DagMutationDsl) -> DagMutation {
         DagMutationDsl::EdgesPatch { id, patch } => DagMutation::Edges(CollectionMutation::Patch { id, patch }),
         DagMutationDsl::SetNodes { nodes } => DagMutation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
         DagMutationDsl::SetEdges { edges } => DagMutation::SetEdges { edges },
-        DagMutationDsl::SetDocument { document } => DagMutation::SetDocument { document: dag_document_from_dsl(document) },
+        DagMutationDsl::SetSnapshot { snapshot } => DagMutation::SetSnapshot { snapshot: dag_snapshot_from_dsl(snapshot) },
     }
 }
 
@@ -7978,14 +7978,14 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct DagDocumentVcs {
+    pub struct DagSnapshotVcs {
         store: RefCell<DagStore>,
     }
 
     #[wasm_bindgen]
-    impl DagDocumentVcs {
+    impl DagSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<DagDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -8032,7 +8032,7 @@ mod dag_vcs_tests {
         DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() }
     }
 
-    fn round_trip(document: &DagDocument, operation: &DagMutation) -> DagDocument {
+    fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
         let forward = vcs::apply_mutation(document, operation);
         let mut restored = forward.clone();
         for back in operation.inverse(document) {
@@ -8076,7 +8076,7 @@ mod dag_vcs_tests {
     /// 🧩️ One node per `DagNodeKind` tag (safe field values only — no raw JSON literals in
     /// `default`/`value`/`Tree.json`, see {@link json_to_property}'s docstring), so the DSL round trip
     /// exercises every kind-specific payload shape the wire-literal property bag needs to carry.
-    fn kitchen_sink_document() -> DagDocument {
+    fn kitchen_sink_snapshot() -> DagSnapshot {
         let port = |id: &str, label: &str| IoPortSpec::simple(id, label);
         let nodes = vec![
             DagNodeSpec {
@@ -8138,7 +8138,7 @@ mod dag_vcs_tests {
             DagFixtureEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },
             DagFixtureEdge { id: "e2".into(), source: "comp@out".into(), target: "screen@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
         ];
-        DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes, edges }
+        DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes, edges }
     }
 
     #[test]
@@ -8149,8 +8149,8 @@ mod dag_vcs_tests {
 
     #[test]
     fn dag_document_dsl_round_trips_every_node_kind() {
-        crate::os_store::test_support::assert_dsl_round_trip(&kitchen_sink_document());
-        crate::os_store::test_support::assert_dsl_pack_equivalence(&kitchen_sink_document());
+        crate::os_store::test_support::assert_dsl_round_trip(&kitchen_sink_snapshot());
+        crate::os_store::test_support::assert_dsl_pack_equivalence(&kitchen_sink_snapshot());
     }
 
     #[test]
@@ -8216,12 +8216,12 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_set_document() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetDocument { document: kitchen_sink_document() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetSnapshot { snapshot: kitchen_sink_snapshot() });
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
-        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
         crate::os_store::test_support::assert_document_text_round_trip(&store);
         crate::os_store::test_support::assert_document_pack_round_trip(&store);
@@ -8233,10 +8233,10 @@ mod dag_vcs_tests {
     /// any new codec.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<DagDocument, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️DslTests
 }

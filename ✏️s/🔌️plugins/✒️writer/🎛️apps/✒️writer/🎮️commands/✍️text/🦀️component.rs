@@ -4,7 +4,7 @@
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
 use crate::artifacts::writer::engine::{apply_jack_rename, dag_jack_example_document, format_writer_text, jack_example_document, jack_symbol_at_offset, JackSymbolKind};
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +21,7 @@ pub mod text_edit {
     /// ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into a few undo
     /// steps, not one-per-keystroke. Any interrupting command applies without this key and breaks the
     /// coalescing run.
-    pub fn handle(payload: &TextEdit, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &TextEdit, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::amend(vec![WriterMutation::SetText { text: payload.text.clone() }], "writer-text-edit"))
     }
 }
@@ -39,28 +39,28 @@ pub mod set_text {
 
     /// 🪙️ A discrete document replacement (unlike `TextEdit`'s keystroke bursts) — each call is its own
     /// undo step, so it must NOT share `TextEdit`'s coalescing key.
-    pub fn handle(payload: &SetText, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetText, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WriterMutation::SetText { text: payload.text.clone() }]))
     }
 }
 //#endregion 🔖️SetText
 
-//#region 🔖️SetDocument
-pub mod set_document {
+//#region 🔖️SetSnapshot
+pub mod set_snapshot {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "document")]
-    pub struct SetDocument {
+    #[dsl(keyword = "set-snapshot")]
+    pub struct SetSnapshot {
         #[dsl(block)]
-        pub document: WriterProjection,
+        pub snapshot: WriterSnapshot,
     }
 
-    pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![WriterMutation::SetDocument { document: payload.document.clone() }]))
+    pub fn handle(payload: &SetSnapshot, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![WriterMutation::SetSnapshot { snapshot: payload.snapshot.clone() }]))
     }
 }
-//#endregion 🔖️SetDocument
+//#endregion 🔖️SetSnapshot
 
 //#region 🔖️OpenDocument
 pub mod open_document {
@@ -73,7 +73,7 @@ pub mod open_document {
         pub text: String,
     }
 
-    pub fn handle(payload: &OpenDocument, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenDocument, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
         let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
         let language_id = dsl::language_for_semio_content(payload.text.as_bytes())
@@ -86,32 +86,32 @@ pub mod open_document {
             language_id,
             payload.text.len()
         );
-        let document = WriterProjection { schema: crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA.into(), id: id.clone(), language_id, uri: payload.uri.clone(), text: payload.text.clone() };
-        Ok(Emit::mutations(vec![WriterMutation::SetDocument { document }]))
+        let document = WriterSnapshot { schema: crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA.into(), id: id.clone(), language_id, uri: payload.uri.clone(), text: payload.text.clone() };
+        Ok(Emit::mutations(vec![WriterMutation::SetSnapshot { snapshot: document }]))
     }
 }
 //#endregion 🔖️OpenDocument
 
 //#region 🔖️JsonSetters
-/// 🙈️ Shared body for `SetDocumentJson`/`SetFixtureJson` — both replace the whole document from a raw
+/// 🙈️ Shared body for `SetSnapshotJson`/`SetFixtureJson` — both replace the whole document from a raw
 /// JSON string, silently no-op'ing on a parse failure (dev-only chrome setters, never user-facing).
 fn parse_document_json(json: &str) -> Emit<WriterMutation, WriterConfigMutation> {
-    match serde_json::from_str::<WriterProjection>(json) {
-        Ok(document) => Emit::mutations(vec![WriterMutation::SetDocument { document }]),
+    match serde_json::from_str::<WriterSnapshot>(json) {
+        Ok(document) => Emit::mutations(vec![WriterMutation::SetSnapshot { snapshot: document }]),
         Err(_) => Emit::default(),
     }
 }
 
-pub mod set_document_json {
+pub mod set_snapshot_json {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "document-json")]
-    pub struct SetDocumentJson {
+    pub struct SetSnapshotJson {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetDocumentJson, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSnapshotJson, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(parse_document_json(&payload.json))
     }
 }
@@ -125,7 +125,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(parse_document_json(&payload.json))
     }
 }
@@ -134,7 +134,7 @@ pub mod set_fixture_json {
 //#region 🔖️SetActiveExample
 pub mod set_active_example {
     use super::*;
-    use crate::artifacts::writer::engine::empty_writer_projection;
+    use crate::artifacts::writer::engine::empty_writer_snapshot;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
@@ -142,13 +142,13 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = match payload.example_id.as_str() {
             "jack" => jack_example_document(),
             "dag.jack" => dag_jack_example_document(),
-            _ => empty_writer_projection(),
+            _ => empty_writer_snapshot(),
         };
-        Ok(Emit::mutations(vec![WriterMutation::SetDocument { document }]))
+        Ok(Emit::mutations(vec![WriterMutation::SetSnapshot { snapshot: document }]))
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -161,9 +161,9 @@ pub mod format_document {
     #[dsl(keyword = "format-document")]
     pub struct FormatDocument {}
 
-    pub fn handle(_payload: &FormatDocument, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &FormatDocument, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let formatted = format_writer_text(&document.text, &document.language_id);
         let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 }]);
         if formatted != document.text {
@@ -184,9 +184,9 @@ pub mod commit_rename {
         pub text: String,
     }
 
-    pub fn handle(payload: &CommitRename, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &CommitRename, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
         if selection.start == selection.end {
             if let Some(symbol) = jack_symbol_at_offset(&document.text, selection.start) {
@@ -223,11 +223,11 @@ mod tests {
         for text in ["h", "he", "hel", "hell", "hello"] {
             dispatch(&mut app, WriterCommand::TextEdit(super::text_edit::TextEdit { text: text.into() }));
         }
-        assert_eq!(app.projection().expect("projection").text, "hello");
+        assert_eq!(app.snapshot().expect("projection").text, "hello");
         // The whole typing burst shares one coalesce key, so a single undo restores the pre-burst buffer
         // rather than backing out one keystroke at a time.
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").text, "", "coalesced typing collapses to one undo step");
+        assert_eq!(app.snapshot().expect("projection").text, "", "coalesced typing collapses to one undo step");
     }
 
     #[test]
@@ -235,8 +235,8 @@ mod tests {
         let mut app = app_with_jack();
         dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }));
         let result = app.dispatch_typed(WriterCommand::FormatDocument(format_document::FormatDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("format");
-        assert_eq!(result.document_mutations.len(), 1);
-        assert!(app.projection().expect("projection").text.contains('\n'));
+        assert_eq!(result.mutations.len(), 1);
+        assert!(app.snapshot().expect("projection").text.contains('\n'));
     }
 
     #[test]
@@ -245,15 +245,15 @@ mod tests {
         // not record a history entry.
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::FormatDocument(format_document::FormatDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("format");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]
     fn set_text_action_updates_projection() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetText(super::set_text::SetText { text: "MATCH (a) RETURN a".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set text");
-        assert_eq!(result.document_mutations.len(), 1);
-        assert_eq!(app.projection().expect("projection").text, "MATCH (a) RETURN a");
+        assert_eq!(result.mutations.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").text, "MATCH (a) RETURN a");
     }
 
     #[test]
@@ -261,13 +261,13 @@ mod tests {
         let mut app = new_app();
         dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "first".into() }));
         dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "second".into() }));
-        assert_eq!(app.projection().expect("projection").text, "second");
+        assert_eq!(app.snapshot().expect("projection").text, "second");
         let undo = app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert!(undo.document_mutations.is_empty());
+        assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-        assert_eq!(app.projection().expect("projection").text, "first");
+        assert_eq!(app.snapshot().expect("projection").text, "first");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").text, "second");
+        assert_eq!(app.snapshot().expect("projection").text, "second");
     }
 
     #[test]
@@ -280,8 +280,8 @@ mod tests {
         // a real selection command first (mirrors what the editor surface does before offering rename).
         dispatch(&mut app, WriterCommand::SetEditorSelection(crate::apps::writer::commands::selection::set_editor_selection::SetEditorSelection { start, end: start }));
         let result = app.dispatch_typed(WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() }), &semio_framework_plugin::testkit::meta("local")).expect("commit rename");
-        assert_eq!(result.document_mutations.len(), 1);
-        let text = app.projection().expect("projection").text;
+        assert_eq!(result.mutations.len(), 1);
+        let text = app.snapshot().expect("projection").text;
         assert_eq!(text.matches("piece").count(), 3);
         assert_eq!(text.matches("a:Piece").count(), 0);
     }
@@ -290,8 +290,8 @@ mod tests {
     fn set_active_example_loads_jack_fixture() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
-        assert_eq!(result.document_mutations.len(), 1);
-        let projection = app.projection().expect("projection");
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("projection");
         assert_eq!(projection.id, "jack");
         assert!(projection.text.contains("MATCH"));
     }
@@ -300,16 +300,16 @@ mod tests {
     fn set_active_example_loads_dag_jack_fixture() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "dag.jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
-        assert_eq!(result.document_mutations.len(), 1);
-        assert_eq!(app.projection().expect("projection").id, "dag-jack");
+        assert_eq!(result.mutations.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").id, "dag-jack");
     }
 
     #[test]
     fn set_active_example_falls_back_to_empty_document() {
         let mut app = app_with_jack();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
-        assert_eq!(result.document_mutations.len(), 1);
-        let projection = app.projection().expect("projection");
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("projection");
         assert_eq!(projection.id, "empty");
         assert_eq!(projection.text, "");
     }

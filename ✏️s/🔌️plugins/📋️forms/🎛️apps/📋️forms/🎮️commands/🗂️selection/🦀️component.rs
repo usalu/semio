@@ -1,7 +1,7 @@
 //! 🗂️ Forms play app commands — blueprint/inspector selection.
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::artifacts::forms::{op::FormMutation, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::config(vec![FormsConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn set_selection_reflects_in_the_blueprint_builder_render() {
         let mut app = forms_app();
-        let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        let first_question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::SetSelection(set_selection::SetSelection { ids: vec![first_question_id.clone()] }));
         let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
         assert!(json.contains(&format!(r#""selectedId":"{first_question_id}""#)));

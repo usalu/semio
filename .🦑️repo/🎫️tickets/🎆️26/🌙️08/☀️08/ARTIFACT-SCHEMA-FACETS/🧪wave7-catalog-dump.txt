@@ -1,0 +1,108 @@
+[DEBUG] s.lowpoly.lowpoly facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.block.block3d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1992 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.puzzle.puzzle3d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.puzzle.puzzle5d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.architect.program facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.raster.raster facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.playbook.playbook facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.block.block5d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.fem.fem3d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1991 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.demonstrator.playground facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.gis.gisterrain facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.reasoning.wires facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.energy.model facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1999 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1997 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.remodel.remodel facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.shooting.shooting facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.animate.present facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.block.block2d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.note.note facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.cad.cad facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.procedural.procedural2d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.writer.writer facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.gis.gismap facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.fem.fem2d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1993 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.forms.forms facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.dag.dag facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1996 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1998 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1994 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.mathematical.mathematical facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.vdi3805 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.trinity.jack facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.din4108 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.imperative.imperative facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.vcs.vcs facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.sourcing.curate facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.layout.layout facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.din18599 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.procedural.procedural3d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.iso16757 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.process.process3d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.sequence.sequence facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.space.home facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.flow.flow facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1995 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.puzzle.puzzle2d facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.trinity.rewrite facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.en1990 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.draw.draw facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] s.norm.din16798 facets artifact=[true, true, true, true, true] snapshot=[true, true, true, true, true] diff=[true, true, true, true, true]
+[DEBUG] catalog artifact id s.animate.present
+[DEBUG] catalog artifact id s.architect.program
+[DEBUG] catalog artifact id s.block.block2d
+[DEBUG] catalog artifact id s.block.block3d
+[DEBUG] catalog artifact id s.block.block5d
+[DEBUG] catalog artifact id s.cad.cad
+[DEBUG] catalog artifact id s.dag.dag
+[DEBUG] catalog artifact id s.demonstrator.playground
+[DEBUG] catalog artifact id s.draw.draw
+[DEBUG] catalog artifact id s.energy.model
+[DEBUG] catalog artifact id s.fem.fem2d
+[DEBUG] catalog artifact id s.fem.fem3d
+[DEBUG] catalog artifact id s.flow.flow
+[DEBUG] catalog artifact id s.forms.forms
+[DEBUG] catalog artifact id s.gis.gismap
+[DEBUG] catalog artifact id s.gis.gisterrain
+[DEBUG] catalog artifact id s.imperative.imperative
+[DEBUG] catalog artifact id s.layout.layout
+[DEBUG] catalog artifact id s.lowpoly.lowpoly
+[DEBUG] catalog artifact id s.mathematical.mathematical
+[DEBUG] catalog artifact id s.norm.din16798
+[DEBUG] catalog artifact id s.norm.din18599
+[DEBUG] catalog artifact id s.norm.din4108
+[DEBUG] catalog artifact id s.norm.en1990
+[DEBUG] catalog artifact id s.norm.en1991
+[DEBUG] catalog artifact id s.norm.en1992
+[DEBUG] catalog artifact id s.norm.en1993
+[DEBUG] catalog artifact id s.norm.en1994
+[DEBUG] catalog artifact id s.norm.en1995
+[DEBUG] catalog artifact id s.norm.en1996
+[DEBUG] catalog artifact id s.norm.en1997
+[DEBUG] catalog artifact id s.norm.en1998
+[DEBUG] catalog artifact id s.norm.en1999
+[DEBUG] catalog artifact id s.norm.iso16757
+[DEBUG] catalog artifact id s.norm.vdi3805
+[DEBUG] catalog artifact id s.note.note
+[DEBUG] catalog artifact id s.playbook.playbook
+[DEBUG] catalog artifact id s.procedural.procedural2d
+[DEBUG] catalog artifact id s.procedural.procedural3d
+[DEBUG] catalog artifact id s.process.process3d
+[DEBUG] catalog artifact id s.puzzle.puzzle2d
+[DEBUG] catalog artifact id s.puzzle.puzzle3d
+[DEBUG] catalog artifact id s.puzzle.puzzle5d
+[DEBUG] catalog artifact id s.raster.raster
+[DEBUG] catalog artifact id s.reasoning.wires
+[DEBUG] catalog artifact id s.remodel.remodel
+[DEBUG] catalog artifact id s.sequence.sequence
+[DEBUG] catalog artifact id s.shooting.shooting
+[DEBUG] catalog artifact id s.sourcing.curate
+[DEBUG] catalog artifact id s.space.home
+[DEBUG] catalog artifact id s.trinity.jack
+[DEBUG] catalog artifact id s.trinity.rewrite
+[DEBUG] catalog artifact id s.vcs.vcs
+[DEBUG] catalog artifact id s.writer.writer

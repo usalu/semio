@@ -1,6 +1,6 @@
 //! 🏭️ `bearbeiten` pane — the demonstrator's entwerfen-mit-bestand fabrication surface, served by
 //! 🏭️process's `process3d-play` app. This is the one pane that owns real bridging logic: process's
-//! engine tessellates a typed `Process3dDocument` rather than raw JSON, so the untyped
+//! engine tessellates a typed `Process3dSnapshot` rather than raw JSON, so the untyped
 //! `MeshData`-codec signature the OS registries expect is adapted here.
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use process::apps::process3d::{create_process3d_app, Process3dPlayApp};
 use process::artifacts::process3d::engine::processed_mesh;
-use process::artifacts::process3d::{Process3dDocument, PROCESS_3D_SCHEMA};
+use process::artifacts::process3d::{Process3dSnapshot, PROCESS_3D_SCHEMA};
 
 const PROCESS_3D_KIND: &str = "3d.process";
 const PROCESS_3D_FORMAT: &str = "process";
@@ -18,7 +18,7 @@ const PROCESS_3D_FORMAT: &str = "process";
 /// 🔺️ Replays a process document's fabrication steps and returns the resulting mesh — the JSON-typed
 /// adapter the OS mesh registries require around `process`'s typed engine entry point.
 fn mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let document: Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let document: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
 }
 

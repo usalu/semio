@@ -8,17 +8,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::iso16757::Document;
+use crate::artifacts::iso16757::Iso16757Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
-pub fn encode(document: &Document) -> Vec<u8> {
+pub fn encode(document: &Iso16757Snapshot) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Document, PackError> {
-    <Document as store::DocumentPack>::decode_pack(bytes)
+pub fn decode(bytes: &[u8]) -> Result<Iso16757Snapshot, PackError> {
+    <Iso16757Snapshot as store::DocumentPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -33,12 +33,12 @@ mod tests {
     // sub-field of that nested record (here: `Names.short_name`, `None` on many rows of this fixture's
     // `#[dsl(table)]` catalogue tables — `ProductGroup`/`ProductClass`/`Product`/`Subject` etc. all
     fn document_dsl_pack_equivalence_the_reference_fixture() {
-        store::test_support::assert_dsl_pack_equivalence(&Document::reference_fixture());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&Iso16757Snapshot::reference_fixture());
     }
 
     #[test]
     fn pack_round_trips_the_reference_fixture() {
-        let document = Document::reference_fixture();
+        let document = Iso16757Snapshot::reference_fixture();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }

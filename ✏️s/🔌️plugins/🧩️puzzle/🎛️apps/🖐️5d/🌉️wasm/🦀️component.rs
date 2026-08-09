@@ -6,7 +6,7 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-use crate::artifacts::puzzle5d::engine::empty_puzzle5d_projection;
+use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
 use crate::artifacts::puzzle5d::spr::{Puzzle5dEnvelope, Puzzle5dStore};
 use crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA;
 use std::cell::RefCell;
@@ -27,7 +27,7 @@ impl Puzzle5dDocumentVcs {
                 let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Puzzle5dStore::new(envelope)
             }
-            None => Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None)),
+            None => Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None)),
         };
         Ok(Self { store: RefCell::new(store) })
     }

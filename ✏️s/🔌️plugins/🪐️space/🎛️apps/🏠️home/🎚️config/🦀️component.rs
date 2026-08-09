@@ -2,10 +2,10 @@
 //! merged at app level per the per-app recipe: `Config`/`ConfigMutation` are inherently app-scoped,
 //! never artifact-scoped).
 //!
-//! 🕳️ `SHomeDocument` is a two-field counter document (`schema` + `catalog_generation`) with no tree
+//! 🕳️ `SHomeSnapshot` is a two-field counter document (`schema` + `catalog_generation`) with no tree
 //! structure, id generation, or media import/export of its own — the original monolith never factored
 //! out a pure `empty_home_document()`/compute helper (every call site builds the literal
-//! `SHomeDocument { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
+//! `SHomeSnapshot { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
 //! document-side `⚙️engine` node under `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the
 //! Home launcher's real `DocumentApp::Config`: the one `view_state.locale` read `apps::home`'s labels
 //! actually need, plus the `active_panel_tab` action.
@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
+#[dsl(id = "home.config")]
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
 pub struct HomeConfig {
@@ -29,7 +30,7 @@ pub struct HomeConfig {
 impl store::DocumentDsl for HomeConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
+        "home.config"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -218,14 +219,14 @@ mod tests {
 
     #[test]
     fn home_config_dsl_text_round_trips() {
-        store::test_support::assert_dsl_round_trip(&HomeConfig::default());
+        store::os_store::test_support::assert_dsl_round_trip(&HomeConfig::default());
     }
 
     #[test]
     fn home_config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
-        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
-        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
     }
 
     #[test]

@@ -1,7 +1,11 @@
 //! 🧬️ Iso16757 artifact schema — every field of the artifact with its state class.
 
+
+use std::collections::BTreeMap;
+
 use schema::ArtifactSchema;
-use serde::{{Deserialize, Serialize}};
+use crate::artifacts::iso16757::CatalogueValue;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Iso16757 artifact state across persistent and shared-ui classes.
@@ -26,14 +30,14 @@ impl Iso16757Artifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::iso16757::Iso16757Snapshot {
         crate::artifacts::iso16757::Iso16757Snapshot {
-            catalogue: self.catalogue,
-            dictionary: self.dictionary,
-            geometry: self.geometry,
-            selection: self.selection,
-            part_number_rule: self.part_number_rule,
-            part_number_inputs: self.part_number_inputs,
-            script_limits: self.script_limits,
-            exchange_process: self.exchange_process,
+            catalogue: self.catalogue.clone(),
+            dictionary: self.dictionary.clone(),
+            geometry: self.geometry.clone(),
+            selection: self.selection.clone(),
+            part_number_rule: self.part_number_rule.clone(),
+            part_number_inputs: self.part_number_inputs.clone(),
+            script_limits: self.script_limits.clone(),
+            exchange_process: self.exchange_process.clone(),
         }
     }
 
@@ -51,7 +55,14 @@ impl Iso16757Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::iso16757::Iso16757Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

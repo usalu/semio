@@ -1,0 +1,97 @@
+//! 🧬️ Forms snapshot schema — persistent fields only.
+
+use crate::artifacts::forms::{FormStep, FORMS_DOCUMENT_SCHEMA};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted forms document snapshot (persistent fields of the artifact).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.forms.forms")]
+pub struct FormsSnapshot {
+    #[state(persistent)]
+    pub schema: String,
+    #[state(persistent)]
+    pub id: String,
+    #[state(persistent)]
+    pub version: String,
+    #[state(persistent)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[state(persistent)]
+    pub steps: Vec<FormStep>,
+}
+
+impl Default for FormsSnapshot {
+    fn default() -> Self {
+        Self {
+            schema: FORMS_DOCUMENT_SCHEMA.into(),
+            id: "forms".into(),
+            version: "1".into(),
+            title: None,
+            steps: Vec::new(),
+        }
+    }
+}
+//#endregion 🔖️Snapshot
+
+//#region 🔖️DslMirror
+impl store::DocumentDsl for FormsSnapshot {
+    const EXTENSION: &'static str = "forms";
+    fn envelope_id() -> &'static str {
+        FORMS_DOCUMENT_SCHEMA
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &flow::playbook::PlaybookSpec::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        let spec = flow::playbook::PlaybookSpec::__dsl_from_record(&record)?;
+        Ok(spec.into())
+    }
+    fn print_dsl(&self) -> String {
+        let playbook: flow::playbook::PlaybookSpec = self.clone().into();
+        let body = dsl::print(&playbook.__dsl_to_record(), &flow::playbook::PlaybookSpec::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for FormsSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let playbook: flow::playbook::PlaybookSpec = self.clone().into();
+        let inner = store::pack_rt::encode_document(&flow::playbook::PlaybookSpec::__dsl_spec(), &playbook.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &flow::playbook::PlaybookSpec::__dsl_spec(), options)?;
+        let spec = flow::playbook::PlaybookSpec::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
+        Ok(spec.into())
+    }
+}
+//#endregion 🔖️DslMirror

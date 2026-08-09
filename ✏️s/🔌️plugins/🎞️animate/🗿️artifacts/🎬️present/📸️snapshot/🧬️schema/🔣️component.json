@@ -1,0 +1,50 @@
+{
+  "$id": "https://semio.tech/schema/s/animate/present/snapshot.json",
+  "title": "PresentSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "tiles"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "source": { "$ref": "#/$defs/FigureTileSource", "x-semio-state": "persistent" },
+    "tiles": { "type": "array", "items": { "$ref": "#/$defs/FigureTileDraft" }, "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "FigureTileFrame": {
+      "title": "FigureTileFrame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "width": { "type": "number", "format": "double" },
+        "height": { "type": "number", "format": "double" }
+      }
+    },
+    "FigureTileSource": {
+      "title": "FigureTileSource",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "kind", "frame"],
+      "properties": {
+        "src": { "type": "string" },
+        "kind": { "type": "string" },
+        "frame": { "$ref": "#/$defs/FigureTileFrame" },
+        "sourceAspect": { "type": "number", "format": "double" },
+        "pdfPage": { "type": "integer", "format": "uint32" }
+      }
+    },
+    "FigureTileDraft": {
+      "title": "FigureTileDraft",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "crop"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "crop": { "$ref": "#/$defs/FigureTileFrame" }
+      }
+    }
+  }
+}

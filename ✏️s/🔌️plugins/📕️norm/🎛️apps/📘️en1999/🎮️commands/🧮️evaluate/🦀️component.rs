@@ -20,7 +20,7 @@ pub struct Evaluate {}
 
 //#region 🔖️Handler
 pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, En1999Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1999Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_document(doc.snapshot.clone(), "evaluate")
+    crate::app_surface::commit_snapshot(En1999Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
 }
 //#endregion 🔖️Handler
 

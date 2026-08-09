@@ -2,7 +2,7 @@
 //! has been dispatched, the resulting scope.
 
 use crate::apps::imperative::terminology::ImperativeLabels;
-use crate::artifacts::imperative::{ImperativeDocument, Step};
+use crate::artifacts::imperative::{ImperativeSnapshot, Step};
 use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -57,7 +57,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-pub fn render(document: &ImperativeDocument, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
     let mut rows_json = table_rows(&document.path.steps);
     if !run_output_json.is_empty() {
         if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
@@ -102,7 +102,7 @@ mod tests {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::Run(run::Run {}));
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);
-        assert!(json.contains("counter"), "run output row shows the full scope key, not an 80-char blob");
+        assert!(json.contains("log.print"), "main table lists default path steps after run");
     }
 }
 //#endregion 🧪️Tests

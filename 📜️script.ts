@@ -2206,7 +2206,7 @@ const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
  * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` on the same fixtures — seeded at
  * wave 1 with every file that fails the check today (wave 0 only built the `pack` crate family itself;
  * wave 1 only wired `vcs`/`dsl_derive`/`framework`, proving the mechanism on `vcs/rs/lib.rs`'s own
- * `DemoProjection` fixture, which is why `vcs/rs/lib.rs` is NOT in this list). Wave 2's per-app-family
+ * `VcsSnapshot` fixture, which is why `vcs/rs/lib.rs` is NOT in this list). Wave 2's per-app-family
  * agents add the pack-equivalence assertions beside each technology's existing DSL round-trip tests and
  * remove that file from this list; wave 3 verifies it has shrunk to empty. Still empty today, but keyed
  * by `policyNormalizeRelPath` (canonical `<pluginId>/<component>`) like its siblings below, so the first
@@ -2221,7 +2221,7 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  * `vcs::test_support::assert_command_envelope_round_trip` (added in CW7) on the same fixtures — seeded
  * at CW8 with every file that fails the check today, exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
  * was seeded for the dsl/pack lock step (`vcs/rs/lib.rs` itself proves the mechanism on its own
- * `DemoProjection`/`LossyMutation` fixtures, which is why it is NOT in this list). Remove an entry
+ * `VcsSnapshot`/`LossyMutation` fixtures, which is why it is NOT in this list). Remove an entry
  * once that file adds the command-envelope-round-trip call. Keyed by `policyNormalizeRelPath` (canonical
  * `<pluginId>/<component>`, not the raw repo-relative path) so a plugin's move to the taxonomy layout
  * never requires touching this list — matched against every discovered file via `policyNormalizeRelPath`
@@ -2250,7 +2250,7 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
  * elsewhere covers them) — accepted as DSL-complete by `policyDslCompletenessBreaches` without a
  * hand-rolled-impl grep hit under that exact type name.
  * - `Value` (`serde_json::Value`): blanket `impl DocumentDsl for serde_json::Value` in `vcs/rs/lib.rs`
- *   (the schema-less escape hatch for a technology whose `DocumentApp::Projection` predates its own
+ *   (the schema-less escape hatch for a technology whose `DocumentApp::Snapshot` predates its own
  *   typed DSL derive — see `puzzle_2d`'s `🔖️ValueBridge` region).
  * - `SetDocumentMutation` (`norm_core::SetDocumentMutation<D>`): one hand-rolled generic
  *   `impl<D: DocumentDsl> OpText for SetDocumentMutation<D>` in `norm/core/rs/lib.rs`, shared by every
@@ -2947,25 +2947,25 @@ function policyAllRustFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; projectionType: string; mutationType: string };
+type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; snapshotType: string; mutationType: string };
 
 const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+(\w+)\s*\{/g;
 
-/** 🔎️Extracts `type Projection = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
+/** 🔎️Extracts `type Snapshot = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
 function policyDocumentAppUsages(scope: string, content: string): PolicyDocumentAppUsage[] {
   const usages: PolicyDocumentAppUsage[] = [];
   let m: RegExpExecArray | null;
   POLICY_DOCUMENT_APP_IMPL_RE.lastIndex = 0;
   while ((m = POLICY_DOCUMENT_APP_IMPL_RE.exec(content))) {
     const body = policyExtractFnBody(content, m.index);
-    const projectionMatch = body.match(/type\s+Projection\s*=\s*([\w:<>]+)\s*;/);
+    const snapshotMatch = body.match(/type\s+Snapshot\s*=\s*([\w:<>]+)\s*;/);
     const mutationMatch = body.match(/type\s+Mutation\s*=\s*([\w:<>]+)\s*;/);
-    if (!projectionMatch || !mutationMatch) continue;
+    if (!snapshotMatch || !mutationMatch) continue;
     usages.push({
       scope,
       line: policyLineOfIndex(content, m.index),
       appType: m[1]!,
-      projectionType: projectionMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
+      snapshotType: snapshotMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
       mutationType: mutationMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
     });
   }
@@ -3008,9 +3008,9 @@ const POLICY_USE_ALIAS_RE = /\b(\w+)\s+as\s+(\w+)\b/g;
 
 /**
  * 🔎️One O(total content) pass building every `RealName as AliasName` rename seen in any `use` item
- * (e.g. `use raster_core::{RasterProjection as RasterDocument};`) — a technology's block-kind wrapper
+ * (e.g. `use raster_core::{RasterSnapshot as RasterDocument};`) — a technology's block-kind wrapper
  * commonly re-exports another crate's already-DSL-complete type under a locally-meaningful alias
- * (`forms`'s `PlaybookSpec as FormSpec`, `raster/plugin`'s `RasterProjection as RasterDocument`), so a
+ * (`forms`'s `PlaybookSpec as FormSpec`, `raster/plugin`'s `RasterSnapshot as RasterDocument`), so a
  * plain per-file struct/impl scan alone would report a false gap on the alias name.
  */
 function policyTypeAliasMap(files: readonly { content: string }[]): Map<string, string> {
@@ -3035,11 +3035,11 @@ function policyResolveAlias(aliasOf: ReadonlyMap<string, string>, typeName: stri
 }
 
 /**
- * 📏️dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Projection`/`Mutation` type
+ * 📏️dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Snapshot`/`Mutation` type
  * must be DSL-complete — `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type itself (or
  * on the real type behind a `RealName as AliasName` import rename), a hand-rolled `impl DocumentDsl`/
  * `impl OpText`, or a documented generic bridge (see `POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`).
- * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Projection: vcs::DocumentDsl` /
+ * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Snapshot: vcs::DocumentDsl` /
  * `Mutation: vcs::OpText` bounds in `framework/plugin/rs/lib.rs`; this catches the same gap without
  * needing a full `cargo build`. A single pass builds the DSL-complete type-name sets once
  * (`policyDslCompleteTypeNames`) so checking every app's usage stays O(1) instead of re-scanning the
@@ -3054,8 +3054,8 @@ function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
 
   for (const { relPath, content } of files) {
     for (const usage of policyDocumentAppUsages(relPath, content)) {
-      const checks: readonly { label: "Projection" | "Mutation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
-        { label: "Projection", typeName: usage.projectionType, trait: "DocumentDsl", completeNames: complete.documentDsl },
+      const checks: readonly { label: "Snapshot" | "Mutation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
+        { label: "Snapshot", typeName: usage.snapshotType, trait: "DocumentDsl", completeNames: complete.documentDsl },
         { label: "Mutation", typeName: usage.mutationType, trait: "OpText", completeNames: complete.opText },
       ];
       for (const { label, typeName, trait, completeNames } of checks) {
@@ -3069,8 +3069,8 @@ function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
           scope: relPath,
           line: usage.line,
           priority: "high",
-          reason: "Every DocumentApp app's Projection must implement vcs::DocumentDsl and Mutation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
-          solution: `Add #[derive(dsl::DslDocument)] (Projection) / #[derive(dsl::DslOps)] (Mutation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
+          reason: "Every DocumentApp app's Snapshot must implement vcs::DocumentDsl and Mutation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
+          solution: `Add #[derive(dsl::DslDocument)] (Snapshot) / #[derive(dsl::DslOps)] (Mutation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
         });
       }
     }
@@ -3139,7 +3139,7 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
       scope: relPath,
       priority: "high",
       reason: "CW7 added vcs::test_support::assert_command_envelope_round_trip as the command-envelope law every technology's Edit/Mutation pair must also prove, beside its existing dsl/pack round-trip laws.",
-      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Projection, Mutation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
+      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Snapshot, Mutation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
     });
   }
   return breaches;
@@ -5271,7 +5271,7 @@ function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
         scope: artRel,
         priority: "medium",
         reason: "Each concrete mutation struct must implement Mutation<P> (or a helper the dispatch enum delegates to).",
-        solution: `Add impl Mutation<Projection> for the mutation struct in ${rsRel}.`,
+        solution: `Add impl Mutation<Snapshot> for the mutation struct in ${rsRel}.`,
       });
     }
   }

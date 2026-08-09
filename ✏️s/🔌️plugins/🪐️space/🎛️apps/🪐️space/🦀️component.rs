@@ -2,7 +2,7 @@
 //! merged at app level).
 //!
 //! 🕳️ Deviation from the usual "general"/"ui" split: the Studio app has no document type of its own —
-//! its `DocumentApp::Projection`/`Mutation` are `semio_framework_os::{WorkflowDocument, WorkflowMutation}`,
+//! its `DocumentApp::Projection`/`Mutation` are `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}`,
 //! owned entirely by `framework/product/os/core/rs` (outside this plugin). There is therefore no
 //! `🗿️artifacts/🪐️space` node anywhere in this crate — this file carries what would otherwise be the
 //! artifact facade's constants (manifest/panel identifiers shared by `engine` config defaults and this
@@ -29,12 +29,12 @@ use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewpo
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
-use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowMutation};
+use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, OnceLock};
 
 //#region 🔖️Constants
 pub const S_PLAY_APP_ID: &str = "studio";
@@ -57,7 +57,7 @@ pub(crate) fn s_play_action(action: &str, args: Option<Value>) -> semio_framewor
 /// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
 /// via `engine::negotiate_media_connect`, converting a rejection into a `Notify` effect — shared by
 /// `connections::connect_media_ports` and the `graph_edit::node_graph_edit`/`"connect"` fixture edit.
-pub(crate) fn negotiate_connect_or_notify(projection: &WorkflowDocument, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, HostEffect> {
+pub(crate) fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, HostEffect> {
     crate::apps::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| HostEffect::Notify { message: reason })
 }
 
@@ -74,7 +74,7 @@ pub(crate) fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
 }
 
 /// 🔧️ Small pure fold applying a batch of `SpaceConfigMutation`s onto a snapshot — used where a
-/// command handler needs the POST-command config (not the pre-command `cfg.projection`) to build a
+/// command handler needs the POST-command config (not the pre-command `cfg.snapshot`) to build a
 /// derived side value (the presence broadcast) in the very same call, without reaching back into a
 /// store this pure function doesn't own.
 pub(crate) fn apply_config_mutations(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigMutation]) -> SpaceConfig {
@@ -111,12 +111,16 @@ pub(crate) fn config_space_id(config: &SpaceConfig) -> String {
     config.space_id.clone().unwrap_or_else(|| "default".into())
 }
 
-pub(crate) fn presence_peers_json(app: &SpaceApp, config: &SpaceConfig) -> String {
+fn shared_presence_peers() -> Arc<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> {
+    static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>>> = OnceLock::new();
+    REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
+}
+
+pub(crate) fn presence_peers_json(_app: &SpaceApp, config: &SpaceConfig) -> String {
     let space_id = config_space_id(config);
     let self_client_id = config.client_id.clone().unwrap_or_default();
     let now_ms = host_now_ms();
-    let peers: Vec<Value> = app
-        .presence_peers
+    let peers: Vec<Value> = shared_presence_peers()
         .lock()
         .ok()
         .and_then(|registry| registry.get(&space_id).cloned())
@@ -128,13 +132,13 @@ pub(crate) fn presence_peers_json(app: &SpaceApp, config: &SpaceConfig) -> Strin
     serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
 }
 
-pub(crate) fn publish_presence(app: &SpaceApp, config: &SpaceConfig) {
+pub(crate) fn publish_presence(_app: &SpaceApp, config: &SpaceConfig) {
     let (Some(client_id), Some(client_name)) = (&config.client_id, &config.client_name) else {
         return;
     };
     let space_id = config_space_id(config);
     let now_ms = host_now_ms();
-    if let Ok(mut registry) = app.presence_peers.lock() {
+    if let Ok(mut registry) = shared_presence_peers().lock() {
         let peers = registry.entry(space_id).or_default();
         peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
         peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: config.selected_node_ids.clone(), updated_at_ms: now_ms });
@@ -199,7 +203,7 @@ fn space_workflow_context_menu_items(
 app_commands! {
     /// 🎯️ `SpaceApp::Command` — the SOLE dispatch surface for the studio app's own behavior, one
     /// variant per action declared in `create_space_app`'s manifest.
-    pub enum SpaceCommand for WorkflowDocument, WorkflowMutation, SpaceConfig, crate::apps::space::config::SpaceConfigMutation {
+    pub enum SpaceCommand for WorkflowSnapshot, WorkflowMutation, SpaceConfig, crate::apps::space::config::SpaceConfigMutation {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "patchParameter" as "patch-parameter" => patch_parameter::PatchParameter,
         "addParameter" as "add-parameter" => add_parameter::AddParameter,
@@ -256,13 +260,28 @@ app_commands! {
 //#endregion 🔖️SpaceCommand
 
 //#region 🔖️SpaceApp
-/// 🧪️ Unit struct — every former `StudioRuntimeState`/`self.config` field now lives in `SpaceConfig`,
-/// written through `SpaceConfigMutation`s. Ephemeral presence heartbeats live on the app instance.
+/// 🧪️ App instance — config lives in `SpaceConfig` via `SpaceConfigMutation`s; ephemeral presence
+/// heartbeats stay on the app instance until DocumentHost presence wiring lands.
 #[derive(Default, Clone, Copy)]
 pub struct SpaceApp;
 
 impl DocumentApp for SpaceApp {
-    fn command_id(command: &SpaceCommand) -> &str {
+    type Snapshot = WorkflowSnapshot;
+    type Mutation = WorkflowMutation;
+    type Config = SpaceConfig;
+    type ConfigMutation = crate::apps::space::config::SpaceConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Command = SpaceCommand;
+
+    const APP_ID: &'static str = S_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
+
+    fn initial_snapshot() -> WorkflowSnapshot {
+        empty_workflow_snapshot()
+    }
+
+    fn command_id(command: &SpaceCommand) -> &'static str {
         command.command_id()
     }
 
@@ -366,24 +385,24 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
         let emit = command.dispatch(doc, cfg)?;
         if presence_refresh_needed(&emit.config_mutations) {
-            let next_config = apply_config_mutations(cfg.projection, &emit.config_mutations);
-            publish_presence(&SpaceApp, &next_config);
+            let next_config = apply_config_mutations(cfg.snapshot, &emit.config_mutations);
+            publish_presence(&SpaceApp::default(), &next_config);
         }
         Ok(emit)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
-        let projection = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
+        let projection = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Space body keys still match.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
-            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(&SpaceApp, projection, config),
+            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(&SpaceApp::default(), projection, config),
             crate::apps::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::apps::space::modes::main::windows::media_vfs::render(projection, &config.locale),
             crate::apps::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::apps::space::modes::main::windows::compiled_dag::render(projection),
             S_PLAY_CATALOGUE_BODY_KEY => crate::apps::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
@@ -393,14 +412,14 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn window_measures(doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
-        HashMap::from([(crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::apps::space::modes::main::windows::workflow::window_measures(cfg.projection, &doc.projection.graph.nodes))])
+    fn window_measures(doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+        HashMap::from([(crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::apps::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes))])
     }
 
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.projection.locale);
-        let is_de = cfg.projection.locale.starts_with("de");
-        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.projection.selected_node_ids)
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.snapshot.locale);
+        let is_de = cfg.snapshot.locale.starts_with("de");
+        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.snapshot.selected_node_ids)
     }
 }
 //#endregion 🔖️SpaceApp
@@ -533,8 +552,9 @@ pub fn create_space_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
-    use semio_framework_os::{apply_workflow_mutation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
-    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
+    use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
+    use semio_framework_plugin::{App, AppIo, DraftView, HistoryView, LocalizedLabel, SurfaceKind};
+    use store::EngineHandles;
 
     pub(crate) fn empty_history() -> HistoryView {
         HistoryView::empty()
@@ -542,14 +562,19 @@ pub(crate) mod testkit {
 
     use std::cell::RefCell;
 
-    
+    thread_local! {
+        static STUDIO_TEST_APP: RefCell<SpaceApp> = RefCell::new(SpaceApp::default());
+    }
 
-    pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation>, Fault> {
+    pub(crate) fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation>, Fault> {
         STUDIO_TEST_APP.with(|app| {
+            let _app = app.borrow();
             let history = empty_history();
-            let doc = DocumentView { projection, history: &history };
-            let cfg = ConfigView { projection: config };
-            app.borrow().handle(command, &doc, &cfg)
+            let doc = DocumentView { snapshot: projection, history: &history };
+            let cfg = ConfigView { snapshot: config };
+            let draft = DraftView { snapshot: &NoDraft::default() };
+            let engines = EngineHandles::empty();
+            SpaceApp::handle(command, &doc, &cfg, &draft, &engines)
         })
     }
 
@@ -558,8 +583,8 @@ pub(crate) mod testkit {
     }
 
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
-    pub(crate) fn apply_mutations(projection: &WorkflowDocument, operations: &[WorkflowMutation]) -> WorkflowDocument {
-        operations.iter().fold(projection.clone(), |current, operation| apply_workflow_mutation(&current, operation))
+    pub(crate) fn apply_mutations(projection: &WorkflowSnapshot, operations: &[WorkflowMutation]) -> WorkflowSnapshot {
+        operations.iter().fold(projection.clone(), |current, operation| apply_workflow_operation(&current, operation))
     }
 
     /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
@@ -617,9 +642,9 @@ mod tests {
     use semio_framework_plugin::{PluginApp, VcsDocumentApp};
 
     #[test]
-    fn initial_projection_is_empty_not_demo() {
-        let app = SpaceApp;
-        assert!(app.initial_projection().graph.nodes.is_empty());
+    fn initial_snapshot_is_empty_not_demo() {
+        let app = SpaceApp::default();
+        assert!(SpaceApp::initial_snapshot().graph.nodes.is_empty());
     }
 
     #[test]
@@ -665,10 +690,10 @@ mod tests {
     #[test]
     fn commit_checkpoint_round_trips_projection() {
         use serde_json::json;
-        let mut app = VcsDocumentApp::new(SpaceApp);
-        let before = app.projection().expect("projection").graph.nodes.len();
+        let mut app = VcsDocumentApp::new(SpaceApp::default());
+        let before = app.snapshot().expect("projection").graph.nodes.len();
         app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commit");
-        assert_eq!(app.projection().expect("projection").graph.nodes.len(), before);
+        assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
     }
 
     #[test]
@@ -676,19 +701,19 @@ mod tests {
         use crate::apps::space::commands::nodes::spawn_app;
         use serde_json::json;
         testkit::seed_draw_plugin();
-        let mut app = VcsDocumentApp::new(SpaceApp);
-        let before = app.projection().expect("projection").graph.nodes.len();
+        let mut app = VcsDocumentApp::new(SpaceApp::default());
+        let before = app.snapshot().expect("projection").graph.nodes.len();
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
         app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expect("commit");
-        let after_first = app.projection().expect("projection").graph.nodes.len();
+        let after_first = app.snapshot().expect("projection").graph.nodes.len();
         assert!(after_first > before);
         let files = app.document_pack().expect("document pack");
-        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
+        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
         let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn2");
-        assert!(app.projection().expect("projection").graph.nodes.len() > after_first);
+        assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
         app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &plugin_testkit::meta("local")).expect("checkout");
-        assert_eq!(app.projection().expect("projection").graph.nodes.len(), after_first);
+        assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
     }
 
     /// 🧪️ The definitional proof: two independent instances start from the same deterministic demo
@@ -707,7 +732,7 @@ mod tests {
             SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }),
             SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec![node_id], field: "label".into(), value: "Renamed".into() }),
             move |app| {
-                let projection = app.projection().expect("projection");
+                let projection = app.snapshot().expect("projection");
                 let draw_count = projection.graph.nodes.iter().filter(|node| node.plugin_id == "draw").count();
                 let renamed = projection.graph.nodes.iter().find(|node| node.id == rename_id).is_some_and(|node| node.label == "Renamed");
                 (draw_count, renamed)
@@ -727,14 +752,14 @@ mod tests {
     fn space_labels_resolve_native_english_by_default() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let config = SpaceConfig::default();
-        let cfg = ConfigView { projection: &config };
-        let app = SpaceApp;
-        let catalogue_json = serde_json::to_string(&app.render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg)).unwrap();
+        let cfg = ConfigView { snapshot: &config };
+        let app = SpaceApp::default();
+        let catalogue_json = serde_json::to_string(&SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(catalogue_json.contains("\"Apps\""));
 
-        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
+        let parameters_json = serde_json::to_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
@@ -745,16 +770,16 @@ mod tests {
     fn space_labels_resolve_native_german_locale() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
-        let cfg = ConfigView { projection: &config };
-        let app = SpaceApp;
-        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
+        let cfg = ConfigView { snapshot: &config };
+        let app = SpaceApp::default();
+        let parameters_json = serde_json::to_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
-        let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg)).unwrap();
+        let inspector_json = serde_json::to_string(&SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(inspector_json.contains("Wähle Workflow-Knoten im Arbeitsbereich aus."));
     }
 

@@ -1,0 +1,12 @@
+# 🧬️ Present artifact schema.
+type PresentArtifact {
+  schema: String! @state(class: PERSISTENT)
+  source: FigureTileSource! @state(class: PERSISTENT)
+  tiles: [FigureTileDraft!]! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
+type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
+type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }

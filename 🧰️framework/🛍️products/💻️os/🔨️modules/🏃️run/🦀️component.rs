@@ -455,7 +455,7 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 /// stale leftovers from the dissolved `OsDocument`):
 /// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
 ///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
-///   still carries a `workflow::WorkflowDocument`/`WorkflowMutation` pair per the os-core dissolve's
+///   still carries a `workflow::WorkflowSnapshot`/`WorkflowMutation` pair per the os-core dissolve's
 ///   `## The inversion`, not yet a real `space::SpaceSnapshot` manifest — wiring the ROOT slot's
 ///   actual decoded type to `SpaceSnapshot` is later-wave work, this rewrite is the path/filename
 ///   convention only, see `read_space_document`/`write_space_document`),

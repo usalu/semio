@@ -1,0 +1,7 @@
+# 🧬️ EnergyModel artifact schema.
+
+type EnergyModelArtifact {
+  schema: String!
+  modelJson: String!
+  resultsJson: String!
+}

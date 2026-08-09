@@ -1,0 +1,8 @@
+# 🧬️ S Home artifact schema — every field with its state class.
+
+type SHomeArtifact {
+  schema: String! @state(class: PERSISTENT)
+  catalogGeneration: Long! @state(class: PERSISTENT)
+  activePanelTab: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

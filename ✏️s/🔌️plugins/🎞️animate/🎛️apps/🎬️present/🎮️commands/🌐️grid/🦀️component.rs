@@ -3,7 +3,7 @@
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::PresentDeck;
+use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub mod seed_grid {
         pub columns: u32,
     }
 
-    pub fn handle(payload: &SeedGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        let deck = doc.projection;
+    pub fn handle(payload: &SeedGrid, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        let deck = doc.snapshot;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
@@ -39,8 +39,8 @@ pub mod reset_grid {
     #[dsl(keyword = "reset-grid")]
     pub struct ResetGrid {}
 
-    pub fn handle(_payload: &ResetGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        let deck = doc.projection;
+    pub fn handle(_payload: &ResetGrid, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        let deck = doc.snapshot;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
@@ -56,7 +56,7 @@ pub mod clear_tiles {
     #[dsl(keyword = "clear-tiles")]
     pub struct ClearTiles {}
 
-    pub fn handle(_payload: &ClearTiles, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearTiles, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
     }
 }
@@ -74,7 +74,7 @@ mod tests {
     fn seed_grid_action_adds_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
     }
 
     #[test]
@@ -82,7 +82,7 @@ mod tests {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
         app.dispatch_typed(PresentCommand::SetActiveExample(crate::apps::present::commands::source::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta("local")).expect("reset demo");
-        assert!(app.projection().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
+        assert!(app.snapshot().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
     }
 
     #[test]
@@ -91,10 +91,10 @@ mod tests {
         use semio_framework_plugin::{PluginApp, ViewModel};
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let first_id = app.projection().expect("projection").tiles[0].id.clone();
+        let first_id = app.snapshot().expect("projection").tiles[0].id.clone();
         dispatch(&mut app, PresentCommand::SetSelectedIds(crate::apps::present::commands::view::set_selected_ids::SetSelectedIds { ids: vec![first_id] }));
         dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
-        assert!(app.projection().expect("projection").tiles.is_empty());
+        assert!(app.snapshot().expect("projection").tiles.is_empty());
         let node = app.render(PRESENT_PLAY_BODY_DETAILS, None, &ViewModel::default()).expect("render details");
         let json_str = serde_json::to_string(&node).unwrap();
         assert!(json_str.contains("Select a tile"), "selection was cleared alongside tiles");

@@ -5,23 +5,12 @@
 //! `DocumentStore` (with a real `backwards`), so selection/camera/hover edits are VCS'd exactly like
 //! document content.
 
+pub use crate::artifacts::layout::LayoutDropPreviewState;
 use crate::artifacts::layout::LayoutCamera;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// @emoji 👻️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: ephemeral catalogue drag-ghost state (was
-/// `layout_ui::LayoutDropPreviewState`, a private UI-crate struct) — `kind.is_empty()` means "no live
-/// drop preview" (the B1 config idiom favors an always-present default record over `Option<Record>` so
-/// every field round-trips through the `dsl`/pack machinery uniformly).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
-pub struct LayoutDropPreviewState {
-    pub kind: String,
-    pub x: f64,
-    pub y: f64,
-}
-
 /// 🧮️ B1: layout's real `DocumentApp::Config` — absorbs every field that used to live on
 /// `layout_ui::LayoutPlayApp`'s `RefCell<LayoutPlayRuntime>` (active page, selection, hover, drop-ghost,
 /// engagement draft, and the two independent blueprint/preview camera poses) plus `locale`, the one
@@ -30,7 +19,8 @@ pub struct LayoutDropPreviewState {
 /// `LayoutConfigMutation` instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "layoutcfg")]
+#[dsl(extension = "layout.config")]
+#[dsl(id = "layout.config")]
 #[dsl(layout = "lines")]
 pub struct LayoutConfig {
     /// 👁️ Active page shown/edited on the Blueprint surface — was `LayoutPlayRuntime::active_page_id`.
@@ -301,8 +291,8 @@ mod tests {
             preview_camera: LayoutCamera { x: 7.0, y: 8.0, zoom: 0.75 },
             locale: "de-DE".into(),
         };
-        store::test_support::assert_dsl_round_trip(&config);
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     fn sample_config() -> LayoutConfig {
@@ -348,10 +338,10 @@ mod tests {
     #[test]
     fn config_snapshot_op_text_round_trips() {
         let config = sample_config();
-        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetHover { id: None });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::Snapshot { config });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetHover { id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

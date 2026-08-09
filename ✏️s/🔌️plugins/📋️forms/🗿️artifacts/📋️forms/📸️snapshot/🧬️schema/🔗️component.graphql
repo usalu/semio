@@ -1,0 +1,22 @@
+# @emoji 🧬️ Shared @state directive is defined in the framework schema module.
+
+type FormsSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  version: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  steps: [FormStep!]! @state(class: PERSISTENT)
+}
+
+type FormStep {
+  id: String!
+  title: String!
+  description: String
+  blocks: [FormQuestion!]!
+}
+
+type FormQuestion {
+  id: String!
+  label: String!
+  kind: String!
+}

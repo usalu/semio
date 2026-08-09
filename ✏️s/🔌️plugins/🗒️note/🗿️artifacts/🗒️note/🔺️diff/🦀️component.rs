@@ -1,9 +1,12 @@
-//! 🔺️ Note artifact — the operation diff (constitutional: diff).
+//! 🔺️ Note artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::note::op::{apply_note_mutation, NoteMutation};
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::diff::schema::{
+    NoteAssetsDelta, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
+};
+use crate::artifacts::note::engine::{block_id, flatten_blocks, remove_block_from_tree, update_block_in_tree};
+use crate::artifacts::note::schema::NoteArtifact;
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -11,69 +14,342 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-//#region 🔖️Diff
-/// 🧩️ Snapshot diff wrapping the forward `NoteMutation` — `apply` replays it, `absorb` keeps the latest
-/// (coalescing a whole gesture's `SetBlocks` stream into one edit).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
-pub struct NoteDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(statements)]
-    pub operation: Option<NoteMutation>,
+//#region 🔖️Apply
+impl NoteDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &NoteArtifact) -> NoteArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.blocks {
+            next.blocks = apply_blocks_delta(&next.blocks, delta);
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible = *value;
+        }
+        if let Some(value) = &self.grid_spacing {
+            next.grid_spacing = *value;
+        }
+        if let Some(value) = &self.grid_subdivisions {
+            next.grid_subdivisions = *value;
+        }
+        if let Some(value) = &self.grid_opacity {
+            next.grid_opacity = *value;
+        }
+        if let Some(value) = &self.snap_enabled {
+            next.snap_enabled = *value;
+        }
+        if let Some(value) = &self.snap_grid_spacing {
+            next.snap_grid_spacing = *value;
+        }
+        if let Some(value) = &self.pencil_width {
+            next.pencil_width = *value;
+        }
+        if let Some(value) = &self.eraser_radius {
+            next.eraser_radius = *value;
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
+        }
+        if let Some(list) = &self.selected_block_ids {
+            next.selected_block_ids = list.values.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = self.camera_x {
+            next.camera_x = value;
+        }
+        if let Some(value) = self.camera_y {
+            next.camera_y = value;
+        }
+        if let Some(value) = self.camera_zoom {
+            next.camera_zoom = value;
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.hovered_block_id {
+            next.hovered_block_id = value.clone();
+        }
+        next
+    }
 }
 
-impl MutationDiff<NoteDocument> for NoteDiff {
-    fn apply(&self, projection: &NoteDocument) -> NoteDocument {
-        match &self.operation {
-            Some(operation) => apply_note_mutation(projection, operation),
-            None => projection.clone(),
+/// 🧩 Applies an identified-collection delta to a block tree (root-level adds/removes/patches/reorder).
+pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> Vec<NoteBlockNode> {
+    let mut next = blocks.to_vec();
+    for id in &delta.removed {
+        remove_block_from_tree(&mut next, id);
+    }
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        apply_block_patch_entry(&mut next, entry);
+    }
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next
+            .into_iter()
+            .map(|block| (block_id(&block).to_string(), block))
+            .collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(block) = by_id.remove(id) {
+                ordered.push(block);
+            }
         }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+fn apply_block_patch_entry(blocks: &mut Vec<NoteBlockNode>, entry: &NoteBlockPatchEntry) {
+    if let Some(block_json) = &entry.patch.block_json {
+        if let Ok(replacement) = serde_json::from_str::<NoteBlockNode>(block_json) {
+            update_block_in_tree(blocks, &entry.id, replacement);
+        }
+    }
+}
+
+impl MutationDiff<NoteSnapshot> for NoteDiff {
+    fn apply(&self, snapshot: &NoteSnapshot) -> NoteSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.blocks {
+            next.blocks = apply_blocks_delta(&next.blocks, delta);
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible = *value;
+        }
+        if let Some(value) = &self.grid_spacing {
+            next.grid_spacing = *value;
+        }
+        if let Some(value) = &self.grid_subdivisions {
+            next.grid_subdivisions = *value;
+        }
+        if let Some(value) = &self.grid_opacity {
+            next.grid_opacity = *value;
+        }
+        if let Some(value) = &self.snap_enabled {
+            next.snap_enabled = *value;
+        }
+        if let Some(value) = &self.snap_grid_spacing {
+            next.snap_grid_spacing = *value;
+        }
+        if let Some(value) = &self.pencil_width {
+            next.pencil_width = *value;
+        }
+        if let Some(value) = &self.eraser_radius {
+            next.eraser_radius = *value;
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
+        }
+        next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.operation.is_some() {
-            self.operation = other.operation;
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(title);
+        take!(grid_visible);
+        take!(grid_spacing);
+        take!(grid_subdivisions);
+        take!(grid_opacity);
+        take!(snap_enabled);
+        take!(snap_grid_spacing);
+        take!(pencil_width);
+        take!(eraser_radius);
+        take!(selected_block_ids);
+        take!(active_utility_id);
+        take!(engagement_input);
+        take!(camera_x);
+        take!(camera_y);
+        take!(camera_zoom);
+        take!(locale);
+        take!(hovered_block_id);
+        match (&mut self.blocks, other.blocks) {
+            (Some(dst), Some(src)) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            (None, Some(src)) => self.blocks = Some(src),
+            _ => {}
+        }
+        match (&mut self.assets, other.assets) {
+            (Some(dst), Some(src)) => {
+                dst.entries.extend(src.entries);
+            }
+            (None, Some(src)) => self.assets = Some(src),
+            _ => {}
         }
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
 
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// 🧬️ W1 `DiffCodec` law: `parse_diff(print_diff(d)) == d` and `decode_diff(encode_diff(d)) == d`
-    /// — `NoteDiff` is one of the handful of real diff types proving the `#[derive(dsl::DslDiff)]`
-    /// mechanism (see `POLICY_DIFF_COMPLETENESS_ALLOWLIST` in `script.ts` for the rest, deferred to W6).
-    #[test]
-    fn note_diff_print_parse_round_trips() {
-        use protocol::DiffCodec;
-        let diffs = vec![
-            NoteDiff { operation: Some(NoteMutation::SetGridSpacing { spacing: Some(48.0) }) },
-            NoteDiff { operation: Some(NoteMutation::SetDocument { document: crate::artifacts::note::engine::empty_note_document() }) },
-            NoteDiff::default(),
-        ];
-        for diff in diffs {
-            let printed = diff.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line: {printed:?}");
-            let parsed = NoteDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff failed for {printed:?}: {e}"));
-            assert_eq!(parsed, diff, "DiffCodec text round trip diverged for {printed:?}");
-        }
-    }
-
-    #[test]
-    fn note_diff_encode_decode_round_trips() {
-        use protocol::DiffCodec;
-        let diffs = vec![NoteDiff { operation: Some(NoteMutation::SetGridSpacing { spacing: Some(48.0) }) }, NoteDiff::default()];
-        for diff in diffs {
-            let bytes = diff.encode_diff().expect("encode_diff");
-            let decoded = NoteDiff::decode_diff(&bytes).expect("decode_diff");
-            assert_eq!(decoded, diff, "DiffCodec binary round trip diverged");
-        }
+//#region 🔖️Builders
+/// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
+pub fn diff_set_snapshot(snapshot: &NoteSnapshot) -> NoteDiff {
+    NoteDiff {
+        artifact: Some(Box::new(NoteArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
     }
 }
-//#endregion 🧪️Tests
+
+pub fn diff_set_grid_visible(visible: Option<bool>) -> NoteDiff {
+    NoteDiff {
+        grid_visible: Some(visible),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_grid_spacing(spacing: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        grid_spacing: Some(spacing),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_grid_subdivisions(value: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        grid_subdivisions: Some(value),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_grid_opacity(opacity: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        grid_opacity: Some(opacity),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_snap_enabled(enabled: Option<bool>) -> NoteDiff {
+    NoteDiff {
+        snap_enabled: Some(enabled),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_snap_grid_spacing(spacing: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        snap_grid_spacing: Some(spacing),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_pencil_width(width: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        pencil_width: Some(width),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_eraser_radius(radius: Option<f64>) -> NoteDiff {
+    NoteDiff {
+        eraser_radius: Some(radius),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_blocks(snapshot: &NoteSnapshot, blocks: Vec<NoteBlockNode>) -> NoteDiff {
+    let removed: Vec<String> = flatten_blocks(&snapshot.blocks)
+        .into_iter()
+        .map(|block| block_id(block).to_string())
+        .collect();
+    NoteDiff {
+        blocks: Some(NoteBlocksDelta {
+            removed,
+            added: blocks,
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_put_asset(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+    let mut entries = std::collections::BTreeMap::new();
+    entries.insert(key.to_string(), Some(asset.clone()));
+    NoteDiff {
+        assets: Some(NoteAssetsDelta { entries }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_remove_asset(key: &str) -> NoteDiff {
+    let mut entries = std::collections::BTreeMap::new();
+    entries.insert(key.to_string(), None);
+    NoteDiff {
+        assets: Some(NoteAssetsDelta { entries }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_from_snapshot(snapshot: NoteSnapshot) -> NoteDiff {
+    diff_set_snapshot(&snapshot)
+}
+//#endregion 🔖️Builders
 
 #[cfg(test)]
 mod semio_grammar_conformance {
@@ -87,4 +363,3 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
-

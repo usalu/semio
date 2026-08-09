@@ -4,11 +4,13 @@ use neural_engine::{Atom, Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
+pub const SEQUENCE_DOCUMENT_SCHEMA: &str = "sequence.sequence";
+pub use crate::artifacts::sequence::snapshot::schema::{default_snapshot, SequenceSnapshot};
+
 //#region 🔖️Constants
-pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 //#endregion 🔖️Constants
 
-//#region 🔖️Fixture
+//#region 🔖️Domain
 /// 📦️ Local newtype around {@link neural_engine::Dictionary} — dynamic/schema-less step params
 /// can't be shape-derived field-by-field (arbitrary keys, recursive `Value`), and `Dictionary`
 /// itself can't gain a `dsl::DslField` impl directly (foreign trait, foreign type, no local anchor
@@ -17,7 +19,7 @@ pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 /// fidelity — unlike a schema-less `dsl::Shape::Value`, this never collapses `Atom::Integer` and
 /// `Atom::Decimal` into the same wire number. Deliberately `dsl::Shape::Text` (escaped quoted
 /// string), NOT `dsl::Shape::Embed("json")` (fenced block): this field is only ever reached as a
-/// `#[dsl(table)]` column (`SequenceStep` is `SequenceFixtureDsl.steps`'s row type), and an
+/// `#[dsl(table)]` column (`SequenceStep` is `SequenceSnapshotDsl.steps`'s row type), and an
 /// `Embed`'s Document-mode fence needs its closing ` ``` ` on its own line — the table row printer
 /// glues the remaining row cells (`x y slot collapsed`) onto that same line right after it,
 /// producing a fence the lexer can't close and a confirmed parse failure ("unterminated fenced
@@ -120,43 +122,7 @@ pub struct SequenceEdge {
     pub from: String,
     pub to: String,
 }
-
-/// 🧾️ Runtime fixture shape — kept plain `Serialize`/`Deserialize` only; see `🗣️dsl` for the
-/// `.sequence` DSL text mirror (SoA `steps`/`edges` tables, `edges` as `dsl::Wire` links) and the
-/// hand-written `impl store::DocumentDsl for SequenceFixture` that converts through it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SequenceFixture {
-    pub schema: String,
-    pub steps: Vec<SequenceStep>,
-    pub edges: Vec<SequenceEdge>,
-}
-
-impl Default for SequenceFixture {
-    fn default() -> Self {
-        default_fixture()
-    }
-}
-
-pub fn default_fixture() -> SequenceFixture {
-    SequenceFixture {
-        schema: "sequence.fixture".into(),
-        steps: vec![
-            SequenceStep {
-                id: "step-1".into(),
-                kind: "state.set".into(),
-                params: StepParams::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))),
-                x: 0.0,
-                y: 0.0,
-                slot: None,
-                collapsed: false,
-            },
-            SequenceStep { id: "step-2".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))), x: 280.0, y: 0.0, slot: None, collapsed: false },
-        ],
-        edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
-    }
-}
-//#endregion 🔖️Fixture
+//#endregion 🔖️Domain
 
 //#region 🔖️Collections
 impl protocol::Identified<String> for SequenceStep {
@@ -246,12 +212,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
         name: "Sequence".into(),
-        source_format: "sequence.fixture".into(),
+        source_format: "sequence.sequence".into(),
         component_kind: "sequence".into(),
         dimension: "graph".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Sequence },
-        schema: "sequence.fixture".into(),
+        schema: "sequence.sequence".into(),
         export_formats: vec![],
         import_formats: vec![],
     }
@@ -264,14 +230,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_fixture_has_steps() {
-        assert_eq!(default_fixture().steps.len(), 2);
+    fn default_snapshot_has_steps() {
+        assert_eq!(default_snapshot().steps.len(), 2);
     }
 
     #[test]
     fn artifact_kind_keeps_the_media_schema_consistent_with_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "sequence.fixture");
-        assert_eq!(SEQUENCE_FIXTURE_SCHEMA, "sequence.fixture");
+        assert_eq!(artifact_kind().schema, "sequence.sequence");
+        assert_eq!(SEQUENCE_DOCUMENT_SCHEMA, "sequence.sequence");
     }
 }
 //#endregion 🧪️Tests

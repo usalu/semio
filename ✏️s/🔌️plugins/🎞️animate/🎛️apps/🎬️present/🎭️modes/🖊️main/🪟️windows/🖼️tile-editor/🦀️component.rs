@@ -2,7 +2,7 @@
 //! backdrop plus its crop tiles.
 
 use crate::apps::present::PRESENT_PLAY_APP_ID;
-use crate::artifacts::present::{FigureTileFrame, PresentDeck};
+use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -53,7 +53,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 }
 
 /// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of it.
-fn deck_to_canvas_layers(deck: &PresentDeck, selected: &[String]) -> String {
+fn deck_to_canvas_layers(deck: &PresentSnapshot, selected: &[String]) -> String {
     const SCALE: f64 = 1000.0;
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&deck.source.frame, SCALE);
@@ -78,7 +78,7 @@ fn deck_to_canvas_layers(deck: &PresentDeck, selected: &[String]) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentDeck, selected: &[String]) -> UiNode {
+pub fn render(deck: &PresentSnapshot, selected: &[String]) -> UiNode {
     build_canvas_2d_scene(PRESENT_PLAY_SURFACE_MAIN, PRESENT_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck, selected) })
 }
 //#endregion 🔖️Render
@@ -110,7 +110,7 @@ mod tests {
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
-        let deck = app.projection().expect("projection");
+        let deck = app.snapshot().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         assert!(!deck.source.src.trim().is_empty());
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
-        let mut deck = crate::artifacts::present::default_present_deck();
+        let mut deck = crate::artifacts::present::default_present_snapshot();
         deck.source.src = String::new();
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
-        let mut deck = crate::artifacts::present::default_present_deck();
+        let mut deck = crate::artifacts::present::default_present_snapshot();
         deck.source.kind = "pdf".into();
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();

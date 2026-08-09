@@ -73,24 +73,14 @@ pub fn register() {
     register_artifact_schema();
 }
 
-static LOWPOLY_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the lowpoly artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = LOWPOLY_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor());
 }
 
 /// 🔎 Returns whether `s.lowpoly.lowpoly` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
-    LOWPOLY_SCHEMA_REGISTRY
-        .get()
-        .map(|registry| registry.lock().expect("schema registry lock").get("s.lowpoly.lowpoly").is_some())
-        .unwrap_or(false)
+    ::schema::artifact_schema_descriptor_registered("s.lowpoly.lowpoly")
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

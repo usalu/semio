@@ -29,3 +29,5 @@ impl Mutation<En1995Snapshot> for En1995Mutation {
         }
     }
 }
+
+crate::impl_norm_set_snapshot_ops!(En1995Mutation, En1995Snapshot);

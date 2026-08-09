@@ -4,7 +4,7 @@ package semio.s.norm.en1999.diff;
 
 message En1999Diff {
   // @state persistent
-  En1999Artifact artifact = 1;
+  optional En1999Artifact artifact = 1;
   // @state persistent
   optional double n_ed_kn = 2;
   // @state persistent

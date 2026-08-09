@@ -23,7 +23,7 @@ use crate::artifacts::forms::op::FormMutation;
 // artifact's own `dsl` submodule under the bare name would shadow it (see the identical note in the
 // artifact's `⚙️engine/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{FormQuestion, FormSpec, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
+use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, DocumentApp, DocumentView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
@@ -60,7 +60,7 @@ pub fn try_values_json_text(values: &Map<String, Value>) -> String {
     serde_json::to_string(values).unwrap_or_else(|_| "{}".into())
 }
 
-pub fn effective_try_values(spec: &FormSpec, config: &FormsConfig) -> Map<String, Value> {
+pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Map<String, Value> {
     crate::artifacts::forms::engine::initial_try_values(spec, &try_values_map(config))
 }
 
@@ -187,7 +187,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum FormsCommand for FormSpec, FormMutation, FormsConfig, FormsConfigMutation {
+    pub enum FormsCommand for FormsSnapshot, FormMutation, FormsConfig, FormsConfigMutation {
         "setSelection" as "selection" => set_selection::SetSelection,
         "setTryValue" as "try-value" => set_try_value::SetTryValue,
         "setTryValues" as "try-values" => set_try_values::SetTryValues,
@@ -245,7 +245,7 @@ use vector::{add_vector_field, patch_vector_field, remove_vector_field};
 pub struct FormsPlayApp;
 
 impl DocumentApp for FormsPlayApp {
-    type Projection = FormSpec;
+    type Snapshot = FormsSnapshot;
     type Mutation = FormMutation;
     type Config = FormsConfig;
     type ConfigMutation = FormsConfigMutation;
@@ -257,7 +257,7 @@ impl DocumentApp for FormsPlayApp {
     const APP_ID: &'static str = FORMS_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> FormSpec {
+    fn initial_snapshot() -> FormsSnapshot {
         crate::artifacts::forms::engine::building_component_spec()
     }
 
@@ -272,7 +272,7 @@ impl DocumentApp for FormsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -283,14 +283,14 @@ impl DocumentApp for FormsPlayApp {
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
     /// `Self::Config`).
-    fn export_media(port: &str, doc: &DocumentView<'_, FormSpec>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.projection);
+                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "dictionary:out" => {
-                let values = crate::artifacts::forms::engine::initial_try_values(doc.projection, &Map::new());
+                let values = crate::artifacts::forms::engine::initial_try_values(doc.snapshot, &Map::new());
                 let json = serde_json::to_string(&Value::Object(values)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json } })
             }
@@ -299,9 +299,9 @@ impl DocumentApp for FormsPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
-        let spec = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = forms_play_labels(config);
         match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -578,17 +578,17 @@ mod tests {
     #[test]
     fn add_question_materializes_kind_default() {
         let mut app = forms_app_with_registry();
-        let steps_before = app.projection().expect("projection").steps.len();
+        let steps_before = app.snapshot().expect("projection").steps.len();
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
         app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).expect("add question");
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         assert!(crate::artifacts::forms::engine::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
     }
 
     #[test]
     fn initial_document_seeds_building_component_fixture() {
         let app = forms_app();
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         assert!(!crate::artifacts::forms::engine::flatten_questions(&spec).is_empty());
         assert!(crate::artifacts::forms::engine::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
     }
@@ -637,7 +637,7 @@ mod tests {
     #[test]
     fn two_instances_converge_disjoint_edits() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<FormsPlayApp, (usize, usize)>("mem://forms-convergence", FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), FormsCommand::AddStep(add_step::AddStep {}), |app| {
-            let projection = app.projection().expect("materialize projection");
+            let projection = app.snapshot().expect("materialize projection");
             (projection.steps.len(), projection.steps[0].blocks.len())
         });
     }
@@ -647,10 +647,10 @@ mod tests {
     #[test]
     fn export_media_dictionary_out_returns_default_values() {
         let app = forms_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let media = FormsPlayApp.export_media("dictionary:out", &doc).expect("export dictionary:out");
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let media = <FormsPlayApp as DocumentApp>::export_media("dictionary:out", &doc).expect("export dictionary:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "form.dictionary");
@@ -661,14 +661,14 @@ mod tests {
     #[test]
     fn export_media_document_out_round_trips_through_pack() {
         let app = forms_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let media = FormsPlayApp.export_media("document:out", &doc).expect("export document:out");
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let media = <FormsPlayApp as DocumentApp>::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-        let decoded = <FormSpec as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let decoded = <FormsSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(decoded, document);
     }
 

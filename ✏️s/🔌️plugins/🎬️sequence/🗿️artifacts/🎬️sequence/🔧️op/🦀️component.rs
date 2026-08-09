@@ -1,6 +1,6 @@
 //! 🔧 sequence artifact — OpText/OpBinary bridge for `SequenceMutation`.
 
-pub use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, sequence_fixture_mutations, SequenceMutation, SequenceEnvelope, SequenceStore};
+pub use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, sequence_snapshot_mutations, SequenceMutation, SequenceEnvelope, SequenceStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

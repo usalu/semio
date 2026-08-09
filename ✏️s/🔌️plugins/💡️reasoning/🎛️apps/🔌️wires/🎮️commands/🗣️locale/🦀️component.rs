@@ -1,8 +1,8 @@
 //! 🗣️ Wires play app commands — the host-pushed locale change.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

@@ -1,0 +1,50 @@
+# 🔺️ Mathematical diff schema.
+
+type MathematicalDiff {
+  artifact: MathematicalArtifact @state(class: PERSISTENT)
+  graph: MathematicalGraph @state(class: PERSISTENT)
+  geometry: MathematicalGeometry @state(class: PERSISTENT)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type MathematicalArtifact {
+  graph: MathematicalGraph!
+  geometry: MathematicalGeometry!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+}
+
+type MathematicalGraph {
+  directed: Boolean!
+  nodes: [MathematicalNode!]!
+  edges: [MathematicalEdge!]!
+  algorithm: String!
+  algorithmSeed: String
+}
+
+type MathematicalNode {
+  id: String!
+  label: String!
+  x: Float!
+  y: Float!
+}
+
+type MathematicalEdge {
+  id: String!
+  source: String!
+  target: String!
+}
+
+type MathematicalPoint {
+  x: Float!
+  y: Float!
+}
+
+type MathematicalGeometry {
+  points: [MathematicalPoint!]!
+}

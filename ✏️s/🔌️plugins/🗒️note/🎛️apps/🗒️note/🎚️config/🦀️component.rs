@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 /// `crate::apps::note::NotePlayApp::render`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "notecfg")]
-#[dsl(layout = "lines")]
+#[dsl(id = "note.config", layout = "lines")]
 pub struct NoteConfig {
     /// 👁️ Selected block ids — was `NotePlayRuntime::selected_ids`.
     pub selected_block_ids: Vec<String>,
@@ -260,7 +259,7 @@ mod tests {
             active_utility_id: "pencil".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
@@ -273,14 +272,14 @@ mod tests {
             active_utility_id: "pencil".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::Snapshot { config });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: Some("image-2".into()) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: None });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput { value: "Renaming…".into() });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility { utility_id: "eraserStroke".into() });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::Snapshot { config });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: Some("image-2".into()) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: None });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput { value: "Renaming…".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility { utility_id: "eraserStroke".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// 🧮️ Every `NoteConfigMutation`'s `backwards()` is the whole-config snapshot from just before it —

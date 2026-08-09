@@ -4,15 +4,15 @@ extension en1992
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1992"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = annex-field | quantity-field | ratio-field | bool-field | enum-field
-annex-field = "annex" "=" ("en" | "de")
-quantity-field = ("m-ed-knm" | "v-ed-kn" | "f-ck" | "b-mm" | "d-mm" | "a-s-mm2" | "f-yk" | "n-ed-kn" | "p-kn" | "a-c-mm2" | "span-m" | "udl-kn-m" | "provided-axis-distance-mm" | "bridge-sigma-c-mpa" | "bridge-delta-sigma-s-mpa" | "liquid-sigma-s-mpa" | "liquid-f-ct-eff-mpa" | "liquid-e-s-mpa" | "liquid-s-r-max-mm" | "anchor-h-ef-mm" | "anchor-f-uk-mpa" | "anchor-f-yk-mpa" | "anchor-a-s-mm2" | "anchor-d-mm" | "anchor-c1-mm" | "anchor-n-ed-kn" | "anchor-v-ed-kn") "=" qty
-ratio-field = ("rho-l" | "hd-over-h" | "liquid-rho-p-eff") "=" (FLOAT | INT)
-bool-field = ("use-fem" | "anchor-cracked") "=" BOOL
-enum-field = fire-rating-field | tightness-field
-fire-rating-field = "fire-rating" "=" ("r30" | "r60" | "r90" | "r120")
-tightness-field = "tightness-class" "=" ("tc0" | "tc1" | "tc2")
-reference-sheet = clause-ref qty trace
-clause-sheet = clause-ref verdict
+sheet-body = assign*
+assign = field-name "=" value
+field-name = "en1992-basis" | "en1992-combination" | "en1992-partial-factor" | "en1992-verdict" | "en1992-annex" | "en1992-actor" | "started" | "actor"
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

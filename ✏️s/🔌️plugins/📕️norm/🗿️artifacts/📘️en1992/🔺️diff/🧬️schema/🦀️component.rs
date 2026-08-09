@@ -1,6 +1,8 @@
 //! 🧬️ En1992 diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
+use crate::artifacts::en1992::part_3::TightnessClass;
+use crate::artifacts::en1992::part_1_2::FireRating;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff

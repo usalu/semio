@@ -3,7 +3,7 @@
 use crate::apps::forms::forms_action;
 use crate::apps::forms::terminology::FormsLabels;
 use crate::artifacts::forms::engine::forms_play_step_tree_id;
-use crate::artifacts::forms::FormSpec;
+use crate::artifacts::forms::FormsSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(spec: &FormSpec, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &FormsSnapshot, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = spec
         .steps
         .iter()

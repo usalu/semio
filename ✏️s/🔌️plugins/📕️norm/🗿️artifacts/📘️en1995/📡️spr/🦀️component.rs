@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let mutation = En1995Mutation::SetSnapshot { snapshot: En1995Snapshot::default() };
-        store::test_support::assert_op_line_round_trip(&mutation);
+        store::os_store::test_support::assert_op_line_round_trip(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
@@ -38,10 +38,10 @@ mod tests {
     #[test]
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1995/v1", "en1995", En1995Snapshot::default(), None);
-        let mut store = store::En1995SnapshotStore::new(envelope);
-        store.dispatch(store::En1995SnapshotCommand::Apply { mutations: vec![En1995Mutation::SetSnapshot { snapshot: En1995Snapshot::default() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = store::DocumentStore::new(envelope);
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![En1995Mutation::SetSnapshot { snapshot: En1995Snapshot::default() }], description: None }).expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

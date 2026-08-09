@@ -801,7 +801,7 @@ pub use crate::artifacts::iso16757::snapshot::schema::Iso16757Snapshot;
 pub const ISO16757_EXTENSION: &str = "iso16757";
 
 /// 📋️ ISO 16757 evaluation session document.
-impl Document {
+impl Iso16757Snapshot {
     pub fn reference_fixture() -> Self {
         let dictionary = part_4::Dictionary {
             reference: DictionaryRef { id: "hvac-dict".into(), version: "2025-01".into() },

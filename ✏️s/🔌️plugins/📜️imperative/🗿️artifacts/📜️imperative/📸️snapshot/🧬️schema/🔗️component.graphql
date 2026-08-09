@@ -1,0 +1,30 @@
+# 🧬️ Imperative snapshot schema — persistent fields only.
+
+type ImperativeSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  path: ImperativePath! @state(class: PERSISTENT)
+  seed: [ImperativeSeedEntry!]! @state(class: PERSISTENT)
+}
+
+type ImperativePath {
+  steps: [ImperativeStep!]!
+}
+
+type ImperativeStep {
+  id: String!
+  kind: String!
+  params: JSON
+  bodies: [ImperativeStepBodyEntry!]
+}
+
+type ImperativeStepBodyEntry {
+  slot: String!
+  path: ImperativePath!
+}
+
+type ImperativeSeedEntry {
+  key: String!
+  value: JSON!
+}
+
+scalar JSON

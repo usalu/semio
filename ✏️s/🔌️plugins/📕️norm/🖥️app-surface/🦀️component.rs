@@ -88,7 +88,7 @@ pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_i
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -187,14 +187,15 @@ where
 /// own `Document` shape becomes a whole-document replace; anything else is accepted but inert (no norm
 /// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
 /// replicates the SDK default (decodes the base64 pack).
-pub fn import_media<D>(port: &str, media: &Media) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, MediaError>
+pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
 where
     D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::DocumentPack,
+    F: Fn(D) -> M,
 {
     if port == "model:in" {
         if let MediaPayload::Structured { json, .. } = &media.payload {
             if let Ok(document) = serde_json::from_str::<D>(json) {
-                return Ok(Emit::mutations(vec![crate::document::SetDocumentMutation::SetDocument { document }]));
+                return Ok(Emit::mutations(vec![wrap(document)]));
             }
         }
         return Ok(Emit::default());
@@ -207,19 +208,25 @@ where
     };
     let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
     let document = <D as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    Ok(Emit::mutations(vec![crate::document::SetDocumentMutation::SetDocument { document }]))
+    Ok(Emit::mutations(vec![wrap(document)]))
 }
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
 /// 📤️ The whole-document replace every app's `set-document` and `evaluate` commands emit — `description`
 /// is the manifest action id the command was declared under, which the command log labels the edit with.
+
+/// 📤️ Commit a typed document mutation (typically `XMutation::SetSnapshot { snapshot }`).
+pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+    Ok(Emit::commit(vec![mutation], description))
+}
+
 pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![crate::document::SetDocumentMutation::SetDocument { document }], description))
 }
 
 /// ☑️ The one config-only edit every app's `selected-check` command emits.
-pub fn commit_selected_check_index<D>(index: Option<u32>) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, Fault> {
+pub fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::config(vec![crate::config::NormConfigMutation::SetSelectedCheckIndex { index }]))
 }
 
@@ -233,19 +240,21 @@ pub fn selected_check_index_arg(args: Option<&serde_json::Value>) -> Option<u32>
 //#region 🔖️Views
 /// 👁️ Reads the config's selected check index out of a `ConfigView` — the one field norm apps read.
 pub fn selected_check_index(cfg: &ConfigView<'_, crate::config::NormConfig>) -> Option<u32> {
-    cfg.projection.selected_check_index
+    cfg.snapshot.selected_check_index
 }
 
 /// 📄️ Reads the document out of a `DocumentView` — spelled once so every app's `render`/`handle` reads
 /// it the same way.
-pub fn projection<'a, D>(doc: &'a DocumentView<'_, D>) -> &'a D {
-    doc.projection
+pub fn snapshot<'a, D>(doc: &'a DocumentView<'_, D>) -> &'a D {
+    doc.snapshot
 }
 //#endregion 🔖️Views
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+
+
     use super::*;
 
     #[test]

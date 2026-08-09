@@ -3,7 +3,7 @@
 use crate::apps::wires::terminology::WiresLabels;
 use crate::apps::wires::wires_action;
 use crate::artifacts::wires::engine::{dsl_id, fixture_edges, fixture_nodes, wires_identities, wires_relationships};
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{
     tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -72,7 +72,7 @@ fn document_tree_selected_ids(board: &dsl::DslValue, selected: &[String]) -> Vec
         .collect()
 }
 
-pub fn render(document: &MindmapWiresDocument, selected: &[String], labels: &WiresLabels) -> UiNode {
+pub fn render(document: &WiresSnapshot, selected: &[String], labels: &WiresLabels) -> UiNode {
     let wires = &document.wires_fixture;
     let board = &document.board_fixture;
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)

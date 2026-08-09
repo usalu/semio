@@ -1,0 +1,26 @@
+{
+  "moved": [
+    [
+      "air_exchange",
+      "\u2699\ufe0fengine/air_exchange/\ud83e\udd80\ufe0fcomponent.rs"
+    ],
+    [
+      "air_system",
+      "\u2699\ufe0fengine/air_system/\ud83e\udd80\ufe0fcomponent.rs"
+    ],
+    [
+      "airflow_network",
+      "\u2699\ufe0fengine/airflow_network/\ud83e\udd80\ufe0fcomponent.rs"
+    ],
+    [
+      "calendar",
+      "\u2699\ufe0fengine/calendar/\ud83e\udd80\ufe0fcomponent.rs"
+    ],
+    [
+      "coils",
+      "\u2699\ufe0fengine/coils/\ud83e\udd80\ufe0fcomponent.rs"
+    ]
+  ],
+  "moved_count": 50,
+  "glue_has_artifacts": false
+}

@@ -2,8 +2,8 @@
 
 use crate::apps::sequence::config::SequenceConfig;
 use crate::apps::sequence::SEQUENCE_PLAY_APP_ID;
-use crate::artifacts::sequence::engine::host_from_fixture;
-use crate::artifacts::sequence::SequenceFixture;
+use crate::artifacts::sequence::engine::host_from_snapshot;
+use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -33,8 +33,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, config: &SequenceConfig) -> UiNode {
-    let host = host_from_fixture(fixture);
+pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+    let host = host_from_snapshot(fixture);
     let mut text = host.compile_text();
     if !config.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");

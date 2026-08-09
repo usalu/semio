@@ -4,14 +4,8 @@
 //! `acquirePluginModule`'s lease pool in framework core `📦️index.ts`) instead of statically
 //! duplicating the SDK six times over.
 //!
-//! 🕳️ Deviation from the usual per-app-plugin shape: this crate owns no `🗿️artifacts` and no
-//! `🎛️apps` — every app it registers belongs to one of six source plugins
-//! (procedural/cad/puzzle/sourcing/process/gis) it depends on, so there is no document schema, no
-//! command enum and no DSL/pack/spr codec of its own, and the `semio_plugin!` macro (which assumes
-//! exactly that) does not apply. What demonstrator genuinely owns is the six PANES: each pane's host
-//! export wiring plus its bundle registration, one `🎪️panes/<variant>/🦀️component.rs` per playground
-//! variant declared in `Cargo.toml`. The manual `Plugin` builder + `plugin_exports!` invocation
-//! below is the same pattern `🪐️space`'s bundle uses.
+//! This crate also owns the minimal `🎪️playground` artifact (schema/snapshot/diff/dsl/op/spr/engine)
+//! so the demonstrator taxonomy slot is complete. Pane apps still come from the six source plugins.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`
 //! written in full, relative to THIS file's directory (`📦️packages/🦀️rust`, hence the `../../` climb
@@ -19,6 +13,83 @@
 //! not spliced into that base directory. Do not inline any component file back into this one: the
 //! taxonomy validator and the `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
+
+//#region 🗿️Artifacts
+#[path = "."]
+pub mod artifacts {
+    #[path = "."]
+    pub mod playground {
+        #[path = "../../🗿️artifacts/🎪️playground/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "../../🗿️artifacts/🎪️playground/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🎪️playground/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/🎪️playground/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "../../🗿️artifacts/🎪️playground/🔧️op/🦀️component.rs"]
+        pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod no_mutation {
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎪️playground/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
+        #[path = "../../🗿️artifacts/🎪️playground/🗣️dsl/🦀️component.rs"]
+        pub mod dsl;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🎪️playground/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🎪️playground/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+        pub use snapshot::pack;
+
+        #[path = "../../🗿️artifacts/🎪️playground/📡️spr/🦀️component.rs"]
+        pub mod spr;
+
+        #[path = "../../🗿️artifacts/🎪️playground/⚙️engine/🦀️component.rs"]
+        pub mod engine;
+    }
+}
+//#endregion 🗿️Artifacts
 
 //#region 🎪️Panes
 #[path = "."]
@@ -55,4 +126,3 @@ pub mod examples {
     pub mod art_playground_demo;
 }
 //#endregion 📚️Examples
-

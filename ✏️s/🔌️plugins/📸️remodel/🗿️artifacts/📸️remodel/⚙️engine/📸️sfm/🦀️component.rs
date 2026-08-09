@@ -1866,7 +1866,8 @@ pub fn apply_gcp_prior_residual(point: [f64; 3], known_world: [f64; 3], sigma: f
 
 // #region 🔖️Incremental
 /// 🎛️ Tuning for [`IncrementalSfm`]: RANSAC inlier threshold (pixels), minimum track length to
-/// triangulate, bundle-adjustment iteration cap, IRLS robust loss, and minimum triangulation angle.
+/// triangulate, bundle-adjustment iteration cap, IRLS robust loss, minimum triangulation angle, and
+/// the per-camera visible-point floor used by [`IncrementalSfm::prune_outliers`].
 #[derive(Clone, Debug, PartialEq)]
 pub struct SfmConfig {
     pub ransac_threshold_px: f64,
@@ -1874,11 +1875,19 @@ pub struct SfmConfig {
     pub ba_max_iterations: usize,
     pub robust_loss: RobustLoss,
     pub min_triangulation_angle_rad: f64,
+    pub min_visible_points_to_keep_camera: usize,
 }
 
 impl Default for SfmConfig {
     fn default() -> Self {
-        Self { ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: RobustLoss::Huber(2.0), min_triangulation_angle_rad: 2.0_f64.to_radians() }
+        Self {
+            ransac_threshold_px: 2.0,
+            min_track_length: 3,
+            ba_max_iterations: 50,
+            robust_loss: RobustLoss::Huber(2.0),
+            min_triangulation_angle_rad: 2.0_f64.to_radians(),
+            min_visible_points_to_keep_camera: 6,
+        }
     }
 }
 
@@ -1996,6 +2005,7 @@ pub struct IncrementalSfm {
     intrinsics: Intrinsics,
     tracks: FeatureTracks,
     keypoints_per_frame: Vec<Vec<Keypoint>>,
+    pairwise_matches: Vec<(usize, usize, Vec<Match>)>,
     cfg: SfmConfig,
     cameras: Vec<(usize, CameraPose)>,
     points: std::collections::HashMap<usize, [f64; 3]>,
@@ -2004,7 +2014,13 @@ pub struct IncrementalSfm {
 impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
     pub fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
-        Self { intrinsics, tracks, keypoints_per_frame, cfg, cameras: Vec::new(), points: std::collections::HashMap::new() }
+        Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::HashMap::new() }
+    }
+
+    /// 🕸️ Attaches the pairwise match table used for two-view registration fallbacks (track union-find alone
+    /// drops conflicted chains that JPEG matching often creates, starving essential-matrix correspondence).
+    pub fn set_pairwise_matches(&mut self, pairwise_matches: Vec<(usize, usize, Vec<Match>)>) {
+        self.pairwise_matches = pairwise_matches;
     }
 
     fn is_registered(&self, frame: usize) -> bool {
@@ -2022,6 +2038,37 @@ impl IncrementalSfm {
 
     fn track_obs_in(&self, track: &[(usize, u32)], frame: usize) -> Option<[f64; 2]> {
         track.iter().find(|&&(f, _)| f == frame).map(|&(f, kp)| self.obs_px(f, kp))
+    }
+
+    /// 🎯️ Number of already-triangulated tracks also observed in `frame` — the 2D-3D
+    /// correspondence count [`register_next`](Self::register_next) would feed to PnP.
+    /// 🕸️ Direct pairwise match count between `frame` and any currently registered camera.
+    pub fn pairwise_match_count(&self, frame: usize) -> usize {
+        let registered: std::collections::HashSet<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
+        let mut best = 0usize;
+        for &(a, b, ref matches) in &self.pairwise_matches {
+            if matches.len() < 8 {
+                continue;
+            }
+            if (a == frame && registered.contains(&b)) || (b == frame && registered.contains(&a)) {
+                best = best.max(matches.len());
+            }
+        }
+        best
+    }
+
+        pub fn pnp_correspondence_count(&self, frame: usize) -> usize {
+        self.tracks
+            .tracks
+            .iter()
+            .enumerate()
+            .filter(|(track_id, track)| self.points.contains_key(track_id) && self.track_obs_in(track, frame).is_some())
+            .count()
+    }
+
+    /// 🌱️ Whether `frame` already has a registered camera pose in this reconstruction.
+    pub fn has_camera(&self, frame: usize) -> bool {
+        self.is_registered(frame)
     }
 
     /// 🌱️ Seeds the reconstruction from an initial pair: estimates the essential matrix + relative pose via
@@ -2058,7 +2105,10 @@ impl IncrementalSfm {
     }
 
     /// 🎯️ Registers `frame` via PnP against every already-triangulated track observed there. Requires at
-    /// least 6 2D-3D correspondences (a small margin above [`P3pSolver::SAMPLE_SIZE`] for a robust RANSAC fit).
+    /// least [`P3pSolver::SAMPLE_SIZE`] 2D-3D correspondences. When PnP cannot run yet, falls back to a
+    /// two-view essential-matrix pose against the best-connected registered reference only when enough
+    /// shared triangulated points exist to recover a consistent metric scale and the refined pose
+    /// reprojects those points within `3 * ransac_threshold_px`.
     pub fn register_next(&mut self, frame: usize) -> Result<(), SfmError> {
         if self.is_registered(frame) {
             return Ok(());
@@ -2071,11 +2121,142 @@ impl IncrementalSfm {
             world_pts.push(point);
             obs.push(px);
         }
-        if world_pts.len() < 6 {
-            return Err(SfmError::PnpFailed);
+        if world_pts.len() >= P3pSolver::SAMPLE_SIZE {
+            let cfg = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.999, max_iters: 2000, seed: frame as u64, scoring: RansacScoring::Msac };
+            if let Some((pose, _inliers)) = pnp_ransac(&self.intrinsics, &world_pts, &obs, &cfg) {
+                self.cameras.push((frame, pose));
+                return Ok(());
+            }
         }
-        let cfg = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.999, max_iters: 2000, seed: frame as u64, scoring: RansacScoring::Msac };
-        let (pose, _inliers) = pnp_ransac(&self.intrinsics, &world_pts, &obs, &cfg).ok_or(SfmError::PnpFailed)?;
+        self.register_next_two_view(frame)
+    }
+
+    /// 📐️ Two-view fallback for [`register_next`](Self::register_next): essential-matrix relative pose vs the
+    /// registered frame sharing the most track observations. Metric scale prefers the median ratio of known
+    /// triangulated-point distances to unit-baseline triangulations; when JPEG/matching leaves no shared
+    /// 3D point, falls back to the most recent registered inter-camera baseline length.
+    fn register_next_two_view(&mut self, frame: usize) -> Result<(), SfmError> {
+        let registered: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
+        let mut best: Option<(usize, Vec<([f64; 2], [f64; 2])>)> = None;
+        for &ref_f in &registered {
+            let mut corr = Vec::new();
+            // Prefer direct pairwise matches (unordered) so JPEG conflicted track chains do not starve PnP fallback.
+            for &(a, b, ref matches) in &self.pairwise_matches {
+                let (src, dst, flip) = if a == ref_f && b == frame {
+                    (ref_f, frame, false)
+                } else if a == frame && b == ref_f {
+                    (frame, ref_f, true)
+                } else {
+                    continue;
+                };
+                let _ = (src, dst);
+                for m in matches {
+                    let (px_r, px_f) = if !flip {
+                        (self.obs_px(ref_f, m.a), self.obs_px(frame, m.b))
+                    } else {
+                        (self.obs_px(ref_f, m.b), self.obs_px(frame, m.a))
+                    };
+                    corr.push((px_r, px_f));
+                }
+            }
+            if corr.is_empty() {
+                for track in &self.tracks.tracks {
+                    let Some(px_r) = self.track_obs_in(track, ref_f) else { continue };
+                    let Some(px_f) = self.track_obs_in(track, frame) else { continue };
+                    corr.push((px_r, px_f));
+                }
+            }
+            if corr.len() >= 8 && best.as_ref().map_or(true, |(_, c)| corr.len() > c.len()) {
+                best = Some((ref_f, corr));
+            }
+        }
+        let (ref_f, mut corr) = best.ok_or(SfmError::PnpFailed)?;
+        const MAX_TWO_VIEW_CORRS: usize = 64;
+        if corr.len() > MAX_TWO_VIEW_CORRS {
+            // Keep a deterministic stride subsample so LO-RANSAC stays bounded on dense JPEG match tables.
+            let step = corr.len().div_ceil(MAX_TWO_VIEW_CORRS);
+            corr = corr.into_iter().enumerate().filter_map(|(i, c)| (i % step == 0).then_some(c)).collect();
+        }
+        let two_view = estimate_init_pair_essential(&corr, &self.intrinsics, frame as u64).ok_or(SfmError::DegenerateGeometry)?;
+        let TwoViewModel::Fundamental(e) = two_view.model else {
+            return Err(SfmError::DegenerateGeometry);
+        };
+        let inlier_rays: Vec<([f64; 2], [f64; 2])> = two_view
+            .inliers
+            .iter()
+            .map(|&idx| {
+                let ra = self.intrinsics.unproject_ray(corr[idx].0);
+                let rb = self.intrinsics.unproject_ray(corr[idx].1);
+                ([ra[0], ra[1]], [rb[0], rb[1]])
+            })
+            .collect();
+        let relative = decompose_essential(&e, &inlier_rays).ok_or(SfmError::DegenerateGeometry)?;
+        let ref_pose = self.pose_of(ref_f).ok_or(SfmError::PnpFailed)?;
+        let c_ref = camera_center(&ref_pose);
+        let r_arr = mat3d_to_array(&relative.r.0);
+
+        let mut scales = Vec::new();
+        let mut shared: Vec<([f64; 3], [f64; 2])> = Vec::new();
+        for (track_id, track) in self.tracks.tracks.iter().enumerate() {
+            let Some(&point) = self.points.get(&track_id) else { continue };
+            let Some(px_r) = self.track_obs_in(track, ref_f) else { continue };
+            let Some(px_f) = self.track_obs_in(track, frame) else { continue };
+            let ray_r = self.intrinsics.unproject_ray(px_r);
+            let ray_f = self.intrinsics.unproject_ray(px_f);
+            let Some(p_unit) = triangulate_normalized_pair(&r_arr, relative.t, [ray_r[0], ray_r[1]], [ray_f[0], ray_f[1]]) else {
+                continue;
+            };
+            let dist_metric = norm3(sub3(point, c_ref));
+            let dist_unit = norm3(p_unit);
+            if dist_unit < 1e-9 || dist_metric < 1e-9 {
+                continue;
+            }
+            scales.push(dist_metric / dist_unit);
+            shared.push((point, px_f));
+        }
+        let s = if scales.is_empty() {
+            // 🏃️ JPEG / sparse-track path: no shared triangulated point survived matching, so borrow the
+            // metric from the most recent registered baseline (sequential orbit / video assumes similar
+            // inter-frame translation magnitude) instead of abandoning the frame.
+            if self.cameras.len() < 2 {
+                return Err(SfmError::PnpFailed);
+            }
+            // Anchor metric to the seed pair's baseline so chained two-view poses share one scale.
+            let baseline = norm3(sub3(camera_center(&self.cameras[0].1), camera_center(&self.cameras[1].1)));
+            if baseline < 1e-9 {
+                return Err(SfmError::PnpFailed);
+            }
+            baseline
+        } else {
+            scales.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            let median = scales[scales.len() / 2];
+            if !median.is_finite() || median <= 1e-9 {
+                return Err(SfmError::PnpFailed);
+            }
+            if scales.len() >= 2 {
+                let spread = scales[scales.len() - 1] / scales[0];
+                if !spread.is_finite() || spread > 1.5 {
+                    return Err(SfmError::PnpFailed);
+                }
+            }
+            median
+        };
+        let scaled = Se3 { r: relative.r, t: scale3(relative.t, s) };
+        let pose = CameraPose(scaled.semio_compose_rs(&ref_pose.0));
+        if !shared.is_empty() {
+            let max_reproj = self.cfg.ransac_threshold_px * 3.0;
+            let mut ok = 0usize;
+            for &(point, px) in &shared {
+                let Some(pred) = reproject(&self.intrinsics, &pose, point) else { continue };
+                let err = ((pred[0] - px[0]).powi(2) + (pred[1] - px[1]).powi(2)).sqrt();
+                if err <= max_reproj {
+                    ok += 1;
+                }
+            }
+            if ok == 0 {
+                return Err(SfmError::PnpFailed);
+            }
+        }
         self.cameras.push((frame, pose));
         Ok(())
     }
@@ -2083,6 +2264,33 @@ impl IncrementalSfm {
     /// 🧵️ Triangulates every not-yet-triangulated track that (a) has an observation in `frame` and (b) is
     /// observed by at least 2 registered cameras overall and meets [`SfmConfig::min_track_length`], via
     /// [`triangulate_and_validate`].
+
+    /// 🎯️ Re-estimates every registered camera via PnP against the current triangulated cloud (frames with
+    /// fewer than [`P3pSolver::SAMPLE_SIZE`] correspondences are left unchanged). Cleans up poses that were
+    /// seeded by the two-view baseline-prior fallback before bundle adjustment / dense stereo.
+    pub fn refine_registered_poses_pnp(&mut self) {
+        let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
+        for frame in frames {
+            let mut world_pts = Vec::new();
+            let mut obs = Vec::new();
+            for (track_id, track) in self.tracks.tracks.iter().enumerate() {
+                let Some(&point) = self.points.get(&track_id) else { continue };
+                let Some(px) = self.track_obs_in(track, frame) else { continue };
+                world_pts.push(point);
+                obs.push(px);
+            }
+            if world_pts.len() < P3pSolver::SAMPLE_SIZE {
+                continue;
+            }
+            let cfg = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.999, max_iters: 2000, seed: frame as u64 ^ 0x9E37_79B9, scoring: RansacScoring::Msac };
+            if let Some((pose, _)) = pnp_ransac(&self.intrinsics, &world_pts, &obs, &cfg) {
+                if let Some(slot) = self.cameras.iter_mut().find(|(f, _)| *f == frame) {
+                    slot.1 = pose;
+                }
+            }
+        }
+    }
+
     pub fn triangulate_new(&mut self, frame: usize) {
         let registered: std::collections::HashSet<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         for (track_id, track) in self.tracks.tracks.iter().enumerate() {
@@ -2177,8 +2385,7 @@ impl IncrementalSfm {
 
     /// 🧹️ Drops points whose worst-view reprojection error exceeds `3 * ransac_threshold_px` or whose
     /// best pairwise triangulation angle is below [`SfmConfig::min_triangulation_angle_rad`], then drops
-    /// any camera left seeing fewer than 6 surviving points (a small, documented floor — enough for a
-    /// well-conditioned PnP re-registration attempt, not an arbitrary "many").
+    /// any camera left seeing fewer than [`SfmConfig::min_visible_points_to_keep_camera`] surviving points.
     pub fn prune_outliers(&mut self) {
         let reproj_threshold = self.cfg.ransac_threshold_px * 3.0;
         let mut to_remove = Vec::new();
@@ -2210,7 +2417,7 @@ impl IncrementalSfm {
             self.points.remove(&tid);
         }
 
-        const MIN_VISIBLE_POINTS_TO_KEEP_CAMERA: usize = 6;
+        let min_visible = self.cfg.min_visible_points_to_keep_camera;
         let mut visible_count: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
         for &tid in self.points.keys() {
             for &(f, _) in &self.tracks.tracks[tid] {
@@ -2219,7 +2426,7 @@ impl IncrementalSfm {
                 }
             }
         }
-        self.cameras.retain(|&(f, _)| visible_count.get(&f).copied().unwrap_or(0) >= MIN_VISIBLE_POINTS_TO_KEEP_CAMERA);
+        self.cameras.retain(|&(f, _)| visible_count.get(&f).copied().unwrap_or(0) >= min_visible);
     }
 
     /// 🔁️ Re-runs [`triangulate_new`](Self::triangulate_new) over every registered frame, picking up
@@ -2253,16 +2460,31 @@ impl IncrementalSfm {
         }
         let (f0, f1) = (frame_order[0], frame_order[1]);
         let matches01 = pairwise_matches.iter().find(|&&(a, b, _)| a == f0 && b == f1).map(|(_, _, m)| m).ok_or(SfmError::InsufficientMatches)?;
+        self.set_pairwise_matches(pairwise_matches.to_vec());
         self.init_pair(f0, f1, matches01)?;
 
-        for &frame in &frame_order[2..] {
-            if self.register_next(frame).is_err() {
-                continue;
+        for _ in 0..frame_order.len().saturating_sub(2) {
+            let mut candidates: Vec<(usize, usize)> = frame_order
+                .iter()
+                .copied()
+                .filter(|&frame| !self.is_registered(frame))
+                .map(|frame| (self.pnp_correspondence_count(frame), frame))
+                .collect();
+            candidates.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+            let mut registered_any = false;
+            for (_corrs, frame) in candidates {
+                if self.register_next(frame).is_ok() {
+                    self.triangulate_new(frame);
+                    self.local_ba(5);
+                    self.prune_outliers();
+                    self.retriangulate();
+                    registered_any = true;
+                    break;
+                }
             }
-            self.triangulate_new(frame);
-            self.local_ba(5);
-            self.prune_outliers();
-            self.retriangulate();
+            if !registered_any {
+                break;
+            }
         }
         self.global_ba();
         Ok(self.reconstruction())
@@ -2578,7 +2800,14 @@ mod tests {
         assert!(matches01.len() >= 8, "expected enough shared tracks between frames 0 and 1, got {}", matches01.len());
         let pairwise_matches = vec![(0usize, 1usize, matches01)];
 
-        let cfg = SfmConfig { ransac_threshold_px: 2.5, min_track_length: 2, ba_max_iterations: 30, robust_loss: RobustLoss::Huber(2.0), min_triangulation_angle_rad: 1.0_f64.to_radians() };
+        let cfg = SfmConfig {
+            ransac_threshold_px: 2.5,
+            min_track_length: 2,
+            ba_max_iterations: 30,
+            robust_loss: RobustLoss::Huber(2.0),
+            min_triangulation_angle_rad: 1.0_f64.to_radians(),
+            min_visible_points_to_keep_camera: 6,
+        };
         let mut sfm = IncrementalSfm::new(intr, feature_tracks.clone(), keypoints_per_frame.clone(), cfg);
         let recon = sfm.run_all(&frame_order, &pairwise_matches).expect("run_all should reconstruct the synthetic scene");
 

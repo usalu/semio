@@ -1,4 +1,4 @@
-//! ⚙️ Mathematical artifact — headless compute over the `MathProjection` document (constitutional:
+//! ⚙️ Mathematical artifact — headless compute over the `MathematicalSnapshot` document (constitutional:
 //! engine).
 //!
 //! Everything here is pure over `crate::artifacts::mathematical` types and takes no app-only view-state
@@ -7,18 +7,24 @@
 //! consumer's component file. `empty_component_scene` is the example — both `🎭️modes/✏️edit/🪟️windows/*`
 //! renderers need it, so it lives here rather than in either window's file.
 
-use crate::artifacts::mathematical::{MathGeometry, MathGraph};
+use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph};
 use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
 use serde_json::{json, Value};
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
 
 //#region 🔖️Register
-/// 🗂️ Registers `MathProjection`'s pack↔dsl codec under `MATH_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `MathematicalSnapshot`'s pack↔dsl codec under `MATH_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// folder endpoints and any other schema-string-keyed caller can print/parse mathematical documents.
 /// Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::mathematical::MathematicalPlayApp>(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA);
+}
+
+/// 📎 Registers the mathematical artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::mathematical::schema::mathematical_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -29,8 +35,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::mathematical::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::mathematical::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::mathematical::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::mathematical::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("mathematical.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -59,8 +65,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::mathematical::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::mathematical::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("mathematical.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -135,7 +141,7 @@ pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> U
 
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
-pub fn algorithm_overlay(graph: &MathGraph) -> std::collections::HashMap<String, String> {
+pub fn algorithm_overlay(graph: &MathematicalGraph) -> std::collections::HashMap<String, String> {
     use math::graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
@@ -188,7 +194,7 @@ pub fn algorithm_overlay(graph: &MathGraph) -> std::collections::HashMap<String,
     overlay
 }
 
-pub fn workflow_json(graph: &MathGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn workflow_json(graph: &MathematicalGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let overlay = algorithm_overlay(graph);
     let nodes: Vec<NodeGraphNodeRecord> = graph
         .nodes
@@ -205,7 +211,7 @@ pub fn workflow_json(graph: &MathGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGr
 //#endregion 🔖️GraphAlgorithms
 
 //#region 🔖️Geometry
-pub fn geometry_layers_json(geometry: &MathGeometry) -> String {
+pub fn geometry_layers_json(geometry: &MathematicalGeometry) -> String {
     let points: Vec<math::geometry::Point> = geometry.points.iter().map(|p| math::geometry::Point::new(p.x, p.y)).collect();
     let hull = math::geometry::convex_hull(&points);
     let centroid = math::geometry::polygon_centroid(&hull);
@@ -233,7 +239,7 @@ pub fn geometry_layers_json(geometry: &MathGeometry) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mathematical::MathNode;
+    use crate::artifacts::mathematical::MathematicalNode;
 
     //#region MathematicalIo
     #[test]
@@ -253,7 +259,7 @@ mod tests {
 
     #[test]
     fn topo_algorithm_overlay_orders_dag_nodes() {
-        let graph = MathGraph::default();
+        let graph = MathematicalGraph::default();
         let overlay = algorithm_overlay(&graph);
         assert!(overlay.get("a").unwrap().starts_with(" #0"));
         assert!(overlay.get("d").unwrap().starts_with(" #"));
@@ -261,15 +267,15 @@ mod tests {
 
     #[test]
     fn components_algorithm_overlay_groups_disconnected_node() {
-        let mut graph = MathGraph { algorithm: "components".into(), ..MathGraph::default() };
-        graph.nodes.push(MathNode { id: "z".into(), label: "Z".into(), x: 0.0, y: 0.0 });
+        let mut graph = MathematicalGraph { algorithm: "components".into(), ..MathematicalGraph::default() };
+        graph.nodes.push(MathematicalNode { id: "z".into(), label: "Z".into(), x: 0.0, y: 0.0 });
         let overlay = algorithm_overlay(&graph);
         assert_ne!(overlay.get("a"), overlay.get("z"));
     }
 
     #[test]
     fn bfs_algorithm_overlay_reports_hop_distance() {
-        let graph = MathGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathGraph::default() };
+        let graph = MathematicalGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathematicalGraph::default() };
         let overlay = algorithm_overlay(&graph);
         assert_eq!(overlay.get("a").unwrap(), " d0");
         assert_eq!(overlay.get("b").unwrap(), " d1");
@@ -277,7 +283,7 @@ mod tests {
 
     #[test]
     fn workflow_json_round_trips_node_count() {
-        let graph = MathGraph::default();
+        let graph = MathematicalGraph::default();
         let (nodes, edges) = workflow_json(&graph);
         assert_eq!(nodes.len(), graph.nodes.len());
         assert_eq!(edges.len(), graph.edges.len());
@@ -285,7 +291,7 @@ mod tests {
 
     #[test]
     fn geometry_layers_include_hull_and_centroid() {
-        let geometry = MathGeometry::default();
+        let geometry = MathematicalGeometry::default();
         let layers_json = geometry_layers_json(&geometry);
         assert!(layers_json.contains("\"hull\""));
         assert!(layers_json.contains("\"centroid\""));
@@ -294,35 +300,43 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
-use crate::artifacts::mathematical::MathProjection;
+use crate::artifacts::mathematical::MathematicalSnapshot;
 
-pub struct MathEngine {
-    projection: MathProjection,
+pub struct MathematicalEngine {
+    artifact: crate::artifacts::mathematical::schema::MathematicalArtifact,
+    snapshot: MathematicalSnapshot,
 }
 
-impl MathEngine {
-    pub fn new(projection: MathProjection) -> Self {
-        Self { projection }
+impl MathematicalEngine {
+    pub fn new(snapshot: MathematicalSnapshot) -> Self {
+        let artifact = crate::artifacts::mathematical::schema::MathematicalArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
-impl protocol::ArtifactEngine for MathEngine {
-    type Projection = MathProjection;
-    type Mutation = crate::artifacts::mathematical::mutations::MathMutation;
-    type Diff = crate::artifacts::mathematical::diff::MathDiff;
+impl protocol::ArtifactEngine for MathematicalEngine {
+    type Artifact = crate::artifacts::mathematical::schema::MathematicalArtifact;
+    type Snapshot = MathematicalSnapshot;
+    type Mutation = crate::artifacts::mathematical::mutations::MathematicalMutation;
+    type Diff = crate::artifacts::mathematical::diff::MathematicalDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::mathematical::mutations::apply_math_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

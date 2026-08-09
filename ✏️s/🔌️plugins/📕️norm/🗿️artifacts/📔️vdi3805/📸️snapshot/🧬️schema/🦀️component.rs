@@ -16,14 +16,23 @@ use std::collections::BTreeMap;
 #[dsl(id = "norm.vdi3805", layout = "lines")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Snapshot {
+    #[state(persistent)]
     pub manufacturer_file: ManufacturerFile,
+    #[state(persistent)]
     pub catalog: ManufacturerCatalog,
+    #[state(persistent)]
     pub edition_profile: BTreeMap<String, EditionProfileChoice>,
+    #[state(persistent)]
     pub correction_as_of: EditionId,
+    #[state(persistent)]
     pub strict_mode: bool,
+    #[state(persistent)]
     pub index: CatalogIndex,
+    #[state(persistent)]
     pub geometry: BTreeMap<String, ParametricGeometry>,
+    #[state(persistent)]
     pub curves: BTreeMap<String, CharacteristicCurve>,
+    #[state(persistent)]
     pub limits: SecurityLimits,
 }
 //#region 🔖️HandcraftedDocumentCodecs
@@ -83,7 +92,7 @@ impl store::DocumentPack for Vdi3805Snapshot {
 
 impl Default for Vdi3805Snapshot {
     fn default() -> Self {
-        reference_fixture()
+        crate::artifacts::vdi3805::reference_fixture()
     }
 }
 //#endregion 🔖️Snapshot

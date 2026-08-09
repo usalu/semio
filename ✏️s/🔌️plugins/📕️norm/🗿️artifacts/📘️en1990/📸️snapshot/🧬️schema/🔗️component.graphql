@@ -1,10 +1,10 @@
 # 🧬️ En1990 snapshot schema — persistent fields only.
 
 type En1990Snapshot {
-  gK: Float @state(class: PERSISTENT)
+  gK: Float! @state(class: PERSISTENT)
   qK: [qKItem!]! @state(class: PERSISTENT)
-  resistanceKn: Float @state(class: PERSISTENT)
-  consequenceClass: Int @state(class: PERSISTENT)
-  annex: String @state(class: PERSISTENT)
-  seismicAEdKn: Float @state(class: PERSISTENT)
+  resistanceKn: Float! @state(class: PERSISTENT)
+  consequenceClass: Int! @state(class: PERSISTENT)
+  annex: String! @state(class: PERSISTENT)
+  seismicAEdKn: Float! @state(class: PERSISTENT)
 }

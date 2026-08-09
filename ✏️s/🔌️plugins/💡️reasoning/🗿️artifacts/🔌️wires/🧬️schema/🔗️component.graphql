@@ -1,0 +1,17 @@
+# 🧬️ Wires artifact schema — every field with its state class.
+
+scalar DslValue
+
+type WiresArtifact {
+  wiresFixture: DslValue! @state(class: PERSISTENT)
+  boardFixture: DslValue! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  dragNodeId: String @state(class: PREVIEW)
+  dragLastX: Float! @state(class: PREVIEW)
+  dragLastY: Float! @state(class: PREVIEW)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type WiresStringList {
+  values: [String!]!
+}

@@ -1,6 +1,7 @@
 //! 🧬️ En1990 diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
+use crate::artifacts::en1990::En1990QkEntry;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -29,5 +30,5 @@ pub struct En1990StringList { pub values: Vec<String> }
 /// 📋 Qk table wrapper for optional list diffs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct En1990QkList { pub values: Vec<crate::artifacts::en1990::schema::En1990QkEntry> }
+pub struct En1990QkList { pub values: Vec<En1990QkEntry> }
 //#endregion 🔖️DeltaHelpers

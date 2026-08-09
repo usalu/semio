@@ -7,7 +7,7 @@ message Din4108Diff {
   // @state persistent
   optional string category = 2;
   // @state persistent
-  optional Din4108StringList layers = 3;
+  optional Din4108LayerList layers = 3;
   // @state persistent
   optional string climate = 4;
   // @state persistent
@@ -66,4 +66,4 @@ message Din4108Artifact {
   optional uint32 selected_check_index = 19;
 }
 
-message Din4108StringList { repeated string values = 1; }
+message Din4108LayerList { repeated string values = 1; }

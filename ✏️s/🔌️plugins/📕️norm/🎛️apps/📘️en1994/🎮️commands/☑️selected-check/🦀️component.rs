@@ -21,7 +21,7 @@ pub struct SetSelectedCheckIndex {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, En1994Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1994Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_selected_check_index(payload.index)
+    crate::app_surface::commit_selected_check_index::<En1994Mutation>(payload.index)
 }
 //#endregion 🔖️Handler
 
@@ -37,8 +37,8 @@ mod tests {
         let config = NormConfig::default();
         let emit = handle(
             &SetSelectedCheckIndex { index: Some(4) },
-            &DocumentView { projection: &projection, history: &HistoryView::empty() },
-            &ConfigView { projection: &config },
+            &DocumentView { snapshot: &projection, history: &HistoryView::empty() },
+            &ConfigView { snapshot: &config },
         )
         .expect("handle");
         assert!(emit.document_mutations.is_empty(), "a view action must never emit document operations");

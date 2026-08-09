@@ -2,7 +2,7 @@
 
 use crate::apps::dag::terminology::DagPlayLabels;
 use crate::apps::dag::dag_action;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode,
@@ -77,7 +77,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<La
 //#endregion 🔖️Fields
 
 //#region 🔖️Render
-pub fn render(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),
@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
         let mut app = new_app();
-        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         dispatch(&mut app, DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }));
         let json = render_body(&mut app, DAG_PLAY_BODY_INSPECTOR);
         assert!(json.contains(&node_id));

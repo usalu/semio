@@ -66,21 +66,9 @@ pub mod part_2 {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "norm.en1996", layout = "lines")]
 
 pub use crate::artifacts::en1996::snapshot::schema::En1996Snapshot;
 
-#[path = "./🧬️schema/🦀️component.rs"]
-pub mod schema;
-
-pub mod snapshot {
-    #[path = "./📸️snapshot/🧬️schema/🦀️component.rs"]
-    pub mod schema;
-    #[path = "./📸️snapshot/🎒️pack/🦀️component.rs"]
-    pub mod pack;
-}
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("en1996", "EN 1996")

@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::apps::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
-use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, OsMediaFormat, WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, OsMediaFormat, WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde_json::{json, Value};
 
@@ -18,8 +18,8 @@ pub mod export_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ExportMedia, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let projection = doc.projection;
+    pub fn handle(payload: &ExportMedia, doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let projection = doc.snapshot;
         match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
             Some(node) => {
                 crate::ensure_space_fixtures_registered();
@@ -50,7 +50,7 @@ pub mod import_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit {
             config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(payload.format.clone()) }],
             effects: vec![HostEffect::RequestFileOpen { accept: format!(".{}", payload.format), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
@@ -71,16 +71,18 @@ pub mod import_media_payload {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportMediaPayload, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &ImportMediaPayload, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let mut config_mutations = Vec::new();
-        if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.clone(), config.pending_import_format.clone()) {
+        if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.as_ref(), config.pending_import_format.as_ref()) {
+            let node_id = node_id.clone();
+            let format_name = format_name.clone();
             config_mutations.push(SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
             if let Some(format) = OsMediaFormat::parse(&format_name) {
                 use base64::Engine;
                 let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
                 if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
-                    if let Some(node) = doc.projection.graph.nodes.iter().find(|row| row.id == node_id) {
+                    if let Some(node) = doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
                         // 📥️ Decoding/validation happens here; the decoded content is applied to the
                         // node's own document-ref document by the host (a cross-document operation the
                         // shell can't author from its own store), so this arm emits no studio document
@@ -105,9 +107,9 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
     }
 
     #[test]

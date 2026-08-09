@@ -5,7 +5,7 @@ use crate::artifacts::en1992::En1992Snapshot;
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
 /// (`store::DocumentDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
 /// checked with a FEM-based analysis, an R90 fire rating, and a post-installed anchor in cracked
-/// concrete, under the EN annex — distinct from `Document::default()`'s DE-annex/TC1/R60/uncracked
+/// concrete, under the EN annex — distinct from `En1992Snapshot::default()`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
 /// `anchor_cracked`) are exercised too.
 pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio");
@@ -18,12 +18,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, store::TextError> {
+    <En1992Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1992` DSL text.
-pub fn print_dsl(document: &Document) -> String {
+pub fn print_dsl(document: &En1992Snapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -33,12 +33,12 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::os_store::test_support::assert_dsl_round_trip(&En1992Snapshot::default());
     }
 
     #[test]
     fn dsl_round_trip_agrees_with_print_parse_wrappers() {
-        let document = Document::default();
+        let document = En1992Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
@@ -49,10 +49,12 @@ mod tests {
         // whose errors always reported `TextSpan::at(1, 1)` regardless of which line actually
         // failed. `fire-rating` (kebab-cased from `fire_rating`) is the 16th `key value` line in
         // `print_dsl`'s fixed field order.
-        let printed = print_dsl(&Document::default());
+        let printed = print_dsl(&En1992Snapshot::default());
         let bad = printed.replacen("fire-rating=r60", "fire-rating=not-a-rating", 1);
         assert_ne!(bad, printed, "fire_rating's printed line must match the literal replaced above");
-        let bad_line = bad.lines().position(|l| l.contains("not-a-rating")).expect("bad line present") as u32 + 1;
+        // Spans are relative to the document body after preamble strip.
+        let body = bad.split_once('\n').map(|(_, rest)| rest).unwrap_or(bad.as_str());
+        let bad_line = body.lines().position(|l| l.contains("not-a-rating")).expect("bad line present") as u32 + 1;
         let error = parse_dsl(&bad).expect_err("an unknown fire_rating tag must fail to parse");
         assert_eq!(error.span.line, bad_line, "error span must point at the actual malformed line, not (1, 1)");
     }
@@ -68,7 +70,7 @@ mod tests {
         assert_eq!(document.tightness_class, TightnessClass::Tc2);
         assert!(document.use_fem);
         assert!(document.anchor_cracked);
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 

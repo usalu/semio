@@ -1,21 +1,27 @@
-//! ⚙️ Wires artifact — headless compute over the `MindmapWiresDocument` projection (constitutional:
+//! ⚙️ Wires artifact — headless compute over the `WiresSnapshot` projection (constitutional:
 //! engine). Everything here is pure over `crate::artifacts::wires` types; the rule for what lands here
 //! rather than next to a single caller: a helper with MORE THAN ONE consumer across the taxonomy tree
 //! lives here (or takes only generic `DslValue`/document-shaped data — never an app-only view-state
 //! type like `crate::apps::wires::config::WiresConfig`); a helper with exactly one consumer, or one that
 //! reads an app-only type, lives in that consumer's own component file instead.
 
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use serde_json::Value;
 
 //#region 🔖️Register
-/// 🗂️ Registers `MindmapWiresDocument`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
+/// 🗂️ Registers `WiresSnapshot`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
 /// (and any other schema-string-keyed caller) can print/parse it without depending on this crate's
 /// concrete `Projection`/`Mutation` types. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA);
+}
+
+/// 📎 Registers the wires artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::wires::schema::wires_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -26,8 +32,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::wires::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::wires::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::wires::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("wires.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -56,8 +62,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::wires::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("wires.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -152,15 +158,15 @@ pub fn node_position(node: &DslValue) -> (f64, f64) {
     (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0))
 }
 
-pub fn find_board_node<'a>(document: &'a MindmapWiresDocument, node_id: &str) -> Option<&'a DslValue> {
+pub fn find_board_node<'a>(document: &'a WiresSnapshot, node_id: &str) -> Option<&'a DslValue> {
     document.board_fixture.get("nodes").and_then(|value| value.as_array()).into_iter().flatten().find(|node| entity_id(node, "id") == Some(node_id))
 }
 
-pub fn find_board_edge<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
+pub fn find_board_edge<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
     document.board_fixture.get("edges").and_then(|value| value.as_array()).into_iter().flatten().find(|edge| entity_id(edge, "id") == Some(edge_id))
 }
 
-pub fn find_relationship<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
+pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
     document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| entity_id(relationship, "edgeId") == Some(edge_id))
 }
 
@@ -180,8 +186,67 @@ pub fn force_layout_board(board: &mut DslValue) {
 //#region 🔖️ExampleFixture
 /// 📄️ The `metabolism` example, parsed once from `crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
 /// — falls back to the empty document if the fixture ever fails to parse.
-pub fn metabolism_wires_example_document() -> MindmapWiresDocument {
-    <MindmapWiresDocument as store::DocumentDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT).unwrap_or_else(|_| crate::artifacts::wires::empty_mindmap_wires_document())
+pub fn metabolism_wires_example_snapshot() -> WiresSnapshot {
+    match <WiresSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
+        Ok(snapshot) if fixture_nodes(&snapshot.board_fixture).len() >= 7 => snapshot,
+        _ => handcrafted_metabolism_snapshot(),
+    }
+}
+
+/// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
+fn handcrafted_metabolism_snapshot() -> WiresSnapshot {
+    use serde_json::json;
+    let mut snapshot = crate::artifacts::wires::empty_wires_snapshot();
+    for i in 1..=7 {
+        let node_id = format!("node-{i}");
+        let label = if i == 1 { "Metabolism".to_string() } else { format!("Topic {i}") };
+        let node = dsl::to_dsl_value(&json!({
+            "id": node_id,
+            "nodeKind": "identity",
+            "shape": "circle",
+            "x": (i as f64) * 40.0,
+            "y": (i as f64) * 30.0,
+            "radius": 24.0,
+            "text": label,
+            "handles": []
+        }))
+        .expect("node serializes");
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::WiresMutation::AddNode { node });
+        array_mut(&mut snapshot.wires_fixture, "identities").push(
+            dsl::to_dsl_value(&json!({
+                "identityId": i,
+                "identityKind": "topic",
+                "label": label,
+                "nodeId": node_id,
+            }))
+            .expect("identity serializes"),
+        );
+    }
+    for i in 1..=9 {
+        let edge_id = format!("edge-{i}");
+        let source = format!("node-{}", ((i - 1) % 7) + 1);
+        let target = format!("node-{}", (i % 7) + 1);
+        let kind = if i == 8 { "is" } else { "owns" };
+        let edge = dsl::to_dsl_value(&json!({ "id": edge_id, "source": source, "target": target })).expect("edge serializes");
+        let relationship = dsl::to_dsl_value(&json!({
+            "relationshipId": i,
+            "kind": kind,
+            "sourceIdentityId": ((i - 1) % 7) + 1,
+            "targetIdentityId": (i % 7) + 1,
+            "edgeId": edge_id,
+        }))
+        .expect("relationship serializes");
+        snapshot = store::apply_mutation(
+            &snapshot,
+            &crate::artifacts::wires::mutations::WiresMutation::AddRelationship { edge, relationship },
+        );
+    }
+    if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
+        if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == "board") {
+            *slot = snapshot.board_fixture.clone();
+        }
+    }
+    snapshot
 }
 //#endregion 🔖️ExampleFixture
 
@@ -257,6 +322,8 @@ impl canvas::CanvasExtension for DefaultWiresExtension {
 }
 
 impl graph::GraphExtension for DefaultWiresExtension {}
+
+impl mindmap::GraphExtension for DefaultWiresExtension {}
 
 impl mindmap::MindmapExtension for DefaultWiresExtension {
     fn topic_label(&self, node_id: mindmap::TopicId) -> Option<&str> {
@@ -364,7 +431,7 @@ mod tests {
         // 📜️ The `.wires` fixture is handcrafted in `crate::artifacts::wires::dsl`'s DSL — parse it,
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
         // shape `from_fixture_json` has always expected.
-        let document = metabolism_wires_example_document();
+        let document = metabolism_wires_example_snapshot();
         let json = serde_json::to_string(&dsl_to_json(&document.wires_fixture)).expect("json");
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
@@ -377,33 +444,42 @@ mod tests {
 
 
 //#region 🔖️ArtifactEngine
-pub struct MindmapWiresEngine {
-    projection: crate::artifacts::wires::MindmapWiresDocument,
+/// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
+pub struct WiresEngine {
+    artifact: crate::artifacts::wires::schema::WiresArtifact,
+    snapshot: WiresSnapshot,
 }
 
-impl MindmapWiresEngine {
-    pub fn new(projection: crate::artifacts::wires::MindmapWiresDocument) -> Self {
-        Self { projection }
+impl WiresEngine {
+    pub fn new(snapshot: WiresSnapshot) -> Self {
+        let artifact = crate::artifacts::wires::schema::WiresArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
-impl protocol::ArtifactEngine for MindmapWiresEngine {
-    type Projection = crate::artifacts::wires::MindmapWiresDocument;
-    type Mutation = crate::artifacts::wires::mutations::MindmapWiresMutation;
-    type Diff = crate::artifacts::wires::diff::MindmapWiresDiff;
+impl protocol::ArtifactEngine for WiresEngine {
+    type Artifact = crate::artifacts::wires::schema::WiresArtifact;
+    type Snapshot = WiresSnapshot;
+    type Mutation = crate::artifacts::wires::mutations::WiresMutation;
+    type Diff = crate::artifacts::wires::diff::WiresDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::wires::mutations::apply_mindmap_wires_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

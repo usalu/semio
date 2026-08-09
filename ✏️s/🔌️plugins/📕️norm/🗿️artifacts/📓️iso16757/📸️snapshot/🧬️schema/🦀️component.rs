@@ -13,13 +13,21 @@ use std::collections::BTreeMap;
 #[dsl(id = "norm.iso16757", layout = "lines")]
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Snapshot {
+    #[state(persistent)]
     pub catalogue: part_1::Catalogue,
+    #[state(persistent)]
     pub dictionary: part_4::Dictionary,
+    #[state(persistent)]
     pub geometry: part_2::GeometryCatalogue,
+    #[state(persistent)]
     pub selection: part_1::SelectionRequest,
+    #[state(persistent)]
     pub part_number_rule: part_5::PartNumberRule,
+    #[state(persistent)]
     pub part_number_inputs: BTreeMap<String, CatalogueValue>,
+    #[state(persistent)]
     pub script_limits: part_5::ScriptLimits,
+    #[state(persistent)]
     pub exchange_process: part_5::ExchangeProcess,
 }
 //#region 🔖️HandcraftedDocumentCodecs

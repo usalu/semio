@@ -58,11 +58,11 @@ mod tests {
 
     #[test]
     fn puzzle3d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle3d::engine::empty_puzzle3d_projection;
+        use crate::artifacts::puzzle3d::engine::empty_puzzle3d_snapshot;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
+        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None));
         store
             .dispatch(DocumentCommand::Apply {
                 mutations: vec![Puzzle3dMutation::SetObject {
@@ -185,7 +185,7 @@ mod wire_format_guard {
             Puzzle3dMutation::SetReference { index: 3, reference },
             Puzzle3dMutation::RemoveReference { id: "r1".into() },
             Puzzle3dMutation::SetMeta { meta },
-            Puzzle3dMutation::SetDocument { snapshot: document },
+            Puzzle3dMutation::SetSnapshot { snapshot: document },
         ]
     }
 
@@ -214,7 +214,7 @@ mod wire_format_guard {
         "setReference index=3 reference { id=r1 origin=@0,0,0 width-world=4m locked=false hidden=false source=url=\"/u.png\" media-kind=image } | 80 | 010603062f752e706e6705696d61676502723102000403010e0d06000602010d020006000106010215030000000000000000000000000000000000000000000000000305000000000000104004010501",
         "removeReference id=r1 | 10 | 01070102723101000600",
         "setMeta meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { a b true false vortex } } | 43 | 0108030161016206766f7274657801000e0d01011401050000050001000501020001010300010004000502",
-        "setDocument snapshot { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
+        "setSnapshot snapshot { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
     ];
 
     /// 🔒️ Same frozen capture for the headless engine-command codec.

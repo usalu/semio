@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `SetText`.
 use crate::artifacts::writer::diff::WriterDiff;
 use crate::artifacts::writer::mutations::WriterMutation;
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -21,8 +21,8 @@ impl SetTextDiff {
     }
 }
 
-impl MutationDiff<WriterProjection> for SetTextDiff {
-    fn apply(&self, projection: &WriterProjection) -> WriterProjection {
+impl MutationDiff<WriterSnapshot> for SetTextDiff {
+    fn apply(&self, projection: &WriterSnapshot) -> WriterSnapshot {
         self.clone().into_writer_diff().apply(projection)
     }
 

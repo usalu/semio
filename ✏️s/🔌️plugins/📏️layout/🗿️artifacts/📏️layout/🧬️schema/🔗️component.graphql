@@ -1,0 +1,48 @@
+# 🧬️ Layout artifact schema — every field with its state class.
+
+type LayoutArtifact {
+  schema: String! @state(class: PERSISTENT)
+  name: String! @state(class: PERSISTENT)
+  grid: GridSettings! @state(class: PERSISTENT)
+  paragraphStyles: [ParagraphStyle!]! @state(class: PERSISTENT)
+  characterStyles: [CharacterStyle!]! @state(class: PERSISTENT)
+  stories: [TextStory!]! @state(class: PERSISTENT)
+  links: [ImageLink!]! @state(class: PERSISTENT)
+  parentPages: [ParentPage!]! @state(class: PERSISTENT)
+  spreads: [Spread!]! @state(class: PERSISTENT)
+  pages: [Page!]! @state(class: PERSISTENT)
+  printTarget: String @state(class: PERSISTENT)
+  dataFieldsJson: String @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activePageId: String! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  previewCameraX: Float! @state(class: LOCAL_UI)
+  previewCameraY: Float! @state(class: LOCAL_UI)
+  previewCameraZoom: Float! @state(class: LOCAL_UI)
+  dropPreview: LayoutDropPreviewState! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type GridSettings {
+  baselineGrid: Float!
+  baselineOffset: Float!
+  snapToBaseline: Boolean!
+}
+
+type LayoutDropPreviewState {
+  kind: String!
+  x: Float!
+  y: Float!
+}
+
+type ParagraphStyle { id: String! }
+type CharacterStyle { id: String! }
+type TextStory { id: String! }
+type ImageLink { id: String! }
+type ParentPage { id: String! }
+type Spread { id: String! }
+type Page { id: String! }

@@ -3,7 +3,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, insert_after, insert_block, offset_block_tree, patch_block_field, remove_block_from_tree};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteBlockNode, NoteDocument};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -11,7 +11,7 @@ use serde_json::Value;
 //#region 🔖️Helpers
 /// 🧬️ Clones each of `ids` (present in `document`), offsets the clone by `(24, 24)`, and selects the
 /// clones — the shared body of `DuplicateBlock`/`DuplicateSelection`.
-fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteMutation, NoteConfigMutation> {
+fn duplicate_blocks(document: &NoteSnapshot, ids: &[String]) -> Emit<NoteMutation, NoteConfigMutation> {
     let mut blocks = document.blocks.clone();
     let mut new_ids = Vec::new();
     for source_id in ids {
@@ -55,10 +55,10 @@ pub mod add_block {
         pub y: f64,
     }
 
-    pub fn handle(payload: &AddBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &AddBlock, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let block = create_block_by_kind(&payload.kind, payload.x, payload.y);
         let new_id = block_id(&block).to_string();
-        let mut blocks = doc.projection.blocks.clone();
+        let mut blocks = doc.snapshot.blocks.clone();
         blocks.push(block);
         Ok(Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: vec![new_id] }], ..Default::default() })
     }
@@ -77,8 +77,8 @@ pub mod move_block {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &MoveBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &MoveBlock, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let Some(block) = find_block(&document.blocks, &payload.block_id).cloned() else {
             return Ok(Emit::default());
         };
@@ -114,10 +114,10 @@ pub mod delete_block {
         pub block_id: String,
     }
 
-    pub fn handle(payload: &DeleteBlock, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let mut blocks = doc.projection.blocks.clone();
+    pub fn handle(payload: &DeleteBlock, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let mut blocks = doc.snapshot.blocks.clone();
         remove_block_from_tree(&mut blocks, &payload.block_id);
-        let selection: Vec<String> = cfg.projection.selected_block_ids.iter().filter(|id| **id != payload.block_id).cloned().collect();
+        let selection: Vec<String> = cfg.snapshot.selected_block_ids.iter().filter(|id| **id != payload.block_id).cloned().collect();
         Ok(Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: selection }], ..Default::default() })
     }
 }
@@ -131,12 +131,12 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         if config.selected_block_ids.is_empty() {
             return Ok(Emit::default());
         }
-        let mut blocks = doc.projection.blocks.clone();
+        let mut blocks = doc.snapshot.blocks.clone();
         for id in &config.selected_block_ids {
             remove_block_from_tree(&mut blocks, id);
         }
@@ -155,8 +155,8 @@ pub mod duplicate_block {
         pub block_id: String,
     }
 
-    pub fn handle(payload: &DuplicateBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(duplicate_blocks(doc.projection, std::slice::from_ref(&payload.block_id)))
+    pub fn handle(payload: &DuplicateBlock, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(duplicate_blocks(doc.snapshot, std::slice::from_ref(&payload.block_id)))
     }
 }
 //#endregion 🔖️DuplicateBlock
@@ -169,8 +169,8 @@ pub mod duplicate_selection {
     #[dsl(keyword = "duplicate-selection")]
     pub struct DuplicateSelection {}
 
-    pub fn handle(_payload: &DuplicateSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(duplicate_blocks(doc.projection, &cfg.projection.selected_block_ids))
+    pub fn handle(_payload: &DuplicateSelection, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(duplicate_blocks(doc.snapshot, &cfg.snapshot.selected_block_ids))
     }
 }
 //#endregion 🔖️DuplicateSelection
@@ -187,12 +187,12 @@ pub mod patch_blocks {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchBlocks, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchBlocks, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         if payload.block_ids.is_empty() || payload.field.is_empty() {
             return Ok(Emit::default());
         }
         let json_value = note_patch_json_value(&payload.field, &payload.value);
-        let mut next = doc.projection.clone();
+        let mut next = doc.snapshot.clone();
         for id in &payload.block_ids {
             next = patch_block_field(&next, id, &payload.field, &json_value);
         }
@@ -212,8 +212,8 @@ mod tests {
     fn add_block_action_emits_one_op_and_grows_projection() {
         let mut app = note_app();
         let result = dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 80.0, y: 80.0 }));
-        assert_eq!(result.document_mutations.len(), 1);
-        let projection = app.projection().expect("projection");
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 1);
         assert_eq!(crate::artifacts::note::engine::block_kind(&projection.blocks[0]), "text");
     }
@@ -222,18 +222,18 @@ mod tests {
     fn add_block_then_undo_round_trip() {
         use semio_framework_plugin::testkit;
         let mut app = note_app();
-        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.projection().expect("projection").blocks.len(), 0, 1);
+        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
     }
 
     #[test]
     fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "table".into(), x: 0.0, y: 0.0 }));
-        let table_id = block_id(&app.projection().expect("projection").blocks[0]).to_string();
+        let table_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
 
         for (field, expected_rows, expected_columns) in [("tableAddRow", 3, 3), ("tableAddColumn", 3, 4), ("tableRemoveRow", 2, 4), ("tableRemoveRow", 1, 4), ("tableRemoveRow", 1, 4), ("tableRemoveColumn", 1, 3)] {
             dispatch(&mut app, NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec![table_id.clone()], field: field.into(), value: String::new() }));
-            let projection = app.projection().expect("projection");
+            let projection = app.snapshot().expect("snapshot");
             let block = find_block(&projection.blocks, &table_id).unwrap();
             if let NoteBlockNode::Table { rows, columns, .. } = block {
                 assert_eq!(rows.len(), expected_rows, "field {field}");
@@ -248,11 +248,11 @@ mod tests {
     fn duplicate_selection_clones_with_offset_and_selects_clones() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 10.0, y: 10.0 }));
-        let source_id = block_id(&app.projection().expect("projection").blocks[0]).to_string();
+        let source_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
 
         let result = dispatch(&mut app, NoteCommand::DuplicateSelection(duplicate_selection::DuplicateSelection {}));
-        assert_eq!(result.document_mutations.len(), 1);
-        let projection = app.projection().expect("projection");
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 2);
         let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
         let (x, y, ..) = crate::artifacts::note::engine::block_bounds(clone);

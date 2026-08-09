@@ -1,18 +1,19 @@
-//! ⚙️ Writer artifact — headless compute over the `WriterProjection` projection (constitutional: engine).
+//! ⚙️ Writer artifact — headless compute over the `WriterSnapshot` projection (constitutional: engine).
 //!
-//! Everything here is pure over `WriterProjection`/`WriterCamera` (artifact types) and `trinity::core`'s
+//! Everything here is pure over `WriterSnapshot`/`WriterCamera` (artifact types) and `trinity::core`'s
 //! shared parser. It deliberately takes no `crate::apps::writer::config::WriterConfig` parameter: that
 //! type lives at APP level (view state, not document — artifacts must never depend on apps). A helper
 //! that needs `WriterConfig` (e.g. `editor_hover_context`, shared by the main window and the document
 //! panel) lives in `crate::apps::writer` instead, even though it has more than one consumer — see that
-//! function's doc comment. The rule for what DOES land here: a pure `WriterProjection`-only helper with
+//! function's doc comment. The rule for what DOES land here: a pure `WriterSnapshot`-only helper with
 //! more than one consumer across the taxonomy tree lives here; one with exactly one consumer lives in
 //! that consumer's own component file.
 
-use super::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use super::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use trinity::core::{example_graph, lint, Diagnostic};
+use trinity::core::{example_graph, lint};
+use trinity::lexer::{lex_spanned, SpannedToken, Token};
 
 //#region 🔖️GrammarToken
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -25,12 +26,17 @@ pub struct GrammarToken {
 //#endregion 🔖️GrammarToken
 
 //#region 🔖️Register
-/// 🗂️ Registers `WriterProjection`'s pack↔dsl codec under `WRITER_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `WriterSnapshot`'s pack↔dsl codec under `WRITER_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_writer_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::writer::WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
+}
+
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::writer::schema::writer_artifact_schema_descriptor());
 }
 
 //#region 🔖️Languages
@@ -148,8 +154,8 @@ fn register_writer_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("writer.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -178,8 +184,8 @@ fn register_writer_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("writer.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -236,14 +242,14 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 }
 
 /// @emoji 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens).
-pub fn language_tokens_json(document: &WriterProjection) -> Option<String> {
+pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     eprintln!(
         "[DEBUG] writer.engine language_tokens_json language_id={} text_len={}",
         document.language_id,
         document.text.len()
     );
     if let Some(spec) = dsl::language(&document.language_id) {
-        let session = dsl_lsp::LanguageSession::open(spec, document.text.clone());
+        let session = dsl::lsp::LanguageSession::open(spec, document.text.clone());
         return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
     }
     if dsl::idiom(&document.language_id).is_some() {
@@ -290,8 +296,8 @@ pub struct WriterChapterPayload {
     pub language_id: String,
 }
 
-/// 🎞️ Projects a `WriterProjection` onto the `"text:out"` chapter payload shape.
-pub fn writer_chapter_payload(document: &WriterProjection) -> WriterChapterPayload {
+/// 🎞️ Projects a `WriterSnapshot` onto the `"text:out"` chapter payload shape.
+pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload {
     WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: document.text.clone(), language_id: document.language_id.clone() }
 }
 //#endregion 🔖️Io
@@ -300,8 +306,8 @@ pub fn writer_chapter_payload(document: &WriterProjection) -> WriterChapterPaylo
 /// 📄️ The `jack` example, parsed once from {@link crate::artifacts::writer::dsl::JACK_EXAMPLE_TEXT} —
 /// the source of truth for every call site below (`setActiveExample`, `.example("jack", ...)`, tests,
 /// "file-text"); never re-embed the raw text.
-pub fn jack_example_document() -> WriterProjection {
-    <WriterProjection as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+pub fn jack_example_document() -> WriterSnapshot {
+    <WriterSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
@@ -312,8 +318,8 @@ pub fn jack_example_json() -> String {
 
 /// 📄️ The `dag.jack` example, parsed once from {@link crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT}
 /// — see {@link jack_example_document}.
-pub fn dag_jack_example_document() -> WriterProjection {
-    <WriterProjection as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+pub fn dag_jack_example_document() -> WriterSnapshot {
+    <WriterSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
@@ -323,8 +329,8 @@ pub fn dag_jack_example_json() -> String {
 //#endregion 🔖️Examples
 
 //#region 🔖️DocumentHelpers
-pub fn empty_writer_projection() -> WriterProjection {
-    WriterProjection { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new() }
+pub fn empty_writer_snapshot() -> WriterSnapshot {
+    WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new() }
 }
 
 //#region 🔖️JackAst
@@ -469,21 +475,21 @@ fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
 
 /// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity::core`'s shared
 /// forgiving lexer instead of a hand-rolled writer copy.
-fn jack_tokens(text: &str) -> Vec<trinity::core::SpannedToken> {
-    trinity::core::lex_spanned(text, true).unwrap_or_default()
+fn jack_tokens(text: &str) -> Vec<SpannedToken> {
+    lex_spanned(text, true).unwrap_or_default()
 }
 
-fn jack_token_expects_expr(token: &trinity::core::Token) -> bool {
-    matches!(token, trinity::core::Token::And | trinity::core::Token::Or)
+fn jack_token_expects_expr(token: &Token) -> bool {
+    matches!(token, Token::And | Token::Or)
 }
 
-fn jack_token_expects_pattern(token: &trinity::core::Token) -> bool {
-    matches!(token, trinity::core::Token::KwMatch | trinity::core::Token::KwCreate | trinity::core::Token::KwMerge)
+fn jack_token_expects_pattern(token: &Token) -> bool {
+    matches!(token, Token::KwMatch | Token::KwCreate | Token::KwMerge)
 }
 
 /// 👻️ Required jack token placeholders near the caret (premigration `jackEditorPlaceholders`).
 pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
-    use trinity::core::Token;
+    use Token;
     let tokens = jack_tokens(text);
     let mut out = Vec::new();
     for i in 0..tokens.len() {
@@ -590,21 +596,21 @@ pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlace
     out
 }
 
-const JACK_NEWLINE_AFTER_KEYWORDS: &[trinity::core::Token] = &[
-    trinity::core::Token::KwMatch,
-    trinity::core::Token::KwWhere,
-    trinity::core::Token::KwReturn,
-    trinity::core::Token::KwCreate,
-    trinity::core::Token::KwDelete,
-    trinity::core::Token::KwSet,
-    trinity::core::Token::KwMerge,
-    trinity::core::Token::And,
-    trinity::core::Token::Or,
+const JACK_NEWLINE_AFTER_KEYWORDS: &[Token] = &[
+    Token::KwMatch,
+    Token::KwWhere,
+    Token::KwReturn,
+    Token::KwCreate,
+    Token::KwDelete,
+    Token::KwSet,
+    Token::KwMerge,
+    Token::And,
+    Token::Or,
 ];
 
-fn jack_lex_token_at_offset(tokens: &[trinity::core::SpannedToken], offset: usize) -> Option<&trinity::core::SpannedToken> {
+fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
     for token in tokens {
-        if token.token == trinity::core::Token::Eof {
+        if token.token == Token::Eof {
             break;
         }
         if offset >= token.start && offset <= token.end {
@@ -616,7 +622,7 @@ fn jack_lex_token_at_offset(tokens: &[trinity::core::SpannedToken], offset: usiz
 
 /// ↩️ Whether a jack query may break onto a new line at a byte offset (premigration `jackNewlineAllowedAt`).
 pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
-    use trinity::core::Token;
+    use Token;
     let clamped = offset.min(text.len());
     if !text.is_char_boundary(clamped) {
         return false;
@@ -639,8 +645,8 @@ pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
         return false;
     }
 
-    let mut prev: Option<&trinity::core::SpannedToken> = None;
-    let mut next: Option<&trinity::core::SpannedToken> = None;
+    let mut prev: Option<&SpannedToken> = None;
+    let mut next: Option<&SpannedToken> = None;
     for token in &tokens {
         if token.token == Token::Eof {
             break;
@@ -688,7 +694,7 @@ pub fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
 
 /// 🔗️ Bound jack variable names from pattern bindings (premigration `jackBoundVariableNames`).
 pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
-    use trinity::core::Token;
+    use Token;
     let tokens = jack_tokens(text);
     let mut vars = std::collections::HashSet::new();
     for i in 0..tokens.len() {
@@ -707,8 +713,8 @@ pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String
     vars
 }
 
-fn is_jack_variable_use_token(tokens: &[trinity::core::SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
-    use trinity::core::Token;
+fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
+    use Token;
     let Some(token) = tokens.get(index) else { return false };
     let Token::Ident(text) = &token.token else { return false };
     if !bound.contains(text) {
@@ -723,7 +729,7 @@ fn is_jack_variable_use_token(tokens: &[trinity::core::SpannedToken], index: usi
 
 /// 🔁️ All bound-variable occurrences for a jack variable name (premigration `jackVariableOccurrences`).
 pub fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
-    use trinity::core::Token;
+    use Token;
     let tokens = jack_tokens(text);
     let bound = jack_bound_variable_names(text);
     if !bound.contains(var_name) {
@@ -756,7 +762,7 @@ pub struct JackSymbolAtCursor {
 
 /// 🎯️ Resolve the jack symbol at a byte offset for semantic editor actions (premigration `jackSymbolAtOffset`).
 pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
-    use trinity::core::Token;
+    use Token;
     let tokens = jack_tokens(text);
     let clamped = offset.min(text.len());
     let index = tokens.iter().position(|token| matches!(token.token, Token::Ident(_)) && clamped >= token.start && clamped < token.end)?;
@@ -794,7 +800,7 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 
 pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
     if let Some(spec) = dsl::language(language_id) {
-        let session = dsl_lsp::LanguageSession::open(spec, text.to_string());
+        let session = dsl::lsp::LanguageSession::open(spec, text.to_string());
         let items: Vec<Value> = session
             .completions_at(cursor)
             .into_iter()
@@ -809,12 +815,12 @@ pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -
     None
 }
 
-pub fn language_diagnostics_json(document: &WriterProjection, lint_signal: u32) -> Option<String> {
+pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
     if document.language_id == "jack" {
         let graph = example_graph();
         let diagnostics: Vec<Value> = lint(&graph, &document.text)
             .into_iter()
-            .map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
+            .map(|diag| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
             .collect();
         return serde_json::to_string(&diagnostics).ok();
     }
@@ -824,7 +830,7 @@ pub fn language_diagnostics_json(document: &WriterProjection, lint_signal: u32) 
             return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
         }
     } else if let Some(spec) = dsl::language(&document.language_id) {
-        let session = dsl_lsp::LanguageSession::open(spec, document.text.clone());
+        let session = dsl::lsp::LanguageSession::open(spec, document.text.clone());
         if let Err(err) = session.canonicalize() {
             let end = document.text.len().max(1);
             return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
@@ -947,6 +953,7 @@ mod tests {
 
     #[test]
     fn jack_completions_use_example_fixture() {
+        register_writer_languages();
         let json = jack_completions_json("RETURN a.", 9).unwrap_or_default();
         assert!(!json.is_empty());
     }
@@ -956,36 +963,44 @@ mod tests {
 //#region 🔖️ArtifactEngine
 /// @emoji ⚙️ UI-independent writer artifact engine.
 pub struct WriterEngine {
-    projection: WriterProjection,
+    artifact: crate::artifacts::writer::schema::WriterArtifact,
+    snapshot: WriterSnapshot,
 }
 
 impl WriterEngine {
-    pub fn new(projection: WriterProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: WriterSnapshot) -> Self {
+        let artifact = crate::artifacts::writer::schema::WriterArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> WriterProjection {
-        self.projection
+    pub fn into_snapshot(self) -> WriterSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for WriterEngine {
-    type Projection = WriterProjection;
+    type Artifact = crate::artifacts::writer::schema::WriterArtifact;
+    type Snapshot = WriterSnapshot;
     type Mutation = crate::artifacts::writer::mutations::WriterMutation;
     type Diff = crate::artifacts::writer::diff::WriterDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::writer::mutations::apply_writer_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::writer::mutations::apply_writer_mutation(&mut self.snapshot, mutation);
+        self.artifact = crate::artifacts::writer::schema::WriterArtifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

@@ -32,7 +32,7 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

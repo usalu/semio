@@ -1,3 +1,14 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio imperative.imperative.dsl v1
+schema=imperative.document
+steps {
+  step step-1 kind=state.set params={
+    key=text=counter value=int=1
+  }
+  bodies={
+  }
+  step step-2 kind=log.print params={
+    message=text=hello
+  }
+  bodies={
+  }
+}

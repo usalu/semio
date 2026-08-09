@@ -1,0 +1,27 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.artifact;
+
+// 🧬️ Wires artifact schema.
+
+message WiresArtifact {
+  // @state persistent
+  DslValue wires_fixture = 1;
+  // @state persistent
+  DslValue board_fixture = 2;
+  // @state shared-ui
+  repeated string selected_ids = 3;
+  // @state preview
+  optional string drag_node_id = 4;
+  // @state preview
+  double drag_last_x = 5;
+  // @state preview
+  double drag_last_y = 6;
+  // @state local-ui
+  string locale = 7;
+}
+
+message WiresStringList {
+  repeated string values = 1;
+}
+
+message DslValue {}

@@ -1,6 +1,6 @@
 //! 📜️ Note artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -12,13 +12,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL.
 pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.note` DSL text into a `NoteDocument`.
-pub fn parse_dsl(text: &str) -> Result<NoteDocument, store::TextError> {
-    <NoteDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.note` DSL text into a `NoteSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, store::TextError> {
+    <NoteSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `NoteDocument` back to `.note` DSL text.
-pub fn print_dsl(document: &NoteDocument) -> String {
+/// 🖨️ Prints a `NoteSnapshot` back to `.note` DSL text.
+pub fn print_dsl(document: &NoteSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -32,14 +32,14 @@ mod tests {
     #[test]
     fn semio_example_dsl_round_trips() {
         let document = parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn note_dsl_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
-        let document = NoteDocument {
+        let document = NoteSnapshot {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
             title: Some("Representative \"Doc\"".into()),
@@ -130,7 +130,7 @@ mod tests {
                 },
             ],
         };
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! 📐️ Mathematical play app — the geometry window: the convex-hull/centroid canvas.
 
 use crate::artifacts::mathematical::engine::{empty_component_scene, geometry_layers_json};
-use crate::artifacts::mathematical::MathGeometry;
+use crate::artifacts::mathematical::MathematicalGeometry;
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -31,7 +31,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(geometry: &MathGeometry) -> UiNode {
+pub fn render(geometry: &MathematicalGeometry) -> UiNode {
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GEOMETRY, SurfaceKind::Canvas2d);
     scene.canvas_2d = Some(Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry) });
     UiNode::ComponentScene(scene)
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn renders_canvas_2d_scene() {
-        let json = serde_json::to_string(&render(&MathGeometry::default())).unwrap();
+        let json = serde_json::to_string(&render(&MathematicalGeometry::default())).unwrap();
         assert!(json.contains("canvas-2d"));
     }
 

@@ -1,7 +1,7 @@
 //! 🕸️ Mathematical play app — the graph window: the editable node-graph canvas.
 
 use crate::artifacts::mathematical::engine::{empty_component_scene, workflow_json};
-use crate::artifacts::mathematical::{MathCamera, MathGraph};
+use crate::artifacts::mathematical::{MathematicalCamera, MathematicalGraph};
 use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -31,7 +31,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(graph: &MathGraph, camera: &MathCamera) -> UiNode {
+pub fn render(graph: &MathematicalGraph, camera: &MathematicalCamera) -> UiNode {
     let (nodes, edges) = workflow_json(graph);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph);
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let json = serde_json::to_string(&render(&MathGraph::default(), &MathCamera::default())).unwrap();
+        let json = serde_json::to_string(&render(&MathematicalGraph::default(), &MathematicalCamera::default())).unwrap();
         assert!(json.contains("node-graph"));
     }
 

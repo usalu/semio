@@ -1,0 +1,32 @@
+{
+  "$id": "https://semio.tech/schema/s/space/home/diff.json",
+  "title": "SHomeDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "SHomeArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "catalogGeneration": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0,
+      "x-semio-state": "persistent"
+    },
+    "activePanelTab": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

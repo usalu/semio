@@ -1,5 +1,5 @@
-use crate::artifacts::mathematical::{MathGraph, MathProjection};
+use crate::artifacts::mathematical::{MathematicalGraph, MathematicalSnapshot};
 
-pub fn apply(projection: &mut MathProjection, graph: &MathGraph) {
-    projection.graph = graph.clone();
+pub fn apply(snapshot: &mut MathematicalSnapshot, graph: &MathematicalGraph) {
+    snapshot.graph = graph.clone();
 }

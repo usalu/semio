@@ -2334,7 +2334,7 @@ pub struct WindowKindDefinition {
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub document_projection_schema: Option<String>,
+    pub document_snapshot_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub input_event_schema: Option<String>,
@@ -3043,7 +3043,7 @@ mod app_document_tests {
                 actions: window_actions,
                 utilities: Vec::new(),
                 params_schema: None,
-                document_projection_schema: None,
+                document_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),

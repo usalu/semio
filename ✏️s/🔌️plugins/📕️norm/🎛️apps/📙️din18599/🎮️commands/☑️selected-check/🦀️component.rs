@@ -5,7 +5,7 @@
 //! actively rejects it if it ever starts emitting document operations.
 
 use crate::artifacts::din18599::op::Din18599Mutation;
-use crate::artifacts::din18599::Document;
+use crate::artifacts::din18599::Din18599Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din18599Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_selected_check_index(payload.index)
+pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din18599Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_selected_check_index::<Din18599Mutation>(payload.index)
 }
 //#endregion 🔖️Handler
 
@@ -33,12 +33,12 @@ mod tests {
 
     #[test]
     fn handle_emits_only_a_config_operation() {
-        let projection = Document::default();
+        let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
             &SetSelectedCheckIndex { index: Some(4) },
-            &DocumentView { projection: &projection, history: &HistoryView::empty() },
-            &ConfigView { projection: &config },
+            &DocumentView { snapshot: &projection, history: &HistoryView::empty() },
+            &ConfigView { snapshot: &config },
         )
         .expect("handle");
         assert!(emit.document_mutations.is_empty(), "a view action must never emit document operations");

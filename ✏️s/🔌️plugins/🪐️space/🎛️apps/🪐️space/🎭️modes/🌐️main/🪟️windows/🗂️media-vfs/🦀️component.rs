@@ -2,7 +2,7 @@
 //! Navigates the workflow's media/collection tree; currently root-only (see `engine::flatten_media_vfs_rows`'s doc).
 
 use crate::apps::space::terminology::SStudioLabels;
-use semio_framework_os::{WorkflowDocument, OS_WORKFLOW_VFS_ROOT_ID};
+use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
 use semio_framework_plugin::{build_virtual_file_system_scene, resolve_labels_for_locale, LocalizedLabel, SurfaceKind, UiNode, VirtualFileSystemScene, WindowKindDefinition};
 use serde_json::json;
 
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowDocument, locale: &str) -> UiNode {
+pub fn render(projection: &WorkflowSnapshot, locale: &str) -> UiNode {
     let labels = resolve_labels_for_locale::<SStudioLabels>(locale);
     let mut rows = vec![json!({
         "id": OS_WORKFLOW_VFS_ROOT_ID,

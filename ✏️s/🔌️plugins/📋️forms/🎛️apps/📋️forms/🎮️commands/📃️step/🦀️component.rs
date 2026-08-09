@@ -3,7 +3,7 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::reset_try_config_mutations;
 use crate::artifacts::forms::engine::create_form_id;
-use crate::artifacts::forms::{op::FormMutation, FormSpec, FormStep};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot, FormStep};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod add_step {
     #[dsl(keyword = "add-step")]
     pub struct AddStep {}
 
-    pub fn handle(_payload: &AddStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let spec = doc.projection;
+    pub fn handle(_payload: &AddStep, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let spec = doc.snapshot;
         let step = FormStep { id: create_form_id("step"), title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() };
         Ok(Emit { document_mutations: vec![FormMutation::AddStep { step, index: None }], config_mutations: reset_try_config_mutations(), ..Default::default() })
     }
@@ -35,8 +35,8 @@ pub mod patch_step {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let spec = doc.projection;
+    pub fn handle(payload: &PatchStep, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let spec = doc.snapshot;
         let Some(step) = spec.steps.iter().find(|step| step.id == payload.step_id).cloned() else {
             return Ok(Emit::default());
         };
@@ -60,12 +60,12 @@ pub mod remove_step {
         pub step_id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
-        let spec = doc.projection;
-        let config = cfg.projection;
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
         let removed_ids: Vec<String> = spec.steps.iter().filter(|step| step.id == payload.step_id).flat_map(|step| step.blocks.iter().map(|question| question.id.clone())).collect();
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| !removed_ids.contains(id)).cloned().collect() });
@@ -85,7 +85,7 @@ pub mod move_step {
         pub index: u64,
     }
 
-    pub fn handle(payload: &MoveStep, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveStep, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
@@ -104,7 +104,7 @@ pub mod update_form {
         pub title: String,
     }
 
-    pub fn handle(payload: &UpdateForm, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdateForm, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit { document_mutations: vec![FormMutation::UpdatePlaybook { title: Some(payload.title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() })
     }
 }
@@ -125,35 +125,35 @@ mod tests {
     #[test]
     fn add_step_action_appends_step() {
         let mut app = forms_app();
-        let before = app.projection().expect("projection").steps.len();
+        let before = app.snapshot().expect("projection").steps.len();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
-        assert_eq!(app.projection().expect("projection").steps.len(), before + 1);
+        assert_eq!(app.snapshot().expect("projection").steps.len(), before + 1);
     }
 
     #[test]
     fn patch_step_updates_title_and_description() {
         let mut app = forms_app();
-        let step_id = app.projection().expect("projection").steps[0].id.clone();
+        let step_id = app.snapshot().expect("projection").steps[0].id.clone();
         dispatch(&mut app, FormsCommand::PatchStep(PatchStep { step_id, field: "title".into(), value: "Renamed".into() }));
-        assert_eq!(app.projection().expect("projection").steps[0].title, "Renamed");
+        assert_eq!(app.snapshot().expect("projection").steps[0].title, "Renamed");
     }
 
     #[test]
     fn remove_and_move_step_actions() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
-        let last_step_id = app.projection().expect("projection").steps.last().unwrap().id.clone();
+        let last_step_id = app.snapshot().expect("projection").steps.last().unwrap().id.clone();
         dispatch(&mut app, FormsCommand::MoveStep(MoveStep { step_id: last_step_id.clone(), index: 0 }));
-        assert_eq!(app.projection().expect("projection").steps[0].id, last_step_id);
+        assert_eq!(app.snapshot().expect("projection").steps[0].id, last_step_id);
         dispatch(&mut app, FormsCommand::RemoveStep(RemoveStep { step_id: last_step_id.clone() }));
-        assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != last_step_id));
+        assert!(app.snapshot().expect("projection").steps.iter().all(|step| step.id != last_step_id));
     }
 
     #[test]
     fn update_form_action_sets_title() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::UpdateForm(UpdateForm { title: "My Form".into() }));
-        assert_eq!(app.projection().expect("projection").title.as_deref(), Some("My Form"));
+        assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("My Form"));
     }
 }
 //#endregion 🧪️Tests

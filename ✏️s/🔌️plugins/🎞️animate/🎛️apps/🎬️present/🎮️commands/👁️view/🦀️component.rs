@@ -4,7 +4,7 @@
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::valid_tile_ids;
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::PresentDeck;
+use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub mod set_selected_ids {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelectedIds, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: valid_tile_ids(doc.projection, payload.ids.clone()) }]))
+    pub fn handle(payload: &SetSelectedIds, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: valid_tile_ids(doc.snapshot, payload.ids.clone()) }]))
     }
 }
 //#endregion 🔖️SetSelectedIds
@@ -34,8 +34,8 @@ pub mod canvas_pointer_down {
         pub layer_id: Option<String>,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        let deck = doc.projection;
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        let deck = doc.snapshot;
         match &payload.layer_id {
             Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: vec![id.clone()] }])),
             _ => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }])),
@@ -54,7 +54,7 @@ pub mod no_operation {
     #[dsl(keyword = "no-op")]
     pub struct NoMutation {}
 
-    pub fn handle(_payload: &NoMutation, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(_payload: &NoMutation, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -70,7 +70,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::config(vec![PresentConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
@@ -112,7 +112,7 @@ mod tests {
     fn canvas_pointer_down_selects_matching_tile_and_clears_on_miss() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(crate::apps::present::commands::tile::add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
-        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        let tile_id = app.snapshot().expect("projection").tiles[0].id.clone();
         app.dispatch_typed(PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some(tile_id) }), &meta("local")).expect("pointer hit");
         let details = render(&mut app, PRESENT_PLAY_BODY_DETAILS);
         assert!(details.contains("animate.present.play.details.crop"), "hitting a tile populates the details panel");
@@ -126,7 +126,7 @@ mod tests {
     fn build_details_tree_reports_tile_not_found_for_stale_selection() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SetSelectedIds(set_selected_ids::SetSelectedIds { ids: vec!["was-deleted".into()] }), &meta("local")).expect("select stale");
-        assert!(app.projection().expect("projection").tiles.is_empty());
+        assert!(app.snapshot().expect("projection").tiles.is_empty());
     }
 }
 //#endregion 🧪️Tests

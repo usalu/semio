@@ -1,0 +1,324 @@
+{
+  "$id": "https://semio.tech/schema/s/note/note/diff.json",
+  "title": "NoteDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "NoteArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "blocks": {
+      "$ref": "#/$defs/NoteBlocksDelta",
+      "x-semio-state": "persistent"
+    },
+    "gridVisible": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "gridSpacing": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "gridSubdivisions": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "gridOpacity": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "snapEnabled": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "snapGridSpacing": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "pencilWidth": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "eraserRadius": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "assets": {
+      "$ref": "#/$defs/NoteAssetsDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedBlockIds": {
+      "$ref": "#/$defs/NoteStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredBlockId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "NoteBlockNode": {
+      "title": "NoteBlockNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "NoteImageAsset": {
+      "title": "NoteImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "data"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "NoteAssetsDelta": {
+      "title": "NoteAssetsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/NoteImageAsset"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "NoteStringList": {
+      "title": "NoteStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NoteBlocksDelta": {
+      "title": "NoteBlocksDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteBlockNode"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteBlockPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NoteBlockPatchEntry": {
+      "title": "NoteBlockPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/NoteBlockPatch"
+        }
+      }
+    },
+    "NoteBlockPatch": {
+      "title": "NoteBlockPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blockJson": {
+          "type": "string"
+        }
+      }
+    },
+    "NoteArtifact": {
+      "title": "NoteArtifact",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

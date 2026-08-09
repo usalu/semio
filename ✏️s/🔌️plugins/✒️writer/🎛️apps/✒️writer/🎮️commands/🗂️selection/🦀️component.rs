@@ -3,16 +3,16 @@
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
 use crate::artifacts::writer::engine::{jack_ast_node_by_id, jack_ast_node_for_selection, parse_jack_ast};
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️TextSelectShared
 /// 🙈️ Shared body for `TextSelect`/`SetEditorSelection` — both stage a raw start/end range into
 /// `editor_selection`, additionally resolving the covering jack AST node for jack documents.
-fn text_select_operations(start: usize, end: usize, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Vec<WriterConfigMutation> {
-    let document = doc.projection;
-    let config = cfg.projection;
+fn text_select_operations(start: usize, end: usize, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Vec<WriterConfigMutation> {
+    let document = doc.snapshot;
+    let config = cfg.snapshot;
     let mut ops = vec![WriterConfigMutation::SetEditorSelection { selection: Some(WriterEditorSelection { start, end }) }];
     let ids = if document.language_id == "jack" {
         let root = parse_jack_ast(&document.text);
@@ -37,7 +37,7 @@ pub mod text_select {
         pub end: usize,
     }
 
-    pub fn handle(payload: &TextSelect, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &TextSelect, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::config(text_select_operations(payload.start, payload.end, doc, cfg)))
     }
 }
@@ -54,7 +54,7 @@ pub mod set_editor_selection {
         pub end: usize,
     }
 
-    pub fn handle(payload: &SetEditorSelection, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetEditorSelection, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::config(text_select_operations(payload.start, payload.end, doc, cfg)))
     }
 }
@@ -72,8 +72,8 @@ pub mod select_ast_node {
         pub end: usize,
     }
 
-    pub fn handle(payload: &SelectAstNode, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SelectAstNode, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let ids = if payload.id.is_empty() { Vec::new() } else { vec![payload.id.clone()] };
         Ok(Emit::config(vec![
             WriterConfigMutation::SetSelectedAstIds { ids },
@@ -94,9 +94,9 @@ pub mod set_ast_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetAstSelection, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &SetAstSelection, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let mut ops = vec![WriterConfigMutation::SetSelectedAstIds { ids: payload.ids.clone() }];
         if let Some(id) = payload.ids.first() {
             if document.language_id == "jack" {
@@ -122,8 +122,8 @@ pub mod set_ast_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetAstHover, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetAstHover, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         if payload.id != config.tree_hovered_ast_id {
             Ok(Emit::config(vec![WriterConfigMutation::SetTreeHoveredAstId { id: payload.id.clone() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
         } else {
@@ -144,8 +144,8 @@ pub mod text_hover {
         pub end: Option<usize>,
     }
 
-    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let offset = match (payload.start, payload.end) {
             (Some(s), Some(e)) => Some(s + e.saturating_sub(s) / 2),
             _ => None,
@@ -172,9 +172,9 @@ mod tests {
     #[test]
     fn set_ast_hover_updates_tree_highlight_and_scene_hover() {
         let mut app = app_with_jack();
-        let root = parse_jack_ast(&app.projection().expect("projection").text);
+        let root = parse_jack_ast(&app.snapshot().expect("projection").text);
         let result = app.dispatch_typed(WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some(root.id.clone()) }), &semio_framework_plugin::testkit::meta("local")).expect("hover");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
         let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render tree");
         let tree_json = serde_json::to_string(&tree_node).unwrap();
         assert!(tree_json.contains(&root.id));

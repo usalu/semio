@@ -33,16 +33,9 @@ pub fn register() {
 
 
 
-static FEM3D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the fem3d artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = FEM3D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

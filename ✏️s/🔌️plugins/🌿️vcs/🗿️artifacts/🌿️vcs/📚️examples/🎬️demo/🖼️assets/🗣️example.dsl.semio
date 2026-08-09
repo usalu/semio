@@ -1,3 +1,2 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio vcs.vcs.dsl v1
+schema=vcs.vcs title="VCS Demo" counter=2 notes="demo notes" status=draft tags=[ alpha beta ]

@@ -1,7 +1,7 @@
 //! 🔍️ S Studio app — open/close a node's own plugin instance window.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 
 //#region 🔖️OpenInstance
@@ -15,9 +15,9 @@ pub mod open_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &OpenInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        match payload.node_id.clone().or_else(|| crate::apps::space::primary_selected_node_id(cfg.projection)) {
-            Some(node_id) => match doc.projection.graph.nodes.iter().find(|row| row.id == node_id) {
+    pub fn handle(payload: &OpenInstance, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        match payload.node_id.clone().or_else(|| crate::apps::space::primary_selected_node_id(cfg.snapshot)) {
+            Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
                 Some(node) => Ok(Emit {
                     config_mutations: vec![
                         SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) },
@@ -44,7 +44,7 @@ pub mod close_focused_instance {
     #[dsl(keyword = "close-focused-instance")]
     pub struct CloseFocusedInstance {}
 
-    pub fn handle(_payload: &CloseFocusedInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(_payload: &CloseFocusedInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]))
     }
 }
@@ -60,8 +60,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some("n1".into()) }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some("n1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {}));
     }
 
     #[test]

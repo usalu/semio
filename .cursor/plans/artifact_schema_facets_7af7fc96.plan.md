@@ -16,25 +16,25 @@ todos:
     status: completed
   - id: w4-pilot
     content: "W4 (Grok): lowpoly pilot end to end - 15 leaves, pack moved under snapshot, glue rewired, LowpolyArtifact/Snapshot, diff normalised to field-delta, policy green, tests green; quote finished leaves into the spec"
-    status: in_progress
+    status: completed
   - id: w5-fanout-heavy
     content: "W5 (Grok fan-out, one plugin crate per agent): architect, cad, shooting, remodel, process, draw, procedural, flow, gis, puzzle, block, fem, trinity"
-    status: pending
+    status: completed
   - id: w5-fanout-mech
     content: "W5 (Composer fan-out): norm (3 agents by artifact group), note, forms, layout, playbook, imperative, sequence, raster, vcs, dag, reasoning, space, sourcing, writer, mathematical, animate, plus completing demonstrator/playground and energy/model"
-    status: pending
+    status: completed
   - id: w5-glue
     content: "W5 close-out: glue integrator applies the single glue.rs / index.ts edit for every crate that was split across multiple agents"
-    status: pending
+    status: completed
   - id: w5-fixup
     content: "W5-fixup (Grok, serial): own the shared cross-plugin surfaces that broke 10 of 32 crates last time - framework_core alias, infinite/dag re-exports, store_sync under os-host-full, trinity lex, animate engine paths - and drive all 32 crates green"
-    status: pending
+    status: completed
   - id: w6-sweep
     content: "W6 (2 parallel): Grok finishes Projection to Snapshot across framework/os non-kernel, renderer, hub, os apps; Composer does renderer elements, backbone worker, react re-exports, vitest suites"
-    status: pending
+    status: completed
   - id: w7-register
     content: "W7 (Composer): register every artifact GraphQL and JSON Schema leaf with the hub/OS schema catalog and confirm at runtime with a logged catalog dump"
-    status: pending
+    status: in_progress
   - id: w8-gate
     content: "W8 (Grok): full gate, registry generate to refresh launch.json, zero-legacy Projection sweep excluding the db read-model, ticket_close with the full file list"
     status: pending

@@ -21,7 +21,7 @@ pub struct En1996Diff {
     #[state(persistent)] pub f_k_mpa: Option<f64>,
     #[state(persistent)] pub f_vk_mpa: Option<f64>,
     #[state(persistent)] pub annex: Option<crate::document::AnnexChoice>,
-    #[state(persistent)] pub masonry_class: Option<crate::document::MasonryClass>,
+    #[state(persistent)] pub masonry_class: Option<crate::artifacts::en1996::MasonryClass>,
     #[state(persistent)] pub design_situation: Option<crate::document::DesignSituation>,
     #[state(persistent)] pub mu: Option<f64>,
     #[state(persistent)] pub wall_thickness_mm: Option<f64>,

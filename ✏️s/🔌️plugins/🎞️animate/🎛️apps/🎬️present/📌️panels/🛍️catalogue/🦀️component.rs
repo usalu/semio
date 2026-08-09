@@ -2,7 +2,7 @@
 
 use crate::apps::present::animate_present_action;
 use crate::apps::present::terminology::AnimatePresentLabels;
-use crate::artifacts::present::PresentDeck;
+use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
@@ -23,7 +23,7 @@ fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Optio
     UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(), menu: None })
 }
 
-pub fn render(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
+pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "animate.present.play.catalogue.templates".into(),
@@ -45,7 +45,7 @@ pub fn render(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
-                catalogue_button("animate.present.play.catalogue.figure.catalogue", labels.catalogue_use_figure, "setSource", Some(json!(crate::artifacts::present::default_present_deck().source))),
+                catalogue_button("animate.present.play.catalogue.figure.catalogue", labels.catalogue_use_figure, "setSource", Some(json!(crate::artifacts::present::default_present_snapshot().source))),
                 UiNode::Field(UiFieldNode {
                     id: "animate.present.play.catalogue.figure.src".into(),
                     label: labels.catalogue_active_source.into(),

@@ -1,7 +1,7 @@
 //! ⚡️ ISO 16757 artifact — the operation alias, its store aliases, and its laws.
 //!
-//! 🧬️ `SetDocumentMutation<Document>` (whole-document replace) already implements both
-//! `store::Mutation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+//! 🧬️ `SetDocumentMutation<Iso16757Snapshot>` (whole-document replace) already implements both
+//! `store::Mutation<Iso16757Snapshot>` and, now that `Document` derives `dsl::DslDocument` (i.e.
 //! `store::DocumentDsl`), `store::OpText` too — see `crate::core`'s generic `impl<D: DocumentDsl + ...>
 //! OpText for SetDocumentMutation<D>`. A coarse, whole-value-replace operation is the legitimate,
 //! sufficient choice: this reference/lookup-table document has no interactive editor driving
@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::iso16757::Document;
+use crate::artifacts::iso16757::Iso16757Snapshot;
 
 pub use crate::artifacts::iso16757::mutations::Iso16757Mutation;
 
@@ -27,8 +27,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_document_operation_op_text_round_trips_for_iso16757() {
-        store::test_support::assert_op_line_round_trip(&Iso16757Mutation::SetDocument { document: Document::reference_fixture() });
+    fn set_snapshot_operation_op_text_round_trips_for_iso16757() {
+        store::os_store::test_support::assert_op_line_round_trip(&Iso16757Mutation::SetSnapshot { snapshot: Iso16757Snapshot::reference_fixture() });
     }
 }
 //#endregion 🧪️Tests

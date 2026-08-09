@@ -2,7 +2,7 @@
 
 use crate::apps::raster::config::RasterConfig;
 use crate::apps::raster::raster_scene;
-use crate::artifacts::raster::RasterProjection as RasterDocument;
+use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::{build_paint_2d_scene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

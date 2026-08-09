@@ -1,0 +1,94 @@
+# 🧬️ Raster diff schema — sparse field delta.
+
+type RasterDiff {
+  artifact: RasterArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: RasterLayersDelta @state(class: PERSISTENT)
+  assets: RasterAssetsDelta @state(class: PERSISTENT)
+  selectedIds: RasterStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  brushSize: Float @state(class: LOCAL_UI)
+  brushOpacity: Float @state(class: LOCAL_UI)
+  compositeViewport: RasterViewportSize @state(class: LOCAL_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type RasterStringList {
+  values: [String!]!
+}
+
+type RasterAssetsDelta {
+  entries: [RasterAssetsDeltaEntry!]!
+}
+
+type RasterAssetsDeltaEntry {
+  key: String!
+  value: RasterImageAsset
+}
+
+type RasterLayersDelta {
+  added: [RasterLayerNode!]!
+  removed: [String!]!
+  patched: [RasterLayerPatchEntry!]!
+  reordered: [String!]
+}
+
+type RasterLayerPatchEntry {
+  id: String!
+  patch: RasterLayerPatch!
+}
+
+type RasterLayerPatch {
+  name: String
+  visible: Boolean
+  opacity: Float
+  blendMode: String
+  transformX: Float
+  transformY: Float
+  width: Int
+  height: Int
+  adjustmentKind: String
+}
+
+type RasterLayerNode {
+  kind: String!
+}
+
+type RasterImageAsset {
+  mime: String!
+  data: String!
+}
+
+type RasterViewportSize {
+  width: Float!
+  height: Float!
+}
+
+type RasterArtifact {
+  schema: String!
+  id: String!
+  title: String
+  layers: [RasterLayerNode!]!
+  assets: [RasterImageAssetEntry!]!
+  selectedIds: [String!]!
+  activeUtilityId: String!
+  brushSize: Float!
+  brushOpacity: Float!
+  compositeViewport: RasterViewportSize
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+  hoveredId: String
+}
+
+type RasterImageAssetEntry {
+  key: String!
+  value: RasterImageAsset!
+}

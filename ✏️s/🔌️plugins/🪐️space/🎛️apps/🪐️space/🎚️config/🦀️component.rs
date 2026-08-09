@@ -50,7 +50,7 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 /// window *instances* aren't a thing anywhere in this codebase yet.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "spacecfg")]
+#[dsl(id = "s.spacecfg")]
 #[dsl(layout = "lines")]
 pub struct SpaceConfig {
     /// 🎥️ Workflow-canvas camera, keyed by window id.
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn space_config_dsl_text_round_trips() {
-        store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
+        store::os_store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
     }
 
     #[test]
@@ -404,29 +404,29 @@ mod tests {
 
     #[test]
     fn space_config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::Snapshot { config: SpaceConfig::default() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode { node_id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode { node_id: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "draw draw".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput { value: "".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: Some("a".into()), format: Some("dwg".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId { space_id: Some("demo".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetLocale { value: "de".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::Snapshot { config: SpaceConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: Some("a".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode { node_id: Some("a".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode { node_id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard { node_ids: vec!["a".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed { node_ids: vec!["a".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff { node_ids: vec!["a".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "draw draw".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput { value: "".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: Some("a".into()), format: Some("dwg".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId { space_id: Some("demo".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetLocale { value: "de".into() });
     }
 
     #[test]
     fn space_config_dsl_pack_equivalence() {
-        store::test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
     }
 }
 //#endregion 🧪️Tests

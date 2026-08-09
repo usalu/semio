@@ -1,24 +1,24 @@
 //! 🧮️ Mathematical play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch. B1: the pure-trait pilot for this plugin — `MathematicalPlayApp` is a unit
 //! struct; the former `MathPlayRuntime` app-struct `RefCell` (the node-graph viewport camera) now lives in
-//! `crate::apps::mathematical::config::MathConfig`, written via `MathConfigMutation`s (real `backwards`,
-//! no ad hoc inverse tracking); every action dispatches through the single typed `MathCommand` channel via
+//! `crate::apps::mathematical::config::MathematicalConfig`, written via `MathematicalConfigMutation`s (real `backwards`,
+//! no ad hoc inverse tracking); every action dispatches through the single typed `MathematicalCommand` channel via
 //! `DocumentApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🎚️config/🦀️component.rs`, shared compute in the artifact's `⚙️engine`.
-//! This file is a routing table: `handle` → `MathCommand::dispatch`, `render` → body-key → node, and a
+//! This file is a routing table: `handle` → `MathematicalCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::mathematical::commands::document::set_document;
 use crate::apps::mathematical::commands::geometry::set_points;
 use crate::apps::mathematical::commands::graph::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::apps::mathematical::commands::locale::set_locale;
-use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
+use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::apps::mathematical::modes::edit;
 use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
-use crate::artifacts::mathematical::op::MathMutation;
-use crate::artifacts::mathematical::{MathProjection, MATH_DOCUMENT_SCHEMA};
+use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::{MathematicalSnapshot, MATH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -39,7 +39,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum MathCommand for MathProjection, MathMutation, MathConfig, MathConfigMutation {
+    pub enum MathematicalCommand for MathematicalSnapshot, MathematicalMutation, MathematicalConfig, MathematicalConfigMutation {
         "setDocument" as "set-document" => set_document::SetDocument,
         "setAlgorithm" as "set-algorithm" => set_algorithm::SetAlgorithm,
         "setDirected" as "set-directed" => set_directed::SetDirected,
@@ -53,26 +53,26 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️MathematicalPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
-/// `crate::apps::mathematical::config::MathConfig` (see `DocumentApp::Config`), written through
-/// `MathConfigMutation`s.
+/// `crate::apps::mathematical::config::MathematicalConfig` (see `DocumentApp::Config`), written through
+/// `MathematicalConfigMutation`s.
 #[derive(Default)]
 pub struct MathematicalPlayApp;
 
 impl DocumentApp for MathematicalPlayApp {
-    type Projection = MathProjection;
-    type Mutation = MathMutation;
-    type Config = MathConfig;
-    type ConfigMutation = MathConfigMutation;
+    type Snapshot = MathematicalSnapshot;
+    type Mutation = MathematicalMutation;
+    type Config = MathematicalConfig;
+    type ConfigMutation = MathematicalConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
 
-    type Command = MathCommand;
+    type Command = MathematicalCommand;
 
     const APP_ID: &'static str = MATH_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> MathProjection {
-        MathProjection::default()
+    fn initial_snapshot() -> MathematicalSnapshot {
+        MathematicalSnapshot::default()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -82,11 +82,11 @@ impl DocumentApp for MathematicalPlayApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(command: &MathCommand) -> &'static str {
+    fn command_id(command: &MathematicalCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &MathCommand, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathMutation, MathConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &MathematicalCommand, doc: &DocumentView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -94,26 +94,26 @@ impl DocumentApp for MathematicalPlayApp {
     /// components/SCC group/BFS distance — the port recipe's `computation.mathematical`-kinded output);
     /// `"document:out"` replicates `DocumentApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
-    fn export_media(port: &str, doc: &DocumentView<'_, MathProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let overlay = crate::artifacts::mathematical::engine::algorithm_overlay(&doc.projection.graph);
-                let json = serde_json::to_string(&serde_json::json!({ "algorithm": doc.projection.graph.algorithm, "overlay": overlay })).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let overlay = crate::artifacts::mathematical::engine::algorithm_overlay(&doc.snapshot.graph);
+                let json = serde_json::to_string(&serde_json::json!({ "algorithm": doc.snapshot.graph.algorithm, "overlay": overlay })).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.mathematical".into(), json } })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
         match body_key {
-            MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.projection.graph, &cfg.projection.camera),
-            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.projection.geometry),
+            MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.snapshot.graph, &cfg.snapshot.camera),
+            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.snapshot.geometry),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -186,7 +186,7 @@ pub(crate) mod testkit {
         new_app_with_registry::<MathematicalPlayApp>(create_mathematical_app)
     }
 
-    pub fn dispatch(app: &mut MathApp, command: MathCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut MathApp, command: MathematicalCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
@@ -213,14 +213,14 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 7, "every MathCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 7, "every MathematicalCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -238,15 +238,15 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<MathCommand> {
+    pub(super) fn every_command() -> Vec<MathematicalCommand> {
         vec![
-            MathCommand::SetDocument(set_document::SetDocument { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathGraph::default()), geometry: crate::artifacts::mathematical::MathGeometry::default() }),
-            MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
-            MathCommand::SetDirected(set_directed::SetDirected { directed: true }),
-            MathCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
-            MathCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::artifacts::mathematical::MathCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
-            MathCommand::SetPoints(set_points::SetPoints { geometry: crate::artifacts::mathematical::MathGeometry::default() }),
-            MathCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            MathematicalCommand::SetDocument(set_document::SetDocument { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()), geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
+            MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
+            MathematicalCommand::SetDirected(set_directed::SetDirected { directed: true }),
+            MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
+            MathematicalCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::artifacts::mathematical::MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
+            MathematicalCommand::SetPoints(set_points::SetPoints { geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
+            MathematicalCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
     }
 
@@ -255,14 +255,14 @@ mod tests {
     /// `🧪️wire-baseline-before.txt`).
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let cases: [(MathCommand, &str, &str); 2] = [
-            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "01010104746f706f01000600"),
-            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }), "set-algorithm algorithm=bfs seed=a", "01010201610362667302000601010600"),
+        let cases: [(MathematicalCommand, &str, &str); 2] = [
+            (MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "01010104746f706f01000600"),
+            (MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }), "set-algorithm algorithm=bfs seed=a", "01010201610362667302000601010600"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
     //#endregion 🔖️CommandSurface

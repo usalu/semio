@@ -12,18 +12,18 @@ use crate::artifacts::en1994::En1994Snapshot;
 
 /// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`store::DocumentDsl`):
 /// an EN-annex EN 1994-2 composite bridge girder with a re-entrant deck under an R90 fire rating and a
-/// shear-connector fatigue detail, distinct from `Document::default()`'s DE-annex/R60/trapezoidal-deck/
+/// shear-connector fatigue detail, distinct from `En1994Snapshot::default()`'s DE-annex/R60/trapezoidal-deck/
 /// stud-welded values so the grammar's non-default branches (annex, fire rating, deck type, fatigue
 /// detail) are exercised too.
 pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️composite-bridge-girder/🖼️assets/🗣️composite-bridge-girder.dsl.semio");
 
 /// 📖️ Parses `.en1994` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+pub fn parse_dsl(text: &str) -> Result<En1994Snapshot, store::TextError> {
+    <En1994Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1994` DSL text.
-pub fn print_dsl(document: &Document) -> String {
+pub fn print_dsl(document: &En1994Snapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -35,12 +35,12 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::os_store::test_support::assert_dsl_round_trip(&En1994Snapshot::default());
     }
 
     #[test]
     fn dsl_round_trip_agrees_with_print_parse_wrappers() {
-        let document = Document::default();
+        let document = En1994Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
@@ -52,7 +52,7 @@ mod tests {
         assert_eq!(document.fire_rating, "r90");
         assert_eq!(document.deck_type, "re-entrant");
         assert_eq!(document.fatigue_detail, "shear_connector");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

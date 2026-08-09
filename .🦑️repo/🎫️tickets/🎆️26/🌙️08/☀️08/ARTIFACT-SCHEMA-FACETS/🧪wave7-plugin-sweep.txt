@@ -1,0 +1,26 @@
+semio-s-plugin-animate                        test result: ok. 206 passed; 0 failed
+semio-s-plugin-architect                      test result: ok. 248 passed; 0 failed
+semio-s-plugin-block                          test result: ok. 100 passed; 0 failed
+semio-s-plugin-cad                            test result: ok. 124 passed; 0 failed
+semio-s-plugin-cad-aec-building               test result: ok. 1 passed; 0 failed
+semio-s-plugin-cad-aec-building-energy        test result: ok. 1 passed; 0 failed
+semio-s-plugin-cad-aec-building-structure     test result: ok. 1 passed; 0 failed
+semio-s-plugin-cad-spatial-shape              test result: ok. 1 passed; 0 failed
+semio-s-plugin-dag                            test result: ok. 69 passed; 0 failed
+semio-s-plugin-demonstrator                   test result: ok. 16 passed; 0 failed
+semio-s-plugin-draw                           test result: ok. 83 passed; 0 failed
+semio-s-plugin-draw-fsm                       test result: ok. 26 passed; 0 failed
+semio-s-plugin-draw-fsm-macros                test result: ok. 10 passed; 0 failed
+semio-s-plugin-energy                         test result: ok. 244 passed; 0 failed
+semio-s-plugin-fem                            test result: ok. 332 passed; 0 failed
+semio-s-plugin-flow                           test result: ok. 84 passed; 0 failed
+semio-s-plugin-flow-extension-bim             test result: ok. 8 passed; 0 failed
+semio-s-plugin-flow-extension-brep            test result: ok. 18 passed; 0 failed
+semio-s-plugin-flow-extension-dictionary      test result: ok. 5 passed; 0 failed
+semio-s-plugin-flow-extension-draw            test result: ok. 42 passed; 0 failed
+semio-s-plugin-flow-extension-list            test result: ok. 8 passed; 0 failed
+semio-s-plugin-flow-extension-logic           test result: ok. 3 passed; 0 failed
+semio-s-plugin-flow-extension-math            test result: ok. 8 passed; 0 failed
+semio-s-plugin-flow-extension-primitive       test result: ok. 4 passed; 0 failed
+semio-s-plugin-flow-extension-text            test result: ok. 3 passed; 0 failed
+semio-s-plugin-forms                          

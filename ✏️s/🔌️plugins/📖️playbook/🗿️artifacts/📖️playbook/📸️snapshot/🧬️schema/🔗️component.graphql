@@ -1,0 +1,22 @@
+# 🧬️ Playbook snapshot schema — persistent fields only.
+
+type PlaybookSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  version: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  steps: [PlaybookStep!]! @state(class: PERSISTENT)
+}
+
+type PlaybookStep {
+  id: String!
+  title: String!
+  description: String
+  blocks: [PlaybookBlock!]!
+}
+
+type PlaybookBlock {
+  id: String!
+  label: String!
+  kind: String!
+}

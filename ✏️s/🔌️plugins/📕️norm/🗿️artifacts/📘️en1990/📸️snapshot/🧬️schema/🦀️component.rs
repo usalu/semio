@@ -7,6 +7,29 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Snapshot
 
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[dsl(id = "norm.en1990", layout = "lines")]
+#[artifact_schema(id = "s.norm.en1990")]
+pub struct En1990Snapshot {
+    #[state(persistent)]
+    pub g_k: f64,
+    #[dsl(table)]
+    #[state(persistent)]
+    pub q_k: Vec<En1990QkEntry>,
+    #[dsl(unit = "kN")]
+    #[state(persistent)]
+    pub resistance_kn: f64,
+    #[state(persistent)]
+    pub consequence_class: u8,
+    #[state(persistent)]
+    pub annex: AnnexChoice,
+    /// 🌍️ Seismic accidental action A_Ed [kN] combined per Eq. 6.12b; 0.0 disables the seismic situation.
+    #[dsl(unit = "kN")]
+    #[state(persistent)]
+    pub seismic_a_ed_kn: f64,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct En1990QkEntry {
     #[dsl(positional)]
@@ -15,22 +38,6 @@ pub struct En1990QkEntry {
     pub value: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "norm.en1990", layout = "lines")]
-#[artifact_schema(id = "s.norm.en1990")]
-pub struct En1990Snapshot {
-    pub g_k: f64,
-    #[dsl(table)]
-    pub q_k: Vec<En1990QkEntry>,
-    #[dsl(unit = "kN")]
-    pub resistance_kn: f64,
-    pub consequence_class: u8,
-    pub annex: AnnexChoice,
-    /// 🌍️ Seismic accidental action A_Ed [kN] combined per Eq. 6.12b; 0.0 disables the seismic situation.
-    #[dsl(unit = "kN")]
-    pub seismic_a_ed_kn: f64,
-}
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for En1990Snapshot {

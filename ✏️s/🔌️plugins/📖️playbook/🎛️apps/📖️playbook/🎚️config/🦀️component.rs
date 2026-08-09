@@ -30,7 +30,7 @@ pub struct PlaybookConfig {
 impl store::DocumentDsl for PlaybookConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
+        "playbook.config"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -229,14 +229,14 @@ mod tests {
 
     #[test]
     fn playbook_config_dsl_round_trips_default_and_populated() {
-        store::test_support::assert_config_round_trip(&PlaybookConfig::default());
-        let populated = PlaybookConfig { selected_ids: vec!["step-1".into(), "block-1".into()], locale: "de-DE".into() };
-        store::test_support::assert_config_round_trip(&populated);
+        store::os_store::test_support::assert_config_round_trip(&PlaybookConfig::default());
+        let populated = PlaybookConfig { selected_ids: vec!["step-1".into(), "block-1".into()], locale: "de-DE".into(), contributions_json: "[]".into() };
+        store::os_store::test_support::assert_config_round_trip(&populated);
     }
 
     #[test]
     fn playbook_config_pack_round_trips() {
-        let config = PlaybookConfig { selected_ids: vec!["block-1".into()], locale: "de-DE".into() };
+        let config = PlaybookConfig { selected_ids: vec!["block-1".into()], locale: "de-DE".into(), contributions_json: "[]".into() };
         let bytes = store::DocumentPack::encode_pack(&config);
         let decoded = <PlaybookConfig as store::DocumentPack>::decode_pack(&bytes).expect("decode playbook config pack");
         assert_eq!(decoded, config);
@@ -263,8 +263,8 @@ mod tests {
 
     #[test]
     fn playbook_config_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::Snapshot { config: PlaybookConfig::default() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::Snapshot { config: PlaybookConfig::default() });
     }
 }
 //#endregion 🧪️Tests

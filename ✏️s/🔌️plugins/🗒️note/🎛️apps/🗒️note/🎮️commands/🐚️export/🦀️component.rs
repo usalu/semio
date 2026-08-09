@@ -2,7 +2,7 @@
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
@@ -14,8 +14,8 @@ pub mod save_download {
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
-    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let data = crate::artifacts::note::dsl::print_dsl(doc.projection);
+    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let data = crate::artifacts::note::dsl::print_dsl(doc.snapshot);
         Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None }))
     }
 }
@@ -29,7 +29,7 @@ pub mod load_request {
     #[dsl(keyword = "load-request")]
     pub struct LoadRequest {}
 
-    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
     }
 }
@@ -46,7 +46,7 @@ mod tests {
     fn save_download_and_load_request_effects() {
         let mut app = note_app();
         let save = dispatch(&mut app, NoteCommand::SaveDownload(save_download::SaveDownload {}));
-        assert!(save.operations.is_empty());
+        assert!(save.mutations.is_empty());
         assert!(matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.dsl"), "saveDownload must request a media export: {:?}", save.requested_effects);
 
         let load = dispatch(&mut app, NoteCommand::LoadRequest(load_request::LoadRequest {}));

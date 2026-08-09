@@ -12,7 +12,7 @@
 //! acoustic/daylight IEQ criteria now live alongside cooling generation and comfort
 //! category checks in `part_13`/`part_1` respectively).
 
-use crate::artifacts::din16798::Document;
+use crate::artifacts::din16798::Din16798Snapshot;
 use crate::artifacts::din16798::mutations::Din16798Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, OccupancyType, Quantity};
 
@@ -797,7 +797,7 @@ fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
 }
 
 /// 📋️ Full EN 16798 normative parts (1, 3, 5-1, 5-2, 7, 9, 13, 15, 17) plus DE-NA divergent checks.
-pub fn check_full_environment(document: &Document) -> CheckReport {
+pub fn check_full_environment(document: &Din16798Snapshot) -> CheckReport {
     let occupancy = parse_occupancy(&document.occupancy);
     let category = parse_comfort_category(&document.comfort_category);
     let ida_class = parse_ida_class(&document.ida_class);
@@ -855,63 +855,73 @@ pub fn check_full_environment(document: &Document) -> CheckReport {
 }
 
 // #region 🔖️Session
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
     check_full_environment(document)
 }
 
 pub struct DinEn16798Family;
 
 impl NormFamily for DinEn16798Family {
-    type Document = Document;
+    type Document = Din16798Snapshot;
     type Mutation = Din16798Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinEn16798
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &Din16798Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
 
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent Din16798 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent Din16798 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Din16798Engine {
-    projection: Document,
+    artifact: crate::artifacts::din16798::schema::Din16798Artifact,
+    snapshot: crate::artifacts::din16798::Din16798Snapshot,
 }
 
 impl Din16798Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::din16798::Din16798Snapshot) -> Self {
+        let artifact = crate::artifacts::din16798::schema::Din16798Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::din16798::Din16798Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Din16798Engine {
-    type Projection = Document;
-    type Mutation = Din16798Mutation;
-    type Diff = crate::artifacts::din16798::diff::Diff;
+    type Artifact = crate::artifacts::din16798::schema::Din16798Artifact;
+    type Snapshot = crate::artifacts::din16798::Din16798Snapshot;
+    type Mutation = crate::artifacts::din16798::mutations::Din16798Mutation;
+    type Diff = crate::artifacts::din16798::diff::Din16798Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
 
 pub type Host = NormHost<DinEn16798Family>;
 // #endregion 🔖️Session
@@ -1118,7 +1128,7 @@ mod tests {
 
     #[test]
     fn full_environment_evaluate_covers_all_nine_parts() {
-        let document = Document::default();
+        let document = Din16798Snapshot::default();
         let report = evaluate(&document);
         assert_eq!(report.checks.len(), 25, "checks: {:?}", report.checks);
         assert!(report.all_pass(), "checks: {:?}", report.checks);
@@ -1132,14 +1142,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "din16798.document",
         extension: Some("din16798"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::din16798::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::din16798::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::din16798::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din16798::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din16798::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din16798::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din16798.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1168,8 +1179,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::din16798::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din16798::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din16798::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din16798::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din16798.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1183,3 +1194,13 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("din16798.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.din16798`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::din16798::schema::din16798_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

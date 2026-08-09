@@ -5,7 +5,7 @@ use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 // 🧷️ Aliased: `ExportFixture` below derives the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it.
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{op::FormMutation, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
@@ -17,8 +17,8 @@ pub mod export_fixture {
     #[dsl(keyword = "export-fixture")]
     pub struct ExportFixture {}
 
-    pub fn handle(_payload: &ExportFixture, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let spec = doc.projection;
+    pub fn handle(_payload: &ExportFixture, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let spec = doc.snapshot;
         let data = forms_dsl::print_dsl(spec);
         Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.forms.dsl", spec.id), mime_type: "text/plain".into(), data, encoding: None }))
     }

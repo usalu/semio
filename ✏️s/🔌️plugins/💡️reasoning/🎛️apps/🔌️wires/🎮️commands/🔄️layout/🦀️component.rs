@@ -3,8 +3,8 @@
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::{fixture_nodes, force_layout_board, node_position};
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `PatchNode` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
-fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresMutation> {
+fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
     let mut board = document.board_fixture.clone();
     force_layout_board(&mut board);
     fixture_nodes(&board)
@@ -27,7 +27,7 @@ fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresM
             let mut patch = BTreeMap::new();
             patch.insert("x".into(), dsl::to_dsl_value(&nx).unwrap_or(DslValue::Null));
             patch.insert("y".into(), dsl::to_dsl_value(&ny).unwrap_or(DslValue::Null));
-            Some(MindmapWiresMutation::PatchNode { node_id: id.to_string(), patch })
+            Some(WiresMutation::PatchNode { node_id: id.to_string(), patch })
         })
         .collect()
 }
@@ -40,8 +40,8 @@ pub mod force_layout {
     #[dsl(keyword = "force-layout")]
     pub struct ForceLayout {}
 
-    pub fn handle(_payload: &ForceLayout, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
-        Ok(Emit::mutations(force_layout_operations(doc.projection)))
+    pub fn handle(_payload: &ForceLayout, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
     }
 }
 //#endregion 🔖️ForceLayout
@@ -54,8 +54,8 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
-        Ok(Emit::mutations(force_layout_operations(doc.projection)))
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
     }
 }
 //#endregion 🔖️Reorganize
@@ -70,9 +70,9 @@ mod tests {
     #[test]
     fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
-        let before: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
+        let before: Vec<(f64, f64)> = fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::ForceLayout(force_layout::ForceLayout {}));
-        let after: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
+        let after: Vec<(f64, f64)> = fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
         assert_ne!(before, after, "force layout should move at least one node");
     }
@@ -80,9 +80,9 @@ mod tests {
     #[test]
     fn reorganize_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
-        let before: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
+        let before: Vec<(f64, f64)> = fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::Reorganize(reorganize::Reorganize {}));
-        let after: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
+        let after: Vec<(f64, f64)> = fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
         assert_ne!(before, after, "reorganize should move at least one node");
     }

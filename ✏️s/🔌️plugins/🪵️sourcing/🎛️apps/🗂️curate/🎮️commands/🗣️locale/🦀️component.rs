@@ -3,7 +3,7 @@
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::CurateDocument;
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

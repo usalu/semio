@@ -1,5 +1,5 @@
 //! ✍️ Writer mutation — `SetText` payload + builder + apply.
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use crate::artifacts::writer::mutations::WriterMutation;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub fn set_text(text: String) -> WriterMutation {
     WriterMutation::SetText { text }
 }
 
-pub fn apply(projection: &mut WriterProjection, text: &str) {
-    projection.text = text.to_string();
+pub fn apply(snapshot: &mut WriterSnapshot, text: &str) {
+    snapshot.text = text.to_string();
 }
 //#endregion 🔖️Mutation

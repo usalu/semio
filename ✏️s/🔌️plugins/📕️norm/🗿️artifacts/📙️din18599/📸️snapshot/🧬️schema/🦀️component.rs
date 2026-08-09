@@ -1,6 +1,7 @@
 //! 🧬️ Din18599 snapshot schema — persistent fields only.
 
 use schema::ArtifactSchema;
+use crate::artifacts::din18599::{MonthlyClimate, UseClass};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
@@ -11,20 +12,33 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.din18599", layout = "lines")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Snapshot {
+    #[state(persistent)]
     pub use_class: UseClass,
     #[dsl(unit = "m2")]
+    #[state(persistent)]
     pub heated_area_m2: f64,
+    #[state(persistent)]
     pub occupants: u32,
+    #[state(persistent)]
     pub h_t: f64,
+    #[state(persistent)]
     pub h_v: f64,
     #[dsl(block)]
+    #[state(persistent)]
     pub climate: MonthlyClimate,
+    #[state(persistent)]
     pub internal_gains_w_m2: f64,
+    #[state(persistent)]
     pub solar_gains_kwh: f64,
+    #[state(persistent)]
     pub system_losses_kwh: f64,
+    #[state(persistent)]
     pub renewable_kwh: f64,
+    #[state(persistent)]
     pub annual_limit_kwh: f64,
+    #[state(persistent)]
     pub energy_carrier: String,
+    #[state(persistent)]
     pub reference_q_p_kwh: f64,
 }
 //#region 🔖️HandcraftedDocumentCodecs

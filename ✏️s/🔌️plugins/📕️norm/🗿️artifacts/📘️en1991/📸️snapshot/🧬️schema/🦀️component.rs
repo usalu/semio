@@ -6,15 +6,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 pub mod part_1_2 {
-    use super::*;
-
-    /// 🔥️ Nominal fire exposure curve per EN 1991-1-2 §3.2/Annex B.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-    pub enum FireCurve {
-        Standard,
-        External,
-        Hydrocarbon,
-    }
+    pub use crate::artifacts::en1991::part_1_2::FireCurve;
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
@@ -23,49 +15,81 @@ pub mod part_1_2 {
 #[artifact_schema(id = "s.norm.en1991")]
 pub struct En1991Snapshot {
     #[dsl(unit = "m2")]
+    #[state(persistent)]
     pub area_m2: f64,
+    #[state(persistent)]
     pub category: ImposedCategory,
+    #[state(persistent)]
     pub annex: AnnexChoice,
+    #[state(persistent)]
     pub self_weight_material: String,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub self_weight_thickness_m: f64,
     #[dsl(unit = "kN/m2")]
+    #[state(persistent)]
     pub assumed_g_k_kn_m2: f64,
+    #[state(persistent)]
     pub fire_curve: part_1_2::FireCurve,
+    #[state(persistent)]
     pub fire_resistance_min: f64,
+    #[state(persistent)]
     pub fire_member_capacity_c: f64,
+    #[state(persistent)]
     pub snow_zone: u8,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub snow_altitude_m: f64,
     #[dsl(unit = "kN/m2")]
+    #[state(persistent)]
     pub en_s_k_kn_m2: f64,
+    #[state(persistent)]
     pub wind_zone: u8,
     #[dsl(unit = "m/s")]
+    #[state(persistent)]
     pub en_v_b_m_s: f64,
     #[dsl(unit = "K")]
+    #[state(persistent)]
     pub delta_t_k: f64,
+    #[state(persistent)]
     pub construction_activity: String,
     #[dsl(unit = "t")]
+    #[state(persistent)]
     pub accidental_mass_t: f64,
+    #[state(persistent)]
     pub accidental_speed_km_h: f64,
+    #[state(persistent)]
     pub bridge_lane: u8,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub bridge_span_m: f64,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub bridge_lane_width_m: f64,
+    #[state(persistent)]
     pub bridge_moment_resistance_knm: f64,
+    #[state(persistent)]
     pub crane_class: String,
+    #[state(persistent)]
     pub hoist_class: String,
     #[dsl(unit = "m/s")]
+    #[state(persistent)]
     pub hoisting_speed_m_s: f64,
+    #[state(persistent)]
     pub silo_bulk_density_kn_m3: f64,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub silo_height_m: f64,
     #[dsl(unit = "m")]
+    #[state(persistent)]
     pub silo_hydraulic_radius_m: f64,
+    #[state(persistent)]
     pub silo_mu: f64,
+    #[state(persistent)]
     pub silo_k: f64,
+    #[state(persistent)]
     pub c_s: f64,
+    #[state(persistent)]
     pub c_d: f64,
 }
 //#region 🔖️HandcraftedDocumentCodecs

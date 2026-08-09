@@ -18,14 +18,14 @@ impl Iso16757Diff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-        if let Some(value) = self.catalogue { next.catalogue = value; }
-        if let Some(value) = self.dictionary { next.dictionary = value; }
-        if let Some(value) = self.geometry { next.geometry = value; }
-        if let Some(value) = self.selection { next.selection = value; }
-        if let Some(value) = self.part_number_rule { next.part_number_rule = value; }
-        if let Some(value) = self.part_number_inputs { next.part_number_inputs = value; }
-        if let Some(value) = self.script_limits { next.script_limits = value; }
-        if let Some(value) = self.exchange_process { next.exchange_process = value; }
+        if let Some(value) = &self.catalogue { next.catalogue = value.clone(); }
+        if let Some(value) = &self.dictionary { next.dictionary = value.clone(); }
+        if let Some(value) = &self.geometry { next.geometry = value.clone(); }
+        if let Some(value) = &self.selection { next.selection = value.clone(); }
+        if let Some(value) = &self.part_number_rule { next.part_number_rule = value.clone(); }
+        if let Some(value) = &self.part_number_inputs { next.part_number_inputs = value.clone(); }
+        if let Some(value) = &self.script_limits { next.script_limits = value.clone(); }
+        if let Some(value) = &self.exchange_process { next.exchange_process = value.clone(); }
         if let Some(value) = &self.selected_check_index {
             next.selected_check_index = *value;
         }
@@ -39,14 +39,14 @@ impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
             return replacement.to_snapshot();
         }
         let mut next = snapshot.clone();
-        if let Some(value) = self.catalogue { next.catalogue = value; }
-        if let Some(value) = self.dictionary { next.dictionary = value; }
-        if let Some(value) = self.geometry { next.geometry = value; }
-        if let Some(value) = self.selection { next.selection = value; }
-        if let Some(value) = self.part_number_rule { next.part_number_rule = value; }
-        if let Some(value) = self.part_number_inputs { next.part_number_inputs = value; }
-        if let Some(value) = self.script_limits { next.script_limits = value; }
-        if let Some(value) = self.exchange_process { next.exchange_process = value; }
+        if let Some(value) = &self.catalogue { next.catalogue = value.clone(); }
+        if let Some(value) = &self.dictionary { next.dictionary = value.clone(); }
+        if let Some(value) = &self.geometry { next.geometry = value.clone(); }
+        if let Some(value) = &self.selection { next.selection = value.clone(); }
+        if let Some(value) = &self.part_number_rule { next.part_number_rule = value.clone(); }
+        if let Some(value) = &self.part_number_inputs { next.part_number_inputs = value.clone(); }
+        if let Some(value) = &self.script_limits { next.script_limits = value.clone(); }
+        if let Some(value) = &self.exchange_process { next.exchange_process = value.clone(); }
         next
     }
 

@@ -1,6 +1,6 @@
 //! 📜️ Writer artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,15 +14,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// {@link crate::artifacts::writer::engine::jack_example_json} are the only ways it should be consumed.
 pub const JACK_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
-pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️dag-example.dsl.semio");
 
-/// 📖️ Parses `.writer` DSL text into a `WriterProjection`.
-pub fn parse_dsl(text: &str) -> Result<WriterProjection, store::TextError> {
-    <WriterProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
+    <WriterSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `WriterProjection` back to `.writer` DSL text.
-pub fn print_dsl(projection: &WriterProjection) -> String {
+/// 🖨️ Prints a `WriterSnapshot` back to `.writer` DSL text.
+pub fn print_dsl(projection: &WriterSnapshot) -> String {
     store::DocumentDsl::print_dsl(projection)
 }
 
@@ -35,29 +35,29 @@ mod tests {
     #[test]
     fn jack_example_dsl_round_trips() {
         let document = parse_dsl(JACK_EXAMPLE_TEXT).expect("parse jack example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn dag_jack_example_dsl_round_trips() {
         let document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).expect("parse dag.jack example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
-    fn jack_projection() -> WriterProjection {
-        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+    fn jack_snapshot() -> WriterSnapshot {
+        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]
-    fn writer_dsl_round_trips_empty_and_jack_projections() {
-        store::test_support::assert_dsl_round_trip(&engine::empty_writer_projection());
-        store::test_support::assert_dsl_round_trip(&jack_projection());
+    fn writer_dsl_round_trips_empty_and_jack_snapshots() {
+        store::os_store::test_support::assert_dsl_round_trip(&engine::empty_writer_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
     }
 
     #[test]
     fn writer_dsl_prints_readable_multiline_text() {
-        let printed = print_dsl(&jack_projection());
+        let printed = print_dsl(&jack_snapshot());
         // Bare-ident-shaped scalars print unquoted (`is_bare_ident`); `writer://jack` contains `:`
         // and `/`, so it isn't bare and stays quoted.
         assert!(printed.contains("schema=writer.document"));

@@ -1,7 +1,7 @@
 //! ⚡️ VDI 3805 artifact — the operation alias, its store aliases, and its laws.
 //!
-//! 🧬️ `SetDocumentMutation<Document>` (whole-document replace) already implements both
-//! `store::Mutation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+//! 🧬️ `SetDocumentMutation<Vdi3805Snapshot>` (whole-document replace) already implements both
+//! `store::Mutation<Vdi3805Snapshot>` and, now that `Document` derives `dsl::DslDocument` (i.e.
 //! `store::DocumentDsl`), `store::OpText` too — see `crate::core`'s generic `impl<D: DocumentDsl + ...>
 //! OpText for SetDocumentMutation<D>`. A coarse, whole-value-replace operation is the legitimate,
 //! sufficient choice: this reference/lookup-table document has no interactive editor driving
@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::vdi3805::Document;
+use crate::artifacts::vdi3805::Vdi3805Snapshot;
 
 pub use crate::artifacts::vdi3805::mutations::Vdi3805Mutation;
 
@@ -27,8 +27,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_document_operation_op_text_round_trips_for_vdi3805() {
-        store::test_support::assert_op_line_round_trip(&Vdi3805Mutation::SetDocument { document: crate::artifacts::vdi3805::reference_fixture() });
+    fn set_snapshot_operation_op_text_round_trips_for_vdi3805() {
+        store::os_store::test_support::assert_op_line_round_trip(&Vdi3805Mutation::SetSnapshot { snapshot: crate::artifacts::vdi3805::reference_fixture() });
     }
 }
 //#endregion 🧪️Tests

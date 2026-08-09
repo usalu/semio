@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle 2d artifact — the operation enum and its laws: id-keyed node/edge edits plus scalar
 //! meta, each with a true inverse computed from the pre-operation projection, and a whole-document
 //! replace for example loads. The `serde_json::Value` bridge (`🔖️ValueBridge`) and the play app's
-//! `Puzzle2dPlayProjection` newtype (`🔖️PlayProjection`) live here too, beside the `Mutation`/
+//! `Puzzle2dPlaySnapshot` newtype (`🔖️PlaySnapshot`) live here too, beside the `Mutation`/
 //! `MutationDiff` impls that give them meaning.
 
 
@@ -48,8 +48,8 @@ pub enum Puzzle2dMutation {
         meta: Puzzle2dMeta,
     },
     /// 🌍️ Replaces the whole document (example import / reset / engine fill).
-    #[dsl(key = "setDocument")]
-    SetDocument {
+    #[dsl(key = "setSnapshot")]
+    SetSnapshot {
         #[dsl(block)]
         snapshot: Puzzle2dSnapshot,
     },
@@ -66,7 +66,7 @@ fn puzzle2d_mutation_diff(operation: &Puzzle2dMutation, base: &Puzzle2dSnapshot)
         Puzzle2dMutation::SetEdge { index, edge } => crate::artifacts::puzzle2d::diff::diff_set_edge(*index, edge.clone(), base),
         Puzzle2dMutation::RemoveEdge { id } => crate::artifacts::puzzle2d::diff::diff_remove_edge(id.clone()),
         Puzzle2dMutation::SetMeta { meta } => crate::artifacts::puzzle2d::diff::diff_set_meta(meta.clone()),
-        Puzzle2dMutation::SetDocument { snapshot } => crate::artifacts::puzzle2d::diff::diff_set_snapshot(snapshot.clone()),
+        Puzzle2dMutation::SetSnapshot { snapshot } => crate::artifacts::puzzle2d::diff::diff_set_snapshot(snapshot.clone()),
     }
 }
 
@@ -90,7 +90,7 @@ impl Mutation<Puzzle2dSnapshot> for Puzzle2dMutation {
             },
             Puzzle2dMutation::RemoveEdge { id } => puzzle2d_index_of(&projection.edges, id).map(|index| vec![Puzzle2dMutation::SetEdge { index, edge: projection.edges[index].clone() }]).unwrap_or_default(),
             Puzzle2dMutation::SetMeta { .. } => vec![Puzzle2dMutation::SetMeta { meta: projection.meta.clone() }],
-            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { snapshot: projection.clone() }],
+            Puzzle2dMutation::SetSnapshot { .. } => vec![Puzzle2dMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
@@ -145,7 +145,7 @@ fn apply_puzzle2d_operation_to_value(document: &mut Value, operation: &Puzzle2dM
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
             }
         }
-        Puzzle2dMutation::SetDocument { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+        Puzzle2dMutation::SetSnapshot { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
     }
 }
 
@@ -254,13 +254,13 @@ impl Mutation<Value> for Puzzle2dMutation {
                 let meta: Puzzle2dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle2dMutation::SetMeta { meta }]
             }
-            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
+            Puzzle2dMutation::SetSnapshot { .. } => vec![Puzzle2dMutation::SetSnapshot { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
 
 /// 🧮️ Collects the sparse `set`/`removed` delta for one id-keyed `Value` array collection into typed
-/// entries. Returns `false` (caller falls back to `SetDocument`) whenever an entry is missing an
+/// entries. Returns `false` (caller falls back to `SetSnapshot`) whenever an entry is missing an
 /// `id` or fails to deserialize into `T` — the granular path only ever fires when it's exact.
 fn puzzle2d_collect_value_collection_delta<T>(before: &[Value], after: &[Value], set: &mut Vec<(usize, T)>, removed: &mut Vec<String>) -> bool
 where
@@ -290,7 +290,7 @@ where
 
 /// 🧮️ Computes the granular typed operation sequence turning `before` into `after` (both the bare
 /// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; meta becomes
-/// `SetMeta`. Falls back to a single `SetDocument` whenever the granular replay would not reproduce
+/// `SetMeta`. Falls back to a single `SetSnapshot` whenever the granular replay would not reproduce
 /// `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level keys,
 /// schema changes) — so the emitted operations are always exact while staying granular for the
 /// common edits. The camera is deliberately not a known key: it is session-only
@@ -300,7 +300,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     if before == after {
         return Vec::new();
     }
-    let fallback = |after: &Value| vec![Puzzle2dMutation::SetDocument { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let fallback = |after: &Value| vec![Puzzle2dMutation::SetSnapshot { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
@@ -358,7 +358,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 }
 //#endregion 🔖️ValueBridge
 
-//#region 🔖️PlayProjection
+//#region 🔖️PlaySnapshot
 /// 🌱️ The `Puzzle2dPlayApp` predates the typed `Puzzle2dSnapshot` above and stays on this ad-hoc
 /// `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
 /// helpers (see the app's own module docs) — out of scope to retrofit onto the typed struct.
@@ -369,19 +369,19 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// encoding respectively), same local-bridge shape as `semio_compose_rs`'s `KitSnapshot`. `Mutation`/
 /// `MutationDiff` delegate straight through to the `Value` impls above too.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Puzzle2dPlayProjection(pub Value);
+pub struct Puzzle2dPlaySnapshot(pub Value);
 
-impl PartialEq for Puzzle2dPlayProjection {
+impl PartialEq for Puzzle2dPlaySnapshot {
     fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
 
-impl store::DocumentDsl for Puzzle2dPlayProjection {
+impl store::DocumentDsl for Puzzle2dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle2d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(Puzzle2dPlayProjection).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map(Puzzle2dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -389,20 +389,20 @@ impl store::DocumentDsl for Puzzle2dPlayProjection {
     }
 }
 
-impl store::DocumentPack for Puzzle2dPlayProjection {
+impl store::DocumentPack for Puzzle2dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map(Puzzle2dPlayProjection).map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Puzzle2dPlaySnapshot).map_err(store::PackError::Schema)
     }
 }
 
-impl MutationDiff<Puzzle2dPlayProjection> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dPlayProjection) -> Puzzle2dPlayProjection {
-        Puzzle2dPlayProjection(MutationDiff::<Value>::apply(self, &projection.0))
+impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
+    fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> Puzzle2dPlaySnapshot {
+        Puzzle2dPlaySnapshot(MutationDiff::<Value>::apply(self, &projection.0))
     }
 
     fn absorb(&mut self, other: Self) {
@@ -410,18 +410,18 @@ impl MutationDiff<Puzzle2dPlayProjection> for Puzzle2dDiff {
     }
 }
 
-impl Mutation<Puzzle2dPlayProjection> for Puzzle2dMutation {
+impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, projection: &Puzzle2dPlayProjection) -> Puzzle2dDiff {
+    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> Puzzle2dDiff {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle2dPlayProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Vec<Self> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
-//#endregion 🔖️PlayProjection
+//#endregion 🔖️PlaySnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -439,7 +439,7 @@ mod tests {
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
         let operations = puzzle2d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetNode { .. })));
-        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetDocument { .. })), "granular delta must not fall back to whole-document replace here");
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetSnapshot { .. })), "granular delta must not fall back to whole-document replace here");
         // Forward replay (over the bare Value fixture, mirroring how the play app applies these) reproduces
         // `after`, and each operation's backwards restores `before`.
         let mut forward = before.clone();

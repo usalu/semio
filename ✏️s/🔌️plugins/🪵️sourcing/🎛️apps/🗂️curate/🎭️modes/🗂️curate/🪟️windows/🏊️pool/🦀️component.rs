@@ -4,7 +4,7 @@ use crate::apps::curate::config::{selection_json_for, SourcingCurateConfig};
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
 use crate::artifacts::curate::engine::{available_modules, curated_count, typology_flatten, ModuleCatalogue};
-use crate::artifacts::curate::{CurateDocument, Filters, SortDirection};
+use crate::artifacts::curate::{CurateSnapshot, Filters, SortDirection};
 use semio_framework_plugin::{
     build_table_scene, table_row_json, ui_stack_vertical, Label, LocalizedLabel, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, WindowKindDefinition, WindowOptions,
 };
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -104,7 +104,7 @@ fn pool_columns_json(labels: &SourcingLabels) -> String {
     .to_string()
 }
 
-fn build_pool_table(document: &CurateDocument, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let mut filtered = crate::artifacts::curate::engine::filtered_stock(document, &cfg.filters);
     if let Some(sort) = &cfg.filters.sort {
         filtered.sort_by(|a, b| {
@@ -144,7 +144,7 @@ fn build_pool_table(document: &CurateDocument, cfg: &SourcingCurateConfig, label
     build_table_scene(SOURCING_CURATE_SURFACE_POOL, SOURCING_CONTROLLER_ID, scene)
 }
 
-pub fn render(document: &CurateDocument, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let modules = available_modules();
     ui_stack_vertical(vec![build_filter_bar(&cfg.filters, &modules, labels), build_pool_table(document, cfg, labels)])
 }

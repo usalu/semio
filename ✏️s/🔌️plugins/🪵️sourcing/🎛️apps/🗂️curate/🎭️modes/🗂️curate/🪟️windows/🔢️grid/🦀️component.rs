@@ -3,7 +3,7 @@
 use crate::apps::curate::config::{selected_ids, SourcingCurateConfig};
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
 use crate::artifacts::curate::engine::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
-use crate::artifacts::curate::CurateDocument;
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use serde_json::json;
 use std::collections::HashSet;
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateDocument, cfg: &SourcingCurateConfig) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
     let filtered = filtered_stock(document, &cfg.filters);
     let mut seen_mesh_ids = HashSet::new();
     let mut meshes = Vec::new();

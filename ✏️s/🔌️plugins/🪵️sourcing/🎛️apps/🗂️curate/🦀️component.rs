@@ -11,7 +11,7 @@ use crate::apps::curate::modes::curate;
 use crate::apps::curate::modes::curate::windows::{curated, grid, pool, preview};
 use crate::apps::curate::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::{CurateDocument, SOURCING_CURATE_SCHEMA};
+use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, UiNode,
@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) —
     /// they are genuinely different vocabularies, and `setLocale`/`locale` is the row that proves it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum SourcingCurateCommand for CurateDocument, SourcingMutation, SourcingCurateConfig, SourcingCurateConfigMutation {
+    pub enum SourcingCurateCommand for CurateSnapshot, SourcingMutation, SourcingCurateConfig, SourcingCurateConfigMutation {
         "setDocument" as "document-json" => set_document_json::SetDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "stockFromCatalogue" as "stock-from-catalogue" => stock_from_catalogue::StockFromCatalogue,
@@ -78,7 +78,7 @@ use crate::apps::curate::commands::selection::{select_row, world_select};
 pub struct SourcingCurateApp;
 
 impl DocumentApp for SourcingCurateApp {
-    type Projection = CurateDocument;
+    type Snapshot = CurateSnapshot;
     type Mutation = SourcingMutation;
     type Config = SourcingCurateConfig;
     type ConfigMutation = SourcingCurateConfigMutation;
@@ -90,7 +90,7 @@ impl DocumentApp for SourcingCurateApp {
     const APP_ID: &'static str = SOURCING_CURATE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
-    fn initial_projection() -> CurateDocument {
+    fn initial_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::engine::default_document()
     }
 
@@ -99,25 +99,25 @@ impl DocumentApp for SourcingCurateApp {
     }
 
     /// 🎞️ `catalog:out` (see `crate::artifacts::curate::engine::sourcing_catalog_fragment`) plus the
-    /// inherited `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, CurateDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::engine::sourcing_catalog_fragment(doc.projection).to_string() },
+                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::engine::sourcing_catalog_fragment(doc.snapshot).to_string() },
             }),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(projection: CurateDocument) -> Option<SourcingMutation> {
-        Some(SourcingMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: CurateSnapshot) -> Option<SourcingMutation> {
+        Some(SourcingMutation::SetSnapshot { snapshot })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -127,20 +127,20 @@ impl DocumentApp for SourcingCurateApp {
         command.command_id()
     }
 
-    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
-        crate::artifacts::curate::engine::sync_sourcing_module_contributions(&cfg.projection.contributions_json);
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
+        crate::artifacts::curate::engine::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
+        let snapshot = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = sourcing_curate_labels(config);
         match body_key {
-            pool::SOURCING_CURATE_BODY_POOL => pool::render(document, config, labels),
-            curated::SOURCING_CURATE_BODY_CURATED => curated::render(document, config, labels),
-            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(document, config, labels),
-            grid::SOURCING_CURATE_BODY_GRID => grid::render(document, config),
+            pool::SOURCING_CURATE_BODY_POOL => pool::render(snapshot, config, labels),
+            curated::SOURCING_CURATE_BODY_CURATED => curated::render(snapshot, config, labels),
+            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(snapshot, config, labels),
+            grid::SOURCING_CURATE_BODY_GRID => grid::render(snapshot, config),
             _ => semio_framework_plugin::ui_text(Label::data("")),
         }
     }
@@ -149,7 +149,7 @@ impl DocumentApp for SourcingCurateApp {
 
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
-/// the persisted `CurateDocument` but are only ever dispatched from window chrome.
+/// the persisted `CurateSnapshot` but are only ever dispatched from window chrome.
 fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
 }
@@ -202,7 +202,7 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind_def(preview::definition())
             .window_kind_def(grid::definition())
             .default_layout(curate::layout())
-            // 🔧️ Curation counts/stock edits are persisted in `CurateDocument`, so each arm emits a
+            // 🔧️ Curation counts/stock edits are persisted in `CurateSnapshot`, so each arm emits a
             // whole-document `SetDocument` operation and is declared as a Mutation, never a View.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
@@ -310,7 +310,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -360,21 +360,21 @@ mod tests {
         let cases: [(SourcingCurateCommand, &str, &str); 4] = [
             (
                 SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }),
-                "curate-set-count object-id=beam-glulam-gl24h delta=1",
+                "curate-set-count curate-set-count object-id=beam-glulam-gl24h delta=1",
                 "010401116265616d2d676c756c616d2d676c323468020006000105000000000000f03f",
             ),
             (
                 SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: None, value: Some(4.0) }),
-                "curate-set-count object-id=beam-glulam-gl24h value=4",
+                "curate-set-count curate-set-count object-id=beam-glulam-gl24h value=4",
                 "010401116265616d2d676c756c616d2d676c3234680200060002050000000000001040",
             ),
-            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some("beam-glulam-gl24h".into()) }), "select-row object-id=beam-glulam-gl24h", "010d01116265616d2d676c756c616d2d676c32346801000600"),
-            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: None }), "select-row", "010d0000"),
+            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some("beam-glulam-gl24h".into()) }), "select-row select-row object-id=beam-glulam-gl24h", "010d01116265616d2d676c756c616d2d676c32346801000600"),
+            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: None }), "select-row select-row", "010d0000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -422,7 +422,7 @@ mod tests {
             MediaPayload::Structured { schema, json } => {
                 assert_eq!(schema, "kit.catalog");
                 let fragment: serde_json::Value = serde_json::from_str(&json).unwrap();
-                assert_eq!(fragment["objectKinds"].as_array().unwrap().len(), app.projection().expect("projection").stock.len());
+                assert_eq!(fragment["objectKinds"].as_array().unwrap().len(), app.snapshot().expect("snapshot").stock.len());
             }
             MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
         }

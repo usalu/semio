@@ -1,7 +1,7 @@
 //! 🗣️ Playbook play app commands — host-pushed locale.
 
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
-use crate::artifacts::playbook::{op::PlaybookMutation, PlaybookSpec};
+use crate::artifacts::playbook::{op::PlaybookMutation, PlaybookSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PlaybookSpec>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         Ok(Emit::config(vec![PlaybookConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

@@ -1,0 +1,35 @@
+syntax = "proto3";
+package semio.s.writer.writer;
+
+message WriterArtifact {
+  string schema = 1;
+  string id = 2;
+  string language_id = 3;
+  string uri = 4;
+  string text = 5;
+  repeated string selected_ast_ids = 6;
+  optional WriterEditorSelection editor_selection = 7;
+  WriterEditorSettings editor_settings = 8;
+  uint32 format_signal = 9;
+  uint32 lint_signal = 10;
+  uint32 revision = 11;
+  string engagement_input = 12;
+  double camera_x = 13;
+  double camera_y = 14;
+  double camera_zoom = 15;
+  string locale = 16;
+  optional string tree_hovered_ast_id = 17;
+  optional uint32 editor_hover_offset = 18;
+}
+
+message WriterEditorSelection {
+  uint32 start = 1;
+  uint32 end = 2;
+}
+
+message WriterEditorSettings {
+  bool show_line_numbers = 1;
+  uint32 font_px = 2;
+  uint32 line_height = 3;
+  uint32 tab_size = 4;
+}

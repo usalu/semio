@@ -1,0 +1,45 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.diff;
+
+// 🧬️ VCS diff schema — sparse field delta over the artifact.
+
+message VcsDiff {
+  // @state persistent
+  optional VcsArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string title = 3;
+  // @state persistent
+  optional int64 counter = 4;
+  // @state persistent
+  optional string notes = 5;
+  // @state persistent
+  optional string status = 6;
+  // @state persistent
+  optional VcsTagsDelta tags = 7;
+  // @state shared-ui
+  optional VcsStringList selected_checkpoint_ids = 8;
+  // @state local-ui
+  optional string locale = 9;
+}
+
+message VcsStringList {
+  repeated string values = 1;
+}
+
+message VcsTagsDelta {
+  repeated string added = 1;
+  repeated string removed = 2;
+}
+
+message VcsArtifact {
+  string schema = 1;
+  string title = 2;
+  int64 counter = 3;
+  string notes = 4;
+  string status = 5;
+  repeated string tags = 6;
+  repeated string selected_checkpoint_ids = 7;
+  string locale = 8;
+}

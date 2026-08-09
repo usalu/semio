@@ -47,16 +47,16 @@ mod tests {
                 image_key: None,
             }),
         };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
     fn raster_document_text_round_trips_store_with_applied_operation() {
-        use crate::artifacts::raster::RasterProjection;
+        use crate::artifacts::raster::RasterSnapshot;
 
-        let envelope = store::create_document_envelope::<RasterProjection, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
+        let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
         let mut store = store::DocumentStore::new(envelope);
         store
             .dispatch(store::DocumentCommand::Apply {
@@ -77,8 +77,8 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -88,10 +88,10 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::raster::RasterProjection;
+        use crate::artifacts::raster::RasterSnapshot;
         use protocol::{DocumentId, Edit, SchemaId};
 
-        let envelope = store::create_document_envelope::<RasterProjection, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
+        let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
         let mut store = store::DocumentStore::new(envelope);
         store
             .dispatch(store::DocumentCommand::Apply {
@@ -115,7 +115,7 @@ mod tests {
             })
             .expect("apply");
         let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<RasterProjection, RasterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

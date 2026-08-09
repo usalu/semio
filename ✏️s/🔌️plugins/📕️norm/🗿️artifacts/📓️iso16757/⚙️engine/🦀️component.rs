@@ -1,6 +1,6 @@
 //! ⚙️ ISO 16757 app — headless compute (constitutional: engine).
 
-use crate::artifacts::iso16757::{CatalogueValue, Document};
+use crate::artifacts::iso16757::{CatalogueValue, Iso16757Snapshot};
 use crate::artifacts::iso16757::mutations::Iso16757Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
@@ -514,7 +514,7 @@ fn check_count(report: &mut CheckReport, clause: ClauseId, actual: f64, expected
     report.push(CheckResult::from_utilization(clause, Quantity::new(QuantityKind::Dimensionless, actual), Quantity::new(QuantityKind::Dimensionless, expected), message, AnnexChoice::En));
 }
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
     let annex = AnnexChoice::En;
 
@@ -625,55 +625,65 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct Iso16757Family;
 
 impl crate::document::NormFamily for Iso16757Family {
-    type Document = Document;
+    type Document = Iso16757Snapshot;
     type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Iso16757
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent Iso16757 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent Iso16757 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Iso16757Engine {
-    projection: Document,
+    artifact: crate::artifacts::iso16757::schema::Iso16757Artifact,
+    snapshot: crate::artifacts::iso16757::Iso16757Snapshot,
 }
 
 impl Iso16757Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::iso16757::Iso16757Snapshot) -> Self {
+        let artifact = crate::artifacts::iso16757::schema::Iso16757Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::iso16757::Iso16757Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Iso16757Engine {
-    type Projection = Document;
-    type Mutation = Iso16757Mutation;
-    type Diff = crate::artifacts::iso16757::diff::Diff;
+    type Artifact = crate::artifacts::iso16757::schema::Iso16757Artifact;
+    type Snapshot = crate::artifacts::iso16757::Iso16757Snapshot;
+    type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
+    type Diff = crate::artifacts::iso16757::diff::Iso16757Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
 
 pub type Host = crate::document::NormHost<Iso16757Family>;
 // #endregion 🔖️Session
@@ -687,7 +697,7 @@ mod tests {
 
     #[test]
     fn reference_fixture_selects_one_product() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert_eq!(selection.matches.len(), 1);
         assert!(!selection.ambiguity);
@@ -695,7 +705,7 @@ mod tests {
 
     #[test]
     fn geometry_bbox_volume_for_box_primitive() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let geom = doc.geometry.objects.get("geom.valve.50").expect("geometry");
         let bbox = part_2::evaluate_bounding_box(geom.shape.as_ref().expect("shape"), &doc.geometry).expect("bbox");
         assert!((bbox.volume_m3() - 0.003).abs() < 1e-6);
@@ -703,7 +713,7 @@ mod tests {
 
     #[test]
     fn dictionary_controlled_values_filter_by_subject() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let list = doc.dictionary.controlled_lists.first().expect("list");
         let allowed = part_4::filter_controlled_values(list, "subject.valve", &doc.dictionary);
         assert_eq!(allowed, vec!["50", "80", "100"]);
@@ -720,7 +730,7 @@ mod tests {
 
     #[test]
     fn ifc_step_export_contains_data_section() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let ifc = part_5::build_ifc_catalogue(&doc.catalogue);
         let step = part_5::export_ifc_step(&ifc);
         assert!(step.contains("ENDSEC"));
@@ -729,7 +739,7 @@ mod tests {
 
     #[test]
     fn evaluate_exercises_all_parts_with_numeric_checks() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&Iso16757Snapshot::default());
         assert!(!report.checks.is_empty());
         let clauses: HashSet<String> = report.checks.iter().map(|c| format!("{} {}", c.clause.part, c.clause.section)).collect();
         assert!(clauses.iter().any(|c| c.starts_with("1 ")));
@@ -743,7 +753,7 @@ mod tests {
 
     #[test]
     fn catalogue_json_round_trip() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let json = io::catalogue_to_json(&doc.catalogue).expect("json");
         let restored = io::catalogue_from_json(&json).expect("restore");
         assert_eq!(restored.id, doc.catalogue.id);
@@ -751,7 +761,7 @@ mod tests {
 
     #[test]
     fn composition_cycle_detected() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.compositions.insert("product.a".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.b".into(), quantity: 1 }]);
         doc.catalogue.compositions.insert("product.b".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.a".into(), quantity: 1 }]);
         assert!(part_1::detect_composition_cycle(&doc.catalogue, "product.a"));
@@ -787,7 +797,7 @@ mod tests {
 
     #[test]
     fn select_products_filters_by_series_id() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         let other_series = crate::artifacts::iso16757::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
         let other_product = crate::artifacts::iso16757::part_1::Product {
             id: "product.other".into(),
@@ -813,7 +823,7 @@ mod tests {
 
     #[test]
     fn select_products_records_missing_property_and_constraint_failures() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "prop.missing".into(), operator: crate::artifacts::iso16757::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 1.0 } });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert!(selection.matches.is_empty());
@@ -828,7 +838,7 @@ mod tests {
 
     #[test]
     fn select_products_flags_ambiguity_with_multiple_matches() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.product_indexes.push(crate::artifacts::iso16757::part_1::ProductIndex { id: "index.cv50.dup".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: Vec::new() });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert_eq!(selection.matches.len(), 2);
@@ -837,7 +847,7 @@ mod tests {
 
     #[test]
     fn resolve_bim_embedding_error_paths() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let unknown_index = part_1::resolve_bim_embedding(&doc.catalogue, "index.unknown", HashMap::new());
         assert!(matches!(unknown_index, Err(NormError::InvalidValue { field, .. }) if field == "index_id"));
 
@@ -857,7 +867,7 @@ mod tests {
 
     #[test]
     fn resolve_bim_embedding_falls_back_to_series_geometry() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products[0].variants[0].geometry_id = None;
         let embedding = part_1::resolve_bim_embedding(&doc.catalogue, "index.cv50", HashMap::new()).expect("embedding");
         assert_eq!(embedding.resolved_geometry_id, doc.catalogue.product_series[0].geometry_id);
@@ -865,21 +875,21 @@ mod tests {
 
     #[test]
     fn validate_catalogue_structure_flags_issues() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products.clear();
         assert!(part_1::validate_catalogue_structure(&doc.catalogue).iter().any(|i| i.contains("no products")));
 
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products[0].series_id = "series.unknown".into();
         let issues = part_1::validate_catalogue_structure(&doc.catalogue);
         assert!(issues.iter().any(|i| i.contains("references unknown series")));
 
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.property_definitions[0].id = String::new();
         let issues = part_1::validate_catalogue_structure(&doc.catalogue);
         assert!(issues.iter().any(|i| i.contains("empty property definition id")));
 
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.catalogue.compositions.insert("product.cv".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.cv".into(), quantity: 1 }]);
         let issues = part_1::validate_catalogue_structure(&doc.catalogue);
         assert!(issues.iter().any(|i| i.contains("composition cycle")));
@@ -1068,14 +1078,14 @@ mod tests {
 
     #[test]
     fn resolve_property_found_and_missing() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         assert!(part_4::resolve_property(&doc.dictionary, "prop.dn").is_some());
         assert!(part_4::resolve_property(&doc.dictionary, "prop.unknown").is_none());
     }
 
     #[test]
     fn validate_dictionary_flags_dangling_and_cardinality_review() {
-        let mut doc = Document::default();
+        let mut doc = Iso16757Snapshot::default();
         doc.dictionary.relationships.push(crate::artifacts::iso16757::part_4::Relationship {
             id: "r.dangling".into(),
             kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsDependentOn,
@@ -1097,7 +1107,7 @@ mod tests {
 
     #[test]
     fn filter_controlled_values_context_rules() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let mut empty_context_list = doc.dictionary.controlled_lists[0].clone();
         empty_context_list.context_subject_ids.clear();
         assert_eq!(part_4::filter_controlled_values(&empty_context_list, "anything", &doc.dictionary), empty_context_list.values);
@@ -1109,7 +1119,7 @@ mod tests {
 
     #[test]
     fn to_iso12006_mappings_basic() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let mappings = part_4::to_iso12006_mappings(&doc.dictionary);
         assert_eq!(mappings.len(), doc.dictionary.subjects.len());
         assert_eq!(mappings[0].iso12006_uri, "iso12006://subject/subject.valve");
@@ -1169,7 +1179,7 @@ mod tests {
 
     #[test]
     fn dictionary_json_round_trip() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let json = io::dictionary_to_json(&doc.dictionary).expect("json");
         assert!(json.contains("hvac-dict"));
     }
@@ -1178,7 +1188,7 @@ mod tests {
     /// `evaluate`, so it belongs beside the compute it binds.
     #[test]
     fn norm_family_evaluate_matches_host() {
-        let doc = Document::default();
+        let doc = Iso16757Snapshot::default();
         let host = Host::from_document(doc);
         assert!(!host.report().checks.is_empty());
         assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
@@ -1188,14 +1198,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.document",
         extension: Some("iso16757"),
         role: crate::dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: crate::dsl::passthrough_hooks("iso16757.document"),
     });
     crate::dsl::register_language(crate::dsl::LanguageSpec {
@@ -1224,8 +1235,8 @@ pub fn register_pilot_languages() {
         role: crate::dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: crate::dsl::passthrough_hooks("iso16757.pack"),
     });
     crate::dsl::register_language(crate::dsl::LanguageSpec {
@@ -1239,3 +1250,12 @@ pub fn register_pilot_languages() {
         hooks: crate::dsl::passthrough_hooks("iso16757.spr"),
     });
 }
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.iso16757`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

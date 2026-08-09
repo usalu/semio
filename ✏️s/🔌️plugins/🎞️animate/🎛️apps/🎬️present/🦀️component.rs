@@ -19,7 +19,7 @@ use crate::apps::present::panels::{catalogue, document, inspection};
 use crate::apps::present::terminology::animate_present_labels;
 use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::{default_present_deck, FigureTileDraft, PresentDeck, PRESENT_DECK_SCHEMA};
+use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
@@ -54,7 +54,7 @@ pub(crate) fn new_tile_id(prefix: &str) -> String {
 
 /// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
 /// accepts a selection/target id list.
-pub(crate) fn valid_tile_ids(deck: &PresentDeck, ids: Vec<String>) -> Vec<String> {
+pub(crate) fn valid_tile_ids(deck: &PresentSnapshot, ids: Vec<String>) -> Vec<String> {
     let valid: HashSet<&str> = deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
 }
@@ -76,7 +76,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 /// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
 /// Shared by `🎮️commands/🐚️shell::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
-pub(crate) fn tile_morph_prompt_effect(deck: &PresentDeck) -> HostEffect {
+pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
     HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
 }
 //#endregion 🔖️Helpers
@@ -90,7 +90,7 @@ semio_framework_plugin::app_commands! {
     /// `"animate.resetGrid" as "reset-grid"` is the row that proves it (mirrors the pre-B1
     /// `handle_command`-only `"animate.resetGrid"` app-scope command). **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum PresentCommand for PresentDeck, PresentMutation, PresentConfig, PresentConfigMutation {
+    pub enum PresentCommand for PresentSnapshot, PresentMutation, PresentConfig, PresentConfigMutation {
         "seedGrid" as "seed-grid" => seed_grid::SeedGrid,
         "addTile" as "add-tile" => add_tile::AddTile,
         "deleteTile" as "delete-tile" => delete_tile::DeleteTile,
@@ -131,7 +131,7 @@ use view::{canvas_pointer_down, no_operation, set_locale, set_selected_ids};
 pub struct AnimatePresentPlayApp;
 
 impl DocumentApp for AnimatePresentPlayApp {
-    type Projection = PresentDeck;
+    type Snapshot = PresentSnapshot;
     type Mutation = PresentMutation;
     type Config = PresentConfig;
     type ConfigMutation = PresentConfigMutation;
@@ -141,18 +141,18 @@ impl DocumentApp for AnimatePresentPlayApp {
     type Command = PresentCommand;
 
     const APP_ID: &'static str = PRESENT_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = PRESENT_DECK_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> PresentDeck {
-        default_present_deck()
+    fn initial_snapshot() -> PresentSnapshot {
+        default_present_snapshot()
     }
 
     fn io() -> Option<AppIo> {
         Some(crate::artifacts::present::engine::present_io())
     }
 
-    fn whole_document_operation(projection: PresentDeck) -> Option<PresentMutation> {
-        Some(PresentMutation::SetDeck { deck: projection })
+    fn whole_document_operation(snapshot: PresentSnapshot) -> Option<PresentMutation> {
+        Some(PresentMutation::SetSnapshot { snapshot })
     }
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
@@ -160,11 +160,11 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
     /// natural insertion point). Never mutates anything directly: the caller applies the returned
     /// `Tiles(Add)` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
-        let deck = doc.projection;
+        let deck = doc.snapshot;
         let count = deck.tiles.len();
         let id = next_frame_tile_id(count);
         let crop = next_frame_tile_crop(count);
@@ -179,13 +179,13 @@ impl DocumentApp for AnimatePresentPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
-        let deck = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
+        let deck = doc.snapshot;
+        let config = cfg.snapshot;
         let selected = &config.selected_ids;
         let labels = animate_present_labels(config);
         match body_key {
@@ -301,18 +301,18 @@ mod tests {
 
     #[test]
     fn deck_schema_is_animate_present() {
-        assert_eq!(default_present_deck().schema, PRESENT_DECK_SCHEMA);
+        assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
-        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
         app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert!(app.projection().expect("projection").tiles.is_empty());
+        assert!(app.snapshot().expect("projection").tiles.is_empty());
         app.handle_action("redo", None, &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
     }
 
     #[test]
@@ -345,7 +345,7 @@ mod tests {
         for body in [PRESENT_PLAY_BODY_DOCUMENT, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS] {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
-        assert!(json.contains(PRESENT_DECK_SCHEMA), "artifact kind missing from the manifest");
+        assert!(json.contains(PRESENT_DOCUMENT_SCHEMA), "artifact kind missing from the manifest");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -362,15 +362,15 @@ mod tests {
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
         instance_a.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).expect("a adds tile");
-        let mut source = instance_b.projection().expect("projection").source;
+        let mut source = instance_b.snapshot().expect("projection").source;
         source.kind = "video".into();
         instance_b.dispatch_typed(PresentCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).expect("b sets source kind");
 
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
-        let projection_a = instance_a.projection().expect("projection");
-        let projection_b = instance_b.projection().expect("projection");
+        let projection_a = instance_a.snapshot().expect("projection");
+        let projection_b = instance_b.snapshot().expect("projection");
         assert_eq!(projection_a.tiles.len(), 1, "instance A keeps its own tile");
         assert_eq!(projection_b.tiles.len(), 1, "instance B converges on A's tile");
         assert_eq!(projection_a.source.kind, "video", "instance A converges on B's source edit");
@@ -391,10 +391,10 @@ mod tests {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
         let mut app = testkit::present_app_with_registry();
-        let before = app.projection().expect("projection").tiles.len();
+        let before = app.snapshot().expect("projection").tiles.len();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
         app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
-        let after = app.projection().expect("projection");
+        let after = app.snapshot().expect("projection");
         assert_eq!(after.tiles.len(), before + 1);
         assert_eq!(after.tiles.last().expect("imported tile").name, "hero-frame");
     }
@@ -408,7 +408,7 @@ mod tests {
             let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
             app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
         }
-        let tiles = app.projection().expect("projection").tiles;
+        let tiles = app.snapshot().expect("projection").tiles;
         assert_eq!(tiles.len(), 2);
         assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
     }
@@ -422,8 +422,8 @@ mod tests {
     }
 
     #[test]
-    fn empty_present_deck_has_no_tiles() {
-        assert!(crate::artifacts::present::engine::empty_present_deck().tiles.is_empty());
+    fn empty_present_snapshot_has_no_tiles() {
+        assert!(crate::artifacts::present::engine::empty_present_snapshot().tiles.is_empty());
     }
     //#endregion 🔖️PortTests
 
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -492,13 +492,13 @@ mod tests {
         let without_crop = PresentCommand::AddTile(add_tile::AddTile { crop: None });
         assert!(OpText::print_op(&with_crop).starts_with("add-tile"));
         assert!(OpText::print_op(&without_crop).starts_with("add-tile"));
-        store::test_support::assert_op_text_binary_equivalence(&with_crop);
-        store::test_support::assert_op_text_binary_equivalence(&without_crop);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&with_crop);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&without_crop);
 
         let with_layer = PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) });
         let without_layer = PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: None });
-        store::test_support::assert_op_text_binary_equivalence(&with_layer);
-        store::test_support::assert_op_text_binary_equivalence(&without_layer);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&with_layer);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&without_layer);
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.

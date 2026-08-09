@@ -1,4 +1,4 @@
-//! ⚙️ Forms artifact — headless compute over the `FormSpec` projection (constitutional: engine).
+//! ⚙️ Forms artifact — headless compute over the `FormsSnapshot` projection (constitutional: engine).
 //!
 //! Pure compute over the shared `playbook` kernel crate's step/block domain is re-exported here under
 //! forms' historical names; this component adds the forms-specific default/example document builders,
@@ -12,22 +12,27 @@ use crate::artifacts::forms::op::FormMutation;
 // submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{FormQuestion, FormSpec, FormStep, FORMS_DOCUMENT_SCHEMA};
+use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FormStep, FORMS_DOCUMENT_SCHEMA};
 use serde_json::Value;
 
 //#region 🔖️Types
 pub use crate::playbook::{
-    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, initial_values as initial_try_values,
+    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions,
     is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
+
+pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
+    crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), overrides)
+}
 //#endregion 🔖️Types
 
 //#region 🔖️Register
-/// 🗂️ Registers `FormSpec`'s pack↔dsl codec under `FORMS_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `FormsSnapshot`'s pack↔dsl codec under `FORMS_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse forms documents without
 /// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::forms::FormsPlayApp>(FORMS_DOCUMENT_SCHEMA);
 }
@@ -40,8 +45,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::forms::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("forms.forms"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -70,8 +75,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::forms::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("forms.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -116,20 +121,20 @@ pub fn forms_io() -> semio_framework_plugin::AppIo {
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ The forms app's empty document — a single "Inputs" step with no blocks yet.
-pub fn empty_forms_projection() -> FormSpec {
-    FormSpec { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] }
+pub fn empty_forms_snapshot() -> FormsSnapshot {
+    FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] }
 }
 
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
-pub fn building_component_spec() -> FormSpec {
-    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+pub fn building_component_spec() -> FormsSnapshot {
+    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ The `default` (Contact) example, parsed once from `forms_dsl::DEFAULT_EXAMPLE_TEXT` — the source of truth
 /// for every "default" example call site (`setActiveExample`, `App::example`).
-pub fn default_example_spec() -> FormSpec {
-    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+pub fn default_example_spec() -> FormsSnapshot {
+    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
@@ -139,8 +144,8 @@ pub fn default_example_json() -> String {
 }
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
-pub fn onboarding_example_spec() -> FormSpec {
-    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+pub fn onboarding_example_spec() -> FormsSnapshot {
+    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
@@ -151,7 +156,7 @@ pub fn onboarding_example_json() -> String {
 
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
 /// command test's "did the edit land" assertion share this flattening.
-pub fn flatten_questions(spec: &FormSpec) -> Vec<(String, FormQuestion)> {
+pub fn flatten_questions(spec: &FormsSnapshot) -> Vec<(String, FormQuestion)> {
     spec.steps.iter().flat_map(|step| step.blocks.iter().map(|question| (step.title.clone(), question.clone()))).collect()
 }
 //#endregion 🔖️DocumentHelpers
@@ -164,7 +169,7 @@ pub struct QuestionLocation {
 
 /// 🔎️ Locates a question by id anywhere in the document — the single lookup every question-editing
 /// command (`❓️question`, `🔘️option`, `📐️vector`) and the inspection panel share.
-pub fn locate_question(spec: &FormSpec, question_id: &str) -> Option<QuestionLocation> {
+pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<QuestionLocation> {
     for step in &spec.steps {
         if let Some(question) = step.blocks.iter().find(|question| question.id == question_id) {
             return Some(QuestionLocation { step_id: step.id.clone(), question: question.clone() });
@@ -176,7 +181,7 @@ pub fn locate_question(spec: &FormSpec, question_id: &str) -> Option<QuestionLoc
 /// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock`
 /// operation that records the edit — the single seam every inspector/command patch flows through.
 /// Returns `None` if the question no longer exists.
-pub fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
+pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
@@ -189,11 +194,9 @@ pub fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl F
 /// 🆔️ A process-unique id for a newly created step/question/option — shared by every command that
 /// creates one (`addStep`, `addQuestion`, `dropQuestionKind`, `addQuestionOption`).
 pub fn create_form_id(prefix: &str) -> String {
-    let serial = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{serial}")
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    format!("{prefix}-{next}")
 }
 
 /// 🌳️ The document-tree node id for a step — shared by the document panel (tree item ids) and the
@@ -274,7 +277,7 @@ mod tests {
 
     #[test]
     fn update_block_operation_returns_none_for_a_missing_question() {
-        let spec = empty_forms_projection();
+        let spec = empty_forms_snapshot();
         assert!(update_block_operation(&spec, "missing", |question| question.label = "x".into()).is_none());
     }
 
@@ -287,7 +290,7 @@ mod tests {
         assert_eq!(spec.steps[0].blocks[0].label, "Renamed");
     }
 
-    fn apply_form_edit_mutation(spec: &FormSpec, operation: &FormMutation) -> FormSpec {
+    fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
         crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation)
     }
 
@@ -335,3 +338,57 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent forms artifact engine — owns the artifact; every transition is a mutation.
+pub struct FormsEngine {
+    artifact: crate::artifacts::forms::schema::FormsArtifact,
+    snapshot: FormsSnapshot,
+}
+
+impl FormsEngine {
+    /// 🏗️ Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: FormsSnapshot) -> Self {
+        let artifact = crate::artifacts::forms::schema::FormsArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    /// 📸️ Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> FormsSnapshot {
+        self.snapshot
+    }
+}
+
+impl protocol::ArtifactEngine for FormsEngine {
+    type Artifact = crate::artifacts::forms::schema::FormsArtifact;
+    type Snapshot = FormsSnapshot;
+    type Mutation = FormMutation;
+    type Diff = crate::artifacts::forms::diff::FormsDiff;
+
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.forms.forms`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::forms::schema::forms_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

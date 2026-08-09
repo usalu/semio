@@ -30,27 +30,27 @@ pub fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::{engine, WriterProjection};
+    use crate::artifacts::writer::{engine, WriterSnapshot};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = WriterMutation::SetText { text: "hello".into() };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_projection() -> WriterProjection {
-        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+    fn jack_snapshot() -> WriterSnapshot {
+        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]
     fn writer_document_text_round_trips_through_the_store() {
-        let mut store = store::DocumentStore::<WriterProjection, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_projection(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetDocument { document: jack_projection() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = store::DocumentStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -61,10 +61,10 @@ mod tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{DocumentId, Edit, SchemaId};
 
-        let mut store = store::DocumentStore::<WriterProjection, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_projection(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetDocument { document: jack_projection() }], description: None }).expect("apply");
+        let mut store = store::DocumentStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<WriterProjection, WriterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

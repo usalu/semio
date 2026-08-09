@@ -7,19 +7,20 @@
 //! which already depends on both this module and `crate::artifacts::dag::op`.
 
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
-use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagDocument, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
+use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use protocol::CollectionMutation;
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Register
-/// 🗂️ Registers `DagDocument`'s pack<->dsl codec under its real `document_schema()` string so
+/// 🗂️ Registers `DagSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse DAG
 /// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::dag::DagPlayApp>(DAG_DOCUMENT_SCHEMA);
 }
 
@@ -32,8 +33,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("dag.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -62,8 +63,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("dag.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -81,6 +82,58 @@ pub fn register_pilot_languages() {
 
 //#endregion 🔖️Register
 
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `DagMutation`.
+pub struct DagEngine {
+    artifact: crate::artifacts::dag::schema::DagArtifact,
+    snapshot: DagSnapshot,
+}
+
+impl DagEngine {
+    pub fn new(snapshot: DagSnapshot) -> Self {
+        let artifact = crate::artifacts::dag::schema::DagArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    pub fn into_snapshot(self) -> DagSnapshot {
+        self.snapshot
+    }
+}
+
+impl protocol::ArtifactEngine for DagEngine {
+    type Artifact = crate::artifacts::dag::schema::DagArtifact;
+    type Snapshot = DagSnapshot;
+    type Mutation = DagMutation;
+    type Diff = crate::artifacts::dag::diff::DagDiff;
+
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.dag.dag`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::dag::schema::dag_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
+
 //#region ⚠️ Errors
 /// ⚠️ Errors from DAG play app edge-connection building.
 #[derive(Debug, thiserror::Error)]
@@ -95,7 +148,7 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn document_to_workflow(document: &DagDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = document
         .nodes
         .iter()
@@ -123,7 +176,7 @@ pub fn document_to_workflow(document: &DagDocument) -> (Vec<NodeGraphNodeRecord>
     (nodes, edges)
 }
 
-pub fn next_node_id(document: &DagDocument) -> String {
+pub fn next_node_id(document: &DagSnapshot) -> String {
     let max = document.nodes.iter().filter_map(|node| node.id.strip_prefix('n').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0);
     format!("n{}", max + 1)
 }
@@ -197,7 +250,7 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
 }
 
 /// 🔗️ Builds the `DagFixtureEdge` connecting two ports, or `Err` if it would introduce a cycle.
-pub fn connect_edge(document: &DagDocument, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagFixtureEdge, DagPlayError> {
+pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagFixtureEdge, DagPlayError> {
     let existing: Vec<(String, String)> = document
         .edges
         .iter()
@@ -241,9 +294,9 @@ pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&
 
 /// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.
 /// Two app-level consumers (`🎮️commands/🔧️nodes::remove_node` and `🎮️commands/🕸️graph::{delete_selection,
-/// node_graph_edit}`) — takes only `DagDocument`, no app-only config type, so per the DocumentHelpers
+/// node_graph_edit}`) — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers
 /// placement rule it lives here rather than being duplicated per consumer.
-pub fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> Vec<DagMutation> {
+pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
     let mut operations: Vec<DagMutation> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagMutation::Nodes(CollectionMutation::Remove { id: node.id.clone() })).collect();
     operations.extend(
         document
@@ -273,7 +326,7 @@ mod tests {
 
     #[test]
     fn next_node_id_continues_after_the_highest_existing_suffix() {
-        let mut document = infinite_board_port_directed_dag::default_dag_document();
+        let mut document: DagSnapshot = infinite_board_port_directed_dag::default_dag_document().into();
         document.nodes.push(DagNodeSpec { id: "n99".into(), ..default_node_for_kind("note", "n99", 0.0, 0.0) });
         assert_eq!(next_node_id(&document), "n100");
     }
@@ -288,7 +341,7 @@ mod tests {
 
     #[test]
     fn connect_edge_rejects_a_connection_that_would_create_a_cycle() {
-        let document = infinite_board_port_directed_dag::default_dag_document();
+        let document: DagSnapshot = infinite_board_port_directed_dag::default_dag_document().into();
         if let (Some(first), Some(second)) = (document.nodes.first(), document.nodes.get(1)) {
             let _ = connect_edge(&document, &first.id, "out", &second.id, "in");
             let result = connect_edge(&document, &second.id, "out", &first.id, "in");
@@ -313,7 +366,7 @@ mod tests {
 
     #[test]
     fn remove_nodes_operations_also_removes_edges_touching_the_removed_node() {
-        let mut document = infinite_board_port_directed_dag::default_dag_document();
+        let mut document: DagSnapshot = infinite_board_port_directed_dag::default_dag_document().into();
         let node_id = document.nodes.first().expect("fixture has a node").id.clone();
         let touching_edges = document.edges.iter().filter(|edge| { let (from, _) = split_endpoint(&edge.source); let (to, _) = split_endpoint(&edge.target); from == node_id || to == node_id }).count();
         let operations = remove_nodes_operations(&document, std::slice::from_ref(&node_id));
@@ -324,7 +377,7 @@ mod tests {
 
     #[test]
     fn remove_nodes_operations_is_empty_for_an_unknown_node_id() {
-        let document = infinite_board_port_directed_dag::default_dag_document();
+        let document = crate::artifacts::dag::default_snapshot();
         assert!(remove_nodes_operations(&document, &["nonexistent".to_string()]).is_empty());
     }
 }

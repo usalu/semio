@@ -4,7 +4,7 @@
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
 use crate::demo_space_projection;
-use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowDocument};
+use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_plugin::{
     build_node_graph_scene, resolve_labels_for_locale, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions,
@@ -57,7 +57,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -92,7 +92,7 @@ fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
     config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
 }
 
-pub fn render(app: &crate::apps::space::SpaceApp, projection: &WorkflowDocument, config: &SpaceConfig) -> UiNode {
+pub fn render(app: &crate::apps::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> UiNode {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
     let camera = workflow_camera(config);
     let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn renders_workflow_scene() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
+        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn workflow_scene_uses_flow_engine_with_fixture() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
+        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#"\"engine\":\"flow\""#));

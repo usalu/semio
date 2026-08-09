@@ -1,0 +1,66 @@
+syntax = "proto3";
+package semio.s.imperative.imperative.diff;
+
+// 🧬️ Imperative diff schema — sparse field delta over the artifact.
+
+message ImperativeDiff {
+  optional ImperativeArtifact artifact = 1; // @state persistent
+  optional string schema = 2; // @state persistent
+  optional ImperativePathDelta path = 3; // @state persistent
+  optional map<string, string> seed = 4; // @state persistent
+  optional ImperativeStringList selected_step_ids = 5; // @state shared-ui
+  optional string locale = 6; // @state local-ui
+  optional string contributions_json = 7; // @state local-ui
+}
+
+message ImperativeStringList {
+  repeated string values = 1;
+}
+
+message ImperativePathRef {
+  optional string owner = 1;
+  optional string slot = 2;
+}
+
+message ImperativePathDelta {
+  ImperativePathRef path_ref = 1;
+  ImperativeStepsDelta steps = 2;
+}
+
+message ImperativeStepsDelta {
+  repeated ImperativeStep added = 1;
+  repeated string removed = 2;
+  repeated ImperativeStepPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message ImperativeStepPatchEntry {
+  string id = 1;
+  string patch_json = 2;
+}
+
+message ImperativePath {
+  repeated ImperativeStep steps = 1;
+}
+
+message ImperativeStep {
+  string id = 1;
+  string kind = 2;
+  string params_json = 3;
+  repeated ImperativeStepBodyEntry bodies = 4;
+}
+
+message ImperativeStepBodyEntry {
+  string slot = 1;
+  ImperativePath path = 2;
+}
+
+message ImperativeArtifact {
+  string schema = 1;
+  ImperativePath path = 2;
+  map<string, string> seed = 3;
+  repeated string selected_step_ids = 4;
+  string locale = 5;
+  string contributions_json = 6;
+  string run_output_json = 7;
+}

@@ -8,13 +8,21 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as spr;
 
+//#region 🔖️OsHostFull
+// 🧬️ `workflow_kernel` is the private path-mount of `🔨️modules/🔁️workflow` — kept distinct from the
+// public OS-layer `pub mod workflow` in host so that module can re-export the kernel vocabulary and
+// layer media/registry helpers on top. Public spelling beside `space` is `workflow` only.
 #[cfg(feature = "os-host-full")]
 #[path = "../../../🔨️modules/🔁️workflow/🦀️component.rs"]
-pub mod workflow_kernel;
+mod workflow_kernel;
 
 #[cfg(feature = "os-host-full")]
 #[path = "../../../🔨️modules/🪐️space/🦀️component.rs"]
 pub mod space;
+
+#[cfg(feature = "os-host-full")]
+pub use store::sync as store_sync;
+//#endregion 🔖️OsHostFull
 
 #[path = "../../🦀️component.rs"]
 mod host_core;

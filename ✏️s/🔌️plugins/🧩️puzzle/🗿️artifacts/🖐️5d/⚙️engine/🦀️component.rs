@@ -148,7 +148,7 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 //#endregion 🔖️KindCompatibility
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle5d_projection() -> Puzzle5dSnapshot {
+pub fn empty_puzzle5d_snapshot() -> Puzzle5dSnapshot {
     Puzzle5dSnapshot::default()
 }
 

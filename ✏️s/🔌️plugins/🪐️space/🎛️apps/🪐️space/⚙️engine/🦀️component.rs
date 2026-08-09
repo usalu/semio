@@ -1,14 +1,14 @@
-//! ⚙️ S Studio app — headless compute over the kernel-owned `WorkflowDocument` (constitutional:
+//! ⚙️ S Studio app — headless compute over the kernel-owned `WorkflowSnapshot` (constitutional:
 //! engine, kept app-level since this app owns no document-side `🗿️artifacts` node — see
 //! `🦀️component.rs`'s module doc for the full rationale). Every function here computes over
-//! `semio_framework_os::{WorkflowDocument, WorkflowMutation}` (a foreign type owned by the kernel
+//! `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}` (a foreign type owned by the kernel
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
 use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os::{
     create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id, MediaContract,
-    WorkflowDocument, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
+    WorkflowSnapshot, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -44,7 +44,7 @@ pub fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &st
 /// @emoji 🩹️ Builds a `PatchParameter` operation by folding `patch` (a `{field: value}` object) into the
 /// current parameter — the store-free operation-builder used in place of os-core's
 /// `OsWorkflowStore::patch_parameter`.
-pub fn patch_parameter_operation(projection: &WorkflowDocument, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
+pub fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
     let current = projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
     Some(WorkflowMutation::PatchParameter { parameter_id: parameter_id.into(), parameter: patch_workflow_parameter(current, patch) })
 }
@@ -75,7 +75,7 @@ pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<
 /// neither can push a `WorkflowMutation::ConnectPorts` for an incompatible or unresolved pair of ports.
 /// Operates directly on `WorkflowNode`/`WorkflowMediaPort` — a node's ports are typed `MediaPortSpec`s
 /// now, no more string `artifact_kind` join through a separate `OsMediaPort`.
-pub fn negotiate_media_connect(projection: &WorkflowDocument, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
+pub fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
     let source_port =
         projection.graph.nodes.iter().find(|node| node.id == source_node_id).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)).ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
     let target_port =
@@ -101,7 +101,7 @@ pub fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &Workfl
 /// @emoji 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
-pub fn workflow_to_dag_fixture(projection: &WorkflowDocument) -> DagFixture {
+pub fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagFixture {
     let parameter_by_id: HashMap<_, _> = projection.parameters.iter().map(|row| (parameter_entity_id(row).to_string(), row)).collect();
     let nodes = projection
         .graph
@@ -157,7 +157,7 @@ pub fn workflow_to_dag_fixture(projection: &WorkflowDocument) -> DagFixture {
     DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges }
 }
 
-pub fn compiled_dag_wire_literal(projection: &WorkflowDocument) -> String {
+pub fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
     let fixture = workflow_to_dag_fixture(projection);
     dag_fixture_to_wire_literal(&fixture)
 }
@@ -165,7 +165,7 @@ pub fn compiled_dag_wire_literal(projection: &WorkflowDocument) -> String {
 
 //#region 🔖️OsParameterBridge
 // 🌉️ os-core's `instance::OsParameter`/`OsParameterFieldBinding`/`OsParameterType` (registry-facing)
-// were deliberately left untouched by the os-core dissolve while `WorkflowDocument.parameters`/
+// were deliberately left untouched by the os-core dissolve while `WorkflowSnapshot.parameters`/
 // `.parameter_bindings` now carry the kernel `workflow` crate's own, structurally-identical
 // `WorkflowParameter`/`WorkflowParameterBinding`/`WorkflowParameterType`. These two parameter
 // vocabularies are a known, intentionally-deferred duplication — this bridge converts between them at

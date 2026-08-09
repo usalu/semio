@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/diff.json",
+  "title": "PlaygroundDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "PlaygroundArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

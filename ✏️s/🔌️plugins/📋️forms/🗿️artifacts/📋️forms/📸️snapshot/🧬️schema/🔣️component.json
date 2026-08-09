@@ -1,0 +1,47 @@
+{
+  "$id": "https://semio.tech/schema/s/forms/forms/snapshot.json",
+  "title": "FormsSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "steps"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "id": { "type": "string", "x-semio-state": "persistent" },
+    "version": { "type": "string", "x-semio-state": "persistent" },
+    "title": {
+      "oneOf": [{ "type": "null" }, { "type": "string" }],
+      "x-semio-state": "persistent"
+    },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FormStep" },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "FormStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "blocks"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FormQuestion" }
+        }
+      }
+    },
+    "FormQuestion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "kind": { "type": "string" }
+      }
+    }
+  }
+}

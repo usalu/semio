@@ -1480,9 +1480,22 @@ mod tests {
         Dictionary::with_schema("vector").insert("x", Value::Atom(Atom::Decimal(x))).insert("y", Value::Atom(Atom::Decimal(y))).insert("z", Value::Atom(Atom::Decimal(z)))
     }
 
+    /// 🔒️ Serialises the tests that share the process-wide brep kernel. Recovers from a poisoned
+    /// lock so that one failing test reports its own assertion instead of cascading `PoisonError`s
+    /// through every sibling.
     fn test_serial() -> std::sync::MutexGuard<'static, ()> {
         static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-        LOCK.get_or_init(|| Mutex::new(())).lock().unwrap()
+        let lock = LOCK.get_or_init(|| Mutex::new(()));
+        lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// 🔗️ Brep handles are content-addressed: `Brep::mint` hashes the geometry with blake3 and uses
+    /// the hex digest verbatim, so a handle carries no kind prefix — `kind` is the separate field.
+    fn is_geometry_handle(geometry: &Dictionary) -> bool {
+        let Some(handle) = geometry.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) else {
+            return false;
+        };
+        handle.len() == 64 && handle.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
     }
 
     fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
@@ -1508,7 +1521,7 @@ mod tests {
         let out = reg.dispatch("brep.prim3d.box", &input).unwrap();
         let solid = channel_payload(&out, "solid");
         assert_eq!(solid.schema(), Some("geometry"));
-        assert!(solid.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().starts_with("solid-"));
+        assert!(is_geometry_handle(&solid));
         assert_eq!(solid.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("solid"));
     }
 
@@ -1521,7 +1534,7 @@ mod tests {
         let out = reg.dispatch("brep.curve.line", &Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0))).insert("end", Value::Dictionary(point(1.0, 0.0, 0.0)))).unwrap();
         let curve = channel_payload(&out, "curve");
         assert_eq!(curve.schema(), Some("geometry"));
-        assert!(curve.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().starts_with("curve-"));
+        assert!(is_geometry_handle(&curve));
         assert_eq!(curve.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("curve"));
     }
 
@@ -1777,7 +1790,6 @@ mod tests {
         assert_eq!(out.get("handle").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("solid-1"));
         assert_eq!(out.get("kind").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("solid"));
     }
-}
 
     #[test]
     fn extension_bundle_extends_flow_and_evaluates_box() {
@@ -1829,6 +1841,7 @@ mod tests {
         let out: Dictionary = serde_json::from_slice(&extension_invoke("evaluate", req.to_string().as_bytes()).unwrap()).unwrap();
         assert_eq!(channel_payload(&out, "solid").schema(), Some("geometry"));
     }
+}
 
 // #endregion 🔖️Tests
 

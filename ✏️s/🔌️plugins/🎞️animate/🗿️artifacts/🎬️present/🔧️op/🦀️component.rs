@@ -9,7 +9,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 pub use crate::artifacts::present::mutations::{apply_present_mutation, inverse_present_mutation, PresentMutation};
 
-use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
+use crate::artifacts::present::snapshot::schema::{present_snapshot_from_dsl, present_snapshot_to_dsl, PresentSnapshotDsl};
+use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentSnapshot};
 use protocol::CollectionMutation;
 
 
@@ -18,7 +19,7 @@ use protocol::CollectionMutation;
 /// something to attach to: `PresentMutation::Tiles` wraps `protocol::CollectionMutation<..>`, a
 /// foreign generic type the derive can't classify (and can't gain a `DslField` impl here either — both
 /// the trait and the type live outside this crate, so Rust's orphan rules forbid it). Every `Tiles(...)`
-/// case is flattened into its own tagged variant instead; `SetSource`/`SetTiles`/`SetDeck` carry
+/// case is flattened into its own tagged variant instead; `SetSource`/`SetTiles`/`SetSnapshot` carry
 /// straight through unchanged. `From`/`Into` below keep this an implementation detail — nothing
 /// outside `impl protocol::OpText for PresentMutation` ever names it.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
@@ -48,9 +49,9 @@ enum PresentMutationDsl {
         #[dsl(table)]
         tiles: Vec<FigureTileDraft>,
     },
-    SetDeck {
+    SetSnapshot {
         #[dsl(block)]
-        deck: PresentDeck,
+        snapshot: PresentSnapshotDsl,
     },
 }
 //#region 🔖️HandcraftedOpCodecs
@@ -101,7 +102,7 @@ impl From<&PresentMutation> for PresentMutationDsl {
             PresentMutation::Tiles(CollectionMutation::Patch { id, patch }) => PresentMutationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
             PresentMutation::SetSource { source } => PresentMutationDsl::SetSource { source: source.clone() },
             PresentMutation::SetTiles { tiles } => PresentMutationDsl::SetTiles { tiles: tiles.clone() },
-            PresentMutation::SetDeck { deck } => PresentMutationDsl::SetDeck { deck: deck.clone() },
+            PresentMutation::SetSnapshot { snapshot } => PresentMutationDsl::SetSnapshot { snapshot: present_snapshot_to_dsl(snapshot) },
         }
     }
 }
@@ -115,7 +116,7 @@ impl From<PresentMutationDsl> for PresentMutation {
             PresentMutationDsl::TilesPatch { id, patch } => PresentMutation::Tiles(CollectionMutation::Patch { id, patch }),
             PresentMutationDsl::SetSource { source } => PresentMutation::SetSource { source },
             PresentMutationDsl::SetTiles { tiles } => PresentMutation::SetTiles { tiles },
-            PresentMutationDsl::SetDeck { deck } => PresentMutation::SetDeck { deck },
+            PresentMutationDsl::SetSnapshot { snapshot } => PresentMutation::SetSnapshot { snapshot: present_snapshot_from_dsl(snapshot) },
         }
     }
 }
@@ -149,14 +150,15 @@ impl protocol::OpBinary for PresentMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::present::{default_figure_tile_source, default_present_deck, FigureTileFrame};
+    use protocol::Mutation;
+    use crate::artifacts::present::{default_figure_tile_source, default_present_snapshot, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, PresentSnapshot};
     use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-    use store::test_support;
+    use store::os_store::test_support;
 
-    fn round_trip(deck: &PresentDeck, operation: &PresentMutation) -> PresentDeck {
+    fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
         let forward = vcs::apply_mutation(deck, operation);
         let mut restored = forward.clone();
-        for back in operation.inverse(deck) {
+        for back in protocol::Mutation::inverse(operation, deck) {
             restored = vcs::apply_mutation(&restored, &back);
         }
         assert_eq!(&restored, deck, "backwards() must exactly restore the pre-operation deck");
@@ -165,7 +167,7 @@ mod tests {
 
     #[test]
     fn set_tiles_and_clear_round_trip() {
-        let deck = default_present_deck();
+        let deck = default_present_snapshot();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let seeded = round_trip(&deck, &PresentMutation::SetTiles { tiles });
         assert_eq!(seeded.tiles.len(), 4);
@@ -175,7 +177,7 @@ mod tests {
 
     #[test]
     fn tile_add_patch_remove_round_trip() {
-        let deck = default_present_deck();
+        let deck = default_present_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         let added = round_trip(&deck, &PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: tile }));
         assert_eq!(added.tiles.len(), 1);
@@ -229,8 +231,8 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_set_deck() {
-        test_support::assert_op_line_round_trip(&PresentMutation::SetDeck { deck: default_present_deck() });
+    fn op_text_round_trip_set_snapshot() {
+        test_support::assert_op_line_round_trip(&PresentMutation::SetSnapshot { snapshot: default_present_snapshot() });
     }
     //#endregion 🔖️OpTextTests
 }

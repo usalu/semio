@@ -1,0 +1,20 @@
+// 🧬️ Raster snapshot schema — persistent fields only.
+syntax = "proto3";
+package semio.s.raster.raster.snapshot;
+
+message RasterSnapshot {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated RasterLayerNode layers = 4;
+  map<string, RasterImageAsset> assets = 5;
+}
+
+message RasterLayerNode {
+  string kind = 1;
+}
+
+message RasterImageAsset {
+  string mime = 1;
+  bytes data = 2;
+}

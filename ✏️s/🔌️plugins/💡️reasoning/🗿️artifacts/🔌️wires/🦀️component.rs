@@ -1,6 +1,6 @@
 //! 🧠️ Wires artifact — the document entity this plugin's one app (🔌️wires) edits.
 //!
-//! `MindmapWiresDocument`'s `wires_fixture`/`board_fixture` fields stay opaque `dsl::DslValue` HERE,
+//! `WiresSnapshot`'s `wires_fixture`/`board_fixture` fields stay opaque `dsl::DslValue` HERE,
 //! deliberately: `⚙️engine`/`🖱️commands`/`🔧️op` all address board nodes/edges and wires relationships
 //! generically by id (`array_mut`/`entity_id`/JSON-patch-style ops) for mergeable, granular edits, and
 //! re-typing this struct's own fields would force all of that machinery onto typed field access. The
@@ -21,15 +21,9 @@ pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
-/// 🧠️ The mindmap-wires document: the semantic wires fixture (identities/relationships/kind catalogs)
-/// paired with its own `reasoning.mindmap.fixture` board fixture (nodes/edges/camera). See the module
-/// doc above for why both fields stay opaque `dsl::DslValue`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MindmapWiresDocument {
-    pub wires_fixture: DslValue,
-    pub board_fixture: DslValue,
-}
+/// 📸️ Persisted wires snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
+pub use crate::artifacts::wires::snapshot::schema::WiresSnapshot;
+pub use crate::artifacts::wires::schema::WiresArtifact;
 //#endregion 🔖️Types
 
 //#region 🔖️EmptyFixtures
@@ -49,16 +43,15 @@ pub fn empty_wires_fixture() -> DslValue {
     DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![])), ("relationships".into(), DslValue::Array(vec![])), ("board".into(), empty_board_fixture())])
 }
 
-/// 📭️ Fresh mindmap-wires document with empty fixtures.
-pub fn empty_mindmap_wires_document() -> MindmapWiresDocument {
-    MindmapWiresDocument { wires_fixture: empty_wires_fixture(), board_fixture: empty_board_fixture() }
+/// 📭️ Fresh wires snapshot with empty fixtures.
+pub fn empty_wires_snapshot() -> WiresSnapshot {
+    WiresSnapshot { wires_fixture: empty_wires_fixture(), board_fixture: empty_board_fixture() }
 }
 //#endregion 🔖️EmptyFixtures
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::wires::create_wires_app`'s `🔖️Manifest` region. Lifted out of the old ui crate's
-/// inline `.artifact_kind(ArtifactKindSpec { .. })` call.
+/// `crate::apps::wires::create_wires_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.wires".into(),
@@ -238,8 +231,8 @@ pub struct SourceDsl {
 }
 
 /// 🧠️ The `reasoning.wires.fixture` semantic layer — schema/identities/relationships, its own
-/// nested board-fixture copy (`board`, the same `BoardFixtureDsl` shape as `MindmapWiresDocument`'s
-/// separate `board_fixture`), and optional kit `source` provenance.
+/// nested board-fixture copy (`board`, the same `BoardFixtureDsl` shape as the top-level
+/// `board_fixture`), and optional kit `source` provenance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct WiresFixtureDsl {
@@ -256,124 +249,7 @@ pub struct WiresFixtureDsl {
     #[dsl(block)]
     pub source: Option<SourceDsl>,
 }
-
-/// 🧾️ Local DSL-mirror twin of `MindmapWiresDocument` — see `🔖️DslMirror`'s intro doc above for why
-/// the real struct keeps opaque `Value` fields while this twin (used only at the `parse_dsl`/
-/// `print_dsl`/pack boundary) is fully typed.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-#[dsl(extension = "reasoning.wires", layout = "lines")]
-struct MindmapWiresDocumentDsl {
-    #[dsl(key = "wires", block)]
-    wires_fixture: WiresFixtureDsl,
-    #[dsl(key = "board", block)]
-    board_fixture: BoardFixtureDsl,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for MindmapWiresDocumentDsl {
-    const EXTENSION: &'static str = "wires";
-    fn envelope_id() -> &'static str { "reasoning.wires" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for MindmapWiresDocumentDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-/// 🔀️ Real document (opaque `Value`) → DSL mirror (typed), for `print_dsl`/`encode_pack_with`. A
-/// stored `Value` that doesn't match the fixed `reasoning.wires.fixture`/`reasoning.mindmap.fixture`
-/// shape is a genuine data-corruption bug, not a case to silently coerce — hence the panic rather
-/// than a `Result` (this direction can't return one: `store::DocumentDsl::print_dsl` is infallible).
-fn mindmap_wires_document_to_dsl(document: &MindmapWiresDocument) -> MindmapWiresDocumentDsl {
-    MindmapWiresDocumentDsl {
-        wires_fixture: dsl::from_dsl_value(document.wires_fixture.clone()).unwrap_or_else(|error| panic!("wires_fixture does not match the reasoning.wires.fixture schema: {error}")),
-        board_fixture: dsl::from_dsl_value(document.board_fixture.clone()).unwrap_or_else(|error| panic!("board_fixture does not match the reasoning.mindmap.fixture schema: {error}")),
-    }
-}
-
-/// 🔀️ DSL mirror (typed) → real document (opaque `DslValue`), for `parse_dsl`/`decode_pack_with`.
-fn mindmap_wires_document_from_dsl(parsed: &MindmapWiresDocumentDsl) -> Result<MindmapWiresDocument, store::TextError> {
-    Ok(MindmapWiresDocument {
-        wires_fixture: dsl::to_dsl_value(&parsed.wires_fixture).map_err(|error| store::TextError::new(format!("invalid wires fixture: {error}"), store::TextSpan::at(1, 1)))?,
-        board_fixture: dsl::to_dsl_value(&parsed.board_fixture).map_err(|error| store::TextError::new(format!("invalid board fixture: {error}"), store::TextSpan::at(1, 1)))?,
-    })
-}
 //#endregion 🔖️DslMirror
-
-/// 📜️ `.wires` textual document — derive-engine grammar via `MindmapWiresDocumentDsl` (see
-/// `🔖️DslMirror`); `parse_dsl`/`print_dsl` convert at the boundary.
-impl store::DocumentDsl for MindmapWiresDocument {
-    const EXTENSION: &'static str = "wires";
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <MindmapWiresDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
-        mindmap_wires_document_from_dsl(&parsed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <MindmapWiresDocumentDsl as store::DocumentDsl>::print_dsl(&mindmap_wires_document_to_dsl(self))
-    }
-}
-
-/// 📦️ `.wires` binary pack — same `MindmapWiresDocumentDsl` mirror as `DocumentDsl` above (see
-/// `🔖️DslMirror`); `dsl::DslDocument`'s derive already gives `MindmapWiresDocumentDsl` its own
-/// `DocumentPack` impl, so this just routes through the same to/from-dsl boundary functions.
-impl store::DocumentPack for MindmapWiresDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <MindmapWiresDocumentDsl as store::DocumentPack>::encode_pack_with(&mindmap_wires_document_to_dsl(self), options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <MindmapWiresDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
-        mindmap_wires_document_from_dsl(&parsed).map_err(store::text_error_to_pack_error)
-    }
-}
 //#endregion 🔖️Dsl
 
 //#region 🧪️Tests
@@ -381,8 +257,6 @@ impl store::DocumentPack for MindmapWiresDocument {
 mod tests {
     use super::*;
 
-    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` matches the store envelope schema for this
-    /// artifact (unlike flow, both are the same `MINDMAP_WIRES_SCHEMA` string here).
     #[test]
     fn artifact_kind_uses_the_wires_fixture_schema() {
         assert_eq!(artifact_kind().schema, MINDMAP_WIRES_SCHEMA);
@@ -390,10 +264,10 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_has_empty_fixtures() {
-        let document = empty_mindmap_wires_document();
-        assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
-        assert_eq!(document.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
+    fn empty_snapshot_has_empty_fixtures() {
+        let snapshot = empty_wires_snapshot();
+        assert_eq!(snapshot.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
+        assert_eq!(snapshot.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
     }
 }
 //#endregion 🧪️Tests

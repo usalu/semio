@@ -1,0 +1,25 @@
+# 🔺️ DAG diff schema.
+type DagDiff {
+  artifact: DagArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  nodes: DagNodesDelta @state(class: PERSISTENT)
+  edges: DagEdgesDelta @state(class: PERSISTENT)
+  setNodes: DagNodeSpecList @state(class: PERSISTENT)
+  setEdges: DagFixtureEdgeList @state(class: PERSISTENT)
+  selectedNodeIds: DagStringList @state(class: SHARED_UI)
+  camera: DagCamera @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+type DagStringList { values: [String!]! }
+type DagNodeSpecList { values: [DagNodeSpec!]! }
+type DagFixtureEdgeList { values: [DagFixtureEdge!]! }
+type DagNodesDelta { added: [DagNodeSpec!]! removed: [String!]! patched: [DagNodePatchEntry!]! reordered: [String!] }
+type DagEdgesDelta { added: [DagFixtureEdge!]! removed: [String!]! patched: [DagEdgePatchEntry!]! reordered: [String!] }
+type DagNodePatchEntry { id: String! patch: DagNodePatch! }
+type DagEdgePatchEntry { id: String! patch: DagEdgePatch! }
+type DagNodePatch { name: String x: Float y: Float }
+type DagEdgePatch { source: String target: String }
+type DagNodeSpec { id: String! }
+type DagFixtureEdge { id: String! source: String! target: String! }
+type DagCamera { x: Float! y: Float! zoom: Float! }
+type DagArtifact { schema: String! nodes: [DagNodeSpec!]! edges: [DagFixtureEdge!]! selectedNodeIds: [String!]! camera: DagCamera! locale: String! }

@@ -4,7 +4,7 @@ use crate::apps::raster::config::RasterConfig;
 use crate::apps::raster::terminology::RasterPlayLabels;
 use crate::apps::raster::{layer_row_id, raster_action, RASTER_TREE_PREFIX};
 use crate::artifacts::raster::engine::{find_layer, layer_name, layer_visible};
-use crate::artifacts::raster::{RasterLayerNode, RasterProjection as RasterDocument};
+use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 

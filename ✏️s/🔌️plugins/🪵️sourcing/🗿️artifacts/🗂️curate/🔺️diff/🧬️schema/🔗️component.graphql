@@ -1,0 +1,106 @@
+# 🧬️ Curate diff schema — sparse field delta.
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type TableSort {
+  columnId: String!
+  direction: SortDirection!
+}
+
+type Filters {
+  query: String!
+  moduleIds: [String!]!
+  typologyPath: [String!]!
+  minAvailability: Int!
+  sort: TableSort
+}
+
+union GeometryRecipe =
+  | GeometryRecipeBox
+  | GeometryRecipeFrame
+  | GeometryRecipeSlab
+  | GeometryRecipeMesh
+
+type GeometryRecipeBox {
+  kind: String!
+  width: Float!
+  height: Float!
+  depth: Float!
+}
+
+type GeometryRecipeFrame {
+  kind: String!
+  width: Float!
+  height: Float!
+  depth: Float!
+  profile: Float!
+}
+
+type GeometryRecipeSlab {
+  kind: String!
+  width: Float!
+  depth: Float!
+  thickness: Float!
+}
+
+type GeometryRecipeMesh {
+  kind: String!
+  positions: [Float!]!
+  normals: [Float!]!
+  indices: [Int!]!
+}
+
+type ObjectKind {
+  id: String!
+  name: String!
+  moduleId: String!
+  typologyPath: [String!]!
+  availability: Int!
+  geometry: GeometryRecipe!
+}
+
+type CuratedItem {
+  objectId: String!
+  count: Int!
+}
+
+type CurateStringList {
+  values: [String!]!
+}
+
+type CurateObjectKindPatchEntry {
+  id: String!
+  kind: ObjectKind!
+}
+
+type CurateStockDelta {
+  added: [ObjectKind!]
+  removed: [String!]
+  patched: [CurateObjectKindPatchEntry!]
+  reordered: [String!]
+}
+
+type CurateCuratedPatchEntry {
+  objectId: String!
+  count: Int
+}
+
+type CurateCuratedDelta {
+  added: [CuratedItem!]
+  removed: [String!]
+  patched: [CurateCuratedPatchEntry!]
+  reordered: [String!]
+}
+
+type CurateDiff {
+  artifact: CurateArtifact @state(class: PERSISTENT)
+  stock: CurateStockDelta @state(class: PERSISTENT)
+  curated: CurateCuratedDelta @state(class: PERSISTENT)
+  filters: Filters @state(class: LOCAL_UI)
+  selectedObjectId: String @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+  contributionsJson: String @state(class: LOCAL_UI)
+}

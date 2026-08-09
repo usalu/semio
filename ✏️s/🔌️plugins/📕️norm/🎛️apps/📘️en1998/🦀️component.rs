@@ -101,7 +101,7 @@ impl DocumentApp for En1998PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, En1998Snapshot>) -> Result<Emit<En1998Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media::<En1998Snapshot>(port, media)
+        crate::app_surface::import_media(port, media, |snapshot| En1998Mutation::SetSnapshot { snapshot })
     }
     //#endregion 🔖️MediaPorts
 }
@@ -195,7 +195,7 @@ mod tests {
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         let keywords = ["set-snapshot", "evaluate", "selected-check"];
         for (command, keyword) in every_command().into_iter().zip(keywords) {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
         }
@@ -258,26 +258,26 @@ mod tests {
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
         testkit::dispatch(&mut app, En1998Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1998Snapshot::default() }));
-        let host = NormHost::<En1998Family>::from_document(app.projection().expect("projection"));
+        let host = NormHost::<En1998Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
 
     #[test]
     fn evaluate_recommits_the_current_projection_without_changing_it() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         testkit::dispatch(&mut app, En1998Command::Evaluate(evaluate::Evaluate {}));
-        assert_eq!(before, app.projection().expect("projection"));
+        assert_eq!(before, app.snapshot().expect("projection"));
     }
 
     /// 🧮️ `setSelectedCheckIndex` is config-only — it must dispatch cleanly and never touch the document.
     #[test]
     fn selected_check_index_is_a_config_only_edit() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         let result = testkit::dispatch(&mut app, En1998Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
         assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
-        assert_eq!(before, app.projection().expect("projection"), "a config-only command must never mutate the document");
+        assert_eq!(before, app.snapshot().expect("projection"), "a config-only command must never mutate the document");
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
@@ -295,7 +295,7 @@ mod tests {
         testkit::dispatch(&mut app, En1998Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1998Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection"), En1998Snapshot::default());
+        assert_eq!(app.snapshot().expect("projection"), En1998Snapshot::default());
     }
 
     /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.

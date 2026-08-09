@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::en1998::En1998Snapshot;
 
-/// 🗄️ The seismic-rc-frame example fixture, handcrafted in `en1998`'s DSL (`store::En1998SnapshotDsl`): a
+/// 🗄️ The seismic-rc-frame example fixture, handcrafted in `en1998`'s DSL (`store::DocumentDsl`): a
 /// high-importance dual-system RC building in seismic zone 3 on ground type D, resolved under the EN
 /// annex's Type 2 spectrum on EN ground type C, with an isolated-bridge bearing check, a near-collapse
 /// KL3 retrofit assessment, and companion silo/tank/tower/foundation/retaining-wall subsystem checks —
@@ -21,12 +21,12 @@ pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../📚️e
 
 /// 📖️ Parses `.en1998` DSL text into a `En1998Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1998Snapshot, store::TextError> {
-    <En1998Snapshot as store::En1998SnapshotDsl>::parse_dsl(text)
+    <En1998Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1998Snapshot` back to `.en1998` DSL text.
 pub fn print_dsl(document: &En1998Snapshot) -> String {
-    store::En1998SnapshotDsl::print_dsl(document)
+    store::DocumentDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&En1998Snapshot::default());
+        store::os_store::test_support::assert_dsl_round_trip(&En1998Snapshot::default());
     }
 
     #[test]
@@ -49,7 +49,7 @@ mod tests {
         assert_eq!(document.retrofit_limit_state, "near_collapse");
         assert!(!document.multiple_resisting_systems);
         assert!(!document.tower_is_chimney);
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

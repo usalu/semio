@@ -1,0 +1,45 @@
+syntax = "proto3";
+package semio.s.note.note;
+
+message NoteDiff {
+  optional NoteArtifact artifact = 1;
+  optional string schema = 2;
+  optional string id = 3;
+  optional StringNullable title = 4;
+  optional NoteBlocksDelta blocks = 5;
+  optional BoolNullable grid_visible = 6;
+  optional DoubleNullable grid_spacing = 7;
+  optional DoubleNullable grid_subdivisions = 8;
+  optional DoubleNullable grid_opacity = 9;
+  optional BoolNullable snap_enabled = 10;
+  optional DoubleNullable snap_grid_spacing = 11;
+  optional DoubleNullable pencil_width = 12;
+  optional DoubleNullable eraser_radius = 13;
+  optional NoteAssetsDelta assets = 14;
+  optional NoteStringList selected_block_ids = 15;
+  optional string active_utility_id = 16;
+  optional string engagement_input = 17;
+  optional double camera_x = 18;
+  optional double camera_y = 19;
+  optional double camera_zoom = 20;
+  optional string locale = 21;
+  optional StringNullable hovered_block_id = 22;
+}
+
+message StringNullable { optional string value = 1; }
+message BoolNullable { optional bool value = 1; }
+message DoubleNullable { optional double value = 1; }
+
+message NoteArtifact { string _placeholder = 1; }
+message NoteBlocksDelta {
+  repeated NoteBlockNode added = 1;
+  repeated string removed = 2;
+  repeated NoteBlockPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message NoteBlockPatchEntry { string id = 1; NoteBlockPatch patch = 2; }
+message NoteBlockPatch { optional string block_json = 1; }
+message NoteBlockNode { string kind = 1; }
+message NoteAssetsDelta { map<string, NoteImageAsset> entries = 1; }
+message NoteStringList { repeated string values = 1; }
+message NoteImageAsset { string mime = 1; string data = 2; }

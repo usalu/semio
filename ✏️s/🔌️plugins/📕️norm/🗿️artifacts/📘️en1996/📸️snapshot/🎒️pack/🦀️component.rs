@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `En1996Snapshot` to its binary pack form.
 pub fn encode(document: &En1996Snapshot) -> Vec<u8> {
-    store::En1996SnapshotPack::encode_pack(document)
+    store::DocumentPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `En1996Snapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1996Snapshot, PackError> {
-    <En1996Snapshot as store::En1996SnapshotPack>::decode_pack(bytes)
+    <En1996Snapshot as store::DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -29,7 +29,7 @@ mod tests {
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
         let document = En1996Snapshot::default();
-        store::test_support::assert_dsl_pack_equivalence(&document);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }

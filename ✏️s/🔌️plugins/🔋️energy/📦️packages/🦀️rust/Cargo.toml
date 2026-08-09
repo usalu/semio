@@ -3,7 +3,7 @@ name = "semio-s-plugin-energy"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Energy plugin - headless building energy model (BEM) engine: typed Rust API for transient whole-building simulation, no document/app/DSL surface"
+description = "Energy plugin - headless building energy model (BEM) engine with energy.model artifact facets"
 
 [lints]
 workspace = true
@@ -19,5 +19,8 @@ path = "📦️glue.rs"
 
 [dependencies]
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { workspace = true }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde = { workspace = true }
+serde_json = { workspace = true }

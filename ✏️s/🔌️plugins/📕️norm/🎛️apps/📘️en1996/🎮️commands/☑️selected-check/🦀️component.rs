@@ -21,7 +21,7 @@ pub struct SetSelectedCheckIndex {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, En1996Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1996Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_selected_check_index(payload.index)
+    crate::app_surface::commit_selected_check_index::<En1996Mutation>(payload.index)
 }
 //#endregion 🔖️Handler
 

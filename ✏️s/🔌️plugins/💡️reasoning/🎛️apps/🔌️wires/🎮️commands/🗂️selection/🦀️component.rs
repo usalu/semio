@@ -3,8 +3,8 @@
 //! `config_mutations` and never document operations.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod document_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &DocumentSelect, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &DocumentSelect, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }

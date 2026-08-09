@@ -6,7 +6,7 @@
 //! `app_commands!` invocation.
 
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::config(vec![VcsDemoConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_command_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&VcsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
     }
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more passing

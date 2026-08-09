@@ -161,12 +161,12 @@ pub fn decode_op(bytes: &[u8]) -> Result<ImperativeMutation, protocol::ProtocolE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::imperative::ImperativeDocument;
+    use crate::artifacts::imperative::ImperativeSnapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-1".into() } };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -176,14 +176,14 @@ mod tests {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
 
-        let document = crate::artifacts::imperative::engine::default_document();
-        let envelope = store::create_document_envelope::<ImperativeDocument, ImperativeMutation>("imperative.document/v1", "test", document, None);
+        let document = crate::artifacts::imperative::engine::default_snapshot();
+        let envelope = store::create_document_envelope::<ImperativeSnapshot, ImperativeMutation>("imperative.document/v1", "test", document, None);
         let mut doc_store = store::DocumentStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Add { index: 0, item: step } };
         doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&doc_store);
-        store::test_support::assert_document_pack_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
     #[test]

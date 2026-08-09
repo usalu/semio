@@ -17,7 +17,7 @@ pub use crate::document::NormHost;
 /// `CheckReport::checks` row the inspection panel currently renders.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "normcfg")]
+#[dsl(id = "norm.config", extension = "normcfg")]
 #[dsl(layout = "lines")]
 pub struct NormConfig {
     /// 👁️ Which `CheckReport::checks` row the inspection panel renders — `None` (the default) means
@@ -212,14 +212,14 @@ mod tests {
 
     #[test]
     fn norm_config_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&NormConfig::default());
-        store::test_support::assert_dsl_round_trip(&NormConfig { selected_check_index: Some(3) });
+        store::os_store::test_support::assert_dsl_round_trip(&NormConfig::default());
+        store::os_store::test_support::assert_dsl_round_trip(&NormConfig { selected_check_index: Some(3) });
     }
 
     #[test]
     fn norm_config_dsl_pack_equivalence() {
-        store::test_support::assert_dsl_pack_equivalence(&NormConfig::default());
-        store::test_support::assert_dsl_pack_equivalence(&NormConfig { selected_check_index: Some(7) });
+        store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig::default());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig { selected_check_index: Some(7) });
     }
 
     #[test]
@@ -236,9 +236,9 @@ mod tests {
 
     #[test]
     fn norm_config_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) });
-        store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: None });
-        store::test_support::assert_op_line_round_trip(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
+        store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) });
+        store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: None });
+        store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
     }
 
     /// 🧷️ Pins the config operations' exact pre-migration wire bytes (from the ticket's

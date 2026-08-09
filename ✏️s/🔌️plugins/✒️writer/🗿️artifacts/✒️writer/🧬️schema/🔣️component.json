@@ -1,0 +1,239 @@
+{
+  "$id": "https://semio.tech/schema/s/writer/writer/artifact.json",
+  "title": "WriterArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "languageId",
+    "uri",
+    "text",
+    "selectedAstIds",
+    "editorSettings",
+    "formatSignal",
+    "lintSignal",
+    "revision",
+    "engagementInput",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "languageId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "uri": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "text": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selectedAstIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "editorSelection": {
+      "$ref": "#/$defs/WriterEditorSelection",
+      "x-semio-state": "shared-ui"
+    },
+    "editorSettings": {
+      "$ref": "#/$defs/WriterEditorSettings",
+      "x-semio-state": "shared-ui"
+    },
+    "formatSignal": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lintSignal": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "treeHoveredAstId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "editorHoverOffset": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "WriterEditorSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "WriterEditorSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "showLineNumbers",
+        "fontPx",
+        "lineHeight",
+        "tabSize"
+      ],
+      "properties": {
+        "showLineNumbers": {
+          "type": "boolean"
+        },
+        "fontPx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lineHeight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "tabSize": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "WriterStringList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "WriterTextRangeEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "insert"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "insert": {
+          "type": "string"
+        }
+      }
+    },
+    "WriterTextDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replacement": {
+          "type": "string"
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WriterTextRangeEdit"
+          }
+        }
+      }
+    },
+    "WriterArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "languageId",
+        "uri",
+        "text",
+        "selectedAstIds",
+        "editorSettings",
+        "formatSignal",
+        "lintSignal",
+        "revision",
+        "engagementInput",
+        "cameraX",
+        "cameraY",
+        "cameraZoom",
+        "locale"
+      ],
+      "properties": {}
+    }
+  }
+}

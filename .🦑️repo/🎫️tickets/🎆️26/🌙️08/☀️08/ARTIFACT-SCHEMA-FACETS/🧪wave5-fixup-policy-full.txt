@@ -1,0 +1,6 @@
+[DEBUG] runPolicyScript starting for /Users/ueli/Documents/semio/📜️script.ts
+[DEBUG] runPolicyScript parsing policy file export
+[DEBUG] runPolicyScript resolving folder/bundle entity
+[DEBUG] runPolicyScript importing module dynamically from url /Users/ueli/Documents/semio/📜️script.ts
+[DEBUG] runPolicyScript imported module successfully
+[DEBUG] runPolicyScript invoking policy function for kind technology

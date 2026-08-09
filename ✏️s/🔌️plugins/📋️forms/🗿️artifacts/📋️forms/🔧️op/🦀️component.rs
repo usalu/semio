@@ -10,11 +10,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::engine::empty_forms_projection;
+    use crate::artifacts::forms::engine::empty_forms_snapshot;
 
     #[test]
     fn update_form_mutation_sets_title() {
-        let spec = empty_forms_projection();
+        let spec = empty_forms_snapshot();
         let mutation = FormMutation::UpdatePlaybook { title: Some("Renamed".into()) };
         let next = apply_form_edit_mutation(&spec, &mutation);
         assert_eq!(next.title.as_deref(), Some("Renamed"));

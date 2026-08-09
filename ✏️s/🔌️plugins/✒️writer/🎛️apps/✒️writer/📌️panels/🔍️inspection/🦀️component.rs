@@ -2,9 +2,9 @@
 
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use trinity::core::{example_graph, lint, Diagnostic};
+use trinity::core::{example_graph, lint};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_INSPECTION: &str = "writer.play.inspection";
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
@@ -50,7 +50,7 @@ pub fn render(document: &WriterProjection, config: &WriterConfig, labels: &Write
     ];
     if document.language_id == "jack" {
         let graph = example_graph();
-        let messages: Vec<String> = lint(&graph, &document.text).into_iter().map(|diag: Diagnostic| diag.message).take(8).collect();
+        let messages: Vec<String> = lint(&graph, &document.text).into_iter().map(|diag| diag.message).take(8).collect();
         if !messages.is_empty() {
             sections.push(UiSectionNode {
                 id: "writer-inspector.diagnostics".into(),

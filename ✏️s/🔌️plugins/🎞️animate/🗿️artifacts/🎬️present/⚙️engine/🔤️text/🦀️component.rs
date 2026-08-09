@@ -227,6 +227,8 @@ pub mod text {
     const TEXT_MARGIN_PT: f64 = 8.0;
     const TEXT_SIZE_PT: f64 = 36.0;
 
+    static TYPST_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
+
     /// 📝️ Plain text Sobject rendered through Typst.
     #[derive(Clone)]
     pub struct Text {
@@ -507,7 +509,8 @@ pub mod text {
     /// 🖨️ Compile Typst markup to merged SVG.
     pub fn typst_markup_to_svg(markup: &str) -> Option<String> {
         let fonts = TYPST_FONTS.get_or_init(typst_asset_font_list);
-        let book = (LazyHash::new(FontBook::from_fonts(fonts.iter())));
+        static FONT_BOOK: OnceLock<LazyHash<FontBook>> = OnceLock::new();
+        let book = FONT_BOOK.get_or_init(|| LazyHash::new(FontBook::from_fonts(fonts.iter())));
         typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
     }
 

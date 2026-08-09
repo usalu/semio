@@ -2,7 +2,7 @@
 
 use crate::apps::dag::terminology::DagPlayLabels;
 use crate::apps::dag::dag_action;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::dag_node_kind_tag;
 use semio_framework_plugin::{
     tree_item, tree_item_desc, tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -20,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = document
         .nodes
         .iter()

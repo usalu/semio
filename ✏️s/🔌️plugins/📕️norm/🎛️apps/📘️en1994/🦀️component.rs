@@ -6,7 +6,7 @@
 //! `crate::artifacts::en1994::engine`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::apps::en1994::commands::{evaluate, selected_check, set_document};
+use crate::apps::en1994::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::en1994::modes::edit as edit_mode;
 use crate::apps::en1994::modes::edit::windows::{inputs, results};
 use crate::apps::en1994::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -34,8 +34,8 @@ semio_framework_plugin::app_commands! {
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
-    pub enum En1994Command for Document, En1994Mutation, NormConfig, NormConfigMutation {
-        "setDocument" as "set-document" => set_document::SetDocument,
+    pub enum En1994Command for En1994Snapshot, En1994Mutation, NormConfig, NormConfigMutation {
+        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
     }
@@ -47,7 +47,7 @@ semio_framework_plugin::app_commands! {
 pub struct En1994PlayApp;
 
 impl DocumentApp for En1994PlayApp {
-    type Projection = En1994Snapshot;
+    type Snapshot = En1994Snapshot;
     type Mutation = En1994Mutation;
     type Config = NormConfig;
     type ConfigMutation = NormConfigMutation;
@@ -63,7 +63,7 @@ impl DocumentApp for En1994PlayApp {
         CONFIG_SCHEMA
     }
 
-    fn initial_projection() -> En1994Snapshot {
+    fn initial_snapshot() -> En1994Snapshot {
         En1994Snapshot::default()
     }
 
@@ -80,13 +80,13 @@ impl DocumentApp for En1994PlayApp {
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, En1994Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
-        let host = NormHost::<En1994Family>::from_document(doc.projection.clone());
+        let host = NormHost::<En1994Family>::from_document(doc.snapshot.clone());
         match body_key {
-            inputs::BODY_INPUTS => inputs::render(doc.projection),
+            inputs::BODY_INPUTS => inputs::render(doc.snapshot),
             results::BODY_RESULTS => results::render(&host),
             document_panel::BODY_DOCUMENT => document_panel::render(&host),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.projection.selected_check_index),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.snapshot.selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
         }
     }
@@ -96,12 +96,12 @@ impl DocumentApp for En1994PlayApp {
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &DocumentView<'_, En1994Snapshot>) -> Result<Media, MediaError> {
-        crate::app_surface::export_media::<En1994Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
+        crate::app_surface::export_media::<En1994Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, En1994Snapshot>) -> Result<Emit<En1994Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media::<En1994Snapshot>(port, media)
+        crate::app_surface::import_media(port, media, |snapshot| En1994Mutation::SetSnapshot { snapshot })
     }
     //#endregion 🔖️MediaPorts
 }
@@ -122,7 +122,7 @@ pub fn create_en1994_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument setzen"))
+            .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .keybinding("mod+z", "undo")
@@ -172,7 +172,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<En1994Command> {
         vec![
-            En1994Command::SetDocument(set_document::SetDocument { document: En1994Snapshot::default() }),
+            En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }),
             En1994Command::Evaluate(evaluate::Evaluate {}),
             En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -186,16 +186,16 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids, vec!["setDocument", "evaluate", "setSelectedCheckIndex"]);
+        assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex"]);
     }
 
     /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
     /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-        let keywords = ["set-document", "evaluate", "selected-check"];
+        let keywords = ["set-snapshot", "evaluate", "selected-check"];
         for (command, keyword) in every_command().into_iter().zip(keywords) {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
         }
@@ -205,7 +205,7 @@ mod tests {
     /// could have silently rewritten — the fieldless `Evaluate` (was a unit variant) and both `Option`
     /// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
     /// `🧪️wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
-    /// of the three payload shapes involves the per-standard `Document`.
+    /// of the three payload shapes involves the per-standard `En1994Snapshot`.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &En1994Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -255,29 +255,29 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn set_document_commits_a_host_backed_report() {
+    fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1994Command::SetDocument(set_document::SetDocument { document: En1994Snapshot::default() }));
-        let host = NormHost::<En1994Family>::from_document(app.projection().expect("projection"));
+        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }));
+        let host = NormHost::<En1994Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
 
     #[test]
     fn evaluate_recommits_the_current_projection_without_changing_it() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         testkit::dispatch(&mut app, En1994Command::Evaluate(evaluate::Evaluate {}));
-        assert_eq!(before, app.projection().expect("projection"));
+        assert_eq!(before, app.snapshot().expect("projection"));
     }
 
     /// 🧮️ `setSelectedCheckIndex` is config-only — it must dispatch cleanly and never touch the document.
     #[test]
     fn selected_check_index_is_a_config_only_edit() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         let result = testkit::dispatch(&mut app, En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
         assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
-        assert_eq!(before, app.projection().expect("projection"), "a config-only command must never mutate the document");
+        assert_eq!(before, app.snapshot().expect("projection"), "a config-only command must never mutate the document");
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
@@ -292,10 +292,10 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1994Command::SetDocument(set_document::SetDocument { document: En1994Snapshot::default() }));
+        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection"), En1994Snapshot::default());
+        assert_eq!(app.snapshot().expect("projection"), En1994Snapshot::default());
     }
 
     /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.

@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_mutation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&VcsDemoMutation::SetCounter { counter: 3 });
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoMutation::SetCounter { counter: 3 });
     }
 }
 //#endregion 🧪️Tests

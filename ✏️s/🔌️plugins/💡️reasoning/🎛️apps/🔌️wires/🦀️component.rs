@@ -23,8 +23,8 @@ use crate::apps::wires::commands::selection::{document_select, set_selection};
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -51,7 +51,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum WiresCommand for MindmapWiresDocument, MindmapWiresMutation, WiresConfig, WiresConfigMutation {
+    pub enum WiresCommand for WiresSnapshot, WiresMutation, WiresConfig, WiresConfigMutation {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addNode" as "add-node" => add_node::AddNode,
         "addRelationship" as "add-relationship" => add_relationship::AddRelationship,
@@ -75,8 +75,8 @@ semio_framework_plugin::app_commands! {
 pub struct ReasoningWiresPlayApp;
 
 impl DocumentApp for ReasoningWiresPlayApp {
-    type Projection = MindmapWiresDocument;
-    type Mutation = MindmapWiresMutation;
+    type Snapshot = WiresSnapshot;
+    type Mutation = WiresMutation;
     type Config = WiresConfig;
     type ConfigMutation = WiresConfigMutation;
     type Draft = NoDraft;
@@ -88,8 +88,8 @@ impl DocumentApp for ReasoningWiresPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
 
-    fn initial_projection() -> MindmapWiresDocument {
-        crate::artifacts::wires::empty_mindmap_wires_document()
+    fn initial_snapshot() -> WiresSnapshot {
+        crate::artifacts::wires::empty_wires_snapshot()
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
@@ -97,18 +97,18 @@ impl DocumentApp for ReasoningWiresPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &WiresCommand, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
-        let document = doc.projection;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.projection.locale);
+    fn render(body_key: &str, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&document.board_fixture, &document.wires_fixture),
-            WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, &cfg.projection.selected_ids, labels),
+            WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, &cfg.snapshot.selected_ids, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
-            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &cfg.projection.selected_ids),
+            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &cfg.snapshot.selected_ids),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -148,7 +148,7 @@ pub fn create_wires_app() -> App {
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
             .config(ReasoningWiresPlayApp::config_spec()),
     )
-    .example(WIRES_PLAY_EXAMPLE_METABOLISM_ID, LocalizedLabel::native("Metabolism", "Stoffwechsel"), serde_json::to_string(&crate::artifacts::wires::engine::metabolism_wires_example_document()).unwrap(), "network")
+    .example(WIRES_PLAY_EXAMPLE_METABOLISM_ID, LocalizedLabel::native("Metabolism", "Stoffwechsel"), serde_json::to_string(&crate::artifacts::wires::engine::metabolism_wires_example_snapshot()).unwrap(), "network")
     .workflow("reasoning-wires", "Mindmap Wires", "graph")
 }
 //#endregion 🔖️Manifest
@@ -172,8 +172,8 @@ pub(crate) mod testkit {
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub fn metabolism_app() -> WiresApp {
         let mut app = new_app();
-        let document = crate::artifacts::wires::engine::metabolism_wires_example_document();
-        let envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let document = crate::artifacts::wires::engine::metabolism_wires_example_snapshot();
+        let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         let files = store::print_document_pack(&envelope).expect("print document pack");
         app.load_document_pack(&files).expect("load metabolism");
         app
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -254,14 +254,14 @@ mod tests {
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         let _ = node;
         let cases: [(WiresCommand, &str, &str); 3] = [
-            (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
-            (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up", "010a0000"),
-            (WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), "locale value=de-DE", "010b010564652d444501000600"),
+            (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
+            (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "010a0000"),
+            (WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), "locale locale value=de-DE", "010b010564652d444501000600"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn metabolism_board_fixture_uses_mindmap_schema() {
-        let document = crate::artifacts::wires::engine::metabolism_wires_example_document();
+        let document = crate::artifacts::wires::engine::metabolism_wires_example_snapshot();
         assert_eq!(document.board_fixture.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
         assert_eq!(crate::artifacts::wires::engine::fixture_nodes(&document.board_fixture).len(), 7);
     }
@@ -324,12 +324,12 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::engine::fixture_nodes(&app.projection().expect("projection").board_fixture).len(), 0, 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::engine::fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).len(), 0, 1);
     }
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::engine::fixture_nodes(&app.projection().expect("projection").board_fixture).len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::engine::fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).len());
     }
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
@@ -346,10 +346,10 @@ mod tests {
         // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
-        let mut base = crate::artifacts::wires::empty_mindmap_wires_document();
-        base = store::apply_mutation(&base, &MindmapWiresMutation::AddNode { node: seed_node("node-1") });
-        base = store::apply_mutation(&base, &MindmapWiresMutation::AddNode { node: seed_node("node-2") });
-        let base_envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
+        let mut base = crate::artifacts::wires::empty_wires_snapshot();
+        base = store::apply_mutation(&base, &WiresMutation::AddNode { node: seed_node("node-1") });
+        base = store::apply_mutation(&base, &WiresMutation::AddNode { node: seed_node("node-2") });
+        let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");
         instance_b.load_document_pack(&base_files).expect("load b");
@@ -366,13 +366,13 @@ mod tests {
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
-        let projection_a = instance_a.projection().expect("projection a");
-        let projection_b = instance_b.projection().expect("projection b");
+        let projection_a = instance_a.snapshot().expect("projection a");
+        let projection_b = instance_b.snapshot().expect("projection b");
         // A's added node-3 survives on both.
         assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
         assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
         // B's move of node-2 survives on both.
-        let x_of = |document: &MindmapWiresDocument| find_board_node(document, "node-2").map(crate::artifacts::wires::engine::node_position).unwrap().0;
+        let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(crate::artifacts::wires::engine::node_position).unwrap().0;
         assert_eq!(x_of(&projection_a), 50.0, "A converges on B's move");
         assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
     }

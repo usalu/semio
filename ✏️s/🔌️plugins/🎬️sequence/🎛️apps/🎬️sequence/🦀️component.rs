@@ -20,7 +20,7 @@ use crate::apps::sequence::modes::edit::windows::{compiled, main, script};
 use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::sequence::terminology::sequence_play_labels;
 use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::{SequenceFixture, StepParams, SEQUENCE_FIXTURE_SCHEMA};
+use crate::artifacts::sequence::{SequenceSnapshot, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
@@ -54,7 +54,7 @@ semio_framework_plugin::app_commands! {
     /// independently from the pre-migration `sequence_protocol` enum's `command_id()` match arm and
     /// `#[dsl(key = ..)]` attribute respectively, never derived one from the other. **Row order is the
     /// binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum SequenceCommand for SequenceFixture, SequenceMutation, SequenceConfig, SequenceConfigMutation {
+    pub enum SequenceCommand for SequenceSnapshot, SequenceMutation, SequenceConfig, SequenceConfigMutation {
         "addStep" as "add-step" => add_step::AddStep,
         "addStepToSlot" as "add-step-to-slot" => add_step_to_slot::AddStepToSlot,
         "addStepDropped" as "add-step-dropped" => add_step_dropped::AddStepDropped,
@@ -85,7 +85,7 @@ semio_framework_plugin::app_commands! {
 pub struct SequencePlayApp;
 
 impl DocumentApp for SequencePlayApp {
-    type Projection = SequenceFixture;
+    type Snapshot = SequenceSnapshot;
     type Mutation = SequenceMutation;
     type Config = SequenceConfig;
     type ConfigMutation = SequenceConfigMutation;
@@ -95,10 +95,10 @@ impl DocumentApp for SequencePlayApp {
     type Command = SequenceCommand;
 
     const APP_ID: &'static str = SEQUENCE_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> SequenceFixture {
-        crate::artifacts::sequence::default_fixture()
+    fn initial_snapshot() -> SequenceSnapshot {
+        crate::artifacts::sequence::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -110,7 +110,7 @@ impl DocumentApp for SequencePlayApp {
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
     /// returned `StepsAdd` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -120,7 +120,7 @@ impl DocumentApp for SequencePlayApp {
         let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.is_object() { value } else { json!({ "value": value }) };
         let params: StepParams = serde_json::from_value(params_value).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let fixture = doc.projection;
+        let fixture = doc.snapshot;
         let id = crate::artifacts::sequence::engine::next_available_step_id(fixture);
         let x = fixture.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if fixture.steps.is_empty() { 0.0 } else { 280.0 };
         let step = crate::artifacts::sequence::SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
@@ -133,7 +133,7 @@ impl DocumentApp for SequencePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -144,9 +144,9 @@ impl DocumentApp for SequencePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = sequence_play_labels(config);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => main::render(fixture, config),
@@ -165,11 +165,11 @@ impl DocumentApp for SequencePlayApp {
     /// `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu` funnel)
     /// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
     /// separator itself.
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = cfg.projection.locale.starts_with("de");
-        let selected = cfg.projection.selected_step_ids.clone();
+        let is_de = cfg.snapshot.locale.starts_with("de");
+        let selected = cfg.snapshot.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 
         let mut menu = Menu::of(registry).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
@@ -300,14 +300,14 @@ mod tests {
     use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
 
     #[test]
-    fn default_fixture_has_steps() {
-        assert_eq!(crate::artifacts::sequence::default_fixture().steps.len(), 2);
+    fn default_snapshot_has_steps() {
+        assert_eq!(crate::artifacts::sequence::default_snapshot().steps.len(), 2);
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.projection().expect("projection").steps.len(), 2, 3);
+        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").steps.len(), 2, 3);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -319,7 +319,7 @@ mod tests {
             "mem://sequence-convergence",
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }),
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }),
-            |app| app.projection().expect("projection"),
+            |app| app.snapshot().expect("projection"),
         );
     }
 
@@ -383,13 +383,13 @@ mod tests {
     #[test]
     fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
         let mut app = new_app_with_registry_wired();
-        let before = app.projection().expect("projection").steps.len();
+        let before = app.snapshot().expect("projection").steps.len();
         let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
         };
         app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
-        let after = app.projection().expect("projection");
+        let after = app.snapshot().expect("projection");
         assert_eq!(after.steps.len(), before + 1);
         let imported = after.steps.last().expect("imported step");
         assert_eq!(imported.kind, "computation.import");
@@ -404,7 +404,7 @@ mod tests {
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
         };
         app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
-        let after = app.projection().expect("projection");
+        let after = app.snapshot().expect("projection");
         let imported = after.steps.last().expect("imported step");
         assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
     }
@@ -439,7 +439,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -484,10 +484,10 @@ mod tests {
     #[test]
     fn optional_field_row_keeps_its_pre_migration_bytes() {
         let some = SequenceCommand::AddStepDropped(add_step_dropped::AddStepDropped { kind: "log.print".into(), x: 1.0, y: 2.0, picked_step_id: Some("step-1".into()) });
-        assert_eq!(protocol::OpText::print_op(&some), "add-step-dropped kind=log.print x=1 y=2 picked-step-id=step-1");
+        assert_eq!(protocol::OpText::print_op(&some), "add-step-dropped add-step-dropped kind=log.print x=1 y=2 picked-step-id=step-1");
         assert_eq!(protocol::OpBinary::encode_op(&some).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), "010202096c6f672e7072696e7406737465702d31040006000105000000000000f03f02050000000000000040030601");
         let none = SequenceCommand::AddStepDropped(add_step_dropped::AddStepDropped { kind: "log.print".into(), x: 1.0, y: 2.0, picked_step_id: None });
-        assert_eq!(protocol::OpText::print_op(&none), "add-step-dropped kind=log.print x=1 y=2");
+        assert_eq!(protocol::OpText::print_op(&none), "add-step-dropped add-step-dropped kind=log.print x=1 y=2");
         assert_eq!(protocol::OpBinary::encode_op(&none).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), "010201096c6f672e7072696e74030006000105000000000000f03f02050000000000000040");
     }
     //#endregion 🔖️CommandSurface

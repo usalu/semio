@@ -1,6 +1,7 @@
 //! 🧬️ En1990 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
+use crate::artifacts::en1990::En1990QkEntry;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -18,16 +19,6 @@ pub struct En1990Artifact {
     #[state(shared_ui)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
-
-//#region 🔖️Helpers
-/// 📊️ One variable action category/value pair for `En1990Snapshot.q_k`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct En1990QkEntry {
-    pub category: String,
-    pub value: f64,
-}
-//#endregion 🔖️Helpers
 
 //#region 🔖️Conversions
 impl En1990Artifact {
@@ -55,7 +46,14 @@ impl En1990Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1990::En1990Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

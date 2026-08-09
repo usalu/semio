@@ -21,7 +21,7 @@ use crate::apps::layout::modes::edit;
 use crate::apps::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
 use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutDocument;
+use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
@@ -61,7 +61,7 @@ semio_framework_plugin::app_commands! {
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum LayoutCommand for LayoutDocument, LayoutMutation, LayoutConfig, LayoutConfigMutation {
+    pub enum LayoutCommand for LayoutSnapshot, LayoutMutation, LayoutConfig, LayoutConfigMutation {
         "setSelection" as "selection" => set_selection::SetSelection,
         "setActivePage" as "active-page" => set_active_page::SetActivePage,
         "setHover" as "hover" => set_hover::SetHover,
@@ -128,7 +128,7 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
 pub struct LayoutPlayApp;
 
 impl DocumentApp for LayoutPlayApp {
-    type Projection = LayoutDocument;
+    type Snapshot = LayoutSnapshot;
     type Mutation = LayoutMutation;
     type Config = LayoutConfig;
     type ConfigMutation = LayoutConfigMutation;
@@ -138,9 +138,9 @@ impl DocumentApp for LayoutPlayApp {
     type Command = LayoutCommand;
 
     const APP_ID: &'static str = LAYOUT_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> LayoutDocument {
+    fn initial_snapshot() -> LayoutSnapshot {
         crate::artifacts::layout::engine::default_document()
     }
 
@@ -153,7 +153,7 @@ impl DocumentApp for LayoutPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -164,14 +164,14 @@ impl DocumentApp for LayoutPlayApp {
     /// `export_document_svg` (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg`
     /// parameter reaches this method, so there is no config-carried "active page" to prefer over the
     /// first page.
-    fn export_media(port: &str, doc: &DocumentView<'_, LayoutDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.projection);
-                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => {
-                let document = doc.projection;
+                let document = doc.snapshot;
                 let page = document.pages.first().ok_or_else(|| MediaError::Payload(port.to_string(), "layout has no pages to export".into()))?;
                 let svg = crate::artifacts::layout::engine::scene::export_document_svg(document, &page.id).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.layout".into(), json: svg } })
@@ -181,11 +181,11 @@ impl DocumentApp for LayoutPlayApp {
     }
 
     /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `fields:in` binds the incoming `form.dictionary`
-    /// values into `LayoutDocument::data_fields_json` — layout has no existing text-interpolation/
+    /// values into `LayoutSnapshot::data_fields_json` — layout has no existing text-interpolation/
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
-    /// named data source (see `crate::artifacts::layout::LayoutDocument::data_fields_json`'s doc) rather
+    /// named data source (see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "fields:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -198,9 +198,9 @@ impl DocumentApp for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = layout_labels(config);
         let mut engine = LayoutEngine::new();
         match body_key {
@@ -214,8 +214,8 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(_doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
-        let config = cfg.projection;
+    fn window_engagements(_doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.snapshot;
         let labels = layout_labels(config);
         HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
     }
@@ -232,12 +232,12 @@ pub fn create_layout_app() -> App {
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
                 name: "Layout".into(),
-                source_format: "layout.fixture".into(),
+                source_format: "layout.layout".into(),
                 component_kind: "layout".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                schema: "layout.fixture".into(),
+                schema: "layout.layout".into(),
                 export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
@@ -369,7 +369,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -424,8 +424,8 @@ mod tests {
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         use crate::artifacts::layout::LayoutCamera;
         let cases: [(LayoutCommand, &str, &str); 5] = [
-            (LayoutCommand::SetHover(set_hover::SetHover { id: None }), "hover", "01020000"),
-            (LayoutCommand::SetHover(set_hover::SetHover { id: Some("frame-1".into()) }), "hover id=frame-1", "010201076672616d652d3101000600"),
+            (LayoutCommand::SetHover(set_hover::SetHover { id: None }), "hover hover", "01020000"),
+            (LayoutCommand::SetHover(set_hover::SetHover { id: Some("frame-1".into()) }), "hover hover id=frame-1", "010201076672616d652d3101000600"),
             (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600", "010600040105000000000000f03f020500000000000000400305000000000000894004050000000000c08240"),
             (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1", "010c010472656374020006000105000000000000f03f"),
             (
@@ -437,7 +437,7 @@ mod tests {
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -508,7 +508,7 @@ mod tests {
     #[test]
     fn sample_fixture_parses() {
         let doc = crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
-        assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA);
+        assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         assert!(!doc.pages.is_empty());
     }
 
@@ -545,7 +545,7 @@ mod tests {
         // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
         let mut app = layout_app_with_registry();
         let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
-        assert_eq!(result.document_mutations.len(), 1);
+        assert_eq!(result.mutations.len(), 1);
     }
 
     #[test]
@@ -555,7 +555,7 @@ mod tests {
         let mut app = layout_app_with_registry();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert!(result.document_mutations.is_empty(), "View action must not emit document operations");
+        assert!(result.mutations.is_empty(), "View action must not emit document operations");
     }
     //#endregion 🔖️CrossCutting
 
@@ -563,11 +563,11 @@ mod tests {
     #[test]
     fn export_media_layout_out_returns_svg_of_first_page() {
         let app = layout_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let app = LayoutPlayApp::default();
-        let media = app.export_media("layout:out", &doc).expect("export layout:out");
+        let media = LayoutPlayApp::export_media("layout:out", &doc).expect("export layout:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.layout");
@@ -577,15 +577,15 @@ mod tests {
     #[test]
     fn export_media_document_out_round_trips_through_pack() {
         let app = layout_app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let app = LayoutPlayApp::default();
-        let media = app.export_media("document:out", &doc).expect("export document:out");
+        let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
-        assert_eq!(schema, crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA);
+        assert_eq!(schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-        let decoded = <LayoutDocument as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let decoded = <LayoutSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(decoded, document);
     }
 
@@ -594,7 +594,7 @@ mod tests {
         let mut app = layout_app();
         let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
         app.import_media("fields:in", &media, &testkit::meta("local")).expect("import fields:in");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
     }
 
@@ -608,7 +608,7 @@ mod tests {
     #[test]
     fn layout_io_declares_fields_in_and_layout_out_ports() {
         let io = crate::artifacts::layout::engine::layout_io();
-        assert_eq!(io.document_schema, "layout.fixture");
+        assert_eq!(io.document_schema, "layout.layout");
         assert_eq!(io.artifact.id, "2d.layout");
         let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
         assert_eq!(fields_in.direction, semio_framework_plugin::MediaPortDirection::In);

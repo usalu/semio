@@ -339,8 +339,8 @@ pub mod host {
     /// 🗂️ One collection's folder/entry tree document.
     pub type OsCollectionDocument = BackboneDocument<space::CollectionSnapshot, space::CollectionMutation>;
     /// 🕸️ One `s.workflow` artifact document — the workflow-graph half of the dissolved `OsSnapshot`
-    /// (see the kernel `workflow` crate's `WorkflowDocument`).
-    pub type OsWorkflowArtifactDocument = BackboneDocument<workflow::WorkflowDocument, workflow::WorkflowMutation>;
+    /// (see the kernel `workflow` crate's `WorkflowSnapshot`).
+    pub type OsWorkflowArtifactDocument = BackboneDocument<workflow::WorkflowSnapshot, workflow::WorkflowMutation>;
 
     /// 🌉️ Live `DocumentStore` handle for a space-manifest session — no bespoke wrapper needed (unlike
     /// `OsWorkflowStore` below, whose only extra logic is workflow-specific node/parameter id-minting);
@@ -441,7 +441,7 @@ pub mod host {
     /// (deterministic across peers replaying the same operation log), (4) break any cycle the previous
     /// rules left behind, (5) drop parameter bindings whose target config field or parameter type no
     /// longer validates. Each rule operates on the edge/binding set the previous one produced.
-    fn reconcile_workflow_document(mut document: workflow::WorkflowDocument) -> (workflow::WorkflowDocument, Vec<SpaceConflict>) {
+    fn reconcile_workflow_snapshot(mut document: workflow::WorkflowSnapshot) -> (workflow::WorkflowSnapshot, Vec<SpaceConflict>) {
         let mut conflicts = Vec::new();
         let mut edges = std::mem::take(&mut document.graph.edges);
         let node_by_id: HashMap<&str, &workflow::WorkflowNode> = document.graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
@@ -547,7 +547,7 @@ pub mod host {
 
     /// @emoji 🌀️ Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
     /// edge with the highest array index — a deterministic proxy for "newest edit" since
-    /// `reconcile_workflow_document` only receives the materialized `WorkflowDocument` by value, not
+    /// `reconcile_workflow_snapshot` only receives the materialized `WorkflowSnapshot` by value, not
     /// per-edge `HybridLogicalTimestamp`s from the edit log. `apply_workflow_operation`'s `ConnectPorts`
     /// handler appends new edges to the end of the vec, so a higher index approximates a later edit;
     /// true HLT-based tie-breaking would need this pass to also see edit history, not just the document.
@@ -610,7 +610,7 @@ pub mod host {
 
     //#region 🔖️OsWorkflowStore
     pub struct OsWorkflowStore {
-        inner: DocumentStore<workflow::WorkflowDocument, workflow::WorkflowMutation>,
+        inner: DocumentStore<workflow::WorkflowSnapshot, workflow::WorkflowMutation>,
         name: String,
     }
 
@@ -630,16 +630,16 @@ pub mod host {
             self.inner.generation()
         }
 
-        pub fn snapshot(&self) -> Result<workflow::WorkflowDocument, VcsError> {
+        pub fn snapshot(&self) -> Result<workflow::WorkflowSnapshot, VcsError> {
             self.inner.snapshot()
         }
 
-        /// @emoji 🤝️ Fresh replay plus `reconcile_workflow_document`'s whole 4(+1)-rule pipeline —
+        /// @emoji 🤝️ Fresh replay plus `reconcile_workflow_snapshot`'s whole 4(+1)-rule pipeline —
         /// invoked explicitly here rather than through `Mutation::reconcile` (a no-op default at the
         /// kernel-crate layer, since two of those rules need the os-core plugin/artifact registry).
-        pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowDocument, Vec<SpaceConflict>), VcsError> {
+        pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowSnapshot, Vec<SpaceConflict>), VcsError> {
             let document = self.inner.snapshot()?;
-            Ok(reconcile_workflow_document(document))
+            Ok(reconcile_workflow_snapshot(document))
         }
 
         pub fn document(&self) -> OsWorkflowArtifactDocument {
@@ -842,7 +842,9 @@ pub mod host {
             if os_space_id_from_backbone_uri(&uri).is_none() {
                 continue;
             }
-            let payload = port.read(&uri)?;
+            let Ok(payload) = port.read(&uri) else {
+                continue;
+            };
             if payload.is_empty() {
                 continue;
             }
@@ -988,7 +990,7 @@ pub mod host {
                         actions: Vec::new(),
                         utilities: Vec::new(),
                         params_schema: None,
-                        document_projection_schema: None,
+                        document_snapshot_schema: None,
                         input_event_schema: None,
                         output_schema: None,
                         capabilities: vec![],
@@ -1043,7 +1045,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_projection_schema: None,
+                    document_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1086,7 +1088,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_projection_schema: None,
+                    document_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1152,7 +1154,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_projection_schema: None,
+                    document_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1274,7 +1276,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_projection_schema: None,
+                    document_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: Vec::new(),
@@ -1323,7 +1325,7 @@ pub mod host {
         }
 
         fn test_workflow_store() -> OsWorkflowStore {
-            OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_document()))
+            OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_snapshot()))
         }
 
         #[test]
@@ -1417,10 +1419,10 @@ pub mod host {
         // `framework/sync/rs/lib.rs` for that layer's own coverage.
 
         // #region 🔖️DslAndOpText
-        /// 🧵️ A representative `WorkflowDocument` exercising every collection: two workflow nodes wired
+        /// 🧵️ A representative `WorkflowSnapshot` exercising every collection: two workflow nodes wired
         /// by one edge, one of each `WorkflowParameter` variant, and one parameter binding — so the DSL
         /// round trip actually covers the workflow encoding, not just an empty-document fixpoint.
-        fn sample_workflow_document() -> workflow::WorkflowDocument {
+        fn sample_workflow_snapshot() -> workflow::WorkflowSnapshot {
             let node_a = workflow::WorkflowNode {
                 id: "app-1".into(),
                 plugin_id: "puzzle".into(),
@@ -1481,7 +1483,7 @@ pub mod host {
                 target_port_id: "app-2:draw.in:in".into(),
                 contract: MediaContract { kind_id: "puzzle.2d.fixture".into(), media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, wire: MediaWireFormat::Document { schema: "puzzle.2d.fixture".into() }, conversion: None },
             };
-            workflow::WorkflowDocument {
+            workflow::WorkflowSnapshot {
                 schema: workflow::S_WORKFLOW_SCHEMA.into(),
                 graph: workflow::Workflow { schema: workflow::WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![edge] },
                 parameters: vec![
@@ -1497,26 +1499,26 @@ pub mod host {
             }
         }
 
-        /// 📜️ `📚️examples/🎬️demo.workflow-document` is the handcrafted DSL-text fixture for `WorkflowDocument`
+        /// 📜️ `📚️examples/🎬️demo.workflow-document` is the handcrafted DSL-text fixture for `WorkflowSnapshot`
         /// (the `s.workflow` artifact document, replacing the dissolved `📚️examples/🎬️demo.os`).
         #[test]
         fn dsl_round_trips_demo_workflow_example() {
             let text = include_str!("../../📚️examples/🎬️demo.workflow-document");
-            let document = <workflow::WorkflowDocument as store::DocumentDsl>::parse_dsl(text).expect("🎬️demo.workflow-document must parse as WorkflowDocument");
+            let document = <workflow::WorkflowSnapshot as store::DocumentDsl>::parse_dsl(text).expect("🎬️demo.workflow-document must parse as WorkflowSnapshot");
             store::test_support::assert_dsl_round_trip(&document);
             store::test_support::assert_dsl_pack_equivalence(&document);
         }
 
         #[test]
-        fn dsl_round_trips_default_workflow_document() {
-            store::test_support::assert_dsl_round_trip(&workflow::empty_workflow_document());
-            store::test_support::assert_dsl_pack_equivalence(&workflow::empty_workflow_document());
+        fn dsl_round_trips_default_workflow_snapshot() {
+            store::test_support::assert_dsl_round_trip(&workflow::empty_workflow_snapshot());
+            store::test_support::assert_dsl_pack_equivalence(&workflow::empty_workflow_snapshot());
         }
 
         #[test]
-        fn dsl_round_trips_workflow_document_with_graph_and_parameters() {
-            store::test_support::assert_dsl_round_trip(&sample_workflow_document());
-            store::test_support::assert_dsl_pack_equivalence(&sample_workflow_document());
+        fn dsl_round_trips_workflow_snapshot_with_graph_and_parameters() {
+            store::test_support::assert_dsl_round_trip(&sample_workflow_snapshot());
+            store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
         }
 
         #[test]
@@ -1614,7 +1616,7 @@ pub mod host {
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
-            let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_document(), None);
+            let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
             let mut store = DocumentStore::new(envelope);
             store.dispatch(DocumentCommand::Apply { mutations: vec![workflow::WorkflowMutation::SyncNodePorts], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
@@ -2883,15 +2885,15 @@ pub mod workflow {
     // only) is re-exported under a different name because this module's own `validate_workflow` (below)
     // wraps it with the contract-renegotiation check that still needs the artifact registry, which only
     // exists at this layer.
-    // 🧬️ `WorkflowDocument`/`WorkflowMutation`/`WorkflowParameter*`/`WorkflowInput*`/`WorkflowOutputBinding`
+    // 🧬️ `WorkflowSnapshot`/`WorkflowMutation`/`WorkflowParameter*`/`WorkflowInput*`/`WorkflowOutputBinding`
     // absorb os-core's dissolved `OsSnapshot`/`OsMutation`/`instance::OsParameter*` (see `## The
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
     pub use crate::workflow_kernel::{
-        apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_document, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
-        validate_workflow as kernel_validate_workflow, validate_workflow_document, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowDocument, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation,
+        apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
+        validate_workflow as kernel_validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
+        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowSnapshot, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation,
         WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowValidation, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
@@ -3201,7 +3203,7 @@ pub mod workflow {
     /// directly from each node's `WorkflowMediaPort.spec: MediaPortSpec` (no more stringly synthesis
     /// from a separate `OsAppInstance` join). `parameters`/port-id helpers are the kernel `workflow`
     /// crate's own (`workflow::WorkflowParameter`/`workflow::media_port_spec_id`/
-    /// `workflow::workflow_parameter_id_from_port_id`) — `WorkflowDocument.parameters` absorbed the
+    /// `workflow::workflow_parameter_id_from_port_id`) — `WorkflowSnapshot.parameters` absorbed the
     /// dissolved `OsSnapshot.parameters` in W3, see `## The inversion`.
     pub fn build_os_workflow_operator_infos(graph: &Workflow, parameters: &[WorkflowParameter]) -> Vec<OsWorkflowOperatorInfo> {
         let parameter_by_id: HashMap<_, _> = parameters.iter().map(|row| (workflow_parameter_id(row).to_string(), row)).collect();
@@ -4076,7 +4078,7 @@ pub mod registry {
             actions: Vec::new(),
             utilities: Vec::new(),
             params_schema: None,
-            document_projection_schema: None,
+            document_snapshot_schema: None,
             input_event_schema: None,
             output_schema: None,
             capabilities: Vec::new(),
@@ -4209,7 +4211,7 @@ pub mod registry {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_projection_schema: None,
+                    document_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: Vec::new(),
@@ -4276,11 +4278,11 @@ pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneR
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 pub use crate::workflow_kernel::{
-    apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_document,
+    apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
     export_os_app_instance_media, import_os_app_instance_media, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
     os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats,
-    sync_workflow_parameter_ports, validate_workflow, validate_workflow_document, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsMediaExportResult, OsMediaFormat, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowDocument,
+    sync_workflow_parameter_ports, validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
+    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsMediaExportResult, OsMediaFormat, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
     WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };

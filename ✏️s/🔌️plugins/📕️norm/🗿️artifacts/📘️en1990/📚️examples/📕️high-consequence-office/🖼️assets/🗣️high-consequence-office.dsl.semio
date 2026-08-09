@@ -1,5 +1,5 @@
 semio norm.en1990.dsl v1
-g-k=250 resistance-kn=420kN consequence-class=3 annex=en seismic-a-ed-kn=0kN
+g-k=250 resistance-kn=420 consequence-class=3 annex=en seismic-a-ed-kn=0
 q-k [category:TEXT value:NUM] {
   office 60
   partition-walls 12

@@ -12,8 +12,9 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<MathMutation, MathConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -28,8 +29,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/➗️mathematical/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -52,12 +64,26 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📐set-geometry/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
+            #[path = "."]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/➗️mathematical/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+
+            #[path = "../../🗿️artifacts/➗️mathematical/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
         }
 
         #[path = "../../🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/➗️mathematical/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/➗️mathematical/⚙️engine/🦀️component.rs"]

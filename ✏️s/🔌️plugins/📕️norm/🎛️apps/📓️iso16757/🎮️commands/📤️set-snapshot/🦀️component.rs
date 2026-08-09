@@ -1,0 +1,46 @@
+//! 📤️ Iso16757 play app command — replace the whole compliance document.
+
+use crate::artifacts::iso16757::op::Iso16757Mutation;
+use crate::artifacts::iso16757::Iso16757Snapshot;
+use crate::config::{NormConfig, NormConfigMutation};
+use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "set-snapshot")]
+pub struct SetSnapshot {
+    #[dsl(block)]
+    pub snapshot: Iso16757Snapshot,
+}
+//#endregion 🔖️Payload
+
+//#region 🔖️Handler
+pub fn handle(payload: &SetSnapshot, _doc: &DocumentView<'_, Iso16757Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Iso16757Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_snapshot(Iso16757Mutation::SetSnapshot { snapshot: payload.snapshot.clone() }, "setSnapshot")
+}
+//#endregion 🔖️Handler
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::iso16757::op::Iso16757Mutation;
+    use semio_framework_plugin::HistoryView;
+
+    #[test]
+    fn handle_commits_the_payload_document_under_its_action_id() {
+        let projection = Iso16757Snapshot::default();
+        let config = NormConfig::default();
+        let emit = handle(
+            &SetSnapshot { snapshot: Iso16757Snapshot::default() },
+            &DocumentView { snapshot: &projection, history: &HistoryView::empty() },
+            &ConfigView { snapshot: &config },
+        )
+        .expect("handle");
+        assert_eq!(emit.document_mutations, vec![Iso16757Mutation::SetSnapshot { snapshot: Iso16757Snapshot::default() }]);
+        assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
+        assert!(emit.config_mutations.is_empty());
+    }
+}
+//#endregion 🧪️Tests

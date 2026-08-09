@@ -1,0 +1,274 @@
+{
+  "$id": "https://semio.tech/schema/s/layout/layout/artifact.json",
+  "title": "LayoutArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "name",
+    "grid",
+    "paragraphStyles",
+    "characterStyles",
+    "stories",
+    "links",
+    "parentPages",
+    "spreads",
+    "pages",
+    "selectedIds",
+    "activePageId",
+    "engagementInput",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "previewCameraX",
+    "previewCameraY",
+    "previewCameraZoom",
+    "dropPreview",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "name": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "grid": {
+      "$ref": "#/$defs/GridSettings",
+      "x-semio-state": "persistent"
+    },
+    "paragraphStyles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ParagraphStyle"
+      },
+      "x-semio-state": "persistent"
+    },
+    "characterStyles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CharacterStyle"
+      },
+      "x-semio-state": "persistent"
+    },
+    "stories": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TextStory"
+      },
+      "x-semio-state": "persistent"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ImageLink"
+      },
+      "x-semio-state": "persistent"
+    },
+    "parentPages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ParentPage"
+      },
+      "x-semio-state": "persistent"
+    },
+    "spreads": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Spread"
+      },
+      "x-semio-state": "persistent"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Page"
+      },
+      "x-semio-state": "persistent"
+    },
+    "printTarget": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "dataFieldsJson": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activePageId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "previewCameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "previewCameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "previewCameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "dropPreview": {
+      "$ref": "#/$defs/LayoutDropPreviewState",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "GridSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineGrid",
+        "baselineOffset",
+        "snapToBaseline"
+      ],
+      "properties": {
+        "baselineGrid": {
+          "type": "number"
+        },
+        "baselineOffset": {
+          "type": "number"
+        },
+        "snapToBaseline": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LayoutDropPreviewState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "LayoutStringList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ParagraphStyle": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CharacterStyle": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "TextStory": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ImageLink": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ParentPage": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Spread": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Page": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutArtifact": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutParagraphStylesDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutCharacterStylesDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutStoriesDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutLinksDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutParentPagesDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutSpreadsDelta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "LayoutPagesDelta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

@@ -4,7 +4,7 @@
 //! the `#[cfg(target_arch = "wasm32")]` on this file's `mod wasm;` declaration in `📦️glue.rs`).
 
 use crate::artifacts::sequence::engine::{sequence_camera_from_dag, SequenceHost};
-use crate::artifacts::sequence::{SequenceFixture, SlotRef};
+use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -48,8 +48,8 @@ impl SequenceSession {
 
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-        let fixture: SequenceFixture = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.replace_fixture(fixture).map_err(|err| JsValue::from_str(&err.to_string()))
+        let fixture: SequenceSnapshot = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        self.state.borrow_mut().host.replace_snapshot(fixture).map_err(|err| JsValue::from_str(&err.to_string()))
     }
 
     #[wasm_bindgen(js_name = fixtureJson)]

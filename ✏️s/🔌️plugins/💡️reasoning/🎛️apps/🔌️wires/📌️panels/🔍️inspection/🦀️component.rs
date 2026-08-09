@@ -1,7 +1,7 @@
 //! 🔍️ Wires play app panel — the inspector: selected node fields, or a document-wide summary.
 
 use crate::artifacts::wires::engine::{fixture_json_string, fixture_nodes, wires_identities, DefaultWiresExtension};
-use crate::artifacts::wires::{MindmapWiresDocument, MINDMAP_WIRES_SCHEMA};
+use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
 use semio_framework_plugin::{ui_inspector_readonly_field, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -21,7 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
+pub fn render(document: &WiresSnapshot, selected: &[String]) -> UiNode {
     let selected_nodes: Vec<&dsl::DslValue> = selected.iter().filter_map(|id| fixture_nodes(&document.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();

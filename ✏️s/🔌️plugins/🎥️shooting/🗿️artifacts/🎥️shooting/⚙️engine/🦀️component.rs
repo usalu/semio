@@ -410,16 +410,8 @@ impl protocol::ArtifactEngine for ShootingEngine {
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️SchemaRegistry
-use std::sync::{Mutex, OnceLock};
-
-static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
-
 /// 📌️ Registers the fifteen handcrafted schema leaves for `s.shooting.shooting`.
 pub fn register_artifact_schema() {
-    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("artifact schema registry")
-        .register(crate::artifacts::shooting::schema::shooting_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::shooting::schema::shooting_artifact_schema_descriptor());
 }
 //#endregion 🔖️SchemaRegistry

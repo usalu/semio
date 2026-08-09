@@ -1,29 +1,33 @@
-//! ⚡️ Mathematical artifact — OpText/OpBinary for `MathMutation`.
+//! ⚡️ Mathematical artifact — OpText/OpBinary for `MathematicalMutation`.
 
-pub use crate::artifacts::mathematical::mutations::{apply_math_mutation, inverse_math_mutation, MathMutation};
+pub use crate::artifacts::mathematical::mutations::{apply_mathematical_mutation, inverse_mathematical_mutation, MathematicalMutation};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::mathematical::dsl::{math_graph_from_dsl, math_graph_to_dsl, MathGraphDsl};
-use crate::artifacts::mathematical::MathGeometry;
+use crate::artifacts::mathematical::dsl::{math_graph_from_dsl, math_graph_to_dsl, mathematical_snapshot_from_dsl, mathematical_snapshot_to_dsl, MathematicalGraphDsl, MathematicalSnapshotDsl};
+use crate::artifacts::mathematical::MathematicalGeometry;
 
 //#region 🔖️OpText
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum MathMutationDsl {
+enum MathematicalMutationDsl {
     SetGraph {
         #[dsl(block)]
-        graph: MathGraphDsl,
+        graph: MathematicalGraphDsl,
     },
     SetGeometry {
         #[dsl(block)]
-        geometry: MathGeometry,
+        geometry: MathematicalGeometry,
+    },
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: MathematicalSnapshotDsl,
     },
 }
 
-impl protocol::OpText for MathMutationDsl {
+impl protocol::OpText for MathematicalMutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -47,7 +51,7 @@ impl protocol::OpText for MathMutationDsl {
     }
 }
 
-impl protocol::OpBinary for MathMutationDsl {
+impl protocol::OpBinary for MathematicalMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -56,39 +60,45 @@ impl protocol::OpBinary for MathMutationDsl {
     }
 }
 
-fn math_mutation_to_dsl(mutation: &MathMutation) -> MathMutationDsl {
+fn mathematical_mutation_to_dsl(mutation: &MathematicalMutation) -> MathematicalMutationDsl {
     match mutation {
-        MathMutation::SetGraph { graph } => MathMutationDsl::SetGraph { graph: math_graph_to_dsl(graph) },
-        MathMutation::SetGeometry { geometry } => MathMutationDsl::SetGeometry { geometry: geometry.clone() },
+        MathematicalMutation::SetGraph { graph } => MathematicalMutationDsl::SetGraph { graph: math_graph_to_dsl(graph) },
+        MathematicalMutation::SetGeometry { geometry } => MathematicalMutationDsl::SetGeometry { geometry: geometry.clone() },
+        MathematicalMutation::SetSnapshot { snapshot } => MathematicalMutationDsl::SetSnapshot {
+            snapshot: mathematical_snapshot_to_dsl(snapshot),
+        },
     }
 }
 
-fn math_mutation_from_dsl(mutation: MathMutationDsl) -> Result<MathMutation, String> {
+fn mathematical_mutation_from_dsl(mutation: MathematicalMutationDsl) -> Result<MathematicalMutation, String> {
     Ok(match mutation {
-        MathMutationDsl::SetGraph { graph } => MathMutation::SetGraph { graph: math_graph_from_dsl(graph)? },
-        MathMutationDsl::SetGeometry { geometry } => MathMutation::SetGeometry { geometry },
+        MathematicalMutationDsl::SetGraph { graph } => MathematicalMutation::SetGraph { graph: math_graph_from_dsl(graph)? },
+        MathematicalMutationDsl::SetGeometry { geometry } => MathematicalMutation::SetGeometry { geometry },
+        MathematicalMutationDsl::SetSnapshot { snapshot } => MathematicalMutation::SetSnapshot {
+            snapshot: mathematical_snapshot_from_dsl(snapshot)?,
+        },
     })
 }
 
-impl protocol::OpText for MathMutation {
+impl protocol::OpText for MathematicalMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let dsl_mutation = <MathMutationDsl as protocol::OpText>::parse_op(line)?;
-        math_mutation_from_dsl(dsl_mutation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
+        let dsl_mutation = <MathematicalMutationDsl as protocol::OpText>::parse_op(line)?;
+        mathematical_mutation_from_dsl(dsl_mutation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        <MathMutationDsl as protocol::OpText>::print_op(&math_mutation_to_dsl(self))
+        <MathematicalMutationDsl as protocol::OpText>::print_op(&mathematical_mutation_to_dsl(self))
     }
 }
 
-impl protocol::OpBinary for MathMutation {
+impl protocol::OpBinary for MathematicalMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        math_mutation_to_dsl(self).encode_op()
+        mathematical_mutation_to_dsl(self).encode_op()
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let dsl_mutation = MathMutationDsl::decode_op(bytes)?;
-        math_mutation_from_dsl(dsl_mutation).map_err(|message| protocol::ProtocolError::Malformed { what: "math mutation", offset: 0, detail: message })
+        let dsl_mutation = MathematicalMutationDsl::decode_op(bytes)?;
+        mathematical_mutation_from_dsl(dsl_mutation).map_err(|message| protocol::ProtocolError::Malformed { what: "mathematical mutation", offset: 0, detail: message })
     }
 }
 //#endregion 🔖️OpText

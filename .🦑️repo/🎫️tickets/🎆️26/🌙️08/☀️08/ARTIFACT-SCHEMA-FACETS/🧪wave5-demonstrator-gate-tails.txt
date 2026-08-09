@@ -1,0 +1,61 @@
+=== cargo check ===
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/././../../🗿️artifacts/🗂️curate/⚙️engine/🦀️component.rs:31:58
+   |
+31 |     let registry = CURATE_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+   |                                                          ^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+31 -     let registry = CURATE_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+31 +     let registry = CURATE_SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
+   |
+
+warning: `semio-s-plugin-sourcing` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-sourcing` to apply 5 suggestions)
+    Checking semio-s-plugin-demonstrator v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 26.69s
+    Blocking waiting for file lock on package cache
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+=== cargo test ===
+
+warning: `semio-s-plugin-gis` (lib) generated 7 warnings (run `cargo fix --lib -p semio-s-plugin-gis` to apply 7 suggestions)
+warning: `semio-s-plugin-puzzle` (lib) generated 76 warnings (run `cargo fix --lib -p semio-s-plugin-puzzle` to apply 56 suggestions)
+warning: `semio-s-plugin-procedural` (lib) generated 28 warnings (run `cargo fix --lib -p semio-s-plugin-procedural` to apply 28 suggestions)
+   Compiling semio-s-plugin-demonstrator v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 40.52s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_demonstrator-5aaaafdcdcdf6f4b)
+
+running 16 tests
+test artifacts::playground::engine::tests::engine_owns_real_artifact ... ok
+test artifacts::playground::engine::tests::empty_snapshot_matches_schema ... ok
+test artifacts::playground::diff::component::tests::empty_diff_is_a_no_operation ... ok
+test panes::bearbeiten::tests::document_from_mesh_always_refuses ... ok
+test artifacts::playground::op::tests::playground_mutation_op_text_round_trips ... ok
+test panes::bearbeiten::tests::mesh_from_document_rejects_a_non_document_payload ... ok
+test artifacts::playground::dsl::tests::default_example_dsl_round_trips ... ok
+test artifacts::playground::dsl::tests::playground_snapshot_dsl_round_trips ... ok
+test artifacts::playground::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::playground::mutations::component::tests::playground_mutation_round_trips_store ... ok
+test artifacts::playground::snapshot::pack::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::playground::snapshot::pack::tests::playground_snapshot_dsl_pack_equivalence ... ok
+test panes::bearbeiten::tests::mesh_from_document_replays_a_default_document ... ok
+test panes::component::tests::every_pane_declares_a_document_schema ... ok
+test panes::component::tests::bundle_registers_the_six_demonstrator_panes ... ok
+test panes::component::tests::bundle_keeps_its_plugin_identity ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+=== policy rg ===
+(end policy rg)
+=== registry rg ===
+(end registry rg)
+=== registry demonstrator (any) ===
+  - 🎪️demonstrator: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs

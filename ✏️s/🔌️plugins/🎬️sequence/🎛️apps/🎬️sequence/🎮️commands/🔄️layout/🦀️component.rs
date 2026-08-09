@@ -3,7 +3,7 @@
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::SequenceFixture;
+use crate::artifacts::sequence::SequenceSnapshot;
 use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,9 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        let orientation = orientation_from_config(&cfg.projection.orientation);
-        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        let orientation = orientation_from_config(&cfg.snapshot.orientation);
+        Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
             let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
             let _ = host.reorganize(&opts);
         })))
@@ -49,7 +49,7 @@ pub mod set_orientation {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetOrientation, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetOrientation, _doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetOrientation { value: payload.value.clone() }]))
     }
 }
@@ -72,7 +72,7 @@ mod tests {
         use semio_framework_plugin::VcsDocumentApp;
 
         pub fn move_all_steps_to_origin(app: &mut VcsDocumentApp<crate::apps::sequence::SequencePlayApp>) {
-            let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
+            let ids: Vec<String> = app.snapshot().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
             for id in &ids {
                 dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }));
             }
@@ -85,7 +85,7 @@ mod tests {
         dispatch(&mut app, SequenceCommand::SetOrientation(SetOrientation { value: "topBottom".into() }));
         move_all_steps_to_origin(&mut app);
         dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {}));
-        let ys: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.y).collect();
+        let ys: Vec<f64> = app.snapshot().expect("projection").steps.iter().map(|step| step.y).collect();
         assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
     }
 
@@ -94,7 +94,7 @@ mod tests {
         let mut app = new_app();
         move_all_steps_to_origin(&mut app);
         dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {}));
-        let xs: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.x).collect();
+        let xs: Vec<f64> = app.snapshot().expect("projection").steps.iter().map(|step| step.x).collect();
         assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
     }
 }

@@ -1,7 +1,10 @@
 /** writer facet WASM facades */
 export * as writer_diff from "../../🗿️artifacts/✒️writer/🔺️diff/🟦️component.ts";
+export * as writer_diff_schema from "../../🗿️artifacts/✒️writer/🔺️diff/🧬️schema/🟦️component.ts";
 export * as writer_dsl from "../../🗿️artifacts/✒️writer/🗣️dsl/🟦️component.ts";
-export * as writer_pack from "../../🗿️artifacts/✒️writer/🎒️pack/🟦️component.ts";
+export * as writer_pack from "../../🗿️artifacts/✒️writer/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as writer_schema from "../../🗿️artifacts/✒️writer/🧬️schema/🟦️component.ts";
+export * as writer_snapshot_schema from "../../🗿️artifacts/✒️writer/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as writer_op from "../../🗿️artifacts/✒️writer/🔧️op/🟦️component.ts";
 export * as writer_mutations from "../../🗿️artifacts/✒️writer/🧬️mutations/🟦️component.ts";
 export * as writer_spr from "../../🗿️artifacts/✒️writer/📡️spr/🟦️component.ts";

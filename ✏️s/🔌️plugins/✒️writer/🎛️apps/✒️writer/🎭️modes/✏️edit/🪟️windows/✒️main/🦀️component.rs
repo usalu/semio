@@ -5,7 +5,7 @@ use crate::apps::writer::modes::edit::windows::main::options;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::apps::writer::editor_hover_context;
 use crate::artifacts::writer::engine::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, language_diagnostics_json, language_tokens_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 
@@ -30,7 +30,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -44,7 +44,7 @@ pub fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterProjection, config: &WriterConfig) -> UiNode {
+pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
     let is_jack = document.language_id == "jack";
     let selection = config.editor_selection.clone().unwrap_or(crate::apps::writer::config::WriterEditorSelection { start: 0, end: 0 });
     let cursor = selection.end;

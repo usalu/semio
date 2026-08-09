@@ -1,9 +1,9 @@
 //! 📄️ Mathematical play app commands — replacing the whole document (graph + geometry) in one go.
 
-use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
-use crate::artifacts::mathematical::dsl::MathGraphDsl;
-use crate::artifacts::mathematical::op::MathMutation;
-use crate::artifacts::mathematical::{MathGeometry, MathProjection};
+use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use crate::artifacts::mathematical::dsl::MathematicalGraphDsl;
+use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,22 +15,22 @@ pub mod set_document {
     #[dsl(keyword = "set-document")]
     pub struct SetDocument {
         #[dsl(block)]
-        pub graph: MathGraphDsl,
+        pub graph: MathematicalGraphDsl,
         #[dsl(block)]
-        pub geometry: MathGeometry,
+        pub geometry: MathematicalGeometry,
     }
 
-    pub fn handle(payload: &SetDocument, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
-        let projection = doc.projection;
+    pub fn handle(payload: &SetDocument, doc: &DocumentView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+        let projection = doc.snapshot;
         let Ok(graph) = crate::artifacts::mathematical::dsl::math_graph_from_dsl(payload.graph.clone()) else {
             return Ok(Emit::default());
         };
         let mut operations = Vec::new();
         if graph != projection.graph {
-            operations.push(MathMutation::SetGraph { graph });
+            operations.push(MathematicalMutation::SetGraph { graph });
         }
         if payload.geometry != projection.geometry {
-            operations.push(MathMutation::SetGeometry { geometry: payload.geometry.clone() });
+            operations.push(MathematicalMutation::SetGeometry { geometry: payload.geometry.clone() });
         }
         Ok(Emit::mutations(operations))
     }
@@ -42,15 +42,15 @@ pub mod set_document {
 mod tests {
     use super::set_document;
     use crate::apps::mathematical::testkit::{dispatch, math_app};
-    use crate::apps::mathematical::MathCommand;
-    use crate::artifacts::mathematical::MathGeometry;
+    use crate::apps::mathematical::MathematicalCommand;
+    use crate::artifacts::mathematical::MathematicalGeometry;
 
     #[test]
     fn set_document_replaces_graph_and_geometry() {
         let mut app = math_app();
-        let geometry = MathGeometry { points: vec![crate::artifacts::mathematical::MathPoint { x: 1.0, y: 2.0 }] };
-        dispatch(&mut app, MathCommand::SetDocument(set_document::SetDocument { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() }));
-        let projection = app.projection().expect("projection");
+        let geometry = MathematicalGeometry { points: vec![crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 }] };
+        dispatch(&mut app, MathematicalCommand::SetDocument(set_document::SetDocument { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() }));
+        let projection = app.snapshot().expect("projection");
         assert_eq!(projection.graph.algorithm, "components");
         assert_eq!(projection.geometry, geometry);
     }

@@ -670,10 +670,11 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "en1990.document",
         extension: Some("en1990"),
-        role: dsl::LanguageRole::En1990Snapshot,
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
@@ -721,3 +722,13 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("en1990.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.en1990`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::en1990::schema::en1990_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

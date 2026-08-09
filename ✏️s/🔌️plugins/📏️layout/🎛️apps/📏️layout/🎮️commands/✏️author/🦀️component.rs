@@ -4,7 +4,7 @@
 use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::artifacts::layout::engine::text_to_rgba;
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{Frame, FramePatch, ImageLinkPatch, LayoutDocument, PageColumns, PageMargins, PagePatch, TextStoryPatch};
+use crate::artifacts::layout::{Frame, FramePatch, ImageLinkPatch, LayoutSnapshot, PageColumns, PageMargins, PagePatch, TextStoryPatch};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -44,16 +44,15 @@ pub mod add_frame {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "add-frame")]
     pub struct AddFrame {
         pub kind: String,
         pub x: Option<f64>,
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let page_id = config.active_page_id.clone();
         let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
             return Ok(Emit::default());
@@ -105,9 +104,9 @@ pub mod add_page {
     #[dsl(keyword = "add-page")]
     pub struct AddPage {}
 
-    pub fn handle(_payload: &AddPage, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &AddPage, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
         let (width, height, spread_id, parent_page_id, margins, columns) = template.map_or(
             (595.0, 842.0, "spread-1".into(), None, PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 }, PageColumns { count: 1, gutter: 0.0 }),
@@ -151,10 +150,10 @@ pub mod patch_page {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchPage, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.projection.active_page_id.clone());
+    pub fn handle(payload: &PatchPage, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
         match page_patch_for_field(&payload.field, &payload.value) {
-            Some(patch) if doc.projection.pages.iter().any(|page| page.id == page_id) => Ok(Emit::mutations(vec![LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch })])),
+            Some(patch) if doc.snapshot.pages.iter().any(|page| page.id == page_id) => Ok(Emit::mutations(vec![LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch })])),
             _ => Ok(Emit::default()),
         }
     }
@@ -174,9 +173,9 @@ pub mod patch_frame {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchFrame, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let document = doc.projection;
-        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.projection.active_page_id.clone());
+    pub fn handle(payload: &PatchFrame, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
         if payload.frame_id.is_empty() {
             return Ok(Emit::default());
         }
@@ -237,17 +236,17 @@ mod tests {
     #[test]
     fn add_frame_action_appends_rect() {
         let mut app = layout_app();
-        let before = app.projection().expect("projection").pages[0].frames.len();
+        let before = app.snapshot().expect("projection").pages[0].frames.len();
         let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
-        assert_eq!(result.document_mutations.len(), 1);
-        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
+        assert_eq!(result.mutations.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
     }
 
     #[test]
     fn undo_redo_round_trips_add_frame() {
         let mut app = layout_app();
-        let before = app.projection().expect("projection").pages[0].frames.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.projection().expect("projection").pages[0].frames.len(), before, before + 1);
+        let before = app.snapshot().expect("projection").pages[0].frames.len();
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1);
     }
 
     #[test]
@@ -255,22 +254,22 @@ mod tests {
         let mut app = layout_app();
         for (field, value) in [("marginTop", 60.0), ("marginRight", 40.0), ("marginBottom", 60.0), ("marginLeft", 40.0), ("columnsGutter", 18.0)] {
             let result = dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() }));
-            assert_eq!(result.document_mutations.len(), 1, "field {field} should apply");
+            assert_eq!(result.mutations.len(), 1, "field {field} should apply");
         }
         dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "columnsCount".into(), value: "3".into() }));
-        let page = app.projection().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
+        let page = app.snapshot().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
         assert_eq!(page.columns.count, 3);
     }
 
     #[test]
     fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = layout_app();
-        let before = app.projection().expect("projection").pages[0].frames.len();
+        let before = app.snapshot().expect("projection").pages[0].frames.len();
         dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
         let frame_id = format!("frame-{}", before + 1);
         let result = dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: frame_id.clone(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }));
-        assert_eq!(result.document_mutations.len(), 1);
-        let doc = app.projection().expect("projection");
+        assert_eq!(result.mutations.len(), 1);
+        let doc = app.snapshot().expect("projection");
         let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
         let Frame::Rect { fill, .. } = frame else { panic!("expected rect frame") };
         assert_eq!(fill.unwrap(), [0.5, 0.4, 0.3, 1.0]);
@@ -280,11 +279,11 @@ mod tests {
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() }));
-        let story = app.projection().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
+        let story = app.snapshot().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
         assert_eq!(story.content, "Edited story body.");
 
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "wrapMode".into(), value: "contour".into() }));
-        let doc = app.projection().expect("projection");
+        let doc = app.snapshot().expect("projection");
         let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
         let Frame::Text { wrap_mode, .. } = frame else { panic!("expected text frame") };
         assert_eq!(wrap_mode, "contour");
@@ -294,7 +293,7 @@ mod tests {
     fn patch_frame_supports_image_link_path() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() }));
-        let link = app.projection().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();
+        let link = app.snapshot().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();
         assert_eq!(link.path, "assets/updated.png");
     }
 }

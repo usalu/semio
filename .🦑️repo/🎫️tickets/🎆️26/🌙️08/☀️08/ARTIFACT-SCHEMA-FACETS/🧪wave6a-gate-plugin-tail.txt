@@ -1,0 +1,2 @@
+warning: `semio-framework-plugin` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2.75s

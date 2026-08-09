@@ -5,7 +5,7 @@
 
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeDocument;
+use crate::artifacts::home::SHomeSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 
 //#region 🔖️NavigateVirtualFileSystemNode
@@ -19,7 +19,7 @@ pub mod navigate_virtual_file_system_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let space_id = payload.node_id.strip_prefix("studio:").unwrap_or(&payload.node_id);
         eprintln!("[DEBUG] home navigateVirtualFileSystemNode id={space_id}");
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }))
@@ -39,8 +39,8 @@ pub mod delete_virtual_file_system_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-        let generation = doc.projection.catalog_generation;
+    pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+        let generation = doc.snapshot.catalog_generation;
         match payload.node_id.strip_prefix("studio:") {
             Some(space_id) => {
                 let draft_port = crate::apps::home::draft_backbone_port();
@@ -63,7 +63,7 @@ pub mod go_home {
     #[dsl(keyword = "go-home")]
     pub struct GoHome {}
 
-    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
     }
 }
@@ -77,9 +77,9 @@ mod tests {
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
         use crate::apps::home::HomeCommand;
-        store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::GoHome(go_home::GoHome {}));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::GoHome(go_home::GoHome {}));
     }
 }
 //#endregion 🧪️Tests

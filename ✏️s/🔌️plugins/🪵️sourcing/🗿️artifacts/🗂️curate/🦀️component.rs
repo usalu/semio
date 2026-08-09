@@ -5,6 +5,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 use serde::{Deserialize, Serialize};
 
 pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
+pub use crate::artifacts::curate::snapshot::schema::CurateSnapshot;
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
@@ -80,7 +81,7 @@ pub struct TableSort {
     pub direction: SortDirection,
 }
 
-/// 🔍️ The pool table's active filter set — narrows `CurateDocument::stock` down to `filtered_stock()`.
+/// 🔍️ The pool table's active filter set — narrows `CurateSnapshot::stock` down to `filtered_stock()`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Filters {
@@ -105,83 +106,6 @@ pub struct CuratedItem {
     pub object_id: String,
     pub count: u32,
 }
-
-/// 🛒️ The curate document: a stock of catalogue kinds ∘ a curated set. `filters` (search/sort) and the
-/// selected-object runtime pointer are session-only view state, not VCS'd content — they live on
-/// `crate::apps::curate::config::SourcingCurateConfig` (the `filters` field reuses the `Filters` type
-/// above verbatim; the runtime pointer is a plain `selected_object_id: Option<String>` config field).
-///
-/// Query/mutation logic over this document (`filtered_stock`, `curated_count`, `curate_delta`,
-/// `curate_set`) lives in `crate::artifacts::curate::engine` as free functions, not as inherent methods
-/// here, mirroring every other artifact in this taxonomy.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(extension = "curate", layout = "lines")]
-pub struct CurateDocument {
-    #[serde(default)]
-    pub stock: Vec<ObjectKind>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub curated: Vec<CuratedItem>,
-}
-
-pub type SourcingDocument = CurateDocument;
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for CurateDocument {
-    const EXTENSION: &'static str = "curate";
-    fn envelope_id() -> &'static str { "curate" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for CurateDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
 
 //#endregion 🔖️Document
 

@@ -1,7 +1,7 @@
 //! ➖ MindmapWires mutation — `RemoveNode` apply delegate.
-use crate::artifacts::wires::MindmapWiresDocument;
-use crate::artifacts::wires::mutations::MindmapWiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
+use crate::artifacts::wires::mutations::WiresMutation;
 
-pub fn apply(projection: &mut MindmapWiresDocument, mutation: &MindmapWiresMutation) {
-    crate::artifacts::wires::mutations::apply_mindmap_wires_mutation(projection, mutation);
+pub fn apply(projection: &mut WiresSnapshot, mutation: &WiresMutation) {
+    crate::artifacts::wires::mutations::apply_wires_mutation(projection, mutation);
 }

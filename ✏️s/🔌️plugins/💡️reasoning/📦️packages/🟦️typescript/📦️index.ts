@@ -1,6 +1,9 @@
 /** reasoning facet WASM facades */
 export * as wires_diff from "../../🗿️artifacts/🔌️wires/🔺️diff/🟦️component.ts";
+export * as wires_diff_schema from "../../🗿️artifacts/🔌️wires/🔺️diff/🧬️schema/🟦️component.ts";
 export * as wires_dsl from "../../🗿️artifacts/🔌️wires/🗣️dsl/🟦️component.ts";
-export * as wires_pack from "../../🗿️artifacts/🔌️wires/🎒️pack/🟦️component.ts";
+export * as wires_pack from "../../🗿️artifacts/🔌️wires/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as wires_schema from "../../🗿️artifacts/🔌️wires/🧬️schema/🟦️component.ts";
+export * as wires_snapshot_schema from "../../🗿️artifacts/🔌️wires/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as wires_op from "../../🗿️artifacts/🔌️wires/🔧️op/🟦️component.ts";
 export * as wires_spr from "../../🗿️artifacts/🔌️wires/📡️spr/🟦️component.ts";

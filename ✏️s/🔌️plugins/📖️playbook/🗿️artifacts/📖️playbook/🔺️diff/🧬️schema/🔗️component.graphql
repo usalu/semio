@@ -1,0 +1,75 @@
+# 🧬️ Playbook diff schema — sparse field delta.
+
+type PlaybookDiff {
+  artifact: PlaybookArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  version: String @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  steps: PlaybookStepsDelta @state(class: PERSISTENT)
+  selectedIds: PlaybookStringList @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+  contributionsJson: String @state(class: LOCAL_UI)
+}
+
+type PlaybookStringList {
+  values: [String!]!
+}
+
+type PlaybookStepsDelta {
+  added: [PlaybookStep!]!
+  removed: [String!]!
+  patched: [PlaybookStepPatchEntry!]!
+  reordered: [String!]
+}
+
+type PlaybookBlocksDelta {
+  added: [PlaybookBlock!]!
+  removed: [String!]!
+  patched: [PlaybookBlockPatchEntry!]!
+  reordered: [String!]
+}
+
+type PlaybookStepPatchEntry {
+  id: String!
+  patch: PlaybookStepPatch!
+}
+
+type PlaybookBlockPatchEntry {
+  id: String!
+  patch: PlaybookBlockPatch!
+}
+
+type PlaybookStepPatch {
+  title: String
+  description: String
+  blocks: PlaybookBlocksDelta
+}
+
+type PlaybookBlockPatch {
+  block: PlaybookBlock
+}
+
+type PlaybookArtifact {
+  schema: String!
+  id: String!
+  version: String!
+  title: String
+  steps: [PlaybookStep!]!
+  selectedIds: [String!]!
+  locale: String!
+  contributionsJson: String!
+}
+
+type PlaybookStep {
+  id: String!
+  title: String!
+  description: String
+  blocks: [PlaybookBlock!]!
+}
+
+type PlaybookBlock {
+  id: String!
+  label: String!
+  kind: String!
+}

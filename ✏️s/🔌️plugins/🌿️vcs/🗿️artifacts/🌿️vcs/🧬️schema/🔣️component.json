@@ -1,0 +1,57 @@
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/artifact.json",
+  "title": "VcsArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "counter",
+    "notes",
+    "status",
+    "tags",
+    "selectedCheckpointIds",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "counter": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "persistent"
+    },
+    "notes": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "status": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckpointIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

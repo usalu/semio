@@ -1,0 +1,28 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.diff;
+message SequenceDiff {
+  optional SequenceArtifact artifact = 1; // @state persistent
+  optional string schema = 2; // @state persistent
+  optional SequenceStepsDelta steps = 3; // @state persistent
+  optional SequenceEdgesDelta edges = 4; // @state persistent
+  optional SequenceStringList selected_step_ids = 5; // @state shared-ui
+  optional string last_run_json = 6; // @state local-ui
+  optional string orientation = 7; // @state local-ui
+  optional SequenceCamera camera = 8; // @state local-ui
+  optional string locale = 9; // @state local-ui
+}
+message SequenceStringList { repeated string values = 1; }
+message SequenceStepsDelta { repeated SequenceStep added = 1; repeated string removed = 2; repeated SequenceStepPatchEntry patched = 3; repeated string reordered = 4; }
+message SequenceEdgesDelta { repeated SequenceEdge added = 1; repeated string removed = 2; repeated SequenceEdgePatchEntry patched = 3; repeated string reordered = 4; }
+message SequenceStepPatchEntry { string id = 1; SequenceStepPatch patch = 2; }
+message SequenceEdgePatchEntry { string id = 1; SequenceEdgePatch patch = 2; }
+message SequenceStep { string id = 1; string kind = 2; string params_json = 3; double x = 4; double y = 5; optional SlotRef slot = 6; bool collapsed = 7; }
+message SequenceEdge { string id = 1; string from = 2; string to = 3; }
+message SlotRef { string owner = 1; string name = 2; }
+message SequenceStepPatch { optional string params_json = 1; optional double x = 2; optional double y = 3; optional bool collapsed = 4; }
+message SequenceEdgePatch { optional string from = 1; optional string to = 2; }
+message SequenceCamera { double x = 1; double y = 2; double zoom = 3; }
+message SequenceArtifact {
+  string schema = 1; repeated SequenceStep steps = 2; repeated SequenceEdge edges = 3;
+  repeated string selected_step_ids = 4; string last_run_json = 5; string orientation = 6; SequenceCamera camera = 7; string locale = 8;
+}

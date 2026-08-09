@@ -1166,14 +1166,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "en1993.document",
         extension: Some("en1993"),
-        role: dsl::LanguageRole::En1993Snapshot,
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1993.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1202,8 +1203,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1993.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -1217,3 +1218,13 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("en1993.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.en1993`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::en1993::schema::en1993_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

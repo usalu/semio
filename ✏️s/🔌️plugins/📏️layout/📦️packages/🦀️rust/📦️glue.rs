@@ -8,6 +8,7 @@
 //! leaf path dangles. Do not inline any component file back into this one: the taxonomy validator and the
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
+extern crate semio_framework_schema as schema;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
@@ -29,8 +30,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/📏️layout/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/📏️layout/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/📏️layout/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -104,10 +116,16 @@ pub mod artifacts {
             }
         }
 
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/📏️layout/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/📏️layout/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
         #[path = "../../🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/📏️layout/📡️spr/🦀️component.rs"]
         pub mod spr;
 

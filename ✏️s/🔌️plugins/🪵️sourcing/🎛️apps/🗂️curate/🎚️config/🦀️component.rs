@@ -2,7 +2,7 @@
 //! (`SourcingCurateConfigMutation`).
 //!
 //! This is APP state, not document state: `filters` (search/sort) and the selected-object runtime
-//! pointer used to live on `CurateDocument` itself (`Filters`/`CurateRuntime`) but are session-only view
+//! pointer used to live on `CurateSnapshot` itself (`Filters`/`CurateRuntime`) but are session-only view
 //! state, not VCS'd content — both moved here so they round-trip through their own real `DocumentStore`
 //! (with a real `backwards`) instead of polluting the VCS'd document. `locale` is the config-derived
 //! counterpart to a host-pushed `ViewModel.locale` — `DocumentApp::render`/`handle` no longer receive a
@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sourcingcuratecfg")]
+#[dsl(id = "curate.config")]
 #[dsl(layout = "lines")]
 pub struct SourcingCurateConfig {
     /// 🔍️ The pool table's active filter/search/sort state.
@@ -281,6 +282,7 @@ mod tests {
             },
             selected_object_id: Some("beam-glulam-gl24h".into()),
             locale: "de-DE".into(),
+            contributions_json: "[]".into(),
         }
     }
 
@@ -313,16 +315,16 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::Snapshot { config: sample_config() });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterQuery { value: "kvh".into() });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterModules { module_ids: vec!["beams".into(), "slabs".into()] });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterTypology { path: vec!["beams".into(), "steel".into()] });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterMinAvailability { value: 7 });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: None });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: Some("beam-glulam-gl24h".into()) });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: None });
-        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::Snapshot { config: sample_config() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterQuery { value: "kvh".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterModules { module_ids: vec!["beams".into(), "slabs".into()] });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterTypology { path: vec!["beams".into(), "steel".into()] });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterMinAvailability { value: 7 });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: None });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: Some("beam-glulam-gl24h".into()) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: None });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

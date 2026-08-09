@@ -1,5 +1,5 @@
-use crate::artifacts::mathematical::{mutations::MathMutation, MathProjection};
+use crate::artifacts::mathematical::{mutations::MathematicalMutation, MathematicalSnapshot};
 
-pub fn inverse(projection: &MathProjection) -> Vec<MathMutation> {
-    vec![MathMutation::SetGraph { graph: projection.graph.clone() }]
+pub fn inverse(snapshot: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    vec![MathematicalMutation::SetGraph { graph: snapshot.graph.clone() }]
 }

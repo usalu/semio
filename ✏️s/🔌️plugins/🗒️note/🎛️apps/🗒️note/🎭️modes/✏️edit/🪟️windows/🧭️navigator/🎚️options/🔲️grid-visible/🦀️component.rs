@@ -2,11 +2,11 @@
 //! Its command handler lives in `🎮️commands/🔲️grid::set_grid_visible`.
 
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(document: &NoteDocument, labels: &NotePlayLabels) -> WindowMeasure {
+pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: "note-navigator-measures.grid-visible".into(),
         icon_id: "layout-grid".into(),

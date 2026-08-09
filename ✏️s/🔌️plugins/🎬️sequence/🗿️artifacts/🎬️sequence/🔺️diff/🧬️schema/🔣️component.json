@@ -1,0 +1,138 @@
+{
+  "$id": "https://semio.tech/schema/s/sequence/sequence/diff.json",
+  "title": "SequenceDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": { "title": "SequenceArtifact", "type": "object", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "steps": { "$ref": "#/$defs/SequenceStepsDelta", "x-semio-state": "persistent" },
+    "edges": { "$ref": "#/$defs/SequenceEdgesDelta", "x-semio-state": "persistent" },
+    "selectedStepIds": { "$ref": "#/$defs/SequenceStringList", "x-semio-state": "shared-ui" },
+    "lastRunJson": { "type": "string", "x-semio-state": "local-ui" },
+    "orientation": { "type": "string", "x-semio-state": "local-ui" },
+    "camera": { "$ref": "#/$defs/SequenceCamera", "x-semio-state": "local-ui" },
+    "locale": { "type": "string", "x-semio-state": "local-ui" }
+  },
+  "$defs": {
+    "SequenceStringList": {
+      "title": "SequenceStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["values"],
+      "properties": { "values": { "type": "array", "items": { "type": "string" } } }
+    },
+    "SequenceStepsDelta": {
+      "title": "SequenceStepsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "patched"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/SequenceStep" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "patched": { "type": "array", "items": { "$ref": "#/$defs/SequenceStepPatchEntry" } },
+        "reordered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "SequenceEdgesDelta": {
+      "title": "SequenceEdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "patched"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdge" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "patched": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdgePatchEntry" } },
+        "reordered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "SequenceStepPatchEntry": {
+      "title": "SequenceStepPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patch"],
+      "properties": {
+        "id": { "type": "string" },
+        "patch": { "$ref": "#/$defs/SequenceStepPatch" }
+      }
+    },
+    "SequenceEdgePatchEntry": {
+      "title": "SequenceEdgePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patch"],
+      "properties": {
+        "id": { "type": "string" },
+        "patch": { "$ref": "#/$defs/SequenceEdgePatch" }
+      }
+    },
+    "SequenceStep": {
+      "title": "SequenceStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "params", "x", "y", "collapsed"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "params": { "type": "object" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "slot": { "$ref": "#/$defs/SlotRef" },
+        "collapsed": { "type": "boolean" }
+      }
+    },
+    "SequenceEdge": {
+      "title": "SequenceEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "SlotRef": {
+      "title": "SlotRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name"],
+      "properties": {
+        "owner": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "SequenceStepPatch": {
+      "title": "SequenceStepPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "params": { "type": "object" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "collapsed": { "type": "boolean" }
+      }
+    },
+    "SequenceEdgePatch": {
+      "title": "SequenceEdgePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "SequenceCamera": {
+      "title": "SequenceCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

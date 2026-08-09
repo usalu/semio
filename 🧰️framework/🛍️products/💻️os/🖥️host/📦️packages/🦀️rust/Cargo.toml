@@ -37,6 +37,7 @@ png = "0.17.16"
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
+zip = { version = "2.4", default-features = false, features = ["deflate"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["bundled"] }
@@ -53,4 +54,4 @@ pretty_assertions = "1.4.1"
 
 [features]
 default = []
-os-host-full = []
+os-host-full = ["dep:zip", "semio-framework-os-kernel/sync"]

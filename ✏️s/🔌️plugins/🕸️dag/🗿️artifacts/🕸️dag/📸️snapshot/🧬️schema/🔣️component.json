@@ -1,0 +1,34 @@
+{
+  "$id": "https://semio.tech/schema/s/dag/dag/snapshot.json",
+  "title": "DagSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "nodes", "edges"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" }, "x-semio-state": "persistent" },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" }, "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "DagNodeSpec": {
+      "title": "DagNodeSpec",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" }
+      }
+    },
+    "DagFixtureEdge": {
+      "title": "DagFixtureEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "target": { "type": "string" }
+      }
+    }
+  }
+}

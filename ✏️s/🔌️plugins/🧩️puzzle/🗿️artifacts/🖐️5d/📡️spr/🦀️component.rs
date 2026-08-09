@@ -38,11 +38,11 @@ mod tests {
 
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle5d::engine::empty_puzzle5d_projection;
+        use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None));
+        let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
         store
             .dispatch(DocumentCommand::Apply {
                 mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
@@ -78,7 +78,7 @@ mod wire_format_guard {
             Puzzle5dMutation::SetFastener { index: 1, fastener },
             Puzzle5dMutation::RemoveFastener { id: "f1".into() },
             Puzzle5dMutation::SetMeta { meta },
-            Puzzle5dMutation::SetDocument { snapshot: document },
+            Puzzle5dMutation::SetSnapshot { snapshot: document },
         ]
     }
 
@@ -92,7 +92,7 @@ mod wire_format_guard {
         "setFastener index=1 fastener { id=f1 source=\"p1:g0\" target=\"p2:g0\" fastener-kind=fk gap=1 shift=2 rise=3 rotation=4 turn=5 tilt=6 } | 101 | 01020402663102666b0570313a67300570323a673002000401010e0d0a0006000106020206030306010405000000000000f03f0505000000000000004006050000000000000840070500000000000010400805000000000000144009050000000000001840",
         "removeFastener id=f1 | 10 | 01030102663101000600",
         "setMeta meta { description=\"a scene\" } | 19 | 0104010761207363656e6501000e0d01000600",
-        "setDocument snapshot { schema=puzzle.5d domain=architecture meta { description=\"\" } kind-compatibility [source:REF target:REF bidirectional:BOOL] { } parts [id:TEXT part-kind:REF part-2d:REC part-3d:REC grips:LIST] { } fasteners [id:TEXT source:TEXT target:TEXT fastener-kind:REF gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } } | 111 | 010503000c6172636869746563747572650970757a7a6c652e356401000e0d06000602010601030e0d0100060005140003000005010005020001061400050000050100050200000300000400000714000a000005010005020005030005040004050004060004070004080004090004",
+        "setSnapshot snapshot { schema=puzzle.5d domain=architecture meta { description=\"\" } kind-compatibility [source:REF target:REF bidirectional:BOOL] { } parts [id:TEXT part-kind:REF part-2d:REC part-3d:REC grips:LIST] { } fasteners [id:TEXT source:TEXT target:TEXT fastener-kind:REF gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } } | 111 | 010503000c6172636869746563747572650970757a7a6c652e356401000e0d06000602010601030e0d0100060005140003000005010005020001061400050000050100050200000300000400000714000a000005010005020005030005040004050004060004070004080004090004",
     ];
 
     /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still

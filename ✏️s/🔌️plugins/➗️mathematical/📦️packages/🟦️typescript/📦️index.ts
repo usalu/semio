@@ -1,7 +1,10 @@
 /** mathematical facet WASM facades */
 export * as mathematical_diff from "../../🗿️artifacts/➗️mathematical/🔺️diff/🟦️component.ts";
+export * as mathematical_diff_schema from "../../🗿️artifacts/➗️mathematical/🔺️diff/🧬️schema/🟦️component.ts";
 export * as mathematical_dsl from "../../🗿️artifacts/➗️mathematical/🗣️dsl/🟦️component.ts";
-export * as mathematical_pack from "../../🗿️artifacts/➗️mathematical/🎒️pack/🟦️component.ts";
-export * as mathematical_op from "../../🗿️artifacts/➗️mathematical/🔧️op/🟦️component.ts";
+export * as mathematical_pack from "../../🗿️artifacts/➗️mathematical/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as mathematical_schema from "../../🗿️artifacts/➗️mathematical/🧬️schema/🟦️component.ts";
+export * as mathematical_snapshot_schema from "../../🗿️artifacts/➗️mathematical/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as mathematical_mutations from "../../🗿️artifacts/➗️mathematical/🧬️mutations/🟦️component.ts";
+export * as mathematical_op from "../../🗿️artifacts/➗️mathematical/🔧️op/🟦️component.ts";
 export * as mathematical_spr from "../../🗿️artifacts/➗️mathematical/📡️spr/🟦️component.ts";

@@ -1,3 +1,81 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio layout.layout.dsl v1
+schema=layout.layout name=Demo
+grid {
+  baseline-grid=12 baseline-offset=0 snap-to-baseline=true
+}
+parent-pages=[ id=parent-1 name=Master width=400 height=500 layer-ids=[ layer-parent ]
+frames {
+  rect id=frame-inherited layer-id=layer-parent stroke=0.4000000059604645,0.5,0.699999988079071,0.800000011920929
+  bounds {
+    x=50 y=50 width=100 height=80 rotation=0
+  }
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-parent Master true false [ frame-inherited ]
+}
+] pages=[ id=page-1 name="Page 1" spread-id=spread-1 parent-page-id=parent-1 width=400 height=500
+margins {
+  top=0 right=0 bottom=0 left=0
+}
+columns {
+  count=1 gutter=0
+}
+layer-ids=[ layer-1 ]
+frames {
+  text id=frame-text-1 layer-id=layer-1 story-id=story-1 columns=1 wrap-mode=box
+  bounds {
+    x=156 y=220 width=80 height=40 rotation=0
+  }
+  inset {
+    x=0 y=0 width=80 height=40
+  }
+  image id=frame-image-1 layer-id=layer-1 link-id=link-missing
+  bounds {
+    x=136 y=435 width=60 height=40 rotation=0
+  }
+  rect id=frame-1 layer-id=layer-1 fill=1,1,1,1
+  bounds {
+    x=10 y=10 width=40 height=40 rotation=0
+  }
+}
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-1 Content true false [ frame-text-1 frame-image-1 frame-1 ]
+}
+overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+id=page-2 name="Page 2" spread-id=spread-1 width=400 height=500
+margins {
+  top=0 right=0 bottom=0 left=0
+}
+columns {
+  count=1 gutter=0
+}
+layer-ids=[ ]
+frames {
+}
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+}
+overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+]
+paragraph-styles [id:TEXT name:TEXT font-family:TEXT font-size:NUM font-weight:UINT leading:NUM tracking:NUM alignment:TEXT] {
+  paragraph.body Body "Layout Sans" 12 400 14.4 0 left
+}
+character-styles [id:TEXT name:TEXT font-family:TEXT font-size:NUM font-weight:UINT italic:BOOL color:TUPLE tracking:NUM] {
+}
+stories [id:TEXT content:TEXT style-runs:TABLE] {
+  story-1 "Hello layout" [ ]
+}
+links [id:TEXT path:TEXT hash:TEXT width:UINT height:UINT dpi:UINT color-profile:TEXT state:TEXT proxy-data-url:TEXT] {
+  link-missing assets/missing.png "sha256:missing" 100 100 300 _ missing _
+}
+spreads [id:TEXT name:TEXT page-ids:LIST] {
+  spread-1 "Spread 1" [ page-1 page-2 ]
+}
+
+
+

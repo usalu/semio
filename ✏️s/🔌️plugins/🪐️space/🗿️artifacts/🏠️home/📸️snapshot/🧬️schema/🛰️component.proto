@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s.space.home.snapshot;
+
+// 🧬️ S Home snapshot schema — persistent fields only.
+
+message SHomeSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  uint64 catalog_generation = 2;
+}

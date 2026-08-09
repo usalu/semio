@@ -15,8 +15,8 @@ use std::collections::{HashMap, HashSet};
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
 
 /// 🪶️ W3 "the inversion" document schema — the persisted `s.workflow` artifact (graph + parameters +
-/// inputs/bindings, see [`WorkflowDocument`]), distinct from `WORKFLOW_SCHEMA` (the bare graph-only
-/// sub-shape still embedded as `WorkflowDocument.graph`). Registered as a builtin artifact kind by
+/// inputs/bindings, see [`WorkflowSnapshot`]), distinct from `WORKFLOW_SCHEMA` (the bare graph-only
+/// sub-shape still embedded as `WorkflowSnapshot.graph`). Registered as a builtin artifact kind by
 /// os-core's `seed_builtin_artifact_kinds`.
 pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
 
@@ -924,10 +924,10 @@ pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParam
 }
 //#endregion 🔖️WorkflowParameters
 
-//#region 🔖️WorkflowDocument
+//#region 🔖️WorkflowSnapshot
 /// 🔌️ One declared collection-level input slot a workflow's nodes can bind an in-port to — `selector`
 /// is a glob matched against collection entry paths at run time (W5's `SpaceRunner` job); this crate
-/// only carries the declaration + validates bindings resolve (`validate_workflow_document`).
+/// only carries the declaration + validates bindings resolve (`validate_workflow_snapshot`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WorkflowInput {
     pub id: String,
@@ -1016,8 +1016,8 @@ pub struct WorkflowOutputBinding {
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-#[dsl(extension = "workflow-document")]
-pub struct WorkflowDocument {
+#[dsl(id = "s.workflow")]
+pub struct WorkflowSnapshot {
     pub schema: String,
     #[dsl(block)]
     pub graph: Workflow,
@@ -1037,16 +1037,79 @@ pub struct WorkflowDocument {
     pub output_bindings: Vec<WorkflowOutputBinding>,
 }
 
-pub fn empty_workflow_document() -> WorkflowDocument {
-    WorkflowDocument { schema: S_WORKFLOW_SCHEMA.into(), graph: empty_workflow(), parameters: Vec::new(), parameter_bindings: Vec::new(), inputs: Vec::new(), input_bindings: Vec::new(), output_bindings: Vec::new() }
+pub fn empty_workflow_snapshot() -> WorkflowSnapshot {
+    WorkflowSnapshot { schema: S_WORKFLOW_SCHEMA.into(), graph: empty_workflow(), parameters: Vec::new(), parameter_bindings: Vec::new(), inputs: Vec::new(), input_bindings: Vec::new(), output_bindings: Vec::new() }
 }
+
+
+//#region 🔖️HandcraftedWorkflowSnapshotCodecs
+/// 🧬️ P6: `DslDocument` emits helpers only — DocumentDsl/DocumentPack are handcrafted here.
+impl store::DocumentDsl for WorkflowSnapshot {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::DocumentPack for WorkflowSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️HandcraftedWorkflowSnapshotCodecs
+
 
 fn workflow_parameter_entity_id(parameter: &WorkflowParameter) -> &str {
     workflow_parameter_id(parameter)
 }
 
 //#region 🔖️WorkflowMutation
-/// ⚡️ One settled `WorkflowDocument` mutation — lifted from os-core's dissolved `OsMutation` (graph/
+/// ⚡️ One settled `WorkflowSnapshot` mutation — lifted from os-core's dissolved `OsMutation` (graph/
 /// parameter arms renamed `*WorkflowNode`/`*WorkflowEdge` -> `*Node`/`*Edge` for brevity now that
 /// there's no sibling `Os*` type to disambiguate from) plus new `DeclareInput`/`RemoveInput`/
 /// `BindInput`/`UnbindInput`/`BindOutput`/`UnbindOutput` variants for the new fields. `SetActiveProgram`/
@@ -1074,7 +1137,7 @@ pub enum WorkflowMutation {
     UnbindOutput { node_id: String, port_id: String },
 }
 
-pub fn apply_workflow_operation(document: &WorkflowDocument, operation: &WorkflowMutation) -> WorkflowDocument {
+pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &WorkflowMutation) -> WorkflowSnapshot {
     let mut next = document.clone();
     match operation {
         WorkflowMutation::AddNode { node } => {
@@ -1178,8 +1241,8 @@ pub enum WorkflowDiff {
     UnbindOutput { node_id: String, port_id: String },
 }
 
-impl protocol::MutationDiff<WorkflowDocument> for WorkflowDiff {
-    fn apply(&self, document: &WorkflowDocument) -> WorkflowDocument {
+impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
+    fn apply(&self, document: &WorkflowSnapshot) -> WorkflowSnapshot {
         let operation = match self {
             WorkflowDiff::Empty => return document.clone(),
             WorkflowDiff::AddNode { node } => WorkflowMutation::AddNode { node: node.clone() },
@@ -1211,10 +1274,10 @@ impl protocol::MutationDiff<WorkflowDocument> for WorkflowDiff {
     }
 }
 
-impl protocol::Mutation<WorkflowDocument> for WorkflowMutation {
+impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
     type Diff = WorkflowDiff;
 
-    fn diff(&self, _document: &WorkflowDocument) -> WorkflowDiff {
+    fn diff(&self, _document: &WorkflowSnapshot) -> WorkflowDiff {
         match self {
             WorkflowMutation::AddNode { node } => WorkflowDiff::AddNode { node: node.clone() },
             WorkflowMutation::RemoveNode { node_id } => WorkflowDiff::RemoveNode { node_id: node_id.clone() },
@@ -1237,7 +1300,7 @@ impl protocol::Mutation<WorkflowDocument> for WorkflowMutation {
         }
     }
 
-    fn inverse(&self, document: &WorkflowDocument) -> Vec<Self> {
+    fn inverse(&self, document: &WorkflowSnapshot) -> Vec<Self> {
         match self {
             WorkflowMutation::AddNode { node } => vec![WorkflowMutation::RemoveNode { node_id: node.id.clone() }],
             // 🧵️ `apply`'s `RemoveNode` arm cascades away every edge/binding touching the node — its
@@ -1316,7 +1379,7 @@ impl protocol::Mutation<WorkflowDocument> for WorkflowMutation {
     // doc already gives for staying registry-free here). Rather than split the four-rule pipeline
     // across two layers (risking a different rule ordering than the one the existing tests pin), the
     // WHOLE graph-reconcile pass — structural rules included — stays a single ordered pipeline at the
-    // os-core layer (`reconcile_workflow_document`, invoked explicitly by `OsWorkflowStore`, not
+    // os-core layer (`reconcile_workflow_snapshot`, invoked explicitly by `OsWorkflowStore`, not
     // through this trait hook). See os-core's `🔖️GraphReconcile` region.
 }
 //#endregion 🔖️WorkflowMutation
@@ -1444,6 +1507,41 @@ fn workflow_mutation_from_dsl(operation: WorkflowMutationDsl) -> WorkflowMutatio
     }
 }
 
+
+impl protocol::OpText for WorkflowMutationDsl {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
+impl protocol::OpBinary for WorkflowMutationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+
 impl protocol::OpText for WorkflowMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(workflow_mutation_from_dsl(<WorkflowMutationDsl as protocol::OpText>::parse_op(line)?))
@@ -1465,13 +1563,13 @@ impl protocol::OpBinary for WorkflowMutation {
 }
 //#endregion 🔖️WorkflowMutationOpText
 
-/// @emoji ✅️ Extends [`validate_workflow`] with the two `WorkflowDocument`-level checks that need the
+/// @emoji ✅️ Extends [`validate_workflow`] with the two `WorkflowSnapshot`-level checks that need the
 /// declared `inputs`/`input_bindings`/`output_bindings` (pure/registry-free, unlike os-core's own
 /// `validate_workflow` wrapper which layers on the contract-renegotiation check): (1) a required node
 /// in-port must have EITHER an incoming edge XOR a `WorkflowInputBinding` targeting it — never both,
 /// never neither; (2) every `input_bindings`/`output_bindings` entry must resolve to a real
 /// `WorkflowInput`/node+port.
-pub fn validate_workflow_document(document: &WorkflowDocument) -> WorkflowValidation {
+pub fn validate_workflow_snapshot(document: &WorkflowSnapshot) -> WorkflowValidation {
     let mut validation = validate_workflow(&document.graph);
 
     let input_ids: HashSet<&str> = document.inputs.iter().map(|input| input.id.as_str()).collect();
@@ -1507,7 +1605,7 @@ pub fn validate_workflow_document(document: &WorkflowDocument) -> WorkflowValida
     validation.ok = validation.errors.is_empty();
     validation
 }
-//#endregion 🔖️WorkflowDocument
+//#endregion 🔖️WorkflowSnapshot
 
 //#region 🔖️RunDocument
 //#region 🔖️RunScalars
@@ -2015,6 +2113,41 @@ fn run_mutation_from_dsl(operation: RunMutationDsl) -> RunMutation {
     }
 }
 
+
+impl protocol::OpText for RunMutationDsl {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
+impl protocol::OpBinary for RunMutationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+
 impl protocol::OpText for RunMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(run_mutation_from_dsl(<RunMutationDsl as protocol::OpText>::parse_op(line)?))
@@ -2183,8 +2316,8 @@ mod tests {
         assert!(deliveries.is_empty());
     }
 
-    //#region 🧪️WorkflowDocumentLaws
-    fn sample_workflow_document() -> WorkflowDocument {
+    //#region 🧪️WorkflowSnapshotLaws
+    fn sample_workflow_snapshot() -> WorkflowSnapshot {
         let node_a = workflow_node("a", vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, Some("kind.a")) }], vec![]);
         let node_b = workflow_node(
             "b",
@@ -2198,7 +2331,7 @@ mod tests {
         // ports from `parameter_bindings`) — an un-synced fixture would make `assert_operation_round_trip`
         // see a spurious port diff on any op whose apply path re-syncs, not a real bug.
         let graph = sync_workflow_parameter_ports(&graph, &parameter_bindings);
-        WorkflowDocument {
+        WorkflowSnapshot {
             schema: S_WORKFLOW_SCHEMA.into(),
             graph,
             parameters: vec![
@@ -2215,8 +2348,8 @@ mod tests {
     }
 
     #[test]
-    fn empty_workflow_document_matches_schema() {
-        let document = empty_workflow_document();
+    fn empty_workflow_snapshot_matches_schema() {
+        let document = empty_workflow_snapshot();
         assert_eq!(document.schema, S_WORKFLOW_SCHEMA);
         assert!(document.graph.nodes.is_empty());
         assert!(document.parameters.is_empty());
@@ -2224,9 +2357,9 @@ mod tests {
     }
 
     #[test]
-    fn workflow_document_dsl_pack_round_trips() {
-        store::test_support::assert_dsl_pack_equivalence(&sample_workflow_document());
-        store::test_support::assert_dsl_pack_equivalence(&empty_workflow_document());
+    fn workflow_snapshot_dsl_pack_round_trips() {
+        store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+        store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
     }
 
     #[test]
@@ -2253,7 +2386,7 @@ mod tests {
 
     #[test]
     fn workflow_operation_backwards_restores_pre_state() {
-        let document = sample_workflow_document();
+        let document = sample_workflow_snapshot();
         // 🧷️ `Remove*` ops are exercised via `*_backwards_restores_cascade_deleted_dependents` below
         // instead of this strict-equality helper: `apply`'s `Add*` counterpart appends to the END of
         // its list, so removing a non-last element and letting `inverse` re-add it changes list
@@ -2278,7 +2411,7 @@ mod tests {
     /// parameter bindings/input bindings/output bindings), not just the bare removed item.
     #[test]
     fn remove_operations_backwards_restores_cascade_deleted_dependents() {
-        let mut document = sample_workflow_document();
+        let mut document = sample_workflow_snapshot();
         // `b` is the last node — removing it also cascade-drops edge `e1` (which targets it).
         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
 
@@ -2300,44 +2433,44 @@ mod tests {
             WorkflowDiff::Empty,
         ];
         for diff in diffs {
-            let applied = protocol::MutationDiff::apply(&diff, &empty_workflow_document());
+            let applied = protocol::MutationDiff::apply(&diff, &empty_workflow_snapshot());
             let _ = applied;
         }
     }
 
     #[test]
-    fn validate_workflow_document_requires_edge_xor_input_binding_on_required_ports() {
-        let mut document = sample_workflow_document();
+    fn validate_workflow_snapshot_requires_edge_xor_input_binding_on_required_ports() {
+        let mut document = sample_workflow_snapshot();
         // 🎯️ Sample fixture wires `a -> b` over `b`'s sole required in-port with NO input binding — ok.
-        assert!(validate_workflow_document(&document).ok, "wired required port with no binding must validate");
+        assert!(validate_workflow_snapshot(&document).ok, "wired required port with no binding must validate");
 
         let binding = WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() };
         document.input_bindings.push(binding.clone());
-        let both = validate_workflow_document(&document);
+        let both = validate_workflow_snapshot(&document);
         assert!(!both.ok);
         assert!(both.errors.iter().any(|error| error.contains("has both a wire and an input binding")), "{:?}", both.errors);
 
         document.graph.edges.clear();
         document.input_bindings.clear();
-        let neither = validate_workflow_document(&document);
+        let neither = validate_workflow_snapshot(&document);
         assert!(!neither.ok);
         assert!(neither.errors.iter().any(|error| error.contains("has neither a wire nor an input binding")), "{:?}", neither.errors);
 
         document.input_bindings.push(binding);
-        assert!(validate_workflow_document(&document).ok, "input binding alone must satisfy a required port");
+        assert!(validate_workflow_snapshot(&document).ok, "input binding alone must satisfy a required port");
     }
 
     #[test]
-    fn validate_workflow_document_flags_unresolved_bindings() {
-        let mut document = sample_workflow_document();
+    fn validate_workflow_snapshot_flags_unresolved_bindings() {
+        let mut document = sample_workflow_snapshot();
         document.input_bindings.push(WorkflowInputBinding { input_id: "missing-input".into(), node_id: "b".into(), port_id: "b:in:in".into() });
         document.output_bindings.push(WorkflowOutputBinding { node_id: "missing-node".into(), port_id: "x".into(), path_template: "out".into() });
-        let validation = validate_workflow_document(&document);
+        let validation = validate_workflow_snapshot(&document);
         assert!(!validation.ok);
         assert!(validation.errors.iter().any(|error| error.contains("unknown input 'missing-input'")));
         assert!(validation.errors.iter().any(|error| error.contains("unknown node/port 'missing-node:x'")));
     }
-    //#endregion 🧪️WorkflowDocumentLaws
+    //#endregion 🧪️WorkflowSnapshotLaws
 
     //#region 🧪️RunDocumentLaws
     fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {

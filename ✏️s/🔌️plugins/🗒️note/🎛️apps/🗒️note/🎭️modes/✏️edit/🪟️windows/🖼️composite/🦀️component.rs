@@ -4,7 +4,7 @@ use crate::apps::note::config::NoteConfig;
 use crate::apps::note::modes::edit::windows::composite::options;
 use crate::apps::note::terminology::NotePlayLabels;
 use crate::apps::note::NOTE_PLAY_CONTROLLER_ID;
-use crate::artifacts::note::{NoteCamera, NoteDocument};
+use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use semio_framework_plugin::{build_ink_canvas_scene, InkCanvasScene, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -36,11 +36,11 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(document: &NoteDocument, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![options::camera::measure(camera, labels), options::grid::measure(document, labels), options::snap::measure(document, labels), options::pencil::measure(document, labels), options::eraser_stroke::measure(document, labels), options::eraser_point::measure(document, labels)]
 }
 
-pub fn engagement(document: &NoteDocument, camera: &NoteCamera, selected_ids: &[String], engagement_input: &str) -> WindowEngagement {
+pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, selected_ids: &[String], engagement_input: &str) -> WindowEngagement {
     let block_count = crate::artifacts::note::engine::flatten_blocks(&document.blocks).len();
     let selected_count = selected_ids.len();
     let zoom = camera.zoom;
@@ -72,10 +72,10 @@ pub fn engagement(document: &NoteDocument, camera: &NoteCamera, selected_ids: &[
 
 //#region 🔖️Render
 /// 🖱️ Builds the ink-canvas scene payload shared by both the composite and navigator windows —
-/// `view_mode` picks which one. Camera is session-only runtime state, never part of `NoteDocument` —
+/// `view_mode` picks which one. Camera is session-only runtime state, never part of `NoteSnapshot` —
 /// merged into the wire payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom
 /// against.
-pub fn render_canvas_scene(document: &NoteDocument, camera: &NoteCamera, selected_ids: &[String], hovered_id: Option<&str>, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
+pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, selected_ids: &[String], hovered_id: Option<&str>, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
     let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| serde_json::json!({}));
     if let Some(map) = document_value.as_object_mut() {
         map.insert("camera".into(), serde_json::to_value(camera).unwrap_or_else(|_| serde_json::json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })));
@@ -89,7 +89,7 @@ pub fn render_canvas_scene(document: &NoteDocument, camera: &NoteCamera, selecte
     )
 }
 
-pub fn render(document: &NoteDocument, cfg: &NoteConfig) -> UiNode {
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
     render_canvas_scene(document, &cfg.camera, &cfg.selected_block_ids, cfg.hovered_block_id.as_deref(), &cfg.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
 }
 //#endregion 🔖️Render

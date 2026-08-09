@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
-use semio_framework_os::{create_backbone_document, WorkflowDocument, WorkflowMutation, OS_SPACE_SCHEMA, S_SPACE_SCHEMA};
+use semio_framework_os::{create_backbone_document, WorkflowSnapshot, WorkflowMutation, OS_SPACE_SCHEMA, S_SPACE_SCHEMA};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, FaultCode, FaultOrigin, HostEffect};
 
 //#region 🔖️SetActiveExample
@@ -16,7 +16,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         if payload.example_id.is_empty() {
             Ok(Emit::default())
         } else {
@@ -35,8 +35,8 @@ pub mod export_studio_pack {
     #[dsl(keyword = "export-studio-pack")]
     pub struct ExportStudioPack {}
 
-    pub fn handle(_payload: &ExportStudioPack, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let space_id = crate::apps::space::config_space_id(cfg.projection);
+    pub fn handle(_payload: &ExportStudioPack, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let space_id = crate::apps::space::config_space_id(cfg.snapshot);
         match crate::apps::home::resolve_studio_document(&space_id) {
             Some(document) => match export_os_space_pack(&document) {
                 Ok(pack_files) => {
@@ -66,8 +66,8 @@ pub mod export_studio_dsl {
     #[dsl(keyword = "export-studio-dsl")]
     pub struct ExportStudioDsl {}
 
-    pub fn handle(_payload: &ExportStudioDsl, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let space_id = crate::apps::space::config_space_id(cfg.projection);
+    pub fn handle(_payload: &ExportStudioDsl, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let space_id = crate::apps::space::config_space_id(cfg.snapshot);
         match crate::apps::home::resolve_studio_document(&space_id) {
             Some(document) => match export_os_space_dsl(&document) {
                 Ok(text_files) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None })),
@@ -88,7 +88,7 @@ pub mod import_space_pack {
     #[dsl(keyword = "import-space-pack")]
     pub struct ImportSpacePack {}
 
-    pub fn handle(_payload: &ImportSpacePack, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(_payload: &ImportSpacePack, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }))
     }
 }
@@ -105,7 +105,7 @@ pub mod import_space_pack_payload {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportSpacePackPayload, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportSpacePackPayload, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         use base64::Engine;
         let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
@@ -132,16 +132,16 @@ pub mod open_space {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let space_id = &payload.space_id;
-        // 🚧️ `parse_demo_space_document()` yields a `workflow::WorkflowDocument`, not a
-        // `space::SpaceProjection`-backed catalog entry — the "demo" id fallback below synthesizes a
+        // 🚧️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot`, not a
+        // `space::SpaceSnapshot`-backed catalog entry — the "demo" id fallback below synthesizes a
         // minimal ephemeral space manifest with the same id/name instead, so `"demo"` still resolves to
         // *something* openable.
         let document = crate::apps::home::resolve_studio_document(space_id).or_else(|| {
             if space_id == "demo" {
                 let name = { let demo = crate::parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
-                let projection = semio_framework_os::empty_space_projection(&name, semio_framework_os::SpaceKind::Atelier, semio_framework_os::SpaceVisibility::Private);
+                let projection = semio_framework_os::empty_space_snapshot(&name, semio_framework_os::SpaceKind::Atelier, semio_framework_os::SpaceVisibility::Private);
                 Some(create_backbone_document(S_SPACE_SCHEMA, "demo", &name, projection))
             } else {
                 None
@@ -156,26 +156,26 @@ pub mod open_space {
             SpaceConfigMutation::SetSelection { node_ids: Vec::new() },
             SpaceConfigMutation::SetClipboard { node_ids: Vec::new() },
         ];
-        // 🕸️ `document` is a `space::SpaceProjection`-backed manifest — it carries no workflow graph of
+        // 🕸️ `document` is a `space::SpaceSnapshot`-backed manifest — it carries no workflow graph of
         // its own anymore; the graph lives on a separate `s.workflow` artifact document within one of
         // the space's collections. Resolve, in order: (1) a real workflow artifact already registered
         // in one of `document`'s collections, (2) the bundled demo fixture's real content for the demo
-        // space, (3) a freshly-minted, valid, empty `WorkflowDocument` for any other space that has none
+        // space, (3) a freshly-minted, valid, empty `WorkflowSnapshot` for any other space that has none
         // yet — never the space manifest's own bytes.
         let is_demo_space = space_id == "demo" || document.name == crate::DEMO_STUDIO_NAME;
-        let workflow_document = crate::apps::home::resolve_workflow_artifact_document(space_id, &document)
+        let workflow_snapshot = crate::apps::home::resolve_workflow_artifact_document(space_id, &document)
             .or_else(|| is_demo_space.then(crate::parse_demo_space_document))
             .unwrap_or_else(|| crate::apps::home::empty_workflow_artifact_document(space_id, &document.name));
-        let active_node_id = workflow_document.vcs.initial_projection.graph.nodes.first().map(|node| node.id.clone());
+        let active_node_id = workflow_snapshot.vcs.initial_snapshot.graph.nodes.first().map(|node| node.id.clone());
         config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: active_node_id });
-        match crate::apps::home::workflow_artifact_envelope_pack(&workflow_document) {
+        match crate::apps::home::workflow_artifact_envelope_pack(&workflow_snapshot) {
             Some(files) => {
                 eprintln!(
                     "[DEBUG] openSpace id={} workflow_id={} nodes={} collections={}",
                     space_id,
-                    workflow_document.id,
-                    workflow_document.vcs.initial_projection.graph.nodes.len(),
-                    document.vcs.initial_projection.collections.len()
+                    workflow_snapshot.id,
+                    workflow_snapshot.vcs.initial_snapshot.graph.nodes.len(),
+                    document.vcs.initial_snapshot.collections.len()
                 );
                 Ok(Emit { config_mutations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
             }
@@ -194,16 +194,16 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::studio_emit;
     use crate::apps::space::SpaceCommand;
-    use semio_framework_os::empty_workflow_document;
+    use semio_framework_os::empty_workflow_snapshot;
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(export_studio_pack::ExportStudioPack {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(export_studio_dsl::ExportStudioDsl {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(import_space_pack::ImportSpacePack {}));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(export_studio_pack::ExportStudioPack {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(export_studio_dsl::ExportStudioDsl {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(import_space_pack::ImportSpacePack {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() }));
     }
 
     #[test]
@@ -214,7 +214,7 @@ mod tests {
         let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
         let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone()).expect("create");
         crate::apps::home::register_studio_port_for_test(&entry.id, port);
-        let empty = empty_workflow_document();
+        let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
@@ -225,13 +225,13 @@ mod tests {
 
     #[test]
     fn open_studio_unknown_id_returns_not_found() {
-        let empty = empty_workflow_document();
+        let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
-    fn load_document_projection(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowDocument, String) {
+    fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowSnapshot, String) {
         let (pack, spr) = emit
             .effects
             .iter()
@@ -240,17 +240,17 @@ mod tests {
                 _ => None,
             })
             .expect("load document");
-        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowMutation> = store::parse_document_pack(pack, spr).expect("parse document pack");
+        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(pack, spr).expect("parse document pack");
         let id = parsed.envelope.id.clone();
-        (parsed.projection, id)
+        (parsed.snapshot, id)
     }
 
     #[test]
     fn open_studio_demo_explicit_loads_demo_fixture() {
-        let empty = empty_workflow_document();
+        let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
-        let (projection, id) = load_document_projection(&emit);
+        let (projection, id) = load_document_snapshot(&emit);
         assert!(id.contains("demo-studio"));
         assert!(!projection.graph.nodes.is_empty());
     }
@@ -260,11 +260,11 @@ mod tests {
         use crate::apps::home::commands::studio::create_studio;
         use semio_framework_plugin::{ConfigView, DocumentApp, DocumentView, HistoryView};
         let home = crate::apps::home::HomeApp;
-        let home_projection = home.initial_projection();
+        let home_projection = crate::apps::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &home_projection, history: &history };
+        let doc = DocumentView { snapshot: &home_projection, history: &history };
         let home_config = crate::apps::home::config::HomeConfig::default();
-        let home_cfg = ConfigView { projection: &home_config };
+        let home_cfg = ConfigView { snapshot: &home_config };
         let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
         let space_id = create
             .effects
@@ -274,10 +274,10 @@ mod tests {
                 _ => None,
             })
             .expect("navigate");
-        let empty = empty_workflow_document();
+        let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.clone() })).expect("handle");
-        let (projection, id) = load_document_projection(&emit);
+        let (projection, id) = load_document_snapshot(&emit);
         assert_eq!(id, space_id);
         assert!(projection.graph.nodes.is_empty());
     }
@@ -288,11 +288,11 @@ mod tests {
         use crate::apps::home::commands::studio::create_studio;
         use semio_framework_plugin::{ConfigView, DocumentApp, DocumentView, HistoryView};
         let home = crate::apps::home::HomeApp;
-        let home_projection = home.initial_projection();
+        let home_projection = crate::apps::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &home_projection, history: &history };
+        let doc = DocumentView { snapshot: &home_projection, history: &history };
         let home_config = crate::apps::home::config::HomeConfig::default();
-        let home_cfg = ConfigView { projection: &home_config };
+        let home_cfg = ConfigView { snapshot: &home_config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
         let uri = emit
@@ -309,14 +309,16 @@ mod tests {
         let document = crate::apps::home::resolve_studio_document(space_id).expect("created studio");
         assert_eq!(document.name, "Fresh Studio");
         assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
-        assert!(document.vcs.initial_projection.collections.is_empty());
+        assert!(document.vcs.initial_snapshot.collections.is_empty());
 
-        let empty = empty_workflow_document();
-        let studio_doc = DocumentView { projection: &empty, history: &history };
+        let empty = empty_workflow_snapshot();
+        let studio_doc = DocumentView { snapshot: &empty, history: &history };
         let studio_config = SpaceConfig::default();
-        let studio_cfg = ConfigView { projection: &studio_config };
-        let studio = crate::apps::space::SpaceApp;
-        let open = studio.handle(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg).expect("handle");
+        let studio_cfg = ConfigView { snapshot: &studio_config };
+        let studio = crate::apps::space::SpaceApp::default();
+        let draft = semio_framework_plugin::DraftView { snapshot: &semio_framework_plugin::NoDraft::default() };
+        let engines = store::EngineHandles::empty();
+        let open = crate::apps::space::SpaceApp::handle(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg, &draft, &engines).expect("handle");
         assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));

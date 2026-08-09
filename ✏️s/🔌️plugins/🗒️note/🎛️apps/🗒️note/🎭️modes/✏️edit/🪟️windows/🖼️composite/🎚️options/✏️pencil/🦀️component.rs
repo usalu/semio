@@ -2,11 +2,11 @@
 //! Its command handler lives in `🎮️commands/✏️drawing::set_pencil_width`.
 
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(document: &NoteDocument, labels: &NotePlayLabels) -> WindowMeasure {
+pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "note-utility-options-pencil".into(),
         label: labels.measure_pencil_width.into(),

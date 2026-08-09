@@ -1,8 +1,8 @@
 //! 📜️ Mathematical artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! The DSL-mirror types and the `store::DocumentDsl` impl for `MathProjection` live here rather than
-//! next to `MathProjection` itself in `crate::artifacts::mathematical`: Rust's orphan rule only requires
-//! the foreign trait (`store::DocumentDsl`) or the type (`MathProjection`) to live in this crate — since
+//! The DSL-mirror types and the `store::DocumentDsl` impl for `MathematicalSnapshot` live here rather than
+//! next to `MathematicalSnapshot` itself in `crate::artifacts::mathematical`: Rust's orphan rule only requires
+//! the foreign trait (`store::DocumentDsl`) or the type (`MathematicalSnapshot`) to live in this crate — since
 //! both now do (the old 7-crate split's per-crate orphan-rule boundary no longer exists), the impl is free
 //! to live wherever is clearest, which is next to its own DSL-mirror machinery.
 //!
@@ -17,94 +17,96 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::mathematical::{MathEdge, MathGeometry, MathGraph, MathNode, MathProjection};
+use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGeometry, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
 use store::DocumentDsl;
 
 //#region 🔖️Dsl
-/// 🔌️ DSL-only mirror of `MathEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
+/// 🔌️ DSL-only mirror of `MathematicalEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
 /// edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary only
-/// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
+/// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathematicalEdge` itself (JSON shape, `algorithm_overlay`,
 /// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
 ///
 /// No `Serialize`/`Deserialize` derive: `dsl::Wire` (the framework DSL kernel's wire-literal field type)
-/// does not implement either, and it is out of this plugin's scope to add them there. `MathGraphDsl`
+/// does not implement either, and it is out of this plugin's scope to add them there. `MathematicalGraphDsl`
 /// below — the only place this type is ever nested inside something serde-derived (`app_commands!`
-/// unconditionally derives `Serialize`/`Deserialize` on the generated `MathCommand` enum, even though
+/// unconditionally derives `Serialize`/`Deserialize` on the generated `MathematicalCommand` enum, even though
 /// its actual wire codec is `dsl::DslOps`, never `serde_json`; see `crate::apps::mathematical`'s
 /// `🔖️Commands` doc comment) — hand-implements those traits by round-tripping through the fully
-/// serde-able `MathGraph`/`MathEdge` JSON shape instead of deriving them field-by-field.
+/// serde-able `MathematicalGraph`/`MathematicalEdge` JSON shape instead of deriving them field-by-field.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub struct MathEdgeDsl {
+pub struct MathematicalEdgeDsl {
     id: String,
     wire: dsl::Wire,
 }
 
-pub fn math_edge_to_dsl(edge: &MathEdge, directed: bool) -> MathEdgeDsl {
+pub fn math_edge_to_dsl(edge: &MathematicalEdge, directed: bool) -> MathematicalEdgeDsl {
     let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
-    MathEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
+    MathematicalEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
-pub fn math_edge_from_dsl(edge: MathEdgeDsl) -> Result<MathEdge, String> {
+pub fn math_edge_from_dsl(edge: MathematicalEdgeDsl) -> Result<MathematicalEdge, String> {
     let dsl::WireValue { from, edge: link, .. } = edge.wire.0;
     let (_directed, to) = link.ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
-    Ok(MathEdge { id: edge.id, source: from.id, target: to.id })
+    Ok(MathematicalEdge { id: edge.id, source: from.id, target: to.id })
 }
 
-/// 🕸️ DSL-only mirror of `MathGraph` — `nodes`/`edges` print as SoA tables, `edges` wire-typed via
-/// `MathEdgeDsl`.
+/// 🕸️ DSL-only mirror of `MathematicalGraph` — `nodes`/`edges` print as SoA tables, `edges` wire-typed via
+/// `MathematicalEdgeDsl`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub struct MathGraphDsl {
+pub struct MathematicalGraphDsl {
     directed: bool,
     #[dsl(table)]
-    nodes: Vec<MathNode>,
+    nodes: Vec<MathematicalNode>,
     #[dsl(table)]
-    edges: Vec<MathEdgeDsl>,
+    edges: Vec<MathematicalEdgeDsl>,
     algorithm: String,
     algorithm_seed: Option<String>,
 }
 
-pub fn math_graph_to_dsl(graph: &MathGraph) -> MathGraphDsl {
-    MathGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
+pub fn math_graph_to_dsl(graph: &MathematicalGraph) -> MathematicalGraphDsl {
+    MathematicalGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
 }
 
-pub fn math_graph_from_dsl(graph: MathGraphDsl) -> Result<MathGraph, String> {
-    Ok(MathGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
+pub fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<MathematicalGraph, String> {
+    Ok(MathematicalGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
 }
 
-/// 🔌️ Hand-rolled `Serialize`/`Deserialize` for `MathGraphDsl` — see the type's own doc comment for why
-/// this can't be `#[derive(...)]`d. Round-trips through the fully serde-able `MathGraph` JSON shape via
+/// 🔌️ Hand-rolled `Serialize`/`Deserialize` for `MathematicalGraphDsl` — see the type's own doc comment for why
+/// this can't be `#[derive(...)]`d. Round-trips through the fully serde-able `MathematicalGraph` JSON shape via
 /// the same `math_graph_to_dsl`/`math_graph_from_dsl` conversions the DSL/pack codecs already use, so the
-/// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathGraph`'s own
-/// camelCase shape, not a `MathGraphDsl`-internal one.
-impl Serialize for MathGraphDsl {
+/// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathematicalGraph`'s own
+/// camelCase shape, not a `MathematicalGraphDsl`-internal one.
+impl Serialize for MathematicalGraphDsl {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         math_graph_from_dsl(self.clone()).map_err(serde::ser::Error::custom)?.serialize(serializer)
     }
 }
 
-impl<'de> Deserialize<'de> for MathGraphDsl {
+impl<'de> Deserialize<'de> for MathematicalGraphDsl {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Ok(math_graph_to_dsl(&MathGraph::deserialize(deserializer)?))
+        Ok(math_graph_to_dsl(&MathematicalGraph::deserialize(deserializer)?))
     }
 }
 
-/// 📄️ DSL-only mirror of `MathProjection` — the actual `#[derive(dsl::DslRecord)]` root.
+/// 📄️ DSL-only mirror of `MathematicalSnapshot` — the actual `#[derive(dsl::DslRecord)]` root.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-#[dsl(extension = "mathematical", layout = "lines")]
-pub struct MathProjectionDsl {
+#[dsl(id = "mathematical.mathematical", layout = "lines")]
+pub struct MathematicalSnapshotDsl {
     #[dsl(block)]
-    graph: MathGraphDsl,
+    graph: MathematicalGraphDsl,
     #[dsl(block)]
-    geometry: MathGeometry,
+    geometry: MathematicalGeometry,
 }
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for MathProjectionDsl {
+impl store::DocumentDsl for MathematicalSnapshotDsl {
     const EXTENSION: &'static str = "mathematical";
-    fn envelope_id() -> &'static str { "mathematical" }
+    fn envelope_id() -> &'static str {
+        "mathematical.mathematical"
+    }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -128,7 +130,7 @@ impl store::DocumentDsl for MathProjectionDsl {
     }
 }
 
-impl store::DocumentPack for MathProjectionDsl {
+impl store::DocumentPack for MathematicalSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -158,23 +160,23 @@ impl store::DocumentPack for MathProjectionDsl {
 
 
 
-pub fn math_projection_to_dsl(projection: &MathProjection) -> MathProjectionDsl {
-    MathProjectionDsl { graph: math_graph_to_dsl(&projection.graph), geometry: projection.geometry.clone() }
+pub fn mathematical_snapshot_to_dsl(projection: &MathematicalSnapshot) -> MathematicalSnapshotDsl {
+    MathematicalSnapshotDsl { graph: math_graph_to_dsl(&projection.graph), geometry: projection.geometry.clone() }
 }
 
-pub fn math_projection_from_dsl(projection: MathProjectionDsl) -> Result<MathProjection, String> {
-    Ok(MathProjection { graph: math_graph_from_dsl(projection.graph)?, geometry: projection.geometry })
+pub fn mathematical_snapshot_from_dsl(projection: MathematicalSnapshotDsl) -> Result<MathematicalSnapshot, String> {
+    Ok(MathematicalSnapshot { graph: math_graph_from_dsl(projection.graph)?, geometry: projection.geometry })
 }
 //#endregion 🔖️Dsl
 
 //#region 🔖️DslText
-/// 📖️ Parses `.mathematical` DSL text into a `MathProjection`.
-pub fn parse_dsl(text: &str) -> Result<MathProjection, store::TextError> {
-    <MathProjection as DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.mathematical` DSL text into a `MathematicalSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
+    <MathematicalSnapshot as DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `MathProjection` back to `.mathematical` DSL text.
-pub fn print_dsl(projection: &MathProjection) -> String {
+/// 🖨️ Prints a `MathematicalSnapshot` back to `.mathematical` DSL text.
+pub fn print_dsl(projection: &MathematicalSnapshot) -> String {
     DocumentDsl::print_dsl(projection)
 }
 //#endregion 🔖️DslText
@@ -186,16 +188,30 @@ mod tests {
 
     #[test]
     fn math_projection_dsl_round_trips_default() {
-        store::test_support::assert_dsl_round_trip(&MathProjection::default());
+        store::os_store::test_support::assert_dsl_round_trip(&MathematicalSnapshot::default());
+    }
+
+    #[test]
+    fn example_primary_text_round_trips() {
+        let text = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        let parsed = crate::artifacts::mathematical::dsl::parse_dsl(text).expect("parse example");
+        store::os_store::test_support::assert_dsl_round_trip(&parsed);
     }
 
     #[test]
     fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
-        let mut graph = MathGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathGraph::default() };
+        let mut graph = MathematicalGraph {
+            algorithm: "bfs".into(),
+            algorithm_seed: Some("a".into()),
+            ..MathematicalGraph::default()
+        };
         graph.nodes.clear();
         graph.edges.clear();
-        let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };
-        store::test_support::assert_dsl_round_trip(&projection);
+        let projection = MathematicalSnapshot {
+            graph,
+            geometry: MathematicalGeometry { points: Vec::new() },
+        };
+        store::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.energy.model;
+
+message EnergyModelSnapshot {
+  string schema = 1;
+  string model_json = 2;
+}

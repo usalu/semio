@@ -1,0 +1,33 @@
+# 🧬️ Note snapshot schema.
+
+type NoteSnapshot {
+  schema: String!
+  id: String!
+  title: String
+  blocks: [NoteBlockNode!]!
+  gridVisible: Boolean
+  gridSpacing: Float
+  gridSubdivisions: Float
+  gridOpacity: Float
+  snapEnabled: Boolean
+  snapGridSpacing: Float
+  pencilWidth: Float
+  eraserRadius: Float
+  assets: [NoteImageAssetEntry!]!
+}
+
+type NoteBlockNode {
+  kind: String!
+}
+
+type NoteImageAssetEntry {
+  key: String!
+  value: NoteImageAsset!
+}
+
+type NoteImageAsset {
+  mime: String!
+  data: String!
+  width: Float
+  height: Float
+}

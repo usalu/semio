@@ -1,3 +1,20 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio dag.dag.dsl v1
+schema=dag.fixture nodes=[ id=slider-a name=A abbreviation="" icon="" x=0 y=0 width=72 height=14 properties={
+}
+computation variadic-inputs=false variadic-outputs=false
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+}
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+}
+id=slider-b name=B abbreviation="" icon="" x=200 y=0 width=72 height=14 properties={
+}
+computation variadic-inputs=false variadic-outputs=false
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+}
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+}
+]
+edges [id:TEXT source:TEXT target:TEXT route-style:ENUM properties:MAP] {
+  edge-1 "slider-a@out" "slider-b@in" bezier {
+  }
+}

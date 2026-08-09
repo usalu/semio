@@ -1044,7 +1044,7 @@ pub const VDI3805_EXTENSION: &str = "vdi3805";
 
 /// 📋️ VDI 3805 evaluation document.
 /// 🧪️ Minimal valid heating valve (sheet 2) reference fixture.
-pub fn reference_fixture() -> Document {
+pub fn reference_fixture() -> Vdi3805Snapshot {
     let bsn = BuildingSystemNumber { system_code: "420".into(), subsystem: "10".into(), sequence: 1 };
     let file = ManufacturerFile { header_version: "3805".into(), manufacturer: "DEMO".into(), building_system_number: bsn, created: "2026-07-22".into(), charset: "UTF-8".into(), record_count: 3, extensions: ExtensionBag::default() };
     let mut parameters = BTreeMap::new();
@@ -1086,7 +1086,7 @@ pub fn reference_fixture() -> Document {
             points: vec![CurvePoint { x: 0.0, y: 0.0 }, CurvePoint { x: 100.0, y: 4.5 }],
         },
     )]);
-    Document { manufacturer_file: file, catalog, edition_profile: BTreeMap::new(), correction_as_of: EditionId::new(2024, 1), strict_mode: false, index, geometry, curves, limits: SecurityLimits::default() }
+    Vdi3805Snapshot { manufacturer_file: file, catalog, edition_profile: BTreeMap::new(), correction_as_of: EditionId::new(2024, 1), strict_mode: false, index, geometry, curves, limits: SecurityLimits::default() }
 }
 // #endregion Session
 
@@ -1136,7 +1136,7 @@ mod tests {
 
     #[test]
     fn characteristic_curve_interpolates() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let curve = doc.curves.get("curve.kvs").expect("curve");
         let y = curve.interpolate(50.0);
         assert!((y - 2.25).abs() < 1e-6);
@@ -1147,7 +1147,7 @@ mod tests {
         let empty = CharacteristicCurve { id: "empty".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: Vec::new() };
         assert_eq!(empty.interpolate(10.0), 0.0);
 
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let curve = doc.curves.get("curve.kvs").expect("curve");
         assert_eq!(curve.interpolate(-10.0), curve.points[0].y);
         assert_eq!(curve.interpolate(1000.0), curve.points[curve.points.len() - 1].y);
@@ -1164,7 +1164,7 @@ mod tests {
 
     #[test]
     fn geometry_bbox_volume() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let geom = doc.geometry.get("geom.valve.50").expect("geom");
         let bbox = geom.evaluate_bbox();
         assert!((bbox.volume_m3() - 0.003).abs() < 1e-6);
@@ -1172,7 +1172,7 @@ mod tests {
 
     #[test]
     fn catalog_index_filters_by_dn() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let matches = doc.index.filter_by_dn(50);
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].product_id, "VLV-50-001");
@@ -1180,7 +1180,7 @@ mod tests {
 
     #[test]
     fn catalog_index_filter_by_sheet_and_tag() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let by_sheet = doc.index.filter_by_sheet(SheetId(2));
         assert_eq!(by_sheet.len(), 1);
         let by_tag = doc.index.filter_by_tag("control valve");
@@ -1241,7 +1241,7 @@ mod tests {
 
     #[test]
     fn manufacturer_catalog_product_for_sheet() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         assert!(doc.catalog.product_for_sheet(SheetId(2)).is_some());
         assert!(doc.catalog.product_for_sheet(SheetId(3)).is_none());
     }

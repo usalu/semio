@@ -1,8 +1,11 @@
 //! 🧬️ layout artifact — document mutation dispatch.
 
 
-use crate::artifacts::layout::diff::LayoutDiff;
-use crate::artifacts::layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, LayoutDocument, Page, PagePatch, TextStory, TextStoryPatch};
+use crate::artifacts::layout::diff::{
+    diff_set_snapshot, links_delta_from_collection_mutation, pages_delta_from_collection_mutation,
+    pages_replace_delta, stories_delta_from_collection_mutation, LayoutDiff,
+};
+use crate::artifacts::layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, LayoutSnapshot, Page, PagePatch, TextStory, TextStoryPatch};
 use protocol::{apply_collection_mutation, inverse_collection_mutation, CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};
 
@@ -100,7 +103,7 @@ pub enum LayoutMutation {
         patch: FramePatch,
     },
     /// 🔠️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: whole-field replace for
-    /// `LayoutDocument::data_fields_json` — the `fields:in` workflow port's real, undoable write (see
+    /// `LayoutSnapshot::data_fields_json` — the `fields:in` workflow port's real, undoable write (see
     /// `crate::apps::layout::commands::author::import_media`).
     SetDataFields {
         json: Option<String>,
@@ -109,7 +112,7 @@ pub enum LayoutMutation {
 
 /// 🧮️ Applies `operation` onto `doc` in place — the sole forward-transform used both by
 /// `LayoutDiff::apply` and (indirectly, via `Mutation::diff`) by every op's own `backwards`.
-pub fn apply_layout_mutation(doc: &mut LayoutDocument, operation: &LayoutMutation) {
+pub fn apply_layout_mutation(doc: &mut LayoutSnapshot, operation: &LayoutMutation) {
     match operation {
         LayoutMutation::Pages(cop) => apply_collection_mutation(&mut doc.pages, cop),
         LayoutMutation::Stories(cop) => apply_collection_mutation(&mut doc.stories, cop),
@@ -146,7 +149,7 @@ pub fn apply_layout_mutation(doc: &mut LayoutDocument, operation: &LayoutMutatio
     }
 }
 
-pub fn inverse_layout_mutation(doc: &LayoutDocument, operation: &LayoutMutation) -> Vec<LayoutMutation> {
+pub fn inverse_layout_mutation(doc: &LayoutSnapshot, operation: &LayoutMutation) -> Vec<LayoutMutation> {
     match operation {
         LayoutMutation::Pages(cop) => vec![LayoutMutation::Pages(inverse_collection_mutation(&doc.pages, cop))],
         LayoutMutation::Stories(cop) => vec![LayoutMutation::Stories(inverse_collection_mutation(&doc.stories, cop))],
@@ -178,14 +181,39 @@ pub fn inverse_layout_mutation(doc: &LayoutDocument, operation: &LayoutMutation)
     }
 }
 
-impl Mutation<LayoutDocument> for LayoutMutation {
+impl Mutation<LayoutSnapshot> for LayoutMutation {
     type Diff = LayoutDiff;
 
-    fn diff(&self, _projection: &LayoutDocument) -> LayoutDiff {
-        LayoutDiff { mutations: vec![self.clone()] }
+    fn diff(&self, snapshot: &LayoutSnapshot) -> LayoutDiff {
+        match self {
+            LayoutMutation::Pages(op) => LayoutDiff {
+                pages: Some(pages_delta_from_collection_mutation(&snapshot.pages, op)),
+                ..Default::default()
+            },
+            LayoutMutation::Stories(op) => LayoutDiff {
+                stories: Some(stories_delta_from_collection_mutation(&snapshot.stories, op)),
+                ..Default::default()
+            },
+            LayoutMutation::Links(op) => LayoutDiff {
+                links: Some(links_delta_from_collection_mutation(&snapshot.links, op)),
+                ..Default::default()
+            },
+            LayoutMutation::SetDataFields { json } => LayoutDiff {
+                data_fields_json: Some(json.clone()),
+                ..Default::default()
+            },
+            LayoutMutation::AddFrame { .. } | LayoutMutation::RemoveFrame { .. } | LayoutMutation::PatchFrame { .. } => {
+                let mut next = snapshot.clone();
+                apply_layout_mutation(&mut next, self);
+                LayoutDiff {
+                    pages: Some(pages_replace_delta(&snapshot.pages, &next.pages)),
+                    ..Default::default()
+                }
+            }
+        }
     }
 
-    fn inverse(&self, projection: &LayoutDocument) -> Vec<Self> {
+    fn inverse(&self, projection: &LayoutSnapshot) -> Vec<Self> {
         inverse_layout_mutation(projection, self)
     }
 }
@@ -198,9 +226,9 @@ mod tests {
     use crate::artifacts::layout::LayoutBounds;
     use protocol::MutationDiff;
 
-    const SAMPLE: &str = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
+    const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
-    fn sample_doc() -> LayoutDocument {
+    fn sample_doc() -> LayoutSnapshot {
         serde_json::from_str(SAMPLE).expect("sample doc")
     }
 
@@ -208,7 +236,7 @@ mod tests {
         Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, fill: Some([0.1, 0.2, 0.3, 1.0]), stroke: None }
     }
 
-    fn round_trip(doc: &LayoutDocument, operation: &LayoutMutation) -> LayoutDocument {
+    fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
         let forward = operation.diff(doc).apply(doc);
         let backs = operation.inverse(doc);
         let mut restored = forward.clone();

@@ -17,14 +17,14 @@ import type {
 import type { StoragePort } from "../🖥️platform/🟦️component.ts";
 
 //#region EphemeralLane
-/** 🫧 Process-local box for module ephemeral values — sole lane until OS draft projection owns these keys. */
+/** 🫧 Process-local box for module ephemeral values — sole lane until OS draft snapshot owns these keys. */
 export type EphemeralBox<T> = { current: T };
 
 const ephemeralBoxes = new Map<string, EphemeralBox<unknown>>();
 const ephemeralMaps = new Map<string, Map<unknown, unknown>>();
 const ephemeralSets = new Map<string, Set<unknown>>();
 
-/** 🫧 Get-or-create a mutable box keyed for OS draft projection.
+/** 🫧 Get-or-create a mutable box keyed for OS draft snapshot.
  * Init is stored as-is — never treat a function-typed `T` as a lazy factory (that would
  * invoke identity/no-op resolvers and leave `.current` undefined). */
 export function ephemeralBox<T>(key: string, init: T): EphemeralBox<T> {

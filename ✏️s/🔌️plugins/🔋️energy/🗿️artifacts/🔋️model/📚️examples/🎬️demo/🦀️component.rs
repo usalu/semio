@@ -1,9 +1,7 @@
-//! 📚️ Example `demo`.
+//! 📚️ Bundled energy-model demo example.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
-
+/// @emoji 🪪 Example id.
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
-pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+
+/// @emoji 🏷️ Example label.
+pub const LABEL_EN: &str = "Demo";

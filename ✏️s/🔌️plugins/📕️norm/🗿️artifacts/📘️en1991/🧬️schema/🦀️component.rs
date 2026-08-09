@@ -1,6 +1,7 @@
 //! 🧬️ En1991 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
+use crate::artifacts::en1991::part_1_2::FireCurve;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -123,7 +124,14 @@ impl En1991Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1991::En1991Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

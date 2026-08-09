@@ -1,7 +1,7 @@
 //! 🗂️ S Studio app — node/instance selection commands.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️SelectInstance
@@ -15,7 +15,7 @@ pub mod select_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let node_ids = payload.node_id.iter().cloned().collect();
         Ok(Emit::config(vec![SpaceConfigMutation::SetActiveNode { node_id: payload.node_id.clone() }, SpaceConfigMutation::SetSelection { node_ids }]))
     }
@@ -26,7 +26,7 @@ pub mod select_instance {
 /// 🔁️ Shared body for `node_graph_select` and `set_media_node_selection` — both replace the node
 /// selection wholesale (optionally "select all"), publish presence, and set a single active node when
 /// exactly one is selected.
-fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowDocument, _config: &SpaceConfig) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowSnapshot, _config: &SpaceConfig) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let node_ids = if select_all { projection.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { node_ids };
     let mut config_mutations = vec![SpaceConfigMutation::SetSelection { node_ids: node_ids.clone() }];
     if node_ids.len() == 1 {
@@ -46,8 +46,8 @@ pub mod node_graph_select {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+    pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.snapshot, cfg.snapshot))
     }
 }
 
@@ -62,8 +62,8 @@ pub mod set_media_node_selection {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+    pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.snapshot, cfg.snapshot))
     }
 }
 //#endregion 🔖️GraphSelection
@@ -79,7 +79,7 @@ pub mod set_app_instance_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetAppInstanceSelection, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAppInstanceSelection, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let mut config_mutations = vec![SpaceConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }];
         if payload.node_ids.len() == 1 {
             config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: payload.node_ids.first().cloned() });
@@ -97,10 +97,10 @@ mod tests {
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
         use crate::apps::space::SpaceCommand;
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SelectInstance(select_instance::SelectInstance { node_id: Some("n1".into()) }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()], select_all: false }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetMediaNodeSelection(set_media_node_selection::SetMediaNodeSelection { node_ids: vec![], select_all: true }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppInstanceSelection(set_app_instance_selection::SetAppInstanceSelection { node_ids: vec!["n1".into()] }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SelectInstance(select_instance::SelectInstance { node_id: Some("n1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()], select_all: false }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetMediaNodeSelection(set_media_node_selection::SetMediaNodeSelection { node_ids: vec![], select_all: true }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppInstanceSelection(set_app_instance_selection::SetAppInstanceSelection { node_ids: vec!["n1".into()] }));
     }
 
     #[test]

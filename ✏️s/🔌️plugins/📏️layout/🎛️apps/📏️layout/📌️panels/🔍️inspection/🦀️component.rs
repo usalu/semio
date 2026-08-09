@@ -4,7 +4,7 @@ use crate::apps::layout::config::LayoutConfig;
 use crate::apps::layout::layout_action;
 use crate::apps::layout::terminology::LayoutLabels;
 use crate::artifacts::layout::engine::rgba_to_text;
-use crate::artifacts::layout::{Frame, LayoutDocument, LAYOUT_FIXTURE_SCHEMA};
+use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     UiSectionNode, UiSelectItem, UiSelectNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -28,24 +28,24 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Helpers
-fn story_full_content(doc: &LayoutDocument, story_id: &str) -> String {
+fn story_full_content(doc: &LayoutSnapshot, story_id: &str) -> String {
     doc.stories.iter().find(|story| story.id == story_id).map(|story| story.content.clone()).unwrap_or_default()
 }
 
-fn link_path(doc: &LayoutDocument, link_id: &str) -> String {
+fn link_path(doc: &LayoutSnapshot, link_id: &str) -> String {
     doc.links.iter().find(|link| link.id == link_id).map(|link| link.path.clone()).unwrap_or_default()
 }
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     if config.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "layout-play-inspector.empty".into(),
             label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(Label::data(format!("{}: {}", labels.schema.as_str(), LAYOUT_FIXTURE_SCHEMA))),
+                ui_text(Label::data(format!("{}: {}", labels.schema.as_str(), LAYOUT_DOCUMENT_SCHEMA))),
                 ui_text(Label::data(format!("{}: {}", labels.name.as_str(), doc.name))),
                 ui_text(Label::data(format!("{}: {}", labels.pages.as_str(), doc.pages.len()))),
                 ui_text(Label::data(format!("{}: {}", labels.active_page.as_str(), config.active_page_id))),

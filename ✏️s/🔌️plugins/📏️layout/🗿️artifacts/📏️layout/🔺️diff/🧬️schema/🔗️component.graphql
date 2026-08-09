@@ -1,0 +1,63 @@
+# 🔺️ Layout diff schema — sparse field delta.
+
+type LayoutDiff {
+  artifact: LayoutArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  name: String @state(class: PERSISTENT)
+  grid: GridSettings @state(class: PERSISTENT)
+  paragraphStyles: LayoutParagraphStylesDelta @state(class: PERSISTENT)
+  characterStyles: LayoutCharacterStylesDelta @state(class: PERSISTENT)
+  stories: LayoutStoriesDelta @state(class: PERSISTENT)
+  links: LayoutLinksDelta @state(class: PERSISTENT)
+  parentPages: LayoutParentPagesDelta @state(class: PERSISTENT)
+  spreads: LayoutSpreadsDelta @state(class: PERSISTENT)
+  pages: LayoutPagesDelta @state(class: PERSISTENT)
+  printTarget: String @state(class: PERSISTENT)
+  dataFieldsJson: String @state(class: PERSISTENT)
+  selectedIds: LayoutStringList @state(class: SHARED_UI)
+  activePageId: String @state(class: LOCAL_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  previewCameraX: Float @state(class: LOCAL_UI)
+  previewCameraY: Float @state(class: LOCAL_UI)
+  previewCameraZoom: Float @state(class: LOCAL_UI)
+  dropPreview: LayoutDropPreviewState @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type LayoutStringList { values: [String!]! }
+type LayoutPagesDelta { added: [Page!]!, removed: [String!]!, patched: [LayoutPagePatchEntry!]!, reordered: [String!] }
+type LayoutPagePatchEntry { id: String!, patch: PagePatch! }
+type LayoutStoriesDelta { added: [TextStory!]!, removed: [String!]!, patched: [LayoutStoryPatchEntry!]!, reordered: [String!] }
+type LayoutStoryPatchEntry { id: String!, patch: TextStoryPatch! }
+type LayoutLinksDelta { added: [ImageLink!]!, removed: [String!]!, patched: [LayoutLinkPatchEntry!]!, reordered: [String!] }
+type LayoutLinkPatchEntry { id: String!, patch: ImageLinkPatch! }
+type LayoutParagraphStylesDelta { added: [ParagraphStyle!]!, removed: [String!]!, patched: [LayoutParagraphStylePatchEntry!]!, reordered: [String!] }
+type LayoutParagraphStylePatchEntry { id: String!, patch: ParagraphStylePatch! }
+type LayoutCharacterStylesDelta { added: [CharacterStyle!]!, removed: [String!]!, patched: [LayoutCharacterStylePatchEntry!]!, reordered: [String!] }
+type LayoutCharacterStylePatchEntry { id: String!, patch: CharacterStylePatch! }
+type LayoutParentPagesDelta { added: [ParentPage!]!, removed: [String!]!, patched: [LayoutParentPagePatchEntry!]!, reordered: [String!] }
+type LayoutParentPagePatchEntry { id: String!, patch: ParentPagePatch! }
+type LayoutSpreadsDelta { added: [Spread!]!, removed: [String!]!, patched: [LayoutSpreadPatchEntry!]!, reordered: [String!] }
+type LayoutSpreadPatchEntry { id: String!, patch: SpreadPatch! }
+
+type GridSettings { baselineGrid: Float!, baselineOffset: Float!, snapToBaseline: Boolean! }
+type LayoutDropPreviewState { kind: String!, x: Float!, y: Float! }
+type LayoutArtifact { schema: String! }
+type ParagraphStyle { id: String! }
+type CharacterStyle { id: String! }
+type TextStory { id: String! }
+type ImageLink { id: String! }
+type ParentPage { id: String! }
+type Spread { id: String! }
+type Page { id: String! }
+type PagePatch { name: String }
+type TextStoryPatch { content: String }
+type ImageLinkPatch { path: String }
+type ParagraphStylePatch { name: String }
+type CharacterStylePatch { name: String }
+type ParentPagePatch { name: String }
+type SpreadPatch { name: String }

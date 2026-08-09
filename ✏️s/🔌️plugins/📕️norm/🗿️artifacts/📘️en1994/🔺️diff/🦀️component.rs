@@ -18,28 +18,28 @@ impl En1994Diff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-        if let Some(value) = self.annex { next.annex = value; }
-        if let Some(value) = self.m_ed_knm { next.m_ed_knm = value; }
-        if let Some(value) = self.v_ed_kn { next.v_ed_kn = value; }
-        if let Some(value) = self.m_pla { next.m_pla = value; }
-        if let Some(value) = self.m_pl_rd { next.m_pl_rd = value; }
-        if let Some(value) = self.eta { next.eta = value; }
-        if let Some(value) = self.v_l_rd { next.v_l_rd = value; }
-        if let Some(value) = self.insulation_thickness_mm { next.insulation_thickness_mm = value; }
+        if let Some(value) = &self.annex { next.annex = value.clone(); }
+        if let Some(value) = &self.m_ed_knm { next.m_ed_knm = value.clone(); }
+        if let Some(value) = &self.v_ed_kn { next.v_ed_kn = value.clone(); }
+        if let Some(value) = &self.m_pla { next.m_pla = value.clone(); }
+        if let Some(value) = &self.m_pl_rd { next.m_pl_rd = value.clone(); }
+        if let Some(value) = &self.eta { next.eta = value.clone(); }
+        if let Some(value) = &self.v_l_rd { next.v_l_rd = value.clone(); }
+        if let Some(value) = &self.insulation_thickness_mm { next.insulation_thickness_mm = value.clone(); }
         if let Some(value) = &self.fire_rating { next.fire_rating = value.clone(); }
         if let Some(value) = &self.deck_type { next.deck_type = value.clone(); }
-        if let Some(value) = self.delta_sigma_mpa { next.delta_sigma_mpa = value; }
+        if let Some(value) = &self.delta_sigma_mpa { next.delta_sigma_mpa = value.clone(); }
         if let Some(value) = &self.fatigue_detail { next.fatigue_detail = value.clone(); }
-        if let Some(value) = self.d_mm { next.d_mm = value; }
-        if let Some(value) = self.h_sc_mm { next.h_sc_mm = value; }
-        if let Some(value) = self.f_ck_mpa { next.f_ck_mpa = value; }
-        if let Some(value) = self.f_u_mpa { next.f_u_mpa = value; }
-        if let Some(value) = self.e_cm_mpa { next.e_cm_mpa = value; }
-        if let Some(value) = self.v_ed_per_stud_kn { next.v_ed_per_stud_kn = value; }
-        if let Some(value) = self.span_m { next.span_m = value; }
-        if let Some(value) = self.f_y_mpa { next.f_y_mpa = value; }
-        if let Some(value) = self.n_cycles_stud { next.n_cycles_stud = value; }
-        if let Some(value) = self.delta_tau_stud_mpa { next.delta_tau_stud_mpa = value; }
+        if let Some(value) = &self.d_mm { next.d_mm = value.clone(); }
+        if let Some(value) = &self.h_sc_mm { next.h_sc_mm = value.clone(); }
+        if let Some(value) = &self.f_ck_mpa { next.f_ck_mpa = value.clone(); }
+        if let Some(value) = &self.f_u_mpa { next.f_u_mpa = value.clone(); }
+        if let Some(value) = &self.e_cm_mpa { next.e_cm_mpa = value.clone(); }
+        if let Some(value) = &self.v_ed_per_stud_kn { next.v_ed_per_stud_kn = value.clone(); }
+        if let Some(value) = &self.span_m { next.span_m = value.clone(); }
+        if let Some(value) = &self.f_y_mpa { next.f_y_mpa = value.clone(); }
+        if let Some(value) = &self.n_cycles_stud { next.n_cycles_stud = value.clone(); }
+        if let Some(value) = &self.delta_tau_stud_mpa { next.delta_tau_stud_mpa = value.clone(); }
         if let Some(value) = &self.selected_check_index {
             next.selected_check_index = *value;
         }
@@ -53,28 +53,28 @@ impl MutationDiff<En1994Snapshot> for En1994Diff {
             return replacement.to_snapshot();
         }
         let mut next = snapshot.clone();
-        if let Some(value) = self.annex { next.annex = value; }
-        if let Some(value) = self.m_ed_knm { next.m_ed_knm = value; }
-        if let Some(value) = self.v_ed_kn { next.v_ed_kn = value; }
-        if let Some(value) = self.m_pla { next.m_pla = value; }
-        if let Some(value) = self.m_pl_rd { next.m_pl_rd = value; }
-        if let Some(value) = self.eta { next.eta = value; }
-        if let Some(value) = self.v_l_rd { next.v_l_rd = value; }
-        if let Some(value) = self.insulation_thickness_mm { next.insulation_thickness_mm = value; }
+        if let Some(value) = &self.annex { next.annex = value.clone(); }
+        if let Some(value) = &self.m_ed_knm { next.m_ed_knm = value.clone(); }
+        if let Some(value) = &self.v_ed_kn { next.v_ed_kn = value.clone(); }
+        if let Some(value) = &self.m_pla { next.m_pla = value.clone(); }
+        if let Some(value) = &self.m_pl_rd { next.m_pl_rd = value.clone(); }
+        if let Some(value) = &self.eta { next.eta = value.clone(); }
+        if let Some(value) = &self.v_l_rd { next.v_l_rd = value.clone(); }
+        if let Some(value) = &self.insulation_thickness_mm { next.insulation_thickness_mm = value.clone(); }
         if let Some(value) = &self.fire_rating { next.fire_rating = value.clone(); }
         if let Some(value) = &self.deck_type { next.deck_type = value.clone(); }
-        if let Some(value) = self.delta_sigma_mpa { next.delta_sigma_mpa = value; }
+        if let Some(value) = &self.delta_sigma_mpa { next.delta_sigma_mpa = value.clone(); }
         if let Some(value) = &self.fatigue_detail { next.fatigue_detail = value.clone(); }
-        if let Some(value) = self.d_mm { next.d_mm = value; }
-        if let Some(value) = self.h_sc_mm { next.h_sc_mm = value; }
-        if let Some(value) = self.f_ck_mpa { next.f_ck_mpa = value; }
-        if let Some(value) = self.f_u_mpa { next.f_u_mpa = value; }
-        if let Some(value) = self.e_cm_mpa { next.e_cm_mpa = value; }
-        if let Some(value) = self.v_ed_per_stud_kn { next.v_ed_per_stud_kn = value; }
-        if let Some(value) = self.span_m { next.span_m = value; }
-        if let Some(value) = self.f_y_mpa { next.f_y_mpa = value; }
-        if let Some(value) = self.n_cycles_stud { next.n_cycles_stud = value; }
-        if let Some(value) = self.delta_tau_stud_mpa { next.delta_tau_stud_mpa = value; }
+        if let Some(value) = &self.d_mm { next.d_mm = value.clone(); }
+        if let Some(value) = &self.h_sc_mm { next.h_sc_mm = value.clone(); }
+        if let Some(value) = &self.f_ck_mpa { next.f_ck_mpa = value.clone(); }
+        if let Some(value) = &self.f_u_mpa { next.f_u_mpa = value.clone(); }
+        if let Some(value) = &self.e_cm_mpa { next.e_cm_mpa = value.clone(); }
+        if let Some(value) = &self.v_ed_per_stud_kn { next.v_ed_per_stud_kn = value.clone(); }
+        if let Some(value) = &self.span_m { next.span_m = value.clone(); }
+        if let Some(value) = &self.f_y_mpa { next.f_y_mpa = value.clone(); }
+        if let Some(value) = &self.n_cycles_stud { next.n_cycles_stud = value.clone(); }
+        if let Some(value) = &self.delta_tau_stud_mpa { next.delta_tau_stud_mpa = value.clone(); }
         next
     }
 

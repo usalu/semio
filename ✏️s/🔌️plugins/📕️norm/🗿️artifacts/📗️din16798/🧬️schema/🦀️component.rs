@@ -1,7 +1,7 @@
 //! 🧬️ Din16798 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use serde::{{Deserialize, Serialize}};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din16798 artifact state across persistent and shared-ui classes.
@@ -213,7 +213,14 @@ impl Din16798Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din16798::Din16798Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

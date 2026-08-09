@@ -1,7 +1,7 @@
 //! 🧩️ Sourcing curate app commands — host-pushed plugin contributions (sourcing modules).
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::{op::SourcingMutation, CurateDocument};
+use crate::artifacts::curate::{op::SourcingMutation, CurateSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }

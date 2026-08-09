@@ -1,5 +1,11 @@
-//! 🔺️ Imperative artifact — diff structs + `MutationDiff` impl (constitutional: diff).
+//! 🔺️ Imperative artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::imperative::diff::schema::{
+    ImperativeDiff, ImperativePathDelta, ImperativeStepPatchEntry, ImperativeStepsDelta, ImperativeStringList,
+};
+use crate::artifacts::imperative::schema::ImperativeArtifact;
+use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, Path, PathRef, Step};
+use protocol::{CollectionMutation, Identified, MutationDiff};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,62 +13,218 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::{ImperativeDocument, Path, PathRef};
-
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct ImperativeDiff(pub Option<ImperativeMutation>);
-
-impl protocol::MutationDiff<ImperativeDocument> for ImperativeDiff {
-    fn apply(&self, projection: &ImperativeDocument) -> ImperativeDocument {
-        let mut next = projection.clone();
-        if let Some(operation) = &self.0 {
-            if let Some(steps) = resolve_steps_mut(&mut next, &operation.path_ref) {
-                protocol::apply_collection_mutation(steps, &operation.collection);
+//#region 🔖️Apply
+fn apply_steps_delta(items: &[Step], delta: &ImperativeStepsDelta) -> Vec<Step> {
+    let mut next = items.to_vec();
+    for id in &delta.removed {
+        next.retain(|step| step.id != *id);
+    }
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        if let Some(step) = next.iter_mut().find(|step| step.id == entry.id) {
+            step.params = entry.patch.clone();
+        }
+    }
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|step| (step.id.clone(), step)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(step) = by_id.remove(id) {
+                ordered.push(step);
             }
-            prune_empty_slot(&mut next, &operation.path_ref);
         }
-        next
+        ordered.extend(by_id.into_values());
+        next = ordered;
     }
-
-    fn absorb(&mut self, other: Self) {
-        if other.0.is_some() {
-            self.0 = other.0;
-        }
-    }
+    next
 }
 
-fn resolve_steps_mut<'a>(document: &'a mut ImperativeDocument, path_ref: &PathRef) -> Option<&'a mut Vec<crate::artifacts::imperative::Step>> {
+fn resolve_steps_mut<'a>(snapshot: &'a mut ImperativeSnapshot, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
-        return Some(&mut document.path.steps);
+        return Some(&mut snapshot.path.steps);
     }
     let owner = path_ref.owner.clone()?;
     let slot = path_ref.slot.clone()?;
-    let owner_step = document.path.steps.iter_mut().find(|step| step.id == owner)?;
+    let owner_step = snapshot.path.steps.iter_mut().find(|step| step.id == owner)?;
     Some(&mut owner_step.bodies.entry(slot).or_insert_with(Path::new).steps)
 }
 
-/// 🧹️ Drops a nested slot's `bodies` entry once it's empty, so an emptied slot is bit-identical to
-/// a never-touched one — required for `Add` then `Remove` to be a true, exact inverse pair.
-fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
+fn prune_empty_slot(snapshot: &mut ImperativeSnapshot, path_ref: &PathRef) {
     let (Some(owner), Some(slot)) = (&path_ref.owner, &path_ref.slot) else {
         return;
     };
-    if let Some(owner_step) = document.path.steps.iter_mut().find(|step| &step.id == owner) {
+    if let Some(owner_step) = snapshot.path.steps.iter_mut().find(|step| &step.id == owner) {
         if owner_step.bodies.get(slot).is_some_and(|path| path.steps.is_empty()) {
             owner_step.bodies.remove(slot);
         }
     }
 }
-//#endregion 🔖️Diff
+
+fn apply_path_delta(snapshot: &mut ImperativeSnapshot, delta: &ImperativePathDelta) {
+    if let Some(steps) = resolve_steps_mut(snapshot, &delta.path_ref) {
+        *steps = apply_steps_delta(steps, &delta.steps);
+    }
+    prune_empty_slot(snapshot, &delta.path_ref);
+}
+
+impl ImperativeDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> ImperativeArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.path {
+            let mut snapshot = next.to_snapshot();
+            apply_path_delta(&mut snapshot, delta);
+            next.set_snapshot(snapshot);
+        }
+        if let Some(seed) = &self.seed {
+            next.seed = seed.clone();
+        }
+        if let Some(list) = &self.selected_step_ids {
+            next.selected_step_ids = list.values.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        next
+    }
+}
+
+fn absorb_steps_delta(target: &mut Option<ImperativeStepsDelta>, incoming: Option<ImperativeStepsDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            None => *target = Some(src),
+        }
+    }
+}
+
+fn absorb_path_delta(target: &mut Option<ImperativePathDelta>, incoming: Option<ImperativePathDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) if dst.path_ref == src.path_ref => {
+                dst.steps.added.extend(src.steps.added);
+                dst.steps.removed.extend(src.steps.removed);
+                dst.steps.patched.extend(src.steps.patched);
+                if src.steps.reordered.is_some() {
+                    dst.steps.reordered = src.steps.reordered;
+                }
+            }
+            _ => *target = Some(src),
+        }
+    }
+}
+
+impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
+    fn apply(&self, snapshot: &ImperativeSnapshot) -> ImperativeSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.path {
+            apply_path_delta(&mut next, delta);
+        }
+        if let Some(seed) = &self.seed {
+            next.seed = seed.clone();
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        absorb_path_delta(&mut self.path, other.path);
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(seed);
+        take!(selected_step_ids);
+        take!(locale);
+        take!(contributions_json);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+/// 🧩 Builds a step-collection delta from a [`CollectionMutation`].
+pub fn steps_delta_from_collection_mutation(
+    base: &[Step],
+    op: &CollectionMutation<String, Step, Dictionary>,
+) -> ImperativeStepsDelta {
+    match op {
+        CollectionMutation::Add { item, .. } => ImperativeStepsDelta {
+            added: vec![item.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Remove { id } => ImperativeStepsDelta {
+            removed: vec![id.clone()],
+            ..Default::default()
+        },
+        CollectionMutation::Patch { id, patch } => ImperativeStepsDelta {
+            patched: vec![ImperativeStepPatchEntry {
+                id: id.clone(),
+                patch: patch.clone(),
+            }],
+            ..Default::default()
+        },
+        CollectionMutation::Move { id, to_index } => {
+            let mut ids: Vec<String> = base.iter().map(Identified::id).cloned().collect();
+            if let Some(from) = ids.iter().position(|x| x == id) {
+                let item = ids.remove(from);
+                let to = (*to_index).min(ids.len());
+                ids.insert(to, item);
+            }
+            ImperativeStepsDelta {
+                reordered: Some(ids),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+/// 📸️ Whole-snapshot replacement diff.
+pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
+    ImperativeDiff {
+        artifact: Some(Box::new(ImperativeArtifact::from_snapshot(snapshot))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::imperative::{Dictionary, Step};
+    use crate::artifacts::imperative::engine::default_snapshot;
     use std::collections::BTreeMap;
 
     fn step(id: &str, kind: &str) -> Step {
@@ -70,42 +232,35 @@ mod tests {
     }
 
     #[test]
-    fn resolve_steps_mut_unknown_owner_is_none() {
-        let mut document = crate::artifacts::imperative::engine::default_document();
-        let path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
-        assert!(resolve_steps_mut(&mut document, &path_ref).is_none());
+    fn imperative_diff_absorb_whole_artifact_wins() {
+        let mut diff = ImperativeDiff {
+            path: Some(ImperativePathDelta {
+                path_ref: PathRef::default(),
+                steps: ImperativeStepsDelta { removed: vec!["step-1".into()], ..Default::default() },
+            }),
+            ..Default::default()
+        };
+        let replacement = ImperativeDiff {
+            artifact: Some(Box::new(ImperativeArtifact::default())),
+            ..Default::default()
+        };
+        diff.absorb(replacement);
+        assert!(diff.artifact.is_some());
+        assert!(diff.path.is_none());
     }
 
     #[test]
-    fn prune_empty_slot_removes_emptied_bodies_entry() {
-        let mut document = crate::artifacts::imperative::engine::default_document();
-        document.path.steps.push(step("step-if", "control.if"));
-        let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
-        resolve_steps_mut(&mut document, &path_ref).expect("materializes slot").push(step("step-nested", "log.print"));
-        let owner_step = document.path.steps.iter().find(|s| s.id == "step-if").expect("owner");
-        assert!(owner_step.bodies.contains_key("then"));
-        resolve_steps_mut(&mut document, &path_ref).expect("slot exists").clear();
-        prune_empty_slot(&mut document, &path_ref);
-        let owner_step = document.path.steps.iter().find(|s| s.id == "step-if").expect("owner");
-        assert!(!owner_step.bodies.contains_key("then"));
-    }
-
-    #[test]
-    fn prune_empty_slot_noop_without_owner_or_slot() {
-        let mut document = crate::artifacts::imperative::engine::default_document();
-        prune_empty_slot(&mut document, &PathRef::default());
-    }
-
-    #[test]
-    fn imperative_diff_absorb_keeps_latest_some_and_ignores_none() {
-        use protocol::MutationDiff;
-        let first = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-1".into() } };
-        let second = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-2".into() } };
-        let mut diff = ImperativeDiff(Some(first));
-        diff.absorb(ImperativeDiff(None));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionMutation::Remove { id } if id == "step-1")));
-        diff.absorb(ImperativeDiff(Some(second)));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionMutation::Remove { id } if id == "step-2")));
+    fn path_delta_remove_round_trips_via_apply() {
+        let base = default_snapshot();
+        let diff = ImperativeDiff {
+            path: Some(ImperativePathDelta {
+                path_ref: PathRef::default(),
+                steps: ImperativeStepsDelta { removed: vec!["step-1".into()], ..Default::default() },
+            }),
+            ..Default::default()
+        };
+        let next = diff.apply(&base);
+        assert!(next.path.steps.iter().all(|step| step.id != "step-1"));
     }
 }
 //#endregion 🧪️Tests

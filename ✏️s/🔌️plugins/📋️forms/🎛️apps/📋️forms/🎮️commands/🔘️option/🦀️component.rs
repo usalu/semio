@@ -4,13 +4,13 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::parse_value_json;
 use crate::artifacts::forms::engine::{create_form_id, update_block_operation};
-use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Shell
-fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
+fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
@@ -22,7 +22,7 @@ fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str,
     })
 }
 
-fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormMutation> {
+fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
     let value = create_form_id("opt");
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
@@ -31,7 +31,7 @@ fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Optio
     })
 }
 
-fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormMutation> {
+fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.retain(|entry| entry.value != option_value);
@@ -53,8 +53,8 @@ pub mod patch_question_options {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &PatchQuestionOptions, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let spec = doc.projection;
+    pub fn handle(payload: &PatchQuestionOptions, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let spec = doc.snapshot;
         let raw_value = parse_value_json(&payload.value_json);
         let operations: Vec<FormMutation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();
         if operations.is_empty() {
@@ -76,8 +76,8 @@ pub mod add_question_option {
         pub label: String,
     }
 
-    pub fn handle(payload: &AddQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        match add_question_option(doc.projection, &payload.question_id, &payload.label) {
+    pub fn handle(payload: &AddQuestionOption, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        match add_question_option(doc.snapshot, &payload.question_id, &payload.label) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
@@ -96,8 +96,8 @@ pub mod remove_question_option {
         pub option_value: String,
     }
 
-    pub fn handle(payload: &RemoveQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        match remove_question_option(doc.projection, &payload.question_id, &payload.option_value) {
+    pub fn handle(payload: &RemoveQuestionOption, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        match remove_question_option(doc.snapshot, &payload.question_id, &payload.option_value) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
@@ -116,7 +116,7 @@ mod tests {
 
     fn single_or_multi_question_id(app: &mut crate::apps::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::apps::forms::commands::question::add_question::AddQuestion { kind: "single".into(), step_id: None }));
-        crate::artifacts::forms::engine::flatten_questions(&app.projection().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
+        crate::artifacts::forms::engine::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
     }
 
     #[test]
@@ -124,11 +124,11 @@ mod tests {
         let mut app = forms_app();
         let question_id = single_or_multi_question_id(&mut app);
         dispatch(&mut app, FormsCommand::AddQuestionOption(AddQuestionOption { question_id: question_id.clone(), label: "New option".into() }));
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         let (_, question) = crate::artifacts::forms::engine::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         let added = question.options.as_ref().expect("options").iter().find(|option| option.label == "New option").expect("added option").value.clone();
         dispatch(&mut app, FormsCommand::RemoveQuestionOption(RemoveQuestionOption { question_id: question_id.clone(), option_value: added.clone() }));
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         let (_, question) = crate::artifacts::forms::engine::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         assert!(question.options.as_ref().expect("options").iter().all(|option| option.value != added));
     }

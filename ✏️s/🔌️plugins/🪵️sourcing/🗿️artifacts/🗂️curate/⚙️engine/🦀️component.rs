@@ -1,25 +1,31 @@
-//! ⚙️ Sourcing curate artifact — headless compute over the `CurateDocument` projection (constitutional:
+//! ⚙️ Sourcing curate artifact — headless compute over the `CurateSnapshot` projection (constitutional:
 //! engine).
 //!
-//! Query/mutation logic over `CurateDocument` lives here as free functions (`filtered_stock`,
+//! Query/mutation logic over `CurateSnapshot` lives here as free functions (`filtered_stock`,
 //! `curated_count`, `curate_delta`, `curate_set`) rather than inherent methods, mirroring every other
 //! artifact in this taxonomy. The rule for what lands here rather than next to a single caller: a helper
 //! with MORE THAN ONE consumer across the taxonomy tree lives here; a helper with exactly one consumer
 //! lives in that consumer's component file (e.g. `crate::apps::curate::modes::curate::windows::pool`'s
 //! `build_filter_bar`/`build_pool_table`, used only by the pool window).
 
-use crate::artifacts::curate::{CurateDocument, CuratedItem, Filters, GeometryRecipe, ObjectKind, SOURCING_CURATE_SCHEMA};
+use crate::artifacts::curate::{CurateSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, SOURCING_CURATE_SCHEMA};
 use semio_framework::{parse_contributions, Contribution};
 use serde_json::{json, Value};
 use std::sync::Mutex;
 
 //#region 🔖️Register
-/// 🗂️ Registers `CurateDocument`'s pack↔dsl codec under `SOURCING_CURATE_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `CurateSnapshot`'s pack↔dsl codec under `SOURCING_CURATE_SCHEMA` so `framework/sync`'s
 /// folder endpoints and any other schema-string-keyed caller can print/parse curate documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::curate::SourcingCurateApp>(SOURCING_CURATE_SCHEMA);
+}
+
+/// 📎 Registers the curate artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::curate::schema::curate_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -30,8 +36,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("sourcing.curate"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -60,8 +66,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("curate.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -113,7 +119,7 @@ pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
 /// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
-pub fn sourcing_catalog_fragment(document: &CurateDocument) -> Value {
+pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
     let object_kinds: Vec<Value> = document.stock.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
     json!({
         "schema": "manifest",
@@ -286,7 +292,7 @@ pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected
 /// 🔎️ The stock kinds that currently satisfy every active filter dimension. `filters` lives on
 /// `crate::apps::curate::config::SourcingCurateConfig` (session-only view state), so this takes it as a
 /// separate parameter rather than reading it off the document.
-pub fn filtered_stock<'a>(document: &'a CurateDocument, filters: &Filters) -> Vec<&'a ObjectKind> {
+pub fn filtered_stock<'a>(document: &'a CurateSnapshot, filters: &Filters) -> Vec<&'a ObjectKind> {
     document
         .stock
         .iter()
@@ -302,13 +308,13 @@ pub fn filtered_stock<'a>(document: &'a CurateDocument, filters: &Filters) -> Ve
 }
 
 /// 🔢️ How many units of `object_id` are currently in the curated set (0 if absent).
-pub fn curated_count(document: &CurateDocument, object_id: &str) -> u32 {
+pub fn curated_count(document: &CurateSnapshot, object_id: &str) -> u32 {
     document.curated.iter().find(|item| item.object_id == object_id).map_or(0, |item| item.count)
 }
 
 /// ➕️➖️ Adjusts the curated count for `object_id` by `delta`, clamped to `0..=availability`; removes the
 /// entry entirely when the count reaches 0. Silently no-operations if `object_id` isn't in the stock.
-pub fn curate_delta(document: &mut CurateDocument, object_id: &str, delta: i64) {
+pub fn curate_delta(document: &mut CurateSnapshot, object_id: &str, delta: i64) {
     let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return };
     let next = (curated_count(document, object_id) as i64 + delta).clamp(0, kind.availability as i64) as u32;
     curate_set(document, object_id, next);
@@ -316,7 +322,7 @@ pub fn curate_delta(document: &mut CurateDocument, object_id: &str, delta: i64) 
 
 /// 🎯️ Sets the curated count for `object_id` directly, clamped to `0..=availability`; removes the
 /// entry when the count is 0. Silently no-operations if `object_id` isn't in the stock.
-pub fn curate_set(document: &mut CurateDocument, object_id: &str, count: u32) {
+pub fn curate_set(document: &mut CurateSnapshot, object_id: &str, count: u32) {
     let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return };
     let clamped = count.min(kind.availability);
     match document.curated.iter_mut().find(|item| item.object_id == object_id) {
@@ -562,8 +568,14 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
 
 /// 🧩️ Every sourcing module known to this crate, in stable order.
 pub fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
+    let mut modules: Vec<Box<dyn SourcingModule>> = vec![
+        Box::new(beams::BeamsModule),
+        Box::new(windows::WindowsModule),
+        Box::new(slabs::SlabsModule),
+    ];
     let contributed = CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock");
-    contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>).collect()
+    modules.extend(contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>));
+    modules
 }
 
 /// 🔎️ Looks up a single module by id.
@@ -616,15 +628,15 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 
 //#region 🔖️Fixtures
 /// 📄️ The demo-stock example, parsed once from `crate::artifacts::curate::dsl::DEMO_STOCK_TEXT` — the
-/// source of truth for every "demo stock" call site (`setActiveExample`, `initial_projection`, tests).
-pub fn default_document() -> CurateDocument {
-    <CurateDocument as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
+/// source of truth for every "demo stock" call site (`setActiveExample`, `initial_snapshot`, tests).
+pub fn default_document() -> CurateSnapshot {
+    <CurateSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
 }
 
 /// 📄️ The empty-curation example, parsed once from
 /// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT`.
-pub fn empty_document() -> CurateDocument {
-    <CurateDocument as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
+pub fn empty_document() -> CurateSnapshot {
+    <CurateSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
 }
 //#endregion 🔖️Fixtures
 
@@ -633,8 +645,8 @@ pub fn empty_document() -> CurateDocument {
 mod tests {
     use super::*;
 
-    fn sample_document() -> CurateDocument {
-        CurateDocument { stock: sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
+    fn sample_document() -> CurateSnapshot {
+        CurateSnapshot { stock: sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
     }
 
     #[test]
@@ -781,16 +793,16 @@ mod tests {
 
     #[test]
     fn curate_document_dsl_round_trips_sample_and_empty() {
-        store::test_support::assert_dsl_round_trip(&sample_document());
-        store::test_support::assert_dsl_round_trip(&CurateDocument::default());
-        store::test_support::assert_dsl_pack_equivalence(&sample_document());
-        store::test_support::assert_dsl_pack_equivalence(&CurateDocument::default());
+        store::os_store::test_support::assert_dsl_round_trip(&sample_document());
+        store::os_store::test_support::assert_dsl_round_trip(&CurateSnapshot::default());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_document());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&CurateSnapshot::default());
     }
 
     #[test]
     fn available_modules_tracks_contributed_modules() {
         sync_sourcing_module_contributions("[]");
-        assert!(available_modules().is_empty());
+        assert_eq!(available_modules().len(), 3);
         let beams = beams::BeamsModule;
         let entry = semio_framework::ProgramContributionEntry {
             plugin_id: "sourcing-module-beams".into(),
@@ -805,7 +817,7 @@ mod tests {
         };
         sync_sourcing_module_contributions(&serde_json::to_string(&vec![entry]).unwrap());
         let modules = available_modules();
-        assert_eq!(modules.len(), 1);
+        assert_eq!(modules.len(), 4);
         assert_eq!(modules[0].module_id, "beams");
         sync_sourcing_module_contributions("[]");
     }
@@ -834,33 +846,45 @@ mod tests {
 
 
 //#region 🔖️ArtifactEngine
+use crate::artifacts::curate::schema::CurateArtifact;
+
 pub struct SourcingEngine {
-    projection: crate::artifacts::curate::SourcingDocument,
+    artifact: CurateArtifact,
+    cached_snapshot: CurateSnapshot,
 }
 
 impl SourcingEngine {
-    pub fn new(projection: crate::artifacts::curate::SourcingDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: CurateSnapshot) -> Self {
+        Self {
+            artifact: CurateArtifact::from_snapshot(snapshot.clone()),
+            cached_snapshot: snapshot,
+        }
     }
 }
 
 impl protocol::ArtifactEngine for SourcingEngine {
-    type Projection = crate::artifacts::curate::SourcingDocument;
+    type Artifact = CurateArtifact;
+    type Snapshot = CurateSnapshot;
     type Mutation = crate::artifacts::curate::mutations::SourcingMutation;
-    type Diff = crate::artifacts::curate::diff::SourcingDiff;
+    type Diff = crate::artifacts::curate::diff::CurateDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.cached_snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::curate::mutations::apply_sourcing_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.cached_snapshot);
+        self.artifact = diff.apply_to_artifact(&self.artifact);
+        self.cached_snapshot = self.artifact.to_snapshot();
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.artifact.to_snapshot())
     }
 }
 //#endregion 🔖️ArtifactEngine

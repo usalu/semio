@@ -1,0 +1,66 @@
+{
+  "$id": "https://semio.tech/schema/s/sequence/sequence/artifact.json",
+  "title": "SequenceArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "steps", "edges", "selectedStepIds", "lastRunJson", "orientation", "camera", "locale"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/SequenceStep" }, "x-semio-state": "persistent" },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdge" }, "x-semio-state": "persistent" },
+    "selectedStepIds": { "type": "array", "items": { "type": "string" }, "x-semio-state": "shared-ui" },
+    "lastRunJson": { "type": "string", "x-semio-state": "local-ui" },
+    "orientation": { "type": "string", "x-semio-state": "local-ui" },
+    "camera": { "$ref": "#/$defs/SequenceCamera", "x-semio-state": "local-ui" },
+    "locale": { "type": "string", "x-semio-state": "local-ui" }
+  },
+  "$defs": {
+    "SequenceStep": {
+      "title": "SequenceStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "params", "x", "y", "collapsed"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "params": { "type": "object" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "slot": { "$ref": "#/$defs/SlotRef" },
+        "collapsed": { "type": "boolean" }
+      }
+    },
+    "SequenceEdge": {
+      "title": "SequenceEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "SlotRef": {
+      "title": "SlotRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name"],
+      "properties": {
+        "owner": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "SequenceCamera": {
+      "title": "SequenceCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

@@ -1,7 +1,10 @@
 /** layout facet WASM facades */
 export * as layout_diff from "../../🗿️artifacts/📏️layout/🔺️diff/🟦️component.ts";
 export * as layout_dsl from "../../🗿️artifacts/📏️layout/🗣️dsl/🟦️component.ts";
-export * as layout_pack from "../../🗿️artifacts/📏️layout/🎒️pack/🟦️component.ts";
+export * as layout_pack from "../../🗿️artifacts/📏️layout/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as layout_artifact_schema from "../../🗿️artifacts/📏️layout/🧬️schema/🟦️component.ts";
+export * as layout_snapshot_schema from "../../🗿️artifacts/📏️layout/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as layout_diff_schema from "../../🗿️artifacts/📏️layout/🔺️diff/🧬️schema/🟦️component.ts";
 export * as layout_mutations from "../../🗿️artifacts/📏️layout/🧬️mutations/🟦️component.ts";
 export * as layout_op from "../../🗿️artifacts/📏️layout/🔧️op/🟦️component.ts";
 export * as layout_spr from "../../🗿️artifacts/📏️layout/📡️spr/🟦️component.ts";

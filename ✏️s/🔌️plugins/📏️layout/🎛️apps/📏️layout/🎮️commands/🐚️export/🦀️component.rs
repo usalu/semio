@@ -7,7 +7,7 @@ use crate::apps::layout::panels::preflight::run_layout_preflight;
 use crate::apps::layout::terminology::layout_labels;
 use crate::artifacts::layout::engine::scene::{export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip};
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutDocument;
+use crate::artifacts::layout::LayoutSnapshot;
 use base64::Engine;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, DocumentView, Emit, Fault};
@@ -23,9 +23,9 @@ pub mod export_png {
         pub page_id: Option<String>,
     }
 
-    pub fn handle(payload: &ExportPng, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.projection.active_page_id.clone());
-        match export_document_png_cpu(doc.projection, &page_id) {
+    pub fn handle(payload: &ExportPng, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
+        match export_document_png_cpu(doc.snapshot, &page_id) {
             Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
             Err(_) => Ok(Emit::default()),
         }
@@ -43,9 +43,9 @@ pub mod export_svg {
         pub page_id: Option<String>,
     }
 
-    pub fn handle(payload: &ExportSvg, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.projection.active_page_id.clone());
-        match export_document_svg(doc.projection, &page_id) {
+    pub fn handle(payload: &ExportSvg, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
+        match export_document_svg(doc.snapshot, &page_id) {
             Ok(svg) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None })),
             Err(_) => Ok(Emit::default()),
         }
@@ -63,9 +63,9 @@ pub mod export_pdf {
         pub page_id: Option<String>,
     }
 
-    pub fn handle(payload: &ExportPdf, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.projection.active_page_id.clone());
-        match export_document_pdf(doc.projection, &page_id) {
+    pub fn handle(payload: &ExportPdf, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
+        match export_document_pdf(doc.snapshot, &page_id) {
             Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
             Err(_) => Ok(Emit::default()),
         }
@@ -81,9 +81,9 @@ pub mod export_package {
     #[dsl(keyword = "export-package")]
     pub struct ExportPackage {}
 
-    pub fn handle(_payload: &ExportPackage, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-        let document = doc.projection;
-        let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(cfg.projection))).unwrap_or_else(|_| "[]".into());
+    pub fn handle(_payload: &ExportPackage, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(cfg.snapshot))).unwrap_or_else(|_| "[]".into());
         let doc_json = serde_json::to_string(document).unwrap_or_default();
         match export_package_zip(&doc_json, &preflight_json) {
             Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
@@ -109,7 +109,7 @@ pub mod engagement_submit {
     }
 
     /// 🐚️ Routes typed export intents from the engagement bar to the matching export handler.
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let typed = payload.value.trim();
         if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
             return export_png::handle(&export_png::ExportPng { page_id: None }, doc, cfg);
@@ -178,7 +178,7 @@ mod tests {
         // check must accept it because its handler only routes an export `HostEffect`, never operations.
         let mut app = crate::apps::layout::testkit::layout_app_with_registry();
         let result = dispatch(&mut app, LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }));
-        assert!(result.document_mutations.is_empty(), "Shell action must not emit document operations");
+        assert!(result.mutations.is_empty(), "Shell action must not emit document operations");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 }

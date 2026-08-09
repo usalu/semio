@@ -1,6 +1,6 @@
 dialect grammar
 grammar vcs.diff
-extension vcsdemo
+extension vcs
 use family-sheet
 start diff
 

@@ -1,0 +1,6 @@
+# 🧬️ S Home snapshot schema — persistent fields only.
+
+type SHomeSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  catalogGeneration: Long! @state(class: PERSISTENT)
+}

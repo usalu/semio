@@ -1,5 +1,5 @@
-//! 🧮️ Mathematical play app — view state (`MathConfig`) and its operation enum
-//! (`MathConfigMutation`).
+//! 🧮️ Mathematical play app — view state (`MathematicalConfig`) and its operation enum
+//! (`MathematicalConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.mathematical` document. It still round-trips through a real
@@ -7,27 +7,26 @@
 //! content — absorbs the former app-struct `RefCell` (`MathPlayRuntime::camera`, the node-graph viewport)
 //! plus the locale the UI used to read off the deleted `ViewModel`.
 
-use crate::artifacts::mathematical::MathCamera;
+use crate::artifacts::mathematical::MathematicalCamera;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "mathematicalcfg")]
-#[dsl(layout = "lines")]
-pub struct MathConfig {
+#[dsl(id = "mathematical.config", layout = "lines")]
+pub struct MathematicalConfig {
     /// 🎥️ Node-graph viewport camera — session-only, never a document field. Was
     /// `MathPlayRuntime::camera`.
     #[dsl(block)]
-    pub camera: MathCamera,
+    pub camera: MathematicalCamera,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
 }
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for MathConfig {
+impl store::DocumentDsl for MathematicalConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -57,7 +56,7 @@ impl store::DocumentDsl for MathConfig {
 }
 
 /// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for MathConfig {
+impl store::DocumentPack for MathematicalConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -88,41 +87,41 @@ impl store::DocumentPack for MathConfig {
 //#endregion 🔖️DocumentCodec
 
 
-impl Default for MathConfig {
+impl Default for MathematicalConfig {
     fn default() -> Self {
-        Self { camera: MathCamera::default(), locale: "en-US".into() }
+        Self { camera: MathematicalCamera::default(), locale: "en-US".into() }
     }
 }
 
-store::impl_whole_record_config!(MathConfig);
+store::impl_whole_record_config!(MathematicalConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// 🧮️ `MathConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
+/// 🧮️ `MathematicalConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
 /// `MathPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns —
 /// mirrors `shooting_op::ShootingConfigMutation`'s "undo this tick is exactly restore the whole-config
-/// snapshot from just before it" pattern: `Mutation::Diff` is the WHOLE `MathConfig` (not a granular
+/// snapshot from just before it" pattern: `Mutation::Diff` is the WHOLE `MathematicalConfig` (not a granular
 /// patch type), `diff()` returns "the full config after this op", and
-/// `protocol::MutationDiff<MathConfig>::apply` for `MathConfig` itself (see `store::impl_whole_record_config!`)
+/// `protocol::MutationDiff<MathematicalConfig>::apply` for `MathematicalConfig` itself (see `store::impl_whole_record_config!`)
 /// just returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum MathConfigMutation {
+pub enum MathematicalConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
-        config: MathConfig,
+        config: MathematicalConfig,
     },
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
-        camera: MathCamera,
+        camera: MathematicalCamera,
     },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for MathConfigMutation {
+impl protocol::OpText for MathematicalConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -147,7 +146,7 @@ impl protocol::OpText for MathConfigMutation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for MathConfigMutation {
+impl protocol::OpBinary for MathematicalConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -193,21 +192,21 @@ impl protocol::OpBinary for MathConfigMutation {
 //#endregion 🔖️OpCodec
 
 
-impl Mutation<MathConfig> for MathConfigMutation {
-    type Diff = MathConfig;
+impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
+    type Diff = MathematicalConfig;
 
-    fn diff(&self, base: &MathConfig) -> MathConfig {
+    fn diff(&self, base: &MathematicalConfig) -> MathematicalConfig {
         let mut next = base.clone();
         match self {
-            MathConfigMutation::Snapshot { config } => return config.clone(),
-            MathConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            MathConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            MathematicalConfigMutation::Snapshot { config } => return config.clone(),
+            MathematicalConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            MathematicalConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn inverse(&self, base: &MathConfig) -> Vec<Self> {
-        vec![MathConfigMutation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &MathematicalConfig) -> Vec<Self> {
+        vec![MathematicalConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigMutations
@@ -219,42 +218,42 @@ mod tests {
 
     #[test]
     fn math_config_default_is_the_identity_camera_and_english_locale() {
-        let config = MathConfig::default();
-        assert_eq!(config.camera, MathCamera::default());
+        let config = MathematicalConfig::default();
+        assert_eq!(config.camera, MathematicalCamera::default());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
     fn math_config_dsl_round_trips() {
-        let config = MathConfig { camera: MathCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
-        store::test_support::assert_dsl_round_trip(&config);
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        let config = MathematicalConfig { camera: MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
+        store::os_store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn config_operation_snapshot_diff_ignores_base() {
-        let base = MathConfig::default();
+        let base = MathematicalConfig::default();
         let mut snapshot = base.clone();
         snapshot.locale = "de-DE".into();
-        let operation = MathConfigMutation::Snapshot { config: snapshot.clone() };
+        let operation = MathematicalConfigMutation::Snapshot { config: snapshot.clone() };
         assert_eq!(Mutation::diff(&operation, &base), snapshot);
     }
 
     #[test]
     fn config_operation_set_camera_round_trips() {
-        let base = MathConfig::default();
-        let camera = MathCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = MathConfigMutation::SetCamera { camera: camera.clone() };
+        let base = MathematicalConfig::default();
+        let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
         let next = Mutation::diff(&operation, &base);
         assert_eq!(next.camera, camera);
         let backwards = Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![MathConfigMutation::Snapshot { config: base }]);
-        store::test_support::assert_op_line_round_trip(&operation);
+        assert_eq!(backwards, vec![MathematicalConfigMutation::Snapshot { config: base }]);
+        store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn config_operation_set_locale_round_trips() {
-        store::test_support::assert_op_line_round_trip(&MathConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&MathematicalConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

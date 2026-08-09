@@ -1,0 +1,77 @@
+# 🧬️ Curate artifact schema — every field with its state class.
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type TableSort {
+  columnId: String!
+  direction: SortDirection!
+}
+
+type Filters {
+  query: String!
+  moduleIds: [String!]!
+  typologyPath: [String!]!
+  minAvailability: Int!
+  sort: TableSort
+}
+
+union GeometryRecipe =
+  | GeometryRecipeBox
+  | GeometryRecipeFrame
+  | GeometryRecipeSlab
+  | GeometryRecipeMesh
+
+type GeometryRecipeBox {
+  kind: String!
+  width: Float!
+  height: Float!
+  depth: Float!
+}
+
+type GeometryRecipeFrame {
+  kind: String!
+  width: Float!
+  height: Float!
+  depth: Float!
+  profile: Float!
+}
+
+type GeometryRecipeSlab {
+  kind: String!
+  width: Float!
+  depth: Float!
+  thickness: Float!
+}
+
+type GeometryRecipeMesh {
+  kind: String!
+  positions: [Float!]!
+  normals: [Float!]!
+  indices: [Int!]!
+}
+
+type ObjectKind {
+  id: String!
+  name: String!
+  moduleId: String!
+  typologyPath: [String!]!
+  availability: Int!
+  geometry: GeometryRecipe!
+}
+
+type CuratedItem {
+  objectId: String!
+  count: Int!
+}
+
+type CurateArtifact {
+  stock: [ObjectKind!]! @state(class: PERSISTENT)
+  curated: [CuratedItem!]! @state(class: PERSISTENT)
+  filters: Filters! @state(class: LOCAL_UI)
+  selectedObjectId: String @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}

@@ -1,6 +1,7 @@
 //! 🧬️ Din4108 snapshot schema — persistent fields only.
 
 use schema::ArtifactSchema;
+use crate::artifacts::din4108::LayerDocument;
 use crate::document::ClimateZoneDe;
 use serde::{Deserialize, Serialize};
 
@@ -12,25 +13,43 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.din4108", layout = "lines")]
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Snapshot {
+    #[state(persistent)]
     pub category: String,
     #[dsl(table)]
+    #[state(persistent)]
     pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
+    #[state(persistent)]
     pub climate: ClimateZoneDe,
+    #[state(persistent)]
     pub airtightness_n50: f64,
+    #[state(persistent)]
     pub psi_times_l_sum: f64,
+    #[state(persistent)]
     pub rh_int: f64,
+    #[state(persistent)]
     pub catalog_id: String,
+    #[state(persistent)]
     pub material_id: String,
+    #[state(persistent)]
     pub airtightness_class: String,
+    #[state(persistent)]
     pub t_int_c: f64,
+    #[state(persistent)]
     pub solar_absorptance: f64,
+    #[state(persistent)]
     pub irradiance_w_m2: f64,
+    #[state(persistent)]
     pub moisture_mu_exterior: f64,
+    #[state(persistent)]
     pub moisture_mu_interior: f64,
     #[dsl(unit = "m2")]
+    #[state(persistent)]
     pub envelope_area_m2: f64,
+    #[state(persistent)]
     pub bb2_details_conform: bool,
+    #[state(persistent)]
     pub application_type: String,
+    #[state(persistent)]
     pub declared_application_class: String,
 }
 //#region 🔖️HandcraftedDocumentCodecs

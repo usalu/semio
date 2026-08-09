@@ -1,0 +1,71 @@
+{
+  "$id": "https://semio.tech/schema/s/reasoning/wires/diff.json",
+  "title": "WiresDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "WiresArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "wiresFixture": {
+      "title": "DslValue",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "boardFixture": {
+      "title": "DslValue",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/WiresStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "dragNodeId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "dragLastX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "preview"
+    },
+    "dragLastY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "preview"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "WiresStringList": {
+      "title": "WiresStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

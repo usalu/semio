@@ -1,4 +1,4 @@
-//! ⚙️ Playbook artifact — headless compute over the `PlaybookSpec` projection (constitutional: engine).
+//! ⚙️ Playbook artifact — headless compute over the `PlaybookSnapshot` (constitutional: engine).
 //!
 //! Pure compute over the shared `playbook` kernel crate's step/block domain is re-exported here; this
 //! component adds the media I/O declaration, the chapter-import payload shape, and the block-shell
@@ -10,15 +10,16 @@ use crate::artifacts::playbook::PLAYBOOK_DOCUMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
-pub use crate::playbook::{empty_playbook_projection, flatten_playbook_blocks, PlaybookBlock};
+pub use crate::artifacts::playbook::{empty_playbook_snapshot, flatten_playbook_blocks, PlaybookBlock};
 //#endregion 🔖️Types
 
 //#region 🔖️Register
-/// 🗂️ Registers `PlaybookSpec`'s pack↔dsl codec under `PLAYBOOK_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `PlaybookSnapshot`'s pack↔dsl codec under `PLAYBOOK_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse playbook documents without
 /// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::playbook::PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);
 }
@@ -31,8 +32,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playbook::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playbook.playbook"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -61,8 +62,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::playbook::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playbook.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -174,37 +175,52 @@ mod tests {
 //#region 🔖️ArtifactEngine
 /// 🧬️ UI-independent document engine — every transition is a `PlaybookMutation`.
 pub struct PlaybookEngine {
-    projection: crate::playbook::PlaybookSpec,
+    artifact: crate::artifacts::playbook::schema::PlaybookArtifact,
+    snapshot: crate::artifacts::playbook::PlaybookSnapshot,
 }
 
 impl PlaybookEngine {
-    pub fn new(projection: crate::playbook::PlaybookSpec) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::playbook::PlaybookSnapshot) -> Self {
+        let artifact = crate::artifacts::playbook::schema::PlaybookArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::playbook::PlaybookSpec {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::playbook::PlaybookSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for PlaybookEngine {
-    type Projection = crate::playbook::PlaybookSpec;
+    type Artifact = crate::artifacts::playbook::schema::PlaybookArtifact;
+    type Snapshot = crate::artifacts::playbook::PlaybookSnapshot;
     type Mutation = crate::artifacts::playbook::mutations::PlaybookMutation;
-    type Diff = crate::artifacts::playbook::diff::PlaybookDiff;
+    type Diff = crate::artifacts::playbook::PlaybookDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = crate::artifacts::playbook::mutations::apply_playbook_edit_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.playbook.playbook`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
 

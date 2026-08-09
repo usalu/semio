@@ -192,15 +192,9 @@ mod tests {
 
 
 //#region 🔖️ArtifactSchemaRegistry
-use std::sync::{Mutex, OnceLock};
-
-static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
-
 /// 🧬️ Registers `block2d` fifteen-leaf artifact schema descriptor once.
 pub fn register_artifact_schema() {
-    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    let mut guard = registry.lock().expect("schema registry");
-    guard.register(crate::artifacts::block2d::schema::block2d_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::block2d::schema::block2d_artifact_schema_descriptor());
 }
 //#endregion 🔖️ArtifactSchemaRegistry
 

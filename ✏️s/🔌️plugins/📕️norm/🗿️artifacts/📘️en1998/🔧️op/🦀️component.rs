@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn set_snapshot_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() });
     }
 }
 //#endregion 🧪️Tests

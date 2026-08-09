@@ -4,7 +4,7 @@
 use crate::apps::imperative::config::ImperativeConfigMutation;
 use crate::artifacts::imperative::engine::ImperativeHost;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::ImperativeDocument;
+use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
         Ok(Emit::config(vec![ImperativeConfigMutation::SetSelectedSteps { ids: payload.ids.clone() }]))
     }
 }
@@ -34,8 +34,8 @@ pub mod run {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let host = ImperativeHost::from_document(doc.projection.clone());
+    pub fn handle(_payload: &Run, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let host = ImperativeHost::from_snapshot(doc.snapshot.clone());
         let result = host.run();
         let json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
         Ok(Emit::config(vec![ImperativeConfigMutation::SetRunOutput { json }]))
@@ -54,7 +54,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
         Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

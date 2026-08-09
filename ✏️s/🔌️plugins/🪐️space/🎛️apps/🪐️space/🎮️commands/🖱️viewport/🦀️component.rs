@@ -1,7 +1,7 @@
 //! 🖱️ S Studio app — graph hover + viewport/camera commands.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{OsWorkflowCamera, WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{OsWorkflowCamera, WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️Hover
@@ -22,7 +22,7 @@ pub mod node_graph_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -37,7 +37,7 @@ pub mod text_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -54,7 +54,7 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match serde_json::from_str::<OsWorkflowCamera>(&payload.viewport_json) {
             Ok(camera) => Ok(Emit::config(vec![SpaceConfigMutation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
             Err(_) => Ok(Emit::default()),
@@ -71,9 +71,9 @@ mod tests {
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
         use crate::apps::space::SpaceCommand;
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { hover_json: Some("{\"nodeId\":\"n1\"}".into()) }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::TextHover(text_hover::TextHover { hover_json: None }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{\"x\":0,\"y\":0,\"zoom\":1}".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { hover_json: Some("{\"nodeId\":\"n1\"}".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::TextHover(text_hover::TextHover { hover_json: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{\"x\":0,\"y\":0,\"zoom\":1}".into() }));
     }
 
     #[test]

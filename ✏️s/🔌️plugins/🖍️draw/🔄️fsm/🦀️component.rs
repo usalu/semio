@@ -3,12 +3,6 @@
 //! Machine structure is compile-time (dense static tables addressed by `NodeId`s);
 //! machine state and actor instances are runtime. See [`Machine`] and [`statechart!`].
 
-// 🧯️ Needed so `statechart!`-expanded code (in downstream consumer crates, e.g. `crate::apps::draw`)
-// can refer to this crate by its own name (`fsm::Command`/`fsm::CommandSink`/…) — clippy cannot see
-// that external use from inside this crate itself, hence the allow.
-#[allow(unused_extern_crates)]
-extern crate self as fsm;
-
 mod host {
     //! 🌐️ Host abstraction — hosts execute the commands the kernel only describes.
 
@@ -215,12 +209,12 @@ mod host {
         struct DummyMachine;
         impl Machine for DummyMachine {
             type Context = ();
-            type Event = super::testing::support::UnitEvent;
+            type Event = super::super::testing::support::UnitEvent;
             type Input = ();
             type Output = ();
             type Effect = &'static str;
             type Config = crate::BitSet<1>;
-            fn definition() -> &'static super::kernel::MachineDefinition<Self> {
+            fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
                 unimplemented!("host tests never step a machine")
             }
         }
@@ -336,8 +330,8 @@ mod inspect {
 
         #[test]
         fn trace_inspector_records_one_microstep_per_transition() {
-            use super::kernel::{init, macrostep};
-            use super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+            use super::super::kernel::{init, macrostep};
+            use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
             let mut sink = Vec::new();
             let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
@@ -968,7 +962,7 @@ mod kernel {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use super::inspect::NullInspector;
+        use super::super::inspect::NullInspector;
         use crate::{ActionId, BitSet, EventId, GuardId, NodeId};
 
         //#region 🔖️ToggleMachine
@@ -1363,15 +1357,15 @@ mod persist {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use super::kernel::{init, macrostep};
-        use super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::super::kernel::{init, macrostep};
+        use super::super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn persist_then_restore_round_trips_active_state() {
             let _ = unit_toggle_definition();
             let mut sink = Vec::new();
             let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
-            let mut inspector = super::inspect::NullInspector;
+            let mut inspector = super::super::inspect::NullInspector;
             macrostep(&mut snapshot, UnitToggleEvent::Flip, &mut sink, &mut inspector);
             assert!(snapshot.matches("on"));
 
@@ -1597,8 +1591,8 @@ mod runtime {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use super::host::TestHost;
-        use super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::super::host::TestHost;
+        use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn actor_system_drains_sent_events_through_one_macrostep_each() {
@@ -1762,7 +1756,7 @@ mod testing {
 
     #[cfg(test)]
     pub(crate) mod support {
-        use super::kernel::{MachineDefinition, NodeDef, NodeKind, TransitionDef, TransitionKind, Trigger, ROOT};
+        use super::super::kernel::{MachineDefinition, NodeDef, NodeKind, TransitionDef, TransitionKind, Trigger, ROOT};
         use crate::{BitSet, EventId, Machine, StatechartEvent};
 
         #[derive(Clone, Debug, PartialEq)]
@@ -1837,7 +1831,7 @@ mod testing {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+        use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn explore_reaches_both_toggle_states() {

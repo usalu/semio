@@ -5,7 +5,7 @@ use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
 use crate::apps::space::terminology::SStudioLabels;
 use crate::apps::space::{s_play_action, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID};
-use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowDocument, WorkflowNode, WorkflowParameter};
+use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowSnapshot, WorkflowNode, WorkflowParameter};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -19,7 +19,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowDocument, config: &SpaceConfig, term_labels: &SStudioLabels) -> UiNode {
+pub fn render(projection: &WorkflowSnapshot, config: &SpaceConfig, term_labels: &SStudioLabels) -> UiNode {
     let selected_node_ids = &config.selected_node_ids;
     let mut children = vec![UiSectionNode {
         id: "s-play-inspector.header".into(),

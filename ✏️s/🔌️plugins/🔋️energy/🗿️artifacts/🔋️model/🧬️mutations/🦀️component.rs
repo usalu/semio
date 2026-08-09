@@ -1,34 +1,57 @@
-//! 🧬️ EnergyModel artifact — minimal mutation dispatch.
-use serde::{Deserialize, Serialize};
-use protocol::Mutation;
+//! 🧬️ EnergyModel artifact — mutation dispatch.
 
+use crate::artifacts::model::diff::diff_set_snapshot;
+use crate::artifacts::model::{EnergyModelDiff, EnergyModelSnapshot};
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutations
+/// 📐️ Typed content mutation for an `EnergyModelSnapshot`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum EnergyModelMutation {
     #[default]
     NoMutation,
-    SetDocument {
+    SetSnapshot {
         #[dsl(block)]
-        document: EnergyModelDocument,
+        snapshot: EnergyModelSnapshot,
     },
 }
+//#endregion 🔖️Mutations
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct EnergyModelDocument {
-    pub schema: String,
-}
-
-pub fn apply_model_mutation(projection: &mut EnergyModelDocument, mutation: &EnergyModelMutation) {
+//#region 🔖️Apply
+/// ▶️ Applies `mutation` to `snapshot`, producing the next document.
+pub fn apply_energy_model_mutation(
+    snapshot: &mut EnergyModelSnapshot,
+    mutation: &EnergyModelMutation,
+) {
     match mutation {
         EnergyModelMutation::NoMutation => {}
-        EnergyModelMutation::SetDocument { document } => *projection = document.clone(),
+        EnergyModelMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
 }
+//#endregion 🔖️Apply
 
-impl Mutation<EnergyModelDocument> for EnergyModelMutation {
-    type Diff = EnergyModelMutation;
-    fn diff(&self, _p: &EnergyModelDocument) -> Self::Diff { self.clone() }
-    fn inverse(&self, p: &EnergyModelDocument) -> Vec<Self> {
-        vec![EnergyModelMutation::SetDocument { document: p.clone() }]
+//#region 🔖️MutationTrait
+impl Mutation<EnergyModelSnapshot> for EnergyModelMutation {
+    type Diff = EnergyModelDiff;
+
+    fn diff(&self, _base: &EnergyModelSnapshot) -> Self::Diff {
+        match self {
+            EnergyModelMutation::NoMutation => EnergyModelDiff::default(),
+            EnergyModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+        }
+    }
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<Self> {
+        match self {
+            EnergyModelMutation::NoMutation => vec![EnergyModelMutation::NoMutation],
+            EnergyModelMutation::SetSnapshot { .. } => {
+                vec![EnergyModelMutation::SetSnapshot {
+                    snapshot: base.clone(),
+                }]
+            }
+        }
     }
 }
+//#endregion 🔖️MutationTrait

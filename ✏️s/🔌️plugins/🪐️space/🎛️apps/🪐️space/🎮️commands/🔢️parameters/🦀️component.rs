@@ -4,7 +4,7 @@
 //! `🔖️SpaceCommand` region, which `use`s each of these modules flat).
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowDocument, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️PatchParameter
@@ -22,8 +22,8 @@ pub mod patch_parameter {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchParameter, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let projection = doc.projection;
+    pub fn handle(payload: &PatchParameter, doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let projection = doc.snapshot;
         let value_json: Value = serde_json::from_str(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
         let patch = if payload.field == "addOption" {
             value_json.as_str().map(str::to_string).and_then(|option| {
@@ -72,7 +72,7 @@ pub mod add_parameter {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &AddParameter, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let parameter_type = match payload.kind.as_str() {
             "categorical" => WorkflowParameterType::Categorical,
             "toggle" => WorkflowParameterType::Toggle,
@@ -95,7 +95,7 @@ pub mod remove_parameter {
         pub parameter_id: String,
     }
 
-    pub fn handle(payload: &RemoveParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveParameter, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WorkflowMutation::RemoveParameter { parameter_id: payload.parameter_id.clone() }]))
     }
 }
@@ -114,7 +114,7 @@ pub mod bind_parameter_field {
         pub parameter_id: String,
     }
 
-    pub fn handle(payload: &BindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &BindParameterField, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         if payload.parameter_id.is_empty() || payload.parameter_id == "__direct__" {
             Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
         } else {
@@ -138,7 +138,7 @@ pub mod unbind_parameter_field {
         pub field_path: String,
     }
 
-    pub fn handle(payload: &UnbindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &UnbindParameterField, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
     }
 }
@@ -156,20 +156,20 @@ mod tests {
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
         use crate::apps::space::SpaceCommand;
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(patch_parameter::PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveParameter(remove_parameter::RemoveParameter { parameter_id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::BindParameterField(bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(patch_parameter::PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveParameter(remove_parameter::RemoveParameter { parameter_id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::BindParameterField(bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
     }
 
     #[test]
     fn patch_parameter_action_updates_value() {
         let projection = demo_space_projection();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let config = SpaceConfig::default();
-        let cfg = ConfigView { projection: &config };
+        let cfg = ConfigView { snapshot: &config };
         let emit = patch_parameter::handle(&patch_parameter::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }, &doc, &cfg).expect("handle");
         assert_eq!(emit.document_mutations.len(), 1);
         let next = apply_mutations(&projection, &emit.document_mutations);
@@ -187,12 +187,12 @@ mod tests {
         let node = projection.graph.nodes.first().expect("node").clone();
         let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).to_string();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let cfg = ConfigView { projection: &config };
+        let doc = DocumentView { snapshot: &projection, history: &history };
+        let cfg = ConfigView { snapshot: &config };
         let emit = bind_parameter_field::handle(&bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id }, &doc, &cfg).expect("handle");
         projection = apply_mutations(&projection, &emit.document_mutations);
         assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let emit = unbind_parameter_field::handle(&unbind_parameter_field::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() }, &doc, &cfg).expect("handle");
         projection = apply_mutations(&projection, &emit.document_mutations);
         assert!(!projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));

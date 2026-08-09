@@ -1,8 +1,8 @@
 //! 📐️ Mathematical play app commands — replacing the geometry playground's point cloud.
 
-use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
-use crate::artifacts::mathematical::op::MathMutation;
-use crate::artifacts::mathematical::{MathGeometry, MathProjection};
+use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -14,11 +14,11 @@ pub mod set_points {
     #[dsl(keyword = "set-points")]
     pub struct SetPoints {
         #[dsl(block)]
-        pub geometry: MathGeometry,
+        pub geometry: MathematicalGeometry,
     }
 
-    pub fn handle(payload: &SetPoints, _doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![MathMutation::SetGeometry { geometry: payload.geometry.clone() }]))
+    pub fn handle(payload: &SetPoints, _doc: &DocumentView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![MathematicalMutation::SetGeometry { geometry: payload.geometry.clone() }]))
     }
 }
 //#endregion 🔖️SetPoints
@@ -28,15 +28,15 @@ pub mod set_points {
 mod tests {
     use super::set_points;
     use crate::apps::mathematical::testkit::{dispatch, math_app};
-    use crate::apps::mathematical::MathCommand;
-    use crate::artifacts::mathematical::{MathGeometry, MathPoint};
+    use crate::apps::mathematical::MathematicalCommand;
+    use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalPoint};
 
     #[test]
     fn set_points_replaces_geometry() {
         let mut app = math_app();
-        let geometry = MathGeometry { points: vec![MathPoint { x: 1.0, y: 2.0 }] };
-        dispatch(&mut app, MathCommand::SetPoints(set_points::SetPoints { geometry: geometry.clone() }));
-        assert_eq!(app.projection().expect("projection").geometry, geometry);
+        let geometry = MathematicalGeometry { points: vec![MathematicalPoint { x: 1.0, y: 2.0 }] };
+        dispatch(&mut app, MathematicalCommand::SetPoints(set_points::SetPoints { geometry: geometry.clone() }));
+        assert_eq!(app.snapshot().expect("projection").geometry, geometry);
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,20 @@
+{
+  "$id": "https://semio.tech/schema/s/energy/model/snapshot.json",
+  "title": "EnergyModelSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "modelJson"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "modelJson": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

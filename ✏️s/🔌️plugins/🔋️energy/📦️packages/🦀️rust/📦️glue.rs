@@ -20,106 +20,112 @@
 
 #![allow(clippy::too_many_arguments)]
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
+
+
 //#region ⚙️Engine
-#[path = "../../⚙️engine/🦀️air_exchange.rs"]
+#[path = "../../⚙️engine/air_exchange/🦀️component.rs"]
 pub mod air_exchange;
-#[path = "../../⚙️engine/🦀️air_system.rs"]
+#[path = "../../⚙️engine/air_system/🦀️component.rs"]
 pub mod air_system;
-#[path = "../../⚙️engine/🦀️airflow_network.rs"]
+#[path = "../../⚙️engine/airflow_network/🦀️component.rs"]
 pub mod airflow_network;
-#[path = "../../⚙️engine/🦀️calendar.rs"]
+#[path = "../../⚙️engine/calendar/🦀️component.rs"]
 pub mod calendar;
-#[path = "../../⚙️engine/🦀️coils.rs"]
+#[path = "../../⚙️engine/coils/🦀️component.rs"]
 pub mod coils;
-#[path = "../../⚙️engine/🦀️comfort.rs"]
+#[path = "../../⚙️engine/comfort/🦀️component.rs"]
 pub mod comfort;
-#[path = "../../⚙️engine/🦀️controls.rs"]
+#[path = "../../⚙️engine/controls/🦀️component.rs"]
 pub mod controls;
-#[path = "../../⚙️engine/🦀️curves.rs"]
+#[path = "../../⚙️engine/curves/🦀️component.rs"]
 pub mod curves;
-#[path = "../../⚙️engine/🦀️daylight.rs"]
+#[path = "../../⚙️engine/daylight/🦀️component.rs"]
 pub mod daylight;
-#[path = "../../⚙️engine/🦀️dispatch.rs"]
+#[path = "../../⚙️engine/dispatch/🦀️component.rs"]
 pub mod dispatch;
-#[path = "../../⚙️engine/🦀️economics.rs"]
+#[path = "../../⚙️engine/economics/🦀️component.rs"]
 pub mod economics;
-#[path = "../../⚙️engine/🦀️electrical.rs"]
+#[path = "../../⚙️engine/electrical/🦀️component.rs"]
 pub mod electrical;
-#[path = "../../⚙️engine/🦀️envelope.rs"]
+#[path = "../../⚙️engine/envelope/🦀️component.rs"]
 pub mod envelope;
-#[path = "../../⚙️engine/🦀️error.rs"]
+#[path = "../../⚙️engine/error/🦀️component.rs"]
 pub mod error;
-#[path = "../../⚙️engine/🦀️evaporative.rs"]
+#[path = "../../⚙️engine/evaporative/🦀️component.rs"]
 pub mod evaporative;
-#[path = "../../⚙️engine/🦀️fans.rs"]
+#[path = "../../⚙️engine/fans/🦀️component.rs"]
 pub mod fans;
-#[path = "../../⚙️engine/🦀️faults.rs"]
+#[path = "../../⚙️engine/faults/🦀️component.rs"]
 pub mod faults;
-#[path = "../../⚙️engine/🦀️fenestration.rs"]
+#[path = "../../⚙️engine/fenestration/🦀️component.rs"]
 pub mod fenestration;
-#[path = "../../⚙️engine/🦀️gains.rs"]
+#[path = "../../⚙️engine/gains/🦀️component.rs"]
 pub mod gains;
-#[path = "../../⚙️engine/🦀️geometry.rs"]
+#[path = "../../⚙️engine/geometry/🦀️component.rs"]
 pub mod geometry;
-#[path = "../../⚙️engine/🦀️heat_recovery.rs"]
+#[path = "../../⚙️engine/heat_recovery/🦀️component.rs"]
 pub mod heat_recovery;
-#[path = "../../⚙️engine/🦀️humidity_eq.rs"]
+#[path = "../../⚙️engine/humidity_eq/🦀️component.rs"]
 pub mod humidity_eq;
-#[path = "../../⚙️engine/🦀️hvac_topo.rs"]
+#[path = "../../⚙️engine/hvac_topo/🦀️component.rs"]
 pub mod hvac_topo;
-#[path = "../../⚙️engine/🦀️iaq.rs"]
+#[path = "../../⚙️engine/iaq/🦀️component.rs"]
 pub mod iaq;
-#[path = "../../⚙️engine/🦀️ideal_hvac.rs"]
+#[path = "../../⚙️engine/ideal_hvac/🦀️component.rs"]
 pub mod ideal_hvac;
-#[path = "../../⚙️engine/🦀️kernel.rs"]
+#[path = "../../⚙️engine/kernel/🦀️component.rs"]
 pub mod kernel;
-#[path = "../../⚙️engine/🦀️material.rs"]
+#[path = "../../⚙️engine/material/🦀️component.rs"]
 pub mod material;
-#[path = "../../⚙️engine/🦀️meters.rs"]
+#[path = "../../⚙️engine/meters/🦀️component.rs"]
 pub mod meters;
-#[path = "../../⚙️engine/🦀️metrics.rs"]
+#[path = "../../⚙️engine/metrics/🦀️component.rs"]
 pub mod metrics;
-#[path = "../../⚙️engine/🦀️model.rs"]
+#[path = "../../⚙️engine/model/🦀️component.rs"]
 pub mod model;
-#[path = "../../⚙️engine/🦀️num.rs"]
+#[path = "../../⚙️engine/num/🦀️component.rs"]
 pub mod num;
-#[path = "../../⚙️engine/🦀️output.rs"]
+#[path = "../../⚙️engine/output/🦀️component.rs"]
 pub mod output;
-#[path = "../../⚙️engine/🦀️plant.rs"]
+#[path = "../../⚙️engine/plant/🦀️component.rs"]
 pub mod plant;
-#[path = "../../⚙️engine/🦀️precompute.rs"]
+#[path = "../../⚙️engine/precompute/🦀️component.rs"]
 pub mod precompute;
-#[path = "../../⚙️engine/🦀️props.rs"]
+#[path = "../../⚙️engine/props/🦀️component.rs"]
 pub mod props;
-#[path = "../../⚙️engine/🦀️refrigeration.rs"]
+#[path = "../../⚙️engine/refrigeration/🦀️component.rs"]
 pub mod refrigeration;
-#[path = "../../⚙️engine/🦀️results.rs"]
+#[path = "../../⚙️engine/results/🦀️component.rs"]
 pub mod results;
-#[path = "../../⚙️engine/🦀️room_air.rs"]
+#[path = "../../⚙️engine/room_air/🦀️component.rs"]
 pub mod room_air;
-#[path = "../../⚙️engine/🦀️schedule.rs"]
+#[path = "../../⚙️engine/schedule/🦀️component.rs"]
 pub mod schedule;
-#[path = "../../⚙️engine/🦀️shw.rs"]
+#[path = "../../⚙️engine/shw/🦀️component.rs"]
 pub mod shw;
-#[path = "../../⚙️engine/🦀️sim.rs"]
+#[path = "../../⚙️engine/sim/🦀️component.rs"]
 pub mod sim;
-#[path = "../../⚙️engine/🦀️site.rs"]
+#[path = "../../⚙️engine/site/🦀️component.rs"]
 pub mod site;
-#[path = "../../⚙️engine/🦀️sizing.rs"]
+#[path = "../../⚙️engine/sizing/🦀️component.rs"]
 pub mod sizing;
-#[path = "../../⚙️engine/🦀️solar.rs"]
+#[path = "../../⚙️engine/solar/🦀️component.rs"]
 pub mod solar;
-#[path = "../../⚙️engine/🦀️solar_thermal.rs"]
+#[path = "../../⚙️engine/solar_thermal/🦀️component.rs"]
 pub mod solar_thermal;
-#[path = "../../⚙️engine/🦀️terminal.rs"]
+#[path = "../../⚙️engine/terminal/🦀️component.rs"]
 pub mod terminal;
-#[path = "../../⚙️engine/🦀️units.rs"]
+#[path = "../../⚙️engine/units/🦀️component.rs"]
 pub mod units;
-#[path = "../../⚙️engine/🦀️water.rs"]
+#[path = "../../⚙️engine/water/🦀️component.rs"]
 pub mod water;
-#[path = "../../⚙️engine/🦀️zone_air.rs"]
+#[path = "../../⚙️engine/zone_air/🦀️component.rs"]
 pub mod zone_air;
-#[path = "../../⚙️engine/🦀️zone_hvac.rs"]
+#[path = "../../⚙️engine/zone_hvac/🦀️component.rs"]
 pub mod zone_hvac;
 //#endregion ⚙️Engine
 
@@ -177,9 +183,92 @@ pub use zone_hvac::*;
 //#endregion 🔖️FlatReExports
 
 
+//#region 🗿️Artifacts
+#[path = "."]
+pub mod artifacts {
+    #[path = "."]
+    pub mod model {
+        #[path = "../../🗿️artifacts/🔋️model/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "../../🗿️artifacts/🔋️model/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🔋️model/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🔋️model/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
+        #[path = "../../🗿️artifacts/🔋️model/🔧️op/🦀️component.rs"]
+        pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod no_mutation {
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+
+            #[path = "."]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🔋️model/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+        }
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🔋️model/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+
+            #[path = "../../🗿️artifacts/🔋️model/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
+        #[path = "../../🗿️artifacts/🔋️model/🗣️dsl/🦀️component.rs"]
+        pub mod dsl;
+
+        #[path = "../../🗿️artifacts/🔋️model/📡️spr/🦀️component.rs"]
+        pub mod spr;
+
+        #[path = "../../🗿️artifacts/🔋️model/⚙️engine/🦀️component.rs"]
+        pub mod engine;
+    }
+}
+//#endregion 🗿️Artifacts
+
 //#region 🔖️Plugin
 #[path = "../../🔌️plugin/🦀️component.rs"]
 pub mod plugin;
+#[path = "../../🔌️plugin/🎛️apps/🦀️component.rs"]
+pub mod plugin_apps;
+#[path = "../../🔌️plugin/🛂️manifest/🦀️component.rs"]
+pub mod plugin_manifest;
+#[path = "../../🔌️plugin/🔧️setup/🦀️component.rs"]
+pub mod plugin_setup;
+#[path = "../../🔌️plugin/🎟️capabilities/🦀️component.rs"]
+pub mod plugin_capabilities;
 
 //#region 📚️Examples
 #[path = "."]

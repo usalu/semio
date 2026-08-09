@@ -5,7 +5,7 @@
 //! record "the user asked for a fresh evaluation" in the command log.
 
 use crate::artifacts::din4108::op::Din4108Mutation;
-use crate::artifacts::din4108::Document;
+use crate::artifacts::din4108::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,8 +19,8 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_document(doc.projection.clone(), "evaluate")
+pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_snapshot(Din4108Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
 }
 //#endregion 🔖️Handler
 
@@ -28,15 +28,14 @@ pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &Conf
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::SetDocumentMutation;
-    use semio_framework_plugin::HistoryView;
+        use semio_framework_plugin::HistoryView;
 
     #[test]
     fn handle_recommits_the_current_projection_under_its_action_id() {
-        let projection = Document::default();
+        let projection = Din4108Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(&Evaluate {}, &DocumentView { projection: &projection, history: &HistoryView::empty() }, &ConfigView { projection: &config }).expect("handle");
-        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: Document::default() }]);
+        let emit = handle(&Evaluate {}, &DocumentView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
+        assert_eq!(emit.document_mutations, vec![Din4108Mutation::SetSnapshot { snapshot: Din4108Snapshot::default() }]);
         assert_eq!(emit.description.as_deref(), Some("evaluate"));
     }
 }

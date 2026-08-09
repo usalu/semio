@@ -1,11 +1,16 @@
 //! 🧬️ Note artifact — document mutation dispatch.
 
-use crate::artifacts::note::{NoteBlockNode, NoteDocument, NoteImageAsset};
+use crate::artifacts::note::diff::{
+    diff_put_asset, diff_remove_asset, diff_set_blocks, diff_set_eraser_radius, diff_set_grid_opacity,
+    diff_set_grid_spacing, diff_set_grid_subdivisions, diff_set_grid_visible, diff_set_pencil_width,
+    diff_set_snap_enabled, diff_set_snap_grid_spacing, diff_set_snapshot,
+};
+use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
-/// 📐️ Typed content mutation for a `NoteDocument`. Every content change flows through one of these so
+/// 📐️ Typed content mutation for a `NoteSnapshot`. Every content change flows through one of these so
 /// the `DocumentStore` records a true inverse (`backwards`). Scalar setters carry the field's own
 /// `Option` shape (backwards is a plain prior-value read); block edits use a whole-tree `SetBlocks`
 /// snapshot (the recursive reid/clone tree makes per-node operations far messier than a snapshot); asset
@@ -47,13 +52,13 @@ pub enum NoteMutation {
         asset: NoteImageAsset,
     },
     /// 🗑️ True composed inverse of a `PutAsset` that introduced the key — the whole-document
-    /// `SetDocument` snapshot this used to invert to would have undone every other pending change too.
+    /// `SetSnapshot` snapshot this used to invert to would have undone every other pending change too.
     RemoveAsset {
         key: String,
     },
-    SetDocument {
+    SetSnapshot {
         #[dsl(block)]
-        document: NoteDocument,
+        snapshot: NoteSnapshot,
     },
 }
 
@@ -62,7 +67,7 @@ pub enum NoteMutation {
 
 /// ▶️ Applies `operation` to `projection`, producing the next document — shared by `NoteDiff::apply` and
 /// this file's own `Mutation::diff`/tests.
-pub fn apply_note_mutation(projection: &NoteDocument, operation: &NoteMutation) -> NoteDocument {
+pub fn apply_note_mutation(projection: &NoteSnapshot, operation: &NoteMutation) -> NoteSnapshot {
     let mut next = projection.clone();
     match operation {
         NoteMutation::SetGridVisible { visible } => next.grid_visible = *visible,
@@ -80,19 +85,32 @@ pub fn apply_note_mutation(projection: &NoteDocument, operation: &NoteMutation) 
         NoteMutation::RemoveAsset { key } => {
             next.assets.remove(key);
         }
-        NoteMutation::SetDocument { document } => next = document.clone(),
+        NoteMutation::SetSnapshot { snapshot } => next = snapshot.clone(),
     }
     next
 }
 
-impl Mutation<NoteDocument> for NoteMutation {
+impl Mutation<NoteSnapshot> for NoteMutation {
     type Diff = crate::artifacts::note::diff::NoteDiff;
 
-    fn diff(&self, _projection: &NoteDocument) -> Self::Diff {
-        crate::artifacts::note::diff::NoteDiff { operation: Some(self.clone()) }
+    fn diff(&self, snapshot: &NoteSnapshot) -> Self::Diff {
+        match self {
+            NoteMutation::SetGridVisible { visible } => diff_set_grid_visible(*visible),
+            NoteMutation::SetGridSpacing { spacing } => diff_set_grid_spacing(*spacing),
+            NoteMutation::SetGridSubdivisions { value } => diff_set_grid_subdivisions(*value),
+            NoteMutation::SetGridOpacity { opacity } => diff_set_grid_opacity(*opacity),
+            NoteMutation::SetSnapEnabled { enabled } => diff_set_snap_enabled(*enabled),
+            NoteMutation::SetSnapGridSpacing { spacing } => diff_set_snap_grid_spacing(*spacing),
+            NoteMutation::SetPencilWidth { width } => diff_set_pencil_width(*width),
+            NoteMutation::SetEraserRadius { radius } => diff_set_eraser_radius(*radius),
+            NoteMutation::SetBlocks { blocks } => diff_set_blocks(snapshot, blocks.clone()),
+            NoteMutation::PutAsset { key, asset } => diff_put_asset(key, asset),
+            NoteMutation::RemoveAsset { key } => diff_remove_asset(key),
+            NoteMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+        }
     }
 
-    fn inverse(&self, projection: &NoteDocument) -> Vec<Self> {
+    fn inverse(&self, projection: &NoteSnapshot) -> Vec<Self> {
         match self {
             NoteMutation::SetGridVisible { .. } => vec![NoteMutation::SetGridVisible { visible: projection.grid_visible }],
             NoteMutation::SetGridSpacing { .. } => vec![NoteMutation::SetGridSpacing { spacing: projection.grid_spacing }],
@@ -114,7 +132,7 @@ impl Mutation<NoteDocument> for NoteMutation {
                 // Removing a key that was already absent is a no-op — nothing to restore.
                 None => Vec::new(),
             },
-            NoteMutation::SetDocument { .. } => vec![NoteMutation::SetDocument { document: projection.clone() }],
+            NoteMutation::SetSnapshot { .. } => vec![NoteMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
@@ -129,16 +147,16 @@ mod tests {
     fn op_text_round_trips_every_variant() {
         use crate::artifacts::note::{NoteBlockNode, NoteImageAsset};
 
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridVisible { visible: Some(true) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridVisible { visible: None });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSpacing { spacing: Some(16.0) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSpacing { spacing: None });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSubdivisions { value: Some(8.0) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridOpacity { opacity: Some(0.6) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetSnapEnabled { enabled: Some(false) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetSnapGridSpacing { spacing: Some(4.0) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetPencilWidth { width: Some(5.0) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetEraserRadius { radius: Some(20.0) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridVisible { visible: Some(true) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridVisible { visible: None });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSpacing { spacing: Some(16.0) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSpacing { spacing: None });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridSubdivisions { value: Some(8.0) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetGridOpacity { opacity: Some(0.6) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetSnapEnabled { enabled: Some(false) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetSnapGridSpacing { spacing: Some(4.0) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetPencilWidth { width: Some(5.0) });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetEraserRadius { radius: Some(20.0) });
 
         let stroke_with_points = NoteBlockNode::Ink {
             id: "stroke-1".into(),
@@ -169,27 +187,27 @@ mod tests {
             font_weight: "normal".into(),
             align: "left".into(),
         };
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetBlocks { blocks: vec![text_block, stroke_with_points] });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetBlocks { blocks: vec![text_block, stroke_with_points] });
 
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::PutAsset { key: "asset-2".into(), asset: NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,xyz".into(), width: None, height: None } });
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::RemoveAsset { key: "asset-2".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::PutAsset { key: "asset-2".into(), asset: NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,xyz".into(), width: None, height: None } });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::RemoveAsset { key: "asset-2".into() });
 
-        store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetDocument { document: crate::artifacts::note::engine::empty_note_document() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteMutation::SetSnapshot { snapshot: crate::artifacts::note::engine::empty_note_snapshot() });
     }
 
     #[test]
     fn operation_backwards_restores_pre_state() {
-        let pre = crate::artifacts::note::engine::empty_note_document();
-        store::test_support::assert_operation_round_trip(&pre, NoteMutation::SetGridSpacing { spacing: Some(48.0) });
+        let pre = crate::artifacts::note::engine::empty_note_snapshot();
+        store::os_store::test_support::assert_operation_round_trip(&pre, NoteMutation::SetGridSpacing { spacing: Some(48.0) });
     }
 
     /// 🗑️ `PutAsset`'s inverse must be composed (touch only the one key), not a whole-document
-    /// `SetDocument` snapshot that would also clobber every other pending change.
+    /// `SetSnapshot` snapshot that would also clobber every other pending change.
     #[test]
     fn put_asset_backwards_is_composed_not_a_whole_document_snapshot() {
         use crate::artifacts::note::NoteImageAsset;
 
-        let mut pre = crate::artifacts::note::engine::empty_note_document();
+        let mut pre = crate::artifacts::note::engine::empty_note_snapshot();
         pre.grid_spacing = Some(99.0); // an unrelated field that a snapshot inverse would wrongly revert too
         let asset = NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: None, height: None };
 

@@ -13,14 +13,14 @@ use crate::apps::writer::commands::engagement::{engagement_input, engagement_sub
 use crate::apps::writer::commands::inspect::{lint_document, request_completions};
 use crate::apps::writer::commands::locale::set_locale;
 use crate::apps::writer::commands::selection::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
-use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_document, set_document_json, set_fixture_json, set_text, text_edit};
+use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::apps::writer::modes::edit;
 use crate::apps::writer::modes::edit::windows::main;
 use crate::apps::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
@@ -63,7 +63,7 @@ type HoverContext = (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>
 /// 🐁️ Resolves tree/editor hover cross-highlighting. Lives at APP level, not the artifact's `⚙️engine`,
 /// even though it has two consumers (the main window and the document panel) — it takes `WriterConfig`,
 /// an app-only view-state type, and artifacts must never depend on apps.
-pub fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> HoverContext {
+pub fn editor_hover_context(document: &WriterSnapshot, config: &WriterConfig) -> HoverContext {
     use crate::artifacts::writer::engine::{find_deepest_jack_ast_node_at, jack_ast_node_by_id, jack_symbol_at_offset, parse_jack_ast, JackSymbolKind};
 
     if document.language_id != "jack" {
@@ -89,12 +89,12 @@ semio_framework_plugin::app_commands! {
     /// payload types — mirrors the pre-migration `WriterCommand::command_id()` match arm that mapped all
     /// three variants to the same `"setEditorSetting"` string. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum WriterCommand for WriterProjection, WriterMutation, WriterConfig, WriterConfigMutation {
+    pub enum WriterCommand for WriterSnapshot, WriterMutation, WriterConfig, WriterConfigMutation {
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "setText" as "set-text" => set_text::SetText,
-        "setDocument" as "document" => set_document::SetDocument,
+        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "openDocument" as "open-document" => open_document::OpenDocument,
-        "setDocumentJson" as "document-json" => set_document_json::SetDocumentJson,
+        "setSnapshotJson" as "document-json" => set_snapshot_json::SetSnapshotJson,
         "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "formatDocument" as "format-document" => format_document::FormatDocument,
@@ -180,7 +180,7 @@ fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&Context
 pub struct WriterPlayApp;
 
 impl DocumentApp for WriterPlayApp {
-    type Projection = WriterProjection;
+    type Snapshot = WriterSnapshot;
     type Mutation = WriterMutation;
     type Config = WriterConfig;
     type ConfigMutation = WriterConfigMutation;
@@ -192,16 +192,16 @@ impl DocumentApp for WriterPlayApp {
     const APP_ID: &'static str = WRITER_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> WriterProjection {
-        crate::artifacts::writer::engine::empty_writer_projection()
+    fn initial_snapshot() -> WriterSnapshot {
+        crate::artifacts::writer::engine::empty_writer_snapshot()
     }
 
     fn io() -> Option<AppIo> {
         Some(crate::artifacts::writer::engine::writer_io())
     }
 
-    fn whole_document_mutation(projection: WriterProjection) -> Option<WriterMutation> {
-        Some(WriterMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: WriterSnapshot) -> Option<WriterMutation> {
+        Some(WriterMutation::SetSnapshot { snapshot })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -210,7 +210,7 @@ impl DocumentApp for WriterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -218,22 +218,22 @@ impl DocumentApp for WriterPlayApp {
     /// `crate::artifacts::writer::engine::writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the
     /// intended consumer. Falls through to the default whole-document-pack export for `"document:out"`
     /// (duplicated inline, not delegated — Rust traits have no `super` call for an overridden default).
-    fn export_media(port: &str, doc: &DocumentView<'_, WriterProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
-            let payload = crate::artifacts::writer::engine::writer_chapter_payload(doc.projection);
+            let payload = crate::artifacts::writer::engine::writer_chapter_payload(doc.snapshot);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json } });
         }
         if port != "document:out" {
             return Err(MediaError::NotImplemented);
         }
-        let bytes = doc.projection.encode_pack();
+        let bytes = doc.snapshot.encode_pack();
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = writer_play_labels(config);
         match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, config),
@@ -244,10 +244,10 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn window_engagements(_doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(_doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let labels = writer_play_labels(config);
         let engagement = WindowEngagement {
             session_active: Some(false),
@@ -281,13 +281,13 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(_doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(config)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = cfg.projection.locale.starts_with("de");
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let is_de = cfg.snapshot.locale.starts_with("de");
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
     }
@@ -325,8 +325,8 @@ pub fn create_writer_app() -> App {
             .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen")))
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen")).with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen")))
-            .action_with(writer_hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
-            .action_with(writer_hidden_operation("setDocumentJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen")))
+            .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen")))
+            .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen")))
             .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen")))
             // 🙈️ Internal View measures — selection, hover, AST navigation, completions, editor settings.
             .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern")).with_category("tools"))
@@ -346,7 +346,7 @@ pub fn create_writer_app() -> App {
                     ActionArgOption::new("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack")),
                 ]).default_value("jack"),
             ])
-            .action_args("setDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
+            .action_args("setSnapshotJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -446,9 +446,9 @@ mod tests {
         let expectations: Vec<(&str, WriterCommand)> = vec![
             ("text-edit", WriterCommand::TextEdit(text_edit::TextEdit { text: "x".into() })),
             ("set-text", WriterCommand::SetText(set_text::SetText { text: "x".into() })),
-            ("document", WriterCommand::SetDocument(set_document::SetDocument { document: jack_projection() })),
+            ("set-snapshot", WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: jack_snapshot() })),
             ("open-document", WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: "x".into() })),
-            ("document-json", WriterCommand::SetDocumentJson(set_document_json::SetDocumentJson { json: "{}".into() })),
+            ("document-json", WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() })),
             ("fixture-json", WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() })),
             ("active-example", WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })),
             ("format-document", WriterCommand::FormatDocument(format_document::FormatDocument {})),
@@ -477,8 +477,8 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document — used across the app's own command-surface tests.
-    fn jack_projection() -> WriterProjection {
-        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+    fn jack_snapshot() -> WriterSnapshot {
+        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -486,9 +486,9 @@ mod tests {
         vec![
             WriterCommand::TextEdit(text_edit::TextEdit { text: "hello".into() }),
             WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }),
-            WriterCommand::SetDocument(set_document::SetDocument { document: jack_projection() }),
+            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: jack_snapshot() }),
             WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: String::new() }),
-            WriterCommand::SetDocumentJson(set_document_json::SetDocumentJson { json: "{}".into() }),
+            WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
             WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
             WriterCommand::FormatDocument(format_document::FormatDocument {}),
@@ -519,14 +519,14 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(WriterCommand, &str, &str); 3] = [
-            (WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }), "ast-hover id=jack-ast-1", "0110010a6a61636b2d6173742d3101000600"),
-            (WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }), "text-hover start=3", "01110001000403"),
-            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit", "01170000"),
+            (WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }), "ast-hover ast-hover id=jack-ast-1", "0110010a6a61636b2d6173742d3101000600"),
+            (WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }), "text-hover text-hover start=3", "01110001000403"),
+            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01170000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
     //#endregion 🔖️CommandSurface
@@ -571,8 +571,8 @@ mod tests {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::engine::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { projection: &document, history: &history };
-        let media = app.export_media("text:out", &doc_view).expect("export text:out");
+        let doc_view = DocumentView { snapshot: &document, history: &history };
+        let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
         let payload: crate::artifacts::writer::engine::WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
@@ -583,10 +583,10 @@ mod tests {
     #[test]
     fn export_media_rejects_unknown_ports() {
         let app = WriterPlayApp;
-        let document = crate::artifacts::writer::engine::empty_writer_projection();
+        let document = crate::artifacts::writer::engine::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { projection: &document, history: &history };
-        assert!(matches!(app.export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
+        let doc_view = DocumentView { snapshot: &document, history: &history };
+        assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
 
@@ -600,8 +600,8 @@ mod tests {
         let document = crate::artifacts::writer::engine::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let cfg = ConfigView { projection: &config };
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let cfg = ConfigView { snapshot: &config };
         let registry = AppActionRegistry::from_definition(&create_writer_app().definition);
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: WRITER_PLAY_BODY_MAIN.into(), args: None },
@@ -615,7 +615,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let items = app.context_menu(&request, &doc, &cfg, &registry);
+        let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &registry);
         assert!(items.len() <= 9, "top-level writer context menu should stay progressively disclosed: {items:?}");
         assert_eq!(items.last().map(|item| item.id.as_str()), Some("writer-cut"), "cut must stay the trailing destructive item: {items:?}");
         assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
@@ -638,11 +638,11 @@ mod tests {
     }
 
     #[test]
-    fn whole_document_mutation_replaces_the_projection() {
+    fn whole_document_operation_replaces_the_snapshot() {
         let app = WriterPlayApp;
-        let replacement = jack_projection();
-        let operation = app.whole_document_mutation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, WriterMutation::SetDocument { document: replacement });
+        let replacement = jack_snapshot();
+        let operation = WriterPlayApp::whole_document_operation(replacement.clone()).expect("whole document operation");
+        assert_eq!(operation, WriterMutation::SetSnapshot { snapshot: replacement });
     }
 
     #[test]

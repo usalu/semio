@@ -8,18 +8,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::din16798::Document;
+use crate::artifacts::din16798::Din16798Snapshot;
 
 /// 📜️ Bundled default example document (`.semio` envelope + DSL body).
 pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses DIN EN 16798 DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+pub fn parse_dsl(text: &str) -> Result<Din16798Snapshot, store::TextError> {
+    <Din16798Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.din16798` DSL text.
-pub fn print_dsl(document: &Document) -> String {
+pub fn print_dsl(document: &Din16798Snapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -30,13 +30,13 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::os_store::test_support::assert_dsl_round_trip(&Din16798Snapshot::default());
     }
 
     #[test]
     fn bundled_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(DEFAULT_EXAMPLE_TEXT).expect("parse bundled example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

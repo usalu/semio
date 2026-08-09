@@ -1,1 +1,1 @@
-// stub
+//! 🧬️ Playground `NoMutation` 🦠️mutation leaf.

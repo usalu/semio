@@ -11,7 +11,7 @@
 //! `🏠️home` launcher and `🪐️space` studio apps, so it does NOT use the `semio_plugin!` macro (that
 //! macro assumes one document schema and one app-registration path per plugin) — it keeps the manual
 //! `Plugin` builder + `plugin_exports!` invocation the pre-migration bundle crate already used.
-//! `🪐️space`'s own app owns no document type at all (wraps the kernel-owned `WorkflowDocument`), so
+//! `🪐️space`'s own app owns no document type at all (wraps the kernel-owned `WorkflowSnapshot`), so
 //! there is only ONE `🗿️artifacts` node in this crate (`🏠️home`) — see `apps::space::🦀️component.rs`'s
 //! module doc for the full rationale.
 
@@ -21,6 +21,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<Mutation, ConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -41,8 +42,17 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/🏠️home/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
         #[path = "../../🗿️artifacts/🏠️home/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -64,10 +74,21 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🏠️home/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🏠️home/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🏠️home/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🏠️home/📡️spr/🦀️component.rs"]
         pub mod spr;
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🗿️artifacts/🏠️home/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+        }
     }
 }
 //#endregion 🗿️Artifacts

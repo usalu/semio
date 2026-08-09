@@ -342,7 +342,7 @@ impl crate::document::NormFamily for En1997Family {
     }
 
     fn evaluate(document: &Self::Document) -> crate::document::CheckReport {
-        super::evaluate(document)
+        evaluate(document)
     }
 }
 
@@ -500,14 +500,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "en1997.document",
         extension: Some("en1997"),
-        role: dsl::LanguageRole::En1997Snapshot,
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1996::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1996::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1996::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1996::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1996::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1996::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1997.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -536,8 +537,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::en1996::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1996::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1996::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1996::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1997.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -551,3 +552,12 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("en1997.spr"),
     });
 }
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.en1997`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::en1997::schema::en1997_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

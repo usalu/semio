@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.dag.dag.snapshot;
+message DagSnapshot {
+  string schema = 1; // @state persistent
+  repeated DagNodeSpec nodes = 2; // @state persistent
+  repeated DagFixtureEdge edges = 3; // @state persistent
+}
+message DagNodeSpec { string id = 1; }
+message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }

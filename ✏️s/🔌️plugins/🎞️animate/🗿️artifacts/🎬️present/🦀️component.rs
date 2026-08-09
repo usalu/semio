@@ -4,6 +4,9 @@ use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
+pub const PRESENT_DOCUMENT_SCHEMA: &str = "animate.present";
+pub use crate::artifacts::present::snapshot::schema::{default_snapshot, PresentSnapshot};
+
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
 /// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
@@ -37,101 +40,35 @@ pub struct FigureTileDraft {
     #[dsl(block)]
     pub crop: FigureTileFrame,
 }
-
-/// 📜️ `.present` textual document: `schema=... \n source { ... } \n tiles [ ... ]` (see
-/// {@link store::DocumentDsl}).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(extension = "present", layout = "lines")]
-#[serde(rename_all = "camelCase")]
-pub struct PresentDeck {
-    pub schema: String,
-    #[dsl(block)]
-    pub source: FigureTileSource,
-    #[dsl(table)]
-    pub tiles: Vec<FigureTileDraft>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for PresentDeck {
-    const EXTENSION: &'static str = "present";
-    fn envelope_id() -> &'static str { "present" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for PresentDeck {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
+//#endregion 🔖️Domain
 
 pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource { src: "/🖼️bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
+    FigureTileSource {
+        src: "/🖼️bauteilbörse.png".into(),
+        kind: "figure".into(),
+        frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 },
+        source_aspect: Some(1222.0 / 896.0),
+        pdf_page: None,
+    }
 }
 
-pub fn default_present_deck() -> PresentDeck {
-    PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
+pub fn default_present_snapshot() -> PresentSnapshot {
+    default_snapshot()
 }
-//#endregion 🔖️Domain
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::apps::present::create_animate_present_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: PRESENT_DECK_SCHEMA.into(),
-        name: "Animate Present Deck".into(),
-        source_format: PRESENT_DECK_SCHEMA.into(),
+        id: PRESENT_DOCUMENT_SCHEMA.into(),
+        name: "Animate Present".into(),
+        source_format: PRESENT_DOCUMENT_SCHEMA.into(),
         component_kind: "panel".into(),
         dimension: "2d".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Presentation, form: MediaForm::Deck },
-        schema: PRESENT_DECK_SCHEMA.into(),
+        schema: PRESENT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
     }
@@ -139,8 +76,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️CollectionSupport
-/// 🪪️ Orphan-rule anchor: `Identified`/`Patchable` (from `protocol`) can only be implemented for
-/// `FigureTileDraft` in the crate that defines it — this is that crate.
 impl Identified<String> for FigureTileDraft {
     fn id(&self) -> &String {
         &self.id
@@ -166,7 +101,10 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
     }
 
     fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
-        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
+        Some(FigureTileDraftPatch {
+            name: (self.name != other.name).then(|| other.name.clone()),
+            crop: (self.crop != other.crop).then(|| other.crop.clone()),
+        })
     }
 }
 //#endregion 🔖️CollectionSupport
@@ -177,16 +115,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn present_deck_schema_is_animate_present() {
-        assert_eq!(default_present_deck().schema, PRESENT_DECK_SCHEMA);
+    fn present_snapshot_schema_is_animate_present() {
+        assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
-    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` matches the store envelope schema for this
-    /// artifact (unlike flow, animate never split these two).
     #[test]
     fn artifact_kind_matches_the_store_schema() {
-        assert_eq!(artifact_kind().schema, PRESENT_DECK_SCHEMA);
-        assert_eq!(artifact_kind().id, PRESENT_DECK_SCHEMA);
+        assert_eq!(artifact_kind().schema, PRESENT_DOCUMENT_SCHEMA);
+        assert_eq!(artifact_kind().id, PRESENT_DOCUMENT_SCHEMA);
     }
 }
 //#endregion 🧪️Tests

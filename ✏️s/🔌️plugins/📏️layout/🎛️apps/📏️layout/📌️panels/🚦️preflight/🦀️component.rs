@@ -6,7 +6,7 @@
 
 use crate::apps::layout::layout_action;
 use crate::apps::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
-use crate::artifacts::layout::{Frame, LayoutDocument};
+use crate::artifacts::layout::{Frame, LayoutSnapshot};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -48,7 +48,7 @@ fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
     "ok"
 }
 
-fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
+fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
     let paragraph = paragraph_style_id.and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id)).or_else(|| doc.paragraph_styles.first());
     let (mut family, mut size) = paragraph.map_or_else(|| ("Layout Sans".into(), 12.0), |style| (style.font_family.clone(), style.font_size));
     if let Some(character_id) = character_style_id {
@@ -66,7 +66,7 @@ fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, cha
 
 /// 🚦️ Runs every preflight check over the document, returning the flat issue list — shared by this
 /// panel's tree and the export package's zip manifest.
-pub fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<PreflightIssue> {
+pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
         let resolved = crate::artifacts::layout::engine::resolve_page(doc, page);
@@ -185,7 +185,7 @@ fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description:
     item
 }
 
-pub fn render(doc: &LayoutDocument, cfg: &crate::apps::layout::config::LayoutConfig) -> UiNode {
+pub fn render(doc: &LayoutSnapshot, cfg: &crate::apps::layout::config::LayoutConfig) -> UiNode {
     let labels = layout_labels(cfg);
     let issues = run_layout_preflight(doc, labels);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn preflight_reports_all_expected_issue_codes() {
         let json = r#"{
-            "schema": "layout.fixture",
+            "schema": "layout.layout",
             "name": "Preflight Fixture",
             "grid": {"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},
             "paragraphStyles": [{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],
@@ -267,7 +267,7 @@ mod tests {
             }],
             "printTarget":"print"
         }"#;
-        let mut doc: LayoutDocument = serde_json::from_str(json).expect("preflight fixture");
+        let mut doc: LayoutSnapshot = serde_json::from_str(json).expect("preflight fixture");
         if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
             story.content = "a".repeat(450);
         }

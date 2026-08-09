@@ -1,0 +1,1587 @@
+
+================================================================================
+⚙️engine/🦀️component.rs
+================================================================================
+//! ⚙️ VCS artifact — headless compute (was: constitutional `engine`).
+
+use crate::artifacts::vcs::{VcsSnapshot, VCS_DOCUMENT_SCHEMA};
+
+//#region 🔖️DocumentHelpers
+pub fn empty_vcs_snapshot() -> VcsSnapshot {
+    VcsSnapshot::default()
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️Register
+/// 🗂️ Registers `VcsSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
+/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse vcs-play
+/// documents without depending on this crate's concrete snapshot/mutation types. Called by
+/// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`.
+pub fn register() {
+    register_artifact_schema();
+    register_pilot_languages();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.document",
+        extension: Some("vcs"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::vcs::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("vcs.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.spr"),
+    });
+}
+
+//#endregion 🔖️Register
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.vcs.vcs`.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry")
+        .register(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_vcs_snapshot();
+        assert_eq!(snapshot.schema, VCS_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.status, "new");
+    }
+}
+//#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+pub struct VcsDemoEngine {
+    artifact: crate::artifacts::vcs::schema::VcsArtifact,
+    snapshot: VcsSnapshot,
+}
+
+impl VcsDemoEngine {
+    pub fn new(snapshot: VcsSnapshot) -> Self {
+        let artifact = crate::artifacts::vcs::schema::VcsArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+}
+
+impl protocol::ArtifactEngine for VcsDemoEngine {
+    type Artifact = crate::artifacts::vcs::schema::VcsArtifact;
+    type Snapshot = VcsSnapshot;
+    type Mutation = crate::artifacts::vcs::mutations::VcsDemoMutation;
+    type Diff = crate::artifacts::vcs::diff::VcsDiff;
+
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
+================================================================================
+📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+================================================================================
+semio vcs.vcs.dsl v1
+schema=vcs.vcs title="VCS Demo" counter=2 notes="demo notes" status=draft tags=[ alpha beta ]
+
+================================================================================
+📚️examples/🎬️demo/🟦️component.ts
+================================================================================
+/** 📚️ Example `demo`. */
+export const id = "demo";
+export const label = { en: "Demo", de: "Demo" } as const;
+export const icon = "file";
+
+================================================================================
+📚️examples/🎬️demo/🦀️component.rs
+================================================================================
+//! 📚️ Example `demo`.
+
+use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+
+pub const ID: &str = "demo";
+pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
+pub const ICON: &str = "file";
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
+pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+
+================================================================================
+📚️examples/🎬️demo/🧪️tests/🟦️test.ts
+================================================================================
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+const here = dirname(fileURLToPath(import.meta.url));
+describe("demo", () => {
+  it("ships primary asset", () => {
+    expect(readFileSync(join(here, "../🖼️assets/🗣️example.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+  });
+});
+
+================================================================================
+📚️examples/🎬️demo/🧪️tests/🦀️test.rs
+================================================================================
+#[test]
+fn primary_asset_is_nonempty() {
+    let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
+    assert!(text.len() > 8);
+}
+
+================================================================================
+📡️spr/📡️component.protocol.semio
+================================================================================
+dialect protocol
+protocol vcs.spr
+version 1
+schema vcs.vcs.mutation
+start record
+framing record
+record vcs.vcs-add-node tag 1
+field format u8
+field ordinal varint
+field body bytes
+record vcs.vcs-set-load tag 2
+field format u8
+field ordinal varint
+field body bytes
+record vcs.vcs-commit-step tag 3
+field format u8
+field ordinal varint
+field body bytes
+chain hash u64
+
+================================================================================
+📡️spr/🟦️component.ts
+================================================================================
+/** WASM facade — encode/decode delegates to the plugin Rust crate. */
+export function encode(value: unknown): Uint8Array {
+  throw new Error("wire to plugin WASM");
+}
+export function decode(bytes: Uint8Array): unknown {
+  throw new Error("wire to plugin WASM");
+}
+
+================================================================================
+📡️spr/🦀️component.rs
+================================================================================
+//! ⚖️ VCS artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
+//!
+//! The app's typed `VcsCommand` enum — which used to share the old `📡️protocol` crate with this codec —
+//! is an APP concern, not an artifact one: it now lives in `🎛️apps/🌿️vcs/🦀️component.rs`, assembled from
+//! the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
+use crate::artifacts::vcs::op::VcsDemoMutation;
+use protocol::OpBinary;
+
+/// 📦️ Encodes a `VcsDemoMutation` to its binary state-patch form.
+pub fn encode_op(operation: &VcsDemoMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+    operation.encode_op()
+}
+
+/// 📖️ Decodes a `VcsDemoMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolError> {
+    VcsDemoMutation::decode_op(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn op_binary_round_trips_and_agrees_with_text() {
+        let operation = VcsDemoMutation::SetCounter { counter: 7 };
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+        let bytes = encode_op(&operation).expect("encode");
+        assert_eq!(decode_op(&bytes).expect("decode"), operation);
+    }
+}
+//#endregion 🧪️Tests
+
+================================================================================
+📸️snapshot/🎒️pack/📡️component.protocol.semio
+================================================================================
+dialect protocol
+protocol vcs.pack
+version 1
+schema vcs.vcs
+start frame
+framing magic 0x8953cda4fcfa0d0a
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment eng-node u8
+segment eng-load u8
+segment flags u8
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32
+
+================================================================================
+📸️snapshot/🎒️pack/🟦️component.ts
+================================================================================
+/** WASM facade — encode/decode delegates to the plugin Rust crate. */
+export function encode(value: unknown): Uint8Array {
+  throw new Error("wire to plugin WASM");
+}
+export function decode(bytes: Uint8Array): unknown {
+  throw new Error("wire to plugin WASM");
+}
+
+================================================================================
+📸️snapshot/🎒️pack/🦀️component.rs
+================================================================================
+//! 📦️ VCS artifact — binary document surface + laws (was: constitutional `pack`).
+
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
+use crate::artifacts::vcs::VcsSnapshot;
+use store::PackError;
+
+/// 📦️ Encodes a `VcsSnapshot` to its binary pack form.
+pub fn encode(projection: &VcsSnapshot) -> Vec<u8> {
+    store::DocumentPack::encode_pack(projection)
+}
+
+/// 📖️ Decodes a `VcsSnapshot` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<VcsSnapshot, PackError> {
+    <VcsSnapshot as store::DocumentPack>::decode_pack(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::vcs::op::VcsDemoMutation;
+    use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
+
+    #[test]
+    fn vcs_demo_projection_dsl_pack_equivalence() {
+        let projection = crate::artifacts::vcs::engine::empty_vcs_snapshot();
+        store::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+        let bytes = encode(&projection);
+        assert_eq!(decode(&bytes).expect("decode"), projection);
+    }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `VcsDemoMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
+    /// existing pack round-trip law (same pattern as `mathematical`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let mut store: DocumentStore<VcsSnapshot, VcsDemoMutation> =
+            DocumentStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_snapshot(), None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
+        let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+}
+//#endregion 🧪️Tests
+
+================================================================================
+📸️snapshot/🧬️schema/🔗️component.graphql
+================================================================================
+# 🧬️ VCS snapshot schema — persistent fields only.
+
+type VcsSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  title: String! @state(class: PERSISTENT)
+  counter: Long! @state(class: PERSISTENT)
+  notes: String! @state(class: PERSISTENT)
+  status: String! @state(class: PERSISTENT)
+  tags: [String!]! @state(class: PERSISTENT)
+}
+
+================================================================================
+📸️snapshot/🧬️schema/🔣️component.json
+================================================================================
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/snapshot.json",
+  "title": "VcsSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "counter",
+    "notes",
+    "status",
+    "tags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "counter": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "persistent"
+    },
+    "notes": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "status": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    }
+  }
+}
+
+================================================================================
+📸️snapshot/🧬️schema/🛰️component.proto
+================================================================================
+syntax = "proto3";
+package semio.s.vcs.vcs.snapshot;
+
+// 🧬️ VCS snapshot schema — persistent fields only.
+
+message VcsSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string title = 2;
+  // @state persistent
+  int64 counter = 3;
+  // @state persistent
+  string notes = 4;
+  // @state persistent
+  string status = 5;
+  // @state persistent
+  repeated string tags = 6;
+}
+
+================================================================================
+📸️snapshot/🧬️schema/🟦️component.ts
+================================================================================
+/** 🧬️ VCS snapshot schema — persistent fields only. */
+
+export interface VcsSnapshot {
+  /** @state persistent */
+  schema: string;
+  /** @state persistent */
+  title: string;
+  /** @state persistent */
+  counter: number;
+  /** @state persistent */
+  notes: string;
+  /** @state persistent */
+  status: string;
+  /** @state persistent */
+  tags: string[];
+}
+
+================================================================================
+📸️snapshot/🧬️schema/🦀️component.rs
+================================================================================
+//! 🧬️ VCS snapshot schema — persistent fields only.
+
+use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted VCS demo document snapshot (persistent fields of the artifact).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.vcs.vcs")]
+#[dsl(extension = "vcs")]
+#[dsl(layout = "lines")]
+pub struct VcsSnapshot {
+    #[state(persistent)]
+    pub schema: String,
+    #[state(persistent)]
+    pub title: String,
+    #[state(persistent)]
+    pub counter: i64,
+    #[state(persistent)]
+    pub notes: String,
+    #[state(persistent)]
+    pub status: String,
+    #[state(persistent)]
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+
+impl Default for VcsSnapshot {
+    fn default() -> Self {
+        Self {
+            schema: VCS_DOCUMENT_SCHEMA.into(),
+            title: "VCS Demo".into(),
+            counter: 0,
+            notes: String::new(),
+            status: "new".into(),
+            tags: Vec::new(),
+        }
+    }
+}
+//#endregion 🔖️Snapshot
+
+//#region 🔖️HandcraftedDocumentCodecs
+impl store::DocumentDsl for VcsSnapshot {
+    const EXTENSION: &'static str = "vcs";
+    fn envelope_id() -> &'static str {
+        "vcs.vcs"
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions {
+                limits: dsl::Limits::default(),
+                mode: dsl::SourceMode::Document,
+            },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for VcsSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) =
+            store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+================================================================================
+🔧️op/📖️component.grammar.semio
+================================================================================
+dialect grammar
+grammar vcs.op
+extension vcs
+use family-sheet
+start mutation
+
+artifact-mark = "vcs.vcs-op"
+mutation = artifact-mark eng-op+
+eng-op = "add-node" eng-field+ | "set-load" eng-field+ | "set-support" eng-field+ | "commit-step" eng-field+
+eng-field = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-node = "node" "=" INT | "element" "=" IDENT
+eng-record = eng-node*
+
+================================================================================
+🔧️op/🟦️component.ts
+================================================================================
+/** WASM facade — parse/print delegates to the plugin Rust crate. */
+export function parseDsl(text: string): unknown {
+  throw new Error("wire to plugin WASM");
+}
+export function printDsl(value: unknown): string {
+  throw new Error("wire to plugin WASM");
+}
+
+================================================================================
+🔧️op/🦀️component.rs
+================================================================================
+//! 🔧 VCS artifact — OpText/OpBinary for `VcsDemoMutation`.
+
+pub use crate::artifacts::vcs::mutations::{apply_vcs_demo_mutation, inverse_vcs_demo_mutation, VcsDemoMutation};
+
+//#region 📖️SemioGrammar
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+//#region 🔖️HandcraftedOpCodecs
+impl protocol::OpText for VcsDemoMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+impl protocol::OpBinary for VcsDemoMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+//#endregion 🔖️HandcraftedOpCodecs
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vcs_demo_mutation_op_text_round_trips() {
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoMutation::SetCounter { counter: 3 });
+    }
+}
+//#endregion 🧪️Tests
+
+================================================================================
+🔺️diff/📖️component.grammar.semio
+================================================================================
+dialect grammar
+grammar vcs.diff
+extension vcs
+use family-sheet
+start diff
+
+artifact-mark = "vcs.vcs-diff"
+diff = artifact-mark eng-change+
+eng-change = "node-add" INT | "load-set" IDENT | "support-set" IDENT | "commit" TEXT
+eng-node = "node" "=" INT | "load" "=" IDENT
+
+================================================================================
+🔺️diff/🟦️component.ts
+================================================================================
+/** WASM facade — parse/print delegates to the plugin Rust crate. */
+export function parseDsl(text: string): unknown {
+  throw new Error("wire to plugin WASM");
+}
+export function printDsl(value: unknown): string {
+  throw new Error("wire to plugin WASM");
+}
+
+================================================================================
+🔺️diff/🦀️component.rs
+================================================================================
+//! 🔺️ VCS artifact — sparse field-delta diff codec and apply/absorb.
+
+use crate::artifacts::vcs::schema::VcsArtifact;
+use crate::artifacts::vcs::VcsSnapshot;
+use protocol::MutationDiff;
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+pub use super::schema::*;
+
+//#region 🔖️Apply
+pub fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> Vec<String> {
+    let mut next = tags.to_vec();
+    for tag in &delta.removed {
+        next.retain(|e| e != tag);
+    }
+    for tag in &delta.added {
+        if !next.contains(tag) {
+            next.push(tag.clone());
+        }
+    }
+    next
+}
+
+fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+            }
+            None => *target = Some(src),
+        }
+    }
+}
+
+impl VcsDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> VcsArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(counter) = self.counter {
+            next.counter = counter;
+        }
+        if let Some(notes) = &self.notes {
+            next.notes = notes.clone();
+        }
+        if let Some(status) = &self.status {
+            next.status = status.clone();
+        }
+        if let Some(delta) = &self.tags {
+            next.tags = apply_tags_delta(&next.tags, delta);
+        }
+        if let Some(list) = &self.selected_checkpoint_ids {
+            next.selected_checkpoint_ids = list.values.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
+}
+
+impl MutationDiff<VcsSnapshot> for VcsDiff {
+    fn apply(&self, snapshot: &VcsSnapshot) -> VcsSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(counter) = self.counter {
+            next.counter = counter;
+        }
+        if let Some(notes) = &self.notes {
+            next.notes = notes.clone();
+        }
+        if let Some(status) = &self.status {
+            next.status = status.clone();
+        }
+        if let Some(delta) = &self.tags {
+            next.tags = apply_tags_delta(&next.tags, delta);
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        absorb_tags_delta(&mut self.tags, other.tags);
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(title);
+        take!(counter);
+        take!(notes);
+        take!(status);
+        take!(selected_checkpoint_ids);
+        take!(locale);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+/// 🖼️ Whole-snapshot replacement diff.
+pub fn diff_set_snapshot(snapshot: &VcsSnapshot) -> VcsDiff {
+    VcsDiff {
+        artifact: Some(Box::new(VcsArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_diff_is_a_no_operation() {
+        let base = crate::artifacts::vcs::engine::empty_vcs_snapshot();
+        let diff = VcsDiff::default();
+        assert_eq!(diff.apply(&base), base);
+    }
+}
+//#endregion 🧪️Tests
+
+================================================================================
+🔺️diff/🧬️schema/🔗️component.graphql
+================================================================================
+# 🧬️ VCS diff schema — sparse field delta over the artifact.
+
+type VcsDiff {
+  artifact: VcsArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  counter: Long @state(class: PERSISTENT)
+  notes: String @state(class: PERSISTENT)
+  status: String @state(class: PERSISTENT)
+  tags: VcsTagsDelta @state(class: PERSISTENT)
+  selectedCheckpointIds: VcsStringList @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type VcsStringList {
+  values: [String!]!
+}
+
+type VcsTagsDelta {
+  added: [String!]!
+  removed: [String!]!
+}
+
+================================================================================
+🔺️diff/🧬️schema/🔣️component.json
+================================================================================
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/diff.json",
+  "title": "VcsDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "VcsArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "counter": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "persistent"
+    },
+    "notes": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "status": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "tags": {
+      "$ref": "#/$defs/VcsTagsDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckpointIds": {
+      "$ref": "#/$defs/VcsStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "VcsStringList": {
+      "title": "VcsStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "VcsTagsDelta": {
+      "title": "VcsTagsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
+================================================================================
+🔺️diff/🧬️schema/🛰️component.proto
+================================================================================
+syntax = "proto3";
+package semio.s.vcs.vcs.diff;
+
+// 🧬️ VCS diff schema — sparse field delta over the artifact.
+
+message VcsDiff {
+  // @state persistent
+  optional VcsArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string title = 3;
+  // @state persistent
+  optional int64 counter = 4;
+  // @state persistent
+  optional string notes = 5;
+  // @state persistent
+  optional string status = 6;
+  // @state persistent
+  optional VcsTagsDelta tags = 7;
+  // @state shared-ui
+  optional VcsStringList selected_checkpoint_ids = 8;
+  // @state local-ui
+  optional string locale = 9;
+}
+
+message VcsStringList {
+  repeated string values = 1;
+}
+
+message VcsTagsDelta {
+  repeated string added = 1;
+  repeated string removed = 2;
+}
+
+message VcsArtifact {
+  string schema = 1;
+  string title = 2;
+  int64 counter = 3;
+  string notes = 4;
+  string status = 5;
+  repeated string tags = 6;
+  repeated string selected_checkpoint_ids = 7;
+  string locale = 8;
+}
+
+================================================================================
+🔺️diff/🧬️schema/🟦️component.ts
+================================================================================
+/** 🧬️ VCS diff schema — sparse field delta over the artifact. */
+
+export interface VcsDiff {
+  /** @state persistent */
+  artifact?: VcsArtifact;
+  /** @state persistent */
+  schema?: string;
+  /** @state persistent */
+  title?: string;
+  /** @state persistent */
+  counter?: number;
+  /** @state persistent */
+  notes?: string;
+  /** @state persistent */
+  status?: string;
+  /** @state persistent */
+  tags?: VcsTagsDelta;
+  /** @state shared-ui */
+  selectedCheckpointIds?: VcsStringList;
+  /** @state local-ui */
+  locale?: string;
+}
+
+export interface VcsStringList {
+  values: string[];
+}
+
+export interface VcsTagsDelta {
+  added: string[];
+  removed: string[];
+}
+
+export interface VcsArtifact {
+  schema: string;
+  title: string;
+  counter: number;
+  notes: string;
+  status: string;
+  tags: string[];
+  selectedCheckpointIds: string[];
+  locale: string;
+}
+
+================================================================================
+🔺️diff/🧬️schema/🦀️component.rs
+================================================================================
+//! 🧬️ VCS diff schema — sparse field delta over the artifact.
+
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Diff
+/// 🔺️ Sparse field delta for the VCS artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase", default)]
+#[artifact_schema(id = "s.vcs.vcs")]
+pub struct VcsDiff {
+    #[state(persistent)]
+    pub artifact: Option<Box<crate::artifacts::vcs::schema::VcsArtifact>>,
+    #[state(persistent)]
+    pub schema: Option<String>,
+    #[state(persistent)]
+    pub title: Option<String>,
+    #[state(persistent)]
+    pub counter: Option<i64>,
+    #[state(persistent)]
+    pub notes: Option<String>,
+    #[state(persistent)]
+    pub status: Option<String>,
+    #[state(persistent)]
+    pub tags: Option<VcsTagsDelta>,
+    #[state(shared_ui)]
+    pub selected_checkpoint_ids: Option<VcsStringList>,
+    #[state(local_ui)]
+    pub locale: Option<String>,
+}
+//#endregion 🔖️Diff
+
+//#region 🔖️DeltaHelpers
+/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct VcsStringList {
+    pub values: Vec<String>,
+}
+
+/// 🏷️ Tag-list sparse delta (added/removed tag strings).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct VcsTagsDelta {
+    pub added: Vec<String>,
+    pub removed: Vec<String>,
+}
+//#endregion 🔖️DeltaHelpers
+
+================================================================================
+🗣️dsl/📖️component.grammar.semio
+================================================================================
+dialect grammar
+grammar vcs.document
+extension vcs
+use family-sheet
+start document
+
+artifact-mark = "vcs.vcs"
+document = artifact-mark doc-body
+doc-body = eng-header eng-tables
+eng-header = "model" "=" IDENT
+eng-tables = nodes-table? elements-table? loads-table?
+nodes-table = "nodes" table-schema "{" row* "}"
+elements-table = "elements" table-schema "{" row* "}"
+loads-table = "loads" table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = eng-node*
+eng-node = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "support" "=" IDENT | "commit" "=" TEXT
+eng-record = eng-node*
+
+================================================================================
+🗣️dsl/🟦️component.ts
+================================================================================
+/** WASM facade — parse/print delegates to the plugin Rust crate. */
+export function parseDsl(text: string): unknown {
+  throw new Error("wire to plugin WASM");
+}
+export function printDsl(value: unknown): string {
+  throw new Error("wire to plugin WASM");
+}
+
+================================================================================
+🗣️dsl/🦀️component.rs
+================================================================================
+//! 📜️ VCS artifact — textual document grammar surface + laws (was: constitutional `dsl`).
+
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
+use crate::artifacts::vcs::VcsSnapshot;
+
+/// 📄️ The `demo` example checkpoint, handcrafted in the `.vcsdemo` DSL — a mid-review structural
+/// change with a non-zero counter, freeform notes, an in-progress status, and a few tags.
+pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+
+/// 📖️ Parses `.vcsdemo` DSL text into a `VcsSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<VcsSnapshot, store::TextError> {
+    <VcsSnapshot as store::DocumentDsl>::parse_dsl(text)
+}
+
+/// 🖨️ Prints a `VcsSnapshot` back to `.vcsdemo` DSL text.
+pub fn print_dsl(projection: &VcsSnapshot) -> String {
+    store::DocumentDsl::print_dsl(projection)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vcs_demo_projection_dsl_round_trips() {
+        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vcs::engine::empty_vcs_snapshot());
+    }
+
+    #[test]
+    fn default_example_dsl_round_trips() {
+        let document = parse_dsl(VCS_DEMO_DEFAULT_EXAMPLE_TEXT).expect("parse default .vcsdemo example");
+        store::os_store::test_support::assert_dsl_round_trip(&document);
+    }
+}
+//#endregion 🧪️Tests
+
+================================================================================
+🦀️component.rs
+================================================================================
+//! 🌿️ VCS artifact — the document entity the `vcs-play` app edits.
+
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+pub const VCS_DOCUMENT_SCHEMA: &str = "vcs.vcs";
+pub use crate::artifacts::vcs::snapshot::schema::VcsSnapshot;
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::apps::vcs::create_vcs_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "vcs.document".into(),
+        name: "VCS Document".into(),
+        source_format: VCS_DOCUMENT_SCHEMA.into(),
+        component_kind: "vcs".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: VCS_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+
+================================================================================
+🧬️mutations/📖️component.grammar.semio
+================================================================================
+dialect grammar
+grammar vcs.op
+extension vcs
+use family-sheet
+start mutation
+
+artifact-mark = "vcs.vcs-op"
+mutation = artifact-mark eng-op+
+eng-op = "add-node" eng-field+ | "set-load" eng-field+ | "set-support" eng-field+ | "commit-step" eng-field+
+eng-field = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-node = "node" "=" INT | "element" "=" IDENT
+eng-record = eng-node*
+
+================================================================================
+🧬️mutations/🔢set-counter/🦠️mutation/🟦️component.ts
+================================================================================
+export {};
+
+================================================================================
+🧬️mutations/🟦️component.ts
+================================================================================
+/** 🧩 vcs 🧬️mutations WASM facade. */
+export {};
+
+================================================================================
+🧬️mutations/🦀️component.rs
+================================================================================
+//! 🧬️ VCS artifact — document mutation dispatch enum.
+
+use crate::artifacts::vcs::diff::{diff_set_snapshot, VcsDiff, VcsTagsDelta};
+use crate::artifacts::vcs::VcsSnapshot;
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutations
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+#[allow(clippy::large_enum_variant, reason = "SetSnapshot.snapshot carries the whole document")]
+pub enum VcsDemoMutation {
+    SetCounter { counter: i64 },
+    SetTitle { title: String },
+    SetNotes { notes: String },
+    SetStatus { status: String },
+    AddTag { tag: String },
+    RemoveTag { tag: String },
+    SetSnapshot { snapshot: VcsSnapshot },
+}
+
+pub fn apply_vcs_demo_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) {
+    match mutation {
+        VcsDemoMutation::SetCounter { counter } => super::set_counter::mutation::apply(snapshot, *counter),
+        VcsDemoMutation::SetTitle { title } => super::set_title::mutation::apply(snapshot, title),
+        VcsDemoMutation::SetNotes { notes } => super::set_notes::mutation::apply(snapshot, notes),
+        VcsDemoMutation::SetStatus { status } => super::set_status::mutation::apply(snapshot, status),
+        VcsDemoMutation::AddTag { tag } => super::add_tag::mutation::apply(snapshot, tag),
+        VcsDemoMutation::RemoveTag { tag } => super::remove_tag::mutation::apply(snapshot, tag),
+        VcsDemoMutation::SetSnapshot { snapshot: replacement } => *snapshot = replacement.clone(),
+    }
+}
+
+pub fn inverse_vcs_demo_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<VcsDemoMutation> {
+    match mutation {
+        VcsDemoMutation::SetCounter { counter } => super::set_counter::inverse::inverse(snapshot, *counter),
+        VcsDemoMutation::SetTitle { title } => super::set_title::inverse::inverse(snapshot, title),
+        VcsDemoMutation::SetNotes { notes } => super::set_notes::inverse::inverse(snapshot, notes),
+        VcsDemoMutation::SetStatus { status } => super::set_status::inverse::inverse(snapshot, status),
+        VcsDemoMutation::AddTag { tag } => super::add_tag::inverse::inverse(snapshot, tag),
+        VcsDemoMutation::RemoveTag { tag } => super::remove_tag::inverse::inverse(snapshot, tag),
+        VcsDemoMutation::SetSnapshot { .. } => vec![VcsDemoMutation::SetSnapshot { snapshot: snapshot.clone() }],
+    }
+}
+
+impl Mutation<VcsSnapshot> for VcsDemoMutation {
+    type Diff = VcsDiff;
+
+    fn diff(&self, _snapshot: &VcsSnapshot) -> Self::Diff {
+        match self {
+            VcsDemoMutation::SetCounter { counter } => VcsDiff { counter: Some(*counter), ..Default::default() },
+            VcsDemoMutation::SetTitle { title } => VcsDiff { title: Some(title.clone()), ..Default::default() },
+            VcsDemoMutation::SetNotes { notes } => VcsDiff { notes: Some(notes.clone()), ..Default::default() },
+            VcsDemoMutation::SetStatus { status } => VcsDiff { status: Some(status.clone()), ..Default::default() },
+            VcsDemoMutation::AddTag { tag } => VcsDiff {
+                tags: Some(VcsTagsDelta { added: vec![tag.clone()], ..Default::default() }),
+                ..Default::default()
+            },
+            VcsDemoMutation::RemoveTag { tag } => VcsDiff {
+                tags: Some(VcsTagsDelta { removed: vec![tag.clone()], ..Default::default() }),
+                ..Default::default()
+            },
+            VcsDemoMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+        }
+    }
+
+    fn inverse(&self, snapshot: &VcsSnapshot) -> Vec<Self> {
+        inverse_vcs_demo_mutation(snapshot, self)
+    }
+}
+//#endregion 🔖️Mutations
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::vcs::engine;
+
+    #[test]
+    fn vcs_demo_mutation_round_trips_store() {
+        let mut store = store::DocumentStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", engine::empty_vcs_snapshot(), None));
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 3 }], description: None }).expect("apply");
+        assert_eq!(store.snapshot().expect("snapshot").counter, 3);
+    }
+}
+//#endregion 🧪️Tests
+
+================================================================================
+🧬️schema/🔗️component.graphql
+================================================================================
+# 🧬️ VCS artifact schema — every field with its state class.
+
+type VcsArtifact {
+  schema: String! @state(class: PERSISTENT)
+  title: String! @state(class: PERSISTENT)
+  counter: Long! @state(class: PERSISTENT)
+  notes: String! @state(class: PERSISTENT)
+  status: String! @state(class: PERSISTENT)
+  tags: [String!]! @state(class: PERSISTENT)
+  selectedCheckpointIds: [String!]! @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+================================================================================
+🧬️schema/🔣️component.json
+================================================================================
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/artifact.json",
+  "title": "VcsArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "counter",
+    "notes",
+    "status",
+    "tags",
+    "selectedCheckpointIds",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "counter": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "persistent"
+    },
+    "notes": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "status": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckpointIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}
+
+================================================================================
+🧬️schema/🛰️component.proto
+================================================================================
+syntax = "proto3";
+package semio.s.vcs.vcs.artifact;
+
+// 🧬️ VCS artifact schema — every field with its state class.
+
+message VcsArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string title = 2;
+  // @state persistent
+  int64 counter = 3;
+  // @state persistent
+  string notes = 4;
+  // @state persistent
+  string status = 5;
+  // @state persistent
+  repeated string tags = 6;
+  // @state shared-ui
+  repeated string selected_checkpoint_ids = 7;
+  // @state local-ui
+  string locale = 8;
+}
+
+================================================================================
+🧬️schema/🟦️component.ts
+================================================================================
+/** 🧬️ VCS artifact schema — every field with its state class. */
+
+export interface VcsArtifact {
+  /** @state persistent */
+  schema: string;
+  /** @state persistent */
+  title: string;
+  /** @state persistent */
+  counter: number;
+  /** @state persistent */
+  notes: string;
+  /** @state persistent */
+  status: string;
+  /** @state persistent */
+  tags: string[];
+  /** @state shared-ui */
+  selectedCheckpointIds: string[];
+  /** @state local-ui */
+  locale: string;
+}
+
+================================================================================
+🧬️schema/🦀️component.rs
+================================================================================
+//! 🧬️ VCS artifact schema — every field of the artifact with its state class.
+
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Artifact
+/// 🧬️ Full VCS demo artifact state across persistent, shared-ui and local-ui classes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.vcs.vcs")]
+pub struct VcsArtifact {
+    #[state(persistent)]
+    pub schema: String,
+    #[state(persistent)]
+    pub title: String,
+    #[state(persistent)]
+    pub counter: i64,
+    #[state(persistent)]
+    pub notes: String,
+    #[state(persistent)]
+    pub status: String,
+    #[state(persistent)]
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[state(shared_ui)]
+    #[serde(default)]
+    pub selected_checkpoint_ids: Vec<String>,
+    #[state(local_ui)]
+    pub locale: String,
+}
+//#endregion 🔖️Artifact
+
+//#region 🔖️Conversions
+impl Default for VcsArtifact {
+    fn default() -> Self {
+        Self {
+            schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(),
+            title: "VCS Demo".into(),
+            counter: 0,
+            notes: String::new(),
+            status: "new".into(),
+            tags: Vec::new(),
+            selected_checkpoint_ids: Vec::new(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl VcsArtifact {
+    /// 📸️ Persisted subset.
+    pub fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
+        crate::artifacts::vcs::VcsSnapshot {
+            schema: self.schema.clone(),
+            title: self.title.clone(),
+            counter: self.counter,
+            notes: self.notes.clone(),
+            status: self.status.clone(),
+            tags: self.tags.clone(),
+        }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    pub fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
+        Self {
+            schema: snapshot.schema,
+            title: snapshot.title,
+            counter: snapshot.counter,
+            notes: snapshot.notes,
+            status: snapshot.status,
+            tags: snapshot.tags,
+            ..Self::default()
+        }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
+        self.schema = snapshot.schema;
+        self.title = snapshot.title;
+        self.counter = snapshot.counter;
+        self.notes = snapshot.notes;
+        self.status = snapshot.status;
+        self.tags = snapshot.tags;
+    }
+}
+//#endregion 🔖️Conversions
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.vcs.vcs` — fifteen handcrafted schema leaves.
+pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+    schema::ArtifactSchemaDescriptor {
+        id: "s.vcs.vcs",
+        artifact: schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        snapshot: schema::FacetLeaves {
+            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+        },
+        diff: schema::FacetLeaves {
+            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor

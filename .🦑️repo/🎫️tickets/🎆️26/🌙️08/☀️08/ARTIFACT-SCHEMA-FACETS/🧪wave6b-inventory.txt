@@ -1,0 +1,970 @@
+📜️script.ts:2209: * `DemoProjection` fixture, which is why `vcs/rs/lib.rs` is NOT in this list). Wave 2's per-app-family
+📜️script.ts:2224: * `DemoProjection`/`LossyMutation` fixtures, which is why it is NOT in this list). Remove an entry
+📜️script.ts:2253: *   (the schema-less escape hatch for a technology whose `DocumentApp::Projection` predates its own
+📜️script.ts:2950:type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; projectionType: string; mutationType: string };
+📜️script.ts:2954:/** 🔎️Extracts `type Projection = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
+📜️script.ts:2961:    const projectionMatch = body.match(/type\s+Projection\s*=\s*([\w:<>]+)\s*;/);
+📜️script.ts:2963:    if (!projectionMatch || !mutationMatch) continue;
+📜️script.ts:2968:      projectionType: projectionMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
+📜️script.ts:3011: * (e.g. `use raster_core::{RasterProjection as RasterDocument};`) — a technology's block-kind wrapper
+📜️script.ts:3013: * (`forms`'s `PlaybookSpec as FormSpec`, `raster/plugin`'s `RasterProjection as RasterDocument`), so a
+📜️script.ts:3038: * 📏️dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Projection`/`Mutation` type
+📜️script.ts:3042: * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Projection: vcs::DocumentDsl` /
+📜️script.ts:3057:      const checks: readonly { label: "Projection" | "Mutation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
+📜️script.ts:3058:        { label: "Projection", typeName: usage.projectionType, trait: "DocumentDsl", completeNames: complete.documentDsl },
+📜️script.ts:3072:          reason: "Every DocumentApp app's Projection must implement vcs::DocumentDsl and Mutation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
+📜️script.ts:3073:          solution: `Add #[derive(dsl::DslDocument)] (Projection) / #[derive(dsl::DslOps)] (Mutation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
+📜️script.ts:3086: * `assert_document_pack_round_trip(` somewhere in the same file — dsl and pack are two projections of
+📜️script.ts:3109:      reason: "Every DSL round-trip test must have a pack-round-trip sibling on the same fixture(s), at the same test level — dsl and pack are two projections of the same (RecordSpec, RecordValue) value model, never two independently-maintained sources of truth.",
+📜️script.ts:3123: * round-tripping through `protocol::MutationEnvelope`s is a third projection of the same value model,
+📜️script.ts:3142:      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Projection, Mutation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
+📜️script.ts:5274:        solution: `Add impl Mutation<Projection> for the mutation struct in ${rsRel}.`,
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts:158: * every declared area state and every projection map (`taxonomyLeafFilenames`,
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:277:  camera.updateProjectionMatrix();
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:2383:          projection: { label: { normal: "Projektion", beginner: "Projektion" } },
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:3093:          projection: { label: { normal: "Projection", beginner: "Projection" } },
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:5950:/** @emoji 🪟️ Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:6910:/** @emoji 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:10087:      expect(elementIdSegment("world-orbit-projection")).toBe("worldOrbitProjection");
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:12232:      perspective.updateProjectionMatrix();
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:12237:      ortho.updateProjectionMatrix();
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:12292:      ortho.updateProjectionMatrix();
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:12316:        projectionMatrix: ortho.projectionMatrix,
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:12317:        projectionMatrixInverse: ortho.projectionMatrixInverse,
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:16763:            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:16774:            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:16784:            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:16799:                <Pane id="projection-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded onFoldToggle={onFoldToggle}>
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:18817:    it("keeps the gizmo in the bottom-right corner above the folded projection pane chrome", () => {
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:53:  "projection.axonometric": "projection-axonometric",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:54:  "projection.curvilinear": "projection-curvilinear",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:55:  "projection.dimetric": "projection-dimetric",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:56:  "projection.isometric": "projection-isometric",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:57:  "projection.oblique": "projection-oblique",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:58:  "projection.oblique.cabinet": "projection-oblique-cabinet",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:59:  "projection.oblique.cavalier": "projection-oblique-cavalier",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:60:  "projection.oblique.military": "projection-oblique-military",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:61:  "projection.one-point": "projection-one-point",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:62:  "projection.orthographic": "projection-orthographic",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:63:  "projection.parallel": "projection-parallel",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:64:  "projection.perspective": "projection-perspective",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:65:  "projection.three-point": "projection-three-point",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:66:  "projection.trimetric": "projection-trimetric",
+🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts:67:  "projection.two-point": "projection-two-point",
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:568:  WorldOrbitProjectionSwitch,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:569:  WorldProjectionKindSwitch,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:570:  WorldProjectionRig,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:571:  worldProjectionFamily,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:572:  worldProjectionGumballPlane,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:573:  worldProjectionOrbitConstraints,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:574:  worldProjectionModeFov,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:575:  worldProjectionDefaults,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:577:  createWorldProjectionTemplates,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:578:  decodeWorldProjectionTemplateId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:579:  encodeWorldProjectionTemplateId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:580:  worldProjectionSpecLabel,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:581:  worldProjectionSpecIconId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:582:  computeWorldProjectionPose,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:583:  frameWorldProjectionPose,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:586:  type WorldProjectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:587:  type WorldProjectionTemplateDescriptor,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:594:  type OrbitCameraProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:953:import { type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldSelectionMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost } from "../../../../🧱️elements/World3dHost/🟦️component.tsx";
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:954:export { type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldSelectionMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost };
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts:485:/** @emoji 🧭️ Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:166:  worldGumballConfigForProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:238:import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:537:    const renamedExtra = shellReducer(state, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main-top", iconId: "projection-orthographic" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:538:    expect(renamedExtra.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:539:    const renamedBase = shellReducer(renamedExtra, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main", iconId: "projection-three-point" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:540:    expect(renamedBase.layout.windowIconsById["puzzle3d-main"]).toBe("projection-three-point");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:541:    expect(renamedBase.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2081:    ortho.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2106:    perspective.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2292:    expect(markup).toContain("data-world-projection-kind-switch");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2304:      { position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: true, up: [0, 0, 1] },
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2305:      { position: [4, 5, 6], target: [1, 1, 1], zoom: 2, projection: "orthographic", up: [0, 1, 0] },
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2310:    expect(merged.projection).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2312:    expect(merged.explicitProjection).toBe(true);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2316:  it("buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2317:    const withUp = buildWorldCameraDispatchArgs({ position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1], projection: "orthographic" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2319:    expect(withUp).not.toHaveProperty("projection");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2320:    expect(withUp).not.toHaveProperty("projectionSpec");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2322:    const withoutUp = buildWorldCameraDispatchArgs({ position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2325:    expect(withoutUp).not.toHaveProperty("projection");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2329:    const args = worldCameraSetCameraDispatchArgs("puzzle.3d.play.viewport", { position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1], projection: "orthographic" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2356:  it("preserves projectionSpec.view from gizmo snaps instead of clobbering to top", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2358:      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } },
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2359:      { position: [0, -600, 0], target: [0, 0, 0], zoom: 50, projection: "orthographic", projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } },
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:2361:    expect(merged.projectionSpec).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4048:  it("worldGumballConfigForProjection intersects transform mode with planar window projections", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4049:    expect(worldGumballConfigForProjection("move", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4058:    expect(worldGumballConfigForProjection("rotate", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }).plane).toBe("xz");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4059:    expect(worldGumballConfigForProjection("scale", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } }).plane).toBe("yz");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4060:    expect(worldGumballConfigForProjection("move", { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }).plane).toBeUndefined();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4061:    expect(worldGumballConfigForProjection("transform", undefined).plane).toBeUndefined();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4830:describe("Display Windows tab — projection drag templates", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4859:  it("nests the full Parallel/Perspective projection taxonomy under a world-3d window kind", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4887:  it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4894:    expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:4898:    expect(decodeWorldProjectionTemplateId(isoPayload.templateId)).toMatchObject({ mode: { kind: "axonometric", variant: "isometric" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5061:  it("hydrates Top (1/3) + Perspective (2/3) instances and projection templates", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5062:    const topTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5063:    const perspectiveTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5097:    expect(seed.pendingProjections).toEqual([
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5104:    const topTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:5105:    const perspectiveTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } });
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts:20:/** 🫧 Process-local box for module ephemeral values — sole lane until OS draft projection owns these keys. */
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts:27:/** 🫧 Get-or-create a mutable box keyed for OS draft projection.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:50:import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:118:/** @emoji 🪟️ Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:121: * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}). Branches keep `items`
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:130:function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], windowKindId: string, idPrefix: string): TreeDataItem[] {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:138:      dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) },
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:139:      ...(template.children?.length ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) } : {}),
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:156:          // 🔃️ `worldProjectionTemplatesToTreeItems` already returns its items pre-reversed for one "up" render
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx:162:                  ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, `framework.display.windows.${kind.id}.projection`),
+🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/🟦️component.ts:1:/** @emoji 📜️ `@semio-tech/framework-math` — compile-time graph manifest types and catalog projection. */
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️component.tsx:312:          {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:58:  computeWorldProjectionPose,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:61:  frameWorldProjectionPose,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:64:  worldProjectionDefaults,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:65:  worldProjectionFamily,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:66:  worldProjectionGumballPlane,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:67:  worldProjectionModeFov,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:68:  worldProjectionOrbitConstraints,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:69:  worldProjectionSpecIconId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:70:  worldProjectionSpecLabel,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:79:  WorldProjectionKindSwitch,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:80:  WorldProjectionRig,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:84:  type WorldProjectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:539:  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:630:type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:632:/** 📐️ A `camera_json.projection` field is the composed mode ⊗ orientation taxonomy object. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:633:function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefined {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:641:  return value as WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:646:    const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number; up?: readonly [number, number, number]; projection?: string | object };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:649:    const projectionSpec = parseWorldProjectionField(parsed.projection);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:650:    const explicitProjection = projectionSpec !== undefined || parsed.projection === "perspective" || parsed.projection === "orthographic";
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:651:    const projectionFamily = projectionSpec ? worldProjectionFamily(projectionSpec) : undefined;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:657:      projection: projectionFamily ? (projectionFamily === "parallel" ? "orthographic" : "perspective") : parsed.projection === "orthographic" ? "orthographic" : "perspective",
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:658:      projectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:659:      fov: parsed.fov ?? (projectionSpec ? worldProjectionModeFov(projectionSpec) : undefined) ?? 45,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:660:      explicitProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:663:    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:668:/** 📷️ Merges an orbit/projection report into the viewport-owned camera without losing FOV, explicit-projection flags, or the full projection spec (orbit reports only ever carry the binary family, never the taxonomy spec). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:675:    projection: next.projection ?? base.projection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:676:    projectionSpec: next.projectionSpec ?? base.projectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:678:    explicitProjection: base.explicitProjection || next.projection === "perspective" || next.projection === "orthographic",
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:687:/** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:688: * (the binary family string, e.g. "orthographic"/"perspective") since the Rust camera struct's `projection`
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:832:    sceneCamera.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:843:    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:867:    projection: "perspective",
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:869:    explicitProjection: false,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:873:/** @emoji 📷️ Seeds a pending display-template projection, framing visible references/instances when present. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:874:function seedPendingWorldProjectionCamera(
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:875:  pendingSpec: WorldProjectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:883:    ? frameWorldProjectionPose(pendingSpec, bounds, {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:887:    : computeWorldProjectionPose(pendingSpec, {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:891:  return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:894:/** @emoji 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:897:function WorldProjectionContentFrame(props: {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:899:  readonly spec: WorldProjectionSpec | undefined;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:920:    const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:921:    const framed: WorldParsedCameraState = { ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true };
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:938:      ortho.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:950:      if ("updateProjectionMatrix" in camera) (camera as OrthographicCamera).updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:1202: * enough to size a push/pull tool's footprint without needing a true tangent-plane projection. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:1606:/** @emoji 🎛️ Transform-mode gumball config intersected with the planar subset implied by a window projection. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:1607:export function worldGumballConfigForProjection(mode: string, projectionSpec?: WorldProjectionSpec): GumballConfig {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:1608:  return gumballConfigForTransformMode(mode, worldProjectionGumballPlane(projectionSpec));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:2066:  projectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:2090:  readonly projectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:2169:      const plane = worldProjectionGumballPlane(projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:2172:    return worldGumballConfigForProjection(transformMode ?? "move", projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:2173:  }, [selection.gumballConfig, transformMode, projectionSpec]);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3557:/** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-right under the navigation cube — the cube sits above the folded chrome and the unfolded pane grows over it. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3558:function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3561:  const projectionLabel = useLabel("ui.host.projection");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3563:    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3564:      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3570:    <div className="pointer-events-none absolute inset-0" data-slot="world-orbit-projection-switch-fallback" data-world-projection-kind-switch-host="">
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3584: * freshly-opened pane's projection (dragging "Top" opens a pane that starts in the Top view, etc.). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3585:const pendingWorldProjectionByWindowId = new Map<string, WorldProjectionSpec>();
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3588:export function registerPendingWorldProjection(windowId: string, spec: WorldProjectionSpec): void {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3589:  pendingWorldProjectionByWindowId.set(windowId, spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3592:/** @emoji 🪟️ Peeks the sticky initial projection for `windowId` — kept until the pane is closed so React
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3595:function peekPendingWorldProjection(windowId: string | null): WorldProjectionSpec | null {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3597:  return pendingWorldProjectionByWindowId.get(windowId) ?? null;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3600:/** @emoji 🪟️ Drops the initial projection seed when a pane is closed (not after first apply). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3601:export function clearPendingWorldProjection(windowId: string | null): void {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3603:  pendingWorldProjectionByWindowId.delete(windowId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3637:  const pendingProjectionSpecRef = useRef<WorldProjectionSpec | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3639:    const pendingSpec = peekPendingWorldProjection(windowInstanceId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3641:    pendingProjectionSpecRef.current = pendingSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3642:    return seedPendingWorldProjectionCamera(pendingSpec, sceneCamera, instances, references);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3644:  const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3648:  const projectionContentFrameSeededRef = useRef(false);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3662:    setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3663:    projectionContentFrameSeededRef.current = false;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3977:        projection: cameraState.projection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:3981:  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, instances, selection.ids]);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4287:  const syncProjectionWindowChrome = useCallback(
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4288:    (spec: WorldProjectionSpec) => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4290:      setWindowTitle?.(windowInstanceId, worldProjectionSpecLabel(spec));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4291:      setWindowIcon?.(windowInstanceId, worldProjectionSpecIconId(spec) as IconName);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4297:    const pending = peekPendingWorldProjection(windowInstanceId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4298:    if (pending) syncProjectionWindowChrome(pending);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4299:  }, [syncProjectionWindowChrome, windowInstanceId]);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4306:      if (state.projectionSpec) syncProjectionWindowChrome(state.projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4309:    [adoptViewportCamera, syncProjectionWindowChrome, dispatchWorldCameraDebounced],
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4312:  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4313:  const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4315:  // 🧭️ User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — view-state only, never
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4316:  // dispatched: the only existing `setProjection` consumer (`apply_world3d_projection_action` in the
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4319:  // contract than this pane's whole-`WorldProjectionSpec` (mode ⊗ orientation) template selection — there is
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4322:  const handleProjectionKindChange = useCallback(
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4323:    (spec: WorldProjectionSpec) => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4324:      setExternalPendingProjectionSpec(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4325:      syncProjectionWindowChrome(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4327:    [syncProjectionWindowChrome],
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4330:  const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4332:    if (!projectionContentFrameSeededRef.current) {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4333:      projectionContentFrameSeededRef.current = true;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4336:    setProjectionFramePending(false);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4339:  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4340:  /** 📷️ Keep fitting the live content bounds into seeded projection panes (esp. orthographic Top) until the
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4343:  const fitProjectionContent = !viewportOwned && Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4344:  const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4813:            <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4824:          <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} pendingSpec={pendingProjectionSpec} />
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4825:          {fitProjectionContent || projectionFramePending ? (
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4826:            <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? worldProjectionSpec} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4832:            projection={cameraState.explicitProjection ? cameraState.projection : undefined}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4838:            projectionSpec={worldProjectionSpec}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4839:            externalPendingSpec={externalPendingProjectionSpec}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4840:            onExternalPendingSpecClear={() => setExternalPendingProjectionSpec(null)}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4842:            onPendingSpecChange={setPendingProjectionSpec}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx:4891:                projectionSpec={worldProjectionSpec}
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:319:type SceneProjectionKind = "camera" | "orthographic";
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:391:  // additionally clears the folded projection pane chrome (`h-medium`) plus one spacing gap so the cube
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1670:const updateSceneCameraProjection = (camera: THREE.Camera): void => {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1672:    camera.updateProjectionMatrix();
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1733:  projection: SceneProjectionKind;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1736:  onProjectionChange?: (projection: SceneProjectionKind) => void;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1746:const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, projection, camera: initialCamera, onCameraChange, onProjectionChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onOrbitEnd }) => {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1766:  const previousProjectionRef = reactHostPort.useRef<SceneProjectionKind>(projection);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1773:    if (projection === "orthographic" && currentCamera instanceof THREE.OrthographicCamera) {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1776:    updateSceneCameraProjection(currentCamera);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1777:  }, [projection, threeCamera]);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1799:    if (previousProjectionRef.current !== projection) {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1800:      previousProjectionRef.current = projection;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1833:        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1836:        updateSceneCameraProjection(cameraRef.current);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1853:        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1856:        updateSceneCameraProjection(cameraRef.current);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1867:  }, [initialCamera, projection]);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1899:        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1902:        updateSceneCameraProjection(cameraRef.current);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1911:        onProjectionChange?.("orthographic");
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1920:  }, [emitCameraChange, onProjectionChange, pendingSnapTarget, projection]);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1927:    if (isUpdatingCameraRef.current || projection !== "orthographic") return;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1929:    onProjectionChange?.("camera");
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1930:  }, [emitCameraChange, onProjectionChange, projection]);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:1985:        updateSceneCameraProjection(camera);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2050:  projection?: SceneProjectionKind;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2051:  onProjectionChange?: (projection: SceneProjectionKind) => void;
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2071:  projection = "camera",
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2072:  onProjectionChange,
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2077:  const [resolvedProjection, setResolvedProjection] = reactHostPort.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2080:    setResolvedProjection(projection ?? (orthographic ? "orthographic" : "camera"));
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2081:  }, [orthographic, projection]);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2083:  const handleProjectionChange = reactHostPort.useCallback(
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2084:    (nextProjection: SceneProjectionKind) => {
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2085:      setResolvedProjection(nextProjection);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2086:      onProjectionChange?.(nextProjection);
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2088:    [onProjectionChange],
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2091:  const projectionOptions: ActionDropdownOption[] = [
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2107:        <ActionDropdown id="ui.scene.projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2111:        orthographic={resolvedProjection === "orthographic"}
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2114:        camera={resolvedProjection === "orthographic" ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : { fov: 75, position: [10, 10, 10], near: 0.1, far: 10000 }}
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2121:          projection={resolvedProjection}
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx:2124:          onProjectionChange={handleProjectionChange}
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:117:  decodeWorldProjectionTemplateId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:118:  worldProjectionSpecIconId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:119:  worldProjectionSpecLabel,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:282:  clearPendingWorldProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:285:  registerPendingWorldProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:393:/** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:396:/** @emoji 🖼️ Lets a per-window host rewrite its Mode window icon (e.g. live projection glyph). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:3314:      const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:3315:      if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:3316:      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:3320:      if (projectionSpec) {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:3322:        dispatch({ type: "SET_WINDOW_ICON", windowId: instanceId, iconId: worldProjectionSpecIconId(projectionSpec) as IconName });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx:5055:                clearPendingWorldProjection(windowId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:368:  /** 🏷️ Live window-title overrides (projection labels, etc.) keyed by window instance id — base kinds and extras. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:370:  /** 🖼️ Live window-icon overrides (projection icons, etc.) keyed by window instance id — base kinds and extras. */
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:53:  "projection.axonometric": "projection-axonometric",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:54:  "projection.curvilinear": "projection-curvilinear",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:55:  "projection.dimetric": "projection-dimetric",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:56:  "projection.isometric": "projection-isometric",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:57:  "projection.oblique": "projection-oblique",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:58:  "projection.oblique.cabinet": "projection-oblique-cabinet",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:59:  "projection.oblique.cavalier": "projection-oblique-cavalier",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:60:  "projection.oblique.military": "projection-oblique-military",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:61:  "projection.one-point": "projection-one-point",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:62:  "projection.orthographic": "projection-orthographic",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:63:  "projection.parallel": "projection-parallel",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:64:  "projection.perspective": "projection-perspective",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:65:  "projection.three-point": "projection-three-point",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:66:  "projection.trimetric": "projection-trimetric",
+🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts:67:  "projection.two-point": "projection-two-point",
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️component.tsx:390:      readonly projection: UiLabelValue;
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:96:  decodeWorldProjectionTemplateId,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:181:  registerPendingWorldProjection,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1133:/** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1143:  readonly pendingProjections: readonly { readonly windowId: string; readonly templateId: string }[];
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1150:      pendingProjections: [],
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1156:  const pendingProjections: { readonly windowId: string; readonly templateId: string }[] = [];
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1167:    if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1172:    pendingProjections,
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1176:/** @emoji 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1188:  for (const pending of seed.pendingProjections) {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1189:    const projectionSpec = decodeWorldProjectionTemplateId(pending.templateId);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx:1190:    if (projectionSpec) registerPendingWorldProjection(pending.windowId, projectionSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:82:/** @emoji 📐️ Orbit view projection mode for display templates. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:83:export type OrbitCameraProjection = "orthographic" | "perspective";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:90:  readonly projection?: OrbitCameraProjection;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:91:  /** @emoji 📐️ Full classical-projection taxonomy spec (Parallel/Perspective families); see {@link WorldProjectionSpec}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:92:  readonly projectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:103:  readonly projection: OrbitCameraProjection;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:143:    before.projection === "orthographic"
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:792:/** @emoji 📶️ Orbit distance that drives automatic LOD — perspective uses eye→target; orthographic maps `zoom` through {@link worldProjectionMatchedPerspectiveDistance} so scroll (which changes zoom, not dolly) still retunes the grid. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:795:  return worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, worldCameraZoom(camera), viewportHeight);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:997:        cam.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1049:    // Parallel projection has uniform screen scale — depth-variable LOD collapses to the scene band (already zoom-aware).
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1218:/** @emoji 📐️ Maps a view id to orthographic vs perspective projection. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1219:export function orbitCameraProjectionForView(view: OrbitCameraViewId): OrbitCameraProjection {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1240:function orbitCameraZoomForProjection(projection: OrbitCameraProjection, zoom?: number): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1241:  if (projection === "orthographic") {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1267:/** @emoji 🔎️ Zoom carried through a projection gizmo snap — preserves live parallel zoom; maps perspective's unit zoom onto the orthographic default. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1268:export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, currentZoom: number, currentIsOrthographic: boolean): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1269:  const family = worldProjectionFamily(pendingSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1271:    return currentIsOrthographic ? currentZoom : orbitCameraZoomForProjection("orthographic", currentZoom);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1273:  return orbitCameraZoomForProjection("perspective", currentZoom);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1280:  const projection = orbitCameraProjectionForView(view);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1281:  const zoom = orbitCameraZoomForProjection(projection, options.zoom);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1284:      return { position: [target[0], target[1], target[2] + distance], target, up: [0, 1, 0], zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1286:      return { position: [target[0], target[1], target[2] - distance], target, up: [0, -1, 0], zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1289:      return { position: [target[0], target[1] - distance, target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1292:      return { position: [target[0], target[1] + distance, target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1295:      return { position: [target[0] + distance, target[1], target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1298:      return { position: [target[0] - distance, target[1], target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1306:        projection,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1326:  const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom: number; updateProjectionMatrix: () => void };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1329:    zoomable.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1335:  const spec = resolveProjectionGizmoSpec(resolveProjectionGizmoHitFromDirection(direction));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1336:  return worldProjectionSpecToOrbitView(spec) ?? "top";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1350:export function applyOrbitProjectionToCameraState(state: WorldCameraState, projection: OrbitCameraProjection): WorldCameraState {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1351:  return { ...state, projection, zoom: orbitCameraZoomForProjection(projection, state.zoom) };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1354:/** @emoji 🎞️ Live projection-matrix morph driven by {@link WorldProjectionSnapDriver} — read by {@link WorldProjectionMatrixDriver} and
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1356:export interface WorldProjectionMorphState {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1357:  readonly fromSpec: WorldProjectionSpec | undefined;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1358:  readonly toSpec: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1366:const WORLD_PROJECTION_MORPH_FALLBACK_REF: MutableRefObject<WorldProjectionMorphState | null> = { current: null };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1371:  readonly morphRef: MutableRefObject<WorldProjectionMorphState | null>;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1379:  const morphRef = reactHostPort.useRef<WorldProjectionMorphState | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1391:  readonly projectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1393:  readonly onSpecSelect: (spec: WorldProjectionSpec) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1400:type ProjectionGizmoVisualState = "idle" | "hover" | "dimmed";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1402:interface ProjectionGizmoVisualPalette {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1410:function resolveProjectionGizmoVisualPalette(): ProjectionGizmoVisualPalette {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1420:function projectionGizmoHitsEqual(a: ProjectionGizmoHit, b: ProjectionGizmoHit): boolean {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1424:function projectionGizmoHitVisualState(hit: ProjectionGizmoHit, hovered: ProjectionGizmoHit | null): ProjectionGizmoVisualState {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1428:  return projectionGizmoHitsEqual(hit, hovered) ? "hover" : "dimmed";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1431:function brightenProjectionGizmoColor(baseColor: string, accentColor: string, amount: number): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1438:function projectionGizmoHeadFillColor(baseColor: string, state: ProjectionGizmoVisualState, palette: ProjectionGizmoVisualPalette, neutral: boolean): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1445:  return brightenProjectionGizmoColor(baseColor, palette.brighten, 0.45);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1448:function projectionGizmoHeadOpacity(state: ProjectionGizmoVisualState, palette: ProjectionGizmoVisualPalette): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1459:export type ProjectionGizmoHit =
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1464:interface WorldProjectionGizmoViewportProps {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1468:  readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1487:function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number, number, number]; readonly color: string; readonly opacity?: number }): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1506:function WorldProjectionGizmoHitHead(props: {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1508:  readonly hit: ProjectionGizmoHit;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1511:  readonly palette: ProjectionGizmoVisualPalette;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1512:  readonly visualState: ProjectionGizmoVisualState;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1515:  readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1516:  readonly onPointerOver: (hit: ProjectionGizmoHit) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1519:  const fillColor = projectionGizmoHeadFillColor(props.color, props.visualState, props.palette, props.neutral);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1520:  const headOpacity = projectionGizmoHeadOpacity(props.visualState, props.palette);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1542:      userData={{ projectionGizmoHit: props.hit }}
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1556:        const hit = (event.object.userData?.projectionGizmoHit as ProjectionGizmoHit | undefined) ?? props.hit;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1565:/** @emoji 🎯️ Navigation cube with face, corner, and center hit targets for projection snapping. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1566:function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1568:  const [hoveredHit, setHoveredHit] = reactHostPort.useState<ProjectionGizmoHit | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1569:  const [palette, setPalette] = reactHostPort.useState(() => resolveProjectionGizmoVisualPalette());
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1573:      setPalette(resolveProjectionGizmoVisualPalette());
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1587:  const visualState = (hit: ProjectionGizmoHit) => projectionGizmoHitVisualState(hit, hoveredHit);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1595:  const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1597:  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly prominent?: boolean }[] = [
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1613:        <WorldProjectionGizmoCornerShaft key={`shaft-${corner.hit.quadrant}-${corner.hit.hemisphere}`} to={corner.position} color={props.neutralColor} opacity={shaftOpacity} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1615:      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} prominent color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", 1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1616:      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", -1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1617:      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} prominent color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", 1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1618:      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", -1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1619:      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} prominent color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", 1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1620:      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", -1))} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1622:        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} prominent={corner.prominent} color={props.neutralColor} neutral visualState={visualState(corner.hit)} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1624:      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} prominent color={props.neutralColor} neutral visualState={visualState({ type: "center" })} {...headBase} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1631:function dispatchProjectionGizmoHit(hit: ProjectionGizmoHit, currentSpec: WorldProjectionSpec | undefined, onSpecSelect: (spec: WorldProjectionSpec) => void, onViewSelect?: (view: OrbitCameraViewId) => void): void {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1632:  const spec = resolveProjectionGizmoSpec(hit, currentSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1634:  const view = worldProjectionSpecToOrbitView(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1640:/** @emoji 🧭️ CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right above the folded projection pane. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1660:      <WorldProjectionGizmoViewport
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1664:        onHitSelect={(hit) => dispatchProjectionGizmoHit(hit, props.projectionSpec, props.onSpecSelect, props.onViewSelect)}
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1670:export interface WorldProjectionSnapDriverProps {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1671:  readonly pendingSpec: WorldProjectionSpec | null;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1672:  readonly currentProjectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1675:  readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1678:interface WorldProjectionSnapAnim {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1679:  readonly spec: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1689:/** @emoji 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set — morphs pose AND the
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1690: * projection matrix itself (via {@link worldProjectionGoalMatrix} / {@link worldProjectionMorphMatrix}) over the same 280ms
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1692:export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps): null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1697:  const animRef = reactHostPort.useRef<WorldProjectionSnapAnim | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1704:    const fromSpec = props.currentProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1709:    const to = worldProjectionTransitionPose(pendingSpec, {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1715:      projectionSpec: fromSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1719:    const toFov = worldProjectionPerspectiveFov(pendingSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1720:    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), fromMatrix: camera.projectionMatrix.clone(), to, toFov, start: performance.now(), holding: false };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1721:    morphRef.current = { fromSpec, toSpec: pendingSpec, fromMatrix: animRef.current.fromMatrix, fromFov: fromFov ?? worldProjectionPerspectiveFov(fromSpec ?? pendingSpec), toFov, eased: 0, holding: false };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1725:  }, [camera, controls, invalidate, morphRef, props.currentProjectionSpec, props.pendingSpec, props.onPendingSpecClear, setSnapGate, size]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1733:      const goal = worldProjectionGoalMatrix(anim.spec, { zoom: anim.to.zoom, fov: anim.toFov, viewport: size, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1734:      camera.projectionMatrix.copy(goal);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1735:      camera.projectionMatrixInverse.copy(goal).invert();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1749:    const goal = worldProjectionGoalMatrix(anim.spec, { zoom: anim.to.zoom, fov: anim.toFov, viewport: size, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1750:    const morphed = worldProjectionMorphMatrix(anim.fromMatrix, goal, eased);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1751:    camera.projectionMatrix.copy(morphed);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1752:    camera.projectionMatrixInverse.copy(morphed).invert();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1765:    // Zoom/FOV fields are synced without `updateProjectionMatrix()` — that would rebuild the matrix from the camera's
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1796:  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1808:  const pendingSpec = props.pendingView ? orbitViewToWorldProjectionSpec(props.pendingView) : null;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1810:    <WorldProjectionSnapDriver
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1820:        if (state.projection) {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1821:          props.onProjectionChange?.(state.projection);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1830:  readonly projectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1831:  readonly externalPendingSpec?: WorldProjectionSpec | null;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1834:  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1836:  readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1837:  /** @emoji 🎞️ Reports the unified pane-or-gizmo pending spec so the host can pre-mount {@link WorldProjectionRig}'s
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1839:  readonly onPendingSpecChange?: (spec: WorldProjectionSpec | null) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1842:/** @emoji 🧭️ Bundles {@link WorldOrbitViewGizmo} and {@link WorldProjectionSnapDriver}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1844:  const [internalPendingSpec, setInternalPendingSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1859:      <WorldProjectionSnapDriver
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1861:        currentProjectionSpec={props.projectionSpec}
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1866:      <WorldOrbitViewGizmo show={props.show} projectionSpec={props.projectionSpec} onSpecSelect={setInternalPendingSpec} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1871:export const WORLD_PROJECTION_KINDS: readonly WorldProjectionKind[] = ["orthographic", "axonometric", "oblique", "onePoint", "twoPoint", "threePoint", "curvilinear"];
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1873:export interface WorldProjectionModeOption {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1876:  readonly spec: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1881: * Prefer {@link createWorldProjectionTemplates} / {@link WorldProjectionKindSwitch} for the canonical taxonomy. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1882:export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly WorldProjectionModeOption[] {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1923:export function worldProjectionTemplateSelectionId(spec: WorldProjectionSpec): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1943:export function worldProjectionTemplateApplySpec(templateSpec: WorldProjectionSpec, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1950:/** @emoji 🌲️ Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1951:export function worldProjectionSwitchTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], onSelect: (spec: WorldProjectionSpec) => void, currentSpec?: WorldProjectionSpec): TreeDataItem[] {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1957:    onClick: () => onSelect(worldProjectionTemplateApplySpec(template.args.spec, currentSpec)),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1958:    ...(template.children?.length ? { items: worldProjectionSwitchTreeItems(template.children, onSelect, currentSpec) } : {}),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1962:export interface WorldProjectionKindSwitchProps {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1963:  readonly spec: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1964:  readonly onSpecChange: (spec: WorldProjectionSpec) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1968:/** @emoji 🌲️ Projection-mode switcher — same Parallel/Perspective taxonomy as {@link createWorldProjectionTemplates}; cube owns spatial angles. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1969:export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1971:  const templates = reactHostPort.useMemo(() => createWorldProjectionTemplates({ controllerId: "projection-switch" }), []);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1972:  const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(templates, props.onSpecChange, props.spec), [templates, props.onSpecChange, props.spec]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1973:  const selectedId = worldProjectionTemplateSelectionId(props.spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1975:    <div className={shellClass} data-world-projection-kind-switch data-level="window">
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1977:        <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: "projection-modes", items }]} />
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1983:export interface WorldOrbitProjectionSwitchProps {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1984:  readonly projection: OrbitCameraProjection;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1985:  readonly onProjectionChange: (projection: OrbitCameraProjection) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1987:  readonly spec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1988:  readonly onSpecChange?: (spec: WorldProjectionSpec) => void;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1991:/** @emoji 🔀️ Orthographic / perspective toggle, or full {@link WorldProjectionKindSwitch} when `spec` is provided. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1992:export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1994:    return <WorldProjectionKindSwitch spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:1999:    <div className={shellClass} data-world-projection-switch data-level="window">
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2000:      <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2003:      <button type="button" className={buttonClass(props.projection === "perspective")} aria-pressed={props.projection === "perspective"} onClick={() => props.onProjectionChange("perspective")}>
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2175:export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number; readonly projectionOverride?: OrbitCameraProjection }): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2184:    return props.projectionOverride ? applyOrbitProjectionToCameraState(base, props.projectionOverride) : base;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2185:  }, [camera, controls, props.projectionOverride, props.seedKey, props.view, targetScratch]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2200:  }, [controls, props.camera, props.seedKey, props.state.position, props.state.target, props.state.up, props.state.zoom, props.state.projection]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2206:  const projection = props.state.projection ?? "perspective";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2208:  const cameraKey = `${projection}:${props.seedKey}`;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2211:      {projection === "orthographic" ? (
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2221:/** @emoji 🔑️ Stable apply token for {@link WorldOrbitCameraViewRigSeed}; keyed by seed + projection, not camera uuid remounts. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2222:export function orbitCameraViewRigApplyToken(seedKey: string | number, projection: OrbitCameraProjection = "perspective"): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2223:  return `${seedKey}:${projection}`;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2237:  const projection = props.state.projection ?? "perspective";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2244:    const token = `${orbitCameraViewRigApplyToken(props.seedKey, projection)}:controls:${controlsReady ? 1 : 0}`;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2251:  }, [controlsReady, getThree, invalidate, projection, props.seedKey]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2256:// #region 📐️WorldProjection
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2257:/** @emoji 📐️ Parallel vs. perspective camera family a {@link WorldProjectionSpec} belongs to. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2258:export type WorldProjectionFamily = "parallel" | "perspective";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2268:export type WorldProjectionOrientation =
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2273:/** @emoji 📐️ Projection *mode* the pane owns (kind + non-spatial params). Composes with {@link WorldProjectionOrientation}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2274:export type WorldProjectionMode =
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2283:/** @emoji 📐️ Full classical projection taxonomy as mode ⊗ orientation — every mode works with every gizmo view.
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2284: * See https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2285:export type WorldProjectionSpec = {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2286:  readonly mode: WorldProjectionMode;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2287:  readonly orientation: WorldProjectionOrientation;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2290:export type WorldProjectionKind = WorldProjectionMode["kind"];
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2292:/** @emoji 📡️ Command name products handle to apply a {@link WorldProjectionSpec}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2293:export const WORLD_PROJECTION_COMMAND = "setProjection";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2295:/** @emoji 📐️ Kind discriminator for a composed {@link WorldProjectionSpec}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2296:export function worldProjectionModeKind(spec: WorldProjectionSpec): WorldProjectionKind {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2301:export function worldProjectionModeFov(spec: WorldProjectionSpec): number | undefined {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2307:export function worldProjectionPerspectiveFov(spec: WorldProjectionSpec): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2308:  const fov = worldProjectionModeFov(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2313:export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): WorldProjectionFamily {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2321:/** @emoji 📐️ Baseline mode + default orientation for a freshly-selected projection kind. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2322:export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProjectionSpec {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2342:/** @emoji 📷️ Fallback canvas size when framing a projection before the live viewport is known. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2344:/** @emoji 📷️ Default padding around content when framing a projection pane. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2352:/** @emoji 📷️ Axis-aligned bounds of instances and visible reference planes, for framing projection panes. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2391:/** @emoji 📷️ Stable key for {@link WorldSceneContentBounds} — used to re-frame projection panes when fill (or any edit) expands the scene. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2399:export function worldProjectionCardinalLook(view: WorldOrthographicViewId): { readonly dir: Vec3; readonly up: Vec3 } {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2417:export function worldProjectionCornerLook(
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2435:export function worldProjectionOrientationLook(spec: WorldProjectionSpec): { readonly dir: Vec3; readonly up: Vec3 } {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2443:      return worldProjectionCardinalLook(orientation.view);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2447:      return worldProjectionCornerLook(orientation.quadrant, orientation.hemisphere, angleA, angleB);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2464:/** @emoji 📷️ Half-width/height of `bounds` in the projection's view plane (CAD axes). */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2465:export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds: WorldSceneContentBounds): { readonly halfWidth: number; readonly halfHeight: number } {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2487:export function worldProjectionOrthoZoom(halfWidth: number, halfHeight: number, viewportWidth: number, viewportHeight: number, padding = WORLD_PROJECTION_FRAME_PADDING): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2495:/** @emoji 📷️ Frames a projection to scene content — centers the target and sets viewport-aware orthographic zoom. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2496:export function frameWorldProjectionPose(
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2497:  spec: WorldProjectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2502:  const { halfWidth, halfHeight } = worldProjectionViewHalfExtent(spec, bounds);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2505:  const family = worldProjectionFamily(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2508:      ? worldProjectionOrthoZoom(halfWidth, halfHeight, options?.viewportWidth ?? WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT, options?.viewportHeight ?? WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT, padding)
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2510:  return computeWorldProjectionPose(spec, { target: bounds.center, distance, zoom });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2514:export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: { readonly target: Vec3; readonly distance?: number; readonly zoom?: number }): WorldCameraState {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2517:  const family = worldProjectionFamily(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2519:  const { dir, up } = worldProjectionOrientationLook(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2525:    projection: family === "parallel" ? "orthographic" : "perspective",
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2526:    projectionSpec: spec,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2530:/** @emoji 🔒️ Orbit-interaction constraints implied by a projection — drafting-locked orientations and modes disable rotation; two-point keeps the horizon level when free. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2531:export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | undefined): { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number } {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2548:export function worldProjectionGumballPlane(spec: WorldProjectionSpec | undefined): GumballPlaneId | undefined {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2584:/** @emoji 📷️ Applies a projection kind/variant switch, keeping the current pose when the caller supplies one
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2586:export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2587:  const family = worldProjectionFamily(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2588:  return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom === 1 ? 50 : state.zoom) : state.zoom };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2591:/** @emoji 🧭️ Structural equality for {@link WorldProjectionOrientation}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2592:export function worldProjectionOrientationsEqual(a: WorldProjectionOrientation, b: WorldProjectionOrientation): boolean {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2602:export function worldProjectionMatchedOrthoZoom(fovDeg: number, distance: number, viewportHeight: number): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2606:/** @emoji 📐️ Perspective orbit distance reproducing an orthographic zoom's apparent scale — inverse of {@link worldProjectionMatchedOrthoZoom}; used by automatic LOD so ortho scroll retunes the grid. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2607:export function worldProjectionMatchedPerspectiveDistance(fovDeg: number, zoom: number, viewportHeight: number): number {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2611:/** @emoji 🪞️ Oblique receding-axis shear matrix — extracted from {@link WorldProjectionMatrixDriver} so
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2612: * {@link worldProjectionGoalMatrix} and the live per-frame shear share one formula; `strength` ramps the shear 0→1. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2613:export function worldObliqueShearMatrix(mode: Extract<WorldProjectionMode, { kind: "oblique" }>, strength = 1): Matrix4 {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2623:/** @emoji 📐️ Destination projection matrix for `spec` at the live viewport size — the "goal" a projection-matrix morph
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2626:export function worldProjectionGoalMatrix(spec: WorldProjectionSpec, options: { readonly zoom: number; readonly fov?: number; readonly viewport: { readonly width: number; readonly height: number }; readonly near?: number; readonly far?: number }): Matrix4 {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2630:  if (worldProjectionFamily(spec) === "parallel") {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2633:    camera.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2634:    const matrix = camera.projectionMatrix.clone();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2637:  const fov = options.fov ?? worldProjectionPerspectiveFov(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2640:  camera.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2641:  const matrix = camera.projectionMatrix.clone();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2648:/** @emoji 🎞️ Element-wise projection-matrix lerp — valid across every pair this engine morphs between: persp↔ortho
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2651:export function worldProjectionMorphMatrix(from: Matrix4, to: Matrix4, t: number): Matrix4 {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2659:/** @emoji 🎞️ Destination pose for a projection snap — preserves eye exactly when only mode changes (matches
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2660: * {@link applyWorldProjectionToCameraState}'s "pure parameter tweaks never move the camera" invariant); re-looks only
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2662: * the live apparent scale via {@link worldProjectionMatchedOrthoZoom} instead of the legacy zoom-50 default — this only
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2664:export function worldProjectionTransitionPose(
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2665:  pendingSpec: WorldProjectionSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2672:    readonly projectionSpec?: WorldProjectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2677:  const previousSpec = live.projectionSpec;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2678:  const orientationUnchanged = previousSpec !== undefined && worldProjectionOrientationsEqual(previousSpec.orientation, pendingSpec.orientation);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2679:  if (orientationUnchanged && previousSpec && live.viewport && worldProjectionFamily(previousSpec) === "perspective" && worldProjectionFamily(pendingSpec) === "parallel") {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2680:    const fromFov = live.fov ?? worldProjectionPerspectiveFov(previousSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2682:    const zoom = worldProjectionMatchedOrthoZoom(fromFov, distance, live.viewport.height);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2683:    return applyWorldProjectionToCameraState({ position: live.position, target: live.target, up: live.up ?? ORBIT_CAMERA_Z_UP, zoom, projection: "orthographic", projectionSpec: pendingSpec }, pendingSpec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2685:  const zoom = worldProjectionSnapZoom(pendingSpec, live.zoom, live.isOrthographic);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2687:    return applyWorldProjectionToCameraState(
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2693:        projection: live.isOrthographic ? "orthographic" : "perspective",
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2694:        projectionSpec: pendingSpec,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2700:  return computeWorldProjectionPose(pendingSpec, { target: live.target, distance, zoom });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2703:/** @emoji 🧭️ Maps a projection-gizmo face to an orthographic view id. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2704:export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sign: 1 | -1): WorldOrthographicViewId {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2714:/** @emoji 🧭️ Resolves a navigation-cube hit into orientation only — never changes projection mode.
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2716:export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2717:  const base = currentSpec ?? worldProjectionDefaults("threePoint");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2720:      return { mode: base.mode, orientation: { type: "cardinal", view: projectionGizmoFaceToOrthographicView(hit.axis, hit.sign) } };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2729:export function resolveProjectionGizmoHitFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): ProjectionGizmoHit {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2751:/** @emoji 🧭️ Converts a legacy {@link OrbitCameraViewId} into a {@link WorldProjectionSpec}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2752:export function orbitViewToWorldProjectionSpec(view: OrbitCameraViewId): WorldProjectionSpec {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2778:      return worldProjectionDefaults("twoPoint");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2781:      return worldProjectionDefaults("threePoint");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2785:/** @emoji 🧭️ Best-effort reverse of {@link orbitViewToWorldProjectionSpec} for legacy orbit callbacks. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2786:export function worldProjectionSpecToOrbitView(spec: WorldProjectionSpec): OrbitCameraViewId | null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2806:/** @emoji 🔀️ Switches projection *mode* while preserving gizmo orientation (and FOV when possible). */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2807:export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2808:  const next = worldProjectionDefaults(kind);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2811:    const fov = worldProjectionModeFov(currentSpec ?? next) ?? worldProjectionModeFov(next)!;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2838:/** @emoji 📷️ Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2839:export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void; readonly pendingSpec?: WorldProjectionSpec | null }): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2840:  const family = worldProjectionFamily(props.spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2843:  const perspectiveFov = worldProjectionPerspectiveFov(props.spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2855:      {props.spec.mode.kind === "oblique" || props.spec.mode.kind === "twoPoint" ? <WorldProjectionMatrixDriver mode={props.spec.mode} /> : null}
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2861:/** @emoji 📷️ Applies a projection preset when `seedKey` changes (owned-camera canvases) — mirrors {@link WorldOrbitCameraViewApplier}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2862:export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSpec; readonly seedKey: string | number }): ReactElement {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2870:    return computeWorldProjectionPose(props.spec, { target: targetCad, distance });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2872:  return <WorldProjectionRig spec={props.spec} state={state} seedKey={props.seedKey} />;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2876: * camera's projection matrix every frame (after recomputing the pristine matrix, so resize/zoom never compounds
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2877: * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse.
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2878: * Defers to {@link WorldProjectionSnapDriver} while a projection morph is in flight (`morphRef.current`), since the
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2881:function WorldProjectionMatrixDriver(props: { readonly mode: Extract<WorldProjectionMode, { kind: "oblique" | "twoPoint" }> }): null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2888:    camera.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2890:      camera.projectionMatrix.multiply(worldObliqueShearMatrix(props.mode));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2892:      camera.projectionMatrix.elements[9] += props.mode.verticalShift;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2894:    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2902:export function worldCurvilinearUnproject(ndc: readonly [number, number], mode: Extract<WorldProjectionMode, { kind: "curvilinear" }>, aspect = 1): readonly [number, number] {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:2972:function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMode, { kind: "curvilinear" }> }): null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3005:    // 🐟️ Fade `uStrength`/`uFov` with the live projection morph — entering curvilinear ramps 0→target strength,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3043:export interface WorldProjectionTemplateDescriptor {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3049:  readonly args: { readonly spec: WorldProjectionSpec };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3050:  readonly children?: readonly WorldProjectionTemplateDescriptor[];
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3053:export interface CreateWorldProjectionTemplatesConfig {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3058:function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3062:function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3066:/** @emoji 🪟️ Builds the projection-mode taxonomy tree (no Top/Front — those are gizmo orientations):
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3069:export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3072:  const leaf = (id: string, label: string, iconId: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, iconId, spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3073:  const branch = (id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, iconId, spec, children);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3075:  const orthographic = leaf("orthographic", "Orthographic", "projection-orthographic", worldProjectionDefaults("orthographic"));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3078:    ["isometric", "Isometric", "projection-isometric"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3079:    ["dimetric", "Dimetric", "projection-dimetric"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3080:    ["trimetric", "Trimetric", "projection-trimetric"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3085:    "projection-axonometric",
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3086:    worldProjectionDefaults("axonometric"),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3096:    ["cabinet", "Cabinet", "projection-oblique-cabinet"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3097:    ["cavalier", "Cavalier", "projection-oblique-cavalier"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3098:    ["military", "Military", "projection-oblique-military"],
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3103:    "projection-oblique",
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3104:    worldProjectionDefaults("oblique"),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3113:  const parallel = branch("parallel", "Parallel", "projection-parallel", worldProjectionDefaults("orthographic"), [orthographic, axonometric, oblique]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3115:  const perspective = branch("perspective", "Perspective", "projection-perspective", worldProjectionDefaults("threePoint"), [
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3116:    leaf("one-point", "1-Point", "projection-one-point", worldProjectionDefaults("onePoint")),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3117:    leaf("two-point", "2-Point", "projection-two-point", worldProjectionDefaults("twoPoint")),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3118:    leaf("three-point", "3-Point", "projection-three-point", worldProjectionDefaults("threePoint")),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3119:    leaf("curvilinear", "Curvilinear", "projection-curvilinear", worldProjectionDefaults("curvilinear")),
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3125:const WORLD_PROJECTION_TEMPLATE_PREFIX = "world-projection:";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3127:/** @emoji 🪟️ Encodes a {@link WorldProjectionSpec} into a `WindowTemplateDropPayload.templateId` string,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3129:export function encodeWorldProjectionTemplateId(spec: WorldProjectionSpec): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3133:/** @emoji 🪟️ Inverse of {@link encodeWorldProjectionTemplateId}; `null` for anything else (including `undefined`). */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3134:export function decodeWorldProjectionTemplateId(templateId: string | undefined): WorldProjectionSpec | null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3140:    return typeof parsed.mode?.kind === "string" && parsed.orientation ? (parsed as WorldProjectionSpec) : null;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3151:export function worldProjectionOrientationLabel(orientation: WorldProjectionOrientation): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3164:/** @emoji 📐️ Mode label matching {@link createWorldProjectionTemplates} leaves. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3165:export function worldProjectionModeLabel(mode: WorldProjectionMode): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3184:/** @emoji 🪟️ Window title for a live projection — matches {@link createWorldProjectionTemplates} mode labels. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3185:export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3186:  return worldProjectionModeLabel(spec.mode);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3189:/** @emoji 🖼️ Catalog icon for a live projection — matches {@link createWorldProjectionTemplates} icons. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3190:export function worldProjectionSpecIconId(spec: WorldProjectionSpec): string {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3193:      return "projection-orthographic";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3197:          return "projection-isometric";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3199:          return "projection-dimetric";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3201:          return "projection-trimetric";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3207:          return "projection-oblique-cabinet";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3209:          return "projection-oblique-cavalier";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3211:          return "projection-oblique-military";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3215:      return "projection-one-point";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3217:      return "projection-two-point";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3219:      return "projection-three-point";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3221:      return "projection-curvilinear";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3224:// #endregion 📐️WorldProjection
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3235:export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", _rotateEnabled = true): {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3244:export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding, projection: OrbitCameraProjection = "perspective", rotateEnabled = true): void {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3245:  const idle = resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3253:export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">, _projection: OrbitCameraProjection = "perspective"): number | null {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3267:  readonly projection?: OrbitCameraProjection;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3280:/** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3282:  const projection = options?.projection ?? "perspective";
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3288:      applyWorldOrbitMouseButtonsIdle(controls, projection, rotateEnabled);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3290:  }, [controls, projection, rotateEnabled]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3301:      controls.mouseButtons.RIGHT = (optionsRef.current?.rotateEnabled ?? true) ? resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective") : event.shiftKey ? MOUSE.PAN : null;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3305:      controls.mouseButtons.RIGHT = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective", optionsRef.current?.rotateEnabled ?? true).RIGHT;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3342:  }, [controls, domElement, options?.dragThresholdPx, projection]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3395:  readonly projection?: OrbitCameraProjection;
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3396:  /** @emoji 🔒️ Rotation/polar-angle limits implied by the active {@link WorldProjectionSpec}; see {@link worldProjectionOrbitConstraints}. */
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3483:  const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3485:  const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled), [projection, rotateEnabled]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3486:  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3500:      projection,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:3512:      projection,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4288:    it("maps an unmodified middle click to pan in every projection", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4321:    it("always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4328:    const base: WorldNavigationSnapshot = { position: [0, 0, 10], target: [0, 0, 0], zoom: 1, projection: "perspective" };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4335:    it("detects zoom via distance change in perspective projection", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4340:    it("detects zoom via the zoom factor in orthographic projection, ignoring unchanged distance", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4341:      const orthoBase: WorldNavigationSnapshot = { ...base, projection: "orthographic", zoom: 1 };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4392:    it("places top view directly above the target with orthographic projection", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4394:      expect(state).toMatchObject({ position: [0, 0, 840], target: [0, 0, 40], up: [0, 1, 0], projection: "orthographic", zoom: 50 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4400:      expect(north.projection).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4402:      expect(perspective.projection).toBe("perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4418:  describe("resolveProjectionGizmoSpec", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4421:      const selectedSpecs: WorldProjectionSpec[] = [];
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4423:      dispatchProjectionGizmoHit({ type: "face", axis: "z", sign: 1 }, current, (spec) => selectedSpecs.push(spec), (view) => selectedViews.push(view));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4428:    it("sets orientation only and preserves the active projection mode", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4429:      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4433:      expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sign: -1 }, { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4437:      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se", hemisphere: "upper" }, { mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4441:      expect(resolveProjectionGizmoSpec({ type: "center" }, { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4445:      expect(resolveProjectionGizmoSpec({ type: "center" }, { mode: { kind: "twoPoint", fov: 42, verticalShift: 0 }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4453:      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw", hemisphere: "lower" }, dimetric)).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4462:        const withTop = { mode: worldProjectionDefaults(kind).mode, orientation: top };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4463:        const pose = computeWorldProjectionPose(withTop, { target: [0, 0, 0], distance: 100 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4465:        expect(pose.projectionSpec).toEqual(withTop);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4467:      const fishTop = resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, worldProjectionDefaults("curvilinear"));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4468:      expect(fishTop).toEqual({ mode: worldProjectionDefaults("curvilinear").mode, orientation: { type: "cardinal", view: "top" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4472:  describe("orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4474:      expect(orbitViewToWorldProjectionSpec("front")).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4475:      expect(orbitViewToWorldProjectionSpec("isometricNw")).toEqual({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "nw", hemisphere: "upper" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4476:      expect(worldProjectionSpecToOrbitView({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "right" } })).toBe("right");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4477:      expect(worldProjectionSpecToOrbitView({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "se", hemisphere: "upper" } })).toBe("isometricSe");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4481:  describe("worldProjectionKindSwitchSpec", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4482:    it("emits defaults for every projection kind", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4484:        expect(worldProjectionKindSwitchSpec(kind).mode.kind).toBe(kind);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4486:      expect(worldProjectionKindSwitchSpec("orthographic")).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4490:      expect(worldProjectionKindSwitchSpec("twoPoint", { mode: { kind: "threePoint", fov: 72 }, orientation: { type: "free" } })).toEqual({ mode: { kind: "twoPoint", fov: 72, verticalShift: 0 }, orientation: { type: "free" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4494:      expect(worldProjectionKindSwitchSpec("orthographic", { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4498:      expect(worldProjectionKindSwitchSpec("curvilinear", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4505:  describe("worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4507:      expect(worldProjectionTemplateSelectionId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4508:      expect(worldProjectionTemplateSelectionId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } })).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4509:      expect(worldProjectionTemplateSelectionId({ mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "lower" } })).toBe("axonometric-dimetric");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4510:      expect(worldProjectionTemplateSelectionId({ mode: { kind: "onePoint", fov: 40 }, orientation: { type: "cardinal", view: "left" } })).toBe("one-point");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4511:      expect(worldProjectionTemplateSelectionId({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "panini" }, orientation: { type: "free" } })).toBe("curvilinear");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4516:      expect(worldProjectionTemplateApplySpec({ mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, axo)).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4520:      expect(worldProjectionTemplateApplySpec({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } }, { mode: { kind: "onePoint", fov: 72 }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4526:    it("mirrors createWorldProjectionTemplates labels and ids in the switch tree", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4527:      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4528:      const items = worldProjectionSwitchTreeItems(templates, () => undefined);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4537:  describe("worldProjectionModeOptions", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4539:      expect(worldProjectionModeOptions({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual([]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4540:      expect(worldProjectionModeOptions({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }).map((row) => row.label)).toEqual(["Iso", "Di", "Tri"]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4541:      expect(worldProjectionModeOptions({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }).map((row) => row.label)).toEqual(["Cab", "Cav", "Mil"]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4542:      expect(worldProjectionModeOptions({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } }).map((row) => row.label)).toEqual(["Fish", "Pan"]);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4573:  describe("applyOrbitProjectionToCameraState", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4575:      const state = applyOrbitProjectionToCameraState({ position: [100, 0, 50], target: [0, 0, 0], zoom: 1, projection: "perspective" }, "orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4576:      expect(state.projection).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4619:  describe("worldProjectionFamily", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4621:      expect(worldProjectionFamily({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toBe("parallel");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4622:      expect(worldProjectionFamily({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toBe("parallel");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4623:      expect(worldProjectionFamily({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } })).toBe("parallel");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4624:      expect(worldProjectionFamily({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBe("perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4625:      expect(worldProjectionFamily({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe("perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4626:      expect(worldProjectionFamily(undefined)).toBe("perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4630:  describe("worldProjectionGumballPlane", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4631:    it("maps planar orthographic views to drafting planes and leaves 3D projections unconstrained", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4632:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("xy");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4633:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toBe("xy");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4634:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "bottom" } })).toBe("xy");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4635:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4636:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "back" } })).toBe("xz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4637:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } })).toBe("yz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4638:      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "right" } })).toBe("yz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4639:      expect(worldProjectionGumballPlane({ mode: { kind: "oblique", variant: "military", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "plan" } })).toBe("xy");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4640:      expect(worldProjectionGumballPlane({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4641:      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4642:      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "left" } })).toBe("yz");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4643:      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "top" } })).toBe("xy");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4644:      expect(worldProjectionGumballPlane({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toBeUndefined();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4645:      expect(worldProjectionGumballPlane({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBeUndefined();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4646:      expect(worldProjectionGumballPlane(undefined)).toBeUndefined();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4659:  describe("computeWorldProjectionPose", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4660:    it("places plan/top directly above the target with orthographic projection", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4661:      const state = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, { target: [0, 0, 40], distance: 800 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4662:      expect(state).toMatchObject({ position: [0, 0, 840], target: [0, 0, 40], up: [0, 1, 0], projection: "orthographic", zoom: 50 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4663:      const plan = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } }, { target: [0, 0, 40], distance: 800 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4668:      const state = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, { target: [7, 0, 0], distance: 100, zoom: 6.4 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4673:      expect(worldProjectionSnapZoom({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, 12.5, true)).toBe(12.5);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4674:      expect(worldProjectionSnapZoom({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }, 1, true)).toBe(1);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4675:      expect(worldProjectionSnapZoom({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "upper" } }, 1, false)).toBe(50);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4676:      expect(worldProjectionSnapZoom({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }, 50, true)).toBe(50);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4680:      const state = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4687:      const ne = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4688:      const sw = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4694:      const upper = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4695:      const lower = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "lower" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4703:      const cavalier = computeWorldProjectionPose({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4705:      const military = computeWorldProjectionPose({ mode: { kind: "oblique", variant: "military", angle: 30, depthScale: 1 }, orientation: { type: "cardinal", view: "plan" } }, { target: [0, 0, 0], distance: 10 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4710:    it("reports perspective projection for the perspective family", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4711:      const threePoint = computeWorldProjectionPose({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }, { target: [0, 0, 0], distance: 100 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4712:      expect(threePoint.projection).toBe("perspective");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4717:  describe("worldProjectionTransitionPose", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4725:        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "top" } } as const,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4728:      const next = worldProjectionTransitionPose(pending, live);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4732:      expect(next.projection).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4733:      expect(next.projectionSpec).toEqual(pending);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4744:        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } } as const,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4748:      const expected = computeWorldProjectionPose(pending, { target: [...live.target], distance, zoom: 1 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4749:      const next = worldProjectionTransitionPose(pending, live);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4753:      expect(next.projectionSpec).toEqual(pending);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4763:        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } } as const,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4767:      const next = worldProjectionTransitionPose(pending, live);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4769:      expect(next.zoom).toBeCloseTo(worldProjectionMatchedOrthoZoom(50, 100, 600), 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4780:        projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } as const,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4784:      const next = worldProjectionTransitionPose(pending, live);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4796:        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } } as const,
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4800:      const next = worldProjectionTransitionPose(pending, live);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4805:  describe("worldProjectionPerspectiveFov", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4807:      expect(worldProjectionPerspectiveFov({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBe(50);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4808:      expect(worldProjectionPerspectiveFov({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe(120);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4809:      expect(worldProjectionPerspectiveFov({ mode: { kind: "curvilinear", fov: 200, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe(160);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4813:  describe("worldProjectionMatchedOrthoZoom", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4815:      const zoom = worldProjectionMatchedOrthoZoom(50, 120, 720);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4816:      expect(worldProjectionMatchedOrthoZoom(50, 240, 720)).toBeCloseTo(zoom / 2, 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4817:      expect(worldProjectionMatchedOrthoZoom(50, 120, 1440)).toBeCloseTo(zoom * 2, 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4820:    it("round-trips with worldProjectionMatchedPerspectiveDistance", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4821:      const zoom = worldProjectionMatchedOrthoZoom(50, 180, 720);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4822:      expect(worldProjectionMatchedPerspectiveDistance(50, zoom, 720)).toBeCloseTo(180, 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4823:      expect(worldProjectionMatchedOrthoZoom(50, worldProjectionMatchedPerspectiveDistance(50, 40, 900), 900)).toBeCloseTo(40, 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4845:  describe("worldProjectionGoalMatrix", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4850:      const goal = worldProjectionGoalMatrix(spec, { zoom: 12.5, viewport, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4853:      cam.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4854:      for (let i = 0; i < 16; i++) expect(goal.elements[i]).toBeCloseTo(cam.projectionMatrix.elements[i], 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4859:      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4862:      cam.updateProjectionMatrix();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4863:      for (let i = 0; i < 16; i++) expect(goal.elements[i]).toBeCloseTo(cam.projectionMatrix.elements[i], 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4868:      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4869:      const base = worldProjectionGoalMatrix({ mode: { kind: "orthographic" }, orientation: spec.orientation }, { zoom: 1, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4874:    it("shifts the two-point vertical projection element", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4876:      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4877:      const base = worldProjectionGoalMatrix({ mode: { kind: "threePoint", fov: 50 }, orientation: spec.orientation }, { zoom: 1, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4882:  describe("worldProjectionMorphMatrix", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4886:      expect(worldProjectionMorphMatrix(from, to, 0).elements).toEqual(from.elements);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4887:      const atOne = worldProjectionMorphMatrix(from, to, 1);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4894:      const mid = worldProjectionMorphMatrix(from, to, 0.5);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4900:      const from = worldProjectionGoalMatrix({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }, { zoom: 10, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4901:      const goal = worldProjectionGoalMatrix({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }, { zoom: 10, viewport });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4902:      const mid = worldProjectionMorphMatrix(from, goal, 0.5);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4908:  describe("projectionGizmoHover", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4909:    const topFace: ProjectionGizmoHit = { type: "face", axis: "z", sign: 1 };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4910:    const freeCenter: ProjectionGizmoHit = { type: "center" };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4911:    const palette = resolveProjectionGizmoVisualPalette();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4914:      expect(projectionGizmoHitVisualState(topFace, topFace)).toBe("hover");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4915:      expect(projectionGizmoHitVisualState(freeCenter, topFace)).toBe("dimmed");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4916:      expect(projectionGizmoHitVisualState(topFace, null)).toBe("idle");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4920:      const axisHover = projectionGizmoHeadFillColor("#ff344f", "hover", palette, false);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4921:      const neutralHover = projectionGizmoHeadFillColor("#9aa0ab", "hover", palette, true);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4928:  describe("frameWorldProjectionPose", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4932:      const state = frameWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.35 });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4937:      expect(state.projection).toBe("orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4950:  describe("worldProjectionOrbitConstraints", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4952:      expect(worldProjectionOrbitConstraints({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } }).rotate).toBe(false);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4953:      expect(worldProjectionOrbitConstraints({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }).rotate).toBe(true);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4954:      expect(worldProjectionOrbitConstraints({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }).rotate).toBe(false);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4955:      expect(worldProjectionOrbitConstraints({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } }).rotate).toBe(false);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4956:      const twoPoint = worldProjectionOrbitConstraints({ mode: { kind: "twoPoint", fov: 50, verticalShift: 0 }, orientation: { type: "free" } });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4959:      expect(worldProjectionOrbitConstraints({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }).rotate).toBe(true);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4986:  describe("worldProjectionSpecIconId", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4987:    it("maps orthographic and three-point specs to distinct projection icons", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4988:      expect(worldProjectionSpecIconId(worldProjectionDefaults("orthographic"))).toBe("projection-orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4989:      expect(worldProjectionSpecIconId(worldProjectionDefaults("threePoint"))).toBe("projection-three-point");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4990:      expect(worldProjectionSpecIconId(worldProjectionDefaults("orthographic"))).not.toBe(worldProjectionSpecIconId(worldProjectionDefaults("threePoint")));
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4994:  describe("createWorldProjectionTemplates", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:4996:      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5004:      expect(parallel!.children![0]!.iconId).toBe("projection-orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5005:      expect(perspective!.children![2]!.iconId).toBe("projection-three-point");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5010:  describe("encodeWorldProjectionTemplateId / decodeWorldProjectionTemplateId", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5012:      const spec: WorldProjectionSpec = { mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "nw", hemisphere: "upper" } };
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5013:      const encoded = encodeWorldProjectionTemplateId(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5015:      expect(decodeWorldProjectionTemplateId(encoded)).toEqual(spec);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5019:      expect(decodeWorldProjectionTemplateId(undefined)).toBeNull();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5020:      expect(decodeWorldProjectionTemplateId("top")).toBeNull();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5021:      expect(decodeWorldProjectionTemplateId("world-projection:not-json")).toBeNull();
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5025:  describe("worldProjectionSpecLabel", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5026:    it("matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from", () => {
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5027:      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5028:      const collectLeafLabels = (nodes: readonly WorldProjectionTemplateDescriptor[]): readonly [string, WorldProjectionSpec][] =>
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5031:        expect(worldProjectionSpecLabel(spec)).toBe(label);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5033:      expect(worldProjectionSpecLabel({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("Orthographic");
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5062:      expect(near).toBeCloseTo(worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, 50, 720), 6);
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx:5063:      expect(far).toBeCloseTo(worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, 2, 720), 6);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:79:  WorldOrbitProjectionSwitch,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:82:  WorldProjectionKindSwitch,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:83:  applyOrbitProjectionToCameraState,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:84:  computeWorldProjectionPose,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:87:  worldProjectionFamily,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:88:  worldProjectionSpecIconId,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:89:  type OrbitCameraProjection,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:90:  type WorldProjectionSpec,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:2226:/** @emoji 🖱️ Z-aligned rod at `origin` (visual only; cursor projection is {@link SpatialConstrainedPointerBridge}). */
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3584:  if ("updateProjectionMatrix" in camera && typeof camera.updateProjectionMatrix === "function") {
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3585:    camera.updateProjectionMatrix();
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3732:  readonly orbitProjection?: OrbitCameraProjection;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3733:  readonly projectionSpec?: WorldProjectionSpec;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3734:  readonly externalPendingProjectionSpec?: WorldProjectionSpec | null;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3735:  readonly onExternalPendingProjectionSpecClear?: () => void;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3737:  readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3738:  readonly onProjectionSpecChange?: (spec: WorldProjectionSpec) => void;
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3809:  orbitProjection,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3810:  projectionSpec,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3811:  externalPendingProjectionSpec,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3812:  onExternalPendingProjectionSpecClear,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3814:  onOrbitProjectionChange,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3815:  onProjectionSpecChange,
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3835:  const projectionGumballConfig = reactHostPort.useMemo(() => {
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3904:          {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} /> : null}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3905:          <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3908:              projectionSpec={projectionSpec}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3909:              externalPendingSpec={externalPendingProjectionSpec}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3910:              onExternalPendingSpecClear={onExternalPendingProjectionSpecClear}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3923:              gumballConfig={projectionGumballConfig ?? undefined}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:3924:              relocateActive={referenceRelocateActive && cadGumballConfigVisible(projectionGumballConfig ?? {})}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4005:            {cadGumballConfigVisible(projectionGumballConfig) && geometry && onTransformGumballCommit ? (
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4007:                config={projectionGumballConfig!}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4753:/** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-right under the navigation cube; the unfolded pane grows over it. Falls back to a local overlay when no pane host is available. */
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4754:function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4758:    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec)} label="Projection">
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4759:      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4765:    <div className="pointer-events-none absolute inset-0" data-slot="world-orbit-projection-switch-fallback" data-world-projection-kind-switch-host="">
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4869:  const [projectionSpec, setProjectionSpec] = reactHostPort.useState<WorldProjectionSpec>(
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4870:    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } } : { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }),
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4872:  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4874:    if (spatialViewOverrides?.projectionSpec) {
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4875:      setProjectionSpec(spatialViewOverrides.projectionSpec);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4877:  }, [spatialViewOverrides?.projectionSpec]);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4878:  const handleProjectionSpecChange = reactHostPort.useCallback(
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4879:    (spec: WorldProjectionSpec) => {
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4880:      setProjectionSpec(spec);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4881:      setExternalPendingProjectionSpec(spec);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4882:      spatialViewOverrides?.onProjectionSpecChange?.(spec);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4883:      const family = worldProjectionFamily(spec);
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:4884:      spatialViewOverrides?.onOrbitProjectionChange?.(family === "parallel" ? "orthographic" : "perspective");
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:6018:          overlay={<WorldOrbitProjectionSwitchPane spec={projectionSpec} onSpecChange={handleProjectionSpecChange} />}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:6066:            projectionSpec={projectionSpec}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:6067:            externalPendingProjectionSpec={externalPendingProjectionSpec}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:6068:            onExternalPendingProjectionSpecClear={() => setExternalPendingProjectionSpec(null)}
+✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx:6069:            onProjectionSpecChange={handleProjectionSpecChange}
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:487:  readonly projections: readonly { readonly expr: Expr; readonly alias?: string }[];
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:512:  readonly projections: readonly { readonly expr: Expr; readonly alias?: string }[];
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:821:        projections: cstToProjectList(pl),
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:861:      projections: cstToProjectList(pl),
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1150:  | { readonly kind: "with"; readonly projections: readonly { readonly expr: Expr; readonly alias?: string }[]; readonly where?: Expr }
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1165:    } else if (cl.kind === "with") steps.push({ kind: "with", projections: cl.projections, ...(cl.where ? { where: cl.where } : {}) });
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1283:        for (const p of st.projections) {
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1351:    for (let i = 0; i < ret.projections.length; i++) {
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1352:      const p = ret.projections[i]!;
+✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/🟦️component.ts:1450:      expect(a.returnClause?.projections.length).toBe(1);
+✏️s/🔌️plugins/📐️cad/🔨️modules/🧪️tests/🟦️component.ts:1864:    it("scalar axis pointer.move sets height from projection along +Z", async () => {
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🧬️schema/🟦️component.ts:138:  projection?: string;
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧬️schema/🟦️component.ts:52:  projection?: string;
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📸️snapshot/🧬️schema/🟦️component.ts:26:  projection?: string;

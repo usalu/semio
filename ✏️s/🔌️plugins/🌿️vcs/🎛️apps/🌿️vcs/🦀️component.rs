@@ -13,7 +13,7 @@ use crate::apps::vcs::modes::edit;
 use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::vcs::terminology::vcs_play_labels;
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection, VCS_DEMO_SCHEMA};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -41,9 +41,9 @@ semio_framework_plugin::app_commands! {
     /// (see `shooting_protocol::ShootingCommand`'s identical doc). Field shapes mirror each action's old
     /// JSON `args` object exactly. **Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.**
-    pub enum VcsCommand for VcsDemoProjection, VcsDemoMutation, VcsDemoConfig, VcsDemoConfigMutation {
+    pub enum VcsCommand for VcsSnapshot, VcsDemoMutation, VcsDemoConfig, VcsDemoConfigMutation {
         "incrementCounter" as "increment-counter" => increment_counter::IncrementCounter,
-        "patchProjection" as "patch-projection" => patch_projection::PatchProjection,
+        "patchSnapshot" as "patch-snapshot" => patch_snapshot::PatchSnapshot,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
         "setSelection" as "set-selection" => set_selection::SetSelection,
@@ -61,7 +61,7 @@ semio_framework_plugin::app_commands! {
 use canvas::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, no_operation};
 use counter::increment_counter;
 use locale::set_locale;
-use patch::{edit as edit_command, patch_projection, text_edit};
+use patch::{edit as edit_command, patch_snapshot, text_edit};
 use selection::set_selection;
 //#endregion 🔖️Commands
 
@@ -78,12 +78,12 @@ fn demo_authors() -> Vec<vcs_kernel::Author> {
 /// whole point is exercising the history UI (swimlane graph, checkpoints, alternatives, undo/redo),
 /// so its "initial document" is itself a populated history, not a bare projection. Dispatched via
 /// `DocumentApp::seed`, called once by `VcsDocumentApp::new` right after store construction.
-fn seed_vcs_demo_history(store: &mut DocumentStore<VcsDemoProjection, VcsDemoMutation>) {
+fn seed_vcs_demo_history(store: &mut DocumentStore<VcsSnapshot, VcsDemoMutation>) {
     let authors = demo_authors();
     let alice = authors[0].clone();
     let bob = authors[1].clone();
     let carol = authors[2].clone();
-    let last_checkpoint_id = |store: &DocumentStore<VcsDemoProjection, VcsDemoMutation>| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
+    let last_checkpoint_id = |store: &DocumentStore<VcsSnapshot, VcsDemoMutation>| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
     let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 1 }, VcsDemoMutation::SetTitle { title: "VCS Demo".into() }], description: Some("bootstrap".into()) });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Bootstrap".into()), authors: vec![alice.clone()] });
@@ -161,7 +161,7 @@ fn seed_vcs_demo_history(store: &mut DocumentStore<VcsDemoProjection, VcsDemoMut
 pub struct VcsPlayApp;
 
 impl DocumentApp for VcsPlayApp {
-    type Projection = VcsDemoProjection;
+    type Snapshot = VcsSnapshot;
     type Mutation = VcsDemoMutation;
     type Config = VcsDemoConfig;
     type ConfigMutation = VcsDemoConfigMutation;
@@ -171,13 +171,13 @@ impl DocumentApp for VcsPlayApp {
     type Command = VcsCommand;
 
     const APP_ID: &'static str = VCS_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = VCS_DEMO_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> VcsDemoProjection {
-        crate::artifacts::vcs::engine::empty_vcs_demo_projection()
+    fn initial_snapshot() -> VcsSnapshot {
+        crate::artifacts::vcs::engine::empty_vcs_snapshot()
     }
 
-    fn seed(store: &mut DocumentStore<VcsDemoProjection, VcsDemoMutation>) {
+    fn seed(store: &mut DocumentStore<VcsSnapshot, VcsDemoMutation>) {
         seed_vcs_demo_history(store);
     }
 
@@ -188,17 +188,17 @@ impl DocumentApp for VcsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &VcsCommand, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &VcsCommand, doc: &DocumentView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
-        let labels = vcs_play_labels(cfg.projection);
+    fn render(body_key: &str, doc: &DocumentView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
+        let labels = vcs_play_labels(cfg.snapshot);
         match body_key {
-            VCS_PLAY_BODY_EDITOR => editor::render(doc.projection, labels),
+            VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels),
             VCS_PLAY_BODY_HISTORY => history::render(doc.history),
-            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, &cfg.projection.selected_checkpoint_ids, labels),
-            VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.projection, labels),
+            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, &cfg.snapshot.selected_checkpoint_ids, labels),
+            VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -221,7 +221,7 @@ pub fn create_vcs_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
-            .mutation("patchProjection", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
+            .mutation("patchSnapshot", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
             .mutation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
@@ -274,9 +274,9 @@ pub(crate) mod testkit {
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub fn seeded_envelope(instance: &VcsApp) -> DocumentEnvelope<VcsDemoProjection, VcsDemoMutation> {
+    pub fn seeded_envelope(instance: &VcsApp) -> DocumentEnvelope<VcsSnapshot, VcsDemoMutation> {
         let files = instance.document_pack().expect("document pack");
-        store::parse_document_pack::<VcsDemoProjection, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
+        store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
     }
 }
 //#endregion 🧪️Testkit
@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -320,7 +320,13 @@ mod tests {
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+            let expected = if id == "setLocale" {
+                "locale".to_string()
+            } else if id == "noMutation" {
+                "no-operation".to_string()
+            } else {
+                id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect()
+            };
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }
@@ -335,7 +341,7 @@ mod tests {
     pub(super) fn every_command() -> Vec<VcsCommand> {
         vec![
             VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}),
-            VcsCommand::PatchProjection(patch_projection::PatchProjection { field: "title".into(), value: "Renamed".into() }),
+            VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
             VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }),
             VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
             VcsCommand::SetSelection(set_selection::SetSelection { ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] }),
@@ -370,9 +376,9 @@ mod tests {
     fn registry_enforced_app_dispatches_a_declared_action() {
         use crate::apps::vcs::testkit::app_with_registry;
         let mut instance = app_with_registry();
-        let before = instance.projection().expect("materialize projection").counter;
+        let before = instance.snapshot().expect("materialize snapshot").counter;
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
-        assert_eq!(instance.projection().expect("materialize projection").counter, before + 1);
+        assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
     //#endregion 🔖️ManifestSanity
 
@@ -402,7 +408,7 @@ mod tests {
         let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
         let checkout = instance.handle_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": root_checkpoint_id })), &meta("local")).expect("checkout");
-        assert!(checkout.operations.is_empty(), "history actions never emit KernelMutations");
+        assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
 
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
         instance.handle_action("commitCheckpoint", Some(&serde_json::json!({ "message": "forked from root" })), &meta("local")).expect("commit");
@@ -415,22 +421,22 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut instance = app();
-        let before = instance.projection().expect("materialize projection").counter;
+        let before = instance.snapshot().expect("materialize snapshot").counter;
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
-        assert_eq!(instance.projection().expect("materialize projection").counter, before + 1);
+        assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
         let undo = instance.handle_action("undo", None, &meta("local")).expect("undo");
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-        assert_eq!(instance.projection().expect("materialize projection").counter, before);
+        assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before);
         instance.handle_action("redo", None, &meta("local")).expect("redo");
-        assert_eq!(instance.projection().expect("materialize projection").counter, before + 1);
+        assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
 
     #[test]
     fn create_and_switch_alternative_round_trip_through_the_wrapper() {
         let mut instance = app();
         let create = instance.handle_action("createAlternative", Some(&serde_json::json!({ "name": "trying-something" })), &meta("local")).expect("create alternative");
-        assert!(create.operations.is_empty());
+        assert!(create.mutations.is_empty());
         let envelope = seeded_envelope(&instance);
         assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");
     }

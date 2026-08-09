@@ -1,0 +1,28 @@
+# 🧬️ Wires diff schema — sparse field delta.
+
+scalar DslValue
+
+type WiresDiff {
+  artifact: WiresArtifact @state(class: PERSISTENT)
+  wiresFixture: DslValue @state(class: PERSISTENT)
+  boardFixture: DslValue @state(class: PERSISTENT)
+  selectedIds: WiresStringList @state(class: SHARED_UI)
+  dragNodeId: String @state(class: PREVIEW)
+  dragLastX: Float @state(class: PREVIEW)
+  dragLastY: Float @state(class: PREVIEW)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type WiresArtifact {
+  wiresFixture: DslValue!
+  boardFixture: DslValue!
+  selectedIds: [String!]!
+  dragNodeId: String
+  dragLastX: Float!
+  dragLastY: Float!
+  locale: String!
+}
+
+type WiresStringList {
+  values: [String!]!
+}

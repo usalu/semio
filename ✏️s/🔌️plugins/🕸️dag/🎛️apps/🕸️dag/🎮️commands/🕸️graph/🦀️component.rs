@@ -13,7 +13,7 @@
 use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::artifacts::dag::engine;
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions, DagNodePatch};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 /// "deleteSelection" logic, reachable from two different action ids pre-migration).
 /// `remove_node::RemoveNode` deliberately does NOT use this helper: it only pulls the removed id out of
 /// the selection, never clears it outright.
-fn delete_selection_result(document: &DagDocument, node_ids: &[String]) -> Option<(Vec<DagMutation>, DagConfigMutation)> {
+fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<(Vec<DagMutation>, DagConfigMutation)> {
     let removes = engine::remove_nodes_operations(document, node_ids);
     if removes.is_empty() {
         None
@@ -44,9 +44,9 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         match delete_selection_result(document, &config.selected_node_ids) {
             Some((removes, clear_selection)) => Ok(Emit { document_mutations: removes, config_mutations: vec![clear_selection], ..Default::default() }),
             None => Ok(Emit::default()),
@@ -79,9 +79,9 @@ pub mod node_graph_edit {
         pub operations: Vec<DagNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let mut document_mutations: Vec<DagMutation> = Vec::new();
         let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
         for sub_operation in &payload.operations {
@@ -89,7 +89,7 @@ pub mod node_graph_edit {
                 DagNodeGraphEditOp::SetFixture { fixture_json } => {
                     if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
                         config_mutations.push(DagConfigMutation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
-                        document_mutations.push(DagMutation::SetDocument { document: dag_document_from_fixture(&fixture) });
+                        document_mutations.push(DagMutation::SetSnapshot { snapshot: dag_document_from_fixture(&fixture).into() });
                     }
                 }
                 DagNodeGraphEditOp::DeleteSelection => {
@@ -123,8 +123,8 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
             Ok(edge) => Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge })])),
             Err(_) => Ok(Emit::default()),
@@ -143,8 +143,8 @@ pub mod disconnect {
         pub edge_id: String,
     }
 
-    pub fn handle(payload: &Disconnect, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &Disconnect, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if document.edges.iter().any(|edge| edge.id == payload.edge_id) {
             Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Remove { id: payload.edge_id.clone() })]))
         } else {
@@ -166,8 +166,8 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if document.nodes.iter().any(|node| node.id == payload.node_id) {
             Ok(Emit::amend(vec![DagMutation::Nodes(CollectionMutation::Patch { id: payload.node_id.clone(), patch: DagNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } })], format!("move-{}", payload.node_id)))
         } else {
@@ -185,11 +185,11 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let camera = dag_config_camera(config);
-        if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, camera)).unwrap_or_default()) {
+        if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera)).unwrap_or_default()) {
             let _ = host.reorganize(&DagLayoutOptions::default());
             if let Ok(json) = host.fixture_json() {
                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
@@ -218,33 +218,33 @@ mod tests {
     fn node_graph_edit_batches_connect_then_delete_selection() {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {
-            let projection = app.projection().expect("projection");
+            let projection = app.snapshot().expect("projection");
             (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
         };
-        let edges_before = app.projection().expect("projection").edges.len();
+        let edges_before = app.snapshot().expect("projection").edges.len();
         app.dispatch_typed(
-            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { mutations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
+            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
             &semio_framework_plugin::testkit::meta("local"),
         )
         .expect("batched connect");
-        assert!(app.projection().expect("projection").edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
+        assert!(app.snapshot().expect("projection").edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        let nodes_before = app.projection().expect("projection").nodes.len();
-        app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { mutations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
-        assert_eq!(app.projection().expect("projection").nodes.len(), nodes_before - 1);
+        let nodes_before = app.snapshot().expect("projection").nodes.len();
+        app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
+        assert_eq!(app.snapshot().expect("projection").nodes.len(), nodes_before - 1);
     }
 
     #[test]
     fn move_media_node_drag_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
-        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         for position in [10.0, 20.0, 30.0] {
             app.dispatch_typed(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id.clone(), x: position, y: position }), &semio_framework_plugin::testkit::meta("local")).expect("drag tick");
         }
         // A whole drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        let restored = app.projection().expect("projection");
+        let restored = app.snapshot().expect("projection");
         let original = infinite_board_port_directed_dag::default_dag_document().nodes.iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
         assert_eq!(restored.nodes.iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
     }
@@ -252,27 +252,27 @@ mod tests {
     #[test]
     fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
         let mut app = testkit::new_app();
-        let edge_id = app.projection().expect("projection").edges.first().map(|edge| edge.id.clone());
+        let edge_id = app.snapshot().expect("projection").edges.first().map(|edge| edge.id.clone());
         if let Some(edge_id) = edge_id {
-            let edges_before = app.projection().expect("projection").edges.len();
+            let edges_before = app.snapshot().expect("projection").edges.len();
             app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect");
-            assert_eq!(app.projection().expect("projection").edges.len(), edges_before - 1);
+            assert_eq!(app.snapshot().expect("projection").edges.len(), edges_before - 1);
         }
         let result = app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id: "nonexistent".into() }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect unknown");
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]
     fn connect_media_ports_adds_an_edge_between_two_nodes() {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {
-            let projection = app.projection().expect("projection");
+            let projection = app.snapshot().expect("projection");
             (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
         };
-        let edges_before = app.projection().expect("projection").edges.len();
+        let edges_before = app.snapshot().expect("projection").edges.len();
         app.dispatch_typed(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: source_id, source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("connect");
-        assert!(app.projection().expect("projection").edges.len() >= edges_before);
+        assert!(app.snapshot().expect("projection").edges.len() >= edges_before);
     }
 }
 //#endregion 🧪️Tests

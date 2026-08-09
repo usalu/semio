@@ -1,12 +1,13 @@
 dialect grammar
 grammar dag.document
 extension dag
-use family-graph
+use family-scene
 start document
 
-document = header schema-line nodes-table edges-table
-header = "semio" IDENT "v" INT
-schema-line = "schema=" IDENT
+artifact-mark = "dag.dag"
+document = artifact-mark doc-body
+doc-body = schema-line nodes-table edges-table
+schema-line = "schema" "=" TEXT
 nodes-table = "nodes" node-table
 node-table = "[" node-columns "]" "{" node-row* "}"
 node-columns = column+
@@ -57,5 +58,4 @@ edge-columns = column+
 edge-row = IDENT TEXT TEXT route-style edge-props?
 route-style = IDENT
 edge-props = "{" edge-field* "}"
-edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
+edge-field = "weight" "=" FLOAT | "weight" "=" INT | "kind" "=" TEXT | "kind" "=" IDENT | "label" "=" TEXT | "id" "=" IDENT

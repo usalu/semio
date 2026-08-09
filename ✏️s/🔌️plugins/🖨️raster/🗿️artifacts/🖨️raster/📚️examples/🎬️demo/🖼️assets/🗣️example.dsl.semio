@@ -1,3 +1,23 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio raster.raster.dsl v1
+schema=raster.document id=semio-demo title="Semio Raster Demo"
+layers {
+  pixel id=backdrop name=Backdrop visible=true opacity=1 blend=normal width=1024 height=1024 image=semio-emblem
+  transform {
+    x=0
+    y=0
+    scale-x=1
+    scale-y=1
+    rotation=0
+  }
+  adjustment id=brighten name=Brighten visible=true opacity=1 blend=normal kind=brightnessContrast
+  transform {
+    x=0
+    y=0
+    scale-x=1
+    scale-y=1
+    rotation=0
+  }
+}
+assets={
+  semio-emblem=mime=image/png data="iVBORw0KGgo="
+}

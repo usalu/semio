@@ -1,0 +1,35 @@
+// 🧬️ Raster artifact schema — every field with its state class.
+syntax = "proto3";
+package semio.s.raster.raster.artifact;
+
+message RasterArtifact {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated RasterLayerNode layers = 4;
+  map<string, RasterImageAsset> assets = 5;
+  repeated string selected_ids = 6;
+  string active_utility_id = 7;
+  double brush_size = 8;
+  double brush_opacity = 9;
+  optional RasterViewportSize composite_viewport = 10;
+  double camera_x = 11;
+  double camera_y = 12;
+  double camera_zoom = 13;
+  string locale = 14;
+  optional string hovered_id = 15;
+}
+
+message RasterLayerNode {
+  string kind = 1;
+}
+
+message RasterImageAsset {
+  string mime = 1;
+  bytes data = 2;
+}
+
+message RasterViewportSize {
+  double width = 1;
+  double height = 2;
+}

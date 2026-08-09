@@ -152,11 +152,11 @@ pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
     serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
-pub fn document_to_json(document: &Document) -> Result<String, NormError> {
+pub fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
     serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
-pub fn document_from_json(json: &str) -> Result<Document, NormError> {
+pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
     serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 // #endregion Io
@@ -195,7 +195,7 @@ macro_rules! define_vdi_part {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Document) -> CheckResult {
+            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 let _ = document;
                 na_check(stringify!($num), "scope", format!("sheet {} reserved", $num))
             }
@@ -209,7 +209,7 @@ macro_rules! define_vdi_part {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Document) -> CheckResult {
+            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 if document.strict_mode {
                     fail_check(stringify!($num), "status", "historical proposal not allowed in strict mode")
                 } else {
@@ -232,7 +232,7 @@ macro_rules! define_vdi_part {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Document) -> CheckResult {
+            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 let product = document.catalog.product_for_sheet(SheetId($num));
                 let profile = document.edition_profile.get(stringify!($num)).copied().unwrap_or(EditionProfileChoice::Current);
                 if product.is_none() {
@@ -251,7 +251,7 @@ macro_rules! define_vdi_part {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Document) -> CheckResult {
+            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 if let Some(product) = document.catalog.product_for_sheet(SheetId($num)) {
                     if product.identity.article_number.is_empty() {
                         return fail_check(stringify!($num), "identity", "missing article number");
@@ -272,7 +272,7 @@ pub mod part_1 {
         &SHEET_ENTRIES[0]
     }
 
-    pub fn check(document: &Document) -> CheckResult {
+    pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
         let issues = validate_structure(&document.catalog);
         if issues.iter().any(|d| d.severity == Severity::Error) {
             fail_check("1", "structure", "Part 1 structural errors")
@@ -384,7 +384,7 @@ define_vdi_part!(part_100, 100, multi_profile);
 // #endregion SheetParts
 
 // #region Session
-fn all_part_checks(document: &Document) -> Vec<CheckResult> {
+fn all_part_checks(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     vec![
         part_1::check(document),
         part_02::check(document),
@@ -489,7 +489,7 @@ fn all_part_checks(document: &Document) -> Vec<CheckResult> {
     ]
 }
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &Vdi3805Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
 
     for check in all_part_checks(document) {
@@ -580,55 +580,65 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct Vdi3805Family;
 
 impl crate::document::NormFamily for Vdi3805Family {
-    type Document = Document;
+    type Document = Vdi3805Snapshot;
     type Mutation = Vdi3805Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Vdi3805
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &Vdi3805Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent Vdi3805 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent Vdi3805 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Vdi3805Engine {
-    projection: Document,
+    artifact: crate::artifacts::vdi3805::schema::Vdi3805Artifact,
+    snapshot: crate::artifacts::vdi3805::Vdi3805Snapshot,
 }
 
 impl Vdi3805Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::vdi3805::Vdi3805Snapshot) -> Self {
+        let artifact = crate::artifacts::vdi3805::schema::Vdi3805Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::vdi3805::Vdi3805Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Vdi3805Engine {
-    type Projection = Document;
-    type Mutation = Vdi3805Mutation;
-    type Diff = crate::artifacts::vdi3805::diff::Diff;
+    type Artifact = crate::artifacts::vdi3805::schema::Vdi3805Artifact;
+    type Snapshot = crate::artifacts::vdi3805::Vdi3805Snapshot;
+    type Mutation = crate::artifacts::vdi3805::mutations::Vdi3805Mutation;
+    type Diff = crate::artifacts::vdi3805::diff::Vdi3805Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
 
 pub type Host = crate::document::NormHost<Vdi3805Family>;
 // #endregion 🔖️Session
@@ -640,7 +650,7 @@ mod tests {
 
     #[test]
     fn evaluate_reaches_operative_sheet_families() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&Vdi3805Snapshot::default());
         let parts: BTreeSet<String> = report.checks.iter().map(|c| c.clause.part.clone()).filter(|p| p.chars().all(|ch| ch.is_ascii_digit())).collect();
         let registry = SchemaCatalog::current();
         for sheet in registry.operative_sheets() {
@@ -654,7 +664,7 @@ mod tests {
 
     #[test]
     fn native_text_round_trip() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let text = serialize_native_text(&doc.catalog);
         let parsed = parse_native_text(&text, SecurityLimits::default()).expect("parse");
         assert_eq!(parsed.products.len(), doc.catalog.products.len());
@@ -663,7 +673,7 @@ mod tests {
 
     #[test]
     fn reserved_sheet_returns_not_applicable() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let result = part_15::check(&doc);
         assert_eq!(result.status, CheckStatus::NotApplicable);
         let result = part_67::check(&doc);
@@ -713,7 +723,7 @@ mod tests {
 
     #[test]
     fn validate_structure_reports_missing_manufacturer() {
-        let mut doc = Document::default();
+        let mut doc = Vdi3805Snapshot::default();
         doc.catalog.file.manufacturer = String::new();
         let issues = validate_structure(&doc.catalog);
         assert!(issues.iter().any(|d| d.field == "manufacturer" && d.severity == Severity::Error));
@@ -721,7 +731,7 @@ mod tests {
 
     #[test]
     fn validate_structure_reports_empty_products() {
-        let mut doc = Document::default();
+        let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products.clear();
         let issues = validate_structure(&doc.catalog);
         assert!(issues.iter().any(|d| d.field == "products" && d.severity == Severity::Warning));
@@ -729,7 +739,7 @@ mod tests {
 
     #[test]
     fn validate_structure_reports_missing_article_number_and_config_id() {
-        let mut doc = Document::default();
+        let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products[0].identity.article_number = String::new();
         doc.catalog.products[0].configuration.id = String::new();
         let issues = validate_structure(&doc.catalog);
@@ -739,7 +749,7 @@ mod tests {
 
     #[test]
     fn validate_structure_reports_unknown_record_family() {
-        let mut doc = Document::default();
+        let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products[0].records.push(NativeRecord { family: RecordFamilyId("888".into()), fields: vec!["888".into()], extensions: ExtensionBag::default() });
         let issues = validate_structure(&doc.catalog);
         assert!(issues.iter().any(|d| d.severity == Severity::Info && d.field.contains("888")));
@@ -762,7 +772,7 @@ mod tests {
 
     #[test]
     fn historical_part_check_respects_strict_mode() {
-        let mut doc = Document { strict_mode: true, ..Document::default() };
+        let mut doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let result = part_12::check(&doc);
         assert_eq!(result.status, CheckStatus::Fail);
 
@@ -773,21 +783,21 @@ mod tests {
 
     #[test]
     fn multi_profile_part_check_reports_metadata_when_no_product() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let result = part_08::check(&doc);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
     #[test]
     fn evaluate_reports_strict_mode_check() {
-        let doc = Document { strict_mode: true, ..Document::default() };
+        let doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let report = evaluate(&doc);
         assert!(report.checks.iter().any(|c| c.clause.section == "strict"));
     }
 
     #[test]
     fn evaluate_skips_geometry_and_curve_checks_when_absent() {
-        let mut doc = Document::default();
+        let mut doc = Vdi3805Snapshot::default();
         doc.geometry.clear();
         doc.curves.clear();
         let report = evaluate(&doc);
@@ -797,7 +807,7 @@ mod tests {
 
     #[test]
     fn catalog_and_document_json_round_trip() {
-        let doc = Document::default();
+        let doc = Vdi3805Snapshot::default();
         let json = catalog_to_json(&doc.catalog).expect("to_json");
         let restored = catalog_from_json(&json).expect("from_json");
         assert_eq!(restored.products.len(), doc.catalog.products.len());
@@ -819,9 +829,9 @@ mod tests {
 
     #[test]
     fn norm_host_recomputes() {
-        let mut host = Host::from_document(Document::default());
+        let mut host = Host::from_document(Vdi3805Snapshot::default());
         assert!(!host.report().checks.is_empty());
-        host.replace_document(Document::default());
+        host.replace_document(Vdi3805Snapshot::default());
         assert!(host.report().all_pass());
     }
 }
@@ -829,14 +839,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.document",
         extension: Some("vdi3805"),
         role: crate::dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
     });
     crate::dsl::register_language(crate::dsl::LanguageSpec {
@@ -865,8 +876,8 @@ pub fn register_pilot_languages() {
         role: crate::dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
     });
     crate::dsl::register_language(crate::dsl::LanguageSpec {
@@ -880,3 +891,13 @@ pub fn register_pilot_languages() {
         hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.vdi3805`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

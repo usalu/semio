@@ -2,8 +2,8 @@
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::fixture_edges;
-use crate::artifacts::wires::op::MindmapWiresMutation;
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -18,8 +18,8 @@ pub mod add_relationship {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddRelationship, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddRelationship, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
         let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
         let edge = dsl::to_dsl_value(&json!({
@@ -36,7 +36,7 @@ pub mod add_relationship {
             "targetIdentityId": 2
         }))
         .expect("relationship serializes");
-        Ok(Emit { document_mutations: vec![MindmapWiresMutation::AddRelationship { edge, relationship }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![WiresMutation::AddRelationship { edge, relationship }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddRelationship
@@ -52,7 +52,7 @@ mod tests {
     fn add_relationship_appends_edge_and_selects() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(fixture_edges(&projection.board_fixture).len(), 1);
     }
 }

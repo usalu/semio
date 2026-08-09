@@ -158,10 +158,10 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // 🧬️ `OsSnapshot`/`OsMutation` are dissolved (os-core dissolve, `## The inversion`) — the
     // studio bundle's root `space.space.pack`/`.spr` files (renamed from `space.os.pack`/`.spr` by
     // W4's canonical on-disk layout rewrite, see `SpaceBundle`'s own doc comment) carry a
-    // `workflow::WorkflowDocument`/`WorkflowMutation` pair (the `s.workflow` artifact document)
+    // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceSnapshot` manifest is later-wave work.
-    let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowDocument, semio_framework_os::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
+    let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowSnapshot, semio_framework_os::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();

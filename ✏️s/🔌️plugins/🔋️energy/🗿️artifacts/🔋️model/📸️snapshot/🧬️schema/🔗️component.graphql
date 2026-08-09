@@ -1,0 +1,6 @@
+# 🧬️ EnergyModel snapshot schema.
+
+type EnergyModelSnapshot {
+  schema: String!
+  modelJson: String!
+}

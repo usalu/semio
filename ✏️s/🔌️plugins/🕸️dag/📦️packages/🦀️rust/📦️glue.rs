@@ -1,23 +1,9 @@
 //! 🔀️ DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
-//!
-//! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
-//! written in full, relative to the owner root (this file itself now lives two levels deeper, in
-//! `📦️packages/🦀️rust/`, so every path carries a `../../` prefix back out to the owner root). The
-//! grouping modules carry `#[path = "."]` so their own names are not spliced into that base
-//! directory — without it, Rust
-//! resolves an inline module's children under `<file dir>/<inline mod name>/…` and every leaf path
-//! dangles. Do not inline any component file back into this one: the taxonomy validator and the
-//! `TaxonomyLibShape` policy lint both fail on it (see master ticket
-//! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DagMutation, DagConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
-// `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here
-// would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
-// on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
+extern crate semio_framework_schema as schema;
 #[allow(clippy::result_large_err)]
 
 extern crate infinite_canvas as infinite_board_port_directed_dag;
@@ -31,8 +17,27 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🕸️dag/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🕸️dag/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🕸️dag/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/🕸️dag/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🕸️dag/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🕸️dag/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
         #[path = "../../🗿️artifacts/🕸️dag/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -70,18 +75,16 @@ pub mod artifacts {
                 pub mod inverse;
             }
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🕸️dag/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🕸️dag/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/🕸️dag/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🕸️dag/⚙️engine/🦀️component.rs"]

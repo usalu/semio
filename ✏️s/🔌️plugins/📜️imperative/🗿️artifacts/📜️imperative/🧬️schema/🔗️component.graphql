@@ -1,0 +1,34 @@
+# 🧬️ Imperative artifact schema — every field with its state class.
+
+type ImperativeArtifact {
+  schema: String! @state(class: PERSISTENT)
+  path: ImperativePath! @state(class: PERSISTENT)
+  seed: [ImperativeSeedEntry!]! @state(class: PERSISTENT)
+  selectedStepIds: [String!]! @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+  runOutputJson: String! @state(class: EFFECT)
+}
+
+type ImperativePath {
+  steps: [ImperativeStep!]!
+}
+
+type ImperativeStep {
+  id: String!
+  kind: String!
+  params: JSON
+  bodies: [ImperativeStepBodyEntry!]
+}
+
+type ImperativeStepBodyEntry {
+  slot: String!
+  path: ImperativePath!
+}
+
+type ImperativeSeedEntry {
+  key: String!
+  value: JSON!
+}
+
+scalar JSON

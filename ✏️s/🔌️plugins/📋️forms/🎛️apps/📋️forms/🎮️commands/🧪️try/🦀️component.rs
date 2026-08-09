@@ -6,7 +6,7 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{effective_try_values, parse_value_json, reset_try_config_mutations, try_values_json_text, try_values_map};
 use crate::artifacts::forms::engine::can_advance;
-use crate::artifacts::forms::{op::FormMutation, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -48,8 +48,8 @@ pub mod set_try_value {
         pub param_key: Option<String>,
     }
 
-    pub fn handle(payload: &SetTryValue, _doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetTryValue, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let mut values = try_values_map(config);
         if let Some(option_value) = &payload.option_value {
             let mut selected = values.get(payload.key.as_str()).and_then(|value| value.as_array().cloned()).unwrap_or_default();
@@ -88,8 +88,8 @@ pub mod set_try_values {
         pub values_json: String,
     }
 
-    pub fn handle(payload: &SetTryValues, _doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let mut values = try_values_map(cfg.projection);
+    pub fn handle(payload: &SetTryValues, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let mut values = try_values_map(cfg.snapshot);
         if let Some(incoming) = serde_json::from_str::<Value>(&payload.values_json).ok().and_then(|value| value.as_object().cloned()) {
             for (key, value) in incoming {
                 values.insert(key, value);
@@ -108,7 +108,7 @@ pub mod reset_try {
     #[dsl(keyword = "reset-try")]
     pub struct ResetTry {}
 
-    pub fn handle(_payload: &ResetTry, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &ResetTry, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::config(reset_try_config_mutations()))
     }
 }
@@ -122,8 +122,8 @@ pub mod previous_step {
     #[dsl(keyword = "previous-step")]
     pub struct PreviousStep {}
 
-    pub fn handle(_payload: &PreviousStep, _doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: cfg.projection.current_step_index.saturating_sub(1) }]))
+    pub fn handle(_payload: &PreviousStep, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: cfg.snapshot.current_step_index.saturating_sub(1) }]))
     }
 }
 //#endregion 🔖️PreviousStep
@@ -136,9 +136,9 @@ pub mod next_step {
     #[dsl(keyword = "next-step")]
     pub struct NextStep {}
 
-    pub fn handle(_payload: &NextStep, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        let spec = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &NextStep, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
         let index = config.current_step_index as usize;
         if index + 1 < spec.steps.len() {
             let step = &spec.steps[index];
@@ -160,7 +160,7 @@ pub mod submit {
     #[dsl(keyword = "submit")]
     pub struct Submit {}
 
-    pub fn handle(_payload: &Submit, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &Submit, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -227,7 +227,7 @@ mod tests {
     fn conditional_visibility_hides_team_size() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
-        let spec = app.projection().expect("projection");
+        let spec = app.snapshot().expect("projection");
         let advanced = spec.steps.iter().find(|step| step.id == "advanced").expect("advanced step");
         let values = crate::artifacts::forms::engine::initial_try_values(&spec, &Map::new());
         assert_eq!(crate::artifacts::forms::engine::visible_questions(advanced, &values).len(), 1);

@@ -4,7 +4,7 @@ package semio.s.norm.en1995.diff;
 
 message En1995Diff {
   // @state persistent
-  En1995Artifact artifact = 1;
+  optional En1995Artifact artifact = 1;
   // @state persistent
   optional double annex = 2;
   // @state persistent

@@ -1,6 +1,7 @@
 //! ⚙️ Raster artifact — headless compute (constitutional: engine).
 
-use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use base64::Engine;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -12,13 +13,18 @@ const SEMIO_RASTER_EXAMPLE_TEXT: &str = crate::artifacts::raster::dsl::SEMIO_RAS
 //#endregion 🔖️Constants
 
 //#region 🔖️Register
-/// 🗂️ Registers `RasterProjection`'s pack↔dsl codec, the raster 2D media export handler and the DWG
+/// 🗂️ Registers `RasterSnapshot`'s pack↔dsl codec, the raster 2D media export handler and the DWG
 /// import handler. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_os::register_2d_export_handlers("2d.raster", "raster", raster_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.raster", raster_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::raster::RasterPlayApp>(RASTER_DOCUMENT_SCHEMA);
+}
+
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::raster::schema::raster_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -29,8 +35,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::raster::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::raster::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::raster::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::raster::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("raster.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -59,8 +65,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::raster::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::raster::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("raster.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -86,8 +92,8 @@ pub fn create_raster_id(prefix: &str) -> String {
     format!("{prefix}-{next}")
 }
 
-pub fn empty_raster_projection() -> RasterProjection {
-    RasterProjection { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: BTreeMap::new() }
+pub fn empty_raster_snapshot() -> RasterSnapshot {
+    RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: BTreeMap::new() }
 }
 
 //#region 🔖️Tree
@@ -191,18 +197,57 @@ pub fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
     }
 }
 
-pub fn empty_raster_document() -> RasterProjection {
-    let mut document = empty_raster_projection();
+pub fn empty_raster_document() -> RasterSnapshot {
+    let mut document = empty_raster_snapshot();
     document.id = "empty".into();
     document.layers = vec![create_pixel_layer("Background", 512, 512)];
     document
 }
 
-/// 📄️ The `semio` example, parsed once from {@link SEMIO_RASTER_EXAMPLE_TEXT} — the source of truth for
-/// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
-/// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_document() -> RasterProjection {
-    <RasterProjection as store::DocumentDsl>::parse_dsl(SEMIO_RASTER_EXAMPLE_TEXT).unwrap_or_else(|_| empty_raster_document())
+pub fn semio_fixture_snapshot() -> RasterSnapshot {
+    let mut assets = BTreeMap::new();
+    assets.insert(
+        "semio-emblem".into(),
+        RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgo=").unwrap_or_default() },
+    );
+    let mut params = BTreeMap::new();
+    params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
+    params.insert("contrast".into(), dsl::to_dsl_value(&serde_json::json!(0.08)).expect("dsl value"));
+    RasterSnapshot {
+        schema: RASTER_DOCUMENT_SCHEMA.into(),
+        id: "semio-demo".into(),
+        title: Some("Semio Raster Demo".into()),
+        layers: vec![
+            RasterLayerNode::Pixel {
+                id: "backdrop".into(),
+                name: "Backdrop".into(),
+                visible: true,
+                opacity: 1.0,
+                blend_mode: "normal".into(),
+                transform: RasterTransform::default(),
+                mask: None,
+                width: Some(1024),
+                height: Some(1024),
+                image_key: Some("semio-emblem".into()),
+            },
+            RasterLayerNode::Adjustment {
+                id: "brighten".into(),
+                name: "Brighten".into(),
+                visible: true,
+                opacity: 1.0,
+                blend_mode: "normal".into(),
+                transform: RasterTransform::default(),
+                adjustment_kind: "brightnessContrast".into(),
+                params,
+            },
+        ],
+        assets,
+    }
+}
+
+/// 📄️ The `semio` example document used by the app manifest and tests.
+pub fn semio_example_document() -> RasterSnapshot {
+    semio_fixture_snapshot()
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_document}, for the framework-generic call sites that
@@ -280,7 +325,9 @@ pub fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), 
 /// 📥️ Rasterizes a DWG drawing's flat SVG projection into a single-layer raster document.
 pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
-    let data = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
+    let data = base64::engine::general_purpose::STANDARD
+        .decode(semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?.as_bytes())
+        .map_err(|error| error.to_string())?;
     let asset_key = create_raster_id("dwg-asset");
     let mut layer = create_pixel_layer("DWG Import", width, height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
@@ -288,7 +335,7 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
     }
     let mut assets = BTreeMap::new();
     assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
-    let document = RasterProjection { schema: RASTER_DOCUMENT_SCHEMA.into(), id: create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
+    let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }
 
@@ -299,7 +346,7 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
 /// is raw (unprefixed) base64 PNG bytes — the same convention `shooting_engine::shooting_photo_media`
 /// produces on `photos:out` and the Vector→Raster run-crate converter produces for a draw `vector:out`
 /// source.
-pub fn raster_append_image_layer(document: &RasterProjection, png_base64: &str) -> RasterProjection {
+pub fn raster_append_image_layer(document: &RasterSnapshot, png_base64: &str) -> RasterSnapshot {
     let asset_key = create_raster_id("image-in-asset");
     let mut layer = create_pixel_layer("Imported Image", 0, 0);
     if let RasterLayerNode::Pixel { image_key, width, height, .. } = &mut layer {
@@ -307,8 +354,9 @@ pub fn raster_append_image_layer(document: &RasterProjection, png_base64: &str) 
         *width = None;
         *height = None;
     }
+    let data = base64::engine::general_purpose::STANDARD.decode(png_base64.as_bytes()).unwrap_or_default();
     let mut next = document.clone();
-    next.assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data: png_base64.to_string() });
+    next.assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
     next.layers.push(layer);
     next
 }
@@ -366,7 +414,7 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 /// `title_card_svg` is a placeholder card today (see `raster_document_json_to_svg`'s doc — real pixel
 /// compositing is wgpu/canvas-host-side, out of this pure headless compute node's reach), rasterized
 /// to PNG for a real, always-available (if generic) `image:out` value.
-pub fn raster_composite_media(document: &RasterProjection) -> Result<semio_framework::Media, semio_framework::MediaError> {
+pub fn raster_composite_media(document: &RasterSnapshot) -> Result<semio_framework::Media, semio_framework::MediaError> {
     let value = serde_json::to_value(document).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error.to_string()))?;
     let (svg, _width, _height) = raster_document_json_to_svg(&value).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, 0, 0).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error))?;
@@ -394,7 +442,7 @@ mod tests {
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [10.0, 10.0, 0.0];
         let value = raster_document_json_from_dwg(&drawing).expect("dwg import");
-        let document: RasterProjection = serde_json::from_value(value).expect("valid raster document");
+        let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");
         assert_eq!(document.layers.len(), 1);
         let RasterLayerNode::Pixel { image_key, .. } = &document.layers[0] else {
             panic!("expected pixel layer");
@@ -409,7 +457,7 @@ mod tests {
     fn imports_empty_dwg_into_blank_raster_document() {
         let drawing = semio_framework_os::DwgDrawing::default();
         let value = raster_document_json_from_dwg(&drawing).expect("empty dwg import");
-        let document: RasterProjection = serde_json::from_value(value).expect("valid raster document");
+        let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");
         assert_eq!(document.layers.len(), 1);
         let RasterLayerNode::Pixel { image_key, width, height, .. } = &document.layers[0] else {
             panic!("expected pixel layer");
@@ -439,7 +487,7 @@ mod tests {
         assert_eq!(next.layers.len(), before_layers + 1);
         let RasterLayerNode::Pixel { image_key, .. } = next.layers.last().unwrap() else { panic!("expected pixel layer") };
         let asset = next.assets.get(image_key.as_ref().unwrap()).expect("asset inserted");
-        assert_eq!(asset.data, "aGVsbG8=");
+        assert_eq!(asset.data, b"hello".to_vec());
     }
 
     #[test]
@@ -454,38 +502,48 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
-/// 🧬️ UI-independent document engine — every transition is a `RasterMutation`.
+/// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct RasterEngine {
-    projection: crate::artifacts::raster::RasterProjection,
+    artifact: crate::artifacts::raster::schema::RasterArtifact,
+    snapshot: RasterSnapshot,
 }
 
 impl RasterEngine {
-    pub fn new(projection: crate::artifacts::raster::RasterProjection) -> Self {
-        Self { projection }
+    /// 🏗️ Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: RasterSnapshot) -> Self {
+        let artifact = crate::artifacts::raster::schema::RasterArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::raster::RasterProjection {
-        self.projection
+    /// 📸️ Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> RasterSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for RasterEngine {
-    type Projection = crate::artifacts::raster::RasterProjection;
+    type Artifact = crate::artifacts::raster::schema::RasterArtifact;
+    type Snapshot = RasterSnapshot;
     type Mutation = crate::artifacts::raster::mutations::RasterMutation;
     type Diff = crate::artifacts::raster::diff::RasterDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = crate::artifacts::raster::mutations::apply_raster_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

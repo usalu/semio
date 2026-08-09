@@ -52,7 +52,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         actions: Vec::new(),
         utilities: vec![utilities::transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

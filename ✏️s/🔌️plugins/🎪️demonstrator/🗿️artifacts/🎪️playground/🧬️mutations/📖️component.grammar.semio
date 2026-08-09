@@ -1,0 +1,11 @@
+dialect grammar
+grammar playground.op
+extension playground
+use family-sheet
+start mutation
+
+artifact-mark = "playground.playground-op"
+mutation = artifact-mark eng-op+
+eng-op = "no-mutation" | "set-snapshot" eng-field+
+eng-field = "schema" "=" TEXT | "commit" "=" TEXT
+eng-record = eng-op*

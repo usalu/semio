@@ -1,6 +1,6 @@
-//! ⚡️ MindmapWires artifact — OpText/OpBinary codecs + grammar for `MindmapWiresMutation`.
+//! ⚡️ Wires artifact — OpText/OpBinary codecs + grammar for `WiresMutation`.
 
-pub use crate::artifacts::wires::mutations::{apply_mindmap_wires_mutation, inverse_mindmap_wires_mutation, MindmapWiresMutation};
+pub use crate::artifacts::wires::mutations::{apply_wires_mutation, inverse_wires_mutation, WiresMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️HandcraftedOpCodecs
-impl protocol::OpText for MindmapWiresMutation {
+impl protocol::OpText for WiresMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -33,7 +33,7 @@ impl protocol::OpText for MindmapWiresMutation {
     }
 }
 
-impl protocol::OpBinary for MindmapWiresMutation {
+impl protocol::OpBinary for WiresMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

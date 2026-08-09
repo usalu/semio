@@ -1,36 +1,51 @@
 dialect protocol
 protocol dag.spr
 version 1
-schema dag.mutation.v1
+schema dag.dag.mutation
 start record
 framing record
+record dag.dag-nodes-add tag=1
 field format u8
-record nodes-add tag 1
-field index varint
-field item bytes
-record nodes-remove tag 2
-field id utf8
-record nodes-move tag 3
-field id utf8
-field to varint
-record nodes-patch tag 4
-field id utf8
-field patch bytes
-record edges-add tag 5
-field index varint
-field item bytes
-record edges-remove tag 6
-field id utf8
-record edges-move tag 7
-field id utf8
-field to varint
-record edges-patch tag 8
-field id utf8
-field patch bytes
-record set-nodes tag 9
-field nodes bytes
-record set-edges tag 10
-field edges bytes
-record set-document tag 11
-field document bytes
+field ordinal varint
+field body bytes
+record dag.dag-nodes-remove tag=2
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-nodes-move tag=3
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-nodes-patch tag=4
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-edges-add tag=5
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-edges-remove tag=6
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-edges-move tag=7
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-edges-patch tag=8
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-set-nodes tag=9
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-set-edges tag=10
+field format u8
+field ordinal varint
+field body bytes
+record dag.dag-set-snapshot tag=11
+field format u8
+field ordinal varint
+field body bytes
 chain hash u64

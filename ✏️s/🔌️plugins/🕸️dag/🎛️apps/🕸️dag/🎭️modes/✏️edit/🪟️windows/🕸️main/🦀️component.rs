@@ -2,7 +2,7 @@
 
 use crate::apps::dag::terminology::DagPlayLabels;
 use crate::artifacts::dag::engine::document_to_workflow;
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::DagCamera;
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagDocument, camera: &DagCamera, selected: &[String], _labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, camera: &DagCamera, selected: &[String], _labels: &DagPlayLabels) -> UiNode {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     let selection = selected.to_vec();

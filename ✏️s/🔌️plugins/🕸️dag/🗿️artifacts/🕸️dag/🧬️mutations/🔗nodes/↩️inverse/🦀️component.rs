@@ -1,7 +1,7 @@
-use crate::artifacts::dag::DagDocument;
+use crate::artifacts::dag::DagSnapshot;
 use crate::artifacts::dag::mutations::DagMutation;
 use protocol::Mutation;
 
-pub fn inverse(base: &DagDocument, mutation: &DagMutation) -> Vec<DagMutation> {
-    <DagMutation as Mutation<DagDocument>>::inverse(mutation, base)
+pub fn inverse(base: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
+    <DagMutation as Mutation<DagSnapshot>>::inverse(mutation, base)
 }

@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "reasoning.wirescfg")]
+#[dsl(id = "wires.config")]
 #[dsl(layout = "lines")]
 pub struct WiresConfig {
     /// 👁️ Selected node/edge ids — was `WiresPlayRuntime::selected_ids`.
@@ -242,26 +243,26 @@ mod tests {
     #[test]
     fn wires_config_dsl_pack_round_trip() {
         let config = WiresConfig { selected_ids: vec!["node-1".into(), "edge-1".into()], drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
     //#endregion 🔖️ConfigTests
 
     //#region 🔖️ConfigOperationTests
     #[test]
     fn config_snapshot_and_selection_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::Snapshot { config: WiresConfig::default() });
-        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::Snapshot { config: WiresConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
     }
 
     #[test]
     fn config_drag_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
-        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
     }
 
     #[test]
     fn config_locale_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` always returns a single whole-config `Snapshot` of the pre-op state, regardless

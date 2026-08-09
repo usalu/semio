@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "formscfg")]
+#[dsl(id = "forms.config")]
 #[dsl(layout = "lines")]
 pub struct FormsConfig {
     /// 👁️ Selected blueprint step/question ids — was `FormsPlayRuntime::selected_ids`.
@@ -247,8 +248,8 @@ mod tests {
     #[test]
     fn forms_config_dsl_and_pack_round_trip() {
         let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 2, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::test_support::assert_dsl_round_trip(&config);
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     fn config_round_trip(base: &FormsConfig, operation: &FormsConfigMutation) -> FormsConfig {
@@ -275,10 +276,10 @@ mod tests {
     #[test]
     fn config_snapshot_op_text_round_trips() {
         let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetSelection { ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex { index: 3 });
-        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetSelection { ids: vec!["a".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex { index: 3 });
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

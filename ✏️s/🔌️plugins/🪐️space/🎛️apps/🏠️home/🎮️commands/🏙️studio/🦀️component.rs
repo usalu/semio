@@ -5,7 +5,7 @@
 
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeDocument;
+use crate::artifacts::home::SHomeSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 
 //#region 🔖️CreateStudio
@@ -39,8 +39,8 @@ pub mod create_studio {
         Emit { document_mutations: vec![SHomeMutation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
     }
 
-    pub fn handle(payload: &CreateStudio, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-        let generation = doc.projection.catalog_generation;
+    pub fn handle(payload: &CreateStudio, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+        let generation = doc.snapshot.catalog_generation;
         match payload.kind.as_str() {
             "folder" => {
                 #[cfg(not(target_arch = "wasm32"))]
@@ -100,7 +100,7 @@ pub mod bind_space_file {
         Ok(())
     }
 
-    pub fn handle(payload: &BindSpaceFile, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &BindSpaceFile, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = bind_studio_file(&payload.space_id, &payload.file_path);
@@ -126,8 +126,8 @@ pub mod import_space {
         pub dsl: Option<String>,
     }
 
-    pub fn handle(payload: &ImportSpace, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-        let generation = doc.projection.catalog_generation;
+    pub fn handle(payload: &ImportSpace, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+        let generation = doc.snapshot.catalog_generation;
         match &payload.dsl {
             Some(dsl) => {
                 if import_os_space_from_dsl(dsl, crate::apps::home::catalog_port()).is_ok() {
@@ -153,7 +153,7 @@ pub mod open_space {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         eprintln!("[DEBUG] home openSpace id={}", payload.space_id);
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
     }
@@ -170,12 +170,12 @@ mod tests {
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
         use crate::apps::home::HomeCommand;
-        store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::BindSpaceFile(bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: Some("programs=[]".into()) }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }));
-        store::test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(open_space::OpenSpace { space_id: "s1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::BindSpaceFile(bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: Some("programs=[]".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(open_space::OpenSpace { space_id: "s1".into() }));
     }
 
     #[test]
@@ -190,17 +190,17 @@ mod tests {
 
     #[test]
     fn temporary_studio_uses_ephemeral_registry_not_catalog() {
-        let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+        let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let config = HomeConfig::default();
-        let cfg = ConfigView { projection: &config };
+        let cfg = ConfigView { snapshot: &config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "ephemeral create must not download");
         let persistent = list_os_space_catalog_entries(crate::apps::home::catalog_port()).expect("list");
         assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
-        let ephemeral_catalog = list_os_space_catalog_entries(crate::apps::home::temp_catalog_port()).expect("list");
+        let ephemeral_catalog = list_os_space_catalog_entries(crate::apps::home::temp_catalog_port()).unwrap_or_default();
         assert!(!ephemeral_catalog.iter().any(|entry| entry.name == "Temp Studio"));
         let uri = emit
             .effects
@@ -214,7 +214,7 @@ mod tests {
         let document = crate::apps::home::resolve_studio_document(space_id).expect("ephemeral studio");
         assert_eq!(document.name, "Temp Studio");
         assert!(document.backbone.is_none());
-        assert!(document.vcs.initial_projection.collections.is_empty());
+        assert!(document.vcs.initial_snapshot.collections.is_empty());
     }
 }
 //#endregion 🧪️Tests

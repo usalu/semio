@@ -3,7 +3,7 @@
 use crate::apps::space::engine::parameter_entity_id;
 use crate::apps::space::terminology::SStudioLabels;
 use crate::apps::space::{s_play_action, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID};
-use semio_framework_os::{WorkflowDocument, WorkflowParameter};
+use semio_framework_os::{WorkflowSnapshot, WorkflowParameter};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode,
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
@@ -177,7 +177,7 @@ fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SStudioLa
     }
 }
 
-pub fn render(projection: &WorkflowDocument, labels: &SStudioLabels) -> UiNode {
+pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-parameters.header".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL)),

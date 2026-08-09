@@ -1,0 +1,29 @@
+syntax = "proto3";
+package semio.s.imperative.imperative.snapshot;
+
+// 🧬️ Imperative snapshot schema — persistent fields only.
+
+message ImperativeSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  ImperativePath path = 2;
+  // @state persistent
+  map<string, string> seed = 3;
+}
+
+message ImperativePath {
+  repeated ImperativeStep steps = 1;
+}
+
+message ImperativeStep {
+  string id = 1;
+  string kind = 2;
+  string params_json = 3;
+  repeated ImperativeStepBodyEntry bodies = 4;
+}
+
+message ImperativeStepBodyEntry {
+  string slot = 1;
+  ImperativePath path = 2;
+}

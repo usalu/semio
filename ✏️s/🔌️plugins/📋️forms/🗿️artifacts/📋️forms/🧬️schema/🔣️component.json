@@ -1,0 +1,82 @@
+{
+  "$id": "https://semio.tech/schema/s/forms/forms/artifact.json",
+  "title": "FormsArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "steps",
+    "selectedIds",
+    "currentStepIndex",
+    "tryValuesJson",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "id": { "type": "string", "x-semio-state": "persistent" },
+    "version": { "type": "string", "x-semio-state": "persistent" },
+    "title": {
+      "oneOf": [{ "type": "null" }, { "type": "string" }],
+      "x-semio-state": "persistent"
+    },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FormStep" },
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    },
+    "currentStepIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "tryValuesJson": { "type": "string", "x-semio-state": "local-ui" },
+    "locale": { "type": "string", "x-semio-state": "local-ui" },
+    "contributionsJson": { "type": "string", "x-semio-state": "local-ui" }
+  },
+  "$defs": {
+    "FormStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "blocks"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FormQuestion" }
+        }
+      }
+    },
+    "FormQuestion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "kind": { "type": "string" }
+      }
+    },
+    "FormsStringList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["values"],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

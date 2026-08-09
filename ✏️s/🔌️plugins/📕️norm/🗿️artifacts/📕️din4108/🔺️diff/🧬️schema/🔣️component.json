@@ -15,7 +15,7 @@
       "x-semio-state": "persistent"
     },
     "layers": {
-      "$ref": "#/$defs/Din4108StringList",
+      "$ref": "#/$defs/Din4108LayerList",
       "x-semio-state": "persistent"
     },
     "climate": {
@@ -106,8 +106,8 @@
     }
   },
   "$defs": {
-    "Din4108StringList": {
-      "title": "Din4108StringList",
+    "Din4108LayerList": {
+      "title": "Din4108LayerList",
       "type": "object",
       "additionalProperties": false,
       "required": [

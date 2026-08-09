@@ -3,7 +3,7 @@
 use crate::apps::raster::config::RasterConfig;
 use crate::apps::raster::terminology::RasterPlayLabels;
 use crate::artifacts::raster::engine::{find_layer, layer_name, layer_opacity};
-use crate::artifacts::raster::{RasterLayerNode, RasterProjection as RasterDocument};
+use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode,
     UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

@@ -1,7 +1,7 @@
 //! 📝️ Imperative play app — the script window: the compiled, read-only textual form of the document.
 
 use crate::artifacts::imperative::engine::ImperativeHost;
-use crate::artifacts::imperative::ImperativeDocument;
+use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -31,8 +31,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeDocument) -> UiNode {
-    let host = ImperativeHost::from_document(document.clone());
+pub fn render(document: &ImperativeSnapshot) -> UiNode {
+    let host = ImperativeHost::from_snapshot(document.clone());
     build_text_editor_scene(IMPERATIVE_PLAY_SURFACE_SCRIPT, crate::apps::imperative::IMPERATIVE_PLAY_APP_ID, TextEditorScene::base(host.compile_text(), Some("imperative".into()), None))
 }
 //#endregion 🔖️Render

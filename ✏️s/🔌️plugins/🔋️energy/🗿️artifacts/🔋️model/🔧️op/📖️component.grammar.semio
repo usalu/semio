@@ -1,0 +1,9 @@
+dialect grammar
+grammar energy.model.op
+extension energy
+start mutation
+
+artifact-mark = "energy.model-op"
+mutation = artifact-mark op+
+op = "no-mutation" | "set-snapshot" snapshot-field+
+snapshot-field = "schema" "=" TEXT | "modelJson" "=" TEXT

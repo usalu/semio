@@ -14,7 +14,7 @@ mod tests {
 
     #[test]
     fn set_nodes_inverse_restores_pre_state() {
-        let document = infinite_board_port_directed_dag::default_dag_document();
+        let document = crate::artifacts::dag::default_snapshot();
         let mutation = DagMutation::SetNodes { nodes: Vec::new() };
         let inverse = mutation.inverse(&document);
         assert_eq!(inverse, vec![DagMutation::SetNodes { nodes: document.nodes }]);

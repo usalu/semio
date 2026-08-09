@@ -5,7 +5,7 @@ use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::editor_hover_context;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::artifacts::writer::engine::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
-use crate::artifacts::writer::WriterProjection;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{
     tree_item, ui_declarative_sections_to_tree, ui_text, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -63,7 +63,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     }
 }
 
-pub fn render(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),

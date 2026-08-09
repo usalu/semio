@@ -100,7 +100,7 @@ pub struct CollectionRef {
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-#[dsl(extension = "space")]
+#[dsl(id = "s.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
     pub name: String,
@@ -198,6 +198,43 @@ pub enum SpaceMutation {
 /// 🧬️ Sparse whole-field diff — mirrors `writer_op::WriterDiff`'s "one `Option<T>` per possible
 /// mutation" shape, the pattern every `#[derive(dsl::DslDiff)]` struct uses (the derive only supports
 /// structs, never tagged enums — see `dsl_derive::derive_dsl_diff`'s doc comment).
+
+//#region 🔖️HandcraftedOpCodecs
+impl protocol::OpText for SpaceMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
+impl protocol::OpBinary for SpaceMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+//#endregion 🔖️HandcraftedOpCodecs
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 pub struct SpaceDiff {
     pub name: Option<String>,
@@ -553,7 +590,7 @@ pub struct CollectionEntry {
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-#[dsl(extension = "collection")]
+#[dsl(id = "s.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
     pub name: String,
@@ -569,6 +606,126 @@ pub struct CollectionSnapshot {
 pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
     CollectionSnapshot { schema: S_COLLECTION_SCHEMA.into(), name: name.into(), folders: Vec::new(), entries: Vec::new() }
 }
+
+
+//#region 🔖️HandcraftedDocumentCodecs
+/// 🧬️ P6: `DslDocument` emits helpers only — DocumentDsl/DocumentPack are handcrafted here.
+impl store::DocumentDsl for SpaceSnapshot {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::DocumentPack for SpaceSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+
+impl store::DocumentDsl for CollectionSnapshot {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::DocumentPack for CollectionSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️HandcraftedDocumentCodecs
 
 //#region 🔖️CollectionMutation
 /// ⚡️ One settled collection-tree mutation. `Move*`/`Rename*`/`ReplaceEntryBody` diff as the WHOLE
@@ -618,6 +775,43 @@ pub enum CollectionMutation {
         body: Box<ArtifactBody>,
     },
 }
+
+
+//#region 🔖️HandcraftedOpCodecs
+impl protocol::OpText for CollectionMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
+impl protocol::OpBinary for CollectionMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+//#endregion 🔖️HandcraftedOpCodecs
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 pub struct CollectionDiff {
@@ -1166,7 +1360,12 @@ impl DraftCatalog {
     /// (this crate is pure data plus pure functions — no wall-clock reads, matching `vcs`'s own doc
     /// comment convention).
     pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>) -> DraftEntry {
-        let artifact_id = vcs::create_document_vcs_id("draft");
+        static DRAFT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let seq = DRAFT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let artifact_id = vcs::content_addressed_entity_id(
+            "draft",
+            format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes(),
+        );
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
         entry
@@ -1565,6 +1764,27 @@ mod tests {
     #[test]
     fn collection_projection_dsl_pack_round_trips() {
         store::test_support::assert_dsl_pack_equivalence(&demo_collection());
+    }
+
+
+    #[test]
+    fn collection_envelope_id_is_two_dot_segments() {
+        let id = <CollectionSnapshot as store::DocumentDsl>::envelope_id();
+        assert_eq!(id, "s.collection");
+        assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
+        let pack = store::DocumentPack::encode_pack(&empty_collection_snapshot("test")).expect("encode");
+        let decoded = <CollectionSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        assert_eq!(decoded.name, "test");
+    }
+
+    #[test]
+    fn space_envelope_id_is_two_dot_segments() {
+        let id = <SpaceSnapshot as store::DocumentDsl>::envelope_id();
+        assert_eq!(id, "s.space");
+        assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
+        let pack = store::DocumentPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private)).expect("encode");
+        let decoded = <SpaceSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        assert_eq!(decoded.name, "test");
     }
 
     #[test]

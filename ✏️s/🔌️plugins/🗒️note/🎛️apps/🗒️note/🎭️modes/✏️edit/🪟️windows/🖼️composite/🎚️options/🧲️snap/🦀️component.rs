@@ -2,11 +2,11 @@
 //! Its command handlers live in `🎮️commands/🧲️snap`.
 
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::NoteDocument;
+use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(document: &NoteDocument, labels: &NotePlayLabels) -> WindowMeasure {
+pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "note-measures.snap".into(),
         label: labels.measure_snap.into(),

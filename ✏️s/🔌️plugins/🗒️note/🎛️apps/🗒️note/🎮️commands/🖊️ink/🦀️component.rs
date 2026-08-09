@@ -4,7 +4,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset};
+use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteSnapshot, NoteImageAsset};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::Deserialize;
 
@@ -34,7 +34,7 @@ enum NoteCanvasEvent {
     SetCamera { camera: NoteCamera },
 }
 
-fn apply_note_canvas_event(document: &mut NoteDocument, event: &NoteCanvasEvent) {
+fn apply_note_canvas_event(document: &mut NoteSnapshot, event: &NoteCanvasEvent) {
     match event {
         NoteCanvasEvent::AddBlock { block, parent_id, index } => {
             insert_block(&mut document.blocks, parent_id.as_deref(), index.unwrap_or(usize::MAX), block.clone());
@@ -57,7 +57,7 @@ fn apply_note_canvas_event(document: &mut NoteDocument, event: &NoteCanvasEvent)
 /// 🔀️ Applies a batch of canvas events to a cloned document and returns the minimal `NoteMutation`s
 /// describing what changed (block-tree snapshot and per-asset puts) — the empty vec means no content
 /// changed (e.g. a gesture that ended where it began).
-fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteMutation> {
+fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEvent]) -> Vec<NoteMutation> {
     let mut next = document.clone();
     for event in events {
         apply_note_canvas_event(&mut next, event);
@@ -87,8 +87,8 @@ pub mod ink_apply_events {
         pub select_ids: Option<Vec<String>>,
     }
 
-    pub fn handle(payload: &InkApplyEvents, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &InkApplyEvents, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
         let mut config_mutations = Vec::new();
         if let Some(ids) = &payload.select_ids {
@@ -138,11 +138,11 @@ mod tests {
         let new_id = block_id(&block).to_string();
 
         let begin_events = json!([
-            { "operation": "addBlock", "block": block, "parentId": null, "index": null }
+            { "mutation": "addBlock", "block": block, "parentId": null, "index": null }
         ])
         .to_string();
         dispatch(&mut app, NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) }));
-        assert_eq!(app.projection().expect("projection").blocks.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         for x in [20.0, 30.0, 40.0] {
             let mut moved = block.clone();
@@ -150,21 +150,21 @@ mod tests {
                 *block_x = x;
             }
             let live_events = json!([
-                { "operation": "updateBlock", "blockId": new_id, "block": moved }
+                { "mutation": "updateBlock", "blockId": new_id, "block": moved }
             ])
             .to_string();
             dispatch(&mut app, NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: live_events, phase: "live".into(), select_ids: None }));
         }
-        assert_eq!(app.projection().expect("projection").blocks.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         // Commit with no further change emits no operation — the gesture is already recorded.
         let commit = dispatch(&mut app, NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }));
-        assert!(commit.operations.is_empty(), "a no-operation commit must not create an edit");
-        assert_eq!(app.projection().expect("projection").blocks.len(), 1);
+        assert!(commit.mutations.is_empty(), "a no-operation commit must not create an edit");
+        assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         // The whole begin+live gesture coalesced into ONE undoable edit.
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert!(app.projection().expect("projection").blocks.is_empty(), "a single undo should erase the whole gesture");
+        assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo should erase the whole gesture");
     }
 
     #[test]

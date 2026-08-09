@@ -121,5 +121,16 @@
       ],
       "x-semio-state": "shared-ui"
     }
+  },
+  "$defs": {
+    "Din4108LayerDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["thicknessM", "lambdaWMk"],
+      "properties": {
+        "thicknessM": { "type": "number", "format": "double" },
+        "lambdaWMk": { "type": "number", "format": "double" }
+      }
+    }
   }
 }

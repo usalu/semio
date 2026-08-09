@@ -2,7 +2,7 @@
 
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use crate::playbook::{visible_blocks, PlaybookBlock};
+use flow::playbook::{visible_blocks, PlaybookBlock};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -114,7 +114,7 @@ struct ModuleRenderPayload {
 impl store::DocumentDsl for ModuleRenderPayload {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
+        "playbook.procedural"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -177,7 +177,7 @@ fn default_params_field() -> dsl::DslValue {
 }
 
 /// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
-/// as `DocumentApp::initial_projection`; live slot renders override it with the forms-supplied payload.
+/// as `DocumentApp::initial_snapshot`; live slot renders override it with the forms-supplied payload.
 fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
@@ -713,6 +713,16 @@ enum Command {
     #[dsl(key = "import-solid")]
     ImportSolid { format: String, data: String },
 }
+
+/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
+impl protocol::OpBinary for Command {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
 //#endregion 🔖️Command
 
 //#region 🔖️App
@@ -720,7 +730,7 @@ enum Command {
 struct ModuleApp;
 
 impl DocumentApp for ModuleApp {
-    type Projection = ModuleRenderPayload;
+    type Snapshot = ModuleRenderPayload;
     type Mutation = ModulePayloadMutation;
     type Config = semio_framework_plugin::NoConfig;
     type ConfigMutation = semio_framework_plugin::NoConfigMutation;
@@ -732,7 +742,7 @@ impl DocumentApp for ModuleApp {
     const APP_ID: &'static str = MODULE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> ModuleRenderPayload {
+    fn initial_snapshot() -> ModuleRenderPayload {
         default_payload()
     }
 
@@ -763,12 +773,12 @@ impl DocumentApp for ModuleApp {
     fn handle(command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
-                let mut payload = doc.projection.clone();
+                let mut payload = doc.snapshot.clone();
                 handle_export_solid(&mut payload, format);
                 Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
             }
             Command::ImportSolid { format, data } => {
-                let mut payload = doc.projection.clone();
+                let mut payload = doc.snapshot.clone();
                 handle_import_solid(&mut payload, format, data);
                 Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
             }
@@ -778,8 +788,8 @@ impl DocumentApp for ModuleApp {
     fn render(body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
-            BODY_PARAMS => render_params_body(doc.projection, labels),
-            BODY_PREVIEW => render_preview_body(doc.projection),
+            BODY_PARAMS => render_params_body(doc.snapshot, labels),
+            BODY_PREVIEW => render_preview_body(doc.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -884,7 +894,7 @@ mod tests {
 
     #[test]
     fn module_manifest_contributes_building_component() {
-        let bundle = module_bundle();
+        let bundle = module_extension_bundle();
         let manifest = bundle.manifest;
         assert_eq!(manifest.contributions.len(), 1);
         let Contribution::PlaybookBlockKind { block_kind, params_body_key, preview_body_key, .. } = &manifest.contributions[0] else {
@@ -924,28 +934,28 @@ mod tests {
     #[test]
     fn export_solid_action_stashes_result_and_is_undoable() {
         let mut app = new_app();
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_none());
+        assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
         // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
         // stashed result is read back through the materialized projection.
         app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("export");
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
+        assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
         // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
         app.handle_action("undo", None, &meta()).expect("undo");
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
+        assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     }
 
     #[test]
     fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
         app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).expect("import");
-        assert!(app.projection().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
+        assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
     #[test]
     fn import_solid_action_reports_error_when_no_data_given() {
         let mut app = new_app();
         app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("import");
-        let payload = app.projection().expect("projection");
+        let payload = app.snapshot().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());
     }
@@ -962,35 +972,34 @@ mod tests {
         let mut app = VcsDocumentApp::with_registry(ModuleApp, registry);
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload operation still applies and stashes a result.
-        app.handle_action(ACTION_EXPORT_SOLID, None, &ViewModel::default(), &meta()).expect("export");
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
+        app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).expect("export");
+        assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
 
     #[test]
     fn unknown_action_yields_no_document_change() {
         let mut app = new_app();
-        let before = app.projection().expect("projection");
-        app.handle_action("noSuchAction", None, &ViewModel::default(), &meta()).expect("noOperation");
-        assert_eq!(app.projection().expect("projection"), before);
+        let before = app.snapshot().expect("projection");
+        assert!(app.handle_action("noSuchAction", None, &meta()).is_err(), "an undeclared action is rejected rather than silently ignored");
+        assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 
     #[test]
     fn module_labels_resolve_native_english_by_default() {
-        let labels = module_labels(&ViewModel::default());
-        assert_eq!(labels.no_flow_inputs, "No flow inputs.");
-        assert_eq!(labels.no_procedural_parameters, "No procedural parameters.");
-        let node = ui_text(labels.no_procedural_parameters.to_string());
+        let labels = ModuleLabels::labels(Locale::En, Terminology::Native);
+        assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
+        assert_eq!(labels.no_procedural_parameters.as_str(), "No procedural parameters.");
+        let node = ui_text(labels.no_procedural_parameters);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No procedural parameters."));
     }
 
     #[test]
     fn module_labels_resolve_german_locale() {
-        let view_state = ViewModel { locale: Some("de".into()), ..ViewModel::default() };
-        let labels = module_labels(&view_state);
-        assert_eq!(labels.no_flow_inputs, "Keine Flow-Eingaben.");
-        assert_eq!(labels.no_procedural_parameters, "Keine prozeduralen Parameter.");
-        let node = ui_text(labels.no_procedural_parameters.to_string());
+        let labels = ModuleLabels::labels(Locale::De, Terminology::Native);
+        assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
+        assert_eq!(labels.no_procedural_parameters.as_str(), "Keine prozeduralen Parameter.");
+        let node = ui_text(labels.no_procedural_parameters);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Keine prozeduralen Parameter."));
         assert!(!json.contains("No procedural parameters."));
@@ -999,13 +1008,13 @@ mod tests {
     //#region 🔖️DslAndOpText
     #[test]
     fn module_render_payload_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&default_payload());
-        store::test_support::assert_dsl_pack_equivalence(&default_payload());
+        store::os_store::test_support::assert_dsl_round_trip(&default_payload());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&default_payload());
     }
 
     #[test]
     fn module_payload_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload { payload: default_payload() });
+        store::os_store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload { payload: default_payload() });
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -1025,7 +1034,7 @@ mod tests {
         payload.interactive = false;
         store.dispatch(DocumentCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");
         let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslAndOpText

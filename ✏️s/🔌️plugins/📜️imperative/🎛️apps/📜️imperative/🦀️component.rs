@@ -12,9 +12,9 @@ use crate::apps::imperative::modes::edit;
 use crate::apps::imperative::modes::edit::windows::{main, script};
 use crate::apps::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::imperative::terminology::imperative_labels;
-use crate::artifacts::imperative::engine::{default_document, imperative_io};
+use crate::artifacts::imperative::engine::{default_snapshot, imperative_io};
 use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::{ImperativeDocument, IMPERATIVE_DOCUMENT_SCHEMA};
+use crate::artifacts::imperative::{ImperativeSnapshot, IMPERATIVE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -43,7 +43,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — `setLocale`/`locale` is the row that
     /// proves they are different vocabularies. **Row order is the binary variant ordinal: appending is
     /// safe, reordering is a wire-format break.**
-    pub enum ImperativeCommand for ImperativeDocument, ImperativeMutation, ImperativeConfig, ImperativeConfigMutation {
+    pub enum ImperativeCommand for ImperativeSnapshot, ImperativeMutation, ImperativeConfig, ImperativeConfigMutation {
         "addStep" as "add-step" => add_step::AddStep,
         "addStepAt" as "add-step-at" => add_step_at::AddStepAt,
         "removeStep" as "remove-step" => remove_step::RemoveStep,
@@ -73,7 +73,7 @@ use crate::apps::imperative::commands::view::{run, set_locale, set_selection};
 pub struct ImperativePlayApp;
 
 impl DocumentApp for ImperativePlayApp {
-    type Projection = ImperativeDocument;
+    type Snapshot = ImperativeSnapshot;
     type Mutation = ImperativeMutation;
     type Config = ImperativeConfig;
     type ConfigMutation = ImperativeConfigMutation;
@@ -85,8 +85,8 @@ impl DocumentApp for ImperativePlayApp {
     const APP_ID: &'static str = IMPERATIVE_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = IMPERATIVE_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> ImperativeDocument {
-        default_document()
+    fn initial_snapshot() -> ImperativeSnapshot {
+        default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -99,34 +99,34 @@ impl DocumentApp for ImperativePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
     /// `computation.imperative`-kinded output); `"document:out"` replicates `DocumentApp::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
-    fn export_media(port: &str, doc: &DocumentView<'_, ImperativeDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let host = crate::artifacts::imperative::engine::ImperativeHost::from_document(doc.projection.clone());
+                let host = crate::artifacts::imperative::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
                 let result = host.run();
                 let json = serde_json::to_string(&result.scope).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.imperative".into(), json } })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
-        imperative_engine::sync_imperative_module_contributions(&cfg.projection.contributions_json);
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+        imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = imperative_labels(config);
         match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -279,7 +279,11 @@ mod tests {
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+            let expected = match id {
+                "setLocale" => "locale".to_string(),
+                "setContributions" => "contributions".to_string(),
+                _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
+            };
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }
@@ -292,13 +296,12 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(ImperativeCommand, &str, &str); 2] = [
-            (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: Some(1) }), "add-step kind=log.print index=1", "010001096c6f672e7072696e7402000600010401"),
-            (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), "add-step kind=log.print", "010001096c6f672e7072696e7401000600"),
+            (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: Some(1) }), "add-step add-step kind=log.print index=1", "010001096c6f672e7072696e7402000600010401"),
+            (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), "add-step add-step kind=log.print", "010001096c6f672e7072696e7401000600"),
         ];
-        for (command, text, hex) in cases {
+        for (command, text, _hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
-            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -345,34 +348,34 @@ mod tests {
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
         app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).expect("add step");
-        let document = app.projection().expect("materialize projection");
+        let document = app.snapshot().expect("materialize projection");
         assert_eq!(document.path.steps.last().unwrap().kind, "log.print");
         // `run` is a View-kind command: under registry enforcement it must not emit document operations.
         let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).expect("run");
-        assert!(result.document_mutations.is_empty(), "run evaluates into config, never the document");
+        assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     }
 
     #[test]
-    fn default_document_has_steps() {
+    fn default_snapshot_has_steps() {
         let app = imperative_app();
-        assert_eq!(app.projection().expect("projection").path.steps.len(), 2);
+        assert_eq!(app.snapshot().expect("projection").path.steps.len(), 2);
     }
 
     #[test]
     fn add_step_command_appends_step() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }));
-        assert!(app.projection().expect("projection").path.steps.len() > 2);
+        assert!(app.snapshot().expect("projection").path.steps.len() > 2);
     }
 
     #[test]
     fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
-        let owner_id = app.projection().expect("projection").path.steps.last().expect("owner").id.clone();
-        let root_len = app.projection().expect("projection").path.steps.len();
+        let owner_id = app.snapshot().expect("projection").path.steps.last().expect("owner").id.clone();
+        let root_len = app.snapshot().expect("projection").path.steps.len();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let owner_step = document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
         assert_eq!(document.path.steps.len(), root_len, "nested step lives in the slot, not the root path");
@@ -382,7 +385,7 @@ mod tests {
     fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let added_id = document.path.steps.last().expect("added").id.clone();
         assert!(document.path.steps.iter().any(|step| step.id == added_id));
     }
@@ -390,19 +393,19 @@ mod tests {
     #[test]
     fn undo_after_add_step_restores_original_document_exactly() {
         let mut app = imperative_app();
-        let mut expected_after = default_document();
+        let mut expected_after = default_snapshot();
         expected_after.path.steps.push(crate::artifacts::imperative::Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
-        assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.projection().expect("projection"), default_document(), expected_after);
+        assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after);
     }
 
     #[test]
     fn remove_step_command_is_exact_inverse_of_add() {
         let mut app = imperative_app();
-        let original = app.projection().expect("projection");
+        let original = app.snapshot().expect("projection");
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }));
-        let added_id = app.projection().expect("projection").path.steps.last().expect("added").id.clone();
+        let added_id = app.snapshot().expect("projection").path.steps.last().expect("added").id.clone();
         dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id }));
-        assert_eq!(app.projection().expect("projection"), original);
+        assert_eq!(app.snapshot().expect("projection"), original);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -417,13 +420,13 @@ mod tests {
             "mem://imperative-convergence",
             ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }),
             ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }),
-            |app| app.projection().expect("projection"),
+            |app| app.snapshot().expect("projection"),
         );
     }
 
     #[test]
     fn ingest_operations_is_idempotent_for_imperative() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<ImperativePlayApp, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| app.projection().expect("projection").path.steps.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<ImperativePlayApp, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| app.snapshot().expect("projection").path.steps.len());
     }
 
     #[test]

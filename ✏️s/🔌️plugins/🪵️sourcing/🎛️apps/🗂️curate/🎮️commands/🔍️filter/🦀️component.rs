@@ -2,7 +2,7 @@
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::{CurateDocument, SortDirection, TableSort};
+use crate::artifacts::curate::{CurateSnapshot, SortDirection, TableSort};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub mod set_filter_query {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetFilterQuery, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFilterQuery, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterQuery { value: payload.value.clone() }]))
     }
 }
@@ -33,8 +33,8 @@ pub mod set_filter_module {
         pub enabled: bool,
     }
 
-    pub fn handle(payload: &SetFilterModule, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut module_ids = cfg.projection.filters.module_ids.clone();
+    pub fn handle(payload: &SetFilterModule, _doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let mut module_ids = cfg.snapshot.filters.module_ids.clone();
         if payload.enabled {
             if !module_ids.iter().any(|id| id == &payload.module_id) {
                 module_ids.push(payload.module_id.clone());
@@ -57,7 +57,7 @@ pub mod set_filter_typology {
         pub path: String,
     }
 
-    pub fn handle(payload: &SetFilterTypology, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFilterTypology, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let path = if payload.path.is_empty() { Vec::new() } else { payload.path.split('/').map(String::from).collect() };
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterTypology { path }]))
     }
@@ -75,8 +75,8 @@ pub mod set_filter_min_availability {
         pub value: Option<f64>,
     }
 
-    pub fn handle(payload: &SetFilterMinAvailability, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let current = cfg.projection.filters.min_availability as f64;
+    pub fn handle(payload: &SetFilterMinAvailability, _doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        let current = cfg.snapshot.filters.min_availability as f64;
         let next = payload.delta.map(|d| current + d).or(payload.value).unwrap_or(current);
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
     }
@@ -94,7 +94,7 @@ pub mod sort_table {
         pub direction: String,
     }
 
-    pub fn handle(payload: &SortTable, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SortTable, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let sort = TableSort { column_id: payload.column_id.clone(), direction: if payload.direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } };
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSort { sort: Some(sort) }]))
     }

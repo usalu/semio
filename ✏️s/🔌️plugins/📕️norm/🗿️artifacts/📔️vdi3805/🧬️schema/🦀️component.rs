@@ -1,7 +1,11 @@
 //! 🧬️ Vdi3805 artifact schema — every field of the artifact with its state class.
 
+
+use std::collections::BTreeMap;
+
 use schema::ArtifactSchema;
-use serde::{{Deserialize, Serialize}};
+use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Vdi3805 artifact state across persistent and shared-ui classes.
@@ -9,15 +13,15 @@ use serde::{{Deserialize, Serialize}};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Artifact {
-    #[state(persistent)] pub manufacturer_file: String,
-    #[state(persistent)] pub catalog: String,
+    #[state(persistent)] pub manufacturer_file: ManufacturerFile,
+    #[state(persistent)] pub catalog: ManufacturerCatalog,
     #[state(persistent)] pub edition_profile: BTreeMap<String, EditionProfileChoice>,
-    #[state(persistent)] pub correction_as_of: String,
+    #[state(persistent)] pub correction_as_of: EditionId,
     #[state(persistent)] pub strict_mode: bool,
-    #[state(persistent)] pub index: String,
+    #[state(persistent)] pub index: CatalogIndex,
     #[state(persistent)] pub geometry: BTreeMap<String, ParametricGeometry>,
     #[state(persistent)] pub curves: BTreeMap<String, CharacteristicCurve>,
-    #[state(persistent)] pub limits: String,
+    #[state(persistent)] pub limits: SecurityLimits,
     #[state(shared_ui)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
@@ -27,15 +31,15 @@ impl Vdi3805Artifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::vdi3805::Vdi3805Snapshot {
         crate::artifacts::vdi3805::Vdi3805Snapshot {
-            manufacturer_file: self.manufacturer_file,
-            catalog: self.catalog,
-            edition_profile: self.edition_profile,
-            correction_as_of: self.correction_as_of,
+            manufacturer_file: self.manufacturer_file.clone(),
+            catalog: self.catalog.clone(),
+            edition_profile: self.edition_profile.clone(),
+            correction_as_of: self.correction_as_of.clone(),
             strict_mode: self.strict_mode,
-            index: self.index,
-            geometry: self.geometry,
-            curves: self.curves,
-            limits: self.limits,
+            index: self.index.clone(),
+            geometry: self.geometry.clone(),
+            curves: self.curves.clone(),
+            limits: self.limits.clone(),
         }
     }
 
@@ -54,7 +58,14 @@ impl Vdi3805Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vdi3805::Vdi3805Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

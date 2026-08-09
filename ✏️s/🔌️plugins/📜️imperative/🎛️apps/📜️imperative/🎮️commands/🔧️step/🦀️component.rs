@@ -5,7 +5,7 @@
 use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
 use crate::artifacts::imperative::dsl::ValueDsl;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::{Dictionary, ImperativeDocument, PathRef, Step};
+use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, PathRef, Step};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Helpers
 /// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
 /// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
-fn next_step_id(document: &ImperativeDocument) -> String {
+fn next_step_id(document: &ImperativeSnapshot) -> String {
     fn max_suffix(steps: &[Step]) -> u64 {
         steps.iter().fold(0, |acc, step| {
             let own = step.id.strip_prefix("step-").and_then(|rest| rest.parse::<u64>().ok()).unwrap_or(0);
@@ -29,7 +29,7 @@ fn next_step_id(document: &ImperativeDocument) -> String {
 /// `control.if` then/else) resolve correctly; falls back to the root path unless both are present and
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
-fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeDocument) -> PathRef {
+fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeSnapshot) -> PathRef {
     match (owner, slot) {
         (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),
@@ -38,7 +38,7 @@ fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeD
 
 /// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
 /// (an unmaterialized slot reads as empty).
-fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [Step] {
+fn steps_at<'a>(document: &'a ImperativeSnapshot, path_ref: &PathRef) -> &'a [Step] {
     match (&path_ref.owner, &path_ref.slot) {
         (Some(owner), Some(slot)) => document.path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map_or(&[], |path| path.steps.as_slice()),
         _ => document.path.steps.as_slice(),
@@ -47,7 +47,7 @@ fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [St
 
 /// 🔎️ True when the step `id` exists in the list the `owner`/`slot` command fields address — the
 /// pre-state guard the operation arms share so a stale id never emits a no-operation edit into history.
-fn resolve_contains(document: &ImperativeDocument, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
+fn resolve_contains(document: &ImperativeSnapshot, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
     let path_ref = path_ref_from(owner, slot, document);
     steps_at(document, &path_ref).iter().any(|step| step.id == id)
 }
@@ -64,8 +64,8 @@ pub mod add_step {
         pub index: Option<usize>,
     }
 
-    pub fn handle(payload: &AddStep, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddStep, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
         Ok(Emit {
@@ -90,8 +90,8 @@ pub mod add_step_at {
         pub slot: Option<String>,
     }
 
-    pub fn handle(payload: &AddStepAt, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddStepAt, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
@@ -114,9 +114,9 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         if resolve_contains(document, None, None, &payload.id) {
             let mut ids = config.selected_step_ids.clone();
             ids.retain(|step_id| step_id != &payload.id);
@@ -144,9 +144,9 @@ pub mod remove_step_at {
         pub slot: Option<String>,
     }
 
-    pub fn handle(payload: &RemoveStepAt, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveStepAt, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
             let mut ids = config.selected_step_ids.clone();
@@ -174,8 +174,8 @@ pub mod move_step {
         pub index: usize,
     }
 
-    pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if resolve_contains(document, None, None, &payload.id) {
             Ok(Emit::mutations(vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
         } else {
@@ -198,8 +198,8 @@ pub mod move_step_at {
         pub slot: Option<String>,
     }
 
-    pub fn handle(payload: &MoveStepAt, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &MoveStepAt, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
             Ok(Emit::mutations(vec![ImperativeMutation { path_ref, collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
@@ -221,8 +221,8 @@ pub mod set_step_params {
         pub params: BTreeMap<String, ValueDsl>,
     }
 
-    pub fn handle(payload: &SetStepParams, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &SetStepParams, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if resolve_contains(document, None, None, &payload.id) {
             Ok(Emit::mutations(vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Patch { id: payload.id.clone(), patch: crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params) } }]))
         } else {
@@ -245,8 +245,8 @@ pub mod set_step_params_at {
         pub params: BTreeMap<String, ValueDsl>,
     }
 
-    pub fn handle(payload: &SetStepParamsAt, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &SetStepParamsAt, doc: &DocumentView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        let document = doc.snapshot;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
             Ok(Emit::mutations(vec![ImperativeMutation { path_ref, collection: CollectionMutation::Patch { id: payload.id.clone(), patch: crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params) } }]))

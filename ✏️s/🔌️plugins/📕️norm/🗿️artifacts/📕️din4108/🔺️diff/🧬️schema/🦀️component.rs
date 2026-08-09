@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct Din4108Diff {
     #[state(persistent)] pub artifact: Option<Box<crate::artifacts::din4108::schema::Din4108Artifact>>,
     #[state(persistent)] pub category: Option<String>,
-    #[state(persistent)] pub layers: Option<Din4108StringList>,
+    #[state(persistent)] pub layers: Option<Din4108LayerList>,
     #[state(persistent)] pub climate: Option<crate::document::ClimateZoneDe>,
     #[state(persistent)] pub airtightness_n50: Option<f64>,
     #[state(persistent)] pub psi_times_l_sum: Option<f64>,
@@ -37,4 +37,8 @@ pub struct Din4108Diff {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Din4108StringList { pub values: Vec<String> }
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Din4108LayerList { pub values: Vec<crate::artifacts::din4108::LayerDocument> }
 //#endregion 🔖️DeltaHelpers

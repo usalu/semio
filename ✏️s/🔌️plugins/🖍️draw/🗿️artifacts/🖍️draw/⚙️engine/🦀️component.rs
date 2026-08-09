@@ -32,24 +32,14 @@ pub fn register() {
     semio_framework_os::register_dwg_import_handler("2d.drawing", draw_document_json_from_dwg);
 }
 
-static DRAW_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the draw artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = DRAW_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::draw::schema::draw_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::draw::schema::draw_artifact_schema_descriptor());
 }
 
 /// 🔎 Returns whether `s.draw.draw` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
-    DRAW_SCHEMA_REGISTRY
-        .get()
-        .map(|registry| registry.lock().expect("schema registry lock").get("s.draw.draw").is_some())
-        .unwrap_or(false)
+    ::schema::artifact_schema_descriptor_registered("s.draw.draw")
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

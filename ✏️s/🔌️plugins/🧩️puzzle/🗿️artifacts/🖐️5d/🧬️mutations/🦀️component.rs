@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle 5d artifact — the granular operation enum and its laws: id-keyed part/fastener edits
 //! plus the scalar meta, each with a true inverse computed from the pre-operation projection, plus
 //! the whole-document replace for example loads. Also carries the `serde_json::Value` bridge (and the
-//! `Puzzle5dPlayProjection` newtype over it) the play app's untyped document still rides on, and the
+//! `Puzzle5dPlaySnapshot` newtype over it) the play app's untyped document still rides on, and the
 //! `puzzle5d_document_delta_operations` before/after differ every document-mutating action goes through.
 
 
@@ -49,8 +49,8 @@ pub enum Puzzle5dMutation {
         meta: Puzzle5dMeta,
     },
     /// 🌍️ Replaces the whole document (example import / reset / engine fill).
-    #[dsl(key = "setDocument")]
-    SetDocument {
+    #[dsl(key = "setSnapshot")]
+    SetSnapshot {
         #[dsl(block)]
         snapshot: Puzzle5dSnapshot,
     },
@@ -67,7 +67,7 @@ fn puzzle5d_mutation_diff(operation: &Puzzle5dMutation, base: &Puzzle5dSnapshot)
         Puzzle5dMutation::SetFastener { index, fastener } => crate::artifacts::puzzle5d::diff::diff_set_fastener(*index, fastener.clone(), base),
         Puzzle5dMutation::RemoveFastener { id } => crate::artifacts::puzzle5d::diff::diff_remove_fastener(id.clone()),
         Puzzle5dMutation::SetMeta { meta } => crate::artifacts::puzzle5d::diff::diff_set_meta(meta.clone()),
-        Puzzle5dMutation::SetDocument { snapshot } => crate::artifacts::puzzle5d::diff::diff_set_snapshot(snapshot.clone()),
+        Puzzle5dMutation::SetSnapshot { snapshot } => crate::artifacts::puzzle5d::diff::diff_set_snapshot(snapshot.clone()),
     }
 }
 
@@ -91,7 +91,7 @@ impl Mutation<Puzzle5dSnapshot> for Puzzle5dMutation {
             },
             Puzzle5dMutation::RemoveFastener { id } => puzzle5d_index_of(&projection.fasteners, id).map_or_else(Vec::new, |index| vec![Puzzle5dMutation::SetFastener { index, fastener: projection.fasteners[index].clone() }]),
             Puzzle5dMutation::SetMeta { .. } => vec![Puzzle5dMutation::SetMeta { meta: projection.meta.clone() }],
-            Puzzle5dMutation::SetDocument { .. } => vec![Puzzle5dMutation::SetDocument { snapshot: projection.clone() }],
+            Puzzle5dMutation::SetSnapshot { .. } => vec![Puzzle5dMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
@@ -140,7 +140,7 @@ fn apply_puzzle5d_operation_to_value(document: &mut Value, operation: &Puzzle5dM
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
             }
         }
-        Puzzle5dMutation::SetDocument { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+        Puzzle5dMutation::SetSnapshot { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
     }
 }
 
@@ -251,13 +251,13 @@ impl Mutation<Value> for Puzzle5dMutation {
                 let meta: Puzzle5dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle5dMutation::SetMeta { meta }]
             }
-            Puzzle5dMutation::SetDocument { .. } => vec![Puzzle5dMutation::SetDocument { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
+            Puzzle5dMutation::SetSnapshot { .. } => vec![Puzzle5dMutation::SetSnapshot { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
 
 /// 🧮️ Collects the sparse `set`/`removed` delta for one id-keyed `Value` array collection into typed
-/// entries. Returns `false` (caller falls back to `SetDocument`) whenever an entry is missing an
+/// entries. Returns `false` (caller falls back to `SetSnapshot`) whenever an entry is missing an
 /// `id` or fails to deserialize into `T`.
 fn puzzle5d_collect_value_collection_delta<T>(before: &[Value], after: &[Value], set: &mut Vec<(usize, T)>, removed: &mut Vec<String>) -> bool
 where
@@ -289,14 +289,14 @@ where
 }
 
 /// 🧮️ Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// document JSON the play app mutates). Falls back to a single `SetDocument` whenever the granular
+/// document JSON the play app mutates). Falls back to a single `SetSnapshot` whenever the granular
 /// replay would not reproduce `after` exactly, or whenever `schema`/`domain`/`label`/`kindCatalogs`/
 /// `kindCompatibility` changed (no granular editor for those today — see `Puzzle5dMutation`'s doc).
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
     if before == after {
         return Vec::new();
     }
-    let fallback = |after: &Value| vec![Puzzle5dMutation::SetDocument { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let fallback = |after: &Value| vec![Puzzle5dMutation::SetSnapshot { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
@@ -353,29 +353,29 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     }
 }
 
-//#region 🔖️PlayProjection
+//#region 🔖️PlaySnapshot
 /// 🌱️ The play app's `Puzzle5dPlayApp` predates the typed `Puzzle5dSnapshot` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers. This newtype exists
 /// only to satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack`;
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
-/// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlayProjection` and `puzzle3d`'s
-/// `Puzzle3dPlayProjection`. `Mutation`/`MutationDiff` delegate straight through to the `Value`
+/// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot` and `puzzle3d`'s
+/// `Puzzle3dPlaySnapshot`. `Mutation`/`MutationDiff` delegate straight through to the `Value`
 /// impls above too.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Puzzle5dPlayProjection(pub Value);
+pub struct Puzzle5dPlaySnapshot(pub Value);
 
-impl PartialEq for Puzzle5dPlayProjection {
+impl PartialEq for Puzzle5dPlaySnapshot {
     fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
 
-impl store::DocumentDsl for Puzzle5dPlayProjection {
+impl store::DocumentDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(Puzzle5dPlayProjection).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map(Puzzle5dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -383,20 +383,20 @@ impl store::DocumentDsl for Puzzle5dPlayProjection {
     }
 }
 
-impl store::DocumentPack for Puzzle5dPlayProjection {
+impl store::DocumentPack for Puzzle5dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map(Puzzle5dPlayProjection).map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Puzzle5dPlaySnapshot).map_err(store::PackError::Schema)
     }
 }
 
-impl MutationDiff<Puzzle5dPlayProjection> for Puzzle5dDiff {
-    fn apply(&self, projection: &Puzzle5dPlayProjection) -> Puzzle5dPlayProjection {
-        Puzzle5dPlayProjection(MutationDiff::<Value>::apply(self, &projection.0))
+impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
+    fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> Puzzle5dPlaySnapshot {
+        Puzzle5dPlaySnapshot(MutationDiff::<Value>::apply(self, &projection.0))
     }
 
     fn absorb(&mut self, other: Self) {
@@ -404,18 +404,18 @@ impl MutationDiff<Puzzle5dPlayProjection> for Puzzle5dDiff {
     }
 }
 
-impl Mutation<Puzzle5dPlayProjection> for Puzzle5dMutation {
+impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, projection: &Puzzle5dPlayProjection) -> Puzzle5dDiff {
+    fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> Puzzle5dDiff {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle5dPlayProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Self> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
-//#endregion 🔖️PlayProjection
+//#endregion 🔖️PlaySnapshot
 //#endregion 🔖️ValueBridge
 
 //#region 🧪️Tests
@@ -445,7 +445,7 @@ mod tests {
         });
         let operations = puzzle5d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::SetPart { .. })));
-        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::SetDocument { .. })), "granular delta must not fall back to whole-document replace here");
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::SetSnapshot { .. })), "granular delta must not fall back to whole-document replace here");
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {
@@ -466,6 +466,6 @@ pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puz
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dPlayProjection, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
+pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dPlaySnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
     mutation.inverse(projection)
 }

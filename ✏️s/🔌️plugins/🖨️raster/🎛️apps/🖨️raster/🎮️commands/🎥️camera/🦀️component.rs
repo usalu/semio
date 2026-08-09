@@ -3,7 +3,7 @@
 
 use crate::apps::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize};
 use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::{RasterCamera, RasterProjection};
+use crate::artifacts::raster::{RasterCamera, RasterSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_composite_viewport {
         pub height: f64,
     }
 
-    pub fn handle(payload: &SetCompositeViewport, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCompositeViewport, _doc: &DocumentView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         Ok(Emit::config(vec![RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: payload.width, height: payload.height }) }]))
     }
 }
@@ -35,7 +35,7 @@ pub mod set_camera {
         pub camera: RasterCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         Ok(Emit::config(vec![RasterConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -51,8 +51,8 @@ pub mod set_camera_zoom {
         pub zoom: f64,
     }
 
-    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, RasterProjection>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
-        let camera = RasterCamera { zoom: payload.zoom, ..cfg.projection.camera.clone() };
+    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+        let camera = RasterCamera { zoom: payload.zoom, ..cfg.snapshot.camera.clone() };
         Ok(Emit::config(vec![RasterConfigMutation::SetCamera { camera }]))
     }
 }

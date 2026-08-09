@@ -4,7 +4,7 @@
 #![cfg(target_arch = "wasm32")]
 
 use crate::artifacts::present::spr::{create_present_envelope, materialize_present_projection_json, PresentEnvelope, PresentStore};
-use crate::artifacts::present::PRESENT_DECK_SCHEMA;
+use crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
@@ -34,7 +34,7 @@ impl PresentDocumentVcs {
                 let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 PresentStore::new(envelope)
             }
-            None => PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", crate::artifacts::present::engine::empty_present_deck(), None)),
+            None => PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::engine::empty_present_snapshot(), None)),
         };
         Ok(Self { store: RefCell::new(store) })
     }

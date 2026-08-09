@@ -1,0 +1,76 @@
+syntax = "proto3";
+package semio.s.playbook.playbook.diff;
+
+message PlaybookDiff {
+  optional PlaybookArtifact artifact = 1;
+  optional string schema = 2;
+  optional string id = 3;
+  optional string version = 4;
+  optional string title = 5;
+  optional PlaybookStepsDelta steps = 6;
+  optional PlaybookStringList selected_ids = 7;
+  optional string locale = 8;
+  optional string contributions_json = 9;
+}
+
+message PlaybookStringList {
+  repeated string values = 1;
+}
+
+message PlaybookStepsDelta {
+  repeated PlaybookStep added = 1;
+  repeated string removed = 2;
+  repeated PlaybookStepPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message PlaybookBlocksDelta {
+  repeated PlaybookBlock added = 1;
+  repeated string removed = 2;
+  repeated PlaybookBlockPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message PlaybookStepPatchEntry {
+  string id = 1;
+  PlaybookStepPatch patch = 2;
+}
+
+message PlaybookBlockPatchEntry {
+  string id = 1;
+  PlaybookBlockPatch patch = 2;
+}
+
+message PlaybookStepPatch {
+  optional string title = 1;
+  optional string description = 2;
+  optional PlaybookBlocksDelta blocks = 3;
+}
+
+message PlaybookBlockPatch {
+  optional PlaybookBlock block = 1;
+}
+
+message PlaybookArtifact {
+  string schema = 1;
+  string id = 2;
+  string version = 3;
+  optional string title = 4;
+  repeated PlaybookStep steps = 5;
+  repeated string selected_ids = 6;
+  string locale = 7;
+  string contributions_json = 8;
+}
+
+message PlaybookStep {
+  string id = 1;
+  string title = 2;
+  optional string description = 3;
+  repeated PlaybookBlock blocks = 4;
+}
+
+message PlaybookBlock {
+  string id = 1;
+  string label = 2;
+  string kind = 3;
+}

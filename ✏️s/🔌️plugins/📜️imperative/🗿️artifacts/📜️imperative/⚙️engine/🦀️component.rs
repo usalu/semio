@@ -1,14 +1,48 @@
-//! ⚙️ Imperative artifact — headless compute over the `ImperativeDocument` projection (constitutional:
+//! ⚙️ Imperative artifact — headless compute over the `ImperativeSnapshot` projection (constitutional:
 //! engine).
 
-use crate::artifacts::imperative::{Dictionary, ImperativeDocument, Path, PathRef, Registry, Step};
-use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, RunResult};
+use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, Path, PathRef, Registry, Step};
+use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, contributions_json_from_entries, register_default_imperative_contributions, register_native_imperative_module, sync_imperative_module_contributions, Executor, RunResult};
+use std::sync::{Mutex, Once, OnceLock};
+
+//#region 🔖️Bootstrap
+/// 🧩️ Default in-process `imperative.module` contribution entries for dev hosts and config defaults.
+pub fn default_imperative_contributions_json() -> String {
+    static ENTRIES: OnceLock<String> = OnceLock::new();
+    ENTRIES
+        .get_or_init(|| {
+            let entries = vec![
+                crate::extensions::effect::imperative_module_contribution(),
+                crate::extensions::math::imperative_module_contribution(),
+                crate::extensions::text::imperative_module_contribution(),
+                crate::extensions::logic::imperative_module_contribution(),
+                crate::extensions::control::imperative_module_contribution(),
+            ];
+            contributions_json_from_entries(&entries)
+        })
+        .clone()
+}
+
+fn bootstrap_imperative_runtime() {
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        register_native_imperative_module("imperative-extension-core", crate::extensions::effect::register);
+        register_native_imperative_module("imperative-extension-math", crate::extensions::math::register);
+        register_native_imperative_module("imperative-extension-text", crate::extensions::text::register);
+        register_native_imperative_module("imperative-extension-logic", crate::extensions::logic::register);
+        register_default_imperative_contributions(default_imperative_contributions_json);
+        sync_imperative_module_contributions(&default_imperative_contributions_json());
+    });
+}
+//#endregion 🔖️Bootstrap
 
 //#region 🔖️Register
-/// 🗂️ Registers `ImperativeDocument`'s pack↔dsl codec under `IMPERATIVE_DOCUMENT_SCHEMA` so
+/// 🗂️ Registers `ImperativeSnapshot`'s pack↔dsl codec under `IMPERATIVE_DOCUMENT_SCHEMA` so
 /// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
 /// imperative documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    bootstrap_imperative_runtime();
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::imperative::ImperativePlayApp>(crate::artifacts::imperative::IMPERATIVE_DOCUMENT_SCHEMA);
 }
@@ -21,8 +55,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -51,8 +85,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -114,37 +148,38 @@ pub enum ImperativeCoreError {
 //#endregion ⚠️ Errors
 
 /// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL (see `🗣️dsl`) instead of a
-/// hand-built Rust literal or a JSON fixture — {@link default_document} is the only way it should be
+/// hand-built Rust literal or a JSON fixture — {@link default_snapshot} is the only way it should be
 /// consumed.
-pub fn default_document() -> ImperativeDocument {
+pub fn default_snapshot() -> ImperativeSnapshot {
     crate::artifacts::imperative::dsl::parse_dsl(crate::artifacts::imperative::dsl::IMPERATIVE_EXAMPLE_TEXT).expect("📜️default.imperative is a static, hand-authored fixture that must always parse")
 }
 
 // #region 🔖️Host
 /// 🎛️ Native imperative path host.
 pub struct ImperativeHost {
-    pub document: ImperativeDocument,
+    pub document: ImperativeSnapshot,
     registry: Registry,
     next_serial: u64,
 }
 
 impl Default for ImperativeHost {
     fn default() -> Self {
-        Self::from_document(default_document())
+        Self::from_snapshot(default_snapshot())
     }
 }
 
 impl ImperativeHost {
-    pub fn from_document(document: ImperativeDocument) -> Self {
+    pub fn from_snapshot(document: ImperativeSnapshot) -> Self {
+        bootstrap_imperative_runtime();
         Self { document, registry: imperative_module_registry(), next_serial: 100 }
     }
 
     pub fn load_json(json: &str) -> Result<Self, ImperativeCoreError> {
-        let document: ImperativeDocument = serde_json::from_str(json)?;
+        let document: ImperativeSnapshot = serde_json::from_str(json)?;
         if document.schema != "imperative.document" {
             return Err(ImperativeCoreError::UnsupportedSchema(document.schema));
         }
-        Ok(Self::from_document(document))
+        Ok(Self::from_snapshot(document))
     }
 
     pub fn to_json(&self) -> Result<String, ImperativeCoreError> {
@@ -226,7 +261,7 @@ impl ImperativeHost {
     }
 
     pub fn run(&self) -> RunResult {
-        Executor::new(&self.registry).run(&self.document.path, &self.document.seed)
+        Executor::new(&self.registry).run(&self.document.path, &crate::artifacts::imperative::seed_dictionary(&self.document.seed))
     }
 
     pub fn compile_text(&self) -> String {
@@ -255,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn host_runs_default_document() {
+    fn host_runs_default_snapshot() {
         let host = ImperativeHost::default();
         let result = host.run();
         assert_eq!(result.effects.len(), 2);
@@ -389,39 +424,54 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
-/// 🧬️ UI-independent document engine — every transition is a `ImperativeMutation`.
+/// 🧬️ UI-independent document engine — owns the artifact; every transition is an `ImperativeMutation`.
 pub struct ImperativeEngine {
-    projection: crate::artifacts::imperative::ImperativeDocument,
+    artifact: crate::artifacts::imperative::schema::ImperativeArtifact,
+    snapshot: crate::artifacts::imperative::ImperativeSnapshot,
 }
 
 impl ImperativeEngine {
-    pub fn new(projection: crate::artifacts::imperative::ImperativeDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
+        let artifact = crate::artifacts::imperative::schema::ImperativeArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::imperative::ImperativeDocument {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::imperative::ImperativeSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for ImperativeEngine {
-    type Projection = crate::artifacts::imperative::ImperativeDocument;
+    type Artifact = crate::artifacts::imperative::schema::ImperativeArtifact;
+    type Snapshot = crate::artifacts::imperative::ImperativeSnapshot;
     type Mutation = crate::artifacts::imperative::mutations::ImperativeMutation;
     type Diff = crate::artifacts::imperative::diff::ImperativeDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = protocol::MutationDiff::apply(&diff, &self.projection);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = protocol::MutationDiff::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.imperative.imperative`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
 

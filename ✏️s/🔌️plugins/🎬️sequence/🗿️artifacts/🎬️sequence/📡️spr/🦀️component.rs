@@ -162,13 +162,13 @@ pub fn decode_op(bytes: &[u8]) -> Result<SequenceMutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_fixture, SequenceEdge, SequenceFixture, SequenceStep, SlotRef, StepParams};
+    use crate::artifacts::sequence::{default_snapshot, SequenceEdge, SequenceSnapshot, SequenceStep, SlotRef, StepParams};
     use neural_engine::{Atom, Dictionary, Value};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = SequenceMutation::StepsPatch { id: "step-1".into(), patch: SequenceStepPatch { x: Some(42.0), ..Default::default() } };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -177,7 +177,7 @@ mod tests {
     /// the resulting envelope survives both the text and binary document-level protocols.
     #[test]
     fn sequence_document_text_round_trips_store_with_applied_operation() {
-        let envelope = store::create_document_envelope::<SequenceFixture, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None);
+        let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
@@ -185,14 +185,14 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store::test_support::assert_document_text_round_trip(&doc_store);
-        store::test_support::assert_document_pack_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
     //#region 🔖️OpTextTests
     #[test]
     fn op_text_round_trips_steps_add() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
             index: 2,
             item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
         });
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_add_with_slot() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
             index: 0,
             item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
         });
@@ -208,17 +208,17 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_remove() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsRemove { id: "step-99".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsRemove { id: "step-99".into() });
     }
 
     #[test]
     fn op_text_round_trips_steps_move() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsMove { id: "step-99".into(), to_index: 3 });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsMove { id: "step-99".into(), to_index: 3 });
     }
 
     #[test]
     fn op_text_round_trips_steps_patch() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch {
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch {
             id: "step-99".into(),
             patch: SequenceStepPatch {
                 params: Some(StepParams::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
@@ -231,27 +231,27 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_patch_with_no_fields() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_edges_add() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesRemove { id: "edge-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesRemove { id: "edge-1".into() });
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesMove { id: "edge-1".into(), to_index: 0 });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesMove { id: "edge-1".into(), to_index: 0 });
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
     //#endregion 🔖️OpTextTests
 }

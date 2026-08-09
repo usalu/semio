@@ -269,7 +269,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
 
 /// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
 /// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned. Cached so manifest registration,
-/// `initial_projection`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
+/// `initial_snapshot`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
 pub fn forest_play_scene() -> CadSnapshot {
     static FOREST_PLAY_SCENE: OnceLock<CadSnapshot> = OnceLock::new();
     FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
@@ -736,16 +736,9 @@ pub fn register() {
 
 
 //#region 🔖️ArtifactSchemaRegistry
-static CAD_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the cad artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = CAD_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::cad::schema::cad_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::cad::schema::cad_artifact_schema_descriptor());
 }
 //#endregion 🔖️ArtifactSchemaRegistry
 

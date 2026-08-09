@@ -2,7 +2,7 @@
 
 use crate::apps::vcs::terminology::VcsPlayLabels;
 use crate::apps::vcs::vcs_action;
-use crate::artifacts::vcs::VcsDemoProjection;
+use crate::artifacts::vcs::VcsSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode {
+pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "vcs-play-inspector".into(),
         label: labels.title.into(),
@@ -44,7 +44,7 @@ pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode 
                     value: projection.title.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchProjection", Some(json!({ "field": "title" }))),
+                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "title" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -67,7 +67,7 @@ pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode 
                     value: projection.counter.to_string(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchProjection", Some(json!({ "field": "counter" }))),
+                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "counter" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -90,7 +90,7 @@ pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode 
                     value: projection.status.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchProjection", Some(json!({ "field": "status" }))),
+                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "status" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -113,7 +113,7 @@ pub fn render(projection: &VcsDemoProjection, labels: &VcsPlayLabels) -> UiNode 
                     value: projection.notes.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchProjection", Some(json!({ "field": "notes" }))),
+                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "notes" }))),
                     min: None,
                     max: None,
                     step: None,

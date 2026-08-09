@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
+#[dsl(id = "raster.config")]
 #[dsl(extension = "rastercfg")]
 #[dsl(layout = "lines")]
 pub struct RasterConfig {
@@ -101,12 +102,7 @@ impl store::DocumentPack for RasterConfig {
 //#endregion 🔖️DocumentCodec
 
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct RasterConfigViewportSize {
-    pub width: f64,
-    pub height: f64,
-}
+pub type RasterConfigViewportSize = crate::artifacts::raster::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
@@ -267,17 +263,17 @@ mod tests {
 
     #[test]
     fn raster_config_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: None });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity { value: 0.5 });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: None });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetActiveUtility { utility_id: "paintBrush".into() });
-        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: Some("a".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity { value: 0.5 });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetActiveUtility { utility_id: "paintBrush".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]
@@ -301,7 +297,7 @@ mod tests {
             active_utility_id: "paintBrush".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_round_trip(&config);
     }
 }
 //#endregion 🧪️Tests

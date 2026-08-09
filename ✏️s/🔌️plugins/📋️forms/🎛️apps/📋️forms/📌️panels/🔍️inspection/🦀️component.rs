@@ -4,7 +4,7 @@ use crate::apps::forms::config::FormsConfig;
 use crate::apps::forms::terminology::FormsLabels;
 use crate::apps::forms::{catalogue_kinds, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
 use crate::artifacts::forms::engine::{dsl_f64_value, dsl_string_value, is_extension_question_kind, locate_question};
-use crate::artifacts::forms::{FormQuestion, FormSpec};
+use crate::artifacts::forms::{FormQuestion, FormsSnapshot};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup,
     PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -260,7 +260,7 @@ fn question_kind_editor_fields(question: &FormQuestion, question_ids: &[String],
     fields
 }
 
-pub fn render(spec: &FormSpec, config: &FormsConfig, term_labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &FormsSnapshot, config: &FormsConfig, term_labels: &FormsLabels) -> UiNode {
     let contributions = parse_contributions(config);
     let questions: Vec<FormQuestion> = config.selected_ids.iter().filter_map(|id| locate_question(spec, id).map(|location| location.question)).collect();
     if questions.is_empty() {
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn a_single_selected_question_exposes_its_kind_editor_fields() {
         let mut app = forms_app();
-        let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        let first_question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::SetSelection(SetSelection { ids: vec![first_question_id] }));
         let json = render_body(&mut app, BODY_INSPECTION);
         assert!(json.contains("forms-play-inspector.label"));

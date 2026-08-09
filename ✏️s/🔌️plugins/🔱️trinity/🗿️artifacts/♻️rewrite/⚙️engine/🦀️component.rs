@@ -479,16 +479,9 @@ pub fn register_pilot_languages() {
 
 
 //#region 🔖️Register
-static SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-    std::sync::OnceLock::new();
-
 /// 📎 Registers the artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
-    let registry = SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    registry
-        .lock()
-        .expect("schema registry lock")
-        .register(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor());
 }
 
 /// 🗂️ Registers codecs and schema descriptor.

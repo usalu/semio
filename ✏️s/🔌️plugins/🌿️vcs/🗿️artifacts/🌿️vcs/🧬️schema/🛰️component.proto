@@ -1,0 +1,23 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.artifact;
+
+// 🧬️ VCS artifact schema — every field with its state class.
+
+message VcsArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string title = 2;
+  // @state persistent
+  int64 counter = 3;
+  // @state persistent
+  string notes = 4;
+  // @state persistent
+  string status = 5;
+  // @state persistent
+  repeated string tags = 6;
+  // @state shared-ui
+  repeated string selected_checkpoint_ids = 7;
+  // @state local-ui
+  string locale = 8;
+}

@@ -1,0 +1,12 @@
+# 🧬️ VCS artifact schema — every field with its state class.
+
+type VcsArtifact {
+  schema: String! @state(class: PERSISTENT)
+  title: String! @state(class: PERSISTENT)
+  counter: Long! @state(class: PERSISTENT)
+  notes: String! @state(class: PERSISTENT)
+  status: String! @state(class: PERSISTENT)
+  tags: [String!]! @state(class: PERSISTENT)
+  selectedCheckpointIds: [String!]! @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

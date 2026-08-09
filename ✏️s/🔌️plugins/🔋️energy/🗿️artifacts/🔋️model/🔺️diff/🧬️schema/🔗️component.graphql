@@ -1,0 +1,14 @@
+# 🧬️ EnergyModel diff schema.
+
+type EnergyModelDiff {
+  artifact: EnergyModelArtifact
+  schema: String
+  modelJson: String
+  resultsJson: String
+}
+
+type EnergyModelArtifact {
+  schema: String!
+  modelJson: String!
+  resultsJson: String!
+}

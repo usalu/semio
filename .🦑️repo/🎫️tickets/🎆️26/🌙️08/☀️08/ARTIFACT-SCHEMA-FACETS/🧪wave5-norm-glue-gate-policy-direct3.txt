@@ -1,0 +1,556 @@
+norm artifact-schema breaches: 459
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "catalogue" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "dictionary" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "geometry" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "selection" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "partNumberRule" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "partNumberInputs" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "scriptLimits" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "exchangeProcess" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "manufacturerFile" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "catalog" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "editionProfile" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "correctionAsOf" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "strictMode" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "index" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "geometry" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "curves" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "limits" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "category" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "climate" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "airtightnessN50" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "psiTimesLSum" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "rhInt" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "catalogId" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "materialId" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "airtightnessClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "tIntC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "solarAbsorptance" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "irradianceWM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "moistureMuExterior" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "moistureMuInterior" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "envelopeAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "bb2DetailsConform" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "applicationType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "declaredApplicationClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "occupancy" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "comfortCategory" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "tOpC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "rhPercent" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "airSpeedMS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaRmC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "co2Ppm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "dfPercent" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "lAeqDb" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "persons" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "idaClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "ventilationM3H" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "floorAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "bedrooms" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "dwellingVentilationM3H" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "occupants" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "residentialVentilationM3H" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "sfpWM3S" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "sfpRequiredClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "heatRecoveryEta" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "heatRecoveryEtaMin" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "systemType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "yearsSinceInspection" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "humidificationRequiredKgH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "humidificationProvidedKgH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "fanQVM3S" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "fanTRunH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "fanEnergyReferenceKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "nightSetbackK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hrMDotKgS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hrCpJKgk" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hrDeltaTC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hrTH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hrSavingsReferenceKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "n50HInv" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "volumeM3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "infiltrationAllowanceM3H" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "cellarAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "cellarVentilationM3H" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hTrWK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hVeWK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaEC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaSetC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "coolingDeltaTH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "coolingGainsKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "coolingUtilizationFactor" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "coolingReferenceKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "chillerType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "eerActual" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "qCKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "generationReferenceKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "dataCenterSupplyC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "hStWK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaStC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaAmbC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "storageTH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "storageAllowanceKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "dhwDeliveryC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "ductClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "ductTestPressurePa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "ductLeakageM3SM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "gK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "qK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "resistanceKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "consequenceClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "seismicAEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "areaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "category" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "selfWeightMaterial" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "selfWeightThicknessM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "assumedGKKnM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "fireCurve" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "fireResistanceMin" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "fireMemberCapacityC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "snowZone" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "snowAltitudeM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "enSKKnM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "windZone" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "enVBMS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaTK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "constructionActivity" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "accidentalMassT" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "accidentalSpeedKmH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeLane" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeSpanM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeLaneWidthM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeMomentResistanceKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "craneClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "hoistClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "hoistingSpeedMS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "siloBulkDensityKnM3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "siloHeightM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "siloHydraulicRadiusM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "siloMu" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "siloK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "cS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "cD" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "fCk" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "bMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "dMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "aSMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "fYk" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "rhoL" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "nEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "pKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "aCMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "useFem" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "spanM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "udlKnM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "fireRating" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "providedAxisDistanceMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeSigmaCMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeDeltaSigmaSMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "tightnessClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "hdOverH" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "liquidSigmaSMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "liquidRhoPEff" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "liquidFCtEffMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "liquidESMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "liquidSRMaxMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorHEfMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorCracked" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorFUkMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorFYkMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorASMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorDMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorC1Mm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "anchorVEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "nEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "aMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "aVMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "wPlMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fYMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fUMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "chi" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "aNetMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "tensionNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fireThicknessMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fireRating" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fireMassivity" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fireMu0" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fireDesignTemperatureC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfBBarMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfTMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfKSigma" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfPsi" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "cfGrossResistanceKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "stainlessMEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "stainlessWPlMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "stainlessFYMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "platedLambdaP" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "platedSigmaEdMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "siloTMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "siloRMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "shellSigmaXEdMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "siloK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "siloGammaKnM3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "siloDepthM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltFEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltNBolts" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltASMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltE1Mm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltE2Mm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltD0Mm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltDMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltTMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltFUMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "boltFUbMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "weldAMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "weldLMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "weldFUMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "weldSteelGrade" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "weldFEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaSigmaMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fatigueCategory" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "fatigueMethod" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "t10SteelSubgrade" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "t10ActualThicknessMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "t10TEdC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "tensionComponentFUkKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "tensionComponentFKKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "tensionComponentNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "hssWElMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "hssFYMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "hssSectionClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "hssMEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeLambda" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgePhi2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeDeltaSigmaPMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "towerWindFactor" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "towerNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "pileSigmaMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "pileKRed" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "pileNEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "craneFZEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "craneWheelContactLengthMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "craneDispersionMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "craneTWMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "mPla" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "mPlRd" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "eta" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "vLRd" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "insulationThicknessMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "fireRating" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "deckType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaSigmaMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "fatigueDetail" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "dMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "hScMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "fCkMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "fUMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "eCmMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdPerStudKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "spanM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "fYMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "nCyclesStud" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaTauStudMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "nEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "wMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "aMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "bMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "hMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "fMK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "fC0K" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "serviceClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "loadDuration" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "mCritKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "fEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "aEfMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "fVK" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "fireDurationMin" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "sectionDepthMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "aVertMS2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "nCyclesBridge" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "nEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "hEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "zMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "areaMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "shearAreaMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "fKMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "fVkMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "masonryClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "designSituation" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "mu" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "wallThicknessMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "fireResistanceMin" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "unit" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "exposure" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "mortar" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "bedJointThicknessMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "storeys" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "hEfMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "tEfMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "vEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "hEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "footingAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "phiDeg" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "cKpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "gammaKnM3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "bM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "dFM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "eSMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "nu" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "designApproach" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "settlementLimitMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "nPileEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "alphaS" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "pileDM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "qSKpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "pileLM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "qBKpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "pileBaseAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "pileNProfiles" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "zInvestigatedM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "seismicZone" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "groundType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "importanceClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "structuralSystem" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "t1S" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "massT" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "vRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "driftMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "heightM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "multipleResistingSystems" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "enAGr" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "enGroundType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "enSpectrumType" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "periodRatio" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "bridgeVRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "bearingDEdMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "bearingDRdMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "retrofitKnowledgeLevel" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "retrofitLimitState" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "retrofitEDKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "retrofitRKKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "retrofitGammaEl" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloHeightM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloRadiusM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloNRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloVEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloVRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "siloQNominal" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "tankHeightM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "tankRadiusM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "tankMassT" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "tankVRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "towerMEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "towerMRdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "towerIsChimney" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "towerQNominal" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "towerMassT" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "foundationAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "foundationPRdKpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "foundationHEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "foundationHRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "kFoundation" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "kSoil" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "wallHeightM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "wallPhiDeg" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "wallSoilGammaKnM3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "wallR" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "wallHRdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "artifact" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "nEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "mEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "aMm2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "wElMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "alloy" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "chi" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "iTMm4" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "lCrMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "thetaC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaSigmaEd" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "deltaSigmaC" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "fatigueM" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "nCycles" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "vWeldEdKn" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "weldThroatMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "weldLengthMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "betaW" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sheetBMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sheetTMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sheetKSigma" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sheetWElMm3" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sheetMEdKnm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "shellTMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "shellRMm" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "sigmaEdShellMpa" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "annex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "useClass" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "heatedAreaM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "occupants" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "hT" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "hV" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "climate" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "internalGainsWM2" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "solarGainsKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "systemLossesKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "renewableKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "annualLimitKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "energyCarrier" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "referenceQPKwh" disagrees with normative JSON Schema optionality/cardinality
+- artifact-schema/field-parity "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🧬️schema/🔗️component.graphql" field "selectedCheckIndex" disagrees with normative JSON Schema optionality/cardinality
+norm total policy breaches: 705
+byKind {
+  "app-plugin/app-coupling": 1,
+  "taxonomy/dead-example-leaf": 30,
+  "taxonomy/emoji-prefix": 15,
+  "pack-migration/completeness": 15,
+  "protocol-migration/command-envelope-completeness": 24,
+  "dsl-migration/diff-completeness": 17,
+  "mutation-migration/impl-presence": 15,
+  "handcrafted-grammar/spec-distinctness": 15,
+  "handcrafted-grammar/declared-use": 60,
+  "handcrafted-grammar/spec-wiring-include": 15,
+  "handcrafted-grammar/empty-example": 24,
+  "artifact-schema/field-parity": 459,
+  "os-state-authority/item-scope-global": 15
+}
+* app-plugin/app-coupling ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust depends directly on another plugin's crate (fem -> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tri
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tri
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip
+* pack-migration/completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_tr
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🎚️config/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📸️snapshot/🎒️pack/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip
+* protocol-migration/command-envelope-completeness "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs" proves the pack round-trip law but never calls assert_command_envelope_round_trip

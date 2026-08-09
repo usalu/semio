@@ -2,7 +2,7 @@
 //! edit-op batch: setFixture/move/connect/deleteSelection).
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{apply_flow_fixture_to_os_workflow, OsWorkflowCamera, WorkflowDocument, WorkflowMutation};
+use semio_framework_os::{apply_flow_fixture_to_os_workflow, OsWorkflowCamera, WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde_json::Value;
 
@@ -20,9 +20,9 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let projection = doc.snapshot;
+        let config = cfg.snapshot;
         let edit_operations = serde_json::from_str::<Value>(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
         let mut document_mutations = Vec::new();
         let mut config_mutations = Vec::new();
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
         use crate::apps::space::SpaceCommand;
-        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }));
     }
 
     #[test]

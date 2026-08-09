@@ -3,7 +3,7 @@
 use crate::apps::sequence::sequence_action;
 use crate::apps::sequence::terminology::SequenceLabels;
 use crate::artifacts::sequence::engine::{control_slots, is_control_kind};
-use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
+use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiControlNode, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -37,7 +37,7 @@ fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
     }
 }
 
-fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
+fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceSnapshot, labels: &SequenceLabels) -> UiTreeItemNode {
     let mut item = tree_item_with_action(format!("sequence-play-document.step.{}", step.id), Label::data(format!("{} ({})", step.id, step.kind)), Some(step.kind.clone()), sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))));
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
@@ -82,7 +82,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, selected: &[String], labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)).collect();
     let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))).collect();
     PanelTreeBuilder::new("sequence-play-document")

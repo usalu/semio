@@ -1,6 +1,6 @@
 dialect grammar
 grammar vcs.document
-extension vcsdemo
+extension vcs
 use family-sheet
 start document
 

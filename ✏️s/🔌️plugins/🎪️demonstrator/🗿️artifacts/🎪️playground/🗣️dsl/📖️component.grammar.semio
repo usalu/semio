@@ -1,0 +1,11 @@
+dialect grammar
+grammar playground.document
+extension playground
+use family-sheet
+start document
+
+artifact-mark = "playground.playground"
+document = artifact-mark doc-body
+doc-body = eng-header
+eng-header = "schema" "=" TEXT
+eng-record = eng-header*

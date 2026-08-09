@@ -4,7 +4,7 @@ use crate::apps::curate::config::SourcingCurateConfig;
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
 use crate::artifacts::curate::engine::{instance_json, kind_mesh_json};
-use crate::artifacts::curate::CurateDocument;
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateDocument, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let Some(kind) = cfg.selected_object_id.as_ref().and_then(|id| document.stock.iter().find(|kind| &kind.id == id)) else {
         return ui_text(labels.no_selection);
     };

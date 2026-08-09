@@ -1,5 +1,0 @@
-test artifacts::block2d::dsl::tests::block2d_definition_dsl_round_trips ... ok
-test artifacts::block5d::dsl::tests::block5d_definition_dsl_round_trips ... ok
-
-test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
-

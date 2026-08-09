@@ -2,7 +2,7 @@
 
 use crate::apps::forms::config::FormsConfig;
 use crate::apps::forms::terminology::FormsLabels;
-use crate::artifacts::forms::FormSpec;
+use crate::artifacts::forms::FormsSnapshot;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -36,11 +36,17 @@ fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::apps::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
-pub fn render(spec: &FormSpec, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = crate::apps::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::apps::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
     let builder_config = forms_playbook_builder_config();
-    crate::playbook::render_playbook_builder(FORMS_PLAY_SURFACE_BLUEPRINT, spec, &palette, config.selected_ids.first().map(String::as_str), &builder_config)
+    crate::playbook::render_playbook_builder(
+        FORMS_PLAY_SURFACE_BLUEPRINT,
+        &crate::artifacts::forms::mutations::as_playbook_spec(spec),
+        &palette,
+        config.selected_ids.first().map(String::as_str),
+        &builder_config,
+    )
 }
 //#endregion 🔖️Render
 
@@ -54,7 +60,7 @@ mod tests {
     #[test]
     fn renders_blueprint_builder_cards() {
         let mut app = forms_app();
-        let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        let first_question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
         let json = render_body(&mut app, BODY_BLUEPRINT);
         assert!(json.contains(r#""componentKind":"block-list""#));
         assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));

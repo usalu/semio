@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.s.imperative.imperative.artifact;
+
+// 🧬️ Imperative artifact schema — every field with its state class.
+
+message ImperativeArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  ImperativePath path = 2;
+  // @state persistent
+  map<string, string> seed = 3;
+  // @state shared-ui
+  repeated string selected_step_ids = 4;
+  // @state local-ui
+  string locale = 5;
+  // @state local-ui
+  string contributions_json = 6;
+  // @state effect
+  string run_output_json = 7;
+}
+
+message ImperativePath {
+  repeated ImperativeStep steps = 1;
+}
+
+message ImperativeStep {
+  string id = 1;
+  string kind = 2;
+  string params_json = 3;
+  repeated ImperativeStepBodyEntry bodies = 4;
+}
+
+message ImperativeStepBodyEntry {
+  string slot = 1;
+  ImperativePath path = 2;
+}

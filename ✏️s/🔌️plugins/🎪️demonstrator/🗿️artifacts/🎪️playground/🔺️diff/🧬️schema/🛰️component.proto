@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.demonstrator.playground.diff;
+
+// 🧬️ Playground diff schema — sparse field delta over the artifact.
+
+message PlaygroundDiff {
+  // @state persistent
+  optional PlaygroundArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+}
+
+message PlaygroundArtifact {
+  string schema = 1;
+}

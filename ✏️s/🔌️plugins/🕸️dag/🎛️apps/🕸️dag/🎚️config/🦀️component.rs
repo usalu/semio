@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "dagcfg")]
+#[dsl(id = "dag.config")]
 #[dsl(layout = "lines")]
 pub struct DagConfig {
     /// 👁️ Selected node ids — was `DagPlayRuntime::selected_node_ids`.
@@ -255,16 +256,16 @@ mod tests {
     #[test]
     fn dag_config_dsl_pack_round_trip() {
         let config = DagConfig { selected_node_ids: vec!["n1".into(), "n2".into()], camera_x: 12.5, camera_y: -3.0, camera_zoom: 2.25, locale: "de-DE".into() };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn dag_config_operation_text_binary_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
-        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()] });
-        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: Vec::new() });
-        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
-        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: Vec::new() });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]

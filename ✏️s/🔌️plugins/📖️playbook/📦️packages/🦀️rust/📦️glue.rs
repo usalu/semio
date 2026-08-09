@@ -20,6 +20,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 extern crate semio_framework as semio_framework;
 extern crate flow;
 pub use flow::playbook;
@@ -40,8 +41,26 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/📖️playbook/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/📖️playbook/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/📖️playbook/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -135,8 +154,6 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs"]
-        pub mod pack;
         #[path = "../../🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/📖️playbook/⚙️engine/🦀️component.rs"]

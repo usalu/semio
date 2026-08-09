@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::iso16757::Document;
+use crate::artifacts::iso16757::Iso16757Snapshot;
 
 /// 📄️ The `default` example document, handcrafted in the `.iso16757` DSL — a demo HVAC catalogue
 /// worked example (control valve product group/class/series/product/variant, ISO 16757-4 dictionary
@@ -17,12 +17,12 @@ use crate::artifacts::iso16757::Document;
 pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+pub fn parse_dsl(text: &str) -> Result<Iso16757Snapshot, store::TextError> {
+    <Iso16757Snapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.iso16757` DSL text.
-pub fn print_dsl(document: &Document) -> String {
+pub fn print_dsl(document: &Iso16757Snapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -33,13 +33,13 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
-        store::test_support::assert_dsl_round_trip(&Document::reference_fixture());
+        store::os_store::test_support::assert_dsl_round_trip(&Iso16757Snapshot::reference_fixture());
     }
 
     #[test]
     fn default_example_dsl_round_trips() {
         let document = parse_dsl(ISO16757_DEFAULT_EXAMPLE_TEXT).expect("parse default .iso16757 example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]

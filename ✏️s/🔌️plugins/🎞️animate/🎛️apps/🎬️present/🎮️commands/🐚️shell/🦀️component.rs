@@ -6,7 +6,7 @@ use crate::apps::present::tile_morph_prompt_effect;
 use crate::artifacts::present::engine::export_video_from_scene;
 use crate::artifacts::present::engine::PresentScene;
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::PresentDeck;
+use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
@@ -22,8 +22,8 @@ pub mod copy_prompt {
     #[dsl(keyword = "copy-prompt")]
     pub struct CopyPrompt {}
 
-    pub fn handle(_payload: &CopyPrompt, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        Ok(Emit::effect(tile_morph_prompt_effect(doc.projection)))
+    pub fn handle(_payload: &CopyPrompt, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::effect(tile_morph_prompt_effect(doc.snapshot)))
     }
 }
 //#endregion 🔖️CopyPrompt
@@ -39,7 +39,7 @@ pub mod export_video_from_deck {
         pub scene_json: String,
     }
 
-    pub fn handle(payload: &ExportVideoFromDeck, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportVideoFromDeck, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let scene = serde_json::from_str::<PresentScene>(&payload.scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
         match export_video_from_deck(&scene, &payload.output_dir) {
             Ok(bundles) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })),
@@ -62,7 +62,7 @@ mod tests {
         let mut app = present_app_with_registry();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
         let result = app.dispatch_typed(PresentCommand::CopyPrompt(copy_prompt::CopyPrompt {}), &meta("local")).expect("copy prompt");
-        assert!(result.document_mutations.is_empty(), "copyPrompt is a host effect, not a document operation");
+        assert!(result.mutations.is_empty(), "copyPrompt is a host effect, not a document operation");
         assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt");
     }
 

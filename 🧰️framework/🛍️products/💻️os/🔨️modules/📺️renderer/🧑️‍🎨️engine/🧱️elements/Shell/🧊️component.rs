@@ -5405,7 +5405,7 @@ mod command_registry_tests {
                 actions: vec![],
                 utilities: vec![],
                 params_schema: None,
-                document_projection_schema: None,
+                document_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],

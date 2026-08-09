@@ -1,7 +1,8 @@
 //! 🧬️ Din18599 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use serde::{{Deserialize, Serialize}};
+use crate::artifacts::din18599::{MonthlyClimate, UseClass};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across persistent and shared-ui classes.
@@ -36,7 +37,7 @@ impl Din18599Artifact {
             occupants: self.occupants,
             h_t: self.h_t,
             h_v: self.h_v,
-            climate: self.climate,
+            climate: self.climate.clone(),
             internal_gains_w_m2: self.internal_gains_w_m2,
             solar_gains_kwh: self.solar_gains_kwh,
             system_losses_kwh: self.system_losses_kwh,
@@ -66,7 +67,14 @@ impl Din18599Artifact {
             selected_check_index: None,
         }
     }
+    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din18599::Din18599Snapshot) {
+        let selected = self.selected_check_index;
+        *self = Self::from_snapshot(snapshot);
+        self.selected_check_index = selected;
+    }
 }
+
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor

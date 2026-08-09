@@ -1,0 +1,261 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33: warning: unused imports: `Limits` and `TextError`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11: warning: unused import: `self::span::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11: warning: unused import: `self::diagnostic::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11: warning: unused import: `self::token::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11: warning: unused import: `self::lexer::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11: warning: unused import: `self::trust::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5: warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27: warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76: warning: unused imports: `SignatureVerifier` and `Signer`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31: warning: unused imports: `ActorId`, `ConflictRule`, `DocumentId`, `DocumentVersion`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31: warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11: warning: unused import: `self::ids::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11: warning: unused import: `self::dictionary::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11: warning: unused import: `self::crypto::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9: warning: ambiguous glob re-exports: the name `ids` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:260:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:261:25: warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2283:19: warning: method `set_envelope` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+warning: `semio-framework-os-kernel` (lib) generated 45 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 22 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3881:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:96: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5715:17: warning: unnecessary `unsafe` block: unnecessary `unsafe` block
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5432:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5446:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5456:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5132:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5168:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5471:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5048:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5390:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5421:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1847:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+warning: `semio-framework-plugin` (lib) generated 16 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+   Compiling semio-s-plugin-norm v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust)
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:799:6: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:804:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:819:13: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:829:6: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:833:13: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:842:38: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:845:17: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/🦀️component.rs:3:5: warning: unused import: `crate::document::ClimateZoneDe`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📕️din4108/📸️snapshot/🧬️schema/🦀️component.rs:20:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:756:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:760:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:765:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:772:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:773:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/🦀️component.rs:4:13: warning: unused imports: `Deserialize` and `Serialize`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:884:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:888:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:893:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:900:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:901:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/🧬️schema/🦀️component.rs:4:34: warning: unused imports: `MonthlyClimate` and `UseClass`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/⚙️engine/🦀️component.rs:510:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/⚙️engine/🦀️component.rs:514:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/⚙️engine/🦀️component.rs:519:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/⚙️engine/🦀️component.rs:526:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📙️din18599/⚙️engine/🦀️component.rs:527:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././././../../🗿️artifacts/📘️en1990/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:2:5: warning: unused import: `crate::artifacts::en1990::En1990Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1990/🔧️op/🦀️component.rs:16:5: warning: unused import: `crate::artifacts::en1990::En1990Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1990/⚙️engine/🦀️component.rs:470:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1991/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1991/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1991::part_1_2::FireCurve`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1991/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1991::part_1_2::FireCurve`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././././../../🗿️artifacts/📘️en1991/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:2:5: warning: unused import: `crate::artifacts::en1991::En1991Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs:15:5: warning: unused import: `crate::artifacts::en1991::En1991Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1991/⚙️engine/🦀️component.rs:547:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1992/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1992/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1992::part_3::TightnessClass`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1992/🧬️schema/🦀️component.rs:5:5: warning: unused import: `crate::artifacts::en1992::part_1_2::FireRating`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1992::part_3::TightnessClass`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1992/🔺️diff/🧬️schema/🦀️component.rs:5:5: warning: unused import: `crate::artifacts::en1992::part_1_2::FireRating`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././././../../🗿️artifacts/📘️en1992/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:2:5: warning: unused import: `crate::artifacts::en1992::En1992Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:476:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1993/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1993/🦀️component.rs:4:13: warning: unused imports: `Deserialize` and `Serialize`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././././../../🗿️artifacts/📘️en1993/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:2:5: warning: unused import: `crate::artifacts::en1993::En1993Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs:15:5: warning: unused import: `crate::artifacts::en1993::En1993Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1993/⚙️engine/🦀️component.rs:895:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1994/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1994/🦀️component.rs:4:13: warning: unused imports: `Deserialize` and `Serialize`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././././../../🗿️artifacts/📘️en1994/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:2:5: warning: unused import: `crate::artifacts::en1994::En1994Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1994/🔧️op/🦀️component.rs:15:5: warning: unused import: `crate::artifacts::en1994::En1994Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1994/⚙️engine/🦀️component.rs:270:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:46:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:52:34: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:53:9: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:77:36: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/🧬️schema/🦀️component.rs:103:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1995/📸️snapshot/🧬️schema/🦀️component.rs:15:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::en1995::schema::En1995Artifact as EnArtifact`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1995/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1995::En1995Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1995::mutations::En1995Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:373:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:380:47: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:390:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:394:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:399:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:406:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🦀️component.rs:3:23: warning: unused imports: `AnnexChoice` and `DesignSituation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:3:32: warning: unused imports: `MasonryClass` and `part_2`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:4:23: warning: unused imports: `AnnexChoice` and `DesignSituation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:49:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:55:34: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:56:9: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:82:36: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/🧬️schema/🦀️component.rs:110:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/📸️snapshot/🧬️schema/🦀️component.rs:34:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/📸️snapshot/🧬️schema/🦀️component.rs:36:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/📸️snapshot/🧬️schema/🦀️component.rs:38:27: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/📸️snapshot/🧬️schema/🦀️component.rs:48:19: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/📸️snapshot/🧬️schema/🦀️component.rs:50:17: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::en1996::schema::En1996Artifact as EnArtifact`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1996/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1996::En1996Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:9:5: warning: unused import: `crate::artifacts::en1996::mutations::En1996Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:287:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:294:47: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:304:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:308:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:313:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:320:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:48:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:54:34: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:55:9: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:81:36: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/🧬️schema/🦀️component.rs:109:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1997/📸️snapshot/🧬️schema/🦀️component.rs:37:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::en1997::schema::En1997Artifact as EnArtifact`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1997/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1997::En1997Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:5:5: warning: unused import: `crate::artifacts::en1997::mutations::En1997Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:337:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:344:47: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:354:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:358:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:363:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:370:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/🧬️schema/🦀️component.rs:74:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/🧬️schema/🦀️component.rs:80:34: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/🧬️schema/🦀️component.rs:81:9: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/🧬️schema/🦀️component.rs:134:36: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/🧬️schema/🦀️component.rs:189:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::en1998::schema::En1998Artifact as EnArtifact`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1998/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1998::En1998Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1998::mutations::En1998Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:714:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:721:47: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:731:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:735:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:740:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:747:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::document::AnnexChoice`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:52:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:58:34: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:59:9: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:89:36: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/🧬️schema/🦀️component.rs:121:46: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1999/📸️snapshot/🧬️schema/🦀️component.rs:65:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::en1999::schema::En1999Artifact as EnArtifact`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/./././../../🗿️artifacts/📘️en1999/🔺️diff/🧬️schema/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1999::En1999Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::en1999::mutations::En1999Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:407:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:414:47: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:424:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:428:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:433:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:440:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:4:5: warning: unused import: `crate::artifacts::iso16757::mutations::Iso16757Mutation`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:646:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:650:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:655:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:662:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1202:5: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1202:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1205:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1210:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1212:5: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1212:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1215:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1220:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1222:5: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1222:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1225:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1230:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1232:5: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1232:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1235:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1240:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1242:5: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1242:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1245:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1250:16: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs:20:5: warning: unused import: `crate::artifacts::vdi3805::Vdi3805Snapshot`
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:600:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:601:15: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:605:26: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:606:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:610:35: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:616:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:617:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:618:21: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:619:17: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:847:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:848:28: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:849:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:850:29: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:857:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:858:28: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:859:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:860:29: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:867:23: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:868:28: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:879:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:880:29: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:889:24: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:890:29: warning: unnecessary qualification
+✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:907:19: warning: unnecessary qualification
+warning: `semio-s-plugin-norm` (lib test) generated 187 warnings (run `cargo fix --lib -p semio-s-plugin-norm --tests` to apply 187 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 36.42s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_norm-7cfdfb7aa73a2521)
+error: test failed, to rerun pass `-p semio-s-plugin-norm --lib`

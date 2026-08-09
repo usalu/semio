@@ -1,0 +1,90 @@
+// 🧬️ Raster diff schema — sparse field delta.
+syntax = "proto3";
+package semio.s.raster.raster.diff;
+
+message RasterDiff {
+  optional RasterArtifact artifact = 1;
+  optional string schema = 2;
+  optional string id = 3;
+  optional StringValue title = 4;
+  optional RasterLayersDelta layers = 5;
+  optional RasterAssetsDelta assets = 6;
+  optional RasterStringList selected_ids = 7;
+  optional string active_utility_id = 8;
+  optional double brush_size = 9;
+  optional double brush_opacity = 10;
+  optional RasterViewportSize composite_viewport = 11;
+  optional double camera_x = 12;
+  optional double camera_y = 13;
+  optional double camera_zoom = 14;
+  optional string locale = 15;
+  optional StringValue hovered_id = 16;
+}
+
+message StringValue {
+  optional string value = 1;
+}
+
+message RasterStringList {
+  repeated string values = 1;
+}
+
+message RasterAssetsDelta {
+  map<string, RasterImageAsset> entries = 1;
+}
+
+message RasterLayersDelta {
+  repeated RasterLayerNode added = 1;
+  repeated string removed = 2;
+  repeated RasterLayerPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message RasterLayerPatchEntry {
+  string id = 1;
+  RasterLayerPatch patch = 2;
+}
+
+message RasterLayerPatch {
+  optional string name = 1;
+  optional bool visible = 2;
+  optional float opacity = 3;
+  optional string blend_mode = 4;
+  optional double transform_x = 5;
+  optional double transform_y = 6;
+  optional uint32 width = 7;
+  optional uint32 height = 8;
+  optional string adjustment_kind = 9;
+}
+
+message RasterLayerNode {
+  string kind = 1;
+}
+
+message RasterImageAsset {
+  string mime = 1;
+  bytes data = 2;
+}
+
+message RasterViewportSize {
+  double width = 1;
+  double height = 2;
+}
+
+message RasterArtifact {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated RasterLayerNode layers = 4;
+  map<string, RasterImageAsset> assets = 5;
+  repeated string selected_ids = 6;
+  string active_utility_id = 7;
+  double brush_size = 8;
+  double brush_opacity = 9;
+  optional RasterViewportSize composite_viewport = 10;
+  double camera_x = 11;
+  double camera_y = 12;
+  double camera_zoom = 13;
+  string locale = 14;
+  optional string hovered_id = 15;
+}

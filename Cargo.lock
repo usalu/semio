@@ -6650,6 +6650,7 @@ dependencies = [
  "usvg 0.45.1",
  "uuid",
  "wasm-bindgen",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -6868,6 +6869,38 @@ dependencies = [
  "schemars 0.8.22",
  "semio-framework-os-kernel",
  "semio-framework-schema-derive",
+ "semio-s-plugin-animate",
+ "semio-s-plugin-architect",
+ "semio-s-plugin-block",
+ "semio-s-plugin-cad",
+ "semio-s-plugin-dag",
+ "semio-s-plugin-demonstrator",
+ "semio-s-plugin-draw",
+ "semio-s-plugin-energy",
+ "semio-s-plugin-fem",
+ "semio-s-plugin-flow",
+ "semio-s-plugin-forms",
+ "semio-s-plugin-gis",
+ "semio-s-plugin-imperative",
+ "semio-s-plugin-layout",
+ "semio-s-plugin-lowpoly",
+ "semio-s-plugin-mathematical",
+ "semio-s-plugin-norm",
+ "semio-s-plugin-note",
+ "semio-s-plugin-playbook",
+ "semio-s-plugin-procedural",
+ "semio-s-plugin-process",
+ "semio-s-plugin-puzzle",
+ "semio-s-plugin-raster",
+ "semio-s-plugin-reasoning-mindmap",
+ "semio-s-plugin-remodel",
+ "semio-s-plugin-sequence",
+ "semio-s-plugin-shooting",
+ "semio-s-plugin-sourcing",
+ "semio-s-plugin-space",
+ "semio-s-plugin-trinity",
+ "semio-s-plugin-vcs",
+ "semio-s-plugin-writer",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7043,6 +7076,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7147,9 +7181,11 @@ dependencies = [
 name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-ui",
  "serde",
  "serde_json",
@@ -7161,7 +7197,9 @@ name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-3d",
  "semio-s-plugin-cad",
  "semio-s-plugin-gis",
@@ -7169,6 +7207,7 @@ dependencies = [
  "semio-s-plugin-process",
  "semio-s-plugin-puzzle",
  "semio-s-plugin-sourcing",
+ "serde",
  "serde_json",
 ]
 
@@ -7216,8 +7255,11 @@ name = "semio-s-plugin-energy"
 version = "0.1.0"
 dependencies = [
  "semio-framework-math",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -7377,6 +7419,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
 ]
@@ -7404,7 +7447,9 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-imperative",
+ "semio-s-imperative-extension-sdk",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7486,6 +7531,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -7523,6 +7569,7 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-ui",
  "serde",
  "serde_json",
@@ -7534,6 +7581,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-plugin-fem",
  "serde",
  "serde_json",
@@ -7548,6 +7596,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7561,6 +7610,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-ui",
  "serde",
  "serde_json",
@@ -7690,11 +7740,13 @@ dependencies = [
 name = "semio-s-plugin-raster"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "blake3",
  "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7707,6 +7759,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-mindmap",
  "serde",
  "serde_json",
@@ -7740,7 +7793,12 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-imperative",
+ "semio-s-plugin-imperative-control",
+ "semio-s-plugin-imperative-effect",
+ "semio-s-plugin-imperative-math",
+ "semio-s-plugin-imperative-text",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7770,6 +7828,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7818,6 +7877,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
 ]
@@ -7865,6 +7925,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
 ]
@@ -7874,8 +7935,10 @@ name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
  "semio-framework-editor",
+ "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-plugin-trinity",
  "serde",
  "serde_json",

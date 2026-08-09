@@ -3,7 +3,7 @@
 use crate::apps::curate::config::{selection_json_for, SourcingCurateConfig};
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
-use crate::artifacts::curate::CurateDocument;
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_table_scene, table_row_json, LocalizedLabel, SurfaceKind, TableCell, TableScene, UiNode, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_projection_schema: None,
+        document_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateDocument, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "availability", "label": labels.col_availability.as_str()},

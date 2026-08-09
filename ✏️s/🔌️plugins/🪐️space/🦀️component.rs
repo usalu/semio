@@ -2,13 +2,13 @@
 //! owns this content alone (see the master ticket's "shared code used by ≥2 apps of the plugin" rule),
 //! so it lives in this plugin-root `🫀️core` kernel instead of duplicated into both apps.
 
-use semio_framework_os::{create_backbone_document, register_os_fixture_json, OsWorkflowArtifactDocument, WorkflowDocument, S_WORKFLOW_SCHEMA};
+use semio_framework_os::{create_backbone_document, register_os_fixture_json, OsWorkflowArtifactDocument, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
 use std::sync::LazyLock;
 
 //#region 🔖️Constants
 pub const DEMO_STUDIO_ID: &str = "demo-studio";
 pub const DEMO_STUDIO_NAME: &str = "Demo Studio";
-/// 📜️ the demo studio is handcrafted `.s` DSL text (a `WorkflowDocument`, see `🔖️DocumentHelpers` —
+/// 📜️ the demo studio is handcrafted `.s` DSL text (a `WorkflowSnapshot`, see `🔖️DocumentHelpers` —
 /// the dissolved `OsProjection`'s successor), not JSON — it is compiled into the binary, so a parse
 /// failure here is a bug in the bundled fixture.
 pub const DEMO_STUDIO_DSL: &str = include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.space.studio.dsl.semio");
@@ -33,21 +33,21 @@ pub fn ensure_space_fixtures_registered() {
 }
 
 /// 🌱️ Parses the packaged demo studio fixture into a full `OsWorkflowArtifactDocument` envelope —
-/// shared by the Home launcher's catalog seed and the Studio app's `initial_projection`. The fixture
-/// holds only the `WorkflowDocument` payload (`DEMO_STUDIO_DSL`); the envelope metadata
+/// shared by the Home launcher's catalog seed and the Studio app's `initial_snapshot`. The fixture
+/// holds only the `WorkflowSnapshot` payload (`DEMO_STUDIO_DSL`); the envelope metadata
 /// (schema/id/name, freshly-minted history) is built via `create_backbone_document`.
 pub fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
-    let initial_projection = <WorkflowDocument as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowDocument DSL text");
-    create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_projection)
+    let initial_snapshot = <WorkflowSnapshot as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
+    create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_snapshot)
 }
 
 pub fn demo_os_document() -> OsWorkflowArtifactDocument {
     parse_demo_space_document()
 }
 
-/// @emoji 🌱️ The demo space's bare `WorkflowDocument` — the studio app's `initial_projection`, parsed
+/// @emoji 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
 /// straight out of the packaged fixture (no envelope/runtime wrapper).
-pub fn demo_space_projection() -> WorkflowDocument {
-    demo_os_document().vcs.initial_projection
+pub fn demo_space_projection() -> WorkflowSnapshot {
+    demo_os_document().vcs.initial_snapshot
 }
 //#endregion 🔖️DocumentHelpers

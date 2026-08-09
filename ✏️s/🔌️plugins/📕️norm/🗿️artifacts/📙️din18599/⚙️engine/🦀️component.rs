@@ -2,7 +2,7 @@
 
 use crate::artifacts::din16798::engine::part_3::residential_ventilation_rate;
 use crate::artifacts::din18599::mutations::Din18599Mutation;
-use crate::artifacts::din18599::{BalancingInputs, Document, MonthlyClimate, UseClass};
+use crate::artifacts::din18599::{BalancingInputs, Din18599Snapshot, MonthlyClimate, UseClass};
 use crate::artifacts::din4108::engine::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::engine::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity};
@@ -40,7 +40,7 @@ fn cooling_degree_hours(climate: &MonthlyClimate, theta_int_cool: f64) -> f64 {
 // 📌️ Deviation from the original monolith: this was `impl BalancingInputs { pub fn
 // reference_residential(..) }` — an inherent method. It needs `din4108_engine`/`din16798_engine`,
 // which `din18599` (rs) must not depend on (rs sits below engine in every constitutional crate),
-// so it moved here as a free function. See `crate::artifacts::din18599::Document`'s `Default` impl for the
+// so it moved here as a free function. See `crate::artifacts::din18599::Din18599Snapshot`'s `Default` impl for the
 // precomputed numeric result of `reference_residential(ClimateZoneDe::Zone2, 100.0)`.
 pub fn reference_residential(zone: ClimateZoneDe, area_m2: f64) -> BalancingInputs {
     let occupants = ((area_m2 / 30.0).ceil() as u32).max(1);
@@ -477,7 +477,7 @@ pub fn check_primary_energy(inputs: &BalancingInputs) -> Result<CheckResult, Nor
 }
 
 // #region 🔖️Session
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
     balance_annual(document).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
         report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
@@ -488,56 +488,66 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct DinV18599Family;
 
 impl NormFamily for DinV18599Family {
-    type Document = Document;
+    type Document = Din18599Snapshot;
     type Mutation = Din18599Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinV18599
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &Din18599Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
 
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent Din18599 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent Din18599 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Din18599Engine {
-    projection: Document,
+    artifact: crate::artifacts::din18599::schema::Din18599Artifact,
+    snapshot: crate::artifacts::din18599::Din18599Snapshot,
 }
 
 impl Din18599Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::din18599::Din18599Snapshot) -> Self {
+        let artifact = crate::artifacts::din18599::schema::Din18599Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::din18599::Din18599Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Din18599Engine {
-    type Projection = Document;
-    type Mutation = Din18599Mutation;
-    type Diff = crate::artifacts::din18599::diff::Diff;
+    type Artifact = crate::artifacts::din18599::schema::Din18599Artifact;
+    type Snapshot = crate::artifacts::din18599::Din18599Snapshot;
+    type Mutation = crate::artifacts::din18599::mutations::Din18599Mutation;
+    type Diff = crate::artifacts::din18599::diff::Din18599Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+
 
 pub type Host = NormHost<DinV18599Family>;
 // #endregion 🔖️Session
@@ -701,14 +711,15 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
+    register_artifact_schema();
     dsl::register_language(dsl::LanguageSpec {
         id: "din18599.document",
         extension: Some("din18599"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din18599.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -737,8 +748,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("din18599.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -752,3 +763,13 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("din18599.spr"),
     });
 }
+
+
+//#region 🔖️SchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.din18599`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor());
+}
+//#endregion 🔖️SchemaRegistry

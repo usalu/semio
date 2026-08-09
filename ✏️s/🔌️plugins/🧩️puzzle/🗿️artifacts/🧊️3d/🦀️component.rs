@@ -376,4 +376,4 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
-pub use crate::artifacts::puzzle3d::op::Puzzle3dPlayProjection;
+pub use crate::artifacts::puzzle3d::op::Puzzle3dPlaySnapshot;

@@ -25,9 +25,9 @@ use crate::apps::note::modes::edit;
 use crate::apps::note::modes::edit::windows::{composite, navigator};
 use crate::apps::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::note::terminology::note_play_labels;
-use crate::artifacts::note::engine::empty_note_document;
+use crate::artifacts::note::engine::empty_note_snapshot;
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteDocument, NOTE_DOCUMENT_SCHEMA};
+use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::EngineHandles;
 use std::collections::HashMap;
@@ -71,7 +71,7 @@ semio_framework_plugin::app_commands! {
     /// or its hosts) collapse onto the one surviving action id's command instead of keeping a dead
     /// synonym. Row order is the binary variant ordinal: appending is safe, reordering is a wire-format
     /// break.
-    pub enum NoteCommand for NoteDocument, NoteMutation, NoteConfig, NoteConfigMutation {
+    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoteConfig, NoteConfigMutation {
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSpacing" as "set-grid-spacing" => set_grid_spacing::SetGridSpacing,
         "setGridSubdivisions" as "set-grid-subdivisions" => set_grid_subdivisions::SetGridSubdivisions,
@@ -123,7 +123,7 @@ semio_framework_plugin::app_commands! {
 pub struct NotePlayApp;
 
 impl DocumentApp for NotePlayApp {
-    type Projection = NoteDocument;
+    type Snapshot = NoteSnapshot;
     type Mutation = NoteMutation;
     type Config = NoteConfig;
     type ConfigMutation = NoteConfigMutation;
@@ -135,8 +135,8 @@ impl DocumentApp for NotePlayApp {
     const APP_ID: &'static str = NOTE_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> NoteDocument {
-        empty_note_document()
+    fn initial_snapshot() -> NoteSnapshot {
+        empty_note_snapshot()
     }
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
@@ -146,13 +146,13 @@ impl DocumentApp for NotePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = note_play_labels(config);
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config),
@@ -164,18 +164,18 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
-        let config = cfg.projection;
+    fn window_engagements(doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.snapshot;
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.projection, &config.camera, &config.selected_block_ids, &config.engagement_input)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.selected_block_ids, &config.engagement_input)),
             (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id)),
         ])
     }
 
-    fn window_measures(doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         let labels = note_play_labels(config);
-        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.projection, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.projection, &config.camera, labels))])
+        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
     }
 }
 //#endregion 🔖️NotePlayApp
@@ -185,7 +185,7 @@ impl DocumentApp for NotePlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_note_app() -> App {
-    let document = empty_note_document();
+    let document = empty_note_snapshot();
     let mut app = App::from_builder(
         App::builder(NOTE_PLAY_APP_ID, LocalizedLabel::native("Note", "Notiz"))
             .document(["semio", "note"])
@@ -362,7 +362,7 @@ mod tests {
     #[test]
     fn command_ids_are_unique_across_every_row() {
         let app = NotePlayApp;
-        let ids: Vec<&str> = every_command().iter().map(|command| app.command_id(command)).collect();
+        let ids: Vec<&str> = every_command().iter().map(|command| NotePlayApp::command_id(command)).collect();
         let mut sorted = ids.clone();
         sorted.sort_unstable();
         sorted.dedup();
@@ -374,7 +374,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -428,11 +428,11 @@ mod tests {
     /// copied from the pre-migration `🧪️wire-baseline-before.txt` dump.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
-        store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
-        store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetHover(set_hover::SetHover { block_id: None }));
-        store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-        store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetHover(set_hover::SetHover { block_id: None }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));
     }
     //#endregion 🔖️CommandSurface
 
@@ -477,7 +477,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = note_app();
-        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.projection().expect("projection").blocks.len(), 0, 1);
+        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -490,7 +490,7 @@ mod tests {
             NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }),
             NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(false) }),
             |app| {
-                let projection = app.projection().expect("projection");
+                let projection = app.snapshot().expect("snapshot");
                 (projection.blocks.len(), projection.grid_visible)
             },
         );
@@ -498,7 +498,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_note() {
-        testkit::assert_ingest_idempotent::<NotePlayApp, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.projection().expect("projection").grid_spacing.unwrap_or_default());
+        testkit::assert_ingest_idempotent::<NotePlayApp, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default());
     }
     //#endregion 🔖️CrossCutting
 }

@@ -1,0 +1,9 @@
+# 🧬️ Writer snapshot schema.
+
+type WriterSnapshot {
+  schema: String!
+  id: String!
+  languageId: String!
+  uri: String!
+  text: String!
+}

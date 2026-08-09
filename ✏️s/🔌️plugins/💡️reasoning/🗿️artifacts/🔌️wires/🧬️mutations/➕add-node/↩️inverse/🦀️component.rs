@@ -1,6 +1,6 @@
-use crate::artifacts::wires::MindmapWiresDocument;
-use crate::artifacts::wires::mutations::MindmapWiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
+use crate::artifacts::wires::mutations::WiresMutation;
 
-pub fn inverse(base: &MindmapWiresDocument, mutation: &MindmapWiresMutation) -> Vec<MindmapWiresMutation> {
-    <MindmapWiresMutation as protocol::Mutation<MindmapWiresDocument>>::inverse(mutation, base)
+pub fn inverse(base: &WiresSnapshot, mutation: &WiresMutation) -> Vec<WiresMutation> {
+    <WiresMutation as protocol::Mutation<WiresSnapshot>>::inverse(mutation, base)
 }

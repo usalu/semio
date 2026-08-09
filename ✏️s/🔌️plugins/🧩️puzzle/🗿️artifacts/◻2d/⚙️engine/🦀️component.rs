@@ -38,7 +38,7 @@ impl GraphExtension for Puzzle2dExtension {}
 //#endregion 🔖️Puzzle2dExtension
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle2d_projection() -> Puzzle2dSnapshot {
+pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
     Puzzle2dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
@@ -50,9 +50,23 @@ pub fn empty_puzzle2d_projection() -> Puzzle2dSnapshot {
 /// 🚧️ The 🖐️5d port adds its own `crate::apps::puzzle5d::register_puzzle5d_exports()` line right here.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schemas();
     crate::apps::puzzle2d::register_puzzle2d_exports();
     crate::apps::puzzle3d::register_puzzle3d_exports();
     crate::apps::puzzle5d::register_puzzle5d_exports();
+}
+
+/// 📎 Registers all puzzle artifact schema descriptors into the OS-wide catalog.
+pub fn register_artifact_schemas() {
+    artifact_schema::register_artifact_schema_descriptor(
+        crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor(),
+    );
+    artifact_schema::register_artifact_schema_descriptor(
+        crate::artifacts::puzzle3d::schema::puzzle3d_artifact_schema_descriptor(),
+    );
+    artifact_schema::register_artifact_schema_descriptor(
+        crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor(),
+    );
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

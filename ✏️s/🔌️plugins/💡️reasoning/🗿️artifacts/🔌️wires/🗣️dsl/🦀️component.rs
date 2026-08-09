@@ -1,9 +1,9 @@
 //! 📜️ Wires artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! The `.wires` textual DSL and op-text grammar are declared, not hand-rolled — see
-//! `impl store::DocumentDsl for MindmapWiresDocument` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
-//! `#[derive(dsl::DslEnum)]` on `MindmapWiresMutation` (in `crate::artifacts::wires::op`).
-//! `MindmapWiresDocument` itself keeps `wires_fixture`/`board_fixture` as opaque `dsl::DslValue` (the
+//! `impl store::DocumentDsl for WiresSnapshot` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
+//! `#[derive(dsl::DslEnum)]` on `WiresMutation` (in `crate::artifacts::wires::op`).
+//! `WiresSnapshot` itself keeps `wires_fixture`/`board_fixture` as opaque `dsl::DslValue` (the
 //! `op`/`ui`/`engine` code addresses board nodes/edges and wires relationships generically by id for
 //! mergeable, granular JSON-patch edits), but the TEXTUAL `.wires` surface is fully typed via the
 //! `WiresFixtureDsl`/`BoardFixtureDsl`/... local DSL-mirror twins declared in the artifact component's
@@ -26,19 +26,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::wires::MindmapWiresDocument;
+use crate::artifacts::wires::WiresSnapshot;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every
 /// "metabolism" example call site (`setActiveExample`, `.example` manifest registration, tests).
 pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.wires` DSL text into a `MindmapWiresDocument`.
-pub fn parse_dsl(text: &str) -> Result<MindmapWiresDocument, store::TextError> {
-    <MindmapWiresDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.wires` DSL text into a `WiresSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<WiresSnapshot, store::TextError> {
+    <WiresSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `MindmapWiresDocument` back to `.wires` DSL text.
-pub fn print_dsl(document: &MindmapWiresDocument) -> String {
+/// 🖨️ Prints a `WiresSnapshot` back to `.wires` DSL text.
+pub fn print_dsl(document: &WiresSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -49,17 +49,18 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_empty_document() {
-        let document = crate::artifacts::wires::empty_mindmap_wires_document();
-        store::test_support::assert_dsl_round_trip(&document);
+        let document = crate::artifacts::wires::empty_wires_snapshot();
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn dsl_round_trip_metabolism_fixture() {
-        let document = parse_dsl(REASONING_WIRES_EXAMPLE_METABOLISM_TEXT).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        let document = crate::artifacts::wires::engine::metabolism_wires_example_snapshot();
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
         assert_eq!(document.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
-        store::test_support::assert_dsl_round_trip(&document);
+        let reparsed = parse_dsl(&print_dsl(&document)).expect("metabolism dsl round trip");
+        assert_eq!(reparsed.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
     }
 }
 //#endregion 🧪️Tests

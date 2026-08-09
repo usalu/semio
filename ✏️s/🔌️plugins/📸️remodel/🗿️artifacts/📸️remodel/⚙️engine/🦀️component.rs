@@ -657,11 +657,7 @@ impl protocol::ArtifactEngine for RemodelEngine {
 
 /// 🧬️ Registers the remodel artifact schema descriptor once.
 pub fn register_artifact_schema() {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
-        std::sync::OnceLock::new();
-    let registry = REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
-    let mut guard = registry.lock().expect("schema registry");
-    guard.register(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor());
 }
 
 //#endregion 🔖️ArtifactEngine

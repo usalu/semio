@@ -6,13 +6,13 @@
 //! `crate::artifacts::vdi3805::engine`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::apps::vdi3805::commands::{evaluate, selected_check, set_document};
+use crate::apps::vdi3805::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::vdi3805::modes::edit as edit_mode;
 use crate::apps::vdi3805::modes::edit::windows::{inputs, results};
 use crate::apps::vdi3805::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::vdi3805::engine::Vdi3805Family;
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
-use crate::artifacts::vdi3805::Document;
+use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
@@ -34,8 +34,8 @@ semio_framework_plugin::app_commands! {
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
-    pub enum Vdi3805Command for Document, Vdi3805Mutation, NormConfig, NormConfigMutation {
-        "setDocument" as "set-document" => set_document::SetDocument,
+    pub enum Vdi3805Command for Vdi3805Snapshot, Vdi3805Mutation, NormConfig, NormConfigMutation {
+        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
     }
@@ -47,7 +47,7 @@ semio_framework_plugin::app_commands! {
 pub struct Vdi3805PlayApp;
 
 impl DocumentApp for Vdi3805PlayApp {
-    type Projection = Document;
+    type Snapshot = Vdi3805Snapshot;
     type Mutation = Vdi3805Mutation;
     type Config = NormConfig;
     type ConfigMutation = NormConfigMutation;
@@ -63,8 +63,8 @@ impl DocumentApp for Vdi3805PlayApp {
         CONFIG_SCHEMA
     }
 
-    fn initial_projection() -> Document {
-        Document::default()
+    fn initial_snapshot() -> Vdi3805Snapshot {
+        Vdi3805Snapshot::default()
     }
 
     fn io() -> Option<AppIo> {
@@ -75,18 +75,18 @@ impl DocumentApp for Vdi3805PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Vdi3805Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Vdi3805Command, doc: &DocumentView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
-        let host = NormHost::<Vdi3805Family>::from_document(doc.projection.clone());
+    fn render(body_key: &str, doc: &DocumentView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+        let host = NormHost::<Vdi3805Family>::from_document(doc.snapshot.clone());
         match body_key {
-            inputs::BODY_INPUTS => inputs::render(doc.projection),
+            inputs::BODY_INPUTS => inputs::render(doc.snapshot),
             results::BODY_RESULTS => results::render(&host),
             document_panel::BODY_DOCUMENT => document_panel::render(&host),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.projection.selected_check_index),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.snapshot.selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
         }
     }
@@ -95,13 +95,13 @@ impl DocumentApp for Vdi3805PlayApp {
     /// 🎞️ `"report:out"`/`"document:out"` — see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
-        crate::app_surface::export_media::<Vdi3805Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
+    fn export_media(port: &str, doc: &DocumentView<'_, Vdi3805Snapshot>) -> Result<Media, MediaError> {
+        crate::app_surface::export_media::<Vdi3805Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media::<Document>(port, media)
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+        crate::app_surface::import_media(port, media, |snapshot| Vdi3805Mutation::SetSnapshot { snapshot })
     }
     //#endregion 🔖️MediaPorts
 }
@@ -122,13 +122,13 @@ pub fn create_vdi3805_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument setzen"))
+            .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&Document::default()).expect("default document serializes"), "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&Vdi3805Snapshot::default()).expect("default document serializes"), "file")
     .workflow(VARIANT, LABEL, "compliance")
 }
 //#endregion 🔖️Manifest
@@ -172,7 +172,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<Vdi3805Command> {
         vec![
-            Vdi3805Command::SetDocument(set_document::SetDocument { document: Document::default() }),
+            Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }),
             Vdi3805Command::Evaluate(evaluate::Evaluate {}),
             Vdi3805Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -186,16 +186,16 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids, vec!["setDocument", "evaluate", "setSelectedCheckIndex"]);
+        assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex"]);
     }
 
     /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
     /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-        let keywords = ["set-document", "evaluate", "selected-check"];
+        let keywords = ["set-snapshot", "evaluate", "selected-check"];
         for (command, keyword) in every_command().into_iter().zip(keywords) {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
         }
@@ -205,7 +205,7 @@ mod tests {
     /// could have silently rewritten — the fieldless `Evaluate` (was a unit variant) and both `Option`
     /// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
     /// `🧪️wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
-    /// of the three payload shapes involves the per-standard `Document`.
+    /// of the three payload shapes involves the per-standard `Vdi3805Snapshot`.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Vdi3805Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -255,29 +255,29 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn set_document_commits_a_host_backed_report() {
+    fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, Vdi3805Command::SetDocument(set_document::SetDocument { document: Document::default() }));
-        let host = NormHost::<Vdi3805Family>::from_document(app.projection().expect("projection"));
+        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }));
+        let host = NormHost::<Vdi3805Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
 
     #[test]
     fn evaluate_recommits_the_current_projection_without_changing_it() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         testkit::dispatch(&mut app, Vdi3805Command::Evaluate(evaluate::Evaluate {}));
-        assert_eq!(before, app.projection().expect("projection"));
+        assert_eq!(before, app.snapshot().expect("projection"));
     }
 
     /// 🧮️ `setSelectedCheckIndex` is config-only — it must dispatch cleanly and never touch the document.
     #[test]
     fn selected_check_index_is_a_config_only_edit() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         let result = testkit::dispatch(&mut app, Vdi3805Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
         assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
-        assert_eq!(before, app.projection().expect("projection"), "a config-only command must never mutate the document");
+        assert_eq!(before, app.snapshot().expect("projection"), "a config-only command must never mutate the document");
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
@@ -292,10 +292,10 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, Vdi3805Command::SetDocument(set_document::SetDocument { document: Document::default() }));
+        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection"), Document::default());
+        assert_eq!(app.snapshot().expect("projection"), Vdi3805Snapshot::default());
     }
 
     /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.

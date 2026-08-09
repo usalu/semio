@@ -1,2 +1,2 @@
-/** 🧩 playground mutations facade stub. */
+/** 🧩 playground 🧬️mutations WASM facade. */
 export {};

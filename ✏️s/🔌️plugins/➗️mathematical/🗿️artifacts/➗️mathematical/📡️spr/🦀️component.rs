@@ -1,11 +1,11 @@
 //! ⚖️ Mathematical artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`).
 //!
-//! `protocol::OpBinary for MathMutation` is implemented directly in `crate::artifacts::mathematical::op`
+//! `protocol::OpBinary for MathematicalMutation` is implemented directly in `crate::artifacts::mathematical::op`
 //! (see that module's doc comment). This component only adds the thin artifact-facing
 //! `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law and a whole-store round trip.
 //!
-//! The app's typed `MathCommand` enum — which used to share the old `📡️protocol` crate with this codec —
+//! The app's typed `MathematicalCommand` enum — which used to share the old `📡️protocol` crate with this codec —
 //! is an APP concern, not an artifact one: it now lives in `🎛️apps/➗️mathematical/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
@@ -17,42 +17,42 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::mathematical::op::MathMutation;
+use crate::artifacts::mathematical::op::MathematicalMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `MathMutation` to its binary command form.
-pub fn encode_op(operation: &MathMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `MathematicalMutation` to its binary command form.
+pub fn encode_op(operation: &MathematicalMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `MathMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<MathMutation, protocol::ProtocolError> {
-    MathMutation::decode_op(bytes)
+/// 📖️ Decodes a `MathematicalMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<MathematicalMutation, protocol::ProtocolError> {
+    MathematicalMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mathematical::MathProjection;
+    use crate::artifacts::mathematical::MathematicalSnapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = MathMutation::SetGraph { graph: crate::artifacts::mathematical::MathGraph::default() };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        let operation = MathematicalMutation::SetGraph { graph: crate::artifacts::mathematical::MathematicalGraph::default() };
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
     fn math_document_text_round_trips_through_store() {
-        let initial = MathProjection::default();
+        let initial = MathematicalSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        let graph = crate::artifacts::mathematical::MathGraph { algorithm: "components".into(), ..crate::artifacts::mathematical::MathGraph::default() };
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![MathMutation::SetGraph { graph }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        let graph = crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..crate::artifacts::mathematical::MathematicalGraph::default() };
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![MathematicalMutation::SetGraph { graph }], description: None }).expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

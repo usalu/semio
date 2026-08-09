@@ -21,7 +21,7 @@ pub struct SetSnapshot {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetSnapshot, _doc: &DocumentView<'_, En1997Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1997Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_document(payload.snapshot.clone(), "setSnapshot")
+    crate::app_surface::commit_snapshot(En1997Mutation::SetSnapshot { snapshot: payload.snapshot.clone() }, "setSnapshot")
 }
 //#endregion 🔖️Handler
 
