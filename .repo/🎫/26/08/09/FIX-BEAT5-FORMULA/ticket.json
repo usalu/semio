@@ -1,0 +1,11 @@
+{
+  "title": "Fix Beat5 Formula Animation",
+  "slug": "FIX-BEAT5-FORMULA",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat5: fixed broken ReplacementTransform+formula_panel sequencing; both equations use boxed formula_panel; parked A=πr² with umstellen bridge to r=√(A/π); param walkthroughs with linked highlights; d=2r and sizing chain repositioned clear of formula/caption.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

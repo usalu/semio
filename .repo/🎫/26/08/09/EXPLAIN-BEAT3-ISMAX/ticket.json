@@ -1,0 +1,11 @@
+{
+  "title": "Explain Ismax In Beat3 Formula",
+  "slug": "EXPLAIN-BEAT3-ISMAX",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat3: after revealing I_reduziert = I_S,max · F_V, ring and narrate I_S,max as the unshaded starting irradiance before F_V is applied.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Raise Beat5 Top Formula",
+  "slug": "RAISE-BEAT5-FORMULA",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Raised Beat5 assembly formula from UP*1.55 to UP*1.9 (fly-in tokens from y=1.0 to y=1.35) so it sits clearer above the room ceiling.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

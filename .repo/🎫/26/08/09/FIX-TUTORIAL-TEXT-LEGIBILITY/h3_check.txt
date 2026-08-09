@@ -1,0 +1,1641 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_GebaeudeKonvektion              0 finding(s)   42 near
+Beat2_Innenvolumen                    0 finding(s)   36 near
+Beat3_Luftwechselrate                 0 finding(s)   53 near
+Beat4_SpezWaermekapazitaet            0 finding(s)  166 near
+Beat5_Lueftungsverlust                0 finding(s)  563 near
+Beat6_Waermerueckgewinnung            0 finding(s)  546 near
+Beat7_Lueftungssysteme               20 finding(s)  200 near
+
+========================================================================
+HARD (true crossings):
+  [Beat7 @03] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @04] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @05] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @06] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @07] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @08] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @09] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @10] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @11] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @12] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @13] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @14] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @15] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @16] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @17] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @18] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @19] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @20] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @21] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+  [Beat7 @22] text/line            'Kaltluft (−5°C)' crossed by Polygon at (-4.40,-0.52) text_box=(-5.28, -0.57, -4.32, -0.43)
+
+========================================================================
+NEAR (tight spacing — verify by eye):
+  [Beat1 @03] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @04] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @05] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @05] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @05] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @06] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @06] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @06] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @07] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @07] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @07] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @08] text/text near       'Warme Innenluft steigt und entweic' ↔ 'nach.'
+  [Beat1 @08] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @08] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @09] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @09] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @10] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @10] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @10] text/text near       'Innen bleibt warm, außen bleibt ka' ↔ 'Konvektion.'
+  [Beat1 @11] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @11] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @11] text/text near       'Innen bleibt warm, außen bleibt ka' ↔ 'Konvektion.'
+  [Beat1 @12] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @12] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @12] text/text near       'Innen bleibt warm, außen bleibt ka' ↔ 'Konvektion.'
+  [Beat1 @13] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @13] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @14] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @14] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @14] text/text near       'Beobachten Sie die Partikel: Wärme' ↔ 'Strom kühlt den Raum.'
+  [Beat1 @15] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @15] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @15] text/text near       'Beobachten Sie die Partikel: Wärme' ↔ 'Strom kühlt den Raum.'
+  [Beat1 @16] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @16] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @16] text/text near       'Beobachten Sie die Partikel: Wärme' ↔ 'Strom kühlt den Raum.'
+  [Beat1 @17] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @17] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @18] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @18] text/text near       'Außen' ↔ 'Kalt'
+  [Beat1 @19] text/text near       'Innen' ↔ 'Warm'
+  [Beat1 @19] text/text near       'Außen' ↔ 'Kalt'
+  [Beat2 @07] text/text near       'Die Außenluft verblasst — uns inte' ↔ 'heizen.'
+  [Beat2 @08] text/text near       'Die Außenluft verblasst — uns inte' ↔ 'heizen.'
+  [Beat2 @09] text/text near       'Die Außenluft verblasst — uns inte' ↔ 'heizen.'
+  [Beat2 @10] text/text near       'Die Außenluft verblasst — uns inte' ↔ 'heizen.'
+  [Beat2 @15] text/text near       'V' ↔ '[m³]'
+  [Beat2 @16] text/text near       'V' ↔ '[m³]'
+  [Beat2 @16] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @17] text/text near       'V' ↔ '[m³]'
+  [Beat2 @17] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @18] text/text near       'V' ↔ '[m³]'
+  [Beat2 @18] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @18] text/line near       '[m³]' near SurroundingRectangle text_box=(-0.17, -2.3, 0.62, -1.93) outline_box=(-0.7, -2.34, -0.24, -1.89)
+  [Beat2 @19] text/text near       'V' ↔ '[m³]'
+  [Beat2 @19] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @19] text/line near       '[m³]' near SurroundingRectangle text_box=(-0.17, -2.3, 0.62, -1.93) outline_box=(-0.7, -2.34, -0.24, -1.89)
+  [Beat2 @20] text/text near       'V' ↔ '[m³]'
+  [Beat2 @20] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @20] text/text near       'V ist das nettotemperierte Volumen' ↔ 'Lüftungswärmeverlust.'
+  [Beat2 @20] text/line near       '[m³]' near SurroundingRectangle text_box=(-0.17, -2.3, 0.62, -1.93) outline_box=(-0.7, -2.34, -0.24, -1.89)
+  [Beat2 @21] text/text near       'V' ↔ '[m³]'
+  [Beat2 @21] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @21] text/text near       'V ist das nettotemperierte Volumen' ↔ 'Lüftungswärmeverlust.'
+  [Beat2 @21] text/line near       '[m³]' near SurroundingRectangle text_box=(-0.17, -2.3, 0.62, -1.93) outline_box=(-0.7, -2.34, -0.24, -1.89)
+  [Beat2 @22] text/text near       'V' ↔ '[m³]'
+  [Beat2 @22] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @22] text/text near       'V ist das nettotemperierte Volumen' ↔ 'Lüftungswärmeverlust.'
+  [Beat2 @22] text/line near       '[m³]' near SurroundingRectangle text_box=(-0.17, -2.3, 0.62, -1.93) outline_box=(-0.7, -2.34, -0.24, -1.89)
+  [Beat2 @23] text/text near       'V' ↔ '[m³]'
+  [Beat2 @23] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @23] text/text near       'V ist das nettotemperierte Volumen' ↔ 'Lüftungswärmeverlust.'
+  [Beat2 @24] text/text near       'V' ↔ '[m³]'
+  [Beat2 @24] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @25] text/text near       'V' ↔ '[m³]'
+  [Beat2 @25] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat2 @26] text/text near       'V' ↔ '[m³]'
+  [Beat2 @26] text/text near       'V' ↔ 'Nettovolumen (m³)'
+  [Beat3 @06] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @07] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @08] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @08] text/text near       'Die Luftwechselrate n sagt, wie of' ↔ 'wird.'
+  [Beat3 @09] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @09] text/text near       'Die Luftwechselrate n sagt, wie of' ↔ 'wird.'
+  [Beat3 @10] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @10] text/text near       'Die Luftwechselrate n sagt, wie of' ↔ 'wird.'
+  [Beat3 @11] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @11] text/text near       'Die Luftwechselrate n sagt, wie of' ↔ 'wird.'
+  [Beat3 @12] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @13] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @13] text/text near       'Ein Luftwechsel heißt: das ganze V' ↔ 'Stunde.'
+  [Beat3 @14] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @14] text/text near       'Ein Luftwechsel heißt: das ganze V' ↔ 'Stunde.'
+  [Beat3 @15] text/text near       'Luftwechselrate n (1/h)' ↔ '(DIN 1946-6)'
+  [Beat3 @15] text/text near       'Ein Luftwechsel heißt: das ganze V' ↔ 'Stunde.'
+  [Beat3 @16] text/text near       'Ein Luftwechsel heißt: das ganze V' ↔ 'Stunde.'
+  [Beat3 @16] text/text near       'V' ↔ '·'
+  [Beat3 @16] text/text near       '·' ↔ 'n'
+  [Beat3 @16] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @16] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @17] text/text near       'V' ↔ '·'
+  [Beat3 @17] text/text near       '·' ↔ 'n'
+  [Beat3 @17] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @17] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @18] text/text near       'V' ↔ '·'
+  [Beat3 @18] text/text near       '·' ↔ 'n'
+  [Beat3 @18] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @18] text/text near       'Volumen mal Luftwechselrate — V ma' ↔ 'Lüftungsvolumenstrom.'
+  [Beat3 @18] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @19] text/text near       'V' ↔ '·'
+  [Beat3 @19] text/text near       '·' ↔ 'n'
+  [Beat3 @19] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @19] text/text near       'Volumen mal Luftwechselrate — V ma' ↔ 'Lüftungsvolumenstrom.'
+  [Beat3 @19] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @20] text/text near       'V' ↔ '·'
+  [Beat3 @20] text/text near       '·' ↔ 'n'
+  [Beat3 @20] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @20] text/text near       'Volumen mal Luftwechselrate — V ma' ↔ 'Lüftungsvolumenstrom.'
+  [Beat3 @20] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @21] text/text near       'V' ↔ '·'
+  [Beat3 @21] text/text near       '·' ↔ 'n'
+  [Beat3 @21] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @21] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @22] text/text near       'V' ↔ '·'
+  [Beat3 @22] text/text near       '·' ↔ 'n'
+  [Beat3 @22] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @22] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat3 @23] text/text near       'V' ↔ '·'
+  [Beat3 @23] text/text near       '·' ↔ 'n'
+  [Beat3 @23] text/text near       'n' ↔ '[m³ · 1/h]'
+  [Beat3 @23] text/line near       '·' near SurroundingRectangle text_box=(-0.94, -2.13, -0.88, -2.07) outline_box=(-1.6, -2.52, 1.6, -1.68)
+  [Beat4 @03] text/text near       'V' ↔ '·'
+  [Beat4 @03] text/text near       '·' ↔ 'n'
+  [Beat4 @04] text/text near       'V' ↔ '·'
+  [Beat4 @04] text/text near       '·' ↔ 'n'
+  [Beat4 @05] text/text near       'V' ↔ '·'
+  [Beat4 @05] text/text near       '·' ↔ 'n'
+  [Beat4 @06] text/text near       'V' ↔ '·'
+  [Beat4 @06] text/text near       '·' ↔ 'n'
+  [Beat4 @06] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @07] text/text near       'V' ↔ '·'
+  [Beat4 @07] text/text near       '·' ↔ 'n'
+  [Beat4 @07] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @08] text/text near       'V' ↔ '·'
+  [Beat4 @08] text/text near       '·' ↔ 'n'
+  [Beat4 @08] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @09] text/text near       'V' ↔ '·'
+  [Beat4 @09] text/text near       '·' ↔ 'n'
+  [Beat4 @09] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @10] text/text near       'V' ↔ '·'
+  [Beat4 @10] text/text near       '·' ↔ 'n'
+  [Beat4 @10] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @11] text/text near       'V' ↔ '·'
+  [Beat4 @11] text/text near       '·' ↔ 'n'
+  [Beat4 @11] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @12] text/text near       'V' ↔ '·'
+  [Beat4 @12] text/text near       '·' ↔ 'n'
+  [Beat4 @12] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @13] text/text near       'V' ↔ '·'
+  [Beat4 @13] text/text near       '·' ↔ 'n'
+  [Beat4 @13] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @14] text/text near       'V' ↔ '·'
+  [Beat4 @14] text/text near       '·' ↔ 'n'
+  [Beat4 @14] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @15] text/text near       'V' ↔ '·'
+  [Beat4 @15] text/text near       '·' ↔ 'n'
+  [Beat4 @15] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @16] text/text near       'V' ↔ '·'
+  [Beat4 @16] text/text near       '·' ↔ 'n'
+  [Beat4 @16] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @16] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @16] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @17] text/text near       'V' ↔ '·'
+  [Beat4 @17] text/text near       '·' ↔ 'n'
+  [Beat4 @17] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @17] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @17] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @18] text/text near       'V' ↔ '·'
+  [Beat4 @18] text/text near       '·' ↔ 'n'
+  [Beat4 @18] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @18] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @18] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @19] text/text near       'V' ↔ '·'
+  [Beat4 @19] text/text near       '·' ↔ 'n'
+  [Beat4 @19] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @19] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @19] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @20] text/text near       'V' ↔ '·'
+  [Beat4 @20] text/text near       '·' ↔ 'n'
+  [Beat4 @20] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @20] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @20] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @21] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @21] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @21] text/text near       'V' ↔ '·'
+  [Beat4 @21] text/text near       '·' ↔ 'n'
+  [Beat4 @21] text/text near       'n' ↔ '·'
+  [Beat4 @21] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @21] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @21] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @21] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @21] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @22] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @22] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @22] text/text near       'V' ↔ '·'
+  [Beat4 @22] text/text near       '·' ↔ 'n'
+  [Beat4 @22] text/text near       'n' ↔ '·'
+  [Beat4 @22] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @22] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @22] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @22] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @22] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @22] text/line near       '[Wh/(m³·K)]' near SurroundingRectangle text_box=(0.13, -2.3, 2.47, -1.9) outline_box=(-1.32, -2.37, 0.06, -1.83)
+  [Beat4 @23] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @23] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @23] text/text near       'V' ↔ '·'
+  [Beat4 @23] text/text near       '·' ↔ 'n'
+  [Beat4 @23] text/text near       'n' ↔ '·'
+  [Beat4 @23] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @23] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @23] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @23] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @23] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @23] text/line near       '[Wh/(m³·K)]' near SurroundingRectangle text_box=(0.13, -2.3, 2.47, -1.9) outline_box=(-1.32, -2.37, 0.06, -1.83)
+  [Beat4 @24] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @24] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @24] text/text near       'V' ↔ '·'
+  [Beat4 @24] text/text near       '·' ↔ 'n'
+  [Beat4 @24] text/text near       'n' ↔ '·'
+  [Beat4 @24] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @24] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @24] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @24] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @24] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @24] text/line near       '[Wh/(m³·K)]' near SurroundingRectangle text_box=(0.13, -2.3, 2.47, -1.9) outline_box=(-1.32, -2.37, 0.06, -1.83)
+  [Beat4 @25] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @25] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @25] text/text near       'V' ↔ '·'
+  [Beat4 @25] text/text near       '·' ↔ 'n'
+  [Beat4 @25] text/text near       'n' ↔ '·'
+  [Beat4 @25] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @25] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @25] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @25] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @25] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @25] text/line near       '[Wh/(m³·K)]' near SurroundingRectangle text_box=(0.13, -2.3, 2.47, -1.9) outline_box=(-1.32, -2.37, 0.06, -1.83)
+  [Beat4 @26] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @26] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @26] text/text near       'V' ↔ '·'
+  [Beat4 @26] text/text near       '·' ↔ 'n'
+  [Beat4 @26] text/text near       'n' ↔ '·'
+  [Beat4 @26] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @26] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @26] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @26] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @26] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @26] text/line near       '[Wh/(m³·K)]' near SurroundingRectangle text_box=(0.13, -2.3, 2.47, -1.9) outline_box=(-1.32, -2.37, 0.06, -1.83)
+  [Beat4 @27] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @27] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @27] text/text near       'V' ↔ '·'
+  [Beat4 @27] text/text near       '·' ↔ 'n'
+  [Beat4 @27] text/text near       'n' ↔ '·'
+  [Beat4 @27] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @27] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @27] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @27] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @27] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @28] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @28] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @28] text/text near       'V' ↔ '·'
+  [Beat4 @28] text/text near       '·' ↔ 'n'
+  [Beat4 @28] text/text near       'n' ↔ '·'
+  [Beat4 @28] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @28] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @28] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @28] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @28] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @29] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @29] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @29] text/text near       'V' ↔ '·'
+  [Beat4 @29] text/text near       '·' ↔ 'n'
+  [Beat4 @29] text/text near       'n' ↔ '·'
+  [Beat4 @29] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @29] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @29] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @29] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @29] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @30] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat4 @30] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat4 @30] text/text near       'V' ↔ '·'
+  [Beat4 @30] text/text near       '·' ↔ 'n'
+  [Beat4 @30] text/text near       'n' ↔ '·'
+  [Beat4 @30] text/text near       '·' ↔ 'c_Luft'
+  [Beat4 @30] text/text near       'c_Luft' ↔ '[Wh/(m³·K)]'
+  [Beat4 @30] text/line near       'Heizelement' near ParametricFunction text_box=(-0.61, -1.53, 0.61, -1.35) outline_box=(-1.1, -1.25, 1.1, -1.05)
+  [Beat4 @30] text/line near       '·' near SurroundingRectangle text_box=(-2.03, -2.13, -1.97, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat4 @30] text/line near       '·' near SurroundingRectangle text_box=(-1.45, -2.13, -1.39, -2.07) outline_box=(-2.69, -2.52, 2.69, -1.68)
+  [Beat5 @02] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @03] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @04] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @05] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @06] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @07] text/text near       'Der Lüftungswärmeverlust schließt ' ↔ 'Temperaturdifferenz Delta-Theta.'
+  [Beat5 @07] text/text near       'T_außen (Außentemperatur)' ↔ 'Temperaturdifferenz'
+  [Beat5 @07] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @08] text/text near       'T_außen (Außentemperatur)' ↔ 'Temperaturdifferenz'
+  [Beat5 @08] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @09] text/text near       'T_außen (Außentemperatur)' ↔ 'Temperaturdifferenz'
+  [Beat5 @09] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @10] text/text near       'T_außen (Außentemperatur)' ↔ 'Temperaturdifferenz'
+  [Beat5 @10] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @11] text/text near       'T_außen (Außentemperatur)' ↔ 'Temperaturdifferenz'
+  [Beat5 @11] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @12] text/text near       'Φ_V' ↔ '='
+  [Beat5 @12] text/text near       '=' ↔ 'V'
+  [Beat5 @12] text/text near       'V' ↔ '·'
+  [Beat5 @12] text/text near       '·' ↔ 'n'
+  [Beat5 @12] text/text near       'n' ↔ '·'
+  [Beat5 @12] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @12] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @12] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @12] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @12] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @12] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @12] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @13] text/text near       'Φ_V' ↔ '='
+  [Beat5 @13] text/text near       '=' ↔ 'V'
+  [Beat5 @13] text/text near       'V' ↔ '·'
+  [Beat5 @13] text/text near       '·' ↔ 'n'
+  [Beat5 @13] text/text near       'n' ↔ '·'
+  [Beat5 @13] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @13] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @13] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @13] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @13] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @13] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @13] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @14] text/text near       'Φ_V' ↔ '='
+  [Beat5 @14] text/text near       '=' ↔ 'V'
+  [Beat5 @14] text/text near       'V' ↔ '·'
+  [Beat5 @14] text/text near       '·' ↔ 'n'
+  [Beat5 @14] text/text near       'n' ↔ '·'
+  [Beat5 @14] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @14] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @14] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @14] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @14] text/text near       'Phi_V ist V mal n mal c_Luft mal D' ↔ '12831-1.'
+  [Beat5 @14] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @14] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @14] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @15] text/text near       'Φ_V' ↔ '='
+  [Beat5 @15] text/text near       '=' ↔ 'V'
+  [Beat5 @15] text/text near       'V' ↔ '·'
+  [Beat5 @15] text/text near       '·' ↔ 'n'
+  [Beat5 @15] text/text near       'n' ↔ '·'
+  [Beat5 @15] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @15] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @15] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @15] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @15] text/text near       'Phi_V ist V mal n mal c_Luft mal D' ↔ '12831-1.'
+  [Beat5 @15] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @15] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @15] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @16] text/text near       'Φ_V' ↔ '='
+  [Beat5 @16] text/text near       '=' ↔ 'V'
+  [Beat5 @16] text/text near       'V' ↔ '·'
+  [Beat5 @16] text/text near       '·' ↔ 'n'
+  [Beat5 @16] text/text near       'n' ↔ '·'
+  [Beat5 @16] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @16] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @16] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @16] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @16] text/text near       'Phi_V ist V mal n mal c_Luft mal D' ↔ '12831-1.'
+  [Beat5 @16] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @16] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @16] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @17] text/text near       'Φ_V' ↔ '='
+  [Beat5 @17] text/text near       '=' ↔ 'V'
+  [Beat5 @17] text/text near       'V' ↔ '·'
+  [Beat5 @17] text/text near       '·' ↔ 'n'
+  [Beat5 @17] text/text near       'n' ↔ '·'
+  [Beat5 @17] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @17] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @17] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @17] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @17] text/text near       'Phi_V ist V mal n mal c_Luft mal D' ↔ '12831-1.'
+  [Beat5 @17] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @17] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @17] text/line near       '=' near SurroundingRectangle text_box=(-1.74, -2.16, -1.54, -2.06) outline_box=(-1.47, -2.34, -1.02, -1.89)
+  [Beat5 @17] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @17] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @17] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @18] text/text near       'Φ_V' ↔ '='
+  [Beat5 @18] text/text near       '=' ↔ 'V'
+  [Beat5 @18] text/text near       'V' ↔ '·'
+  [Beat5 @18] text/text near       '·' ↔ 'n'
+  [Beat5 @18] text/text near       'n' ↔ '·'
+  [Beat5 @18] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @18] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @18] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @18] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @18] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @18] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @18] text/line near       '=' near SurroundingRectangle text_box=(-1.74, -2.16, -1.54, -2.06) outline_box=(-1.47, -2.34, -1.02, -1.89)
+  [Beat5 @18] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @18] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @18] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @19] text/text near       'Φ_V' ↔ '='
+  [Beat5 @19] text/text near       '=' ↔ 'V'
+  [Beat5 @19] text/text near       'V' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'n'
+  [Beat5 @19] text/text near       'n' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @19] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @19] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @19] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @19] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @19] text/line near       '=' near SurroundingRectangle text_box=(-1.74, -2.16, -1.54, -2.06) outline_box=(-1.47, -2.34, -1.02, -1.89)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @20] text/text near       'Φ_V' ↔ '='
+  [Beat5 @20] text/text near       '=' ↔ 'V'
+  [Beat5 @20] text/text near       'V' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'n'
+  [Beat5 @20] text/text near       'n' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @20] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @20] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @20] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @20] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @20] text/line near       '=' near SurroundingRectangle text_box=(-1.74, -2.16, -1.54, -2.06) outline_box=(-1.47, -2.34, -1.02, -1.89)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @21] text/text near       'Φ_V' ↔ '='
+  [Beat5 @21] text/text near       '=' ↔ 'V'
+  [Beat5 @21] text/text near       'V' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'n'
+  [Beat5 @21] text/text near       'n' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @21] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @21] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @21] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @21] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @21] text/line near       '=' near SurroundingRectangle text_box=(-1.74, -2.16, -1.54, -2.06) outline_box=(-1.47, -2.34, -1.02, -1.89)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @22] text/text near       'Φ_V' ↔ '='
+  [Beat5 @22] text/text near       '=' ↔ 'V'
+  [Beat5 @22] text/text near       'V' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'n'
+  [Beat5 @22] text/text near       'n' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @22] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @22] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @22] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @22] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @23] text/text near       'Φ_V' ↔ '='
+  [Beat5 @23] text/text near       '=' ↔ 'V'
+  [Beat5 @23] text/text near       'V' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'n'
+  [Beat5 @23] text/text near       'n' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @23] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @23] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @23] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @23] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @23] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @23] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @24] text/text near       'Φ_V' ↔ '='
+  [Beat5 @24] text/text near       '=' ↔ 'V'
+  [Beat5 @24] text/text near       'V' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'n'
+  [Beat5 @24] text/text near       'n' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @24] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @24] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @24] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @24] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @24] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @24] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @25] text/text near       'Φ_V' ↔ '='
+  [Beat5 @25] text/text near       '=' ↔ 'V'
+  [Beat5 @25] text/text near       'V' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'n'
+  [Beat5 @25] text/text near       'n' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @25] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @25] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @25] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @25] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @25] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @25] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @26] text/text near       'Φ_V' ↔ '='
+  [Beat5 @26] text/text near       '=' ↔ 'V'
+  [Beat5 @26] text/text near       'V' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'n'
+  [Beat5 @26] text/text near       'n' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @26] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @26] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @26] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @26] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @26] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @26] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @27] text/text near       'Φ_V' ↔ '='
+  [Beat5 @27] text/text near       '=' ↔ 'V'
+  [Beat5 @27] text/text near       'V' ↔ '·'
+  [Beat5 @27] text/text near       '·' ↔ 'n'
+  [Beat5 @27] text/text near       'n' ↔ '·'
+  [Beat5 @27] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @27] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @27] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @27] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @27] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @27] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @27] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @27] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @27] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @27] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @27] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @28] text/text near       'Φ_V' ↔ '='
+  [Beat5 @28] text/text near       '=' ↔ 'V'
+  [Beat5 @28] text/text near       'V' ↔ '·'
+  [Beat5 @28] text/text near       '·' ↔ 'n'
+  [Beat5 @28] text/text near       'n' ↔ '·'
+  [Beat5 @28] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @28] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @28] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @28] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @28] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @28] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @28] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @28] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @28] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @28] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @28] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @29] text/text near       'Φ_V' ↔ '='
+  [Beat5 @29] text/text near       '=' ↔ 'V'
+  [Beat5 @29] text/text near       'V' ↔ '·'
+  [Beat5 @29] text/text near       '·' ↔ 'n'
+  [Beat5 @29] text/text near       'n' ↔ '·'
+  [Beat5 @29] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @29] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @29] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @29] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @29] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @29] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @29] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @29] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @29] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @29] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @29] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @29] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @29] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @30] text/text near       'Φ_V' ↔ '='
+  [Beat5 @30] text/text near       '=' ↔ 'V'
+  [Beat5 @30] text/text near       'V' ↔ '·'
+  [Beat5 @30] text/text near       '·' ↔ 'n'
+  [Beat5 @30] text/text near       'n' ↔ '·'
+  [Beat5 @30] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @30] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @30] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @30] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @30] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @30] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @30] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @30] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @30] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @30] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @30] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @30] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @30] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @31] text/text near       'Φ_V' ↔ '='
+  [Beat5 @31] text/text near       '=' ↔ 'V'
+  [Beat5 @31] text/text near       'V' ↔ '·'
+  [Beat5 @31] text/text near       '·' ↔ 'n'
+  [Beat5 @31] text/text near       'n' ↔ '·'
+  [Beat5 @31] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @31] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @31] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @31] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @31] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @31] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @31] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @31] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @31] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @31] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @31] text/text near       'c_Luft ist die spez. Wärmekapazitä' ↔ 'Kelvin.'
+  [Beat5 @31] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @31] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @31] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @32] text/text near       'Φ_V' ↔ '='
+  [Beat5 @32] text/text near       '=' ↔ 'V'
+  [Beat5 @32] text/text near       'V' ↔ '·'
+  [Beat5 @32] text/text near       '·' ↔ 'n'
+  [Beat5 @32] text/text near       'n' ↔ '·'
+  [Beat5 @32] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @32] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @32] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @32] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @32] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @32] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @32] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @32] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @32] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @32] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @32] text/text near       'c_Luft ist die spez. Wärmekapazitä' ↔ 'Kelvin.'
+  [Beat5 @32] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @32] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @32] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @33] text/text near       'Φ_V' ↔ '='
+  [Beat5 @33] text/text near       '=' ↔ 'V'
+  [Beat5 @33] text/text near       'V' ↔ '·'
+  [Beat5 @33] text/text near       '·' ↔ 'n'
+  [Beat5 @33] text/text near       'n' ↔ '·'
+  [Beat5 @33] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @33] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @33] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @33] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @33] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @33] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @33] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @33] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @33] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @33] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @33] text/text near       'c_Luft ist die spez. Wärmekapazitä' ↔ 'Kelvin.'
+  [Beat5 @33] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @33] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @33] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @34] text/text near       'Φ_V' ↔ '='
+  [Beat5 @34] text/text near       '=' ↔ 'V'
+  [Beat5 @34] text/text near       'V' ↔ '·'
+  [Beat5 @34] text/text near       '·' ↔ 'n'
+  [Beat5 @34] text/text near       'n' ↔ '·'
+  [Beat5 @34] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @34] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @34] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @34] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @34] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @34] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @34] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @34] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @34] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @34] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @34] text/text near       'c_Luft ist die spez. Wärmekapazitä' ↔ 'Kelvin.'
+  [Beat5 @34] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @34] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @34] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @35] text/text near       'Φ_V' ↔ '='
+  [Beat5 @35] text/text near       '=' ↔ 'V'
+  [Beat5 @35] text/text near       'V' ↔ '·'
+  [Beat5 @35] text/text near       '·' ↔ 'n'
+  [Beat5 @35] text/text near       'n' ↔ '·'
+  [Beat5 @35] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @35] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @35] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @35] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @35] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @35] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @35] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @35] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @35] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @35] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @35] text/text near       'c_Luft ist die spez. Wärmekapazitä' ↔ 'Kelvin.'
+  [Beat5 @35] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @35] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @35] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @35] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @35] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @35] text/line near       '[W]' near SurroundingRectangle text_box=(2.08, -2.3, 2.72, -1.93) outline_box=(1.34, -2.35, 2.01, -1.87)
+  [Beat5 @36] text/text near       'Φ_V' ↔ '='
+  [Beat5 @36] text/text near       '=' ↔ 'V'
+  [Beat5 @36] text/text near       'V' ↔ '·'
+  [Beat5 @36] text/text near       '·' ↔ 'n'
+  [Beat5 @36] text/text near       'n' ↔ '·'
+  [Beat5 @36] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @36] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @36] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @36] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @36] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @36] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @36] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @36] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @36] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @36] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @36] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @36] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @36] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @36] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @36] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @36] text/line near       '[W]' near SurroundingRectangle text_box=(2.08, -2.3, 2.72, -1.93) outline_box=(1.34, -2.35, 2.01, -1.87)
+  [Beat5 @37] text/text near       'Φ_V' ↔ '='
+  [Beat5 @37] text/text near       '=' ↔ 'V'
+  [Beat5 @37] text/text near       'V' ↔ '·'
+  [Beat5 @37] text/text near       '·' ↔ 'n'
+  [Beat5 @37] text/text near       'n' ↔ '·'
+  [Beat5 @37] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @37] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @37] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @37] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @37] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @37] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @37] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @37] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @37] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @37] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @37] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @37] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @37] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @37] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @37] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @37] text/line near       '[W]' near SurroundingRectangle text_box=(2.08, -2.3, 2.72, -1.93) outline_box=(1.34, -2.35, 2.01, -1.87)
+  [Beat5 @38] text/text near       'Φ_V' ↔ '='
+  [Beat5 @38] text/text near       '=' ↔ 'V'
+  [Beat5 @38] text/text near       'V' ↔ '·'
+  [Beat5 @38] text/text near       '·' ↔ 'n'
+  [Beat5 @38] text/text near       'n' ↔ '·'
+  [Beat5 @38] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @38] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @38] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @38] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @38] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @38] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @38] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @38] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @38] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @38] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @38] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @38] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @38] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @38] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @38] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @38] text/line near       '[W]' near SurroundingRectangle text_box=(2.08, -2.3, 2.72, -1.93) outline_box=(1.34, -2.35, 2.01, -1.87)
+  [Beat5 @39] text/text near       'Φ_V' ↔ '='
+  [Beat5 @39] text/text near       '=' ↔ 'V'
+  [Beat5 @39] text/text near       'V' ↔ '·'
+  [Beat5 @39] text/text near       '·' ↔ 'n'
+  [Beat5 @39] text/text near       'n' ↔ '·'
+  [Beat5 @39] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @39] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @39] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @39] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @39] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @39] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @39] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @39] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @39] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @39] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @39] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @39] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @39] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @39] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @39] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @39] text/line near       '[W]' near SurroundingRectangle text_box=(2.08, -2.3, 2.72, -1.93) outline_box=(1.34, -2.35, 2.01, -1.87)
+  [Beat5 @40] text/text near       'Φ_V' ↔ '='
+  [Beat5 @40] text/text near       '=' ↔ 'V'
+  [Beat5 @40] text/text near       'V' ↔ '·'
+  [Beat5 @40] text/text near       '·' ↔ 'n'
+  [Beat5 @40] text/text near       'n' ↔ '·'
+  [Beat5 @40] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @40] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @40] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @40] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @40] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @40] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @40] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @40] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @40] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @40] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @40] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @40] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @40] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @40] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @40] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @41] text/text near       'Φ_V' ↔ '='
+  [Beat5 @41] text/text near       '=' ↔ 'V'
+  [Beat5 @41] text/text near       'V' ↔ '·'
+  [Beat5 @41] text/text near       '·' ↔ 'n'
+  [Beat5 @41] text/text near       'n' ↔ '·'
+  [Beat5 @41] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @41] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @41] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @41] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @41] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @41] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @41] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @41] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @41] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @41] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @41] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @41] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @41] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @41] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @41] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @42] text/text near       'Φ_V' ↔ '='
+  [Beat5 @42] text/text near       '=' ↔ 'V'
+  [Beat5 @42] text/text near       'V' ↔ '·'
+  [Beat5 @42] text/text near       '·' ↔ 'n'
+  [Beat5 @42] text/text near       'n' ↔ '·'
+  [Beat5 @42] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @42] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @42] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @42] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @42] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @42] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @42] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @42] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @42] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @42] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @42] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @42] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @42] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @42] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @42] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @43] text/text near       'Φ_V' ↔ '='
+  [Beat5 @43] text/text near       '=' ↔ 'V'
+  [Beat5 @43] text/text near       'V' ↔ '·'
+  [Beat5 @43] text/text near       '·' ↔ 'n'
+  [Beat5 @43] text/text near       'n' ↔ '·'
+  [Beat5 @43] text/text near       '·' ↔ 'c_Luft'
+  [Beat5 @43] text/text near       'c_Luft' ↔ '·'
+  [Beat5 @43] text/text near       '·' ↔ 'Δθ'
+  [Beat5 @43] text/text near       'Δθ' ↔ '[W]'
+  [Beat5 @43] text/text near       'V' ↔ 'Gebäudevolumen'
+  [Beat5 @43] text/text near       'Gebäudevolumen' ↔ '(m³, DIN EN 12831)'
+  [Beat5 @43] text/text near       'n' ↔ 'Luftwechselrate'
+  [Beat5 @43] text/text near       'Luftwechselrate' ↔ '(1/h, DIN 1946-6)'
+  [Beat5 @43] text/text near       'c_Luft' ↔ 'Spez. Wärmekapazität'
+  [Beat5 @43] text/text near       'Spez. Wärmekapazität' ↔ '(0,34 Wh/(m³·K))'
+  [Beat5 @43] text/text near       'Δθ' ↔ 'Temperaturdifferenz'
+  [Beat5 @43] text/text near       'Temperaturdifferenz' ↔ '(K)'
+  [Beat5 @43] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @43] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat5 @43] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @03] text/text near       'Φ_V' ↔ '='
+  [Beat6 @03] text/text near       '=' ↔ 'V'
+  [Beat6 @03] text/text near       'V' ↔ '·'
+  [Beat6 @03] text/text near       '·' ↔ 'n'
+  [Beat6 @03] text/text near       'n' ↔ '·'
+  [Beat6 @03] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @03] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @03] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @03] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @03] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @03] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @03] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @03] text/line near       'ohne WRG (η = 0%)' near SurroundingRectangle text_box=(-1.06, -1.59, 1.06, -1.36) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @04] text/text near       'Φ_V' ↔ '='
+  [Beat6 @04] text/text near       '=' ↔ 'V'
+  [Beat6 @04] text/text near       'V' ↔ '·'
+  [Beat6 @04] text/text near       '·' ↔ 'n'
+  [Beat6 @04] text/text near       'n' ↔ '·'
+  [Beat6 @04] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @04] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @04] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @04] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @04] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @04] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @04] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @04] text/line near       'ohne WRG (η = 0%)' near SurroundingRectangle text_box=(-1.06, -1.59, 1.06, -1.36) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @05] text/text near       'Φ_V' ↔ '='
+  [Beat6 @05] text/text near       '=' ↔ 'V'
+  [Beat6 @05] text/text near       'V' ↔ '·'
+  [Beat6 @05] text/text near       '·' ↔ 'n'
+  [Beat6 @05] text/text near       'n' ↔ '·'
+  [Beat6 @05] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @05] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @05] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @05] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @05] text/line near       '·' near SurroundingRectangle text_box=(-0.95, -2.14, -0.89, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @05] text/line near       '·' near SurroundingRectangle text_box=(-0.37, -2.14, -0.31, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @05] text/line near       '·' near SurroundingRectangle text_box=(1.21, -2.14, 1.27, -2.09) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @05] text/line near       'ohne WRG (η = 0%)' near SurroundingRectangle text_box=(-1.06, -1.59, 1.06, -1.36) outline_box=(-2.94, -2.52, 2.94, -1.71)
+  [Beat6 @07] text/text near       'Φ_V' ↔ '='
+  [Beat6 @07] text/text near       '=' ↔ 'V'
+  [Beat6 @07] text/text near       'V' ↔ '·'
+  [Beat6 @07] text/text near       '·' ↔ 'n'
+  [Beat6 @07] text/text near       'n' ↔ '·'
+  [Beat6 @07] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @07] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @07] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @07] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @07] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @07] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @07] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @07] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @07] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @07] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @08] text/text near       'Φ_V' ↔ '='
+  [Beat6 @08] text/text near       '=' ↔ 'V'
+  [Beat6 @08] text/text near       'V' ↔ '·'
+  [Beat6 @08] text/text near       '·' ↔ 'n'
+  [Beat6 @08] text/text near       'n' ↔ '·'
+  [Beat6 @08] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @08] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @08] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @08] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @08] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @08] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @08] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @08] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @08] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @08] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @09] text/text near       'Φ_V' ↔ '='
+  [Beat6 @09] text/text near       '=' ↔ 'V'
+  [Beat6 @09] text/text near       'V' ↔ '·'
+  [Beat6 @09] text/text near       '·' ↔ 'n'
+  [Beat6 @09] text/text near       'n' ↔ '·'
+  [Beat6 @09] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @09] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @09] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @09] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @09] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @09] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @09] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @09] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @09] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @09] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @10] text/text near       'Φ_V' ↔ '='
+  [Beat6 @10] text/text near       '=' ↔ 'V'
+  [Beat6 @10] text/text near       'V' ↔ '·'
+  [Beat6 @10] text/text near       '·' ↔ 'n'
+  [Beat6 @10] text/text near       'n' ↔ '·'
+  [Beat6 @10] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @10] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @10] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @10] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @10] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @10] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @10] text/text near       'Mit WRG multiplizieren wir mit ein' ↔ 'bleibt.'
+  [Beat6 @10] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @10] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @10] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @10] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @11] text/text near       'Φ_V' ↔ '='
+  [Beat6 @11] text/text near       '=' ↔ 'V'
+  [Beat6 @11] text/text near       'V' ↔ '·'
+  [Beat6 @11] text/text near       '·' ↔ 'n'
+  [Beat6 @11] text/text near       'n' ↔ '·'
+  [Beat6 @11] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @11] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @11] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @11] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @11] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @11] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @11] text/text near       'Mit WRG multiplizieren wir mit ein' ↔ 'bleibt.'
+  [Beat6 @11] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @11] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @11] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @11] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @12] text/text near       'Φ_V' ↔ '='
+  [Beat6 @12] text/text near       '=' ↔ 'V'
+  [Beat6 @12] text/text near       'V' ↔ '·'
+  [Beat6 @12] text/text near       '·' ↔ 'n'
+  [Beat6 @12] text/text near       'n' ↔ '·'
+  [Beat6 @12] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @12] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @12] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @12] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @12] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @12] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @12] text/text near       'Mit WRG multiplizieren wir mit ein' ↔ 'bleibt.'
+  [Beat6 @12] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @12] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @12] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @12] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @13] text/text near       'Φ_V' ↔ '='
+  [Beat6 @13] text/text near       '=' ↔ 'V'
+  [Beat6 @13] text/text near       'V' ↔ '·'
+  [Beat6 @13] text/text near       '·' ↔ 'n'
+  [Beat6 @13] text/text near       'n' ↔ '·'
+  [Beat6 @13] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @13] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @13] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @13] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @13] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @13] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @13] text/text near       'Mit WRG multiplizieren wir mit ein' ↔ 'bleibt.'
+  [Beat6 @13] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @13] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @13] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @13] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @14] text/text near       'Φ_V' ↔ '='
+  [Beat6 @14] text/text near       '=' ↔ 'V'
+  [Beat6 @14] text/text near       'V' ↔ '·'
+  [Beat6 @14] text/text near       '·' ↔ 'n'
+  [Beat6 @14] text/text near       'n' ↔ '·'
+  [Beat6 @14] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @14] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @14] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @14] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @14] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @14] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @14] text/text near       'Mit WRG multiplizieren wir mit ein' ↔ 'bleibt.'
+  [Beat6 @14] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @14] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @14] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @14] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @14] text/line near       '20%' near RoundedRectangle text_box=(2.53, 0.15, 3.0, 0.32) outline_box=(-0.84, 0.06, 2.36, 0.41)
+  [Beat6 @15] text/text near       'Φ_V' ↔ '='
+  [Beat6 @15] text/text near       '=' ↔ 'V'
+  [Beat6 @15] text/text near       'V' ↔ '·'
+  [Beat6 @15] text/text near       '·' ↔ 'n'
+  [Beat6 @15] text/text near       'n' ↔ '·'
+  [Beat6 @15] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @15] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @15] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @15] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @15] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @15] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @15] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @15] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @15] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @15] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @15] text/line near       '20%' near RoundedRectangle text_box=(2.53, 0.15, 3.0, 0.32) outline_box=(-0.84, 0.06, 2.36, 0.41)
+  [Beat6 @16] text/text near       'Φ_V' ↔ '='
+  [Beat6 @16] text/text near       '=' ↔ 'V'
+  [Beat6 @16] text/text near       'V' ↔ '·'
+  [Beat6 @16] text/text near       '·' ↔ 'n'
+  [Beat6 @16] text/text near       'n' ↔ '·'
+  [Beat6 @16] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @16] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @16] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @16] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @16] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @16] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @16] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @16] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @16] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @16] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @16] text/line near       '20%' near RoundedRectangle text_box=(2.53, 0.15, 3.0, 0.32) outline_box=(-0.84, 0.06, 2.36, 0.41)
+  [Beat6 @17] text/text near       'Φ_V' ↔ '='
+  [Beat6 @17] text/text near       '=' ↔ 'V'
+  [Beat6 @17] text/text near       'V' ↔ '·'
+  [Beat6 @17] text/text near       '·' ↔ 'n'
+  [Beat6 @17] text/text near       'n' ↔ '·'
+  [Beat6 @17] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @17] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @17] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @17] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @17] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @17] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @17] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @17] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @17] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @17] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @17] text/line near       '20%' near RoundedRectangle text_box=(2.53, 0.15, 3.0, 0.32) outline_box=(-0.84, 0.06, 2.36, 0.41)
+  [Beat6 @18] text/text near       'Φ_V' ↔ '='
+  [Beat6 @18] text/text near       '=' ↔ 'V'
+  [Beat6 @18] text/text near       'V' ↔ '·'
+  [Beat6 @18] text/text near       '·' ↔ 'n'
+  [Beat6 @18] text/text near       'n' ↔ '·'
+  [Beat6 @18] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @18] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @18] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @18] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @18] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @18] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @18] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @18] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @18] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @18] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @18] text/line near       '20%' near RoundedRectangle text_box=(2.53, 0.15, 3.0, 0.32) outline_box=(-0.84, 0.06, 2.36, 0.41)
+  [Beat6 @19] text/text near       'Φ_V' ↔ '='
+  [Beat6 @19] text/text near       '=' ↔ 'V'
+  [Beat6 @19] text/text near       'V' ↔ '·'
+  [Beat6 @19] text/text near       '·' ↔ 'n'
+  [Beat6 @19] text/text near       'n' ↔ '·'
+  [Beat6 @19] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @19] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @19] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @19] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @19] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @19] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @19] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @19] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @19] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @19] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @20] text/text near       'Φ_V' ↔ '='
+  [Beat6 @20] text/text near       '=' ↔ 'V'
+  [Beat6 @20] text/text near       'V' ↔ '·'
+  [Beat6 @20] text/text near       '·' ↔ 'n'
+  [Beat6 @20] text/text near       'n' ↔ '·'
+  [Beat6 @20] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @20] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @20] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @20] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @20] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @20] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @20] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @20] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @20] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @20] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @20] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @20] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @20] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @21] text/text near       'Φ_V' ↔ '='
+  [Beat6 @21] text/text near       '=' ↔ 'V'
+  [Beat6 @21] text/text near       'V' ↔ '·'
+  [Beat6 @21] text/text near       '·' ↔ 'n'
+  [Beat6 @21] text/text near       'n' ↔ '·'
+  [Beat6 @21] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @21] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @21] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @21] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @21] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @21] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @21] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @21] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @21] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @21] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @21] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @21] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @21] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @22] text/text near       'Φ_V' ↔ '='
+  [Beat6 @22] text/text near       '=' ↔ 'V'
+  [Beat6 @22] text/text near       'V' ↔ '·'
+  [Beat6 @22] text/text near       '·' ↔ 'n'
+  [Beat6 @22] text/text near       'n' ↔ '·'
+  [Beat6 @22] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @22] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @22] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @22] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @22] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @22] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @22] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @22] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @22] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @22] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @22] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @22] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @22] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @23] text/text near       'Φ_V' ↔ '='
+  [Beat6 @23] text/text near       '=' ↔ 'V'
+  [Beat6 @23] text/text near       'V' ↔ '·'
+  [Beat6 @23] text/text near       '·' ↔ 'n'
+  [Beat6 @23] text/text near       'n' ↔ '·'
+  [Beat6 @23] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @23] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @23] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @23] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @23] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @23] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @23] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @23] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @23] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @23] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @23] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @23] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @23] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @24] text/text near       'Φ_V' ↔ '='
+  [Beat6 @24] text/text near       '=' ↔ 'V'
+  [Beat6 @24] text/text near       'V' ↔ '·'
+  [Beat6 @24] text/text near       '·' ↔ 'n'
+  [Beat6 @24] text/text near       'n' ↔ '·'
+  [Beat6 @24] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @24] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @24] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @24] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @24] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @24] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @24] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @24] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @24] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @24] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @24] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @24] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @24] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @25] text/text near       'Φ_V' ↔ '='
+  [Beat6 @25] text/text near       '=' ↔ 'V'
+  [Beat6 @25] text/text near       'V' ↔ '·'
+  [Beat6 @25] text/text near       '·' ↔ 'n'
+  [Beat6 @25] text/text near       'n' ↔ '·'
+  [Beat6 @25] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @25] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @25] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @25] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @25] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @25] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @25] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @25] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @25] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @25] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @25] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @25] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @25] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @26] text/text near       'Φ_V' ↔ '='
+  [Beat6 @26] text/text near       '=' ↔ 'V'
+  [Beat6 @26] text/text near       'V' ↔ '·'
+  [Beat6 @26] text/text near       '·' ↔ 'n'
+  [Beat6 @26] text/text near       'n' ↔ '·'
+  [Beat6 @26] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @26] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @26] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @26] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @26] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @26] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @26] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @26] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @26] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @26] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @26] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @26] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @26] text/line near       '=' near SurroundingRectangle text_box=(-3.13, -2.15, -2.92, -2.05) outline_box=(-4.18, -2.35, -3.2, -1.84)
+  [Beat6 @26] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @26] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @26] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @26] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @27] text/text near       'Φ_V' ↔ '='
+  [Beat6 @27] text/text near       '=' ↔ 'V'
+  [Beat6 @27] text/text near       'V' ↔ '·'
+  [Beat6 @27] text/text near       '·' ↔ 'n'
+  [Beat6 @27] text/text near       'n' ↔ '·'
+  [Beat6 @27] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @27] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @27] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @27] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @27] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @27] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @27] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @27] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @27] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @27] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @27] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @27] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @27] text/line near       '=' near SurroundingRectangle text_box=(-3.13, -2.15, -2.92, -2.05) outline_box=(-4.18, -2.35, -3.2, -1.84)
+  [Beat6 @27] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @27] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @27] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @27] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @28] text/text near       'Φ_V' ↔ '='
+  [Beat6 @28] text/text near       '=' ↔ 'V'
+  [Beat6 @28] text/text near       'V' ↔ '·'
+  [Beat6 @28] text/text near       '·' ↔ 'n'
+  [Beat6 @28] text/text near       'n' ↔ '·'
+  [Beat6 @28] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @28] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @28] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @28] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @28] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @28] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @28] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @28] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @28] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @28] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @28] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @28] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @28] text/line near       '=' near SurroundingRectangle text_box=(-3.13, -2.15, -2.92, -2.05) outline_box=(-4.18, -2.35, -3.2, -1.84)
+  [Beat6 @28] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @28] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @28] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @28] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @29] text/text near       'Φ_V' ↔ '='
+  [Beat6 @29] text/text near       '=' ↔ 'V'
+  [Beat6 @29] text/text near       'V' ↔ '·'
+  [Beat6 @29] text/text near       '·' ↔ 'n'
+  [Beat6 @29] text/text near       'n' ↔ '·'
+  [Beat6 @29] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @29] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @29] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @29] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @29] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @29] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @29] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @29] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @29] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @29] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @29] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @29] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @29] text/line near       '=' near SurroundingRectangle text_box=(-3.13, -2.15, -2.92, -2.05) outline_box=(-4.18, -2.35, -3.2, -1.84)
+  [Beat6 @29] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @29] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @29] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @29] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @30] text/text near       'Φ_V' ↔ '='
+  [Beat6 @30] text/text near       '=' ↔ 'V'
+  [Beat6 @30] text/text near       'V' ↔ '·'
+  [Beat6 @30] text/text near       '·' ↔ 'n'
+  [Beat6 @30] text/text near       'n' ↔ '·'
+  [Beat6 @30] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @30] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @30] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @30] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @30] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @30] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @30] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @30] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @30] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @30] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @30] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @30] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @30] text/line near       '=' near SurroundingRectangle text_box=(-3.13, -2.15, -2.92, -2.05) outline_box=(-4.18, -2.35, -3.2, -1.84)
+  [Beat6 @30] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @30] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @30] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @30] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @31] text/text near       'Φ_V' ↔ '='
+  [Beat6 @31] text/text near       '=' ↔ 'V'
+  [Beat6 @31] text/text near       'V' ↔ '·'
+  [Beat6 @31] text/text near       '·' ↔ 'n'
+  [Beat6 @31] text/text near       'n' ↔ '·'
+  [Beat6 @31] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @31] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @31] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @31] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @31] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @31] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @31] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @31] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @31] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @31] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @31] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @31] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @31] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @31] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @31] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @31] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @32] text/text near       'Φ_V' ↔ '='
+  [Beat6 @32] text/text near       '=' ↔ 'V'
+  [Beat6 @32] text/text near       'V' ↔ '·'
+  [Beat6 @32] text/text near       '·' ↔ 'n'
+  [Beat6 @32] text/text near       'n' ↔ '·'
+  [Beat6 @32] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @32] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @32] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @32] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @32] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @32] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @32] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @32] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @32] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @32] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @32] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @32] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @32] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @32] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @32] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @32] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @33] text/text near       'Φ_V' ↔ '='
+  [Beat6 @33] text/text near       '=' ↔ 'V'
+  [Beat6 @33] text/text near       'V' ↔ '·'
+  [Beat6 @33] text/text near       '·' ↔ 'n'
+  [Beat6 @33] text/text near       'n' ↔ '·'
+  [Beat6 @33] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @33] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @33] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @33] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @33] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @33] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @33] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @33] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @33] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @33] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @33] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @33] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @33] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @33] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @33] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @33] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @34] text/text near       'Φ_V' ↔ '='
+  [Beat6 @34] text/text near       '=' ↔ 'V'
+  [Beat6 @34] text/text near       'V' ↔ '·'
+  [Beat6 @34] text/text near       '·' ↔ 'n'
+  [Beat6 @34] text/text near       'n' ↔ '·'
+  [Beat6 @34] text/text near       '·' ↔ '(1 − η_WRG)'
+  [Beat6 @34] text/text near       '(1 − η_WRG)' ↔ '·'
+  [Beat6 @34] text/text near       '·' ↔ 'c_Luft'
+  [Beat6 @34] text/text near       'c_Luft' ↔ '·'
+  [Beat6 @34] text/text near       '·' ↔ 'Δθ'
+  [Beat6 @34] text/text near       'Δθ' ↔ '[W]'
+  [Beat6 @34] text/text near       'η_WRG' ↔ 'Wärmerückgewinnungsgrad'
+  [Beat6 @34] text/text near       'Wärmerückgewinnungsgrad' ↔ 'Typisch: 0,70–0,90'
+  [Beat6 @34] text/text near       'Typisch: 0,70–0,90' ↔ 'DIN EN 13141-7 / DIN 1946-6'
+  [Beat6 @34] text/text near       'Φ_V' ↔ 'Reduzierte Lüftungsheizlast'
+  [Beat6 @34] text/text near       'Reduzierte Lüftungsheizlast' ↔ 'Watt [W]'
+  [Beat6 @34] text/text near       'Watt [W]' ↔ 'DIN EN 12831-1'
+  [Beat6 @34] text/line near       '·' near SurroundingRectangle text_box=(-2.33, -2.13, -2.27, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @34] text/line near       '·' near SurroundingRectangle text_box=(-1.75, -2.13, -1.69, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @34] text/line near       '·' near SurroundingRectangle text_box=(1.02, -2.13, 1.07, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat6 @34] text/line near       '·' near SurroundingRectangle text_box=(2.6, -2.13, 2.65, -2.07) outline_box=(-4.32, -2.52, 4.32, -1.68)
+  [Beat7 @03] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @03] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @04] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @04] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @05] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @05] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @06] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @06] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @06] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @06] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @06] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @06] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @06] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @06] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @07] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @07] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @07] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @07] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @07] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @07] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @07] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @07] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @08] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @08] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @08] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @08] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @08] text/text near       'Eine zentrale WRG-Anlage vorwärmt ' ↔ 'zehn Prozent.'
+  [Beat7 @08] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @08] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @08] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @08] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @09] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @09] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @09] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @09] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @09] text/text near       'Eine zentrale WRG-Anlage vorwärmt ' ↔ 'zehn Prozent.'
+  [Beat7 @09] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @09] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @09] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @09] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @10] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @10] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @10] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @10] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @10] text/text near       'Eine zentrale WRG-Anlage vorwärmt ' ↔ 'zehn Prozent.'
+  [Beat7 @10] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @10] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @10] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @10] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @11] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @11] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @11] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @11] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @11] text/text near       'Eine zentrale WRG-Anlage vorwärmt ' ↔ 'zehn Prozent.'
+  [Beat7 @11] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @11] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @11] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @11] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @11] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @11] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @11] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @11] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @12] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @12] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @12] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @12] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @12] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @12] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @12] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @12] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @12] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @12] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @12] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @12] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @13] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @13] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @13] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @13] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @13] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @13] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @13] text/text near       'Dezentrale Keramik-Pendellüfter rü' ↔ 'raumweise.'
+  [Beat7 @13] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @13] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @13] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @13] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @13] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @13] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @14] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @14] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @14] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @14] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @14] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @14] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @14] text/text near       'Dezentrale Keramik-Pendellüfter rü' ↔ 'raumweise.'
+  [Beat7 @14] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @14] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @14] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @14] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @14] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @14] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @15] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @15] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @15] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @15] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @15] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @15] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @15] text/text near       'Dezentrale Keramik-Pendellüfter rü' ↔ 'raumweise.'
+  [Beat7 @15] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @15] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @15] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @15] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @15] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @15] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @16] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @16] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @16] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @16] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @16] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @16] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @16] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @16] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @16] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @16] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @16] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @16] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @17] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @17] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @17] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @17] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @17] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @17] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @17] text/text near       'DIN 1946-6: mechanische WRG kann d' ↔ '90% senken.'
+  [Beat7 @17] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @17] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @17] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @17] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @17] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @17] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @18] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @18] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @18] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @18] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @18] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @18] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @18] text/text near       'DIN 1946-6: mechanische WRG kann d' ↔ '90% senken.'
+  [Beat7 @18] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @18] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @18] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @18] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @18] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @18] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @19] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @19] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @19] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @19] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @19] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @19] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @19] text/text near       'DIN 1946-6: mechanische WRG kann d' ↔ '90% senken.'
+  [Beat7 @19] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @19] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @19] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @19] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @19] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @19] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @20] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @20] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @20] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @20] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @20] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @20] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @20] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @20] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @20] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @20] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @20] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @20] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @21] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @21] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @21] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @21] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @21] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @21] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @21] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @21] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @21] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @21] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @21] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @21] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)
+  [Beat7 @22] text/text near       '1. FENSTERLÜFTUNG' ↔ 'Freie Lüftung (Ohne WRG)'
+  [Beat7 @22] text/text near       'WRG: 0%' ↔ 'Lüftungsverlust: 100% (Sehr Hoch)'
+  [Beat7 @22] text/text near       '2. ZENTRALE WRG' ↔ 'Zentrales Lüftungsgerät'
+  [Beat7 @22] text/text near       'WRG: 85 – 95%' ↔ 'Lüftungsverlust: ~10% (Gering)'
+  [Beat7 @22] text/text near       '3. DEZENTRALE WRG' ↔ 'Pendellüfter mit Keramik'
+  [Beat7 @22] text/text near       'WRG: 70 – 90%' ↔ 'Lüftungsverlust: ~15 – 30%'
+  [Beat7 @22] text/line near       '2. ZENTRALE WRG' near CurvedArrow text_box=(-0.9, 1.72, 0.9, 1.86) outline_box=(0.34, 1.08, 1.44, 1.53)
+  [Beat7 @22] text/line near       'Zentrales Lüftungsgerät' near CurvedArrow text_box=(-1.05, 1.48, 1.05, 1.68) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @22] text/line near       'WRG Zentral' near CurvedArrow text_box=(-0.21, 0.86, 0.21, 1.13) outline_box=(-1.44, 0.84, -0.34, 1.29)
+  [Beat7 @22] text/line near       'Vorgewärmte Zuluft (+18°C)' near Polygon text_box=(0.11, 0.5, 2.01, 0.65) outline_box=(-0.72, -0.07, 0.72, 0.52)
+  [Beat7 @22] text/line near       '70s Abluft (Speichern)' near Polygon text_box=(4.31, 0.63, 4.98, 0.93) outline_box=(3.02, -0.07, 4.46, 0.52)
+  [Beat7 @22] text/line near       '70s Zuluft (+17°C)' near Polygon text_box=(4.58, -0.75, 5.18, -0.46) outline_box=(3.74, -0.79, 4.46, 0.23)

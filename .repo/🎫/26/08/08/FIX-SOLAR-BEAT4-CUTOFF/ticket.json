@@ -1,0 +1,8 @@
+{
+  "title": "Fix Solar Beat4 Cutoff",
+  "slug": "FIX-SOLAR-BEAT4-CUTOFF",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat4_SaisonaleWinkel: park house+sun+Sonnenbahn lower under the subtitle; keep path_arc inside the stage transform so winter motion no longer clips."
+}

@@ -10,28 +10,26 @@ _TUTORIAL_ROOT = next(
 )
 if str(_TUTORIAL_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_TUTORIAL_ROOT))
-from manim_fonts import apply_body_font, play_scene_title, scene_title
+from manim_fonts import (
+    apply_scene_style, scene_title, play_scene_title, TITLE_RUN_TIME,
+    beat_subtitle, BEAT_SUBTITLE_FADE,
+    SUBTITLE_FONT_SIZE, BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE,
+)
+from manim_visuals import (
+    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
+    solar_wave_ray, symbol_token, watt_anchor,
+    equation_row, formula_panel, highlight_param,
+    caption_bar, swap_caption, hold_for, subtitle_text,
+)
+
+# 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
+TITLE_DE = "Kühllast mit Sonnenschutz"
+
+# Mid-screen anchor for facade / charts / sections.
+CONTENT_CENTER = UP * 0.25
 
 
-
-# ─── Shared Constants ────────────────────────────────────────────────
-P_DEEP_DARK = "#0B0C10"
-P_WHITE     = "#E0E6ED"
-P_CYAN      = "#66FCF1"
-P_TEAL      = "#45A29E"
-P_ORANGE    = "#FFAAA5"
-P_YELLOW    = "#FFE66D"
-P_RED       = "#FF6B6B"
-P_BLUE      = "#4D96FF"
-P_GREEN     = "#CAFFBF"
-
-MAIN_TITLE = "Kühllast mit Sonnenschutz"
-
-
-def _main_title():
-    """☀️ Persistent chapter header shared by every beat of this topic."""
-    return scene_title(MAIN_TITLE)
-
+#region Shared visual motifs
 
 def _sun(pos, radius=0.4):
     """🌞 Layered sun disc with corona rings and burst spokes."""
@@ -44,25 +42,6 @@ def _sun(pos, radius=0.4):
         d = np.array([np.cos(angle), np.sin(angle), 0.0])
         burst.add(Line(pos + d * radius * 1.3, pos + d * radius * 2.1, color=P_YELLOW, stroke_width=2))
     return VGroup(glow, core, ring1, ring2, burst)
-
-
-def _equation_row(parts, font_size=24, buff=0.15):
-    """🧮 Build a Text-only equation from labelled fragments so symbols stay addressable."""
-    row = VGroup()
-    items = {}
-    for key, txt, color in parts:
-        t = Text(txt, font_size=font_size, color=color)
-        row.add(t)
-        if key:
-            items[key] = t
-    row.arrange(RIGHT, buff=buff)
-    return row, items
-
-
-def _boxed(mob, color=P_TEAL, buff=0.22, stroke_width=2.5):
-    """🔲 Rounded surrounding frame in the topic's equation-box style."""
-    box = SurroundingRectangle(mob, color=color, corner_radius=0.12, buff=buff, stroke_width=stroke_width)
-    return VGroup(box, mob), box
 
 
 def _build_window(center=ORIGIN, width=3.6, height=2.7, band=0.3, mullion=0.16, opening_pad=0.16):
@@ -156,68 +135,88 @@ def _bell(x, x0, x1, amp):
         return 0.0
     return amp * np.sin(PI * (x - x0) / (x1 - x0))
 
+#endregion
 
-# ═══════════════════════════════════════════════════════════════════════
-# BEAT 1 – Maximum Solar Irradiance (I_S,max)
-# ═══════════════════════════════════════════════════════════════════════
+
+#region Beat1 – Maximum Solar Irradiance (I_S,max)
 class Beat1_SolarIrradiance(Scene):
+    NARRATION = [
+        ("intro",
+         "Now we tackle the most significant summer heat source: direct solar radiation.",
+         "Die größte sommerliche Wärmequelle: direkte Sonnenstrahlung."),
+        ("irradiance",
+         "Everything starts with the maximum solar irradiance, I S max, measured in watts per square meter.",
+         "Alles beginnt mit I_S,max — der maximalen Bestrahlungsstärke in W/m²."),
+        ("chart",
+         "As the solar chart shows, this maximum value changes drastically depending on the time of day and whether the surface is horizontal, or facing North, South, East, or West.",
+         "Die Kurve zeigt: der Höchstwert hängt von Tageszeit und Orientierung ab."),
+    ]
+
     def construct(self):
-        self.camera.background_color = P_DEEP_DARK
-        apply_body_font()
+        apply_scene_style(self)
 
-        title = _main_title()
-        subtitle = Text("Direkte Sonnenstrahlung", font_size=20, color=P_YELLOW)
-        subtitle.next_to(title, DOWN, buff=0.18)
+        title = scene_title(TITLE_DE)
+        play_scene_title(self, title)
+        subtitle = beat_subtitle("Direkte Sonnenstrahlung", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
-        # ── Facade with a large window ──
-        fac_c = LEFT * 4.3 + UP * 0.15
-        facade = Rectangle(width=3.4, height=2.9, color=P_WHITE, stroke_width=3).move_to(fac_c)
-        win = Rectangle(width=2.0, height=1.5, color=P_CYAN, stroke_width=3).move_to(fac_c + UP * 0.1)
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        # ── Facade with a large window (mid-screen, clear of formula/caption) ──
+        fac_c = LEFT * 4.3 + CONTENT_CENTER + DOWN * 0.35
+        facade = Rectangle(width=3.4, height=2.6, color=P_WHITE, stroke_width=3).move_to(fac_c)
+        win = Rectangle(width=2.0, height=1.35, color=P_CYAN, stroke_width=3).move_to(fac_c + UP * 0.08)
         win_cross = VGroup(
             Line(win.get_top(), win.get_bottom(), color=P_CYAN, stroke_width=2),
             Line(win.get_left(), win.get_right(), color=P_CYAN, stroke_width=2),
         )
-        ground = Line(fac_c + LEFT * 2.1 + DOWN * 1.45, fac_c + RIGHT * 2.1 + DOWN * 1.45,
+        ground = Line(fac_c + LEFT * 2.1 + DOWN * 1.3, fac_c + RIGHT * 2.1 + DOWN * 1.3,
                       color=P_TEAL, stroke_width=4)
         building = VGroup(ground, facade, win, win_cross)
 
-        # ── Sun + rays onto the glazing ──
-        sun_pos = LEFT * 5.9 + UP * 2.55
-        sun = _sun(sun_pos, radius=0.34)
+        # Sun sits in the gap between the lowered facade (top y≈1.2) and the
+        # content ceiling (2.62): radius 0.26 -> outer ring spans y 1.25-2.55.
+        sun_pos = LEFT * 5.9 + UP * 1.9
+        sun = _sun(sun_pos, radius=0.26)
         ray_targets = [
-            win.get_center() + UP * 0.5 + LEFT * 0.7,
-            win.get_center() + UP * 0.15,
-            win.get_center() + DOWN * 0.45 + LEFT * 0.4,
-            win.get_center() + UP * 0.4 + RIGHT * 0.6,
-            win.get_center() + DOWN * 0.3 + RIGHT * 0.7,
+            win.get_center() + UP * 0.45 + LEFT * 0.7,
+            win.get_center() + UP * 0.12,
+            win.get_center() + DOWN * 0.4 + LEFT * 0.4,
+            win.get_center() + UP * 0.35 + RIGHT * 0.6,
+            win.get_center() + DOWN * 0.25 + RIGHT * 0.7,
         ]
         rays = VGroup(*[
-            Line(sun_pos + (t - sun_pos) * 0.22, t, color=P_YELLOW, stroke_width=2.5, stroke_opacity=0.85)
+            solar_wave_ray(sun_pos + (t - sun_pos) * 0.22, t, color=P_YELLOW, stroke_width=2.5, amp=0.08)
             for t in ray_targets
         ])
 
-        # ── Irradiance chart ──
+        irr_anchor = watt_anchor(800, compare="vacuum", title="I_S,max ≈ 800 W/m²")
+        # Bottom-left: the old upper-left corner placement sat on top of the sun.
+        # x≈-4.8 stays clear of the centred formula panel, y≈-2.0 of the caption.
+        irr_anchor.scale(0.6).move_to(LEFT * 4.8 + DOWN * 2.0)
+
         axes = Axes(
             x_range=[6, 18, 3],
             y_range=[0, 900, 300],
-            x_length=5.2,
-            y_length=3.7,
+            x_length=5.0,
+            y_length=3.0,
             axis_config={"color": P_WHITE, "stroke_width": 2},
             tips=False,
-        ).move_to(RIGHT * 3.95 + DOWN * 0.25)
+        ).move_to(RIGHT * 3.7 + CONTENT_CENTER)
 
         x_labels = VGroup(*[
-            Text(str(h), font_size=15, color=P_WHITE).next_to(axes.c2p(h, 0), DOWN, buff=0.16)
+            Text(str(h), font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(axes.c2p(h, 0), DOWN, buff=0.14)
             for h in (6, 9, 12, 15, 18)
         ])
         y_labels = VGroup(*[
-            Text(str(v), font_size=15, color=P_WHITE).next_to(axes.c2p(6, v), LEFT, buff=0.16)
+            Text(str(v), font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(axes.c2p(6, v), LEFT, buff=0.14)
             for v in (300, 600, 900)
         ])
-        y_axis_name = Text("W/m²", font_size=16, color=P_TEAL)
-        y_axis_name.next_to(axes.c2p(6, 900), UP, buff=0.2).shift(LEFT * 0.15)
-        x_axis_name = Text("Sonnenzeit", font_size=16, color=P_TEAL)
-        x_axis_name.next_to(axes.c2p(12, 0), DOWN, buff=0.5)
+        y_axis_name = Text("W/m²", font_size=BODY_FONT_SIZE, color=P_TEAL)
+        y_axis_name.next_to(axes.c2p(6, 900), UP, buff=0.16).shift(LEFT * 0.15)
+        x_axis_name = Text("Sonnenzeit", font_size=BODY_FONT_SIZE, color=P_TEAL)
+        x_axis_name.next_to(axes.c2p(12, 0), DOWN, buff=0.42)
 
         specs = [
             ("Horiz", 5.0, 19.0, 860, P_YELLOW, (6, 18), (12, 860), UP * 0.2),
@@ -235,22 +234,22 @@ class Beat1_SolarIrradiance(Scene):
                 color=color,
                 stroke_width=2.8,
             )
-            curve_labels[name] = Text(name, font_size=16, color=color).move_to(axes.c2p(lx, ly) + off)
+            curve_labels[name] = Text(name, font_size=BODY_FONT_SIZE, color=color).move_to(axes.c2p(lx, ly) + off)
 
-        # ── Equation box ──
-        eq_row, eq_items = _equation_row(
-            [("i", "I_S,max", P_YELLOW), (None, "=", P_WHITE), (None, "ca. 400 bis 800 W/m²", P_YELLOW)],
-            font_size=21,
-        )
-        eq_group, eq_box = _boxed(eq_row, color=P_YELLOW)
-        eq_group.to_corner(DL, buff=0.4)
+        eq_row, eq_items = equation_row([
+            ("i", "I_S,max", P_YELLOW), (None, "=", P_WHITE),
+            (None, "≈ 400–800", P_YELLOW), (None, "[W/m²]", P_TEAL),
+        ])
+        eq_row, eq_box = formula_panel(eq_row, color=P_YELLOW)
 
-        # ── ANIMATION ──
-        play_scene_title(self, title)
-        self.play(FadeIn(subtitle, shift=DOWN * 0.15), run_time=0.5)
+        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
+
         self.play(Create(building), run_time=1.6)
         self.play(FadeIn(sun, scale=0.7), run_time=1.0)
         self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.12), run_time=1.4)
+        self.play(FadeIn(irr_anchor, shift=DOWN * 0.1), run_time=0.9)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "irradiance"))
+        hold_for(self, self.NARRATION, "irradiance", used=4.9 + 0.35)
 
         self.play(Create(axes), run_time=1.2)
         self.play(
@@ -267,6 +266,11 @@ class Beat1_SolarIrradiance(Scene):
         )
 
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
+        i_tok = symbol_token("I_S,max", color=P_YELLOW, font_size=FORMULA_FONT_SIZE)
+        i_tok.move_to(sun.get_center())
+        self.play(ReplacementTransform(sun.copy(), i_tok), run_time=1.0)
+        self.play(i_tok.animate.move_to(eq_items["i"].get_center()), run_time=0.9)
+        self.play(FadeOut(i_tok), run_time=0.35)
 
         for name in ("Horiz", "N", "S", "O", "W"):
             base_color = curves[name].get_stroke_color()
@@ -281,46 +285,63 @@ class Beat1_SolarIrradiance(Scene):
                 run_time=0.35,
             )
 
-        self.play(eq_items["i"].animate.scale(1.15), rate_func=there_and_back, run_time=0.9)
-        # Hold with VO: irradiance chart / I_S,max
-        self.wait(3.1)
+        ring = highlight_param(eq_items, "i", color=P_YELLOW)
+        self.play(Create(ring), run_time=0.5)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "chart"))
+        hold_for(self, self.NARRATION, "chart", used=9.55 + 0.5 + 0.35)
+        self.play(FadeOut(ring), FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# BEAT 2 – Gross Area & Frame Factor (A · F_F)
-# ═══════════════════════════════════════════════════════════════════════
+
+#region Beat2 – Gross Area & Frame Factor (A · F_F)
 class Beat2_FrameFactor(Scene):
+    NARRATION = [
+        ("intro",
+         "To calculate the cooling load, we start with the gross area of the window opening, A.",
+         "Die Kühllast beginnt mit der Rohbauöffnung A."),
+        ("frame",
+         "However, glass doesn't cover the entire opening. We must multiply by F F, the dimensionless frame factor.",
+         "Glas füllt die Öffnung nicht ganz — multipliziert mit dem Rahmenfaktor F_F."),
+        ("aeff",
+         "This mathematically isolates the effective transparent area by subtracting the opaque window frames that physically block the sun.",
+         "So bleibt die transparente Restfläche A_eff — ohne den undurchsichtigen Rahmen."),
+    ]
+
     def construct(self):
-        self.camera.background_color = P_DEEP_DARK
-        apply_body_font()
+        apply_scene_style(self)
 
-        title = _main_title()
-        subtitle = Text("Fensterfläche und Rahmenfaktor", font_size=20, color=P_WHITE)
-        subtitle.next_to(title, DOWN, buff=0.18)
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Fensterfläche und Rahmenfaktor", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
-        w = _build_window(center=LEFT * 3.4 + DOWN * 0.1, width=3.6, height=2.7)
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        w = _build_window(center=LEFT * 3.4 + CONTENT_CENTER, width=3.6, height=2.5)
         w["panes"].set_z_index(2)
         w["frame"].set_z_index(3)
 
-        area_label = Text("A: Rohbauöffnung", font_size=16, color=P_BLUE)
-        area_label.next_to(w["opening"], DOWN, buff=0.22)
+        area_label = Text("A: Rohbauöffnung", font_size=BODY_FONT_SIZE, color=P_BLUE)
+        area_label.next_to(w["opening"], DOWN, buff=0.18)
 
-        # ── Rays: some blocked by the opaque frame, some through the glass ──
         direction = np.array([1.0, -0.55, 0.0])
         direction = direction / np.linalg.norm(direction)
         frame_hits = [
-            np.array([w["x0"] + 0.15, 0.25, 0.0]),
-            np.array([-3.4, 0.35, 0.0]),
+            np.array([w["x0"] + 0.15, 0.55, 0.0]),
+            np.array([-3.4, 0.65, 0.0]),
             np.array([-4.2, w["y1"] - 0.15, 0.0]),
             np.array([-2.6, w["y0"] + 0.15, 0.0]),
         ]
         glass_hits = [
-            np.array([-4.5, 0.45, 0.0]),
-            np.array([-4.0, -0.25, 0.0]),
-            np.array([-4.6, -0.95, 0.0]),
-            np.array([-2.9, 0.3, 0.0]),
-            np.array([-2.3, -0.4, 0.0]),
-            np.array([-2.6, 0.62, 0.0]),
+            np.array([-4.5, 0.75, 0.0]),
+            np.array([-4.0, 0.05, 0.0]),
+            np.array([-4.6, -0.65, 0.0]),
+            np.array([-2.9, 0.6, 0.0]),
+            np.array([-2.3, -0.1, 0.0]),
+            np.array([-2.6, 0.92, 0.0]),
         ]
 
         def _incoming(hit):
@@ -339,33 +360,26 @@ class Beat2_FrameFactor(Scene):
             for h in glass_hits
         ])
 
-        # ── Formula panel ──
-        eq_row, eq_items = _equation_row(
-            [("aeff", "A_eff", P_CYAN), (None, "=", P_WHITE), ("a", "A", P_BLUE),
-             (None, "·", P_WHITE), ("ff", "F_F", P_WHITE)],
-            font_size=28,
-        )
-        def_a = Text("A: Rohbauöffnung des Fensters", font_size=16, color=P_BLUE)
-        def_ff = Text("F_F: Rahmenfaktor, F_F < 1,0", font_size=16, color=P_WHITE)
-        def_aeff = Text("A_eff: transparente Restfläche", font_size=16, color=P_CYAN)
-        defs = VGroup(def_a, def_ff, def_aeff).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
-        panel_body = VGroup(eq_row, defs).arrange(DOWN, buff=0.34)
-        panel, panel_box = _boxed(panel_body, color=P_TEAL)
-        panel.move_to(RIGHT * 3.6 + UP * 0.1)
+        eq_row, eq_items = equation_row([
+            ("aeff", "A_eff", P_CYAN), (None, "=", P_WHITE), ("a", "A", P_BLUE),
+            (None, "·", P_WHITE), ("ff", "F_F", P_WHITE),
+            (None, "  [m²]", P_TEAL),
+        ])
+        eq_row, panel_box = formula_panel(eq_row, color=P_TEAL)
 
-        ff_highlight = SurroundingRectangle(
-            eq_items["ff"], color=P_ORANGE, buff=0.1, stroke_width=3, corner_radius=0.06
-        )
+        unit_a = Text("[m²]", font_size=LABEL_FONT_SIZE, color=P_BLUE).next_to(eq_items["a"], UP, buff=0.12)
+        unit_ff = Text("[-]", font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(eq_items["ff"], UP, buff=0.12)
 
-        # ── ANIMATION ──
-        self.add(title, subtitle)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+
         self.play(Create(w["opening"]), FadeIn(area_label, shift=UP * 0.15), run_time=1.4)
         self.play(w["opening"].animate.set_stroke(color=P_BLUE, width=5), rate_func=there_and_back, run_time=0.9)
 
         self.play(FadeIn(w["frame"], scale=0.9), run_time=1.3)
         self.play(FadeIn(w["panes"]), run_time=0.7)
 
-        self.play(FadeOut(area_label), Create(panel_box), FadeIn(panel_body), run_time=1.4)
+        self.play(FadeOut(area_label), Create(panel_box), FadeIn(eq_row), FadeIn(unit_a), FadeIn(unit_ff), run_time=1.4)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "frame"))
 
         self.play(
             LaggedStart(*[Create(r) for r in (*glass_rays, *frame_rays)], lag_ratio=0.08),
@@ -377,49 +391,67 @@ class Beat2_FrameFactor(Scene):
             run_time=1.6,
         )
 
-        self.play(Create(ff_highlight), run_time=0.7)
+        ring = highlight_param(eq_items, "ff", color=P_ORANGE)
+        self.play(Create(ring), eq_items["ff"].animate.set_color(P_ORANGE), run_time=0.7)
+        hold_for(self, self.NARRATION, "frame", used=6.8 + 0.35)
+        self.play(FadeOut(ring), run_time=0.3)
+
+        ring = highlight_param(eq_items, "aeff", color=P_CYAN)
         self.play(
-            ff_highlight.animate.set_stroke(width=5),
-            eq_items["ff"].animate.set_color(P_ORANGE),
-            rate_func=there_and_back,
-            run_time=1.1,
-        )
-        self.play(
+            Create(ring),
             w["panes"].animate.set_fill(opacity=0.34),
-            Indicate(eq_items["aeff"], color=P_CYAN, scale_factor=1.18),
-            run_time=1.4,
+            run_time=0.8,
         )
-        self.play(FadeOut(ff_highlight), run_time=0.4)
-        # Hold with VO: frame factor / A_eff
-        self.wait(3.0)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "aeff"))
+        hold_for(self, self.NARRATION, "aeff", used=0.8 + 0.35)
+        self.play(FadeOut(ring), FadeOut(caption), FadeOut(unit_a), FadeOut(unit_ff), run_time=0.3)
+        self.wait(0.5)
+#endregion
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# BEAT 3 – Shading Factor (F_V)
-# ═══════════════════════════════════════════════════════════════════════
+#region Beat3 – Shading Factor (F_V)
 class Beat3_ShadingFactor(Scene):
-    """🪟 Vertical section through the facade: without shading the full beam reaches the
-    glass; the external Raffstore intercepts it and reflects the heat back outside."""
+    """🪟 Vertical section: without shading the full beam reaches the glass; Raffstore reflects heat outside."""
+
+    NARRATION = [
+        ("intro",
+         "Next, we deploy our sun protection. This is a vertical section through the facade.",
+         "Als Nächstes der Sonnenschutz — Vertikalschnitt durch die Fassade."),
+        ("ismax",
+         "I S max is the maximum solar irradiance on the facade — the starting intensity in watts per square meter, before any shading.",
+         "I_S,max ist die maximale Bestrahlungsstärke auf die Fassade — der Ausgangswert in W/m² vor Verschattung."),
+        ("unshaded",
+         "With no shading, the full beam strikes the glass and passes straight into the room: a shading factor, F V, of one point zero.",
+         "Ohne Schutz trifft die volle Strahlung auf die Scheibe: F_V = 1,0."),
+        ("raffstore",
+         "Now an external Raffstore drops in front. Its slats intercept the beam and reflect the heat back outside, before it ever reaches the glass.",
+         "Ein außenliegender Raffstore fängt den Strahl ab und reflektiert die Wärme."),
+        ("reduced",
+         "Only a small residual gets through, so F V falls to about zero point one five.",
+         "Nur ein Restanteil kommt durch — F_V sinkt auf etwa 0,15."),
+    ]
 
     def construct(self):
-        self.camera.background_color = P_DEEP_DARK
-        apply_body_font()
+        apply_scene_style(self)
 
-        title = _main_title()
-        subtitle = Text("Verschattungsfaktor", font_size=20, color=P_TEAL)
-        subtitle.next_to(title, DOWN, buff=0.18)
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Verschattungsfaktor", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
-        # ── Facade in vertical section ──
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
         glass_out, glass_in = -3.5, -3.3
-        wall_top, wall_bottom = 1.35, -1.65
+        wall_top, wall_bottom = 1.65, -0.95
         lintel = Rectangle(
-            width=0.5, height=0.85, color=P_WHITE, stroke_width=2.5,
+            width=0.5, height=0.7, color=P_WHITE, stroke_width=2.5,
             fill_color="#161A21", fill_opacity=1.0,
-        ).move_to(np.array([-3.4, wall_top + 0.425, 0.0]))
+        ).move_to(np.array([-3.4, wall_top + 0.35, 0.0]))
         sill = Rectangle(
-            width=0.5, height=0.85, color=P_WHITE, stroke_width=2.5,
+            width=0.5, height=0.7, color=P_WHITE, stroke_width=2.5,
             fill_color="#161A21", fill_opacity=1.0,
-        ).move_to(np.array([-3.4, wall_bottom - 0.425, 0.0]))
+        ).move_to(np.array([-3.4, wall_bottom - 0.35, 0.0]))
         masonry = VGroup(
             lintel, sill,
             _section_hatch(lintel), _section_hatch(sill),
@@ -431,22 +463,23 @@ class Beat3_ShadingFactor(Scene):
             for x in (glass_out, glass_in)
         ]).set_z_index(3)
 
-        ceiling = Line(np.array([-3.15, 2.2, 0.0]), np.array([-0.7, 2.2, 0.0]),
+        ceiling = Line(np.array([-3.15, 2.45, 0.0]), np.array([-0.7, 2.45, 0.0]),
                        color=P_WHITE, stroke_width=2.5)
-        floor = Line(np.array([-3.15, -2.5, 0.0]), np.array([-0.7, -2.5, 0.0]),
+        floor = Line(np.array([-3.15, -1.45, 0.0]), np.array([-0.7, -1.45, 0.0]),
                      color=P_TEAL, stroke_width=4)
-        section = VGroup(masonry, glazing, ceiling, floor)
+        inner_wall = Line(np.array([-0.7, -1.45, 0.0]), np.array([-0.7, 2.45, 0.0]),
+                          color=P_WHITE, stroke_width=2.5)
+        section = VGroup(masonry, glazing, ceiling, floor, inner_wall)
 
-        lbl_out = Text("Außen", font_size=16, color=P_TEAL).move_to(np.array([-6.4, -1.5, 0.0]))
-        lbl_in = Text("Innen", font_size=16, color=P_TEAL).move_to(np.array([-1.5, 1.5, 0.0]))
-        lbl_glass = Text("Verglasung", font_size=15, color=P_CYAN).move_to(np.array([-2.6, -3.0, 0.0]))
+        lbl_out = Text("Außen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(np.array([-6.2, -0.7, 0.0]))
+        lbl_in = Text("Innen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(np.array([-1.5, 1.85, 0.0]))
+        lbl_glass = Text("Verglasung", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([-2.6, -1.65, 0.0]))
 
-        # ── Solar geometry: parallel beam at a high summer altitude ──
         d = np.array([0.75, -0.661, 0.0])
-        sun = _sun(np.array([-6.3, 2.85, 0.0]), radius=0.26)
+        sun = _sun(np.array([-6.3, 1.85, 0.0]), radius=0.26)
 
         slat_x = -4.4
-        slat_ys = [1.2 - i * 0.4 for i in range(8)]
+        slat_ys = [1.45 - i * 0.35 for i in range(8)]
         aimed_ys = slat_ys[:6]
         glass_ys = [y - 0.793 for y in aimed_ys]
 
@@ -463,13 +496,23 @@ class Beat3_ShadingFactor(Scene):
             for y in glass_ys
         ])
 
+        room_end_x, floor_y = -0.7, -1.45
+
+        def _through_end(start):
+            t_floor = (floor_y - start[1]) / d[1]
+            t_wall = (room_end_x - start[0]) / d[0]
+            t = min(t for t in (t_floor, t_wall) if t > 0.05)
+            return start + d * t
+
         interior = VGroup(*[
-            Line(np.array([glass_in, y, 0.0]), np.array([glass_in, y, 0.0]) + d * 2.55,
-                 color=P_YELLOW, stroke_width=2.6, stroke_opacity=0.85).set_z_index(1)
-            for y in glass_ys[:3]
+            Line(
+                np.array([glass_in, y, 0.0]),
+                _through_end(np.array([glass_in, y, 0.0])),
+                color=P_YELLOW, stroke_width=2.6, stroke_opacity=0.85,
+            ).set_z_index(1)
+            for y in glass_ys[:5]
         ])
 
-        # ── External Raffstore: slats normal to the beam, reflecting it back outside ──
         u = np.array([np.cos(48 * DEGREES), np.sin(48 * DEGREES), 0.0])
         n = np.array([-u[1], u[0], 0.0])
         r = d - 2 * float(np.dot(d, n)) * n
@@ -484,11 +527,11 @@ class Beat3_ShadingFactor(Scene):
         rail = Rectangle(
             width=0.62, height=0.26, color=P_TEAL, stroke_width=2,
             fill_color=P_TEAL, fill_opacity=0.9,
-        ).move_to(np.array([slat_x, 1.62, 0.0]))
-        bracket = Line(np.array([slat_x + 0.31, 1.62, 0.0]), np.array([-3.65, 1.62, 0.0]),
+        ).move_to(np.array([slat_x, 1.85, 0.0]))
+        bracket = Line(np.array([slat_x + 0.31, 1.85, 0.0]), np.array([-3.65, 1.85, 0.0]),
                        color=P_TEAL, stroke_width=2.5)
         blind = VGroup(rail, bracket, slats).set_z_index(4)
-        lbl_blind = Text("Raffstore", font_size=15, color=P_TEAL).move_to(np.array([-4.95, -2.35, 0.0]))
+        lbl_blind = Text("Raffstore", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(np.array([-4.95, -1.55, 0.0]))
 
         reflected = VGroup(*[
             Arrow(
@@ -499,80 +542,73 @@ class Beat3_ShadingFactor(Scene):
             ).set_z_index(5)
             for y in aimed_ys
         ])
-        # Residual: leaves the slat's inner tip, crosses the glass, trickles into the room
+        def _floor_end(start):
+            return start + d * ((floor_y - start[1]) / d[1])
+
         residual = VGroup(*[
             Line(
                 np.array([-4.226, y + 0.193, 0.0]),
-                np.array([-4.226, y + 0.193, 0.0]) + d * 3.6,
+                _floor_end(np.array([-4.226, y + 0.193, 0.0])),
                 color=P_YELLOW, stroke_width=1.4, stroke_opacity=0.32,
             ).set_z_index(1)
-            for y in aimed_ys[:3]
+            for y in aimed_ys[:5]
         ])
-        lbl_rest = Text("Restanteil", font_size=15, color=P_YELLOW).move_to(np.array([-1.25, -0.55, 0.0]))
+        lbl_rest = Text("Restanteil", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([-1.25, -0.15, 0.0]))
 
-        # ── Equation ──
-        eq_row, eq_items = _equation_row(
-            [("ired", "I_reduziert", P_TEAL), (None, "=", P_WHITE), ("i", "I_S,max", P_YELLOW),
-             (None, "·", P_WHITE), ("fv", "F_V", P_TEAL)],
-            font_size=25,
-        )
-        eq_group, eq_box = _boxed(eq_row, color=P_TEAL)
-        eq_group.move_to(RIGHT * 3.7 + UP * 2.0)
+        eq_row, eq_items = equation_row([
+            ("ired", "I_reduziert", P_TEAL), (None, "=", P_WHITE), ("i", "I_S,max", P_YELLOW),
+            (None, "·", P_WHITE), ("fv", "F_V", P_TEAL),
+            (None, "  [W/m²]", P_TEAL),
+        ])
+        eq_row, eq_box = formula_panel(eq_row, color=P_TEAL, edge_buff=1.15)
 
-        # ── F_V scale ──
-        sx0, sx1, sy = 1.5, 6.3, -1.55
+        sx0, sx1, sy = 1.5, 6.0, 0.45
         scale_line = Line(np.array([sx0, sy, 0.0]), np.array([sx1, sy, 0.0]), color=P_WHITE, stroke_width=2)
         tick_l = Line(np.array([sx0, sy - 0.12, 0.0]), np.array([sx0, sy + 0.12, 0.0]), color=P_WHITE, stroke_width=2)
         tick_r = Line(np.array([sx1, sy - 0.12, 0.0]), np.array([sx1, sy + 0.12, 0.0]), color=P_WHITE, stroke_width=2)
-        end_l = Text("0,1\naußenliegend", font_size=13, color=P_TEAL, line_spacing=0.8)
-        end_l.next_to(tick_l, DOWN, buff=0.14)
-        end_r = Text("1,0\nohne Schutz", font_size=13, color=P_YELLOW, line_spacing=0.8)
-        end_r.next_to(tick_r, DOWN, buff=0.14)
-        scale_title = Text("Bandbreite F_V", font_size=16, color=P_WHITE)
-        scale_title.next_to(scale_line, UP, buff=1.05)
+        end_l = Text("0,1\naußenliegend", font_size=LABEL_FONT_SIZE, color=P_TEAL, line_spacing=0.8)
+        end_l.next_to(tick_l, DOWN, buff=0.12)
+        end_r = Text("1,0\nohne Schutz", font_size=LABEL_FONT_SIZE, color=P_YELLOW, line_spacing=0.8)
+        end_r.next_to(tick_r, DOWN, buff=0.12)
+        scale_title = Text("Bandbreite F_V", font_size=BODY_FONT_SIZE, color=P_WHITE)
+        scale_title.next_to(scale_line, UP, buff=0.85)
 
         def _sx(fv):
             return sx0 + (fv - 0.1) / 0.9 * (sx1 - sx0)
 
         marker = Triangle(color=P_YELLOW, fill_color=P_YELLOW, fill_opacity=1.0, stroke_width=0)
         marker.scale(0.16).rotate(PI).move_to(np.array([_sx(1.0), sy + 0.24, 0.0]))
-        marker_val = Text("F_V = 1,0", font_size=17, color=P_YELLOW)
-        marker_val.next_to(marker, UP, buff=0.12)
-        marker_val_new = Text("F_V = 0,15", font_size=17, color=P_TEAL)
-        marker_val_new.next_to(np.array([_sx(0.15), sy + 0.4, 0.0]), UP, buff=0.12)
+        marker_val = Text("F_V = 1,0", font_size=BODY_FONT_SIZE, color=P_YELLOW)
+        marker_val.next_to(marker, UP, buff=0.1)
+        marker_val_new = Text("F_V = 0,15", font_size=BODY_FONT_SIZE, color=P_TEAL)
+        marker_val_new.next_to(np.array([_sx(0.15), sy + 0.4, 0.0]), UP, buff=0.1)
 
-        cap_before = Text("Ohne Schutz trifft die volle Strahlung auf die Scheibe",
-                          font_size=17, color=P_YELLOW)
-        cap_before.to_edge(DOWN, buff=0.28)
-        cap_after = Text("Außenliegend reflektiert: Die Wärme bleibt vor der Fassade",
-                         font_size=17, color=P_TEAL)
-        cap_after.to_edge(DOWN, buff=0.28)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        # ── ANIMATION ──
-        self.add(title, subtitle)
         self.play(Create(section), run_time=1.8)
         self.play(
             LaggedStart(FadeIn(lbl_out), FadeIn(lbl_in), FadeIn(lbl_glass), lag_ratio=0.2),
             run_time=1.0,
         )
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
+        ring_i = highlight_param(eq_items, "i", color=P_YELLOW)
+        self.play(Create(ring_i), run_time=0.45)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ismax"))
+        hold_for(self, self.NARRATION, "ismax", used=1.2 + 0.45 + 0.35)
+        self.play(FadeOut(ring_i), run_time=0.25)
 
-        # Situation A — unshaded: the whole beam reaches the glass and enters the room
         self.play(FadeIn(sun, scale=0.7), run_time=0.7)
         self.play(LaggedStart(*[Create(ray) for ray in direct], lag_ratio=0.08), run_time=1.6)
-        self.play(
-            LaggedStart(*[Create(ray) for ray in interior], lag_ratio=0.1),
-            FadeIn(cap_before),
-            run_time=1.4,
-        )
+        self.play(LaggedStart(*[Create(ray) for ray in interior], lag_ratio=0.1), run_time=1.4)
         self.play(
             Create(scale_line), Create(tick_l), Create(tick_r),
             FadeIn(end_l), FadeIn(end_r), FadeIn(scale_title),
             FadeIn(marker, shift=DOWN * 0.2), FadeIn(marker_val),
             run_time=1.4,
         )
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "unshaded"))
+        hold_for(self, self.NARRATION, "unshaded", used=9.1 + 0.35)
 
-        # Situation B — the Raffstore drops in front of the facade
         blind.shift(UP * 3.0).set_opacity(0)
         self.add(blind)
         self.play(blind.animate.shift(DOWN * 3.0).set_opacity(1.0), run_time=1.5)
@@ -583,11 +619,13 @@ class Beat3_ShadingFactor(Scene):
             LaggedStart(*[GrowArrow(a) for a in reflected], lag_ratio=0.08),
             run_time=1.8,
         )
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "raffstore"))
+        hold_for(self, self.NARRATION, "raffstore", used=3.8 + 0.35)
+
         self.play(
             FadeOut(interior),
             LaggedStart(*[Create(ray) for ray in residual], lag_ratio=0.1),
             FadeIn(lbl_rest),
-            ReplacementTransform(cap_before, cap_after),
             run_time=1.6,
         )
         self.play(
@@ -595,84 +633,91 @@ class Beat3_ShadingFactor(Scene):
             ReplacementTransform(marker_val, marker_val_new),
             run_time=1.8,
         )
-
-        fv_highlight = SurroundingRectangle(
-            eq_items["fv"], color=P_TEAL, buff=0.1, stroke_width=3, corner_radius=0.06
-        )
-        self.play(Create(fv_highlight), run_time=0.7)
-        self.play(
-            fv_highlight.animate.set_stroke(width=5),
-            Indicate(eq_items["ired"], color=P_TEAL, scale_factor=1.12),
-            run_time=1.2,
-        )
-        self.play(FadeOut(fv_highlight), run_time=0.4)
-        # Hold with VO: shading factor / Raffstore
-        self.wait(3.0)
+        ring = highlight_param(eq_items, "fv", color=P_TEAL)
+        self.play(Create(ring), run_time=0.7)
+        self.play(Indicate(eq_items["ired"], color=P_TEAL, scale_factor=1.12), run_time=0.8)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reduced"))
+        hold_for(self, self.NARRATION, "reduced", used=4.9 + 0.35)
+        self.play(FadeOut(ring), FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# BEAT 4 – Total Solar Energy Transmittance (g_tot)
-# ═══════════════════════════════════════════════════════════════════════
+#region Beat4 – Total Solar Energy Transmittance (g_tot)
 class Beat4_GlassTransmittance(Scene):
+    NARRATION = [
+        ("intro",
+         "Finally, the remaining light hits the glass pane itself.",
+         "Zuletzt trifft das Restlicht auf die Glasscheibe selbst."),
+        ("gtot",
+         "We multiply by g tot, the total solar energy transmittance.",
+         "Wir multiplizieren mit g_tot — dem Gesamtenergiedurchlassgrad."),
+        ("parts",
+         "Academically, this is the sum of direct solar transmission, tau e, and the secondary inward heat emission, q i, from the glass absorbing the radiation.",
+         "Das ist die Summe aus direkter Transmission τ_e und sekundärer Wärmeabgabe q_i."),
+        ("meaning",
+         "It tells us exactly what fraction of that heat successfully penetrates into the room.",
+         "Er sagt, welcher Anteil der Wärme tatsächlich in den Raum gelangt."),
+    ]
+
     def construct(self):
-        self.camera.background_color = P_DEEP_DARK
-        apply_body_font()
+        apply_scene_style(self)
 
-        title = _main_title()
-        subtitle = Text("Gesamtenergiedurchlassgrad", font_size=20, color=P_RED)
-        subtitle.next_to(title, DOWN, buff=0.18)
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Gesamtenergiedurchlassgrad", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
-        # ── Glass pane cross-section ──
-        pane_x, pane_top, pane_bottom = -1.5, 1.75, -2.2
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        pane_x, pane_top, pane_bottom = -1.5, 2.15, -0.95
         pane_w = 0.36
         pane = Rectangle(
             width=pane_w, height=pane_top - pane_bottom, color=P_CYAN, stroke_width=3,
             fill_color=P_CYAN, fill_opacity=0.18,
         ).move_to(np.array([pane_x, (pane_top + pane_bottom) / 2, 0.0]))
-        pane_label = Text("Verglasung im Schnitt", font_size=16, color=P_CYAN)
-        pane_label.move_to(np.array([pane_x, 2.32, 0.0]))
+        pane_label = Text("Verglasung im Schnitt", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        pane_label.move_to(np.array([pane_x, 2.35, 0.0]))
 
-        outside = Text("Außen", font_size=17, color=P_TEAL).move_to(LEFT * 5.6 + UP * 1.95)
-        inside = Text("Innen", font_size=17, color=P_TEAL).move_to(RIGHT * 4.8 + UP * 1.95)
+        outside = Text("Außen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(LEFT * 5.6 + UP * 1.6)
+        inside = Text("Innen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(RIGHT * 4.8 + UP * 1.6)
 
-        # ── Three light paths (reflection mirrors x on the vertical pane) ──
-        hit_out = np.array([pane_x - pane_w / 2, 1.1, 0.0])
-        hit_in = np.array([pane_x + pane_w / 2, 1.1, 0.0])
+        hit_out = np.array([pane_x - pane_w / 2, 1.45, 0.0])
+        hit_in = np.array([pane_x + pane_w / 2, 1.45, 0.0])
         d_in = np.array([3.52, -1.5, 0.0])
         d_in = d_in / np.linalg.norm(d_in)
         d_ref = np.array([-d_in[0], d_in[1], 0.0])
 
         incoming = Line(hit_out - d_in * 3.83, hit_out, color=P_YELLOW, stroke_width=3)
         reflected = Line(hit_out, hit_out + d_ref * 2.8, color=P_WHITE, stroke_width=2.5, stroke_opacity=0.7)
-        transmitted = Line(hit_in, hit_in + d_in * 4.6, color=P_YELLOW, stroke_width=3)
+        transmitted = Line(hit_in, hit_in + d_in * 4.0, color=P_YELLOW, stroke_width=3)
 
-        lbl_refl = Text("Reflexion", font_size=16, color=P_WHITE).move_to(LEFT * 4.55 + DOWN * 0.5)
-        lbl_tau = Text("τ_e", font_size=22, color=P_YELLOW).move_to(np.array([0.99, 0.68, 0.0]))
-        lbl_qi = Text("q_i", font_size=22, color=P_RED).move_to(np.array([3.05, -1.45, 0.0]))
+        lbl_refl = Text("Reflexion", font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(LEFT * 4.55 + UP * 0.15)
+        lbl_tau = Text("τ_e", font_size=FORMULA_FONT_SIZE, color=P_YELLOW).move_to(np.array([0.99, 1.05, 0.0]))
+        lbl_qi = Text("q_i", font_size=FORMULA_FONT_SIZE, color=P_RED).move_to(np.array([3.05, -0.45, 0.0]))
 
         waves = VGroup(*[
-            _heat_wave(np.array([pane_x + pane_w / 2 + 0.05, y, 0.0]), length=3.6, color=P_RED)
-            for y in (-0.9, -1.45, -2.0)
+            _heat_wave(np.array([pane_x + pane_w / 2 + 0.05, y, 0.0]), length=3.2, color=P_RED)
+            for y in (0.05, -0.45, -0.85)
         ])
 
-        merge_point = np.array([3.6, -0.55, 0.0])
+        merge_point = np.array([3.4, 0.25, 0.0])
         merge_glow = VGroup(
             Dot(merge_point, radius=0.5, color=P_ORANGE, fill_opacity=0.12),
             Dot(merge_point, radius=0.3, color=P_ORANGE, fill_opacity=0.25),
             Dot(merge_point, radius=0.15, color=P_ORANGE, fill_opacity=0.5),
         )
 
-        # ── Equation ──
-        eq_row, eq_items = _equation_row(
-            [("g", "g_tot", P_RED), (None, "=", P_WHITE), ("tau", "τ_e", P_YELLOW),
-             (None, "+", P_WHITE), ("qi", "q_i", P_RED)],
-            font_size=27,
-        )
-        eq_group, eq_box = _boxed(eq_row, color=P_RED)
-        eq_group.move_to(DOWN * 3.2)
+        eq_row, eq_items = equation_row([
+            ("g", "g_tot", P_RED), (None, "=", P_WHITE), ("tau", "τ_e", P_YELLOW),
+            (None, "+", P_WHITE), ("qi", "q_i", P_RED),
+            (None, "  [-]", P_TEAL),
+        ])
+        eq_row, eq_box = formula_panel(eq_row, color=P_RED)
 
-        # ── ANIMATION ──
-        self.add(title, subtitle)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+
         self.play(Create(pane), FadeIn(pane_label), run_time=1.2)
         self.play(FadeIn(outside), FadeIn(inside), run_time=0.6)
 
@@ -691,43 +736,67 @@ class Beat4_GlassTransmittance(Scene):
         )
 
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gtot"))
+        hold_for(self, self.NARRATION, "gtot", used=9.4 + 0.35)
 
         tau_copy = lbl_tau.copy()
         qi_copy = lbl_qi.copy()
         self.add(tau_copy, qi_copy)
+        # Converge side by side, not onto the same point — stacking both tokens
+        # on merge_point left them superimposed and unreadable for the whole
+        # fade that follows.
         self.play(
-            tau_copy.animate.move_to(merge_point),
-            qi_copy.animate.move_to(merge_point),
+            tau_copy.animate.scale(0.7).move_to(merge_point + LEFT * 0.34),
+            qi_copy.animate.scale(0.7).move_to(merge_point + RIGHT * 0.34),
             FadeIn(merge_glow),
             run_time=1.6,
         )
         self.play(
             FadeOut(tau_copy), FadeOut(qi_copy),
             merge_glow.animate.move_to(eq_items["g"].get_center()).scale(0.8),
-            Indicate(eq_items["g"], color=P_ORANGE, scale_factor=1.2),
-            run_time=1.6,
+            run_time=1.2,
         )
-        self.play(FadeOut(merge_glow), run_time=0.6)
-        # Hold with VO: g_tot transmittance
-        self.wait(3.2)
+        ring = highlight_param(eq_items, "g", color=P_ORANGE)
+        self.play(Create(ring), run_time=0.5)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "parts"))
+        hold_for(self, self.NARRATION, "parts", used=3.3 + 0.35)
+        self.play(FadeOut(merge_glow), FadeOut(ring), run_time=0.5)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "meaning"))
+        hold_for(self, self.NARRATION, "meaning", used=0.35)
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# BEAT 5 – Final Solar Cooling Load (Q̇_S,tr)
-# ═══════════════════════════════════════════════════════════════════════
+#region Beat5 – Final Solar Cooling Load (Q̇_S,tr)
 class Beat5_SolarCoolingLoad(Scene):
+    NARRATION = [
+        ("intro",
+         "By multiplying the raw solar irradiance by our building's gross area, and then applying our three dimensionless reduction filters, the frame factor, the shading factor, and the glass transmittance, we arrive at our answer.",
+         "Bestrahlungsstärke mal Fläche, gefiltert durch F_F, F_V und g_tot."),
+        ("result",
+         "This is Q dot S t r, the final transmission cooling load.",
+         "Das ist Q-Punkt-S,tr — die solare Transmissionskühllast."),
+        ("meaning",
+         "It is the precise thermal wattage our mechanical system must actively remove to prevent the room from overheating.",
+         "Genau diese Leistung muss die Anlage aktiv abführen."),
+    ]
+
     def construct(self):
-        self.camera.background_color = P_DEEP_DARK
-        apply_body_font()
+        apply_scene_style(self)
 
-        title = _main_title()
-        subtitle = Text("Solare Kühllast", font_size=20, color=P_YELLOW)
-        subtitle.next_to(title, DOWN, buff=0.18)
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Solare Kühllast", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
-        # ── Room interior (wide shot) ──
-        floor_y, ceil_y = -3.0, 0.5
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        floor_y, ceil_y = -1.1, 1.6
         wall_x = 5.5
-        win_lo, win_hi = -0.8, 0.1
+        win_lo, win_hi = 0.3, 1.1
 
         floor = Line(np.array([-6.0, floor_y, 0.0]), np.array([6.0, floor_y, 0.0]), color=P_TEAL, stroke_width=5)
         ceiling = Line(np.array([-wall_x, ceil_y, 0.0]), np.array([wall_x, ceil_y, 0.0]), color=P_WHITE, stroke_width=3)
@@ -747,7 +816,6 @@ class Beat5_SolarCoolingLoad(Scene):
             color=P_YELLOW, stroke_width=0, fill_color=P_YELLOW, fill_opacity=0.0,
         )
 
-        # Soft floor heat wash where the beam lands (no blob circles)
         pool_center = np.array([-1.75, floor_y + 0.08, 0.0])
         heat_wash = Polygon(
             np.array([-3.05, floor_y + 0.02, 0.0]),
@@ -757,7 +825,7 @@ class Beat5_SolarCoolingLoad(Scene):
             color=P_ORANGE, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.0,
         )
 
-        def _rising_heat_waves(origin, n=4, color=P_ORANGE, height=1.55, x_spread=0.38, stroke_width=2.2):
+        def _rising_heat_waves(origin, n=4, color=P_ORANGE, height=1.35, x_spread=0.38, stroke_width=2.2):
             ox, oy = float(origin[0]), float(origin[1])
             waves = VGroup()
             for i in range(n):
@@ -776,43 +844,25 @@ class Beat5_SolarCoolingLoad(Scene):
                 waves.add(wave)
             return waves
 
-        heat_waves = _rising_heat_waves(pool_center, n=5, color=P_ORANGE, height=1.7, x_spread=0.42)
+        heat_waves = _rising_heat_waves(pool_center, n=5, color=P_ORANGE, height=1.35, x_spread=0.42)
         heat_waves_hot = _rising_heat_waves(
-            pool_center + UP * 0.15, n=4, color=P_RED, height=1.35, x_spread=0.34, stroke_width=1.8
+            pool_center + UP * 0.12, n=4, color=P_RED, height=1.1, x_spread=0.34, stroke_width=1.8
         )
         heat_load = VGroup(heat_wash, heat_waves, heat_waves_hot)
 
-        # ── Master equation ──
-        eq_row, eq_items = _equation_row(
-            [("q", "Q̇_S,tr", P_YELLOW), (None, "=", P_WHITE),
-             ("A", "A", P_BLUE), (None, "·", P_WHITE),
-             ("ff", "F_F", P_WHITE), (None, "·", P_WHITE),
-             ("fv", "F_V", P_TEAL), (None, "·", P_WHITE),
-             ("g", "g_tot", P_RED), (None, "·", P_WHITE),
-             ("i", "I_S,max", P_YELLOW)],
-            font_size=25,
-            buff=0.14,
-        )
-        eq_row.move_to(UP * 2.15)
-        eq_box = SurroundingRectangle(eq_row, color=P_YELLOW, corner_radius=0.14, buff=0.26, stroke_width=3)
+        eq_row, eq_items = equation_row([
+            ("q", "Q̇_S,tr", P_YELLOW), (None, "=", P_WHITE),
+            ("A", "A", P_BLUE), (None, "·", P_WHITE),
+            ("ff", "F_F", P_WHITE), (None, "·", P_WHITE),
+            ("fv", "F_V", P_TEAL), (None, "·", P_WHITE),
+            ("g", "g_tot", P_RED), (None, "·", P_WHITE),
+            ("i", "I_S,max", P_YELLOW),
+            (None, "  [W]", P_TEAL),
+        ], buff=0.12)
+        eq_row, eq_box = formula_panel(eq_row, color=P_YELLOW)
 
-        head = VGroup(eq_items["q"], eq_row[1])
-        fly_keys = ["A", "ff", "fv", "g", "i"]
-        fly_targets = {k: eq_items[k].get_center() for k in fly_keys}
-        start_xs = [-5.0, -2.5, 0.0, 2.5, 5.0]
-        separators = [m for m in eq_row if m not in list(eq_items.values())][1:]
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        for k, sx in zip(fly_keys, start_xs):
-            eq_items[k].move_to(np.array([sx, 1.25, 0.0]))
-        for s in separators:
-            s.set_opacity(0.0)
-
-        caption = Text("Der Anteil, den die Anlage aktiv abführen muss",
-                       font_size=17, color=P_WHITE)
-        caption.to_edge(DOWN, buff=0.28)
-
-        # ── ANIMATION ──
-        self.add(title, subtitle)
         self.play(Create(room), run_time=1.8)
         self.play(beam.animate.set_fill(opacity=0.22), run_time=1.2)
 
@@ -826,41 +876,26 @@ class Beat5_SolarCoolingLoad(Scene):
         self.play(
             *[w.animate.set_stroke(opacity=0.85) for w in heat_waves],
             *[w.animate.set_stroke(opacity=0.7) for w in heat_waves_hot],
-            heat_waves.animate.shift(UP * 0.4),
-            heat_waves_hot.animate.shift(UP * 0.28),
+            heat_waves.animate.shift(UP * 0.35),
+            heat_waves_hot.animate.shift(UP * 0.22),
             heat_wash.animate.set_fill(opacity=0.40),
             run_time=0.9,
         )
 
-        self.play(FadeIn(head, shift=DOWN * 0.2), run_time=0.9)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "result"))
+        self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
+        ring = highlight_param(eq_items, "q", color=P_YELLOW)
         self.play(
-            LaggedStart(*[FadeIn(eq_items[k], scale=0.8) for k in fly_keys], lag_ratio=0.12),
-            run_time=1.4,
-        )
-        self.play(
-            LaggedStart(*[eq_items[k].animate.move_to(fly_targets[k]) for k in fly_keys], lag_ratio=0.1),
-            run_time=1.8,
-        )
-        self.play(
-            *[s.animate.set_opacity(1.0) for s in separators],
-            Create(eq_box),
+            Create(ring),
+            heat_wash.animate.set_fill(opacity=0.48),
+            heat_waves.animate.shift(UP * 0.15).set_stroke(opacity=1.0),
+            heat_waves_hot.animate.shift(UP * 0.1).set_stroke(opacity=0.9),
             run_time=1.0,
         )
+        hold_for(self, self.NARRATION, "result", used=1.2 + 1.0 + 0.35)
 
-        self.play(
-            eq_box.animate.set_stroke(width=6),
-            heat_wash.animate.set_fill(opacity=0.48),
-            heat_waves.animate.shift(UP * 0.2).set_stroke(opacity=1.0),
-            heat_waves_hot.animate.shift(UP * 0.15).set_stroke(opacity=0.9),
-            FadeIn(caption),
-            run_time=1.2,
-        )
-        self.play(
-            eq_box.animate.set_stroke(width=3),
-            heat_wash.animate.set_fill(opacity=0.32),
-            heat_waves.animate.set_stroke(opacity=0.7),
-            heat_waves_hot.animate.set_stroke(opacity=0.55),
-            run_time=0.8,
-        )
-        # Hold with VO: Q̇_S,tr cooling load
-        self.wait(1.8)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "meaning"))
+        hold_for(self, self.NARRATION, "meaning", used=0.35)
+        self.play(FadeOut(ring), FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion

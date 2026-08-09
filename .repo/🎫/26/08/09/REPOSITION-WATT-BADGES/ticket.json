@@ -1,0 +1,11 @@
+{
+  "title": "Reposition Watt Badges",
+  "slug": "REPOSITION-WATT-BADGES",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Moved Beat1 100W/60W watt badges from under the house to a vertical stack on the right of the building.",
+  "files": [
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py"
+  ]
+}

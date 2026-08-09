@@ -1,0 +1,332 @@
+@prefix bot:          <https://w3id.org/bot#> .
+@prefix qudt:         <http://qudt.org/schema/qudt/> .
+@prefix unit:         <http://qudt.org/vocab/unit/> .
+@prefix quantitykind: <http://qudt.org/vocab/quantitykind/> .
+@prefix din:          <https://example.org/ontology/din18599#> .
+@prefix owl:          <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:          <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:         <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:          <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+#  Ontology header
+#################################################################
+
+din: a owl:Ontology ;
+    rdfs:label "DIN V 18599 Building Energy Calculation Ontology Extension"@en ;
+    rdfs:comment "Extends BOT (spatial topology) and QUDT (quantities/units) with the input parameters required to run the DIN V 18599 / GEG building-energy calculation engine (see ../lib.rs). Scoped to calculation INPUTS only -- outputs and the explainability graph in ../ontology.rs (Property, Calculation, InputsTo, OutputsTo) are out of scope." ;
+    owl:imports <https://w3id.org/bot#> ;
+    owl:versionInfo "0.1.0" .
+
+#################################################################
+#  1. Envelope elements (subclasses of bot:Element)
+#     bot:Building, bot:Storey, bot:Space are reused directly.
+#################################################################
+
+din:Wall a owl:Class ; rdfs:subClassOf bot:Element ;
+    rdfs:label "Wall"@en ;
+    rdfs:comment "Rust: transmission::BuildingComponent / ontology::WallData." .
+
+din:Roof a owl:Class ; rdfs:subClassOf bot:Element ;
+    rdfs:label "Roof"@en ;
+    rdfs:comment "Rust: ontology::RoofData." .
+
+din:Slab a owl:Class ; rdfs:subClassOf bot:Element ;
+    rdfs:label "Slab"@en ;
+    rdfs:comment "Ground/basement-facing slab. Rust: ontology::SlabData." .
+
+din:Window a owl:Class ; rdfs:subClassOf bot:Element ;
+    rdfs:label "Window"@en ;
+    rdfs:comment "Rust: transmission::WindowComponent / ontology::WindowData." .
+
+#################################################################
+#  2. Non-BOT physical/system classes
+#################################################################
+
+din:ThermalBridge a owl:Class ;
+    rdfs:label "Linear Thermal Bridge"@en ;
+    rdfs:comment "Rust: transmission::LinearThermalBridge / ontology::ThermalBridgeData." .
+
+din:Material a owl:Class ;
+    rdfs:label "Material"@en ;
+    rdfs:comment "Rust: transmission::Material / ontology::MaterialData." .
+
+din:Layer a owl:Class ;
+    rdfs:label "Construction Layer"@en ;
+    rdfs:comment "Rust: transmission::Layer / ontology::LayerData." .
+
+din:ClimateZone a owl:Class ;
+    rdfs:label "Climate Reference Region"@en ;
+    rdfs:comment "One of the 15 DIN V 18599-10 climate reference regions. Rust: climate::ClimateRegionData." .
+
+din:UsageProfile a owl:Class ;
+    rdfs:label "Usage Profile"@en ;
+    rdfs:comment "DIN V 18599-10 usage-profile archetype (44 variants in Rust). Rust: transmission::UsageProfile." .
+
+din:AutomationClass a owl:Class ;
+    rdfs:label "Building Automation Class"@en ;
+    rdfs:comment "EN 15232 / DIN V 18599-2 automation class A-D. Rust: transmission::AutomationClass." .
+
+din:VentilationSystem a owl:Class ;
+    rdfs:label "Ventilation System"@en ;
+    rdfs:comment "Rust: ventilation::BuildingAirData + ventilation::MechanicalSystem / ontology::VentilationSystemData." .
+
+din:LightingSystem a owl:Class ;
+    rdfs:label "Lighting System"@en ;
+    rdfs:comment "Simplified. Rust: ontology::LightingSystemData. Full DIN V 18599-10 lighting engine (lighting::LightingEngine, RoomUsage catalog) is a future extension." .
+
+din:InternalHeatSource a owl:Class ;
+    rdfs:label "Internal Heat Source"@en ;
+    rdfs:comment "Rust: ontology::InternalHeatSourceData." .
+
+din:HeatingSystem a owl:Class ;
+    rdfs:label "Heating System"@en ;
+    rdfs:comment "DIN V 18599-5 heat generation/distribution/emission chain. Not a first-class entity in ontology.rs today (BuildingData.heating_system is a free-text String) -- promoted here. Rust: heating_system::HeatingSystemEngine." .
+
+din:DHWSystem a owl:Class ;
+    rdfs:label "Domestic Hot Water System"@en ;
+    rdfs:comment "DIN V 18599-8. Absent from ontology.rs today. Rust: dhw_system::DHWEngine." .
+
+#################################################################
+#  3. Controlled-vocabulary classes + representative individuals
+#     (instantiate remaining Rust enum variants the same way)
+#################################################################
+
+din:BuildingTypeEnum a owl:Class .
+din:BuildingType_Residential a din:BuildingTypeEnum .
+din:BuildingType_NonResidential a din:BuildingTypeEnum .
+
+din:GroundContactType a owl:Class .
+din:FloorSlabOnGround a din:GroundContactType .
+din:BasementWallShallow a din:GroundContactType .
+din:BasementWallDeep a din:GroundContactType .
+din:HeatedBasementFloor a din:GroundContactType .
+din:GroundwaterContact a din:GroundContactType .
+
+din:ThermalBridgeCategory a owl:Class .
+din:TBCategory_StandardDefault a din:ThermalBridgeCategory .
+din:TBCategory_GoodPlanning a din:ThermalBridgeCategory .
+din:TBCategory_ExcellentPlanning a din:ThermalBridgeCategory .
+din:TBCategory_InternalInsulationIssues a din:ThermalBridgeCategory .
+
+din:GlazingType a owl:Class .
+din:Glazing_Single a din:GlazingType .
+din:Glazing_Double a din:GlazingType .
+din:Glazing_Triple a din:GlazingType .
+
+din:TightnessCategory a owl:Class .
+din:Tightness_I a din:TightnessCategory .
+din:Tightness_II a din:TightnessCategory .
+din:Tightness_III a din:TightnessCategory .
+din:Tightness_IV a din:TightnessCategory .
+
+din:AutomationClassA a din:AutomationClass .
+din:AutomationClassB a din:AutomationClass .
+din:AutomationClassC a din:AutomationClass .
+din:AutomationClassD a din:AutomationClass .
+
+din:HeatingGeneratorType a owl:Class .
+din:HeatingGenerator_CondensingGasBoiler a din:HeatingGeneratorType .
+din:HeatingGenerator_OldGasBoiler a din:HeatingGeneratorType .
+din:HeatingGenerator_PelletBoiler a din:HeatingGeneratorType .
+din:HeatingGenerator_AirSourceHeatPump a din:HeatingGeneratorType .
+din:HeatingGenerator_GroundSourceHeatPump a din:HeatingGeneratorType .
+din:HeatingGenerator_DirectElectric a din:HeatingGeneratorType .
+din:HeatingGenerator_DistrictHeating a din:HeatingGeneratorType .
+din:HeatingGenerator_SolarThermal a din:HeatingGeneratorType .
+
+din:EmissionType a owl:Class .
+din:Emission_Radiator a din:EmissionType .
+din:Emission_UnderfloorHeating a din:EmissionType .
+
+din:DHWGeneratorType a owl:Class .
+din:DHWGenerator_ElectricInstantaneous a din:DHWGeneratorType .
+din:DHWGenerator_GasStorageNew a din:DHWGeneratorType .
+din:DHWGenerator_HeatPumpAirWater a din:DHWGeneratorType .
+din:DHWGenerator_DistrictHeating a din:DHWGeneratorType .
+
+din:DHWSystemType a owl:Class .
+din:DHW_Centralized a din:DHWSystemType .
+din:DHW_Decentralized a din:DHWSystemType .
+
+#################################################################
+#  4. Object properties -- topology & composition
+#     (<- ontology.rs::Relationship where noted)
+#################################################################
+
+din:hasThermalBridge a owl:ObjectProperty ; rdfs:range din:ThermalBridge ;
+    rdfs:comment "<- Relationship::HasThermalBridge" .
+
+din:hasLayer a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range din:Layer ;
+    rdfs:comment "<- Relationship::ContainsLayer" .
+
+din:hasLayerOrder a owl:DatatypeProperty ; rdfs:domain din:Layer ; rdfs:range xsd:integer ;
+    rdfs:comment "Position from interior (0) to exterior; carries ContainsLayer{order} since RDF has no edge properties." .
+
+din:composedOfMaterial a owl:ObjectProperty ; rdfs:domain din:Layer ; rdfs:range din:Material ;
+    rdfs:comment "<- Relationship::ComposedOfMaterial" .
+
+din:hasUsageProfile a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range din:UsageProfile ;
+    rdfs:comment "<- Relationship::OperatesUnderProfile" .
+
+din:hasAutomationClass a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range din:AutomationClass ;
+    rdfs:comment "<- Relationship::ControlledByAutomation" .
+
+din:locatedInClimateZone a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range din:ClimateZone ;
+    rdfs:comment "<- Relationship::LocatedInClimate" .
+
+din:servicedByVentilationSystem a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range din:VentilationSystem ;
+    rdfs:comment "<- Relationship::ServicedByVentilation" .
+
+din:illuminatedBy a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range din:LightingSystem ;
+    rdfs:comment "<- Relationship::IlluminatedBy" .
+
+din:hasInternalHeatSource a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range din:InternalHeatSource ;
+    rdfs:comment "<- Relationship::ContainsHeatSource" .
+
+din:hasHeatingSystem a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range din:HeatingSystem .
+
+din:hasDHWSystem a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range din:DHWSystem .
+
+#################################################################
+#  5. Object properties -- physical quantities (QUDT QuantityValue pattern)
+#     din:hasX domain -> [ a qudt:QuantityValue ; qudt:numericValue "n"^^xsd:double ; qudt:unit unit:Y ]
+#################################################################
+
+din:hasArea a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Area ;
+    rdfs:comment "m^2. unit:M2." .
+
+din:hasUValue a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:CoefficientOfHeatTransfer ;
+    rdfs:comment "Thermal transmittance, W/(m^2*K). unit:W-PER-M2-K." .
+
+din:hasPsiValue a owl:ObjectProperty ; rdfs:domain din:ThermalBridge ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "Linear thermal transmittance Psi, W/(m*K). unit:W-PER-M-K." .
+
+din:hasLength a owl:ObjectProperty ; rdfs:domain din:ThermalBridge ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasLambda a owl:ObjectProperty ; rdfs:domain din:Material ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:ThermalConductivity ;
+    rdfs:comment "Thermal conductivity, W/(m*K). unit:W-PER-M-K." .
+
+din:hasSpecificHeatCapacity a owl:ObjectProperty ; rdfs:domain din:Material ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "J/(kg*K). unit:J-PER-KG-K (verify before production use)." .
+
+din:hasThickness a owl:ObjectProperty ; rdfs:domain din:Layer ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasThermalResistanceInternal a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "r_si, m^2*K/W. unit:M2-K-PER-W (verify)." .
+
+din:hasThermalResistanceExternal a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "r_se, m^2*K/W. unit:M2-K-PER-W (verify)." .
+
+din:hasCorrectionFactor a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:DimensionlessRatio ;
+    rdfs:comment "Generic dimensionless factor (f_x temperature-correction, f_neig, f_sh/f_c/f_s shading, frame fraction...). unit:UNITLESS. Tag the specific factor via rdfs:label on the value node." .
+
+din:hasSolarAbsorptance a owl:ObjectProperty ; rdfs:domain bot:Element ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "alpha, unitless [0,1]. unit:UNITLESS." .
+
+din:hasGValue a owl:ObjectProperty ; rdfs:domain din:Window ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "Total solar energy transmittance g, unitless [0,1]. unit:UNITLESS." .
+
+din:hasVolume a owl:ObjectProperty ; rdfs:domain bot:Zone ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Volume ;
+    rdfs:comment "m^3. unit:M3. Applies to bot:Building and bot:Space." .
+
+din:hasFloorArea a owl:ObjectProperty ; rdfs:domain bot:Zone ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Area ;
+    rdfs:comment "m^2 (A_NGF net floor area). unit:M2." .
+
+din:hasCeilingHeight a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasRoomDepth a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasElevation a owl:ObjectProperty ; rdfs:domain bot:Storey ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasZoneTemperature a owl:ObjectProperty ; rdfs:domain bot:Space ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Temperature ;
+    rdfs:comment "Heating (or cooling) setpoint temperature, degC. unit:DEG_C." .
+
+din:hasExteriorPerimeter a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Length ;
+    rdfs:comment "m. unit:M." .
+
+din:hasBuildingRotation a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "Building azimuth rotation, degrees. unit:DEG (verify)." .
+
+din:hasWindowToWallRatio a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:DimensionlessRatio ;
+    rdfs:comment "unitless [0,1]. unit:UNITLESS." .
+
+din:hasOrientationAngle a owl:ObjectProperty ; rdfs:domain din:Window ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "Azimuth, degrees from North. unit:DEG (verify)." .
+
+din:hasAirtightnessN50 a owl:ObjectProperty ; rdfs:domain din:VentilationSystem ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "n50, air changes per hour at 50 Pa. unit:PER-HR (verify)." .
+
+din:hasHeatRecoveryEfficiency a owl:ObjectProperty ; rdfs:domain din:VentilationSystem ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:DimensionlessRatio ;
+    rdfs:comment "eta_t, unitless [0,1]. unit:UNITLESS." .
+
+din:hasSupplyAirFlowRate a owl:ObjectProperty ; rdfs:domain din:VentilationSystem ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "m^3/h. unit:M3-PER-HR (verify)." .
+
+din:hasSensibleHeatOutput a owl:ObjectProperty ; rdfs:domain din:InternalHeatSource ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Power ;
+    rdfs:comment "W. unit:W." .
+
+din:hasDailyOperatingHours a owl:ObjectProperty ; rdfs:range qudt:QuantityValue ;
+    rdfs:comment "h/day. unit:HR (verify)." .
+
+din:hasGenerationExpenditureFactor a owl:ObjectProperty ; rdfs:domain din:HeatingSystem ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:DimensionlessRatio ;
+    rdfs:comment "e_g,h per DIN V 18599-5: ratio of final to useful energy for the generation subsystem (1 / efficiency). unit:UNITLESS. Colloquial 'heating system efficiency' = 1 / this value." .
+
+din:hasSystemEfficiency a owl:ObjectProperty ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:DimensionlessRatio ;
+    rdfs:comment "General-purpose efficiency ratio [0,1] for components expressed directly as efficiency rather than an expenditure factor. unit:UNITLESS." .
+
+din:hasTankVolume a owl:ObjectProperty ; rdfs:domain din:DHWSystem ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Volume ;
+    rdfs:comment "m^3 (Rust field dhw_system::DHWEngine.tank_volume_liters is litres -- convert on ingestion). unit:M3." .
+
+din:hasMaxThermalPower a owl:ObjectProperty ; rdfs:domain din:DHWSystem ; rdfs:range qudt:QuantityValue ;
+    qudt:hasQuantityKind quantitykind:Power ;
+    rdfs:comment "kW. unit:KiloW." .
+
+#################################################################
+#  6. Object properties -- controlled-vocabulary attributes
+#################################################################
+
+din:hasBuildingType a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range din:BuildingTypeEnum .
+din:hasGroundContactType a owl:ObjectProperty ; rdfs:domain din:Slab ; rdfs:range din:GroundContactType .
+din:hasThermalBridgeCategory a owl:ObjectProperty ; rdfs:domain bot:Building ; rdfs:range din:ThermalBridgeCategory .
+din:hasGlazingType a owl:ObjectProperty ; rdfs:domain din:Window ; rdfs:range din:GlazingType .
+din:hasTightnessCategory a owl:ObjectProperty ; rdfs:domain din:VentilationSystem ; rdfs:range din:TightnessCategory .
+din:hasGeneratorType a owl:ObjectProperty ; rdfs:domain din:HeatingSystem ; rdfs:range din:HeatingGeneratorType .
+din:hasEmissionType a owl:ObjectProperty ; rdfs:domain din:HeatingSystem ; rdfs:range din:EmissionType .
+din:hasDHWGeneratorType a owl:ObjectProperty ; rdfs:domain din:DHWSystem ; rdfs:range din:DHWGeneratorType .
+din:hasDHWSystemType a owl:ObjectProperty ; rdfs:domain din:DHWSystem ; rdfs:range din:DHWSystemType .
+
+#################################################################
+#  7. Plain datatype properties (no physical unit involved)
+#################################################################
+
+din:hasNumberOfStoreys a owl:DatatypeProperty ; rdfs:domain bot:Building ; rdfs:range xsd:integer .
+din:hasYearClass a owl:DatatypeProperty ; rdfs:domain bot:Building ; rdfs:range xsd:string ;
+    rdfs:comment "TABULA-style construction year class, e.g. '1979-1983'." .
+din:hasMechanicalVentilation a owl:DatatypeProperty ; rdfs:domain din:VentilationSystem ; rdfs:range xsd:boolean .
+din:hasCirculation a owl:DatatypeProperty ; rdfs:domain din:DHWSystem ; rdfs:range xsd:boolean .
+din:isCriticalRoom a owl:DatatypeProperty ; rdfs:domain bot:Space ; rdfs:range xsd:boolean .

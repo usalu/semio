@@ -1,0 +1,11 @@
+{
+  "title": "Beat3 Rays Through To Wall",
+  "slug": "BEAT3-RAYS-WALL",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat3: lowered formula panel (edge_buff 1.15), added interior back wall, extended go-through beams to hit floor/wall, and increased through-rays from 3 to 5.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

@@ -1,4 +1,4 @@
-"""Render, mux, and compose Scene 6 (Lüftungssysteme) into a single video."""
+"""Render, mux, and compose Scene 6 (Natürliche Lüftung im Passivhaus)."""
 
 import sys
 import subprocess
@@ -18,13 +18,15 @@ def main():
     output_dir.mkdir(exist_ok=True)
 
     scenes = [
-        ("Beat1_Systemuebersicht",      base_dir / "beat_1_audio.mp3"),
-        ("Beat2_FreieLueftung",         base_dir / "beat_2_audio.mp3"),
-        ("Beat3_MechanischeGrundtypen", base_dir / "beat_3_audio.mp3"),
-        ("Beat4_Waermerueckgewinnung",  base_dir / "beat_4_audio.mp3"),
-        ("Beat5_Luftfuehrung",          base_dir / "beat_5_audio.mp3"),
-        ("Beat6_RLTFunktionen",         base_dir / "beat_6_audio.mp3"),
-        ("Beat7_Zusammenfassung",       base_dir / "beat_7_audio.mp3"),
+        ("Beat1_PassivhausIdee",           base_dir / "beat_1_audio.mp3"),
+        ("Beat2_Fensterregeln",            base_dir / "beat_2_audio.mp3"),
+        ("Beat3_Querlueftung",             base_dir / "beat_3_audio.mp3"),
+        ("Beat4_Auftrieb",                 base_dir / "beat_4_audio.mp3"),
+        ("Beat5_Nachtlueftung",            base_dir / "beat_5_audio.mp3"),
+        ("Beat6_GrenzenDerFreienLueftung", base_dir / "beat_6_audio.mp3"),
+        ("Beat7_MechanischeGrundtypen",    base_dir / "beat_7_audio.mp3"),
+        ("Beat8_Waermerueckgewinnung",     base_dir / "beat_8_audio.mp3"),
+        ("Beat9_KomfortStrategie",         base_dir / "beat_9_audio.mp3"),
     ]
 
     def resolve_audio(path: Path) -> Path:

@@ -1,0 +1,13 @@
+{
+  "title": "Revise Heating Intro Animations",
+  "slug": "REVISE-HEATING-INTRO-ANIMATIONS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Rebuilt Heating/1_introduction around one shared warm|wall|cold section that every beat redraws, so conduction, convection and radiation are finally seen crossing the same temperature difference instead of in three unrelated cartoons. Heat is drawn as a wave and occupants as body glyphs, removing Beat 1's central ambiguity; the travel-agency and bouncer metaphors in beats 6-9 were replaced by temperature gradients, real layer build-ups and responsive gauges. Promoted the layout-zone and gauge helpers from Cooling/6 into manim_visuals.py as one source and re-verified scene_6. 9/9 beats render clean over three passes with frame readback.",
+  "files": [
+    "tutorial/energy/demand/Heating/1_introduction/scene_1.py",
+    "tutorial/manim_visuals.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py"
+  ]
+}

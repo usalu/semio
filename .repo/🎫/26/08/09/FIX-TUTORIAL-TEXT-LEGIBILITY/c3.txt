@@ -1,0 +1,63 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_PassivhausIdee                  0 finding(s)
+Beat2_Fensterregeln                   0 finding(s)
+Beat3_Querlueftung                    0 finding(s)
+Beat4_Auftrieb                        0 finding(s)
+Beat5_Nachtlueftung                   0 finding(s)
+Beat6_GrenzenDerFreienLueftung        0 finding(s)
+Beat7_MechanischeGrundtypen           0 finding(s)
+Beat8_Waermerueckgewinnung            0 finding(s)
+Beat9_KomfortStrategie               50 finding(s)
+
+========================================================================
+  [Beat9 @15] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @15] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @16] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @16] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @17] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @17] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @18] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @18] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @19] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @19] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @20] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @20] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @21] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @21] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @22] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @22] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @23] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @23] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @24] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @24] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @25] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @25] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @26] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @26] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @27] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @27] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @28] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @28] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @29] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @29] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @30] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @30] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @31] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @31] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @32] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @32] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @33] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @33] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @34] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @34] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @35] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @35] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @36] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @36] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @37] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @37] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @38] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @38] text/line            'Speichermasse puffert' crossed by Dot
+  [Beat9 @39] text/line            'Schließen + verschatten' crossed by Dot
+  [Beat9 @39] text/line            'Speichermasse puffert' crossed by Dot

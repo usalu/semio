@@ -17,6 +17,13 @@ _TUTORIAL_ROOT = next(
 if str(_TUTORIAL_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_TUTORIAL_ROOT))
 from manim_fonts import apply_body_font, play_scene_title, scene_title
+from manim_visuals import (
+    convection_stream,
+    radiation_waves,
+    respiration_parts,
+    symbol_token,
+    watt_anchor,
+)
 
 # ─── Shared Scene 3 Palette ────────────────────────────────────────────────
 P_DEEP_DARK = "#0B0C10"
@@ -435,69 +442,74 @@ class Scene2(Scene):
         self.play(Create(office_setup), FadeIn(caption1), run_time=3.0)
 
         # -----------------------------------------------------------------
-        # BEAT 2: Glowing Pastel Heat Rings Expand from Torso (4.3s)
+        # BEAT 2–3: Strahlung (waves) · Konvektion (air stream) · Atmung (fühlbar/latent)
         # -----------------------------------------------------------------
-        heat_ring1 = Circle(radius=0.5, stroke_color=P_ORANGE, stroke_width=2.5).move_to(torso_center)
-        heat_ring2 = Circle(radius=0.9, stroke_color=P_ORANGE, stroke_width=2.0).move_to(torso_center)
-        heat_ring3 = Circle(radius=1.3, stroke_color=P_ORANGE, stroke_width=1.5).move_to(torso_center)
-        heat_rings = VGroup(heat_ring1, heat_ring2, heat_ring3)
+        rad_origin = torso.get_center() + UP * 0.15
+        rad_waves = radiation_waves(rad_origin, n=4, color=P_ORANGE, height=1.15, x_spread=0.42)
+        lbl_rad = Text("Strahlung", font_size=20, color=P_ORANGE).move_to(torso_center + UP * 1.85 + LEFT * 1.55)
+
+        conv_stream = convection_stream(
+            torso.get_center() + RIGHT * 0.35,
+            torso.get_center() + UP * 1.6 + RIGHT * 0.9,
+            color=P_CYAN,
+            bend=0.45,
+            n_ribbons=3,
+            spread=0.22,
+        )
+        lbl_conv = Text("Konvektion", font_size=20, color=P_CYAN).move_to(torso_center + UP * 2.25 + RIGHT * 0.55)
+
+        mouth = head.get_center() + RIGHT * 0.22 + DOWN * 0.05
+        breath = respiration_parts(mouth, scale=1.05)
+        lbl_resp = Text("Atmung", font_size=20, color=P_RED).move_to(torso_center + UP * 1.55 + RIGHT * 2.0)
 
         self.play(
-            LaggedStart(
-                *[Create(ring) for ring in heat_rings],
-                lag_ratio=0.3
-            ),
-            run_time=2.3
+            LaggedStart(*[Create(w) for w in rad_waves], lag_ratio=0.12),
+            FadeIn(lbl_rad, shift=UP * 0.1),
+            run_time=2.2,
         )
         self.play(
-            heat_rings.animate.scale(1.25).set_stroke(opacity=0.8),
-            run_time=2.0
-        )
-
-        # -----------------------------------------------------------------
-        # BEAT 3: Thermal Plume Drifts Upward with Dissipation Modes (4.3s)
-        # -----------------------------------------------------------------
-        lbl_rad = Text("Strahlung", font_size=22, color=P_ORANGE).move_to(torso_center + UP * 1.6 + LEFT * 1.3)
-        lbl_conv = Text("Konvektion", font_size=22, color=P_ORANGE).move_to(torso_center + UP * 2.1 + RIGHT * 0.1)
-        lbl_resp = Text("Atmung", font_size=22, color=P_ORANGE).move_to(torso_center + UP * 1.4 + RIGHT * 1.4)
-        heat_labels = VGroup(lbl_rad, lbl_conv, lbl_resp)
-
-        self.play(
-            heat_rings.animate.shift(UP * 1.1).set_stroke(opacity=0.45),
-            LaggedStart(*[FadeIn(lbl) for lbl in heat_labels], lag_ratio=0.3),
-            run_time=2.8
+            LaggedStart(*[Create(r) for r in conv_stream], lag_ratio=0.15),
+            FadeIn(lbl_conv, shift=UP * 0.1),
+            run_time=2.0,
         )
         self.play(
-            heat_labels.animate.shift(UP * 0.15),
-            run_time=1.5
+            LaggedStart(*[Create(w) for w in breath["sensible"]], lag_ratio=0.1),
+            FadeIn(breath["sensible_label"]),
+            FadeIn(lbl_resp, shift=RIGHT * 0.1),
+            run_time=1.6,
+        )
+        self.play(
+            LaggedStart(*[FadeIn(d, scale=0.6) for d in breath["latent"]], lag_ratio=0.12),
+            FadeIn(breath["latent_label"]),
+            run_time=1.4,
         )
 
         # -----------------------------------------------------------------
-        # BEAT 4: 100W Heat Output Callout & Summary (4.3s)
+        # BEAT 4: 100 W anchored to everyday devices (laptop / Glühbirne)
         # -----------------------------------------------------------------
-        caption2 = Text("Ruhender Erwachsener gibt ca. 100 W an die Raumluft ab", font_size=24, color=P_CYAN).to_edge(DOWN, buff=0.4)
+        caption2 = Text(
+            "Ruhender Erwachsener ≈ 100 W — greifbar wie eine Glühbirne",
+            font_size=22,
+            color=P_CYAN,
+        ).to_edge(DOWN, buff=0.35)
 
-        # 100W Output Callout Badge
-        badge_box = RoundedRectangle(width=2.6, height=1.1, corner_radius=0.15, stroke_color=P_CYAN, stroke_width=2, fill_color="#0B0C10", fill_opacity=0.95)
-        badge_val = Text("100 W", font_size=34, color=P_CYAN)
-        badge_sub = Text("Abgabe", font_size=20, color=P_WHITE)
-        badge_content = VGroup(badge_val, badge_sub).arrange(DOWN, buff=0.1)
-        badge_content.move_to(badge_box.get_center())
-        badge = VGroup(badge_box, badge_content).move_to(RIGHT * 2.8 + DOWN * 0.3)
+        badge = watt_anchor(100, compare="bulb", title="Körperwärme")
+        badge.move_to(RIGHT * 3.35 + DOWN * 0.15)
+        laptop_ref = watt_anchor(60, compare="laptop", title="Vergleich")
+        laptop_ref.scale(0.85).next_to(badge, DOWN, buff=0.22)
 
         self.play(
             ReplacementTransform(caption1, caption2),
-            FadeIn(badge, shift=LEFT * 0.4),
-            run_time=2.0
+            FadeIn(badge, shift=LEFT * 0.35),
+            run_time=1.8,
         )
+        self.play(FadeIn(laptop_ref, shift=UP * 0.12), run_time=1.0)
         self.play(
-            Indicate(badge, color=P_CYAN, scale_factor=1.15),
-            heat_rings.animate.set_stroke(opacity=0.7).scale(1.1),
-            run_time=2.3
+            Indicate(badge, color=P_CYAN, scale_factor=1.08),
+            rad_waves.animate.shift(UP * 0.15).set_stroke(opacity=0.7),
+            run_time=1.6,
         )
-
-        # Hold with VO: ~100 W human heat callout
-        self.wait(2.0)
+        self.wait(1.2)
 
 
 # --- scene_3 (code_final.py) ---
@@ -600,8 +612,18 @@ class Scene3(Scene):
             thermal_waves.add(wave)
 
         caption_1 = Text(
-            "50 Personen  •  je 100 W Körperwärme", font_size=22, color=P_ORANGE
-        ).next_to(hall_outline, DOWN, buff=0.25)
+            "50 Personen  •  je 100 W  →  5 kW Gesamt",
+            font_size=20,
+            color=P_ORANGE,
+        ).next_to(hall_outline, DOWN, buff=0.18)
+
+        hall_anchor = watt_anchor(5000, compare="toaster", title="Gesamtwärme")
+        hall_anchor.scale(0.72).next_to(caption_1, RIGHT, buff=0.25).align_to(caption_1, UP)
+        absurd = Text(
+            "≈ 5 Toaster — passt das zur Kühllast?",
+            font_size=15,
+            color=P_YELLOW,
+        ).next_to(hall_outline, DOWN, buff=0.55)
 
         self.play(
             *[icon.animate.set_color(ACCENT_ORANGE) for icon in grid_icons],
@@ -611,6 +633,7 @@ class Scene3(Scene):
             FadeIn(caption_1),
             run_time=4.2,
         )
+        self.play(FadeIn(hall_anchor, shift=LEFT * 0.15), FadeIn(absurd), run_time=1.2)
         self.wait(0.2)
 
         # Beat 3: Heat rises into a dense ceiling thermal layer
@@ -1138,8 +1161,24 @@ class ArtificialLightingScene(Scene):
             run_time=0.9,
         )
 
-        # Equation reveal — expand once, highlight f_g definition line
-        self.play(Create(eq_box), FadeIn(eq_body), run_time=1.2)
+        # Equation via morph: luminaires → P_Licht, then assemble formula (no orphan equation)
+        p_token = symbol_token("P_Licht", color=P_CYAN, font_size=26)
+        p_token.move_to(fixtures.get_center())
+        fg_token = symbol_token("f_g", color=P_YELLOW, font_size=26)
+        fg_token.move_to(eq_main.get_center() + RIGHT * 1.6)
+
+        self.play(
+            ReplacementTransform(fixtures.copy(), p_token),
+            run_time=1.3,
+        )
+        self.play(
+            p_token.animate.move_to(eq_p.get_left() + RIGHT * 0.9),
+            FadeIn(eq_box),
+            FadeIn(eq_main),
+            run_time=1.2,
+        )
+        self.play(FadeIn(eq_p), FadeOut(p_token), run_time=0.8)
+        self.play(FadeIn(eq_f), FadeIn(eq_f_sub), FadeIn(caption), run_time=1.0)
         fg_hl = SurroundingRectangle(
             VGroup(eq_f, eq_f_sub),
             color=P_YELLOW,
@@ -1147,7 +1186,7 @@ class ArtificialLightingScene(Scene):
             stroke_width=2,
             corner_radius=0.06,
         )
-        self.play(Create(fg_hl), FadeIn(caption), run_time=0.9)
+        self.play(Create(fg_hl), run_time=0.7)
         self.play(FadeOut(fg_hl), run_time=0.4)
 
         self.wait(0.5)

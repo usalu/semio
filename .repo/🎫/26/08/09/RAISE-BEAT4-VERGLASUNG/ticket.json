@@ -1,0 +1,11 @@
+{
+  "title": "Raise Beat4 Verglasung Label",
+  "slug": "RAISE-BEAT4-VERGLASUNG",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Shifted Beat4 label 'Verglasung im Schnitt' from y=2.0 to y=2.35.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

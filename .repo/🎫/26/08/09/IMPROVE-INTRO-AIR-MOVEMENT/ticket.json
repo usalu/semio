@@ -1,0 +1,12 @@
+{
+  "title": "Improve Intro Air Movement",
+  "slug": "IMPROVE-INTRO-AIR-MOVEMENT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Reworked Beat3_Konvektion air exchange: true buoyancy paths (warm rises/exits top of gap, cold sinks/enters bottom), simultaneous warm+cold streams via new animate_flows, streak particles aimed along the path, denser looping, and a glowing tracked Luftpaket while the exchange keeps circulating. animate_flow now delegates to animate_flows so Cooling/Heating callers get streaks too.",
+  "files": [
+    "tutorial/manim_visuals.py",
+    "tutorial/energy/demand/Heating/1_introduction/scene_1.py"
+  ]
+}

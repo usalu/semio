@@ -1,0 +1,8 @@
+{
+  "title": "Fix Solar Beat5 Sun Labels",
+  "slug": "FIX-SOLAR-BEAT5-SUN-LABELS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat5: Sommersonne/Wintersonne cleared off the sun glow via inflated left/UL placement, stage right-shift, and fade swap instead of Transform; blocked callout nudged under the awning."
+}

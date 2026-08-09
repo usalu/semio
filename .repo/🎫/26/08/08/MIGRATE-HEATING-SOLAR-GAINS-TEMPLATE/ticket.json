@@ -1,0 +1,8 @@
+{
+  "title": "Migrate Heating Solar Gains Template",
+  "slug": "MIGRATE-HEATING-SOLAR-GAINS-TEMPLATE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Migrated Heating Modul 5 solarer Wärmegewinn onto generate-manim-tutorial template (scene_5.py Beat1–8 + audio/compose pipeline). Smoke: all 8 beats Rendered at -ql."
+}

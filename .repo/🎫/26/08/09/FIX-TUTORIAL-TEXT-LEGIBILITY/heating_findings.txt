@@ -1,0 +1,68 @@
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:181: UserWarning: caption_bar width 11.56 > 11.5; hand-break the German line instead of shrinking: 'Bevor wir berechnen, wie viel Wärme ein Gebäude verliert, sehen wir uns an,\nwie Wärme sich überhaupt bewegt.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:286: UserWarning: caption_bar width 11.50 > 11.5; hand-break the German line instead of shrinking: 'Der erste Weg ist die Wärmeleitung — sie passiert in der festen Wand selbst.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "label"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.10 > 11.5; hand-break the German line instead of shrinking: 'Die warme Seite lässt sie stärker schwingen, und jedes stößt seinen Nachbarn an.\nDie Energie wandert die Kette entlang.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 11.77 > 11.5; hand-break the German line instead of shrinking: 'Gibt man der Wand eine Öffnung — ein offenes Fenster, eine undichte Fuge —\nkann Luft hindurch.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.13 > 11.5; hand-break the German line instead of shrinking: 'Warme Raumluft ist leichter, steigt auf und entweicht oben durch die Öffnung —\nkalte Außenluft sinkt unten nach.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 11.91 > 11.5; hand-break the German line instead of shrinking: 'Jede warme Oberfläche sendet Infrarotwellen aus. Die warme Wandseite strahlt\ndirekt zu allem, was kälter ist.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.27 > 11.5; hand-break the German line instead of shrinking: 'Und die Strahlung läuft weiter. Sie braucht kein Medium — genau so erreicht uns\ndie Sonne durch den leeren Raum.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 11.74 > 11.5; hand-break the German line instead of shrinking: 'In einer echten Wand laufen alle drei gleichzeitig — der gesamte Wärmestrom\nist also einfach ihre Summe.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.37 > 11.5; hand-break the German line instead of shrinking: 'Sie jedes Mal zu trennen wäre unbrauchbar — deshalb fasst die DIN EN ISO 6946\nsie zu einer einzigen Kennzahl je Bauteil zusammen.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.38 > 11.5; hand-break the German line instead of shrinking: 'Eine echte Wand ist nie ein Material: Putz, Mauerwerk, Dämmung und Außenputz\nbremsen den Wärmestrom unterschiedlich stark.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.12 > 11.5; hand-break the German line instead of shrinking: 'Eine schlechte Schicht lässt die Temperatur steil über eine kurze Strecke fallen —\nund viel Wärme kommt durch.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.22 > 11.5; hand-break the German line instead of shrinking: 'Wird die Schicht dicker, verteilt sich derselbe Temperaturabfall auf mehr Strecke.\nR steigt, der Wärmestrom sinkt.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:970: UserWarning: caption_bar width 11.61 > 11.5; hand-break the German line instead of shrinking: 'Schritt zwei. Der Widerstand ist nützlich, aber angegeben wird das Gegenteil:\nwie leicht Wärme hindurchkommt.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 11.69 > 11.5; hand-break the German line instead of shrinking: 'Zuerst der gesamte Widerstand des Bauteils: die beiden dünnen Luftschichten\nan den Oberflächen plus alle Schichten dazwischen.'
+  new = caption_bar(text_de, **kwargs)
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_DreiWegeDerWaerme               0 finding(s)
+Beat2_Waermeleitung                   0 finding(s)
+Beat3_Konvektion                      0 finding(s)
+Beat4_Strahlung                       0 finding(s)
+Beat5_Zusammenfassung                 7 finding(s)
+Beat6_VonWegenZuZahlen                0 finding(s)
+Beat7_Waermedurchlasswiderstand      20 finding(s)
+Beat8_UWert                           0 finding(s)
+Beat9_WaermestromFormel               0 finding(s)
+
+========================================================================
+  [Beat5 @33] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @34] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @35] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @36] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @37] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @38] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat5 @39] text/line            'Zusammenfassung — drei Wege, ein W' crossed by SurroundingRectangle
+  [Beat7 @09] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @10] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @11] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @12] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @13] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @14] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @15] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @16] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @17] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @18] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @19] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @20] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @21] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @22] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @23] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @24] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @25] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @26] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @27] text/line            'λ = 2,1' crossed by Line
+  [Beat7 @28] text/line            'λ = 2,1' crossed by Line

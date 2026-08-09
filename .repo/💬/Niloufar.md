@@ -453,3 +453,118 @@ based on the audio, change the duration of the Animation with audi, some parts a
 ---
 
 in cooling add a folder and render all section videos with highest quality, without voices and add the voices in seprate folder
+
+
+## 2026-08-04 17:54
+
+in whole coolings vides apply this instruction :Use meaningful animations: Visuals should accurately represent the physical concepts.Strahlung (Radiation) should be visualized as waves.Convection should be shown as an air stream.Atmung (Respiration/Ventilation) should be divided into multiple parts, such as sensible and latent heat.Contextualize formulas visually: Never introduce raw formulas on their own. Instead, morph physical objects directly into their corresponding formula variables (e.g., morphing walls into the $U$-value, or the volume of air into $n$).Anchor numbers with real-world references: Always contextualize constants and measurements (e.g., instead of just stating "100W", show the equivalent of a toaster, vacuum cleaner, heating unit, or laptop). This aids memorization and helps identify calculation errors by grounding absurd numbers (e.g., "Are you sure your heating load is equivalent to 100,000 toasters?").
+
+---
+
+We need to revise the videos we have generated. To make them more understandable and engaging, we must follow a clear storyline. As a first step, we need to create a standardized template that every scene and explanation will follow. update the scene-generation agent skill to incorporate this template, ensuring that every scene strictly follows these restrictions:
+•	Consistent Styling: Use the same background color, font, and text size across all scenes.
+•	Clear Headings: Display the topic of each scene at the top center using clear, readable text.
+•	Academic Focus: Since these are high-level academic videos, include a dedicated section for formulas. The formulas—or their specific parameters—must be highlighted as they are being explained.
+•	Timing Synchronization: Most importantly, embed the explanatory narration text directly into the Manim Python code for each scene. This will allow us to calculate exactly how many seconds are needed to explain each section
+
+---
+
+Let's now start with the heating videos. In the first scene, the introduction, I want to change some aspects of the storytelling by adding and deleting certain sections. This is the new description and transcript for this scene. I want you to use the skills we have developed, and I also need you to add subtitles. Ensure the subtitles do not collide with any other visual elements and that the language is entirely in German. Here is the new introduction: Module 1: The Foundations - Building Physics as a Story
+
+Objective: Refresh essential physics concepts using relatable analogies. We need students to understand how heat moves before calculating how much moves.
+
+Section 1.1: The Three Modes of Heat Transfer (The "Travel Agency" of Heat)
+
+Concept: Heat always wants to move from a warm place to a cold place (2nd Law of Thermodynamics). We introduce the three ways it gets there.
+
+Storytelling/Analogy: Imagine heat as a crowd of people trying to get from a crowded, hot party (inside) to the cool night air (outside).
+
+Conduction ($Q_k$): Passing a bucket of water down a line. Heat transfers through solid materials (like the wall itself) molecule by molecule.
+
+Convection ($Q_c$): People walking out the door. Heat transfers through moving fluids or gases (like air leaks around a window).
+
+Radiation ($Q_r$): The music pulsing from the speakers. Heat transfers through electromagnetic waves across a space (like the sun heating a dark roof).
+
+Visuals: Animations of molecules vibrating (conduction), air currents moving (convection), and waves radiating (radiation).
+
+Standard Reference: General principles underlying DIN EN ISO 6946 (Building components and building elements - Thermal resistance and thermal transmittance).
+
+---
+
+I want to fix the visual animation of this code. In the first scene, indicating the movement of energy from the warm environment to the cold one has an issue, and I want you to use a better animation that is also physically accurate. Then, in beat 2, the airflow needs to pass through the opening, meaning it should shift a little lower toward the middle of the opening. Finally, in beat 3, the animated sun heating the ground should be a little lower to align with the speaker.
+
+--
+Also in the convection part of beat 3, I want the airflow movement to be realistic instead of just straight lines.
+
+--
+Also, in the introduction, add additional scenes that explain Module 2. Ensure that the style, text, and subtitles perfectly match and sync with the previous scenes. start with the heating videos. For the first scene (the introduction), I want to change some aspects of the storytelling by adding and deleting certain sections. Below is the new description and transcript for this scene. Please use the techniques we have developed and include subtitles. Ensure the subtitles do not overlap with any visual elements and that the text is entirely in German. Here is the new introduction: Module 1: The Foundations - Building Physics as a Story
+
+Objective: Refresh essential physics concepts using relatable analogies. We need students to understand how heat moves before calculating how much moves.
+
+Section 1.1: The Three Modes of Heat Transfer (The "Travel Agency" of Heat)
+
+Concept: Heat always wants to move from a warm place to a cold place (2nd Law of Thermodynamics). We introduce the three ways it gets there.
+
+Storytelling/Analogy: Imagine heat as a crowd of people trying to get from a crowded, hot party (inside) to the cool night air (outside).
+
+Conduction ($Q_k$): Passing a bucket of water down a line. Heat transfers through solid materials (like the wall itself) molecule by molecule.
+
+Convection ($Q_c$): People walking out the door. Heat transfers through moving fluids or gases (like air leaks around a window).
+
+Radiation ($Q_r$): The music pulsing from the speakers. Heat transfers through electromagnetic waves across a space (like the sun heating a dark roof).
+
+Visuals: Animations of molecules vibrating (conduction), air currents moving (convection), and waves radiating (radiation).
+
+Standard Reference: General principles underlying DIN EN ISO 6946 (Building components and building elements - Thermal resistance and thermal transmittance).
+---
+Also, use your creativity to explain the topic with better examples, clearer explanations, and improved animations.
+---
+Now, I want to organize the sections on conduction, convection, internal heat gain, and solar heat gain. Starting with conduction, apply the techniques we've developed, ensuring you follow the guidelines regarding fonts, text sizes, and topic names. Additionally, write the formulas in the scenes with their proper units in an academic format. improve the screen management without changing the core animation too much—just adjust it slightly through repositioning. Finally, add subtitles; you can adjust the duration of the animation to ensure it syncs perfectly with the text
+
+---
+also now do the same for @tutorial/energy/demand/Heating/convection 
+
+---
+@tutorial/energy/demand/Heating/internal_heat_gain now do for this one 
+
+---
+In the internal heat gain section, please shift the animation a little lower, as it collides with the topics at the top. Also, in scene 3, the positions of the human and the appliances are incorrect;  fix all
+
+---
+shift and rescale the entire animated object
+---
+n scene 2, the radiation emitted by the seated human should have low opacity, just like in previous versions. also, the incoming text collides with the house and objects in the scene;  reposition the text to avoid this.
+---
+The text showing phi_p still collides with the house; please shift it lower. Also, make the text in the yellow box on the right bigger
+
+---
+in scene 3 the wire that is connecting to the electricity portal, just show it with line without filling
+---
+In scene 3, the wire connecting to the power outlet should just be a line without a fill.
+---
+Also, the human is animated very poorly, use the human with the chair from the previous scene
+---
+In scene 4, shift the formula and the rectangle around it down a bit
+---
+@tutorial/energy/demand/Heating/5_solar_heat_gain Now it is time to do the same thing for these scenes
+---
+Now I want to organize the sections on conduction, convection, internal heat gain, and solar heat gain. It is time for @tutorial/energy/demand/Heating/5_solar_heat_gain/scene_5.py. apply the established techniques, ensuring you follow the guidelines regarding fonts, text sizes, and topic names. Additionally, write the formulas with their units in an academic format. Improve the screen management without altering the core animation too much—just adjust it slightly through repositioning. Finally, add subtitles, adjusting the animation duration as needed to sync perfectly with the text, just as you did in the previous scenes.
+
+---
+but i want like privious moduls in conducton and others the title be following with modul ..., and also where is subtitel 
+---
+I want the title to start with 'Module...', just like we did in the previous modules for conduction and the others. Also, the subtitles are missing—where are they?
+---
+Make the opacity of the sun the same as the original. It should have low opacity
+---
+you have make the animations to small the texes are unreadble
+---
+In scene 4 (saisonale Winkel), you need to shift the house, the sun, and the other objects lower so that everything is fully visible and nothing gets cut off
+---
+And the animation of the sun with the house is not synced
+---
+
+
+## 2026-08-09 22:52
+
+@tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py in beat 2, the particels they are crossing the room boundry whis we have to avoide, and also in right when q-v,R box is showing p i want the 4 boxes there being allign that means you have to make that rectangle a little bigger

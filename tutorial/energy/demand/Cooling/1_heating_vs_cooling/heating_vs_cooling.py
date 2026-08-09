@@ -11,6 +11,7 @@ _TUTORIAL_ROOT = next(
 if str(_TUTORIAL_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_TUTORIAL_ROOT))
 from manim_fonts import apply_body_font, play_scene_title, scene_title
+from manim_visuals import convection_stream, radiation_waves, solar_wave_ray, watt_anchor
 
 
 class HeatingVsCooling(Scene):
@@ -162,6 +163,16 @@ class HeatingVsCooling(Scene):
         internal_label = Text("Interne Gewinne", font_size=15, color=C_PINK)
         internal_label.next_to(device, UP, buff=0.4)
 
+        laptop_anchor = watt_anchor(60, compare="laptop", title="Gerät")
+        laptop_anchor.scale(0.55).next_to(device, RIGHT, buff=0.25)
+        person_anchor = watt_anchor(100, compare="bulb", title="Person")
+        person_anchor.scale(0.55).next_to(person2, LEFT, buff=0.2)
+
+        solar_rays = VGroup(*[
+            solar_wave_ray(sun_pos, win1.get_center(), color=P_YELLOW, stroke_width=2.0, amp=0.06),
+            solar_wave_ray(sun_pos, win2.get_center(), color=P_YELLOW, stroke_width=2.0, amp=0.06),
+        ])
+
         # Animate Beat 1
         play_scene_title(self, title)
         self.play(Write(subtitle), run_time=0.8)
@@ -176,12 +187,14 @@ class HeatingVsCooling(Scene):
         self.play(
             FadeIn(sun_glow), FadeIn(sun_core), Create(sun_ring1), Create(sun_ring2), Create(sun_burst),
             FadeIn(solar_label),
+            LaggedStart(*[Create(r) for r in solar_rays], lag_ratio=0.15),
             FadeIn(internal_dot),
             Create(internal_waves),
             FadeIn(internal_label),
             run_time=1.8
         )
-        self.wait(2.0)
+        self.play(FadeIn(laptop_anchor), FadeIn(person_anchor), run_time=1.0)
+        self.wait(1.0)
 
         # ----------------------------------------------------
         # BEAT 2 & 3: The Seasonal Shift & Greenhouse Trap
@@ -307,13 +320,13 @@ class HeatingVsCooling(Scene):
         subtitle_beat4 = Text("Wärme aktiv abführen (Mechanische Lüftung)", font_size=20, color=P_CYAN)
         subtitle_beat4.next_to(title_beat4, DOWN, buff=0.2)
 
-        # Cooling exhaust cyan arrows (bursting from roof and side walls)
-        exhaust_arrow_top1 = Arrow(start=roof_peak + LEFT * 0.4 + UP * 0.1, end=roof_peak + LEFT * 1.0 + UP * 1.2, color=P_CYAN, stroke_width=5)
-        exhaust_arrow_top2 = Arrow(start=roof_peak + RIGHT * 0.4 + UP * 0.1, end=roof_peak + RIGHT * 1.0 + UP * 1.2, color=P_CYAN, stroke_width=5)
-        exhaust_arrow_left = Arrow(start=top_left + DOWN * 0.8, end=top_left + LEFT * 1.2 + DOWN * 0.8, color=P_CYAN, stroke_width=5)
-        exhaust_arrow_right = Arrow(start=top_right + DOWN * 0.8, end=top_right + RIGHT * 1.2 + DOWN * 0.8, color=P_CYAN, stroke_width=5)
-
-        exhaust_arrows = VGroup(exhaust_arrow_top1, exhaust_arrow_top2, exhaust_arrow_left, exhaust_arrow_right)
+        # Cooling exhaust as convection air streams (not abstract arrows alone)
+        exhaust_streams = VGroup(
+            convection_stream(roof_peak + LEFT * 0.3, roof_peak + LEFT * 1.1 + UP * 1.1, color=P_CYAN, bend=0.25, n_ribbons=2),
+            convection_stream(roof_peak + RIGHT * 0.3, roof_peak + RIGHT * 1.1 + UP * 1.1, color=P_CYAN, bend=0.25, n_ribbons=2),
+            convection_stream(top_left + DOWN * 0.8, top_left + LEFT * 1.2 + DOWN * 0.8, color=P_CYAN, bend=0.15, n_ribbons=2),
+            convection_stream(top_right + DOWN * 0.8, top_right + RIGHT * 1.2 + DOWN * 0.8, color=P_CYAN, bend=-0.15, n_ribbons=2),
+        )
         exhaust_label = Text("Mechanische Lüftung / Kühlung", font_size=15, color=P_CYAN)
         exhaust_label.next_to(roof_peak, LEFT, buff=1.3)
 
@@ -322,14 +335,17 @@ class HeatingVsCooling(Scene):
             Transform(subtitle, subtitle_beat4),
             FadeOut(sun_group),
             FadeOut(solar_label),
+            FadeOut(solar_rays),
             FadeOut(internal_dot),
             FadeOut(internal_waves),
             FadeOut(internal_label),
+            FadeOut(laptop_anchor),
+            FadeOut(person_anchor),
             run_time=1.2
         )
 
         self.play(
-            *[GrowArrow(arr) for arr in exhaust_arrows],
+            LaggedStart(*[Create(s) for s in exhaust_streams], lag_ratio=0.12),
             FadeIn(exhaust_label),
             heat_block.animate.set_fill(opacity=0.0),
             temp_val.animate.set_value(21),

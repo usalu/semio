@@ -1,0 +1,11 @@
+{
+  "title": "Beat3 Link Both Formulas",
+  "slug": "BEAT3-FORMULA-LINK",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat3 keeps the boxed Q̇_V formula on screen, parks it mid-frame, adds a Q̇_V=Q̇_S,tr → umstellen bridge, then shows the rearranged formula below while indicating matching start symbols during each parameter highlight.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

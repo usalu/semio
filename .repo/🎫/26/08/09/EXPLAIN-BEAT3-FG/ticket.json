@@ -1,0 +1,11 @@
+{
+  "title": "Explain Beat3 Lighting Parameters",
+  "slug": "EXPLAIN-BEAT3-FG",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "After the lighting formula in Beat3_DevicesLighting, added dedicated NARRATION + highlight_param steps for P_Licht and f_g (coincidence factor), matching the existing P_el / f_N device-formula walkthrough. Beat duration grows via hold_for on the new clauses.",
+  "files": [
+    "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py"
+  ]
+}

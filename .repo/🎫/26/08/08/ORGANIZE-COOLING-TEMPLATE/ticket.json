@@ -1,0 +1,25 @@
+{
+  "title": "Organize Cooling Demand Animations Template",
+  "slug": "ORGANIZE-COOLING-TEMPLATE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "note": "Repo MCP unavailable this session; ticket folder created manually. Closed after migrating Cooling 1–6 to five-rule template with subtitles, units, and hold_for sync.",
+  "summary": "Migrated all Cooling topics 1–6 onto the Heating-style five-rule Manim template: fonts/type scale, German titles, academic formula panels with units, German caption_bar subtitles, NARRATION-driven hold_for timing, generate_audio imports. Scene 6 MathTex removed. Smoke renders OK.",
+  "files": [
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py",
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/generate_audio.py",
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/build_full_video.py",
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/manim.cfg",
+    "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/generate_audio.py",
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/generate_audio.py",
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+    "tutorial/energy/demand/Cooling/4_solar_radiation/generate_audio.py",
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py",
+    "tutorial/energy/demand/Cooling/5_systemauslegung/generate_audio.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py"
+  ]
+}

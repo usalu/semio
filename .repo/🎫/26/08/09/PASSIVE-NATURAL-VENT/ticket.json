@@ -1,0 +1,14 @@
+{
+  "title": "Passive Natural Ventilation Focus",
+  "slug": "PASSIVE-NATURAL-VENT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Rewrote Cooling/6 around passive-house natural ventilation for comfort: opening adjustment, cross-flow, stack effect, night purge; mechanical only as reserve. Removed MathTex/mechanical-heavy beats. Updated audio, build, and launch Beat1 target.",
+  "files": [
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+    ".vscode/launch.json"
+  ]
+}

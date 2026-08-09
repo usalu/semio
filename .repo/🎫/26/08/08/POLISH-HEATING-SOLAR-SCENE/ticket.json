@@ -1,0 +1,8 @@
+{
+  "title": "Polish Heating Solar Scene",
+  "slug": "POLISH-HEATING-SOLAR-SCENE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Synced Modul 5 top title + beat subtitle with Modul 1–4 via shared manim_fonts.beat_subtitle (BODY_FONT, set_x(0), buff=0.22, BEAT_SUBTITLE_FADE). Renamed Modul 5 beat topics to match Modul 2–4 style."
+}

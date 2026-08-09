@@ -1,0 +1,8 @@
+{
+  "title": "Fix Heating Solar Scale",
+  "slug": "FIX-HEATING-SOLAR-SCALE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Modul 5 diagrams were crushed by CONTENT_SCALE=0.62. Replaced with focus-based _fit_stage that fills the title/caption band and bumped diagram labels to BODY_FONT_SIZE."
+}

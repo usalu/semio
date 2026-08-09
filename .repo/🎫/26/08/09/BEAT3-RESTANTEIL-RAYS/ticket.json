@@ -1,0 +1,11 @@
+{
+  "title": "Beat3 Restanteil Two More Rays",
+  "slug": "BEAT3-RESTANTEIL-RAYS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Restanteil residual beams increased from 3 to 5 to match the unshaded go-through count.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

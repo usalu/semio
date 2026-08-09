@@ -1,0 +1,15 @@
+{
+  "title": "Fix Text Render",
+  "slug": "FIX-TEXT-RENDER",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Fixed Manim text rendering at the shared helpers: disable_ligatures + body_text defaults, caption auto-wrap at fixed CAPTION_FONT_SIZE (stops clipped overflow from the no-shrink change), and wired Heating/final_calculation (and Heating/4 merged) to apply_scene_style with FadeIn instead of Write on labels. Verified Scene4 -ql: captions stay on-screen and center-aligned; labels no longer ghost from Write.",
+  "files": [
+    "tutorial/manim_fonts.py",
+    "tutorial/manim_visuals.py",
+    "tutorial/energy/demand/Heating/final_calculation/merged_scenes.py",
+    "tutorial/energy/demand/Heating/4_internal_heat_gain/merged_scenes.py",
+    "tutorial/.agents/skills/generate-manim-tutorial/reference.md"
+  ]
+}

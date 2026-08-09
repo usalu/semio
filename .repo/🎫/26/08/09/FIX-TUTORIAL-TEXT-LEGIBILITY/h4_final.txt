@@ -1,0 +1,420 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_WinterInterneGewinne            0 finding(s)   47 near
+Beat2_PersonenPhiP                    0 finding(s)   66 near
+Beat3_GeraetePhiE                     0 finding(s)   42 near
+Beat4_BeleuchtungPhiL                 0 finding(s)   66 near
+Beat5_SummeUndDichte                  3 finding(s)  183 near
+
+========================================================================
+HARD (true crossings):
+  [Beat5 @06] text/text  0.061  'Φ_p' ↔ 'Φ_p'
+  [Beat5 @06] text/text  0.051  'Φ_e' ↔ 'Φ_e'
+  [Beat5 @06] text/text  0.048  'Φ_l' ↔ 'Φ_l'
+
+========================================================================
+NEAR (tight spacing — verify by eye):
+  [Beat1 @08] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @08] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @08] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @09] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @09] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @09] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @10] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @10] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @10] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @11] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @11] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @11] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @12] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @12] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @12] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @13] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @13] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @13] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @13] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @14] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @14] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @14] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @14] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @15] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @15] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @15] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @15] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @16] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @16] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @16] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @16] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @17] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @17] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @17] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @17] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @18] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @18] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @18] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @18] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @19] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @19] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @19] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @19] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat1 @20] text/line near       'Personen' near Line text_box=(-1.54, -0.65, -0.94, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @20] text/line near       'Geräte' near Line text_box=(0.11, -0.65, 0.51, -0.55) outline_box=(-2.17, -0.59, 0.0, 0.53)
+  [Beat1 @20] text/line near       'Licht' near Line text_box=(1.08, -0.65, 1.4, -0.54) outline_box=(0.0, -0.59, 2.17, 0.53)
+  [Beat1 @20] text/line near       'DIN V 18599' near Line text_box=(-0.46, -2.74, 0.46, -2.58) outline_box=(-2.11, -2.45, 2.11, -2.45)
+  [Beat2 @08] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @08] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @08] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @09] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @09] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @09] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @10] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @10] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @10] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @11] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @11] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @11] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @12] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @12] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @12] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @13] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @13] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @13] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @13] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @13] text/line near       'Diese Last liegt bei etwa achtzig ' near SurroundingRectangle text_box=(-5.68, -3.5, 5.68, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @14] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @14] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @14] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @14] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @14] text/line near       'Diese Last liegt bei etwa achtzig ' near SurroundingRectangle text_box=(-5.68, -3.5, 5.68, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @14] text/line near       '[W]' near SurroundingRectangle text_box=(0.14, -2.97, 0.77, -2.6) outline_box=(-0.85, -3.06, 0.07, -2.52)
+  [Beat2 @15] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @15] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @15] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @15] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @15] text/line near       '[W]' near SurroundingRectangle text_box=(0.14, -2.97, 0.77, -2.6) outline_box=(-0.85, -3.06, 0.07, -2.52)
+  [Beat2 @16] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @16] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @16] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @16] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @16] text/line near       '[W]' near SurroundingRectangle text_box=(0.14, -2.97, 0.77, -2.6) outline_box=(-0.85, -3.06, 0.07, -2.52)
+  [Beat2 @16] text/line near       'Wir nennen den Personenwärmestrom ' near SurroundingRectangle text_box=(-4.46, -3.5, 4.46, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @17] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @17] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @17] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @17] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @17] text/line near       '[W]' near SurroundingRectangle text_box=(0.14, -2.97, 0.77, -2.6) outline_box=(-0.85, -3.06, 0.07, -2.52)
+  [Beat2 @17] text/line near       'Wir nennen den Personenwärmestrom ' near SurroundingRectangle text_box=(-4.46, -3.5, 4.46, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @18] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @18] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @18] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @18] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @18] text/line near       '[W]' near SurroundingRectangle text_box=(0.14, -2.97, 0.77, -2.6) outline_box=(-0.85, -3.06, 0.07, -2.52)
+  [Beat2 @18] text/line near       'Wir nennen den Personenwärmestrom ' near SurroundingRectangle text_box=(-4.46, -3.5, 4.46, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @19] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @19] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @19] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @19] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @19] text/line near       'Wir nennen den Personenwärmestrom ' near SurroundingRectangle text_box=(-4.46, -3.5, 4.46, -3.19) outline_box=(-0.99, -3.2, 0.99, -2.38)
+  [Beat2 @20] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @20] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @20] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @20] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @21] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @21] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @21] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @21] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat2 @22] text/text near       'Personen ~80–100 W' ↔ '90 W'
+  [Beat2 @22] text/text near       'Φ_p' ↔ '[W]'
+  [Beat2 @22] text/line near       '90 W' near Circle text_box=(3.74, -0.05, 4.73, 0.32) outline_box=(4.07, -0.49, 4.39, -0.17)
+  [Beat2 @22] text/line near       '≈ 1× Glühbirne (100 W)' near Rectangle text_box=(3.01, -0.93, 5.46, -0.71) outline_box=(4.17, -0.59, 4.29, -0.49)
+  [Beat3 @16] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @16] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @16] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @16] text/line near       'Strom wird Wärme, sobald er die St' near SurroundingRectangle text_box=(-3.85, -3.5, 3.85, -3.2) outline_box=(-1.61, -3.02, 1.61, -2.2)
+  [Beat3 @17] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @17] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @17] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @17] text/line near       'Strom wird Wärme, sobald er die St' near SurroundingRectangle text_box=(-3.85, -3.5, 3.85, -3.2) outline_box=(-1.61, -3.02, 1.61, -2.2)
+  [Beat3 @17] text/line near       '+' near SurroundingRectangle text_box=(-0.48, -2.71, -0.27, -2.5) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @17] text/line near       '[W]' near SurroundingRectangle text_box=(0.76, -2.8, 1.39, -2.42) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @18] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @18] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @18] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @18] text/line near       '+' near SurroundingRectangle text_box=(-0.48, -2.71, -0.27, -2.5) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @18] text/line near       '[W]' near SurroundingRectangle text_box=(0.76, -2.8, 1.39, -2.42) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @19] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @19] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @19] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @19] text/line near       '+' near SurroundingRectangle text_box=(-0.48, -2.71, -0.27, -2.5) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @19] text/line near       '[W]' near SurroundingRectangle text_box=(0.76, -2.8, 1.39, -2.42) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @20] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @20] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @20] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @20] text/line near       '+' near SurroundingRectangle text_box=(-0.48, -2.71, -0.27, -2.5) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @20] text/line near       '[W]' near SurroundingRectangle text_box=(0.76, -2.8, 1.39, -2.42) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @21] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @21] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @21] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @21] text/line near       '+' near SurroundingRectangle text_box=(-0.48, -2.71, -0.27, -2.5) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @21] text/line near       '[W]' near SurroundingRectangle text_box=(0.76, -2.8, 1.39, -2.42) outline_box=(-0.2, -2.86, 0.69, -2.35)
+  [Beat3 @22] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @22] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @22] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @23] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @23] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @23] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @24] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @24] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @24] text/text near       'Φ_e' ↔ '[W]'
+  [Beat3 @25] text/text near       'Φ_p' ↔ '+'
+  [Beat3 @25] text/text near       '+' ↔ 'Φ_e'
+  [Beat3 @25] text/text near       'Φ_e' ↔ '[W]'
+  [Beat4 @14] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @14] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @14] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @14] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @14] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @14] text/line near       'Warme Schwaden steigen vom beleuch' near SurroundingRectangle text_box=(-5.41, -3.5, 5.41, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @15] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @15] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @15] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @15] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @15] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @15] text/line near       'Warme Schwaden steigen vom beleuch' near SurroundingRectangle text_box=(-5.41, -3.5, 5.41, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @15] text/line near       '+' near SurroundingRectangle text_box=(0.18, -2.71, 0.39, -2.5) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @15] text/line near       '[W]' near SurroundingRectangle text_box=(1.33, -2.8, 1.97, -2.42) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @16] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @16] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @16] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @16] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @16] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @16] text/line near       '+' near SurroundingRectangle text_box=(0.18, -2.71, 0.39, -2.5) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @16] text/line near       '[W]' near SurroundingRectangle text_box=(1.33, -2.8, 1.97, -2.42) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @17] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @17] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @17] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @17] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @17] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @17] text/line near       '+' near SurroundingRectangle text_box=(0.18, -2.71, 0.39, -2.5) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @17] text/line near       '[W]' near SurroundingRectangle text_box=(1.33, -2.8, 1.97, -2.42) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @17] text/line near       'Lichtwärme ist Phi-l. Zusammen: Ph' near SurroundingRectangle text_box=(-4.52, -3.5, 4.52, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @18] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @18] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @18] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @18] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @18] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @18] text/line near       '+' near SurroundingRectangle text_box=(0.18, -2.71, 0.39, -2.5) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @18] text/line near       '[W]' near SurroundingRectangle text_box=(1.33, -2.8, 1.97, -2.42) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @18] text/line near       'Lichtwärme ist Phi-l. Zusammen: Ph' near SurroundingRectangle text_box=(-4.52, -3.5, 4.52, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @19] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @19] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @19] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @19] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @19] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @19] text/line near       '+' near SurroundingRectangle text_box=(0.18, -2.71, 0.39, -2.5) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @19] text/line near       '[W]' near SurroundingRectangle text_box=(1.33, -2.8, 1.97, -2.42) outline_box=(0.46, -2.88, 1.26, -2.34)
+  [Beat4 @19] text/line near       'Lichtwärme ist Phi-l. Zusammen: Ph' near SurroundingRectangle text_box=(-4.52, -3.5, 4.52, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @20] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @20] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @20] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @20] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @20] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @20] text/line near       'Lichtwärme ist Phi-l. Zusammen: Ph' near SurroundingRectangle text_box=(-4.52, -3.5, 4.52, -3.19) outline_box=(-2.19, -3.02, 2.19, -2.2)
+  [Beat4 @21] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @21] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @21] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @21] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @21] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @22] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @22] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @22] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @22] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @22] text/text near       'Φ_l' ↔ '[W]'
+  [Beat4 @23] text/text near       'Φ_p' ↔ '+'
+  [Beat4 @23] text/text near       '+' ↔ 'Φ_e'
+  [Beat4 @23] text/text near       'Φ_e' ↔ '+'
+  [Beat4 @23] text/text near       '+' ↔ 'Φ_l'
+  [Beat4 @23] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @03] text/text near       'Φ_p' ↔ 'Personen'
+  [Beat5 @03] text/text near       'Φ_e' ↔ 'Geräte'
+  [Beat5 @03] text/text near       'Φ_l' ↔ 'Beleuchtung'
+  [Beat5 @04] text/text near       'Φ_p' ↔ 'Personen'
+  [Beat5 @04] text/text near       'Φ_e' ↔ 'Geräte'
+  [Beat5 @04] text/text near       'Φ_l' ↔ 'Beleuchtung'
+  [Beat5 @05] text/text near       'Φ_p' ↔ 'Personen'
+  [Beat5 @05] text/text near       'Φ_e' ↔ 'Geräte'
+  [Beat5 @05] text/text near       'Φ_l' ↔ 'Beleuchtung'
+  [Beat5 @06] text/text near       'Φ_int' ↔ '='
+  [Beat5 @06] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @06] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @06] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @06] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @06] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @06] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @06] text/line near       'Personen, Geräte und Beleuchtung s' near SurroundingRectangle text_box=(-4.88, -3.5, 4.88, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @07] text/text near       'Φ_int' ↔ '='
+  [Beat5 @07] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @07] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @07] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @07] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @07] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @07] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @07] text/line near       'Personen, Geräte und Beleuchtung s' near SurroundingRectangle text_box=(-4.88, -3.5, 4.88, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @07] text/line near       '=' near SurroundingRectangle text_box=(-1.56, -2.66, -1.36, -2.56) outline_box=(-2.82, -2.87, -1.63, -2.35)
+  [Beat5 @08] text/text near       'Φ_int' ↔ '='
+  [Beat5 @08] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @08] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @08] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @08] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @08] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @08] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @08] text/line near       '=' near SurroundingRectangle text_box=(-1.56, -2.66, -1.36, -2.56) outline_box=(-2.82, -2.87, -1.63, -2.35)
+  [Beat5 @09] text/text near       'Φ_int' ↔ '='
+  [Beat5 @09] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @09] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @09] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @09] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @09] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @09] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @09] text/line near       '=' near SurroundingRectangle text_box=(-1.56, -2.66, -1.36, -2.56) outline_box=(-2.82, -2.87, -1.63, -2.35)
+  [Beat5 @09] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @10] text/text near       'Φ_int' ↔ '='
+  [Beat5 @10] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @10] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @10] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @10] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @10] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @10] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @10] text/line near       '=' near SurroundingRectangle text_box=(-1.56, -2.66, -1.36, -2.56) outline_box=(-2.82, -2.87, -1.63, -2.35)
+  [Beat5 @10] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @11] text/text near       'Φ_int' ↔ '='
+  [Beat5 @11] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @11] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @11] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @11] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @11] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @11] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @11] text/line near       '=' near SurroundingRectangle text_box=(-1.56, -2.66, -1.36, -2.56) outline_box=(-2.82, -2.87, -1.63, -2.35)
+  [Beat5 @11] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @12] text/text near       'Φ_int' ↔ '='
+  [Beat5 @12] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @12] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @12] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @12] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @12] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @12] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @12] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @13] text/text near       'Φ_int' ↔ '='
+  [Beat5 @13] text/text near       '=' ↔ 'Φ_p'
+  [Beat5 @13] text/text near       'Φ_p' ↔ '+'
+  [Beat5 @13] text/text near       '+' ↔ 'Φ_e'
+  [Beat5 @13] text/text near       'Φ_e' ↔ '+'
+  [Beat5 @13] text/text near       '+' ↔ 'Φ_l'
+  [Beat5 @13] text/text near       'Φ_l' ↔ '[W]'
+  [Beat5 @13] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.96, -3.02, 2.96, -2.2)
+  [Beat5 @14] text/text near       'q_int' ↔ '='
+  [Beat5 @14] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @14] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @14] text/text near       '/' ↔ 'A_N'
+  [Beat5 @14] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @14] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @15] text/text near       'q_int' ↔ '='
+  [Beat5 @15] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @15] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @15] text/text near       '/' ↔ 'A_N'
+  [Beat5 @15] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @15] text/line near       '/' near SurroundingRectangle text_box=(-0.04, -2.8, 0.13, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @15] text/line near       '[W/m²]' near SurroundingRectangle text_box=(1.3, -2.8, 2.69, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @15] text/line near       'Phi-int ist Phi-p plus Phi-e plus ' near SurroundingRectangle text_box=(-5.38, -3.5, 5.38, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @16] text/text near       'q_int' ↔ '='
+  [Beat5 @16] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @16] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @16] text/text near       '/' ↔ 'A_N'
+  [Beat5 @16] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @16] text/line near       '/' near SurroundingRectangle text_box=(-0.04, -2.8, 0.13, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @16] text/line near       '[W/m²]' near SurroundingRectangle text_box=(1.3, -2.8, 2.69, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @17] text/text near       'q_int' ↔ '='
+  [Beat5 @17] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @17] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @17] text/text near       '/' ↔ 'A_N'
+  [Beat5 @17] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @17] text/line near       '/' near SurroundingRectangle text_box=(-0.04, -2.8, 0.13, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @17] text/line near       '[W/m²]' near SurroundingRectangle text_box=(1.3, -2.8, 2.69, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @17] text/line near       'Geteilt durch die Nettogrundfläche' near SurroundingRectangle text_box=(-5.13, -3.5, 5.13, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @18] text/text near       'q_int' ↔ '='
+  [Beat5 @18] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @18] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @18] text/text near       '/' ↔ 'A_N'
+  [Beat5 @18] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @18] text/line near       '/' near SurroundingRectangle text_box=(-0.04, -2.8, 0.13, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @18] text/line near       '[W/m²]' near SurroundingRectangle text_box=(1.3, -2.8, 2.69, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @18] text/line near       'Geteilt durch die Nettogrundfläche' near SurroundingRectangle text_box=(-5.13, -3.5, 5.13, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @19] text/text near       'q_int' ↔ '='
+  [Beat5 @19] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @19] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @19] text/text near       '/' ↔ 'A_N'
+  [Beat5 @19] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @19] text/line near       '/' near SurroundingRectangle text_box=(-0.04, -2.8, 0.13, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @19] text/line near       '[W/m²]' near SurroundingRectangle text_box=(1.3, -2.8, 2.69, -2.4) outline_box=(0.2, -2.86, 1.23, -2.35)
+  [Beat5 @19] text/line near       'Geteilt durch die Nettogrundfläche' near SurroundingRectangle text_box=(-5.13, -3.5, 5.13, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @20] text/text near       'q_int' ↔ '='
+  [Beat5 @20] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @20] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @20] text/text near       '/' ↔ 'A_N'
+  [Beat5 @20] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @20] text/line near       'Geteilt durch die Nettogrundfläche' near SurroundingRectangle text_box=(-5.13, -3.5, 5.13, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @21] text/text near       'q_int' ↔ '='
+  [Beat5 @21] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @21] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @21] text/text near       '/' ↔ 'A_N'
+  [Beat5 @21] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @21] text/line near       '=' near SurroundingRectangle text_box=(-1.57, -2.65, -1.36, -2.55) outline_box=(-2.77, -2.88, -1.64, -2.32)
+  [Beat5 @21] text/line near       'Geteilt durch die Nettogrundfläche' near SurroundingRectangle text_box=(-5.13, -3.5, 5.13, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @22] text/text near       'q_int' ↔ '='
+  [Beat5 @22] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @22] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @22] text/text near       '/' ↔ 'A_N'
+  [Beat5 @22] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @22] text/line near       '=' near SurroundingRectangle text_box=(-1.57, -2.65, -1.36, -2.55) outline_box=(-2.77, -2.88, -1.64, -2.32)
+  [Beat5 @23] text/text near       'q_int' ↔ '='
+  [Beat5 @23] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @23] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @23] text/text near       '/' ↔ 'A_N'
+  [Beat5 @23] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @23] text/line near       '=' near SurroundingRectangle text_box=(-1.57, -2.65, -1.36, -2.55) outline_box=(-2.77, -2.88, -1.64, -2.32)
+  [Beat5 @23] text/line near       'Diese spezifische Dichte q-int ste' near SurroundingRectangle text_box=(-4.93, -3.5, 4.93, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @24] text/text near       'q_int' ↔ '='
+  [Beat5 @24] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @24] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @24] text/text near       '/' ↔ 'A_N'
+  [Beat5 @24] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @24] text/line near       '=' near SurroundingRectangle text_box=(-1.57, -2.65, -1.36, -2.55) outline_box=(-2.77, -2.88, -1.64, -2.32)
+  [Beat5 @24] text/line near       'Diese spezifische Dichte q-int ste' near SurroundingRectangle text_box=(-4.93, -3.5, 4.93, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @25] text/text near       'q_int' ↔ '='
+  [Beat5 @25] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @25] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @25] text/text near       '/' ↔ 'A_N'
+  [Beat5 @25] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @25] text/line near       '=' near SurroundingRectangle text_box=(-1.57, -2.65, -1.36, -2.55) outline_box=(-2.77, -2.88, -1.64, -2.32)
+  [Beat5 @25] text/line near       'Diese spezifische Dichte q-int ste' near SurroundingRectangle text_box=(-4.93, -3.5, 4.93, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @26] text/text near       'q_int' ↔ '='
+  [Beat5 @26] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @26] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @26] text/text near       '/' ↔ 'A_N'
+  [Beat5 @26] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @26] text/line near       'Diese spezifische Dichte q-int ste' near SurroundingRectangle text_box=(-4.93, -3.5, 4.93, -3.19) outline_box=(-2.91, -3.02, 2.91, -2.18)
+  [Beat5 @27] text/text near       'q_int' ↔ '='
+  [Beat5 @27] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @27] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @27] text/text near       '/' ↔ 'A_N'
+  [Beat5 @27] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @28] text/text near       'q_int' ↔ '='
+  [Beat5 @28] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @28] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @28] text/text near       '/' ↔ 'A_N'
+  [Beat5 @28] text/text near       'A_N' ↔ '[W/m²]'
+  [Beat5 @29] text/text near       'q_int' ↔ '='
+  [Beat5 @29] text/text near       '=' ↔ 'Φ_int'
+  [Beat5 @29] text/text near       'Φ_int' ↔ '/'
+  [Beat5 @29] text/text near       '/' ↔ 'A_N'
+  [Beat5 @29] text/text near       'A_N' ↔ '[W/m²]'

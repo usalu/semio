@@ -1,0 +1,8 @@
+{
+  "title": "Fix Full Heating Concat",
+  "slug": "FIX-FULL-HEATING-CONCAT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Recovered 1080p60 FullHeatingDemandVideo.mp4 via ffmpeg (skipped 1 corrupt partial). Switched recommended path to section scenes + ffmpeg concat; updated README + launch.json."
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Lower Scene1 House Layout",
+  "slug": "LOWER-SCENE1-HOUSE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Moved the scene_1 cross-section house and all house-relative visuals (sun, rays, gains, watt anchors, heat block, thermometer, exhaust) slightly lower by shifting the default center from DOWN*0.15 to DOWN*0.45.",
+  "files": [
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py"
+  ]
+}

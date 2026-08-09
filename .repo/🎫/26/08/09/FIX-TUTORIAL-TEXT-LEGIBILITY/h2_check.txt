@@ -1,0 +1,877 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_MakroUndMikro                   5 finding(s)   34 near
+Beat2_RWert                           0 finding(s)  205 near
+Beat3_UWertUndGradient                0 finding(s)  100 near
+Beat4_Gebaeudehuelle                  0 finding(s)  521 near
+
+========================================================================
+HARD (true crossings):
+  [Beat1 @07] text/line            'WARM (GLEICHGEWICHT)' crossed by Rectangle at (0.00,0.08) text_box=(-1.79, 0.02, 1.79, 0.28)
+  [Beat1 @08] text/line            'WARM (GLEICHGEWICHT)' crossed by Rectangle at (0.00,0.08) text_box=(-1.79, 0.02, 1.79, 0.28)
+  [Beat1 @09] text/line            'WARM (GLEICHGEWICHT)' crossed by Rectangle at (0.00,0.08) text_box=(-1.79, 0.02, 1.79, 0.28)
+  [Beat1 @10] text/line            'WARM (GLEICHGEWICHT)' crossed by Rectangle at (0.00,0.08) text_box=(-1.79, 0.02, 1.79, 0.28)
+  [Beat1 @11] text/line            'WARM (GLEICHGEWICHT)' crossed by Rectangle at (0.00,0.08) text_box=(-1.79, 0.02, 1.79, 0.28)
+
+========================================================================
+NEAR (tight spacing — verify by eye):
+  [Beat1 @03] text/text near       'Makroskopisch fließt Wärme vom hei' ↔ 'gleich warm wirken.'
+  [Beat1 @04] text/text near       'Makroskopisch fließt Wärme vom hei' ↔ 'gleich warm wirken.'
+  [Beat1 @05] text/text near       'Makroskopisch fließt Wärme vom hei' ↔ 'gleich warm wirken.'
+  [Beat1 @06] text/text near       'Makroskopisch fließt Wärme vom hei' ↔ 'gleich warm wirken.'
+  [Beat1 @07] text/text near       'Makroskopisch fließt Wärme vom hei' ↔ 'gleich warm wirken.'
+  [Beat1 @09] text/text near       'Diese gemeinsame Wärme ist das the' ↔ 'ist null.'
+  [Beat1 @10] text/text near       'Diese gemeinsame Wärme ist das the' ↔ 'ist null.'
+  [Beat1 @11] text/text near       'Diese gemeinsame Wärme ist das the' ↔ 'ist null.'
+  [Beat1 @12] text/text near       'Diese gemeinsame Wärme ist das the' ↔ 'ist null.'
+  [Beat1 @13] text/text near       'Diese gemeinsame Wärme ist das the' ↔ 'ist null.'
+  [Beat1 @15] text/text near       'Hereinzoomen: ein Molekülgitter. W' ↔ 'Nachbar zu Nachbar.'
+  [Beat1 @16] text/text near       'Hereinzoomen: ein Molekülgitter. W' ↔ 'Nachbar zu Nachbar.'
+  [Beat1 @17] text/text near       'Hereinzoomen: ein Molekülgitter. W' ↔ 'Nachbar zu Nachbar.'
+  [Beat1 @18] text/text near       'Hereinzoomen: ein Molekülgitter. W' ↔ 'Nachbar zu Nachbar.'
+  [Beat1 @18] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @19] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @20] text/text near       'Eine Dämmschicht mit Lufteinschlüs' ↔ 'stoppt fast.'
+  [Beat1 @20] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @21] text/text near       'Eine Dämmschicht mit Lufteinschlüs' ↔ 'stoppt fast.'
+  [Beat1 @21] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @22] text/text near       'Eine Dämmschicht mit Lufteinschlüs' ↔ 'stoppt fast.'
+  [Beat1 @22] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @23] text/text near       'Eine Dämmschicht mit Lufteinschlüs' ↔ 'stoppt fast.'
+  [Beat1 @23] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @24] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @25] text/text near       'Lufteinschlüsse stoppen die Wärmel' ↔ 'die Gebäudehülle.'
+  [Beat1 @25] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @26] text/text near       'Lufteinschlüsse stoppen die Wärmel' ↔ 'die Gebäudehülle.'
+  [Beat1 @26] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @27] text/text near       'Lufteinschlüsse stoppen die Wärmel' ↔ 'die Gebäudehülle.'
+  [Beat1 @27] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @28] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @29] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat1 @30] text/line near       'Dämmschicht (DIN 4108)' near Rectangle text_box=(-0.7, 1.58, 2.06, 1.81) outline_box=(0.46, -1.45, 0.91, 1.46)
+  [Beat2 @07] text/text near       'R' ↔ '='
+  [Beat2 @07] text/text near       '=' ↔ 'd'
+  [Beat2 @07] text/text near       'd' ↔ '/'
+  [Beat2 @07] text/text near       '/' ↔ 'λ'
+  [Beat2 @07] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @08] text/text near       'R' ↔ '='
+  [Beat2 @08] text/text near       '=' ↔ 'd'
+  [Beat2 @08] text/text near       'd' ↔ '/'
+  [Beat2 @08] text/text near       '/' ↔ 'λ'
+  [Beat2 @08] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @09] text/text near       'R' ↔ '='
+  [Beat2 @09] text/text near       '=' ↔ 'd'
+  [Beat2 @09] text/text near       'd' ↔ '/'
+  [Beat2 @09] text/text near       '/' ↔ 'λ'
+  [Beat2 @09] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @09] text/text near       'R ist Dicke d geteilt durch Leitfä' ↔ 'Kelvin pro Watt.'
+  [Beat2 @10] text/text near       'R' ↔ '='
+  [Beat2 @10] text/text near       '=' ↔ 'd'
+  [Beat2 @10] text/text near       'd' ↔ '/'
+  [Beat2 @10] text/text near       '/' ↔ 'λ'
+  [Beat2 @10] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @10] text/text near       'R ist Dicke d geteilt durch Leitfä' ↔ 'Kelvin pro Watt.'
+  [Beat2 @11] text/text near       'R' ↔ '='
+  [Beat2 @11] text/text near       '=' ↔ 'd'
+  [Beat2 @11] text/text near       'd' ↔ '/'
+  [Beat2 @11] text/text near       '/' ↔ 'λ'
+  [Beat2 @11] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @11] text/text near       'R ist Dicke d geteilt durch Leitfä' ↔ 'Kelvin pro Watt.'
+  [Beat2 @12] text/text near       'R' ↔ '='
+  [Beat2 @12] text/text near       '=' ↔ 'd'
+  [Beat2 @12] text/text near       'd' ↔ '/'
+  [Beat2 @12] text/text near       '/' ↔ 'λ'
+  [Beat2 @12] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @12] text/text near       'R ist Dicke d geteilt durch Leitfä' ↔ 'Kelvin pro Watt.'
+  [Beat2 @12] text/line near       '=' near SurroundingRectangle text_box=(-1.38, -2.15, -1.18, -2.05) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @12] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @12] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @12] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @13] text/text near       'R' ↔ '='
+  [Beat2 @13] text/text near       '=' ↔ 'd'
+  [Beat2 @13] text/text near       'd' ↔ '/'
+  [Beat2 @13] text/text near       '/' ↔ 'λ'
+  [Beat2 @13] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @13] text/line near       '=' near SurroundingRectangle text_box=(-1.38, -2.15, -1.18, -2.05) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @13] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @13] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @13] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @14] text/text near       'R' ↔ '='
+  [Beat2 @14] text/text near       '=' ↔ 'd'
+  [Beat2 @14] text/text near       'd' ↔ '/'
+  [Beat2 @14] text/text near       '/' ↔ 'λ'
+  [Beat2 @14] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @14] text/line near       '=' near SurroundingRectangle text_box=(-1.38, -2.15, -1.18, -2.05) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @14] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @14] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @14] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @15] text/text near       'R' ↔ '='
+  [Beat2 @15] text/text near       '=' ↔ 'd'
+  [Beat2 @15] text/text near       'd' ↔ '/'
+  [Beat2 @15] text/text near       '/' ↔ 'λ'
+  [Beat2 @15] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @15] text/line near       '=' near SurroundingRectangle text_box=(-1.38, -2.15, -1.18, -2.05) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @15] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @15] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @15] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @16] text/text near       'R' ↔ '='
+  [Beat2 @16] text/text near       '=' ↔ 'd'
+  [Beat2 @16] text/text near       'd' ↔ '/'
+  [Beat2 @16] text/text near       '/' ↔ 'λ'
+  [Beat2 @16] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @16] text/line near       '=' near SurroundingRectangle text_box=(-1.38, -2.15, -1.18, -2.05) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @16] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-1.11, -2.34, -0.73, -1.86)
+  [Beat2 @16] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @16] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @17] text/text near       'R' ↔ '='
+  [Beat2 @17] text/text near       '=' ↔ 'd'
+  [Beat2 @17] text/text near       'd' ↔ '/'
+  [Beat2 @17] text/text near       '/' ↔ 'λ'
+  [Beat2 @17] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @17] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @17] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @18] text/text near       'R' ↔ '='
+  [Beat2 @18] text/text near       '=' ↔ 'd'
+  [Beat2 @18] text/text near       'd' ↔ '/'
+  [Beat2 @18] text/text near       '/' ↔ 'λ'
+  [Beat2 @18] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @18] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @18] text/line near       '[m²·K/W]' near SurroundingRectangle text_box=(0.03, -2.3, 1.82, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @18] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @18] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @19] text/text near       'R' ↔ '='
+  [Beat2 @19] text/text near       '=' ↔ 'd'
+  [Beat2 @19] text/text near       'd' ↔ '/'
+  [Beat2 @19] text/text near       '/' ↔ 'λ'
+  [Beat2 @19] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @19] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @19] text/line near       '[m²·K/W]' near SurroundingRectangle text_box=(0.03, -2.3, 1.82, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @19] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @19] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @20] text/text near       'R' ↔ '='
+  [Beat2 @20] text/text near       '=' ↔ 'd'
+  [Beat2 @20] text/text near       'd' ↔ '/'
+  [Beat2 @20] text/text near       '/' ↔ 'λ'
+  [Beat2 @20] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @20] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @20] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @20] text/line near       '[m²·K/W]' near SurroundingRectangle text_box=(0.03, -2.3, 1.82, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @20] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @20] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @21] text/text near       'R' ↔ '='
+  [Beat2 @21] text/text near       '=' ↔ 'd'
+  [Beat2 @21] text/text near       'd' ↔ '/'
+  [Beat2 @21] text/text near       '/' ↔ 'λ'
+  [Beat2 @21] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @21] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @21] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @21] text/line near       '[m²·K/W]' near SurroundingRectangle text_box=(0.03, -2.3, 1.82, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @21] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @21] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @22] text/text near       'R' ↔ '='
+  [Beat2 @22] text/text near       '=' ↔ 'd'
+  [Beat2 @22] text/text near       'd' ↔ '/'
+  [Beat2 @22] text/text near       '/' ↔ 'λ'
+  [Beat2 @22] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @22] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @22] text/line near       '/' near SurroundingRectangle text_box=(-0.66, -2.3, -0.49, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @22] text/line near       '[m²·K/W]' near SurroundingRectangle text_box=(0.03, -2.3, 1.82, -1.9) outline_box=(-0.42, -2.34, -0.04, -1.86)
+  [Beat2 @22] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @22] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @23] text/text near       'R' ↔ '='
+  [Beat2 @23] text/text near       '=' ↔ 'd'
+  [Beat2 @23] text/text near       'd' ↔ '/'
+  [Beat2 @23] text/text near       '/' ↔ 'λ'
+  [Beat2 @23] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @23] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @23] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-0.75, -0.79, 0.75, -0.52)
+  [Beat2 @23] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-0.75, -0.4, 0.75, 1.5)
+  [Beat2 @24] text/text near       'R' ↔ '='
+  [Beat2 @24] text/text near       '=' ↔ 'd'
+  [Beat2 @24] text/text near       'd' ↔ '/'
+  [Beat2 @24] text/text near       '/' ↔ 'λ'
+  [Beat2 @24] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @24] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @24] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @24] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @25] text/text near       'R' ↔ '='
+  [Beat2 @25] text/text near       '=' ↔ 'd'
+  [Beat2 @25] text/text near       'd' ↔ '/'
+  [Beat2 @25] text/text near       '/' ↔ 'λ'
+  [Beat2 @25] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @25] text/text near       'Lambda ist die Wärmeleitfähigkeit ' ↔ '4108.'
+  [Beat2 @25] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @25] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @26] text/text near       'R' ↔ '='
+  [Beat2 @26] text/text near       '=' ↔ 'd'
+  [Beat2 @26] text/text near       'd' ↔ '/'
+  [Beat2 @26] text/text near       '/' ↔ 'λ'
+  [Beat2 @26] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @26] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @26] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @27] text/text near       'R' ↔ '='
+  [Beat2 @27] text/text near       '=' ↔ 'd'
+  [Beat2 @27] text/text near       'd' ↔ '/'
+  [Beat2 @27] text/text near       '/' ↔ 'λ'
+  [Beat2 @27] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @27] text/text near       'Verdoppelt man die Dicke, verdoppe' ↔ 'mit d.'
+  [Beat2 @27] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @27] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @28] text/text near       'R' ↔ '='
+  [Beat2 @28] text/text near       '=' ↔ 'd'
+  [Beat2 @28] text/text near       'd' ↔ '/'
+  [Beat2 @28] text/text near       '/' ↔ 'λ'
+  [Beat2 @28] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @28] text/text near       'Verdoppelt man die Dicke, verdoppe' ↔ 'mit d.'
+  [Beat2 @28] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @28] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @29] text/text near       'R' ↔ '='
+  [Beat2 @29] text/text near       '=' ↔ 'd'
+  [Beat2 @29] text/text near       'd' ↔ '/'
+  [Beat2 @29] text/text near       '/' ↔ 'λ'
+  [Beat2 @29] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @29] text/text near       'Verdoppelt man die Dicke, verdoppe' ↔ 'mit d.'
+  [Beat2 @29] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @29] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @30] text/text near       'R' ↔ '='
+  [Beat2 @30] text/text near       '=' ↔ 'd'
+  [Beat2 @30] text/text near       'd' ↔ '/'
+  [Beat2 @30] text/text near       '/' ↔ 'λ'
+  [Beat2 @30] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @30] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @30] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @31] text/text near       'R' ↔ '='
+  [Beat2 @31] text/text near       '=' ↔ 'd'
+  [Beat2 @31] text/text near       'd' ↔ '/'
+  [Beat2 @31] text/text near       '/' ↔ 'λ'
+  [Beat2 @31] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @31] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @31] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat2 @32] text/text near       'R' ↔ '='
+  [Beat2 @32] text/text near       '=' ↔ 'd'
+  [Beat2 @32] text/text near       'd' ↔ '/'
+  [Beat2 @32] text/text near       '/' ↔ 'λ'
+  [Beat2 @32] text/text near       'λ' ↔ '[m²·K/W]'
+  [Beat2 @32] text/line near       'd [m]' near Brace text_box=(-0.31, -1.12, 0.31, -0.87) outline_box=(-1.5, -0.79, 1.5, -0.52)
+  [Beat2 @32] text/line near       'R = 2.0 m²·K/W' near Rectangle text_box=(-1.01, 1.68, 1.01, 1.94) outline_box=(-1.5, -0.4, 1.5, 1.5)
+  [Beat3 @02] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @03] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @04] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @05] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @06] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @06] text/text near       'U' ↔ '='
+  [Beat3 @06] text/text near       '=' ↔ '1'
+  [Beat3 @06] text/text near       '1' ↔ '/'
+  [Beat3 @06] text/text near       '/' ↔ 'R'
+  [Beat3 @06] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @07] text/text near       'Den Widerstand umdrehen ergibt den' ↔ 'Kelvin.'
+  [Beat3 @07] text/text near       'U' ↔ '='
+  [Beat3 @07] text/text near       '=' ↔ '1'
+  [Beat3 @07] text/text near       '1' ↔ '/'
+  [Beat3 @07] text/text near       '/' ↔ 'R'
+  [Beat3 @07] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @07] text/line near       '=' near SurroundingRectangle text_box=(-1.52, -2.15, -1.31, -2.05) outline_box=(-2.04, -2.33, -1.59, -1.87)
+  [Beat3 @08] text/text near       'U' ↔ '='
+  [Beat3 @08] text/text near       '=' ↔ '1'
+  [Beat3 @08] text/text near       '1' ↔ '/'
+  [Beat3 @08] text/text near       '/' ↔ 'R'
+  [Beat3 @08] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @08] text/line near       '=' near SurroundingRectangle text_box=(-1.52, -2.15, -1.31, -2.05) outline_box=(-2.04, -2.33, -1.59, -1.87)
+  [Beat3 @09] text/text near       'U' ↔ '='
+  [Beat3 @09] text/text near       '=' ↔ '1'
+  [Beat3 @09] text/text near       '1' ↔ '/'
+  [Beat3 @09] text/text near       '/' ↔ 'R'
+  [Beat3 @09] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @09] text/line near       '=' near SurroundingRectangle text_box=(-1.52, -2.15, -1.31, -2.05) outline_box=(-2.04, -2.33, -1.59, -1.87)
+  [Beat3 @10] text/text near       'U' ↔ '='
+  [Beat3 @10] text/text near       '=' ↔ '1'
+  [Beat3 @10] text/text near       '1' ↔ '/'
+  [Beat3 @10] text/text near       '/' ↔ 'R'
+  [Beat3 @10] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @10] text/line near       '=' near SurroundingRectangle text_box=(-1.52, -2.15, -1.31, -2.05) outline_box=(-2.04, -2.33, -1.59, -1.87)
+  [Beat3 @11] text/text near       'U' ↔ '='
+  [Beat3 @11] text/text near       '=' ↔ '1'
+  [Beat3 @11] text/text near       '1' ↔ '/'
+  [Beat3 @11] text/text near       '/' ↔ 'R'
+  [Beat3 @11] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @11] text/line near       '=' near SurroundingRectangle text_box=(-1.52, -2.15, -1.31, -2.05) outline_box=(-2.04, -2.33, -1.59, -1.87)
+  [Beat3 @12] text/text near       'U' ↔ '='
+  [Beat3 @12] text/text near       '=' ↔ '1'
+  [Beat3 @12] text/text near       '1' ↔ '/'
+  [Beat3 @12] text/text near       '/' ↔ 'R'
+  [Beat3 @12] text/text near       'R' ↔ '[W/(m²·K)]'
+  [Beat3 @17] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @18] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @19] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @20] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @21] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @21] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @21] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @22] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @22] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @22] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @23] text/text near       'Der Wärmeverlust skaliert auch mit' ↔ 'Watt.'
+  [Beat3 @23] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @23] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @23] text/line near       'Δθ = 25 K' near NumberLine text_box=(2.39, 0.43, 3.59, 0.69) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @24] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @24] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @24] text/line near       'Δθ = 25 K' near NumberLine text_box=(2.39, 0.43, 3.59, 0.69) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @25] text/text near       'Durch die Wand fällt die Temperatu' ↔ 'Delta-Theta.'
+  [Beat3 @25] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @25] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @25] text/line near       'Δθ = 25 K' near NumberLine text_box=(2.39, 0.43, 3.59, 0.69) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @26] text/text near       'Durch die Wand fällt die Temperatu' ↔ 'Delta-Theta.'
+  [Beat3 @26] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @26] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @26] text/line near       'Δθ = 25 K' near NumberLine text_box=(2.39, 0.43, 3.59, 0.69) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @27] text/text near       'Durch die Wand fällt die Temperatu' ↔ 'Delta-Theta.'
+  [Beat3 @27] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @27] text/line near       '−5 °C' near NumberLine text_box=(-3.56, -0.32, -3.03, -0.11) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @27] text/line near       'Δθ = 25 K' near NumberLine text_box=(2.39, 0.43, 3.59, 0.69) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @28] text/text near       'Durch die Wand fällt die Temperatu' ↔ 'Delta-Theta.'
+  [Beat3 @28] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @28] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @28] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @29] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @29] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @29] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @30] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @30] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @30] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @31] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @31] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @31] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @32] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @32] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @32] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @33] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @33] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @33] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @34] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @34] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @34] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat3 @35] text/line near       '20 °C' near NumberLine text_box=(-3.62, 1.25, -3.03, 1.42) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @35] text/line near       '−5 °C' near NumberLine text_box=(-3.66, -0.94, -3.03, -0.73) outline_box=(-3.09, -1.45, -2.74, 1.95)
+  [Beat3 @35] text/line near       'Δθ = 35 K' near NumberLine text_box=(2.39, 0.12, 3.59, 0.38) outline_box=(-2.91, -0.08, 2.29, 0.27)
+  [Beat4 @02] text/text near       'Für das ganze Gebäude addieren wir' ↔ 'Türen, Boden.'
+  [Beat4 @03] text/text near       'Für das ganze Gebäude addieren wir' ↔ 'Türen, Boden.'
+  [Beat4 @03] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @03] text/text near       '=' ↔ 'Σ'
+  [Beat4 @03] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @03] text/text near       '(U_i' ↔ '·'
+  [Beat4 @03] text/text near       '·' ↔ 'A_i'
+  [Beat4 @03] text/text near       'A_i' ↔ '·'
+  [Beat4 @03] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @03] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @03] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @03] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @04] text/text near       'Für das ganze Gebäude addieren wir' ↔ 'Türen, Boden.'
+  [Beat4 @04] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @04] text/text near       '=' ↔ 'Σ'
+  [Beat4 @04] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @04] text/text near       '(U_i' ↔ '·'
+  [Beat4 @04] text/text near       '·' ↔ 'A_i'
+  [Beat4 @04] text/text near       'A_i' ↔ '·'
+  [Beat4 @04] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @04] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @04] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @04] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @05] text/text near       'Für das ganze Gebäude addieren wir' ↔ 'Türen, Boden.'
+  [Beat4 @05] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @05] text/text near       '=' ↔ 'Σ'
+  [Beat4 @05] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @05] text/text near       '(U_i' ↔ '·'
+  [Beat4 @05] text/text near       '·' ↔ 'A_i'
+  [Beat4 @05] text/text near       'A_i' ↔ '·'
+  [Beat4 @05] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @05] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @05] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @05] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @06] text/text near       'Für das ganze Gebäude addieren wir' ↔ 'Türen, Boden.'
+  [Beat4 @06] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @06] text/text near       '=' ↔ 'Σ'
+  [Beat4 @06] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @06] text/text near       '(U_i' ↔ '·'
+  [Beat4 @06] text/text near       '·' ↔ 'A_i'
+  [Beat4 @06] text/text near       'A_i' ↔ '·'
+  [Beat4 @06] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @06] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @06] text/line near       '=' near SurroundingRectangle text_box=(-1.9, -2.13, -1.69, -2.03) outline_box=(-2.91, -2.38, -1.97, -1.78)
+  [Beat4 @06] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @06] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @07] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @07] text/text near       '=' ↔ 'Σ'
+  [Beat4 @07] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @07] text/text near       '(U_i' ↔ '·'
+  [Beat4 @07] text/text near       '·' ↔ 'A_i'
+  [Beat4 @07] text/text near       'A_i' ↔ '·'
+  [Beat4 @07] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @07] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @07] text/line near       '=' near SurroundingRectangle text_box=(-1.9, -2.13, -1.69, -2.03) outline_box=(-2.91, -2.38, -1.97, -1.78)
+  [Beat4 @07] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @07] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @08] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @08] text/text near       '=' ↔ 'Σ'
+  [Beat4 @08] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @08] text/text near       '(U_i' ↔ '·'
+  [Beat4 @08] text/text near       '·' ↔ 'A_i'
+  [Beat4 @08] text/text near       'A_i' ↔ '·'
+  [Beat4 @08] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @08] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @08] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @08] text/line near       '=' near SurroundingRectangle text_box=(-1.9, -2.13, -1.69, -2.03) outline_box=(-2.91, -2.38, -1.97, -1.78)
+  [Beat4 @08] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @08] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @09] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @09] text/text near       '=' ↔ 'Σ'
+  [Beat4 @09] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @09] text/text near       '(U_i' ↔ '·'
+  [Beat4 @09] text/text near       '·' ↔ 'A_i'
+  [Beat4 @09] text/text near       'A_i' ↔ '·'
+  [Beat4 @09] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @09] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @09] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @09] text/line near       '=' near SurroundingRectangle text_box=(-1.9, -2.13, -1.69, -2.03) outline_box=(-2.91, -2.38, -1.97, -1.78)
+  [Beat4 @09] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @09] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @10] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @10] text/text near       '=' ↔ 'Σ'
+  [Beat4 @10] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @10] text/text near       '(U_i' ↔ '·'
+  [Beat4 @10] text/text near       '·' ↔ 'A_i'
+  [Beat4 @10] text/text near       'A_i' ↔ '·'
+  [Beat4 @10] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @10] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @10] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @10] text/line near       '=' near SurroundingRectangle text_box=(-1.9, -2.13, -1.69, -2.03) outline_box=(-2.91, -2.38, -1.97, -1.78)
+  [Beat4 @10] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @10] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @11] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @11] text/text near       '=' ↔ 'Σ'
+  [Beat4 @11] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @11] text/text near       '(U_i' ↔ '·'
+  [Beat4 @11] text/text near       '·' ↔ 'A_i'
+  [Beat4 @11] text/text near       'A_i' ↔ '·'
+  [Beat4 @11] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @11] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @11] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @11] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @11] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @12] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @12] text/text near       '=' ↔ 'Σ'
+  [Beat4 @12] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @12] text/text near       '(U_i' ↔ '·'
+  [Beat4 @12] text/text near       '·' ↔ 'A_i'
+  [Beat4 @12] text/text near       'A_i' ↔ '·'
+  [Beat4 @12] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @12] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @12] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @12] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @12] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @13] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @13] text/text near       '=' ↔ 'Σ'
+  [Beat4 @13] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @13] text/text near       '(U_i' ↔ '·'
+  [Beat4 @13] text/text near       '·' ↔ 'A_i'
+  [Beat4 @13] text/text near       'A_i' ↔ '·'
+  [Beat4 @13] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @13] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @13] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @13] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @13] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @14] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @14] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @14] text/text near       '=' ↔ 'Σ'
+  [Beat4 @14] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @14] text/text near       '(U_i' ↔ '·'
+  [Beat4 @14] text/text near       '·' ↔ 'A_i'
+  [Beat4 @14] text/text near       'A_i' ↔ '·'
+  [Beat4 @14] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @14] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @14] text/text near       'Der Transmissionswärmeverlust ist ' ↔ 'Delta-Theta_i — in Watt, nach DIN '
+  [Beat4 @14] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @14] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @14] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @14] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @14] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @14] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @14] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @14] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @15] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @15] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @15] text/text near       '=' ↔ 'Σ'
+  [Beat4 @15] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @15] text/text near       '(U_i' ↔ '·'
+  [Beat4 @15] text/text near       '·' ↔ 'A_i'
+  [Beat4 @15] text/text near       'A_i' ↔ '·'
+  [Beat4 @15] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @15] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @15] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @15] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @15] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @15] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @15] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @15] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @15] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @15] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @16] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @16] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @16] text/text near       '=' ↔ 'Σ'
+  [Beat4 @16] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @16] text/text near       '(U_i' ↔ '·'
+  [Beat4 @16] text/text near       '·' ↔ 'A_i'
+  [Beat4 @16] text/text near       'A_i' ↔ '·'
+  [Beat4 @16] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @16] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @16] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @16] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @16] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @16] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @16] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @16] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @16] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @16] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @17] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @17] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @17] text/text near       '=' ↔ 'Σ'
+  [Beat4 @17] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @17] text/text near       '(U_i' ↔ '·'
+  [Beat4 @17] text/text near       '·' ↔ 'A_i'
+  [Beat4 @17] text/text near       'A_i' ↔ '·'
+  [Beat4 @17] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @17] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @17] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @17] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @17] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @17] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @17] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @17] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @17] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @17] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @18] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @18] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @18] text/text near       '=' ↔ 'Σ'
+  [Beat4 @18] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @18] text/text near       '(U_i' ↔ '·'
+  [Beat4 @18] text/text near       '·' ↔ 'A_i'
+  [Beat4 @18] text/text near       'A_i' ↔ '·'
+  [Beat4 @18] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @18] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @18] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @18] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @18] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @18] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @18] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @18] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @18] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @18] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @19] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @19] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @19] text/text near       '=' ↔ 'Σ'
+  [Beat4 @19] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @19] text/text near       '(U_i' ↔ '·'
+  [Beat4 @19] text/text near       '·' ↔ 'A_i'
+  [Beat4 @19] text/text near       'A_i' ↔ '·'
+  [Beat4 @19] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @19] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @19] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @19] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @19] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @19] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @19] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @19] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @19] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @19] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @20] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @20] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @20] text/text near       '=' ↔ 'Σ'
+  [Beat4 @20] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @20] text/text near       '(U_i' ↔ '·'
+  [Beat4 @20] text/text near       '·' ↔ 'A_i'
+  [Beat4 @20] text/text near       'A_i' ↔ '·'
+  [Beat4 @20] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @20] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @20] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @20] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @20] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @20] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @20] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @20] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @20] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @20] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @21] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @21] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @21] text/text near       '=' ↔ 'Σ'
+  [Beat4 @21] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @21] text/text near       '(U_i' ↔ '·'
+  [Beat4 @21] text/text near       '·' ↔ 'A_i'
+  [Beat4 @21] text/text near       'A_i' ↔ '·'
+  [Beat4 @21] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @21] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @21] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @21] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @21] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @21] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @21] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @21] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @21] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @21] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @22] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @22] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @22] text/text near       '=' ↔ 'Σ'
+  [Beat4 @22] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @22] text/text near       '(U_i' ↔ '·'
+  [Beat4 @22] text/text near       '·' ↔ 'A_i'
+  [Beat4 @22] text/text near       'A_i' ↔ '·'
+  [Beat4 @22] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @22] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @22] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @22] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @22] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @22] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @22] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @22] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @22] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @22] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @23] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @23] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @23] text/text near       '=' ↔ 'Σ'
+  [Beat4 @23] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @23] text/text near       '(U_i' ↔ '·'
+  [Beat4 @23] text/text near       '·' ↔ 'A_i'
+  [Beat4 @23] text/text near       'A_i' ↔ '·'
+  [Beat4 @23] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @23] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @23] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @23] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @23] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @23] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @23] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @23] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @23] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @23] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @24] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @24] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @24] text/text near       '=' ↔ 'Σ'
+  [Beat4 @24] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @24] text/text near       '(U_i' ↔ '·'
+  [Beat4 @24] text/text near       '·' ↔ 'A_i'
+  [Beat4 @24] text/text near       'A_i' ↔ '·'
+  [Beat4 @24] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @24] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @24] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @24] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @24] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @24] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @24] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @24] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @24] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @24] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @25] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @25] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @25] text/text near       '=' ↔ 'Σ'
+  [Beat4 @25] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @25] text/text near       '(U_i' ↔ '·'
+  [Beat4 @25] text/text near       '·' ↔ 'A_i'
+  [Beat4 @25] text/text near       'A_i' ↔ '·'
+  [Beat4 @25] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @25] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @25] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @25] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @25] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @25] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @25] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @25] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @25] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @25] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @26] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @26] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @26] text/text near       '=' ↔ 'Σ'
+  [Beat4 @26] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @26] text/text near       '(U_i' ↔ '·'
+  [Beat4 @26] text/text near       '·' ↔ 'A_i'
+  [Beat4 @26] text/text near       'A_i' ↔ '·'
+  [Beat4 @26] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @26] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @26] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @26] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @26] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @26] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @26] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @26] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @26] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @26] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @27] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @27] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @27] text/text near       '=' ↔ 'Σ'
+  [Beat4 @27] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @27] text/text near       '(U_i' ↔ '·'
+  [Beat4 @27] text/text near       '·' ↔ 'A_i'
+  [Beat4 @27] text/text near       'A_i' ↔ '·'
+  [Beat4 @27] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @27] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @27] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @27] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @27] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @27] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @27] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @27] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @27] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @27] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @28] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @28] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @28] text/text near       '=' ↔ 'Σ'
+  [Beat4 @28] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @28] text/text near       '(U_i' ↔ '·'
+  [Beat4 @28] text/text near       '·' ↔ 'A_i'
+  [Beat4 @28] text/text near       'A_i' ↔ '·'
+  [Beat4 @28] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @28] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @28] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @28] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @28] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @28] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @28] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @28] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @28] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @28] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @29] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @29] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @29] text/text near       '=' ↔ 'Σ'
+  [Beat4 @29] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @29] text/text near       '(U_i' ↔ '·'
+  [Beat4 @29] text/text near       '·' ↔ 'A_i'
+  [Beat4 @29] text/text near       'A_i' ↔ '·'
+  [Beat4 @29] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @29] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @29] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @29] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @29] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @29] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @29] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @29] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @29] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @29] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @30] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @30] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @30] text/text near       '=' ↔ 'Σ'
+  [Beat4 @30] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @30] text/text near       '(U_i' ↔ '·'
+  [Beat4 @30] text/text near       '·' ↔ 'A_i'
+  [Beat4 @30] text/text near       'A_i' ↔ '·'
+  [Beat4 @30] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @30] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @30] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @30] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @30] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @30] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @30] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @30] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @30] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @30] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @31] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @31] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @31] text/text near       '=' ↔ 'Σ'
+  [Beat4 @31] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @31] text/text near       '(U_i' ↔ '·'
+  [Beat4 @31] text/text near       '·' ↔ 'A_i'
+  [Beat4 @31] text/text near       'A_i' ↔ '·'
+  [Beat4 @31] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @31] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @31] text/text near       'Diese Summe ist die Wärmeleitungs-' ↔ 'Gebäudehülle.'
+  [Beat4 @31] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @31] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @31] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @31] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @31] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @31] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @31] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @31] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @32] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @32] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @32] text/text near       '=' ↔ 'Σ'
+  [Beat4 @32] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @32] text/text near       '(U_i' ↔ '·'
+  [Beat4 @32] text/text near       '·' ↔ 'A_i'
+  [Beat4 @32] text/text near       'A_i' ↔ '·'
+  [Beat4 @32] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @32] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @32] text/text near       'Diese Summe ist die Wärmeleitungs-' ↔ 'Gebäudehülle.'
+  [Beat4 @32] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @32] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @32] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @32] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @32] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @32] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @32] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @32] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @33] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @33] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @33] text/text near       '=' ↔ 'Σ'
+  [Beat4 @33] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @33] text/text near       '(U_i' ↔ '·'
+  [Beat4 @33] text/text near       '·' ↔ 'A_i'
+  [Beat4 @33] text/text near       'A_i' ↔ '·'
+  [Beat4 @33] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @33] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @33] text/text near       'Diese Summe ist die Wärmeleitungs-' ↔ 'Gebäudehülle.'
+  [Beat4 @33] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @33] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @33] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @33] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @33] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @33] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @33] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @33] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @34] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @34] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @34] text/text near       '=' ↔ 'Σ'
+  [Beat4 @34] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @34] text/text near       '(U_i' ↔ '·'
+  [Beat4 @34] text/text near       '·' ↔ 'A_i'
+  [Beat4 @34] text/text near       'A_i' ↔ '·'
+  [Beat4 @34] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @34] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @34] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @34] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @34] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @34] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @34] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @34] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @34] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @34] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @35] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @35] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @35] text/text near       '=' ↔ 'Σ'
+  [Beat4 @35] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @35] text/text near       '(U_i' ↔ '·'
+  [Beat4 @35] text/text near       '·' ↔ 'A_i'
+  [Beat4 @35] text/text near       'A_i' ↔ '·'
+  [Beat4 @35] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @35] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @35] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @35] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @35] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @35] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @35] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @35] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @35] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @35] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)
+  [Beat4 @36] text/text near       'Die thermische Gebäudehülle' ↔ 'Dach'
+  [Beat4 @36] text/text near       'Q̇_T' ↔ '='
+  [Beat4 @36] text/text near       '=' ↔ 'Σ'
+  [Beat4 @36] text/text near       'Σ' ↔ '(U_i'
+  [Beat4 @36] text/text near       '(U_i' ↔ '·'
+  [Beat4 @36] text/text near       '·' ↔ 'A_i'
+  [Beat4 @36] text/text near       'A_i' ↔ '·'
+  [Beat4 @36] text/text near       '·' ↔ 'Δθ_i)'
+  [Beat4 @36] text/text near       'Δθ_i)' ↔ '[W]'
+  [Beat4 @36] text/line near       'Die thermische Gebäudehülle' near Arrow text_box=(-1.86, 2.74, 1.86, 2.97) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @36] text/line near       '·' near SurroundingRectangle text_box=(-0.21, -2.11, -0.16, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @36] text/line near       '·' near SurroundingRectangle text_box=(0.81, -2.11, 0.87, -2.05) outline_box=(-3.05, -2.52, 3.05, -1.64)
+  [Beat4 @36] text/line near       'Dach' near Arrow text_box=(-0.26, 2.63, 0.26, 2.81) outline_box=(-0.06, 2.1, 0.06, 2.55)
+  [Beat4 @36] text/line near       'Fenster' near Arrow text_box=(-2.92, 0.47, -2.13, 0.63) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @36] text/line near       'Wände' near Arrow text_box=(-2.89, 0.06, -2.13, 0.24) outline_box=(-2.05, 0.42, -1.03, 0.68)
+  [Beat4 @36] text/line near       'Türen' near Arrow text_box=(2.13, -0.14, 2.76, 0.04) outline_box=(0.9, -0.19, 2.05, 0.09)
+  [Beat4 @36] text/line near       'Boden' near Arrow text_box=(-0.34, -1.16, 0.34, -0.98) outline_box=(-0.05, -0.9, 0.05, -0.5)

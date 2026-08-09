@@ -1,0 +1,8 @@
+{
+  "title": "Rewrite Final Calc Captions",
+  "slug": "REWRITE-FINAL-CALC-CAPTIONS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Rewrote final_calculation NARRATION into storytelling voice that recalls prior Heating chapters (envelope, convection, solar, internal gains); same keys/animations."
+}

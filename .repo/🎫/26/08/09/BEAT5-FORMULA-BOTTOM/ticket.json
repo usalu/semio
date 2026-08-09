@@ -1,0 +1,11 @@
+{
+  "title": "Beat5 Formula Bottom Only",
+  "slug": "BEAT5-FORMULA-BOTTOM",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Removed Beat5 top fly-in formula assembly; equation now only Create/FadeIns in the bottom formula_panel, then rings Q̇_S,tr.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

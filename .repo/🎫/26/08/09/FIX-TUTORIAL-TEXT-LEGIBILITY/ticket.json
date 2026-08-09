@@ -1,0 +1,21 @@
+{
+  "title": "Fix Tutorial Text Legibility",
+  "slug": "FIX-TUTORIAL-TEXT-LEGIBILITY",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Round 1: raised the shared type scale (body 2.5%->3.2%, label 2.2%->2.7% of frame height); wrote check_layout.py, a dry-run collision checker. Round 2: trimmed SUBTITLE/CAPTION back down slightly per feedback; widened the checker to catch raw VMobject curves (its real blind spot) and fixed two bugs that surfaced doing so; fixed the real collisions found in Heating scene_1 and Cooling scene_6 (both 0 hard findings). Round 3 ('do the same for heating videos'): extended the same checker pass to scene_2/3/4/5 (conduction, convection, internal gains, solar gain) -- confirmed they already inherited the bigger fonts via shared constants -- and fixed 13 more real collisions, plus one missing apply_scene_style() bug in final_calculation/merged_scenes.py. That last file is pre-shared-template legacy (ad hoc font sizes throughout, no Beat* classes) and was flagged as a separate migration rather than silently rewritten. All checked files: 0 hard findings.",
+  "files": [
+    "tutorial/manim_fonts.py",
+    "tutorial/manim_visuals.py",
+    "tutorial/energy/demand/Heating/1_introduction/scene_1.py",
+    "tutorial/energy/demand/Heating/2_conduction/scene_2.py",
+    "tutorial/energy/demand/Heating/3_convection/scene_3.py",
+    "tutorial/energy/demand/Heating/4_internal_heat_gain/scene_4.py",
+    "tutorial/energy/demand/Heating/5_solar_heat_gain/scene_5.py",
+    "tutorial/energy/demand/Heating/final_calculation/merged_scenes.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+    "tutorial/.agents/skills/generate-manim-tutorial/SKILL.md",
+    "tutorial/.agents/skills/generate-manim-tutorial/reference.md"
+  ]
+}

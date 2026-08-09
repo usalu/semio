@@ -1,0 +1,8 @@
+{
+  "title": "Remove Intro From Full Heating",
+  "slug": "REMOVE-INTRO-FROM-FULL-HEATING",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Removed Demo_Intro_Heizlast / Heating_00_Intro from full_heating_video playlist; starts at Modul 1."
+}

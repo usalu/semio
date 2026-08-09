@@ -1,0 +1,11 @@
+{
+  "title": "Beat5 Show Full Formula Chain",
+  "slug": "BEAT5-FORMULA-CHAIN",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat5 now animates the full sizing chain with all three linking formulas: q_v,R=Q̇_S,tr/(ρ·c_p·Δθ), A=q_v,R/v_m, r=√(A/π). Each parks on screen while the next appears; token bar Q̇_S,tr→q_v,R→A→r is indicated in sync.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

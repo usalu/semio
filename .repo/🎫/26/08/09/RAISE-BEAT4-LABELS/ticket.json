@@ -1,0 +1,11 @@
+{
+  "title": "Raise Beat4 Sensible Latent Labels",
+  "slug": "RAISE-BEAT4-LABELS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Moved Beat4 Sensible/Latent column titles from UP*1.35 to UP*1.95 and extended the dashed divider to UP*2.15 so it still frames them.",
+  "files": [
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py"
+  ]
+}

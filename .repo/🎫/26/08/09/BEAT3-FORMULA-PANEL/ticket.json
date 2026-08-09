@@ -1,0 +1,11 @@
+{
+  "title": "Beat3 First Formula Panel Style",
+  "slug": "BEAT3-FORMULA-PANEL",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat3 Q̇_V starter equation now uses formula_panel (bottom boxed slot) like the rearranged q_v,R equation, instead of a raw mid-screen Text row.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

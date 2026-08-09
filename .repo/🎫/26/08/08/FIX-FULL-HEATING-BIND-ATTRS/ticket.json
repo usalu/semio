@@ -1,0 +1,8 @@
+{
+  "title": "Fix Full Heating Bind Attrs",
+  "slug": "FIX-FULL-HEATING-BIND-ATTRS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Bind NARRATION/intro attrs via getattr allowlist so inherited hold_seconds works."
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Move Sensible Latent To Transmission",
+  "slug": "MOVE-SENSIBLE-LATENT-TO-TRANSMISSION",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Shortened Beat8 Licht/Stecker slider tracks (half-length 0.85\u21920.52) so 100% no longer collides with neighboring labels.",
+  "files": [
+    "tutorial/energy/demand/Cooling/2_internal_gains/build_full_video.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/generate_audio.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+    "tutorial/energy/demand/Cooling/full_cooling_video.py"
+  ]
+}

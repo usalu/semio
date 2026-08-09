@@ -1,0 +1,32 @@
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.37 > 11.5; hand-break the German line instead of shrinking: 'Wie viel Luft durchkommt, bestimmt eine wirksame Fläche aus beiden Öffnungen.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 12.15 > 11.5; hand-break the German line instead of shrinking: 'Die kühlere Abluft läuft mit 26 Grad in Gegenrichtung durch den unteren Kanal.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py:1502: UserWarning: caption_bar width 12.67 > 11.5; hand-break the German line instead of shrinking: 'Zusammen ergeben die Stellgrößen eine Betriebsregel, der man täglich folgen kann.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:511: UserWarning: caption_bar width 11.96 > 11.5; hand-break the German line instead of shrinking: 'Am Anfang steht immer dieselbe Frage: ist die Außenluft kühler als der Raum?'
+  new = caption_bar(text_de, **kwargs)
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_PassivhausIdee                  0 finding(s)
+Beat2_Fensterregeln                   0 finding(s)
+Beat3_Querlueftung                    0 finding(s)
+Beat4_Auftrieb                        0 finding(s)
+Beat5_Nachtlueftung                  11 finding(s)
+Beat6_GrenzenDerFreienLueftung        0 finding(s)
+Beat7_MechanischeGrundtypen           0 finding(s)
+Beat8_Waermerueckgewinnung            0 finding(s)
+Beat9_KomfortStrategie                0 finding(s)
+
+========================================================================
+  [Beat5 @30] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @31] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @32] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @33] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @34] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @35] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @36] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @37] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @38] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @39] text/line            '≈ 4 K' crossed by Rectangle
+  [Beat5 @40] text/line            '≈ 4 K' crossed by Rectangle

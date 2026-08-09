@@ -1,0 +1,11 @@
+{
+  "title": "Explain Vm In Beat5",
+  "slug": "EXPLAIN-BEAT5-VM",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat5 now explains v_m when A = q_v,R / v_m appears: design limit for quiet ducts (~2.5 m/s), not derived from the heat load, with a callout card and highlight.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

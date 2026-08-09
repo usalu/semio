@@ -1,0 +1,15 @@
+{
+  "title": "Improve Lueftungssysteme Animations",
+  "slug": "IMPROVE-LUEFTUNGSSYSTEME-ANIMATIONS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Rewrote Cooling/6 scene_6.py so every beat animates a measurable quantity instead of fading in badges, and added SAFE_TOP/SAFE_BOTTOM zones plus a _fit_band guard that removes the label-on-room-outline collisions verified in the baseline render. Then inserted a three-beat mechanical-ventilation block between night purge and the summary — limits of free ventilation, the three base types, and plate heat recovery with the Phi formula — rebuilding the animations deleted by PASSIVE-NATURAL-VENT on the current template. Hand-broke all 32 auto-shrunk captions so caption size is uniform. Nine beats render clean over five manim -ql passes with frame readback; audio regeneration deliberately left to the dev.",
+  "files": [
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+    "tutorial/.agents/skills/generate-manim-tutorial/SKILL.md",
+    "tutorial/.agents/skills/generate-manim-tutorial/reference.md"
+  ]
+}

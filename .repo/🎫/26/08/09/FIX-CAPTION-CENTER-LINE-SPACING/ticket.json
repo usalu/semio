@@ -1,0 +1,14 @@
+{
+  "title": "Fix Caption Center Line Spacing",
+  "slug": "FIX-CAPTION-CENTER-LINE-SPACING",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Fixed German caption_bar and beat/title text at the shared helpers so every Heating/Cooling video gets center-aligned multi-line subtitles, a stable CAPTION_FONT_SIZE (no auto-shrink), and a fixed vertical line gap. Root cause was caption_bar scaling long lines and building multi-line copy as one Pango Text, which left-aligned lines and let Georgia metrics regress on each scene rewrite.",
+  "files": [
+    "tutorial/manim_fonts.py",
+    "tutorial/manim_visuals.py",
+    "tutorial/.agents/skills/generate-manim-tutorial/SKILL.md",
+    "tutorial/.agents/skills/generate-manim-tutorial/reference.md"
+  ]
+}

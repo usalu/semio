@@ -1,0 +1,94 @@
+@prefix bot:  <https://w3id.org/bot#> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix din:  <https://example.org/ontology/din18599#> .
+@prefix ex:   <https://example.org/data/mock-building#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Mock instance graph for din18599-schema.ttl: 1 building -> 1 storey -> 1 space,
+# 1 wall hosting 1 window, 1 heating system. Values are illustrative, sufficient
+# to populate the Rust structs in ../transmission, ../ventilation, ../heating_system.
+
+ex:Building1 a bot:Building ;
+    rdfs:label "Mock Renovation Building"@en ;
+    bot:hasStorey ex:Storey1 ;
+    din:hasNumberOfStoreys 1 ;
+    din:hasYearClass "1979-1983" ;
+    din:hasBuildingType din:BuildingType_Residential ;
+    din:hasVolume             [ a qudt:QuantityValue ; qudt:numericValue "270.0"^^xsd:double ; qudt:unit unit:M3 ] ;
+    din:hasFloorArea          [ a qudt:QuantityValue ; qudt:numericValue "90.0"^^xsd:double  ; qudt:unit unit:M2 ] ;
+    din:hasExteriorPerimeter  [ a qudt:QuantityValue ; qudt:numericValue "38.0"^^xsd:double  ; qudt:unit unit:M ] ;
+    din:hasWindowToWallRatio  [ a qudt:QuantityValue ; qudt:numericValue "0.18"^^xsd:double  ; qudt:unit unit:UNITLESS ] ;
+    din:hasThermalBridgeCategory din:TBCategory_StandardDefault ;
+    din:locatedInClimateZone ex:ClimateZonePotsdam ;
+    din:hasHeatingSystem ex:HeatingSystem1 .
+
+ex:Storey1 a bot:Storey ;
+    rdfs:label "Ground Floor"@en ;
+    din:hasElevation [ a qudt:QuantityValue ; qudt:numericValue "0.0"^^xsd:double ; qudt:unit unit:M ] ;
+    bot:hasSpace ex:LivingRoom .
+
+ex:LivingRoom a bot:Space ;
+    rdfs:label "Living Room"@en ;
+    din:hasVolume        [ a qudt:QuantityValue ; qudt:numericValue "75.0"^^xsd:double ; qudt:unit unit:M3 ] ;
+    din:hasFloorArea     [ a qudt:QuantityValue ; qudt:numericValue "30.0"^^xsd:double ; qudt:unit unit:M2 ] ;
+    din:hasCeilingHeight [ a qudt:QuantityValue ; qudt:numericValue "2.5"^^xsd:double  ; qudt:unit unit:M ] ;
+    din:isCriticalRoom false ;
+    din:hasZoneTemperature [ a qudt:QuantityValue ; qudt:numericValue "20.0"^^xsd:double ; qudt:unit unit:DEG_C ] ;
+    din:hasUsageProfile ex:UsageProfileResidential ;
+    din:hasAutomationClass din:AutomationClassB ;
+    din:servicedByVentilationSystem ex:VentilationSystem1 ;
+    bot:hostsElement ex:ExteriorWallSouth .
+
+ex:ExteriorWallSouth a din:Wall ;
+    rdfs:label "South Exterior Wall"@en ;
+    din:hasArea   [ a qudt:QuantityValue ; qudt:numericValue "18.0"^^xsd:double  ; qudt:unit unit:M2 ] ;
+    din:hasUValue [ a qudt:QuantityValue ; qudt:numericValue "0.24"^^xsd:double  ; qudt:unit unit:W-PER-M2-K ] ;
+    din:hasThermalResistanceInternal [ a qudt:QuantityValue ; qudt:numericValue "0.13"^^xsd:double ; qudt:unit unit:M2-K-PER-W ] ;
+    din:hasThermalResistanceExternal [ a qudt:QuantityValue ; qudt:numericValue "0.04"^^xsd:double ; qudt:unit unit:M2-K-PER-W ] ;
+    din:hasCorrectionFactor [ a qudt:QuantityValue ; rdfs:label "f_x"@en ; qudt:numericValue "1.0"^^xsd:double ; qudt:unit unit:UNITLESS ] ;
+    din:hasSolarAbsorptance [ a qudt:QuantityValue ; qudt:numericValue "0.6"^^xsd:double ; qudt:unit unit:UNITLESS ] ;
+    din:hasThermalBridge ex:LintelBridge ;
+    din:hasLayer ex:InsulationLayer ;
+    bot:hasSubElement ex:Window1 .
+
+ex:Window1 a din:Window ;
+    rdfs:label "South Living-Room Window"@en ;
+    din:hasArea   [ a qudt:QuantityValue ; qudt:numericValue "3.0"^^xsd:double ; qudt:unit unit:M2 ] ;
+    din:hasUValue [ a qudt:QuantityValue ; qudt:numericValue "1.1"^^xsd:double ; qudt:unit unit:W-PER-M2-K ] ;
+    din:hasGValue [ a qudt:QuantityValue ; qudt:numericValue "0.6"^^xsd:double ; qudt:unit unit:UNITLESS ] ;
+    din:hasOrientationAngle [ a qudt:QuantityValue ; qudt:numericValue "180.0"^^xsd:double ; qudt:unit unit:DEG ] ;
+    din:hasGlazingType din:Glazing_Double ;
+    din:hasCorrectionFactor [ a qudt:QuantityValue ; rdfs:label "f_sh"@en ; qudt:numericValue "1.0"^^xsd:double ; qudt:unit unit:UNITLESS ] .
+
+ex:LintelBridge a din:ThermalBridge ;
+    rdfs:label "Window Lintel Thermal Bridge"@en ;
+    din:hasLength   [ a qudt:QuantityValue ; qudt:numericValue "3.0"^^xsd:double  ; qudt:unit unit:M ] ;
+    din:hasPsiValue [ a qudt:QuantityValue ; qudt:numericValue "0.05"^^xsd:double ; qudt:unit unit:W-PER-M-K ] .
+
+ex:InsulationLayer a din:Layer ;
+    din:hasThickness [ a qudt:QuantityValue ; qudt:numericValue "0.16"^^xsd:double ; qudt:unit unit:M ] ;
+    din:hasLayerOrder 1 ;
+    din:composedOfMaterial ex:EPSInsulation .
+
+ex:EPSInsulation a din:Material ;
+    rdfs:label "EPS Insulation"@en ;
+    din:hasLambda [ a qudt:QuantityValue ; qudt:numericValue "0.035"^^xsd:double ; qudt:unit unit:W-PER-M-K ] .
+
+ex:VentilationSystem1 a din:VentilationSystem ;
+    din:hasTightnessCategory din:Tightness_II ;
+    din:hasAirtightnessN50 [ a qudt:QuantityValue ; qudt:numericValue "3.0"^^xsd:double ; qudt:unit unit:PER-HR ] ;
+    din:hasMechanicalVentilation false .
+
+ex:UsageProfileResidential a din:UsageProfile ;
+    rdfs:label "Residential"@en .
+
+ex:ClimateZonePotsdam a din:ClimateZone ;
+    rdfs:label "Potsdam (DIN V 18599-10 reference region)"@en .
+
+ex:HeatingSystem1 a din:HeatingSystem ;
+    rdfs:label "Condensing Gas Boiler + Radiators"@en ;
+    din:hasGeneratorType din:HeatingGenerator_CondensingGasBoiler ;
+    din:hasEmissionType din:Emission_Radiator ;
+    din:hasGenerationExpenditureFactor [ a qudt:QuantityValue ; qudt:numericValue "1.08"^^xsd:double ; qudt:unit unit:UNITLESS ] .

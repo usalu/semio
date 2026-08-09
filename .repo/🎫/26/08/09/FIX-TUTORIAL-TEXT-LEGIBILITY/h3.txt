@@ -1,0 +1,13 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_DreiWegeDerWaerme               0 finding(s)
+Beat2_Waermeleitung                   0 finding(s)
+Beat3_Konvektion                      0 finding(s)
+Beat4_Strahlung                       0 finding(s)
+Beat5_Zusammenfassung                 0 finding(s)
+Beat6_VonWegenZuZahlen                0 finding(s)
+Beat7_Waermedurchlasswiderstand       0 finding(s)
+Beat8_UWert                           0 finding(s)
+Beat9_WaermestromFormel               0 finding(s)
+
+no findings

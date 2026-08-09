@@ -1,0 +1,13 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_PassivhausIdee                  0 finding(s)
+Beat2_Fensterregeln                   0 finding(s)
+Beat3_Querlueftung                    0 finding(s)
+Beat4_Auftrieb                        0 finding(s)
+Beat5_Nachtlueftung                   0 finding(s)
+Beat6_GrenzenDerFreienLueftung        0 finding(s)
+Beat7_MechanischeGrundtypen           0 finding(s)
+Beat8_Waermerueckgewinnung            0 finding(s)
+Beat9_KomfortStrategie                0 finding(s)
+
+no findings

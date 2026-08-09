@@ -1,0 +1,12 @@
+{
+  "title": "Full Cooling Video",
+  "slug": "FULL-COOLING-VIDEO",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-20",
+  "summary": "Force re-rendered full Cooling series at -q h (1080p60); merged FullCoolingDemandVideo.mp4 (~55MB).",
+  "files": [
+    "tutorial/energy/demand/Cooling/full_cooling_video.py",
+    "tutorial/energy/demand/Cooling/media/videos/full_cooling_video/1080p60/FullCoolingDemandVideo.mp4"
+  ]
+}

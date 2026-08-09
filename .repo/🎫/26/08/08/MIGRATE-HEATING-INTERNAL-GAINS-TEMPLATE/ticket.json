@@ -1,0 +1,8 @@
+{
+  "title": "Migrate Heating Internal Gains Template",
+  "slug": "MIGRATE-HEATING-INTERNAL-GAINS-TEMPLATE",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Migrated Heating Modul 4 interne Wärmegewinne onto generate-manim-tutorial template (scene_4.py Beat1–5 + audio/compose pipeline). Smoke: all 5 beats Rendered at -ql."
+}

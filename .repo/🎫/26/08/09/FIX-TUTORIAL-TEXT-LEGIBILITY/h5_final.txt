@@ -1,0 +1,870 @@
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_VerlustZuGewinn                 0 finding(s)    0 near
+Beat2_BestrahlungUndFlaeche           0 finding(s)  122 near
+Beat3_GWert                           0 finding(s)  196 near
+Beat4_SaisonaleWinkel                 0 finding(s)    0 near
+Beat5_Verschattung                    0 finding(s)  122 near
+Beat6_Waermespeicherung               0 finding(s)   21 near
+Beat7_SpeichermasseFormel             0 finding(s)  195 near
+Beat8_Hauptgleichung                  6 finding(s)  192 near
+
+========================================================================
+HARD (true crossings):
+  [Beat8 @04] text/text  0.045  'G' ↔ 'G'
+  [Beat8 @04] text/text  0.046  'A' ↔ 'A'
+  [Beat8 @04] text/text  0.166  'F_f' ↔ 'F_f'
+  [Beat8 @04] text/text  0.025  'g' ↔ 'g'
+  [Beat8 @04] text/text  0.244  'F_sh' ↔ 'F_sh'
+  [Beat8 @04] text/text  0.006  'F_sh' ↔ '[W]'
+
+========================================================================
+NEAR (tight spacing — verify by eye):
+  [Beat2 @10] text/text near       'G' ↔ 'G [W/m²]'
+  [Beat2 @10] text/line near       'G [W/m²]' near Rectangle text_box=(1.67, 1.4, 3.24, 1.74) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @11] text/text near       'G' ↔ 'G [W/m²]'
+  [Beat2 @11] text/line near       'G [W/m²]' near Rectangle text_box=(1.67, 1.4, 3.24, 1.74) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @12] text/text near       'G' ↔ 'G [W/m²]'
+  [Beat2 @12] text/line near       'G [W/m²]' near Rectangle text_box=(1.67, 1.4, 3.24, 1.74) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @13] text/text near       'G' ↔ 'G [W/m²]'
+  [Beat2 @13] text/line near       'G [W/m²]' near Rectangle text_box=(1.67, 1.4, 3.24, 1.74) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @14] text/text near       'G' ↔ 'G [W/m²]'
+  [Beat2 @14] text/line near       'G [W/m²]' near Rectangle text_box=(1.67, 1.4, 3.24, 1.74) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @15] text/text near       'A' ↔ 'A [m²]'
+  [Beat2 @16] text/text near       'A' ↔ 'A [m²]'
+  [Beat2 @17] text/text near       'A' ↔ 'A [m²]'
+  [Beat2 @18] text/text near       'A' ↔ 'A [m²]'
+  [Beat2 @19] text/text near       'A' ↔ 'A [m²]'
+  [Beat2 @19] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @20] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @20] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Rahmen blockiert Strahlung'
+  [Beat2 @21] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @21] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Rahmen blockiert Strahlung'
+  [Beat2 @21] text/text near       'F_f' ↔ 'F_f ≈ 0,7–0,8 [-]'
+  [Beat2 @22] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @22] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Rahmen blockiert Strahlung'
+  [Beat2 @22] text/text near       'F_f' ↔ 'F_f ≈ 0,7–0,8 [-]'
+  [Beat2 @23] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @23] text/text near       'G' ↔ '·'
+  [Beat2 @23] text/text near       '·' ↔ 'A'
+  [Beat2 @23] text/text near       'A' ↔ '·'
+  [Beat2 @23] text/text near       '·' ↔ 'F_f'
+  [Beat2 @23] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @23] text/line near       'Nur der Glasanteil F_f lässt durch' near SurroundingRectangle text_box=(-5.34, -3.17, 5.34, -2.89) outline_box=(-1.58, -2.87, 1.58, -2.06)
+  [Beat2 @23] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @23] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @23] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @23] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @23] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @23] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @24] text/text near       'G' ↔ '·'
+  [Beat2 @24] text/text near       '·' ↔ 'A'
+  [Beat2 @24] text/text near       'A' ↔ '·'
+  [Beat2 @24] text/text near       '·' ↔ 'F_f'
+  [Beat2 @24] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @24] text/line near       'Nur der Glasanteil F_f lässt durch' near SurroundingRectangle text_box=(-5.34, -3.17, 5.34, -2.89) outline_box=(-1.58, -2.87, 1.58, -2.06)
+  [Beat2 @24] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @24] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @25] text/text near       'G' ↔ '·'
+  [Beat2 @25] text/text near       '·' ↔ 'A'
+  [Beat2 @25] text/text near       'A' ↔ '·'
+  [Beat2 @25] text/text near       '·' ↔ 'F_f'
+  [Beat2 @25] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @25] text/line near       'Nur der Glasanteil F_f lässt durch' near SurroundingRectangle text_box=(-5.34, -3.17, 5.34, -2.89) outline_box=(-1.58, -2.87, 1.58, -2.06)
+  [Beat2 @25] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @25] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @26] text/text near       'G' ↔ '·'
+  [Beat2 @26] text/text near       '·' ↔ 'A'
+  [Beat2 @26] text/text near       'A' ↔ '·'
+  [Beat2 @26] text/text near       '·' ↔ 'F_f'
+  [Beat2 @26] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @26] text/line near       'Nur der Glasanteil F_f lässt durch' near SurroundingRectangle text_box=(-5.34, -3.17, 5.34, -2.89) outline_box=(-1.58, -2.87, 1.58, -2.06)
+  [Beat2 @26] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @26] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/text near       'Nur der Glasanteil F_f lässt durch' ↔ 'Watt.'
+  [Beat2 @27] text/text near       'G' ↔ '·'
+  [Beat2 @27] text/text near       '·' ↔ 'A'
+  [Beat2 @27] text/text near       'A' ↔ '·'
+  [Beat2 @27] text/text near       '·' ↔ 'F_f'
+  [Beat2 @27] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @27] text/line near       'Nur der Glasanteil F_f lässt durch' near SurroundingRectangle text_box=(-5.34, -3.17, 5.34, -2.89) outline_box=(-1.58, -2.87, 1.58, -2.06)
+  [Beat2 @27] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @27] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/text near       'G' ↔ '·'
+  [Beat2 @28] text/text near       '·' ↔ 'A'
+  [Beat2 @28] text/text near       'A' ↔ '·'
+  [Beat2 @28] text/text near       '·' ↔ 'F_f'
+  [Beat2 @28] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @28] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @28] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/text near       'G' ↔ '·'
+  [Beat2 @29] text/text near       '·' ↔ 'A'
+  [Beat2 @29] text/text near       'A' ↔ '·'
+  [Beat2 @29] text/text near       '·' ↔ 'F_f'
+  [Beat2 @29] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @29] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @29] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/text near       'G' ↔ '·'
+  [Beat2 @30] text/text near       '·' ↔ 'A'
+  [Beat2 @30] text/text near       'A' ↔ '·'
+  [Beat2 @30] text/text near       '·' ↔ 'F_f'
+  [Beat2 @30] text/text near       'F_f' ↔ '[W]'
+  [Beat2 @30] text/line near       'G' near Rectangle text_box=(-1.36, -2.61, -1.08, -2.31) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/line near       '·' near Rectangle text_box=(-0.93, -2.49, -0.87, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/line near       'A' near Rectangle text_box=(-0.72, -2.61, -0.43, -2.32) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/line near       '·' near Rectangle text_box=(-0.28, -2.49, -0.22, -2.44) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/line near       'F_f' near Rectangle text_box=(-0.07, -2.65, 0.58, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat2 @30] text/line near       '[W]' near Rectangle text_box=(0.73, -2.65, 1.36, -2.28) outline_box=(-2.24, -2.25, 1.49, 1.87)
+  [Beat3 @09] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @09] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @09] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @09] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @10] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @10] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @10] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @10] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @11] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @11] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @11] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @11] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @12] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @12] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @12] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @12] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @13] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @13] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @13] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @13] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @13] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @14] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @14] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @14] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @14] text/text near       'g' ↔ 'g [-] nach DIN V 18599'
+  [Beat3 @14] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @14] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @15] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @15] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @15] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @15] text/text near       'g' ↔ 'g [-] nach DIN V 18599'
+  [Beat3 @15] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @15] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @16] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @16] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @16] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @16] text/text near       'g' ↔ 'g [-] nach DIN V 18599'
+  [Beat3 @16] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @16] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @17] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @17] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @17] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @17] text/text near       'g' ↔ 'g [-] nach DIN V 18599'
+  [Beat3 @17] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @17] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @18] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @18] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @18] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @18] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'F_f'
+  [Beat3 @18] text/text near       'Der g-Wert ist der transmittierte ' ↔ '[W]'
+  [Beat3 @18] text/text near       'G' ↔ '·'
+  [Beat3 @18] text/text near       '·' ↔ 'A'
+  [Beat3 @18] text/text near       'A' ↔ '·'
+  [Beat3 @18] text/text near       '·' ↔ 'F_f'
+  [Beat3 @18] text/text near       'F_f' ↔ '·'
+  [Beat3 @18] text/text near       '·' ↔ 'g'
+  [Beat3 @18] text/text near       'g' ↔ '[W]'
+  [Beat3 @18] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @18] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @18] text/line near       'Der g-Wert ist der transmittierte ' near SurroundingRectangle text_box=(-5.35, -3.15, 5.35, -2.84) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @18] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @18] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @18] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @18] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @18] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @19] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @19] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @19] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @19] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'F_f'
+  [Beat3 @19] text/text near       'Der g-Wert ist der transmittierte ' ↔ '[W]'
+  [Beat3 @19] text/text near       'G' ↔ '·'
+  [Beat3 @19] text/text near       '·' ↔ 'A'
+  [Beat3 @19] text/text near       'A' ↔ '·'
+  [Beat3 @19] text/text near       '·' ↔ 'F_f'
+  [Beat3 @19] text/text near       'F_f' ↔ '·'
+  [Beat3 @19] text/text near       '·' ↔ 'g'
+  [Beat3 @19] text/text near       'g' ↔ '[W]'
+  [Beat3 @19] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @19] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @19] text/line near       'Der g-Wert ist der transmittierte ' near SurroundingRectangle text_box=(-5.35, -3.15, 5.35, -2.84) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @19] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @19] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @19] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @19] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @19] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @19] text/line near       '[W]' near SurroundingRectangle text_box=(1.0, -2.65, 1.64, -2.28) outline_box=(0.58, -2.69, 0.93, -2.24)
+  [Beat3 @20] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @20] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @20] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @20] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'F_f'
+  [Beat3 @20] text/text near       'Der g-Wert ist der transmittierte ' ↔ '[W]'
+  [Beat3 @20] text/text near       'G' ↔ '·'
+  [Beat3 @20] text/text near       '·' ↔ 'A'
+  [Beat3 @20] text/text near       'A' ↔ '·'
+  [Beat3 @20] text/text near       '·' ↔ 'F_f'
+  [Beat3 @20] text/text near       'F_f' ↔ '·'
+  [Beat3 @20] text/text near       '·' ↔ 'g'
+  [Beat3 @20] text/text near       'g' ↔ '[W]'
+  [Beat3 @20] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @20] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @20] text/line near       'Der g-Wert ist der transmittierte ' near SurroundingRectangle text_box=(-5.35, -3.15, 5.35, -2.84) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @20] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @20] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @20] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @20] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @20] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @20] text/line near       '[W]' near SurroundingRectangle text_box=(1.0, -2.65, 1.64, -2.28) outline_box=(0.58, -2.69, 0.93, -2.24)
+  [Beat3 @21] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @21] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @21] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @21] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'F_f'
+  [Beat3 @21] text/text near       'Der g-Wert ist der transmittierte ' ↔ '[W]'
+  [Beat3 @21] text/text near       'G' ↔ '·'
+  [Beat3 @21] text/text near       '·' ↔ 'A'
+  [Beat3 @21] text/text near       'A' ↔ '·'
+  [Beat3 @21] text/text near       '·' ↔ 'F_f'
+  [Beat3 @21] text/text near       'F_f' ↔ '·'
+  [Beat3 @21] text/text near       '·' ↔ 'g'
+  [Beat3 @21] text/text near       'g' ↔ '[W]'
+  [Beat3 @21] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @21] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @21] text/line near       'Der g-Wert ist der transmittierte ' near SurroundingRectangle text_box=(-5.35, -3.15, 5.35, -2.84) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @21] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @21] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @21] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @21] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @21] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @21] text/line near       '[W]' near SurroundingRectangle text_box=(1.0, -2.65, 1.64, -2.28) outline_box=(0.58, -2.69, 0.93, -2.24)
+  [Beat3 @22] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @22] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @22] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'bleibt in Watt.'
+  [Beat3 @22] text/text near       'Der g-Wert ist der transmittierte ' ↔ 'F_f'
+  [Beat3 @22] text/text near       'Der g-Wert ist der transmittierte ' ↔ '[W]'
+  [Beat3 @22] text/text near       'G' ↔ '·'
+  [Beat3 @22] text/text near       '·' ↔ 'A'
+  [Beat3 @22] text/text near       'A' ↔ '·'
+  [Beat3 @22] text/text near       '·' ↔ 'F_f'
+  [Beat3 @22] text/text near       'F_f' ↔ '·'
+  [Beat3 @22] text/text near       '·' ↔ 'g'
+  [Beat3 @22] text/text near       'g' ↔ '[W]'
+  [Beat3 @22] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @22] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @22] text/line near       'Der g-Wert ist der transmittierte ' near SurroundingRectangle text_box=(-5.35, -3.15, 5.35, -2.84) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @22] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @22] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @22] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @22] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @22] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @23] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @23] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @23] text/text near       'G' ↔ '·'
+  [Beat3 @23] text/text near       '·' ↔ 'A'
+  [Beat3 @23] text/text near       'A' ↔ '·'
+  [Beat3 @23] text/text near       '·' ↔ 'F_f'
+  [Beat3 @23] text/text near       'F_f' ↔ '·'
+  [Beat3 @23] text/text near       '·' ↔ 'g'
+  [Beat3 @23] text/text near       'g' ↔ '[W]'
+  [Beat3 @23] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @23] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @23] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @23] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @23] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @23] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @23] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @24] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @24] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @24] text/text near       'G' ↔ '·'
+  [Beat3 @24] text/text near       '·' ↔ 'A'
+  [Beat3 @24] text/text near       'A' ↔ '·'
+  [Beat3 @24] text/text near       '·' ↔ 'F_f'
+  [Beat3 @24] text/text near       'F_f' ↔ '·'
+  [Beat3 @24] text/text near       '·' ↔ 'g'
+  [Beat3 @24] text/text near       'g' ↔ '[W]'
+  [Beat3 @24] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @24] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @24] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @24] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @24] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @24] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @24] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @25] text/text near       'Außen' ↔ 'Reflektiert'
+  [Beat3 @25] text/text near       'Absorbiert' ↔ 'Transmittiert'
+  [Beat3 @25] text/text near       'G' ↔ '·'
+  [Beat3 @25] text/text near       '·' ↔ 'A'
+  [Beat3 @25] text/text near       'A' ↔ '·'
+  [Beat3 @25] text/text near       '·' ↔ 'F_f'
+  [Beat3 @25] text/text near       'F_f' ↔ '·'
+  [Beat3 @25] text/text near       '·' ↔ 'g'
+  [Beat3 @25] text/text near       'g' ↔ '[W]'
+  [Beat3 @25] text/line near       'Außen' near Line text_box=(-4.52, 1.68, -3.63, 1.91) outline_box=(-4.73, -0.14, -0.07, 1.69)
+  [Beat3 @25] text/line near       'Absorbiert' near Rectangle text_box=(0.25, -0.7, 1.66, -0.46) outline_box=(-0.07, -1.02, 0.17, 0.92)
+  [Beat3 @25] text/line near       '·' near SurroundingRectangle text_box=(-1.21, -2.49, -1.15, -2.44) outline_box=(-1.86, -2.87, 1.86, -2.06)
+  [Beat3 @25] text/line near       '·' near Rectangle text_box=(-0.55, -2.49, -0.5, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @25] text/line near       'F_f' near Rectangle text_box=(-0.35, -2.65, 0.3, -2.28) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @25] text/line near       '·' near Rectangle text_box=(0.45, -2.49, 0.51, -2.44) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat3 @25] text/line near       'g' near Rectangle text_box=(0.66, -2.61, 0.85, -2.32) outline_box=(-0.49, -2.25, 0.6, -1.33)
+  [Beat5 @18] text/text near       'F_sh' ↔ 'F_sh [-] DIN 4108-2'
+  [Beat5 @18] text/line near       'F_sh' near Rectangle text_box=(1.14, 1.73, 1.89, 2.05) outline_box=(1.34, 0.85, 1.69, 1.61)
+  [Beat5 @19] text/text near       'G' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'A'
+  [Beat5 @19] text/text near       'A' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'F_f'
+  [Beat5 @19] text/text near       'F_f' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'g'
+  [Beat5 @19] text/text near       'g' ↔ '·'
+  [Beat5 @19] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @19] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @19] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @19] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @19] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @20] text/text near       'G' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'A'
+  [Beat5 @20] text/text near       'A' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'F_f'
+  [Beat5 @20] text/text near       'F_f' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'g'
+  [Beat5 @20] text/text near       'g' ↔ '·'
+  [Beat5 @20] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @20] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @20] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @20] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @20] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @21] text/text near       'G' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'A'
+  [Beat5 @21] text/text near       'A' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'F_f'
+  [Beat5 @21] text/text near       'F_f' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'g'
+  [Beat5 @21] text/text near       'g' ↔ '·'
+  [Beat5 @21] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @21] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @21] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @21] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @21] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @22] text/text near       'G' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'A'
+  [Beat5 @22] text/text near       'A' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'F_f'
+  [Beat5 @22] text/text near       'F_f' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'g'
+  [Beat5 @22] text/text near       'g' ↔ '·'
+  [Beat5 @22] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @22] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @22] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @22] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @22] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @23] text/text near       'G' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'A'
+  [Beat5 @23] text/text near       'A' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'F_f'
+  [Beat5 @23] text/text near       'F_f' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'g'
+  [Beat5 @23] text/text near       'g' ↔ '·'
+  [Beat5 @23] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @23] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @23] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @23] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @23] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @24] text/text near       'G' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'A'
+  [Beat5 @24] text/text near       'A' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'F_f'
+  [Beat5 @24] text/text near       'F_f' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'g'
+  [Beat5 @24] text/text near       'g' ↔ '·'
+  [Beat5 @24] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @24] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @24] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @24] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @24] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @25] text/text near       'G' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'A'
+  [Beat5 @25] text/text near       'A' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'F_f'
+  [Beat5 @25] text/text near       'F_f' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'g'
+  [Beat5 @25] text/text near       'g' ↔ '·'
+  [Beat5 @25] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @25] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @25] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @25] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @25] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @26] text/text near       'G' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'A'
+  [Beat5 @26] text/text near       'A' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'F_f'
+  [Beat5 @26] text/text near       'F_f' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'g'
+  [Beat5 @26] text/text near       'g' ↔ '·'
+  [Beat5 @26] text/text near       '·' ↔ 'F_sh'
+  [Beat5 @26] text/text near       'F_sh' ↔ '[W]'
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(-1.84, -2.49, -1.79, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(-1.19, -2.49, -1.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(-0.19, -2.49, -0.13, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @26] text/line near       '·' near SurroundingRectangle text_box=(0.37, -2.49, 0.42, -2.44) outline_box=(-2.49, -2.87, 2.49, -2.06)
+  [Beat5 @26] text/line near       'F_sh' near Rectangle text_box=(0.57, -2.65, 1.49, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat5 @26] text/line near       '[W]' near Rectangle text_box=(1.64, -2.65, 2.27, -2.28) outline_box=(1.34, -2.25, 1.69, -1.24)
+  [Beat6 @04] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @05] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @06] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @07] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @08] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @09] text/line near       'Betonbodenplatte' near Line text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-1.83, -1.62, 4.89, -0.3)
+  [Beat6 @10] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @11] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @11] text/line near       'Betonbodenplatte' near VMobject text_box=(-1.14, -2.06, 1.08, -1.78) outline_box=(-0.47, -1.62, -0.31, -0.54)
+  [Beat6 @12] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @12] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat6 @13] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @13] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat6 @14] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @14] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat6 @15] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @15] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat6 @16] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @16] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat6 @17] text/text near       '☾' ↔ 'Nachthimmel'
+  [Beat6 @17] text/line near       'Gespeicherte Wärme' near VMobject text_box=(-1.31, -0.29, 1.25, -0.02) outline_box=(-1.55, -1.5, -1.39, -0.42)
+  [Beat7 @02] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @03] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @04] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @04] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @04] text/text near       '=' ↔ 'm'
+  [Beat7 @04] text/text near       'm' ↔ '·'
+  [Beat7 @04] text/text near       '·' ↔ 'c'
+  [Beat7 @04] text/text near       'c' ↔ '·'
+  [Beat7 @04] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @04] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @04] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @04] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @05] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @05] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @05] text/text near       '=' ↔ 'm'
+  [Beat7 @05] text/text near       'm' ↔ '·'
+  [Beat7 @05] text/text near       '·' ↔ 'c'
+  [Beat7 @05] text/text near       'c' ↔ '·'
+  [Beat7 @05] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @05] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @05] text/line near       '=' near SurroundingRectangle text_box=(-0.24, -0.76, -0.03, -0.66) outline_box=(0.04, -0.89, 0.55, -0.52)
+  [Beat7 @05] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @05] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @06] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @06] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @06] text/text near       '=' ↔ 'm'
+  [Beat7 @06] text/text near       'm' ↔ '·'
+  [Beat7 @06] text/text near       '·' ↔ 'c'
+  [Beat7 @06] text/text near       'c' ↔ '·'
+  [Beat7 @06] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @06] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @06] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @06] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @07] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @07] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @07] text/text near       '=' ↔ 'm'
+  [Beat7 @07] text/text near       'm' ↔ '·'
+  [Beat7 @07] text/text near       '·' ↔ 'c'
+  [Beat7 @07] text/text near       'c' ↔ '·'
+  [Beat7 @07] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @07] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @07] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @07] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @08] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @08] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @08] text/text near       '=' ↔ 'm'
+  [Beat7 @08] text/text near       'm' ↔ '·'
+  [Beat7 @08] text/text near       '·' ↔ 'c'
+  [Beat7 @08] text/text near       'c' ↔ '·'
+  [Beat7 @08] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @08] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @08] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @08] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @09] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @09] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @09] text/text near       '=' ↔ 'm'
+  [Beat7 @09] text/text near       'm' ↔ '·'
+  [Beat7 @09] text/text near       '·' ↔ 'c'
+  [Beat7 @09] text/text near       'c' ↔ '·'
+  [Beat7 @09] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @09] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @09] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @09] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @09] text/line near       '[J]' near SurroundingRectangle text_box=(2.05, -0.89, 2.49, -0.52) outline_box=(1.27, -0.93, 1.98, -0.48)
+  [Beat7 @10] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @10] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @10] text/text near       '=' ↔ 'm'
+  [Beat7 @10] text/text near       'm' ↔ '·'
+  [Beat7 @10] text/text near       '·' ↔ 'c'
+  [Beat7 @10] text/text near       'c' ↔ '·'
+  [Beat7 @10] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @10] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @10] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @10] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @10] text/line near       '[J]' near SurroundingRectangle text_box=(2.05, -0.89, 2.49, -0.52) outline_box=(1.27, -0.93, 1.98, -0.48)
+  [Beat7 @11] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @11] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @11] text/text near       '=' ↔ 'm'
+  [Beat7 @11] text/text near       'm' ↔ '·'
+  [Beat7 @11] text/text near       '·' ↔ 'c'
+  [Beat7 @11] text/text near       'c' ↔ '·'
+  [Beat7 @11] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @11] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @11] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @11] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @11] text/line near       '[J]' near SurroundingRectangle text_box=(2.05, -0.89, 2.49, -0.52) outline_box=(1.27, -0.93, 1.98, -0.48)
+  [Beat7 @12] text/text near       'Gespeicherte Wärme Q ist Masse mal' ↔ 'Joule.'
+  [Beat7 @12] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @12] text/text near       '=' ↔ 'm'
+  [Beat7 @12] text/text near       'm' ↔ '·'
+  [Beat7 @12] text/text near       '·' ↔ 'c'
+  [Beat7 @12] text/text near       'c' ↔ '·'
+  [Beat7 @12] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @12] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @12] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @12] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @13] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @13] text/text near       '=' ↔ 'm'
+  [Beat7 @13] text/text near       'm' ↔ '·'
+  [Beat7 @13] text/text near       '·' ↔ 'c'
+  [Beat7 @13] text/text near       'c' ↔ '·'
+  [Beat7 @13] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @13] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @13] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @13] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @14] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @14] text/text near       '=' ↔ 'm'
+  [Beat7 @14] text/text near       'm' ↔ '·'
+  [Beat7 @14] text/text near       '·' ↔ 'c'
+  [Beat7 @14] text/text near       'c' ↔ '·'
+  [Beat7 @14] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @14] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @14] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @14] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @14] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @15] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @15] text/text near       '=' ↔ 'm'
+  [Beat7 @15] text/text near       'm' ↔ '·'
+  [Beat7 @15] text/text near       '·' ↔ 'c'
+  [Beat7 @15] text/text near       'c' ↔ '·'
+  [Beat7 @15] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @15] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @15] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @15] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @15] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @16] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @16] text/text near       '=' ↔ 'm'
+  [Beat7 @16] text/text near       'm' ↔ '·'
+  [Beat7 @16] text/text near       '·' ↔ 'c'
+  [Beat7 @16] text/text near       'c' ↔ '·'
+  [Beat7 @16] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @16] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @16] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @16] text/line near       '=' near SurroundingRectangle text_box=(-0.24, -0.76, -0.03, -0.66) outline_box=(-2.57, -0.99, -0.31, -0.42)
+  [Beat7 @16] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @16] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @17] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @17] text/text near       '=' ↔ 'm'
+  [Beat7 @17] text/text near       'm' ↔ '·'
+  [Beat7 @17] text/text near       '·' ↔ 'c'
+  [Beat7 @17] text/text near       'c' ↔ '·'
+  [Beat7 @17] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @17] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @17] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @17] text/line near       '=' near SurroundingRectangle text_box=(-0.24, -0.76, -0.03, -0.66) outline_box=(-2.57, -0.99, -0.31, -0.42)
+  [Beat7 @17] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @17] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @18] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @18] text/text near       '=' ↔ 'm'
+  [Beat7 @18] text/text near       'm' ↔ '·'
+  [Beat7 @18] text/text near       '·' ↔ 'c'
+  [Beat7 @18] text/text near       'c' ↔ '·'
+  [Beat7 @18] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @18] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @18] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @18] text/line near       '=' near SurroundingRectangle text_box=(-0.24, -0.76, -0.03, -0.66) outline_box=(-2.57, -0.99, -0.31, -0.42)
+  [Beat7 @18] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @18] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @19] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @19] text/text near       '=' ↔ 'm'
+  [Beat7 @19] text/text near       'm' ↔ '·'
+  [Beat7 @19] text/text near       '·' ↔ 'c'
+  [Beat7 @19] text/text near       'c' ↔ '·'
+  [Beat7 @19] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @19] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @19] text/text near       'Thermische Masse dämpft Spitzen, s' ↔ 'Heizlast.'
+  [Beat7 @19] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @19] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @20] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @20] text/text near       '=' ↔ 'm'
+  [Beat7 @20] text/text near       'm' ↔ '·'
+  [Beat7 @20] text/text near       '·' ↔ 'c'
+  [Beat7 @20] text/text near       'c' ↔ '·'
+  [Beat7 @20] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @20] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @20] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @20] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @21] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @21] text/text near       '=' ↔ 'm'
+  [Beat7 @21] text/text near       'm' ↔ '·'
+  [Beat7 @21] text/text near       '·' ↔ 'c'
+  [Beat7 @21] text/text near       'c' ↔ '·'
+  [Beat7 @21] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @21] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @21] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @21] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @22] text/text near       'Q_speicher' ↔ '='
+  [Beat7 @22] text/text near       '=' ↔ 'm'
+  [Beat7 @22] text/text near       'm' ↔ '·'
+  [Beat7 @22] text/text near       '·' ↔ 'c'
+  [Beat7 @22] text/text near       'c' ↔ '·'
+  [Beat7 @22] text/text near       '·' ↔ 'ΔT'
+  [Beat7 @22] text/text near       'ΔT' ↔ '[J]'
+  [Beat7 @22] text/line near       '·' near SurroundingRectangle text_box=(0.62, -0.73, 0.67, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat7 @22] text/line near       '·' near SurroundingRectangle text_box=(1.14, -0.73, 1.2, -0.68) outline_box=(-2.71, -1.13, 2.71, -0.28)
+  [Beat8 @03] text/text near       'G [W/m²]' ↔ 'A [m²]'
+  [Beat8 @04] text/text near       'G' ↔ 'A'
+  [Beat8 @04] text/text near       'G' ↔ '='
+  [Beat8 @04] text/text near       'G' ↔ '·'
+  [Beat8 @04] text/text near       'A' ↔ 'F_f'
+  [Beat8 @04] text/text near       'A' ↔ '·'
+  [Beat8 @04] text/text near       'F_f' ↔ 'g'
+  [Beat8 @04] text/text near       'F_f' ↔ 'A'
+  [Beat8 @04] text/text near       'F_f' ↔ '·'
+  [Beat8 @04] text/text near       'g' ↔ 'F_sh'
+  [Beat8 @04] text/text near       'g' ↔ '·'
+  [Beat8 @04] text/text near       'F_sh' ↔ 'g'
+  [Beat8 @04] text/text near       'F_sh' ↔ '·'
+  [Beat8 @04] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @04] text/text near       '=' ↔ 'G'
+  [Beat8 @04] text/text near       '·' ↔ 'A'
+  [Beat8 @04] text/text near       '·' ↔ 'F_f'
+  [Beat8 @04] text/text near       '·' ↔ 'g'
+  [Beat8 @04] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @04] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @04] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @04] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @04] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @04] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @05] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @05] text/text near       '=' ↔ 'G'
+  [Beat8 @05] text/text near       'G' ↔ '·'
+  [Beat8 @05] text/text near       '·' ↔ 'A'
+  [Beat8 @05] text/text near       'A' ↔ '·'
+  [Beat8 @05] text/text near       '·' ↔ 'F_f'
+  [Beat8 @05] text/text near       'F_f' ↔ '·'
+  [Beat8 @05] text/text near       '·' ↔ 'g'
+  [Beat8 @05] text/text near       'g' ↔ '·'
+  [Beat8 @05] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @05] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @05] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @05] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @05] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @05] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @06] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @06] text/text near       '=' ↔ 'G'
+  [Beat8 @06] text/text near       'G' ↔ '·'
+  [Beat8 @06] text/text near       '·' ↔ 'A'
+  [Beat8 @06] text/text near       'A' ↔ '·'
+  [Beat8 @06] text/text near       '·' ↔ 'F_f'
+  [Beat8 @06] text/text near       'F_f' ↔ '·'
+  [Beat8 @06] text/text near       '·' ↔ 'g'
+  [Beat8 @06] text/text near       'g' ↔ '·'
+  [Beat8 @06] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @06] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @06] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @06] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @06] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @06] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @07] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @07] text/text near       '=' ↔ 'G'
+  [Beat8 @07] text/text near       'G' ↔ '·'
+  [Beat8 @07] text/text near       '·' ↔ 'A'
+  [Beat8 @07] text/text near       'A' ↔ '·'
+  [Beat8 @07] text/text near       '·' ↔ 'F_f'
+  [Beat8 @07] text/text near       'F_f' ↔ '·'
+  [Beat8 @07] text/text near       '·' ↔ 'g'
+  [Beat8 @07] text/text near       'g' ↔ '·'
+  [Beat8 @07] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @07] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @07] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @07] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @07] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @07] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @08] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @08] text/text near       '=' ↔ 'G'
+  [Beat8 @08] text/text near       'G' ↔ '·'
+  [Beat8 @08] text/text near       '·' ↔ 'A'
+  [Beat8 @08] text/text near       'A' ↔ '·'
+  [Beat8 @08] text/text near       '·' ↔ 'F_f'
+  [Beat8 @08] text/text near       'F_f' ↔ '·'
+  [Beat8 @08] text/text near       '·' ↔ 'g'
+  [Beat8 @08] text/text near       'g' ↔ '·'
+  [Beat8 @08] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @08] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @08] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @08] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @08] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @08] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @09] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @09] text/text near       '=' ↔ 'G'
+  [Beat8 @09] text/text near       'G' ↔ '·'
+  [Beat8 @09] text/text near       '·' ↔ 'A'
+  [Beat8 @09] text/text near       'A' ↔ '·'
+  [Beat8 @09] text/text near       '·' ↔ 'F_f'
+  [Beat8 @09] text/text near       'F_f' ↔ '·'
+  [Beat8 @09] text/text near       '·' ↔ 'g'
+  [Beat8 @09] text/text near       'g' ↔ '·'
+  [Beat8 @09] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @09] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @09] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @09] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @09] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @09] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @09] text/line near       '[W]' near SurroundingRectangle text_box=(2.59, 1.36, 3.23, 1.74) outline_box=(1.45, 1.28, 2.52, 1.82)
+  [Beat8 @10] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @10] text/text near       '=' ↔ 'G'
+  [Beat8 @10] text/text near       'G' ↔ '·'
+  [Beat8 @10] text/text near       '·' ↔ 'A'
+  [Beat8 @10] text/text near       'A' ↔ '·'
+  [Beat8 @10] text/text near       '·' ↔ 'F_f'
+  [Beat8 @10] text/text near       'F_f' ↔ '·'
+  [Beat8 @10] text/text near       '·' ↔ 'g'
+  [Beat8 @10] text/text near       'g' ↔ '·'
+  [Beat8 @10] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @10] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @10] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @10] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @10] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @10] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @10] text/line near       '[W]' near SurroundingRectangle text_box=(2.59, 1.36, 3.23, 1.74) outline_box=(1.45, 1.28, 2.52, 1.82)
+  [Beat8 @11] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @11] text/text near       '=' ↔ 'G'
+  [Beat8 @11] text/text near       'G' ↔ '·'
+  [Beat8 @11] text/text near       '·' ↔ 'A'
+  [Beat8 @11] text/text near       'A' ↔ '·'
+  [Beat8 @11] text/text near       '·' ↔ 'F_f'
+  [Beat8 @11] text/text near       'F_f' ↔ '·'
+  [Beat8 @11] text/text near       '·' ↔ 'g'
+  [Beat8 @11] text/text near       'g' ↔ '·'
+  [Beat8 @11] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @11] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @11] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @11] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @11] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @11] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @11] text/line near       '[W]' near SurroundingRectangle text_box=(2.59, 1.36, 3.23, 1.74) outline_box=(1.45, 1.28, 2.52, 1.82)
+  [Beat8 @12] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @12] text/text near       '=' ↔ 'G'
+  [Beat8 @12] text/text near       'G' ↔ '·'
+  [Beat8 @12] text/text near       '·' ↔ 'A'
+  [Beat8 @12] text/text near       'A' ↔ '·'
+  [Beat8 @12] text/text near       '·' ↔ 'F_f'
+  [Beat8 @12] text/text near       'F_f' ↔ '·'
+  [Beat8 @12] text/text near       '·' ↔ 'g'
+  [Beat8 @12] text/text near       'g' ↔ '·'
+  [Beat8 @12] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @12] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @12] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @12] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @12] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @12] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @13] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @13] text/text near       '=' ↔ 'G'
+  [Beat8 @13] text/text near       'G' ↔ '·'
+  [Beat8 @13] text/text near       '·' ↔ 'A'
+  [Beat8 @13] text/text near       'A' ↔ '·'
+  [Beat8 @13] text/text near       '·' ↔ 'F_f'
+  [Beat8 @13] text/text near       'F_f' ↔ '·'
+  [Beat8 @13] text/text near       '·' ↔ 'g'
+  [Beat8 @13] text/text near       'g' ↔ '·'
+  [Beat8 @13] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @13] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @13] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @13] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @13] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @13] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @14] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @14] text/text near       '=' ↔ 'G'
+  [Beat8 @14] text/text near       'G' ↔ '·'
+  [Beat8 @14] text/text near       '·' ↔ 'A'
+  [Beat8 @14] text/text near       'A' ↔ '·'
+  [Beat8 @14] text/text near       '·' ↔ 'F_f'
+  [Beat8 @14] text/text near       'F_f' ↔ '·'
+  [Beat8 @14] text/text near       '·' ↔ 'g'
+  [Beat8 @14] text/text near       'g' ↔ '·'
+  [Beat8 @14] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @14] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @14] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @14] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @14] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @14] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @15] text/text near       'Φ_solar' ↔ '='
+  [Beat8 @15] text/text near       '=' ↔ 'G'
+  [Beat8 @15] text/text near       'G' ↔ '·'
+  [Beat8 @15] text/text near       '·' ↔ 'A'
+  [Beat8 @15] text/text near       'A' ↔ '·'
+  [Beat8 @15] text/text near       '·' ↔ 'F_f'
+  [Beat8 @15] text/text near       'F_f' ↔ '·'
+  [Beat8 @15] text/text near       '·' ↔ 'g'
+  [Beat8 @15] text/text near       'g' ↔ '·'
+  [Beat8 @15] text/text near       '·' ↔ 'F_sh'
+  [Beat8 @15] text/text near       'F_sh' ↔ '[W]'
+  [Beat8 @15] text/line near       '·' near SurroundingRectangle text_box=(-0.89, 1.52, -0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @15] text/line near       '·' near SurroundingRectangle text_box=(-0.23, 1.52, -0.18, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @15] text/line near       '·' near SurroundingRectangle text_box=(0.77, 1.52, 0.83, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)
+  [Beat8 @15] text/line near       '·' near SurroundingRectangle text_box=(1.32, 1.52, 1.38, 1.58) outline_box=(-3.45, 1.14, 3.45, 1.96)

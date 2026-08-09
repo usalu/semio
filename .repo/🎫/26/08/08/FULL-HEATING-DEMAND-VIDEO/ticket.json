@@ -1,0 +1,8 @@
+{
+  "title": "Full Heating Demand Video",
+  "slug": "FULL-HEATING-DEMAND-VIDEO",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Added full_heating_video.py (Demo_Intro_Heizlast + Modul 1–5 + final) and Heating/README.md; launch.json entry; no render."
+}

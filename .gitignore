@@ -575,7 +575,12 @@ tutorial/**/*.mp4
 tutorial/**/*.mp3
 tutorial/**/*.svg
 tutorial/**/*.wav
+tutorial/**/*.png
 tutorial/**/partial_movie_files/
+# Machine-local resolved-font cache (manim_fonts.py) — never shared across machines
+tutorial/.manim_font_cache
+# Accidental Manim dumps when run from repo root (not under tutorial/)
+/media/
 # Ticket work folders: keep text/json, never commit rendered media/audio
 .repo/🎫/**/*.mp4
 .repo/🎫/**/*.mp3
@@ -586,4 +591,6 @@ tutorial/**/partial_movie_files/
 .repo/🎫/**/*.flac
 .repo/🎫/**/*.webm
 .repo/🎫/**/*.mov
+.repo/🎫/**/*.svg
+.repo/🎫/**/*.png
 .repo/🎫/**/partial_movie_files/

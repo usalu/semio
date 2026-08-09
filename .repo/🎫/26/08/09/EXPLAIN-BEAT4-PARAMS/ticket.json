@@ -1,0 +1,11 @@
+{
+  "title": "Explain Beat4 Formula Parameters",
+  "slug": "EXPLAIN-BEAT4-PARAMS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat4 now walkthrough-highlights every continuity and rearranged-area symbol (q_v,R, v_m, A) with dedicated EN/DE NARRATION clauses and hold_for timing.",
+  "files": [
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py"
+  ]
+}

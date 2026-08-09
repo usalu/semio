@@ -1,0 +1,8 @@
+{
+  "title": "Fix Solar Beat4 Sun Sync",
+  "slug": "FIX-SOLAR-BEAT4-SUN-SYNC",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat4: rebuild summer/winter rays+beams from live sun/house after fit; move sun via ArcBetweenPoints to winter_anchor; flip winter caption only after summer fades."
+}

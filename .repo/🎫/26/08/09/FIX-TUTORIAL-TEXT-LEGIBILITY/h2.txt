@@ -1,0 +1,144 @@
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:182: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Bevor wir berechnen, wie viel Wärme ein Gebäude verliert, sehen wir uns an,\nwie Wärme sich überhaupt bewegt.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 75 lines (max 2); shorten the German clause: 'Die Wand ist ein Gitter aus Molekülen, jedes fest an seinen Platz gebunden.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Die warme Seite lässt sie stärker schwingen, und jedes stößt seinen Nachbarn an.\nDie Energie wandert die Kette entlang.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 59 lines (max 2); shorten the German clause: 'Diesen Wärmestrom durch den Feststoff nennen wir Q-Punkt-k.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Gibt man der Wand eine Öffnung — ein offenes Fenster, eine undichte Fuge —\nkann Luft hindurch.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Warme Raumluft ist leichter, steigt auf und entweicht oben durch die Öffnung —\nkalte Außenluft sinkt unten nach.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 68 lines (max 2); shorten the German clause: 'Diesen von bewegter Luft getragenen Wärmestrom nennen wir Q-Punkt-c.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:525: UserWarning: caption_bar wrapped to 63 lines (max 2); shorten the German clause: 'Der dritte Weg ist die Strahlung — und sie fällt aus der Reihe.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "label"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Jede warme Oberfläche sendet Infrarotwellen aus. Die warme Wandseite strahlt\ndirekt zu allem, was kälter ist.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Und die Strahlung läuft weiter. Sie braucht kein Medium — genau so erreicht uns\ndie Sonne durch den leeren Raum.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 39 lines (max 2); shorten the German clause: 'Diesen Wärmestrom nennen wir Q-Punkt-r.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'In einer echten Wand laufen alle drei gleichzeitig — der gesamte Wärmestrom\nist also einfach ihre Summe.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 35 lines (max 2); shorten the German clause: 'Q-Punkt-k durch das feste Material.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 37 lines (max 2); shorten the German clause: 'Q-Punkt-c getragen von bewegter Luft.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 42 lines (max 2); shorten the German clause: 'Q-Punkt-r gestrahlt über den Zwischenraum.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Sie jedes Mal zu trennen wäre unbrauchbar — deshalb fasst die DIN EN ISO 6946\nsie zu einer einzigen Kennzahl je Bauteil zusammen.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Eine echte Wand ist nie ein Material: Putz, Mauerwerk, Dämmung und Außenputz\nbremsen den Wärmestrom unterschiedlich stark.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Eine schlechte Schicht lässt die Temperatur steil über eine kurze Strecke fallen —\nund viel Wärme kommt durch.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Wird die Schicht dicker, verteilt sich derselbe Temperaturabfall auf mehr Strecke.\nR steigt, der Wärmestrom sinkt.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/Heating/1_introduction/scene_1.py:1005: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Schritt zwei. Der Widerstand ist nützlich, aber angegeben wird das Gegenteil:\nwie leicht Wärme hindurchkommt.'
+  caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 3 lines (max 2); shorten the German clause: 'Zuerst der gesamte Widerstand des Bauteils: die beiden dünnen Luftschichten\nan den Oberflächen plus alle Schichten dazwischen.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 72 lines (max 2); shorten the German clause: 'Eine ungedämmte Massivwand von 1960 hat ein U um 1,4 — sie ist ein Sieb.'
+  new = caption_bar(text_de, **kwargs)
+/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/manim_visuals.py:592: UserWarning: caption_bar wrapped to 60 lines (max 2); shorten the German clause: 'Wärmestrom gleich U-Wert mal Fläche mal Temperaturdifferenz.'
+  new = caption_bar(text_de, **kwargs)
+zones: SAFE_TOP=2.58 SAFE_BOTTOM=-2.6 SAFE_BOTTOM_FORMULA=-1.66
+
+Beat1_DreiWegeDerWaerme               0 finding(s)
+Beat2_Waermeleitung                   0 finding(s)
+Beat3_Konvektion                     18 finding(s)
+Beat4_Strahlung                       0 finding(s)
+Beat5_Zusammenfassung                34 finding(s)
+Beat6_VonWegenZuZahlen                0 finding(s)
+Beat7_Waermedurchlasswiderstand      18 finding(s)
+Beat8_UWert                          15 finding(s)
+Beat9_WaermestromFormel               0 finding(s)
+
+========================================================================
+  [Beat3 @13] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @13] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @13] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat3 @14] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @14] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @14] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat3 @15] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @15] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @15] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat3 @16] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @16] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @16] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat3 @17] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @17] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @17] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat3 @18] text/line            'Leitung' crossed by RoundedRectangle
+  [Beat3 @18] text/line            'Strahlung' crossed by RoundedRectangle
+  [Beat3 @18] text/line            'Warme Raumluft ist leichter, steig' crossed by SurroundingRectangle
+  [Beat5 @10] text/line            'In einer echten Wand laufen alle d' crossed by SurroundingRectangle
+  [Beat5 @11] text/line            'In einer echten Wand laufen alle d' crossed by SurroundingRectangle
+  [Beat5 @12] text/line            'In einer echten Wand laufen alle d' crossed by SurroundingRectangle
+  [Beat5 @13] text/line            'In einer echten Wand laufen alle d' crossed by SurroundingRectangle
+  [Beat5 @32] text/line            'Q̇_ges' crossed by RoundedRectangle
+  [Beat5 @32] text/line            'Q̇_k' crossed by RoundedRectangle
+  [Beat5 @32] text/line            'Q̇_c' crossed by RoundedRectangle
+  [Beat5 @32] text/line            'Q̇_r' crossed by RoundedRectangle
+  [Beat5 @32] text/line            '[W]' crossed by RoundedRectangle
+  [Beat5 @32] text/line            'Sie jedes Mal zu trennen wäre unbr' crossed by SurroundingRectangle
+  [Beat5 @33] text/line            'Q̇_ges' crossed by RoundedRectangle
+  [Beat5 @33] text/line            'Q̇_k' crossed by RoundedRectangle
+  [Beat5 @33] text/line            'Q̇_c' crossed by RoundedRectangle
+  [Beat5 @33] text/line            'Q̇_r' crossed by RoundedRectangle
+  [Beat5 @33] text/line            '[W]' crossed by RoundedRectangle
+  [Beat5 @33] text/line            'Sie jedes Mal zu trennen wäre unbr' crossed by SurroundingRectangle
+  [Beat5 @34] text/line            'Q̇_ges' crossed by RoundedRectangle
+  [Beat5 @34] text/line            'Q̇_k' crossed by RoundedRectangle
+  [Beat5 @34] text/line            'Q̇_c' crossed by RoundedRectangle
+  [Beat5 @34] text/line            'Q̇_r' crossed by RoundedRectangle
+  [Beat5 @34] text/line            '[W]' crossed by RoundedRectangle
+  [Beat5 @34] text/line            'Sie jedes Mal zu trennen wäre unbr' crossed by SurroundingRectangle
+  [Beat5 @35] text/line            'Q̇_ges' crossed by RoundedRectangle
+  [Beat5 @35] text/line            'Q̇_k' crossed by RoundedRectangle
+  [Beat5 @35] text/line            'Q̇_c' crossed by RoundedRectangle
+  [Beat5 @35] text/line            'Q̇_r' crossed by RoundedRectangle
+  [Beat5 @35] text/line            '[W]' crossed by RoundedRectangle
+  [Beat5 @35] text/line            'Sie jedes Mal zu trennen wäre unbr' crossed by SurroundingRectangle
+  [Beat5 @36] text/line            'Q̇_ges' crossed by RoundedRectangle
+  [Beat5 @36] text/line            'Q̇_k' crossed by RoundedRectangle
+  [Beat5 @36] text/line            'Q̇_c' crossed by RoundedRectangle
+  [Beat5 @36] text/line            'Q̇_r' crossed by RoundedRectangle
+  [Beat5 @36] text/line            '[W]' crossed by RoundedRectangle
+  [Beat5 @36] text/line            'Sie jedes Mal zu trennen wäre unbr' crossed by SurroundingRectangle
+  [Beat7 @20] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @20] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @20] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat7 @21] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @21] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @21] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat7 @22] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @22] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @22] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat7 @23] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @23] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @23] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat7 @24] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @24] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @24] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat7 @25] text/line            'λ' crossed by RoundedRectangle
+  [Beat7 @25] text/line            '[m²·K/W]' crossed by RoundedRectangle
+  [Beat7 @25] text/line            'Wird die Schicht dicker, verteilt ' crossed by SurroundingRectangle
+  [Beat8 @09] text/line            'Zuerst der gesamte Widerstand des ' crossed by SurroundingRectangle
+  [Beat8 @09] text/line            'R_ges' crossed by RoundedRectangle
+  [Beat8 @09] text/line            'R_si' crossed by RoundedRectangle
+  [Beat8 @09] text/line            'Σ d/λ' crossed by RoundedRectangle
+  [Beat8 @09] text/line            'R_se' crossed by RoundedRectangle
+  [Beat8 @10] text/line            'Zuerst der gesamte Widerstand des ' crossed by SurroundingRectangle
+  [Beat8 @10] text/line            'R_ges' crossed by RoundedRectangle
+  [Beat8 @10] text/line            'R_si' crossed by RoundedRectangle
+  [Beat8 @10] text/line            'Σ d/λ' crossed by RoundedRectangle
+  [Beat8 @10] text/line            'R_se' crossed by RoundedRectangle
+  [Beat8 @11] text/line            'Zuerst der gesamte Widerstand des ' crossed by SurroundingRectangle
+  [Beat8 @11] text/line            'R_ges' crossed by RoundedRectangle
+  [Beat8 @11] text/line            'R_si' crossed by RoundedRectangle
+  [Beat8 @11] text/line            'Σ d/λ' crossed by RoundedRectangle
+  [Beat8 @11] text/line            'R_se' crossed by RoundedRectangle

@@ -1,0 +1,11 @@
+{
+  "title": "Clip Restanteil Rays To Floor",
+  "slug": "CLIP-RESTANTEIL-FLOOR",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Restanteil residual rays now clip exactly at floor_y instead of a fixed overshoot length that pierced through the floor.",
+  "files": [
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py"
+  ]
+}

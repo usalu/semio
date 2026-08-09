@@ -22,6 +22,7 @@ def main():
         ("Beat2_HumanFactor", base_dir / "beat_2_audio.mp3"),
         ("Beat3_DevicesLighting", base_dir / "beat_3_audio.mp3"),
         ("Beat4_CumulativeLoad", base_dir / "beat_4_audio.mp3"),
+        ("Beat8_Mitigation", base_dir / "beat_8_audio.mp3"),
     ]
 
     def resolve_audio(path: Path) -> Path:
@@ -34,10 +35,11 @@ def main():
 
     muxed_clips = []
     manim_bin = SEMIO_ROOT / ".venv" / "bin" / "manim"
+    n_beats = len(scenes)
 
     for idx, (scene_name, audio_path) in enumerate(scenes, start=1):
         print(f"\n{'=' * 60}")
-        print(f"--- Rendering {scene_name} (Beat {idx}/4) ---")
+        print(f"--- Rendering {scene_name} (Beat {idx}/{n_beats}) ---")
         print(f"{'=' * 60}")
 
         render_cmd = [

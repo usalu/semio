@@ -910,11 +910,33 @@
       "name": "🛠️dev🎬manim scene_6",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run manim -pql tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py Beat1_Systemuebersicht",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py Beat1_PassivhausIdee",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 205
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim heating full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Heating/full_heating_video.py -q l",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 206
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim cooling full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Cooling/full_cooling_video.py -q l",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 207
       }
     },
     // #endregion

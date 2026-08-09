@@ -1,0 +1,8 @@
+{
+  "title": "Fix Solar Beat7 Layout",
+  "slug": "FIX-SOLAR-BEAT7-LAYOUT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Beat7: centered three-line defs and raised equation stacked under the subtitle with mid-band spacing."
+}

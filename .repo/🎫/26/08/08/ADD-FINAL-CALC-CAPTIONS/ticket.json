@@ -1,0 +1,8 @@
+{
+  "title": "Add Final Calc Captions",
+  "slug": "ADD-FINAL-CALC-CAPTIONS",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "final_calculation: German captions on all five beats; FullFinalCalculationVideo sets self.NARRATION from each scene_cls before construct."
+}

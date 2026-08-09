@@ -1,0 +1,18 @@
+{
+  "title": "Center Cooling Animation Layout",
+  "slug": "CENTER-COOLING-LAYOUT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-15",
+  "summary": "Migrated remaining merged_scenes Beat5–8 into scene_2; centered mid-screen visuals across Cooling scenes 1–6 with minimal animation changes; formula/caption zones preserved.",
+  "files": [
+    "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/generate_audio.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/build_full_video.py",
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+    "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py"
+  ]
+}
