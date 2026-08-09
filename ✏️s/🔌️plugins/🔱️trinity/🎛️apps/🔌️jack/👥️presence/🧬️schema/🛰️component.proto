@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.app.trinity.jack;
+message JackPresence {
+  // @state shared-ui
+  repeated string selected_node_ids = 1;
+  // @state shared-ui
+  string active_fixture_id = 2;
+  // @state shared-ui
+  string jack_query = 3;
+  // @state shared-ui
+  Camera camera = 4;
+  // @state shared-ui
+  map<string, string> lod_mode_by_window = 5;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

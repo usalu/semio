@@ -267,6 +267,62 @@ pub fn with_kernel_artifact_schema_catalog<R>(visit: impl FnOnce(&[KernelArtifac
 }
 //#endregion 🔖️ArtifactSchemaCatalog
 
+//#region 🔖️AppSchemaCatalog
+/// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
+#[derive(Clone, Debug)]
+pub struct KernelAppSchemaDescriptor {
+    pub id: &'static str,
+    pub config: KernelFacetLeaves,
+    pub presence: KernelFacetLeaves,
+}
+
+struct KernelAppSchemaCatalog {
+    by_id: HashMap<&'static str, KernelAppSchemaDescriptor>,
+}
+
+static KERNEL_APP_SCHEMA_CATALOG: OnceLock<Mutex<KernelAppSchemaCatalog>> = OnceLock::new();
+
+fn kernel_app_schema_catalog() -> &'static Mutex<KernelAppSchemaCatalog> {
+    KERNEL_APP_SCHEMA_CATALOG.get_or_init(|| Mutex::new(KernelAppSchemaCatalog { by_id: HashMap::new() }))
+}
+
+/// 📎 Registers one app owner's handcrafted schema descriptor into the OS-wide catalog.
+pub fn register_kernel_app_schema_descriptor(descriptor: KernelAppSchemaDescriptor) {
+    kernel_app_schema_catalog()
+        .lock()
+        .expect("kernel app schema catalog lock")
+        .by_id
+        .insert(descriptor.id, descriptor);
+}
+
+/// 🔎 Whether `id` is registered in the OS-wide app schema catalog.
+pub fn kernel_app_schema_descriptor_registered(id: &str) -> bool {
+    kernel_app_schema_catalog()
+        .lock()
+        .expect("kernel app schema catalog lock")
+        .by_id
+        .contains_key(id)
+}
+
+/// 🔢 Count of registered app schema owner ids.
+pub fn kernel_app_schema_catalog_len() -> usize {
+    kernel_app_schema_catalog()
+        .lock()
+        .expect("kernel app schema catalog lock")
+        .by_id
+        .len()
+}
+
+/// 📚 Invokes `visit` with every registered kernel app descriptor.
+pub fn with_kernel_app_schema_catalog<R>(visit: impl FnOnce(&[KernelAppSchemaDescriptor]) -> R) -> R {
+    let guard = kernel_app_schema_catalog().lock().expect("kernel app schema catalog lock");
+    let mut entries: Vec<KernelAppSchemaDescriptor> = guard.by_id.values().cloned().collect();
+    entries.sort_by_key(|entry| entry.id);
+    visit(&entries)
+}
+//#endregion 🔖️AppSchemaCatalog
+
+
 //#region 🔖️WireCodec
 /// @emoji 🎞️ Shared primitive codec for `protocol_causal`'s envelope records and `protocol_wire`'s
 /// frame bodies (W5) — hand-rolled, not `crate::os_pack::value::encode_record_body`, because the TS twin on
@@ -359,6 +415,7 @@ pub fn read_f64(bytes: &[u8], pos: &mut usize) -> Result<f64, ProtocolError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{DictBuilder, DictReader, DocumentVersion, HybridLogicalTimestamp, MutationId, RecordHasher};
 
     //#region 🔖️Errors
     #[test]
@@ -441,7 +498,7 @@ mod tests {
 
     //#region 🔖️Scalars
     mod scalars {
-        use super::super::scalar::{read_id, read_timestamp, write_id, write_timestamp};
+        use crate::os_spr::scalar::scalar::{read_id, read_timestamp, write_id, write_timestamp};
         use crate::os_pack::codec::{ByteReader, ByteWriter};
 
         #[test]

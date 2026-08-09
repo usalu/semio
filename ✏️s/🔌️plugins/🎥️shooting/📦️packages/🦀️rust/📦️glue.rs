@@ -190,8 +190,25 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/🎥️shooting/🎚️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/🎥️shooting/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🎥️shooting/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🎥️shooting/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🎥️shooting/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
         #[path = "../../🎛️apps/🎥️shooting/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
         #[path = "../../🎛️apps/🎥️shooting/🌉️wasm/🦀️component.rs"]

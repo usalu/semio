@@ -241,11 +241,29 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/📐️cad/🧮️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/📐️cad/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/📐️cad/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/📐️cad/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/📐️cad/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
         #[path = "../../🎛️apps/📐️cad/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/📐️cad/🕸️wasm/🦀️component.rs"]
+        #[path = "../../🎛️apps/📐️cad/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]

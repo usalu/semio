@@ -1124,7 +1124,7 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
     #[cfg(test)]
     mod generation_forms_tests {
         use super::*;
-        use super::{PlaybookBlock, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
+        use super::super::{PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
         fn sample_spec() -> PlaybookSpec {
             PlaybookSpec {
@@ -1297,7 +1297,7 @@ pub mod builder_kit {
     #[cfg(test)]
     mod builder_kit_tests {
         use super::*;
-        use super::empty_playbook_snapshot;
+        use super::super::empty_playbook_snapshot;
 
         fn sample_config() -> PlaybookBuilderConfig {
             PlaybookBuilderConfig { action_namespace: "playbook-play", controller_id: "playbook-play", labels: PLAYBOOK_BUILDER_LABELS_EN }

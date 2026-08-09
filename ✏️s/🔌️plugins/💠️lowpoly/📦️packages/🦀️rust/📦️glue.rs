@@ -182,8 +182,25 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/💠️lowpoly/🧮️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/💠️lowpoly/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/💠️lowpoly/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
         #[path = "../../🎛️apps/💠️lowpoly/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
         #[path = "../../🎛️apps/💠️lowpoly/🧭️view/🦀️component.rs"]

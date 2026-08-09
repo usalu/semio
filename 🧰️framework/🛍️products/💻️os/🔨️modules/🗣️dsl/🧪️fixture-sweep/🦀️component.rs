@@ -760,7 +760,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_lowpoly_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", ".pack.semio", PROTOCOL, "lowpoly.pack");
     }
@@ -768,7 +768,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_dag_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".pack.semio", PROTOCOL, "dag.pack");
     }
@@ -784,7 +784,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_cad_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", ".pack.semio", PROTOCOL, "cad.pack");
     }
@@ -792,7 +792,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_en1992_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", ".pack.semio", PROTOCOL, "en1992.pack");
     }
@@ -800,7 +800,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_note_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note", ".pack.semio", PROTOCOL, "note.pack");
     }
@@ -808,7 +808,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_fem2d_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📸️snapshot/🎒️pack/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d", ".pack.semio", PROTOCOL, "fem2d.pack");
     }

@@ -3,7 +3,9 @@
 use jsonschema::Validator;
 use schemars::{schema_for, JsonSchema};
 use serde_json::Value;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
+#[cfg(all(test, feature = "catalog-integration"))]
+use std::collections::BTreeSet;
 use thiserror::Error;
 
 pub use semio_framework_os_kernel::StateClass;
@@ -153,8 +155,8 @@ impl ArtifactSchemaRegistry {
 
 //#region 🔖️GlobalArtifactSchemaCatalog
 use semio_framework_os_kernel::{
-    register_kernel_artifact_schema_descriptor, with_kernel_artifact_schema_catalog, KernelArtifactSchemaDescriptor,
-    KernelFacetLeaves,
+    register_kernel_app_schema_descriptor, register_kernel_artifact_schema_descriptor, with_kernel_app_schema_catalog,
+    with_kernel_artifact_schema_catalog, KernelAppSchemaDescriptor, KernelArtifactSchemaDescriptor, KernelFacetLeaves,
 };
 
 fn facet_leaves_to_kernel(leaves: FacetLeaves) -> KernelFacetLeaves {
@@ -263,6 +265,134 @@ pub fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
     })
 }
 //#endregion 🔖️GlobalArtifactSchemaCatalog
+
+//#region 🔖️AppSchemaDescriptor
+/// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
+#[derive(Clone, Debug)]
+pub struct AppSchemaDescriptor {
+    pub id: &'static str,
+    pub config: FacetLeaves,
+    pub presence: FacetLeaves,
+}
+//#endregion 🔖️AppSchemaDescriptor
+
+//#region 🔖️AppSchemaRegistry
+/// 📚 Runtime registry of [`AppSchemaDescriptor`] values — app twin of [`ArtifactSchemaRegistry`].
+pub struct AppSchemaRegistry {
+    by_id: HashMap<&'static str, AppSchemaDescriptor>,
+}
+
+impl Default for AppSchemaRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AppSchemaRegistry {
+    /// 🏗️ Empty registry.
+    pub fn new() -> Self {
+        Self { by_id: HashMap::new() }
+    }
+
+    /// 📎 Insert or replace a descriptor by owner id.
+    pub fn register(&mut self, descriptor: AppSchemaDescriptor) {
+        self.by_id.insert(descriptor.id, descriptor);
+    }
+
+    /// 🔎 Lookup by app schema owner id.
+    pub fn get(&self, id: &str) -> Option<&AppSchemaDescriptor> {
+        self.by_id.get(id)
+    }
+
+    /// 🚶 Walk every registered descriptor.
+    pub fn iter(&self) -> impl Iterator<Item = &AppSchemaDescriptor> {
+        self.by_id.values()
+    }
+
+    /// 🔢 Count of registered app schema owner ids.
+    pub fn len(&self) -> usize {
+        self.by_id.len()
+    }
+
+    /// 📭 Whether no owners are registered yet (A6 fills the catalog).
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
+}
+//#endregion 🔖️AppSchemaRegistry
+
+//#region 🔖️GlobalAppSchemaCatalog
+fn app_descriptor_to_kernel(descriptor: AppSchemaDescriptor) -> KernelAppSchemaDescriptor {
+    KernelAppSchemaDescriptor {
+        id: descriptor.id,
+        config: facet_leaves_to_kernel(descriptor.config),
+        presence: facet_leaves_to_kernel(descriptor.presence),
+    }
+}
+
+fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDescriptor {
+    AppSchemaDescriptor {
+        id: kernel.id,
+        config: facet_leaves_from_kernel(&kernel.config),
+        presence: facet_leaves_from_kernel(&kernel.presence),
+    }
+}
+
+/// 📎 Registers one app owner's handcrafted descriptor into the OS-wide catalog (kernel descriptors + normative JSON + GraphQL SDL).
+pub fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
+    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor));
+}
+
+/// 🔎 Whether `id` is present in the OS-wide app descriptor registry.
+pub fn app_schema_descriptor_registered(id: &str) -> bool {
+    semio_framework_os_kernel::kernel_app_schema_descriptor_registered(id)
+}
+
+/// 📚 Invokes `visit` with the OS-wide [`AppSchemaRegistry`] snapshot.
+pub fn with_app_schema_registry<R>(visit: impl FnOnce(&AppSchemaRegistry) -> R) -> R {
+    let mut registry = AppSchemaRegistry::new();
+    with_kernel_app_schema_catalog(|entries| {
+        for entry in entries {
+            registry.register(app_descriptor_from_kernel(entry));
+        }
+    });
+    visit(&registry)
+}
+
+/// 🔣 Invokes `visit` with a [`SchemaCatalog`] of normative app config JSON leaves.
+pub fn with_app_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCatalog) -> R) -> R {
+    let mut catalog = SchemaCatalog::new();
+    with_kernel_app_schema_catalog(|entries| {
+        for entry in entries {
+            catalog.load_json(
+                entry.id,
+                parse_normative_json_leaf(entry.id, "config", entry.config.json_schema),
+            );
+            catalog.load_json(
+                &format!("{}.presence", entry.id),
+                parse_normative_json_leaf(entry.id, "presence", entry.presence.json_schema),
+            );
+        }
+    });
+    visit(&catalog)
+}
+
+/// 🔗 Returns composed GraphQL SDL (shared `@state` preamble + facet leaf) for an app catalog key (`id`, `{id}.presence`).
+pub fn app_schema_graphql_sdl(key: &str) -> Option<String> {
+    with_kernel_app_schema_catalog(|entries| {
+        for entry in entries {
+            if key == entry.id {
+                return Some(graphql_leaf_with_preamble(entry.config.graphql));
+            }
+            let presence_key = format!("{}.presence", entry.id);
+            if key == presence_key {
+                return Some(graphql_leaf_with_preamble(entry.presence.graphql));
+            }
+        }
+        None
+    })
+}
+//#endregion 🔖️GlobalAppSchemaCatalog
 
 //#region 🔖️StateClassKebab
 /// 🏷️ Parse the canonical kebab `x-semio-state` string into [`StateClass`].
@@ -438,6 +568,7 @@ mod tests {
     }
 
     //#region 🔖️CatalogIntegration
+    #[cfg(feature = "catalog-integration")]
     fn register_all_plugin_artifact_schema_descriptors() {
         semio_s_plugin_animate::artifacts::present::engine::register_artifact_schema();
         semio_s_plugin_architect::artifacts::program::engine::register_artifact_schema();
@@ -493,6 +624,7 @@ mod tests {
         semio_s_plugin_norm::artifacts::vdi3805::engine::register_artifact_schema();
     }
 
+    #[cfg(feature = "catalog-integration")]
     fn facet_formats_resolved(leaves: &FacetLeaves) -> [bool; 5] {
         [
             !leaves.rust.is_empty(),
@@ -503,6 +635,7 @@ mod tests {
         ]
     }
 
+    #[cfg(feature = "catalog-integration")]
     fn json_property_keys(schema: &Value) -> BTreeSet<String> {
         schema
             .get("properties")
@@ -511,6 +644,7 @@ mod tests {
             .unwrap_or_default()
     }
 
+    #[cfg(feature = "catalog-integration")]
     fn persistent_property_keys_from_artifact_json(schema: &Value) -> BTreeSet<String> {
         let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
             return BTreeSet::new();
@@ -524,6 +658,7 @@ mod tests {
             .collect()
     }
 
+    #[cfg(feature = "catalog-integration")]
     fn assert_json_states_parse(descriptor_id: &str, facet: &str, schema: &Value) {
         let properties = schema
             .get("properties")
@@ -539,6 +674,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "catalog-integration")]
     fn validate_registered_artifact_descriptor(descriptor: &ArtifactSchemaDescriptor) {
         let artifact_json: Value = serde_json::from_str(descriptor.artifact.json_schema)
             .unwrap_or_else(|error| panic!("{}: artifact json_schema parse: {error}", descriptor.id));
@@ -570,6 +706,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "catalog-integration")]
     #[test]
     fn artifact_schema_catalog_registers_and_validates_all_fifty_four_artifacts() {
         register_all_plugin_artifact_schema_descriptors();
@@ -612,6 +749,168 @@ mod tests {
             println!("[DEBUG] catalog artifact id {id}");
         }
     }
-    //#endregion 🔖️CatalogIntegration
+
+
+        #[cfg(feature = "catalog-integration")]
+    fn register_all_plugin_app_schema_descriptors() {
+semio_s_plugin_writer::apps::writer::config::schema::register_app_schema();
+        semio_s_plugin_mathematical::apps::mathematical::config::schema::register_app_schema();
+        semio_s_plugin_procedural::apps::procedural2d::config::schema::register_app_schema();
+        semio_s_plugin_procedural::apps::procedural3d::config::schema::register_app_schema();
+        semio_s_plugin_flow::apps::flow::config::schema::register_app_schema();
+        semio_s_plugin_gis::apps::gis2d::config::schema::register_app_schema();
+        semio_s_plugin_gis::apps::gis3d::config::schema::register_app_schema();
+        semio_s_plugin_vcs::apps::vcs::config::schema::register_app_schema();
+        semio_s_plugin_animate::apps::present::config::schema::register_app_schema();
+        semio_s_plugin_shooting::apps::shooting::config::schema::register_app_schema();
+        semio_s_plugin_sequence::apps::sequence::config::schema::register_app_schema();
+        semio_s_plugin_fem::apps::fem2d::config::schema::register_app_schema();
+        semio_s_plugin_fem::apps::fem3d::config::schema::register_app_schema();
+        semio_s_plugin_architect::apps::architect::config::schema::register_app_schema();
+        semio_s_plugin_process::apps::process3d::config::schema::register_app_schema();
+        semio_s_plugin_lowpoly::apps::lowpoly::config::schema::register_app_schema();
+        semio_s_plugin_reasoning_mindmap::apps::wires::config::schema::register_app_schema();
+        semio_s_plugin_forms::apps::forms::config::schema::register_app_schema();
+        semio_s_plugin_layout::apps::layout::config::schema::register_app_schema();
+        semio_s_plugin_cad::apps::cad::config::schema::register_app_schema();
+        semio_s_plugin_norm::config::schema::register_app_schema();
+        semio_s_plugin_playbook::apps::playbook::config::schema::register_app_schema();
+        semio_s_plugin_imperative::apps::imperative::config::schema::register_app_schema();
+        semio_s_plugin_remodel::apps::remodel::config::schema::register_app_schema();
+        semio_s_plugin_trinity::apps::rewrite::config::schema::register_app_schema();
+        semio_s_plugin_trinity::apps::jack::config::schema::register_app_schema();
+        semio_s_plugin_dag::apps::dag::config::schema::register_app_schema();
+        semio_s_plugin_draw::apps::draw::config::schema::register_app_schema();
+        semio_s_plugin_raster::apps::raster::config::schema::register_app_schema();
+        semio_s_plugin_note::apps::note::config::schema::register_app_schema();
+        semio_s_plugin_puzzle::apps::puzzle2d::config::schema::register_app_schema();
+        semio_s_plugin_puzzle::apps::puzzle5d::config::schema::register_app_schema();
+        semio_s_plugin_puzzle::apps::puzzle3d::config::schema::register_app_schema();
+        semio_s_plugin_block::apps::block2d::config::schema::register_app_schema();
+        semio_s_plugin_block::apps::block5d::config::schema::register_app_schema();
+        semio_s_plugin_block::apps::block3d::config::schema::register_app_schema();
+        semio_s_plugin_space::apps::home::config::schema::register_app_schema();
+        semio_s_plugin_space::apps::space::config::schema::register_app_schema();
+        semio_s_plugin_sourcing::apps::curate::config::schema::register_app_schema();
+    }
+
+//#endregion 🔖️CatalogIntegration
+
+    //#region 🔖️AppSchemaRegistryParity
+    fn empty_app_facet_leaves() -> FacetLeaves {
+        FacetLeaves {
+            rust: "",
+            typescript: "",
+            graphql: "",
+            json_schema: r#"{
+  "$id": "https://semio.tech/schema/app/placeholder/empty/config.json",
+  "title": "EmptyConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}"#,
+            proto: "",
+        }
+    }
+
+    fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
+        for (facet, leaves) in [("config", &descriptor.config), ("presence", &descriptor.presence)] {
+            if leaves.json_schema.trim().is_empty() {
+                continue;
+            }
+            let schema: Value = serde_json::from_str(leaves.json_schema)
+                .unwrap_or_else(|error| panic!("{}: {facet} json_schema parse: {error}", descriptor.id));
+            assert_eq!(
+                schema.get("type").and_then(Value::as_str),
+                Some("object"),
+                "{}: {facet} must be an object schema",
+                descriptor.id
+            );
+            let properties = schema
+                .get("properties")
+                .and_then(Value::as_object)
+                .unwrap_or_else(|| panic!("{}: {facet} properties object required", descriptor.id));
+            for (name, prop) in properties {
+                let raw = prop
+                    .get("x-semio-state")
+                    .and_then(Value::as_str)
+                    .unwrap_or_else(|| panic!("{}: {facet} property `{name}` missing x-semio-state", descriptor.id));
+                let class = parse_state_class_kebab(raw)
+                    .unwrap_or_else(|| panic!("{}: {facet} property `{name}` has invalid x-semio-state `{raw}`", descriptor.id));
+                let expected = if facet == "config" { StateClass::LocalUi } else { StateClass::SharedUi };
+                assert_eq!(
+                    class, expected,
+                    "{}: {facet} field `{name}` must be {:?}",
+                    descriptor.id, expected
+                );
+            }
+        }
+    }
+
+    #[cfg(feature = "catalog-integration")]
+    #[test]
+    fn app_schema_registry_registers_and_validates_all_thirty_nine_owners() {
+        register_all_plugin_app_schema_descriptors();
+        let mut registry = AppSchemaRegistry::new();
+        with_kernel_app_schema_catalog(|entries| {
+            for entry in entries {
+                registry.register(app_descriptor_from_kernel(entry));
+            }
+        });
+        assert_eq!(registry.len(), 39, "A6 registers all 39 app schema owners");
+        let mut walked = 0usize;
+        for descriptor in registry.iter() {
+            walked += 1;
+            validate_registered_app_descriptor(descriptor);
+        }
+        assert_eq!(walked, registry.len());
+    }
+
+    #[test]
+    fn app_schema_registry_is_empty_without_catalog_integration_feature() {
+        let mut registry = AppSchemaRegistry::new();
+        with_kernel_app_schema_catalog(|entries| {
+            for entry in entries {
+                registry.register(app_descriptor_from_kernel(entry));
+            }
+        });
+        #[cfg(not(feature = "catalog-integration"))]
+        assert_eq!(registry.len(), 0);
+        #[cfg(feature = "catalog-integration")]
+        {
+            register_all_plugin_app_schema_descriptors();
+            let mut registry = AppSchemaRegistry::new();
+            with_kernel_app_schema_catalog(|entries| {
+                for entry in entries {
+                    registry.register(app_descriptor_from_kernel(entry));
+                }
+            });
+            assert_eq!(registry.len(), 39);
+        }
+    }
+
+    #[test]
+    fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {
+        let mut registry = AppSchemaRegistry::new();
+        let empty = empty_app_facet_leaves();
+        registry.register(AppSchemaDescriptor {
+            id: "s.wave.a3.placeholder",
+            config: empty.clone(),
+            presence: FacetLeaves {
+                json_schema: r#"{
+  "$id": "https://semio.tech/schema/app/placeholder/empty/presence.json",
+  "title": "EmptyPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}"#,
+                ..empty
+            },
+        });
+        assert_eq!(registry.len(), 1);
+        validate_registered_app_descriptor(registry.get("s.wave.a3.placeholder").expect("placeholder"));
+        assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state"));
+    }
+    //#endregion 🔖️AppSchemaRegistryParity
 }
 //#endregion 🔖️Tests

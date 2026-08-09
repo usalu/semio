@@ -1,0 +1,76 @@
+{
+  "$id": "https://semio.tech/schema/app/writer/writer/presence.json",
+  "title": "WriterPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedAstIds",
+    "camera"
+  ],
+  "properties": {
+    "selectedAstIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "editorSelection": {
+      "$ref": "#/$defs/WriterEditorSelection",
+      "x-semio-state": "shared-ui"
+    },
+    "treeHoveredAstId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "editorHoverOffset": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/WriterCamera",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "WriterEditorSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WriterCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

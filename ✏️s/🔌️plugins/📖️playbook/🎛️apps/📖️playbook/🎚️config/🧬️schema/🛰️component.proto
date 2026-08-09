@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.playbook.playbook;
+message PlaybookConfig {
+  // @state local-ui
+  repeated string selected_ids = 1;
+  // @state local-ui
+  string locale = 2;
+  // @state local-ui
+  string contributions_json = 3;
+}

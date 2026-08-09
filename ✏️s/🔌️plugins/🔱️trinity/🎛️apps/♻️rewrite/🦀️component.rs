@@ -11,6 +11,7 @@ use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::{LayoutPoint, RewriteSnapshot, REWRITE_RULE_SCHEMA};
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigMutation};
+use crate::apps::rewrite::presence::{RewritePresence, RewritePresenceMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -485,6 +486,8 @@ impl DocumentApp for TrinityRewritePlayApp {
     type ConfigMutation = RewriteConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = RewritePresence;
+    type PresenceMutation = RewritePresenceMutation;
 
     type Command = TrinityRewriteCommand;
 

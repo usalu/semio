@@ -281,6 +281,19 @@ pub mod apps {
             #[path = "../../🎛️apps/🔌️jack/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
+
+            #[path = "../../🎛️apps/🔌️jack/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🔌️jack/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🔌️jack/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
         }
 
         #[path = "."]
@@ -378,6 +391,19 @@ pub mod apps {
             #[path = "../../🎛️apps/♻️rewrite/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
+
+            #[path = "../../🎛️apps/♻️rewrite/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/♻️rewrite/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/♻️rewrite/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
         }
 
         #[path = "."]

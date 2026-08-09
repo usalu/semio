@@ -7,6 +7,8 @@ export * as fem2d_diff from "../../🗿️artifacts/◻2d/🔺️diff/🟦️com
 export * as fem2d_dsl from "../../🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts";
 export * as fem2d_op from "../../🗿️artifacts/◻2d/🔧️op/🟦️component.ts";
 export * as fem2d_spr from "../../🗿️artifacts/◻2d/📡️spr/🟦️component.ts";
+export * as fem2d_config_schema from "../../🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts";
+export * as fem2d_presence_schema from "../../🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts";
 export * as fem3d_schema from "../../🗿️artifacts/🧊️3d/🧬️schema/🟦️component.ts";
 export * as fem3d_snapshot_schema from "../../🗿️artifacts/🧊️3d/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as fem3d_diff_schema from "../../🗿️artifacts/🧊️3d/🔺️diff/🧬️schema/🟦️component.ts";
@@ -15,3 +17,5 @@ export * as fem3d_diff from "../../🗿️artifacts/🧊️3d/🔺️diff/🟦�
 export * as fem3d_dsl from "../../🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts";
 export * as fem3d_op from "../../🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts";
 export * as fem3d_spr from "../../🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts";
+export * as fem3d_config_schema from "../../🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts";
+export * as fem3d_presence_schema from "../../🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts";

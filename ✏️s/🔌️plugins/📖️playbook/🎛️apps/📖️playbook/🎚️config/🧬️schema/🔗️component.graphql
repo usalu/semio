@@ -1,0 +1,5 @@
+type PlaybookConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}

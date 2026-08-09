@@ -111,8 +111,25 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/🌊️flow/🎚️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/🌊️flow/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🌊️flow/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🌊️flow/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🌊️flow/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
         #[path = "../../🎛️apps/🌊️flow/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 

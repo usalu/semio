@@ -1,0 +1,4 @@
+type Block5dConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

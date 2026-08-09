@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.app.fem.3d.config;
+message FemCamera {
+  string json = 1;
+}
+message Fem3dConfig {
+  // @state local-ui
+  optional string result_source_id = 1;
+  // @state local-ui
+  string result_mode = 2;
+  // @state local-ui
+  uint32 result_mode_index = 3;
+  // @state local-ui
+  FemCamera camera = 4;
+}

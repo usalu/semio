@@ -9,6 +9,7 @@
 
 use crate::apps::shooting::commands::{asset, camera, export, fixture, gumball, locale, scene, selection, shot};
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::apps::shooting::presence::{ShootingPresence, ShootingPresenceMutation};
 use crate::apps::shooting::modes::edit;
 use crate::apps::shooting::modes::edit::windows::icon as icon_window;
 use crate::apps::shooting::modes::edit::windows::scene as scene_window;
@@ -133,6 +134,8 @@ impl DocumentApp for ShootingPlayApp {
     type ConfigMutation = ShootingConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = ShootingPresence;
+    type PresenceMutation = ShootingPresenceMutation;
 
     type Command = ShootingCommand;
 

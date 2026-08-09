@@ -1,0 +1,28 @@
+{
+  "$id": "https://semio.tech/schema/app/animate/present/config.json",
+  "title": "PresentConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "engagementInput",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

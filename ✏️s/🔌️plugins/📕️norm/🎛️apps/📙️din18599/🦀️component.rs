@@ -14,6 +14,7 @@ use crate::artifacts::din18599::engine::DinV18599Family;
 use crate::artifacts::din18599::op::Din18599Mutation;
 use crate::artifacts::din18599::Din18599Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
+use crate::presence::{NormPresence, NormPresenceMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -53,6 +54,8 @@ impl DocumentApp for Din18599PlayApp {
     type ConfigMutation = NormConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = NormPresence;
+    type PresenceMutation = NormPresenceMutation;
 
     type Command = Din18599Command;
 

@@ -1,0 +1,17 @@
+{
+  "plugin": "💠️lowpoly",
+  "crate": "semio-s-plugin-lowpoly",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config",
+      "configType": "LowpolyConfig",
+      "presenceType": "LowpolyPresence",
+      "apps": [
+        "💠️lowpoly/💠️lowpoly"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "💠️lowpoly",
+  "skip_if_lowpoly_done": true
+}

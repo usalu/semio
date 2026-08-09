@@ -1,0 +1,125 @@
+{
+  "$id": "https://semio.tech/schema/app/cad/cad/presence.json",
+  "title": "CadPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedObjectIds",
+    "selectedNodeIds",
+    "componentSelectionMode",
+    "componentSelectionIds",
+    "componentSelectionTargetsMesh",
+    "componentSelectionTargetsVertex",
+    "componentSelectionTargetsEdge",
+    "componentSelectionTargetsFace",
+    "cameraPosition",
+    "cameraTarget",
+    "cameraZoom",
+    "cameraFov",
+    "activeUtilityId",
+    "engagementStep"
+  ],
+  "properties": {
+    "selectedObjectIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetId": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "activeObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionTargetsMesh": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionTargetsVertex": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionTargetsEdge": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "componentSelectionTargetsFace": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraFov": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementStep": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementPane": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

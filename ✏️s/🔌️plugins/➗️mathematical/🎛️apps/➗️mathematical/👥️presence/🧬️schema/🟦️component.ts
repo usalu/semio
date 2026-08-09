@@ -1,0 +1,2 @@
+/** 🧬️ MathematicalPresence */
+export interface MathematicalPresence {}

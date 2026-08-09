@@ -6,12 +6,13 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/{◻2d,🧊️3d}`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Projection` is the `Puzzle5dPlaySnapshot` newtype over a bare
+//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle5dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` document (see `crate::artifacts::puzzle5d::op`'s `🔖️ValueBridge`), not the
 //! typed `Puzzle5dSnapshot` — the `Puzzle5dDocument` model below is this app's own structural twin
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
+use crate::apps::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
 use crate::apps::puzzle5d::commands::{board, brush, camera, engagement, example, fill, grid, hover, lod, part, patch, selection as selection_commands, sun, transform, utility};
 use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime, Puzzle5dSelection};
 use crate::apps::puzzle5d::modes::edit;
@@ -1547,6 +1548,8 @@ impl DocumentApp for Puzzle5dPlayApp {
     type ConfigMutation = Puzzle5dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = Puzzle5dPresence;
+    type PresenceMutation = Puzzle5dPresenceMutation;
     type Command = Puzzle5dCommand;
 
 

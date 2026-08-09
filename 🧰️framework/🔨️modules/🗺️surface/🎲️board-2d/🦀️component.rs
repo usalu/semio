@@ -5,7 +5,7 @@
 //! except the pure host (`BoardHost`) already lives in `infinite_board_port_directed_normal` and is
 //! re-exported by `puzzle_2d_engine` — this crate only owns the wasm session wrapper around it.
 
-use puzzle::artifacts::puzzle2d::Puzzle2dProjection;
+use puzzle::artifacts::puzzle2d::Puzzle2dSnapshot;
 use puzzle::artifacts::puzzle2d::engine::{
     apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
@@ -78,13 +78,13 @@ pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, J
     apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
 }
 
-/// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
+/// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = puzzle2dParseDslJson)]
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::DocumentDsl;
-    let projection = Puzzle2dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
-    serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
+    let snapshot = Puzzle2dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_json::to_string(&snapshot).map_err(|error| JsValue::from_str(&error.to_string()))
 }
 
 // #region 🔖️WasmSession

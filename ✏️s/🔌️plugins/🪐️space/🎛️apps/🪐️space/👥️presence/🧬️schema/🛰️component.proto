@@ -1,0 +1,24 @@
+syntax = "proto3";
+package semio.app.space.space;
+message SpacePresence {
+  // @state shared-ui
+  repeated string selected_node_ids = 1;
+  // @state shared-ui
+  optional string hovered_node_id = 2;
+  // @state shared-ui
+  map<string, SpaceWindowCamera> camera = 3;
+  // @state shared-ui
+  optional string active_node_id = 4;
+  // @state shared-ui
+  optional string focused_node_id = 5;
+  // @state shared-ui
+  repeated string collapsed_node_ids = 6;
+  // @state shared-ui
+  repeated string preview_off_node_ids = 7;
+}
+
+message SpaceWindowCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

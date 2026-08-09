@@ -1,0 +1,3 @@
+type NormConfig {
+  selectedCheckIndex: Int @state(class: LOCAL_UI)
+}

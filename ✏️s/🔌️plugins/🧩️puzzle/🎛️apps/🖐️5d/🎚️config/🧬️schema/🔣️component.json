@@ -1,0 +1,230 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle5d/config.json",
+  "title": "Puzzle5dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera2d",
+    "camera3d",
+    "selection",
+    "selectionMethod",
+    "fillCount",
+    "brushCandidateIndex",
+    "overlapBudget",
+    "lodMode",
+    "suggestionOffset",
+    "gridSnapEnabled",
+    "gridFactor",
+    "engagementInputByWindow",
+    "objectKindWeights",
+    "vortexKindWeights",
+    "sun",
+    "activeUtilityByWindowId",
+    "terminology",
+    "locale"
+  ],
+  "properties": {
+    "camera2d": {
+      "$ref": "#/$defs/Puzzle5dCamera2d",
+      "x-semio-state": "local-ui"
+    },
+    "camera3d": {
+      "$ref": "#/$defs/Puzzle5dCamera3d",
+      "x-semio-state": "local-ui"
+    },
+    "selection": {
+      "$ref": "#/$defs/Puzzle5dSelection",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredPartId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInputByWindow": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "objectKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "vortexKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "sun": {
+      "$ref": "#/$defs/WorldSunConfig",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowId": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "SelectionSet": {
+      "title": "SelectionSet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "WorldSunConfig": {
+      "title": "WorldSunConfig",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "azimuth",
+        "elevation",
+        "intensity",
+        "color"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "azimuth": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dCamera2d": {
+      "title": "Puzzle5dCamera2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    },
+    "Puzzle5dCamera3d": {
+      "title": "Puzzle5dCamera3d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    },
+    "Puzzle5dSelection": {
+      "title": "Puzzle5dSelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "partIds",
+        "gripIds",
+        "fastenerIds"
+      ],
+      "properties": {
+        "partIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "gripIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "fastenerIds": {
+          "$ref": "#/$defs/SelectionSet"
+        }
+      }
+    }
+  }
+}

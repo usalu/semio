@@ -158,8 +158,25 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/🎬️sequence/🎚️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/🎬️sequence/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🎬️sequence/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🎬️sequence/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🎬️sequence/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
         #[path = "../../🎛️apps/🎬️sequence/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
         #[cfg(target_arch = "wasm32")]

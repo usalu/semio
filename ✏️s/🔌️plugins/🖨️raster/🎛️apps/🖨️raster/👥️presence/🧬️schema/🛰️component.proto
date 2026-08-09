@@ -1,0 +1,26 @@
+syntax = "proto3";
+package semio.app.raster.raster;
+
+message RasterPresenceCamera {
+  // @state shared-ui
+  double x = 1;
+  // @state shared-ui
+  double y = 2;
+  // @state shared-ui
+  double zoom = 3;
+}
+
+message RasterPresence {
+  // @state shared-ui
+  repeated string selected_ids = 1;
+  // @state shared-ui
+  optional string hovered_id = 2;
+  // @state shared-ui
+  double brush_size = 3;
+  // @state shared-ui
+  double brush_opacity = 4;
+  // @state shared-ui
+  RasterPresenceCamera camera = 5;
+  // @state shared-ui
+  string active_utility_id = 6;
+}

@@ -1,0 +1,2 @@
+/** 🧬️ VcsDemoPresence */
+export interface VcsDemoPresence {}

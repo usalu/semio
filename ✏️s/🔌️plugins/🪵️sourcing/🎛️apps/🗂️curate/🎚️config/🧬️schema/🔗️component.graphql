@@ -1,0 +1,24 @@
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type TableSort {
+  columnId: String!
+  direction: SortDirection!
+}
+
+type Filters {
+  query: String!
+  moduleIds: [String!]!
+  typologyPath: [String!]!
+  minAvailability: Int!
+  sort: TableSort
+}
+
+type SourcingCurateConfig {
+  filters: Filters! @state(class: LOCAL_UI)
+  selectedObjectId: String @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}

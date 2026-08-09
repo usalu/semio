@@ -1,0 +1,35 @@
+{
+  "$id": "https://semio.tech/schema/app/sequence/sequence/presence.json",
+  "title": "SequencePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["selectedStepIds", "orientation", "camera"],
+  "properties": {
+    "selectedStepIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    },
+    "orientation": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/SequenceCamera",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "SequenceCamera": {
+      "title": "SequenceCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

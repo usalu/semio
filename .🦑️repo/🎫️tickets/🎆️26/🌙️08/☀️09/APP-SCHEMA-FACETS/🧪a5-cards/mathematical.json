@@ -1,0 +1,17 @@
+{
+  "plugin": "➗️mathematical",
+  "crate": "semio-s-plugin-mathematical",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config",
+      "configType": "MathematicalConfig",
+      "presenceType": "MathematicalPresence",
+      "apps": [
+        "➗️mathematical/➗️mathematical"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "➗️mathematical",
+  "skip_if_lowpoly_done": false
+}

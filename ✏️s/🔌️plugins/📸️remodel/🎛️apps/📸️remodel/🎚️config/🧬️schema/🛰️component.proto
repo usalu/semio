@@ -1,0 +1,55 @@
+syntax = "proto3";
+package semio.app.remodel.remodel;
+
+message RemodelWorldCamera {
+  // @state local-ui
+  repeated double position = 1;
+  // @state local-ui
+  repeated double target = 2;
+  // @state local-ui
+  double fov = 3;
+}
+
+message RemodelSelection {
+  // @state local-ui
+  string mode = 4;
+  // @state local-ui
+  repeated string ids = 5;
+}
+
+message RemodelLayerVisibility {
+  // @state local-ui
+  bool mesh = 6;
+  // @state local-ui
+  bool dense = 7;
+  // @state local-ui
+  bool sparse = 8;
+  // @state local-ui
+  bool cameras = 9;
+  // @state local-ui
+  bool gcps = 10;
+}
+
+message RemodelFrameCursor {
+  // @state local-ui
+  optional string stream_id = 11;
+  // @state local-ui
+  uint32 frame_index = 12;
+}
+
+message RemodelConfig {
+  // @state local-ui
+  RemodelWorldCamera camera = 1;
+  // @state local-ui
+  RemodelSelection selection = 2;
+  // @state local-ui
+  RemodelLayerVisibility layers = 3;
+  // @state local-ui
+  RemodelFrameCursor frame_cursor = 4;
+  // @state local-ui
+  string report_table = 5;
+  // @state local-ui
+  string active_utility_id = 6;
+  // @state local-ui
+  string locale = 7;
+}

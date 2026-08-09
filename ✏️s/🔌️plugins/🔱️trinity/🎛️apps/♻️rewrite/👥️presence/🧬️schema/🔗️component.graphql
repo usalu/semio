@@ -1,0 +1,18 @@
+type RewritePresence {
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  activeHoverVar: String! @state(class: SHARED_UI)
+  activeSelectVar: String! @state(class: SHARED_UI)
+  beforePaneCamera: Camera! @state(class: SHARED_UI)
+  lodModeByWindow: [StringEntry!]! @state(class: SHARED_UI)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

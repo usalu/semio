@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.app.space.home;
+message HomePresence {
+}

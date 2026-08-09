@@ -10,6 +10,7 @@
 
 use crate::apps::flow::commands::{catalogue, eval, extension, grid, layout, locale, lod, node_graph, selection, synapse, view, widget};
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::apps::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::apps::flow::modes::edit::windows::{compiled, main};
 use crate::apps::flow::modes::generate::commands::generation;
 use crate::apps::flow::modes::generate::windows::{form, generations, preview};
@@ -213,6 +214,8 @@ impl DocumentApp for FlowPlayApp {
     type ConfigMutation = FlowConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = FlowPresence;
+    type PresenceMutation = FlowPresenceMutation;
 
     type Command = FlowCommand;
 

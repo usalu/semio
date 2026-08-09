@@ -8,6 +8,7 @@
 //! `definition()` per node.
 
 use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
+use crate::apps::imperative::presence::{ImperativePresence, ImperativePresenceMutation};
 use crate::apps::imperative::modes::edit;
 use crate::apps::imperative::modes::edit::windows::{main, script};
 use crate::apps::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -79,6 +80,8 @@ impl DocumentApp for ImperativePlayApp {
     type ConfigMutation = ImperativeConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = ImperativePresence;
+    type PresenceMutation = ImperativePresenceMutation;
 
     type Command = ImperativeCommand;
 

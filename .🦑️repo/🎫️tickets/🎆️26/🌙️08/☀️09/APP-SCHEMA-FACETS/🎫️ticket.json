@@ -1,0 +1,10 @@
+{
+  "id": "26/08/09/APP-SCHEMA-FACETS",
+  "title": "App Schema Facets",
+  "status": "open",
+  "goal": "AI-OPTIMIZED-REPO",
+  "due": "2026-08-09",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Give every app two handcrafted schema facets, following the artifact-facet pattern exactly: 🎚️config/🧬️schema (all local app state, unshared — every field local-ui) and 👥️presence/🧬️schema (shared live ephemeral state — every field shared-ui), each expressed in the five schemaFormats (🦀️component.rs, 🟦️component.ts, 🔗️component.graphql, 🔣️component.json JSON Schema, 🛰️component.proto) with the JSON Schema leaf normative. Consolidate the 🧮️config duplicate into 🎚️config. Make presence load-bearing by replacing PresencePeer's untyped selection_json with a typed per-app DocumentApp::Presence carried as a binary pack. Extend taxonomy, discovery, registry, the Rust taxonomy twin and the root policy scanners to require and cross-check the facets; nothing is generated, so cross-format parity is enforced by policy scanners plus a runtime table-driven test in the framework 🧬️schema module."
+}

@@ -1,0 +1,3 @@
+type Block2dPresence {
+  selectedIds: [String!]! @state(class: SHARED_UI)
+}

@@ -6,6 +6,7 @@
 //! `shooting_ui`'s B1 pilot.
 
 use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
+use crate::apps::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::apps::raster::modes::edit;
 use crate::apps::raster::modes::edit::windows::{composite, navigator};
 use crate::apps::raster::terminology::raster_play_labels;
@@ -147,6 +148,8 @@ impl DocumentApp for RasterPlayApp {
     type ConfigMutation = RasterConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = RasterPresence;
+    type PresenceMutation = RasterPresenceMutation;
 
     type Command = RasterCommand;
 

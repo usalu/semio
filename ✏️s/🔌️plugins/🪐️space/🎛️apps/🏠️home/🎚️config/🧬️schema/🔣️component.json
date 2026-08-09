@@ -1,0 +1,20 @@
+{
+  "$id": "https://semio.tech/schema/app/space/home/config.json",
+  "title": "HomeConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activePanelTab",
+    "locale"
+  ],
+  "properties": {
+    "activePanelTab": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

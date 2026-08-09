@@ -1,0 +1,67 @@
+{
+  "$id": "https://semio.tech/schema/app/procedural/2d/config.json",
+  "title": "Procedural2dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "camera",
+    "showMode",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "local-ui"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedGenerationId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "generationPreviewText": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

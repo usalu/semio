@@ -102,8 +102,26 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/🏠️home/🎚️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/🏠️home/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🏠️home/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🏠️home/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🏠️home/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
         #[path = "../../🎛️apps/🏠️home/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
@@ -144,8 +162,26 @@ pub mod apps {
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/🪐️space/🎚️config/🦀️component.rs"]
-        pub mod config;
+        #[path = "."]
+        pub mod config {
+            #[path = "../../🎛️apps/🪐️space/🎚️config/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🪐️space/🎚️config/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "../../🎛️apps/🪐️space/👥️presence/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🎛️apps/🪐️space/👥️presence/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+
         #[path = "../../🎛️apps/🪐️space/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
         #[path = "../../🎛️apps/🪐️space/⚙️engine/🦀️component.rs"]

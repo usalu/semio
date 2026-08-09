@@ -1,0 +1,10 @@
+type FemCamera {
+  json: String!
+}
+
+type Fem3dConfig {
+  resultSourceId: String @state(class: LOCAL_UI)
+  resultMode: String! @state(class: LOCAL_UI)
+  resultModeIndex: Int! @state(class: LOCAL_UI)
+  camera: FemCamera! @state(class: LOCAL_UI)
+}

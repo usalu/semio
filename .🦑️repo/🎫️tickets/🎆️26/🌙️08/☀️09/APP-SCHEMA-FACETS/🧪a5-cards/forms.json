@@ -1,0 +1,17 @@
+{
+  "plugin": "📋️forms",
+  "crate": "semio-s-plugin-forms",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config",
+      "configType": "FormsConfig",
+      "presenceType": "FormsPresence",
+      "apps": [
+        "📋️forms/📋️forms"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "📋️forms",
+  "skip_if_lowpoly_done": false
+}

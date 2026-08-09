@@ -1,0 +1,14 @@
+{
+  "$id": "https://semio.tech/schema/app/norm/norm/config.json",
+  "title": "NormConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "selectedCheckIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    }
+  }
+}

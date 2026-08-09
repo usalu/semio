@@ -1,0 +1,14 @@
+type Puzzle3dPresence {
+  selectedObjectIds: [String!]! @state(class: SHARED_UI)
+  selectedVortexIds: [String!]! @state(class: SHARED_UI)
+  selectedAttractionIds: [String!]! @state(class: SHARED_UI)
+  selectedTargetVolumeIds: [String!]! @state(class: SHARED_UI)
+  selectedReferenceIds: [String!]! @state(class: SHARED_UI)
+  hoveredObjectId: String @state(class: SHARED_UI)
+  hoveredVortexFullId: String @state(class: SHARED_UI)
+  cameraPosition: [Float!]! @state(class: SHARED_UI)
+  cameraTarget: [Float!]! @state(class: SHARED_UI)
+  cameraZoom: Float! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  activeToolId: String @state(class: SHARED_UI)
+}

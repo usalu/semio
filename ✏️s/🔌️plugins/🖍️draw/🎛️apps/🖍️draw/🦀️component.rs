@@ -10,6 +10,7 @@
 use crate::apps::draw::commands::canvas::DrawSession;
 use crate::apps::draw::commands::{canvas, document, layer, view};
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
+use crate::apps::draw::presence::{DrawPresence, DrawPresenceMutation};
 use crate::apps::draw::modes::edit;
 use crate::apps::draw::modes::edit::windows::canvas as canvas_window;
 use crate::apps::draw::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
@@ -116,6 +117,8 @@ impl DocumentApp for DrawPlayApp {
     type ConfigMutation = DrawConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = DrawPresence;
+    type PresenceMutation = DrawPresenceMutation;
 
     type Command = DrawCommand;
 

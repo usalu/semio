@@ -1,0 +1,44 @@
+syntax = "proto3";
+package semio.app.space.space;
+message SpaceConfig {
+  // @state local-ui
+  map<string, SpaceWindowCamera> camera = 1;
+  // @state local-ui
+  repeated string selected_node_ids = 2;
+  // @state local-ui
+  optional string hovered_node_id = 3;
+  // @state local-ui
+  repeated string collapsed_node_ids = 4;
+  // @state local-ui
+  repeated string preview_off_node_ids = 5;
+  // @state local-ui
+  optional string active_node_id = 6;
+  // @state local-ui
+  optional string focused_node_id = 7;
+  // @state local-ui
+  repeated string clipboard_node_ids = 8;
+  // @state local-ui
+  string workflow_engagement_input = 9;
+  // @state local-ui
+  string compiled_dag_engagement_input = 10;
+  // @state local-ui
+  optional string pending_import_node_id = 11;
+  // @state local-ui
+  optional string pending_import_format = 12;
+  // @state local-ui
+  string active_panel_tab = 13;
+  // @state local-ui
+  optional string space_id = 14;
+  // @state local-ui
+  optional string client_id = 15;
+  // @state local-ui
+  optional string client_name = 16;
+  // @state local-ui
+  string locale = 17;
+}
+
+message SpaceWindowCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

@@ -1,0 +1,83 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle5d/presence.json",
+  "title": "Puzzle5dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedPartIds",
+    "selectedGripIds",
+    "selectedFastenerIds",
+    "camera2dX",
+    "camera2dY",
+    "camera2dZoom",
+    "camera3dPosition",
+    "camera3dTarget",
+    "camera3dZoom",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedPartIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedGripIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedFastenerIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredPartId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera2dX": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "camera2dY": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "camera2dZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "camera3dPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "camera3dTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "camera3dZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

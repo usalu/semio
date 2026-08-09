@@ -1,0 +1,6 @@
+type SequencePresence {
+  selectedStepIds: [String!]! @state(class: SHARED_UI)
+  orientation: String! @state(class: SHARED_UI)
+  camera: SequenceCamera! @state(class: SHARED_UI)
+}
+type SequenceCamera { x: Float! y: Float! zoom: Float! }

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package semio.app.procedural.2d;
+message Procedural2dConfig {
+  // @state local-ui
+  repeated string selected_ids = 1;
+  // @state local-ui
+  CameraJson camera = 2;
+  // @state local-ui
+  string show_mode = 3;
+  // @state local-ui
+  optional string selected_generation_id = 4;
+  // @state local-ui
+  optional string generation_preview_text = 5;
+  // @state local-ui
+  string locale = 6;
+}
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

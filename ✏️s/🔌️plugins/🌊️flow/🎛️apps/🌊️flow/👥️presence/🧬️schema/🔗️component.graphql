@@ -1,0 +1,13 @@
+type FlowPresence {
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  selectedEdgeIds: [String!]! @state(class: SHARED_UI)
+  selectedHandleIds: [String!]! @state(class: SHARED_UI)
+  previewOffNodeIds: [String!]! @state(class: SHARED_UI)
+  camera: CameraJson! @state(class: SHARED_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

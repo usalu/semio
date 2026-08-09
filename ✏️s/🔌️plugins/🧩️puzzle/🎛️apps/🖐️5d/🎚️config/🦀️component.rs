@@ -103,7 +103,7 @@ pub fn puzzle5d_clear_non_grip_selection(selection: &mut Puzzle5dSelection) {
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Puzzle5dRuntime {
+pub struct Puzzle5dConfig {
     /// 📷️ Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
     /// see `setCamera`/`setCamera2d`/`setCamera3d` in `🎮️commands/🎥️camera`.
     #[serde(default)]
@@ -152,7 +152,7 @@ pub struct Puzzle5dRuntime {
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
-impl Default for Puzzle5dRuntime {
+impl Default for Puzzle5dConfig {
     fn default() -> Self {
         Self {
             camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -183,9 +183,10 @@ impl Default for Puzzle5dRuntime {
 /// taking `&Puzzle5dRuntime`/`&mut Puzzle5dRuntime` keeps working unchanged; every read comes from
 /// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`
 /// instead of a silent `self` mutation.
-pub type Puzzle5dConfig = Puzzle5dRuntime;
+/// 🏷️ Alias kept for call sites that still name the runtime.
+pub type Puzzle5dRuntime = Puzzle5dConfig;
 
-impl store::DocumentDsl for Puzzle5dRuntime {
+impl store::DocumentDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -197,7 +198,7 @@ impl store::DocumentDsl for Puzzle5dRuntime {
     }
 }
 
-impl store::DocumentPack for Puzzle5dRuntime {
+impl store::DocumentPack for Puzzle5dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
@@ -208,7 +209,7 @@ impl store::DocumentPack for Puzzle5dRuntime {
     }
 }
 
-store::impl_whole_record_config!(Puzzle5dRuntime);
+store::impl_whole_record_config!(Puzzle5dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation

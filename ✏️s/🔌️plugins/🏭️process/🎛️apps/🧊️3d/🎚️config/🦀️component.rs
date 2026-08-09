@@ -166,7 +166,7 @@ store::impl_whole_record_config!(Process3dConfig);
 /// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
 /// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
 /// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslDocument`), mirroring `cad`'s
-/// identical `Box<CadProjection>` binding.
+/// identical `Box<CadSnapshot>` binding.
 impl dsl::DslField for Box<Process3dConfig> {
     fn shape() -> dsl::Shape {
         <Process3dConfig as dsl::DslField>::shape()

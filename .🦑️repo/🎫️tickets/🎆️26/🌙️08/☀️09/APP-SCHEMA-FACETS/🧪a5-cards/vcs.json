@@ -1,0 +1,17 @@
+{
+  "plugin": "🌿️vcs",
+  "crate": "semio-s-plugin-vcs",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config",
+      "configType": "VcsDemoConfig",
+      "presenceType": "VcsDemoPresence",
+      "apps": [
+        "🌿️vcs/🌿️vcs"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🌿️vcs",
+  "skip_if_lowpoly_done": false
+}

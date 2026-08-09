@@ -2,7 +2,7 @@
 //! merged at app level).
 //!
 //! 🕳️ Deviation from the usual "general"/"ui" split: the Studio app has no document type of its own —
-//! its `DocumentApp::Projection`/`Mutation` are `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}`,
+//! its `DocumentApp::Snapshot`/`Mutation` are `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}`,
 //! owned entirely by `framework/product/os/core/rs` (outside this plugin). There is therefore no
 //! `🗿️artifacts/🪐️space` node anywhere in this crate — this file carries what would otherwise be the
 //! artifact facade's constants (manifest/panel identifiers shared by `engine` config defaults and this
@@ -27,6 +27,7 @@ use crate::apps::space::commands::selection::{node_graph_select, select_instance
 use crate::apps::space::commands::studio_io::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
 use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewport, text_hover};
 use crate::apps::space::config::SpaceConfig;
+use crate::apps::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
@@ -272,6 +273,8 @@ impl DocumentApp for SpaceApp {
     type ConfigMutation = crate::apps::space::config::SpaceConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = SpacePresence;
+    type PresenceMutation = SpacePresenceMutation;
     type Command = SpaceCommand;
 
     const APP_ID: &'static str = S_PLAY_APP_ID;

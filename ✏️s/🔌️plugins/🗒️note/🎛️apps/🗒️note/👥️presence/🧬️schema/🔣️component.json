@@ -1,0 +1,42 @@
+{
+  "$id": "https://semio.tech/schema/app/note/note/presence.json",
+  "title": "NotePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedBlockIds",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedBlockIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredBlockId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

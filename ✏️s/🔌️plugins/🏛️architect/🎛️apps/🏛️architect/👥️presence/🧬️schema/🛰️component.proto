@@ -1,0 +1,25 @@
+syntax = "proto3";
+package semio.app.architect.architect;
+
+enum AdjacencyKind {
+  ADJACENCY_KIND_UNSPECIFIED = 0;
+  ADJACENCY_KIND_REQUIRED = 1;
+  ADJACENCY_KIND_PREFERRED = 2;
+  ADJACENCY_KIND_OPTIONAL = 3;
+  ADJACENCY_KIND_PROHIBITED = 4;
+}
+
+message ArchitectPresence {
+  // @state shared-ui
+  repeated string selected_ids = 1;
+  // @state shared-ui
+  string active_register = 2;
+  // @state shared-ui
+  optional AdjacencyKind adjacency_kind_filter = 3;
+  // @state shared-ui
+  double graph_camera_x = 4;
+  // @state shared-ui
+  double graph_camera_y = 5;
+  // @state shared-ui
+  double graph_camera_zoom = 6;
+}

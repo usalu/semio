@@ -1,0 +1,17 @@
+{
+  "plugin": "🖨️raster",
+  "crate": "semio-s-plugin-raster",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config",
+      "configType": "RasterConfig",
+      "presenceType": "RasterPresence",
+      "apps": [
+        "🖨️raster/🖨️raster"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🖨️raster",
+  "skip_if_lowpoly_done": false
+}

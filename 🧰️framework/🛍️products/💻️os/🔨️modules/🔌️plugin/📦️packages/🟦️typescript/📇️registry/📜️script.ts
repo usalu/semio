@@ -912,12 +912,18 @@ const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 const TAXONOMY_MUTATION_CHILD_DIRS = TAXONOMY.mutationChildDirs ?? [];
 const TAXONOMY_SNAPSHOT_CHILD_DIRS = TAXONOMY.snapshotChildDirs ?? [];
 const TAXONOMY_DIFF_CHILD_DIRS = TAXONOMY.diffChildDirs ?? [];
+const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
+const TAXONOMY_PRESENCE_CHILD_DIRS = TAXONOMY.presenceChildDirs ?? [];
 const TAXONOMY_SCHEMA_FORMATS = Object.values(TAXONOMY.schemaFormats ?? {});
 const MUTATIONS_FACET_DIR = "🧬️mutations";
 const ENGINE_FACET_DIR = "⚙️engine";
 const SNAPSHOT_FACET_DIR = "📸️snapshot";
 const DIFF_FACET_DIR = "🔺️diff";
 const SCHEMA_FACET_DIR = "🧬️schema";
+const CONFIG_FACET_DIR = "🎚️config";
+const PRESENCE_FACET_DIR = "👥️presence";
+const LEGACY_CONFIG_FACET_DIR = "🧮️config";
+const LEGACY_WASM_DIR = "🕸️wasm";
 const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
 const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
@@ -1263,6 +1269,62 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       }
     }
   }
+
+  //#region AppFacetWalk
+  // 🎛 Walk every 🎚️config owner (app-level and plugin-level) and its sibling 👥️presence, requiring all five schemaFormats leaves.
+  const assertAppSchemaOwner = (ownerLabel: string, parentAbs: string): void => {
+    const configAbs = join(parentAbs, CONFIG_FACET_DIR);
+    if (!existsSync(configAbs)) return;
+    for (const child of TAXONOMY_CONFIG_CHILD_DIRS) {
+      const childAbs = join(configAbs, child);
+      if (!existsSync(childAbs)) {
+        findings.push(`${pluginId}: ${ownerLabel} is missing ${CONFIG_FACET_DIR}/${child}/`);
+        continue;
+      }
+      if (child === SCHEMA_FACET_DIR) {
+        for (const format of TAXONOMY_SCHEMA_FORMATS) {
+          if (!existsSync(join(childAbs, format.leafFilename))) {
+            findings.push(`${pluginId}: ${ownerLabel} is missing ${CONFIG_FACET_DIR}/${child}/${format.leafFilename}`);
+          }
+        }
+      }
+    }
+    const presenceAbs = join(parentAbs, PRESENCE_FACET_DIR);
+    if (!existsSync(presenceAbs)) {
+      findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/`);
+      return;
+    }
+    for (const child of TAXONOMY_PRESENCE_CHILD_DIRS) {
+      const childAbs = join(presenceAbs, child);
+      if (!existsSync(childAbs)) {
+        findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/${child}/`);
+        continue;
+      }
+      if (child === SCHEMA_FACET_DIR) {
+        for (const format of TAXONOMY_SCHEMA_FORMATS) {
+          if (!existsSync(join(childAbs, format.leafFilename))) {
+            findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/${child}/${format.leafFilename}`);
+          }
+        }
+      }
+    }
+  };
+  const appsDir = join(pluginRoot, APPS_DIRNAME);
+  for (const app of listDirs(appsDir)) {
+    const appAbs = join(appsDir, app);
+    if (existsSync(join(appAbs, LEGACY_CONFIG_FACET_DIR))) {
+      findings.push(`${pluginId}: app "${app}" still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
+    }
+    if (existsSync(join(appAbs, LEGACY_WASM_DIR))) {
+      findings.push(`${pluginId}: app "${app}" still has ${LEGACY_WASM_DIR}/ — rename to 🌉️wasm/`);
+    }
+    assertAppSchemaOwner(`app "${app}"`, appAbs);
+  }
+  if (existsSync(join(pluginRoot, LEGACY_CONFIG_FACET_DIR))) {
+    findings.push(`${pluginId}: plugin-root still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
+  }
+  assertAppSchemaOwner(`plugin-root`, pluginRoot);
+  //#endregion AppFacetWalk
 
   return findings;
 }

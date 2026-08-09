@@ -1,0 +1,17 @@
+{
+  "plugin": "📏️layout",
+  "crate": "semio-s-plugin-layout",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config",
+      "configType": "LayoutConfig",
+      "presenceType": "LayoutPresence",
+      "apps": [
+        "📏️layout/📏️layout"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "📏️layout",
+  "skip_if_lowpoly_done": false
+}

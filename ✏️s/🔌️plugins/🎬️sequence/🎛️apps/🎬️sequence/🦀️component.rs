@@ -15,6 +15,7 @@ use crate::apps::sequence::commands::playback::{run_command, stop_command};
 use crate::apps::sequence::commands::selection::set_selection;
 use crate::apps::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
+use crate::apps::sequence::presence::{SequencePresence, SequencePresenceMutation};
 use crate::apps::sequence::modes::edit;
 use crate::apps::sequence::modes::edit::windows::{compiled, main, script};
 use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -91,6 +92,8 @@ impl DocumentApp for SequencePlayApp {
     type ConfigMutation = SequenceConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = SequencePresence;
+    type PresenceMutation = SequencePresenceMutation;
 
     type Command = SequenceCommand;
 

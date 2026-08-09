@@ -1,0 +1,24 @@
+type Gis2dConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  layerVisibility: [Gis2dBoolEntry!]! @state(class: LOCAL_UI)
+  cameraJson: String! @state(class: LOCAL_UI)
+  renderMode: String! @state(class: LOCAL_UI)
+  vectorStyle: String! @state(class: LOCAL_UI)
+  lodMode: String! @state(class: LOCAL_UI)
+  featureSelectionJson: String! @state(class: LOCAL_UI)
+  hoverJson: String! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  selectionMode: String! @state(class: LOCAL_UI)
+  layerStrokeScale: [Gis2dNumberEntry!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type Gis2dBoolEntry {
+  key: String!
+  value: Boolean!
+}
+
+type Gis2dNumberEntry {
+  key: String!
+  value: Float!
+}

@@ -68,6 +68,8 @@ impl DocumentApp for Block5dPlayApp {
     type ConfigMutation = Block5dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::block5d::presence::Block5dPresence;
+    type PresenceMutation = crate::apps::block5d::presence::Block5dPresenceMutation;
 
     type Command = Block5dCommand;
 

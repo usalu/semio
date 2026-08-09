@@ -1,0 +1,102 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/jack/config.json",
+  "title": "JackConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "camera",
+    "activeFixtureId",
+    "jackQuery",
+    "jackResultJson",
+    "editorEngagementInput",
+    "graphEngagementInput",
+    "resultsEngagementInput",
+    "reorganizeEpoch",
+    "lodModeByWindow",
+    "revision",
+    "locale"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "local-ui"
+    },
+    "activeFixtureId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "jackQuery": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "jackResultJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "editorEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "graphEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "resultsEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "editorSelection": {
+      "$ref": "#/$defs/JackEditorSelection",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "revision": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    },
+    "JackEditorSelection": {
+      "title": "JackEditorSelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "format": "int64" },
+        "end": { "type": "integer", "format": "int64" }
+      }
+    }
+  }
+}

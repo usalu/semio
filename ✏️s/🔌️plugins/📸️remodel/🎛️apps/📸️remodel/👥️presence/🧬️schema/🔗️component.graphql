@@ -1,0 +1,11 @@
+type RemodelPresence {
+  selectionMode: String! @state(class: SHARED_UI)
+  selectionIds: [String!]! @state(class: SHARED_UI)
+  worldCameraPosition: [Float!]! @state(class: SHARED_UI)
+  worldCameraTarget: [Float!]! @state(class: SHARED_UI)
+  worldCameraFov: Float! @state(class: SHARED_UI)
+  frameStreamId: String @state(class: SHARED_UI)
+  frameIndex: Int! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  reportTable: String! @state(class: SHARED_UI)
+}

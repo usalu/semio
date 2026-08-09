@@ -1,0 +1,17 @@
+{
+  "plugin": "🏭️process",
+  "crate": "semio-s-plugin-process",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config",
+      "configType": "Process3dConfig",
+      "presenceType": "Process3dPresence",
+      "apps": [
+        "🏭️process/🧊️3d"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🏭️process",
+  "skip_if_lowpoly_done": false
+}

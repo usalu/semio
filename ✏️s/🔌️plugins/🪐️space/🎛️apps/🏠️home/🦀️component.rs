@@ -9,6 +9,7 @@ use crate::apps::home::commands::settings::set_active_panel_tab;
 use crate::apps::home::commands::studio::{bind_space_file, create_studio, import_space, open_space};
 use crate::apps::home::commands::vfs::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::apps::home::config::HomeConfig;
+use crate::apps::home::presence::{HomePresence, HomePresenceMutation};
 use crate::apps::home::terminology::SHomeLabels;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::{ensure_space_fixtures_registered, parse_demo_space_document};
@@ -241,7 +242,7 @@ pub fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsW
 
 /// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
 /// `HostEffect::LoadDocument` / host `loadAppDocumentPack`, sized to what `apps::space`'s
-/// `DocumentApp::Projection` (`WorkflowSnapshot`) actually decodes.
+/// `DocumentApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
 pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::DocumentPackFiles> {
     export_backbone_pack(document).ok()
 }
@@ -332,6 +333,8 @@ impl DocumentApp for HomeApp {
     type ConfigMutation = crate::apps::home::config::HomeConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = HomePresence;
+    type PresenceMutation = HomePresenceMutation;
     type Command = HomeCommand;
 
     const APP_ID: &'static str = S_HOME_APP_ID;

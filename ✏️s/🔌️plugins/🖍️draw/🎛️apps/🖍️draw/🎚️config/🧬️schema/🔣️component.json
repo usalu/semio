@@ -1,0 +1,55 @@
+{
+  "$id": "https://semio.tech/schema/app/draw/draw/config.json",
+  "title": "DrawConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "engagementInput",
+    "camera",
+    "activeUtilityId",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/DrawCamera",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "DrawCamera": {
+      "title": "DrawCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

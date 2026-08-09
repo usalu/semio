@@ -1,0 +1,128 @@
+{
+  "$id": "https://semio.tech/schema/app/space/space/config.json",
+  "title": "SpaceConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera",
+    "selectedNodeIds",
+    "collapsedNodeIds",
+    "previewOffNodeIds",
+    "clipboardNodeIds",
+    "workflowEngagementInput",
+    "compiledDagEngagementInput",
+    "activePanelTab",
+    "locale"
+  ],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SpaceWindowCamera"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "collapsedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "previewOffNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "activeNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "focusedNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "clipboardNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "workflowEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "compiledDagEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "pendingImportNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "pendingImportFormat": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activePanelTab": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "spaceId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "clientId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "clientName": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "SpaceWindowCamera": {
+      "title": "SpaceWindowCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

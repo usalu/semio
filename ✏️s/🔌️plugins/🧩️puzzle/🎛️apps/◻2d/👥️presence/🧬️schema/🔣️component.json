@@ -1,0 +1,43 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle2d/presence.json",
+  "title": "Puzzle2dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "selectionMethod",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

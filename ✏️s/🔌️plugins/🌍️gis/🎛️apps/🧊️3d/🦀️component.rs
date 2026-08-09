@@ -58,6 +58,8 @@ impl DocumentApp for Gis3dPlayApp {
     type ConfigMutation = Gis3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::gis3d::presence::Gis3dPresence;
+    type PresenceMutation = crate::apps::gis3d::presence::Gis3dPresenceMutation;
 
     type Command = Gis3dCommand;
 

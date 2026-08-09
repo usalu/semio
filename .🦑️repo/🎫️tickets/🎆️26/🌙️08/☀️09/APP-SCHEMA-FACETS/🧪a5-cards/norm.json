@@ -1,0 +1,31 @@
+{
+  "plugin": "📕️norm",
+  "crate": "semio-s-plugin-norm",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/📕️norm/🎚️config",
+      "configType": "NormConfig",
+      "presenceType": "NormPresence",
+      "apps": [
+        "📕️norm/📓️iso16757",
+        "📕️norm/📔️vdi3805",
+        "📕️norm/📕️din4108",
+        "📕️norm/📗️din16798",
+        "📕️norm/📘️en1990",
+        "📕️norm/📘️en1991",
+        "📕️norm/📘️en1992",
+        "📕️norm/📘️en1993",
+        "📕️norm/📘️en1994",
+        "📕️norm/📘️en1995",
+        "📕️norm/📘️en1996",
+        "📕️norm/📘️en1997",
+        "📕️norm/📘️en1998",
+        "📕️norm/📘️en1999",
+        "📕️norm/📙️din18599"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "📕️norm",
+  "skip_if_lowpoly_done": false
+}

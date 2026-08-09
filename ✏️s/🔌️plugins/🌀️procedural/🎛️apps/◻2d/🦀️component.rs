@@ -92,6 +92,8 @@ impl DocumentApp for Procedural2dPlayApp {
     type ConfigMutation = Procedural2dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::procedural2d::presence::Procedural2dPresence;
+    type PresenceMutation = crate::apps::procedural2d::presence::Procedural2dPresenceMutation;
 
     type Command = Procedural2dCommand;
 

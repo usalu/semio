@@ -154,7 +154,7 @@ pub struct Puzzle3dSuggestionMenu {
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Puzzle3dRuntime {
+pub struct Puzzle3dConfig {
     #[serde(default)]
     pub selection: Puzzle3dSelection,
     #[serde(default = "default_selection_method")]
@@ -242,7 +242,7 @@ pub struct Puzzle3dRuntime {
     pub window_ids: Vec<String>,
 }
 
-impl Default for Puzzle3dRuntime {
+impl Default for Puzzle3dConfig {
     /// 🎛️ Mirrors every `#[serde(default = "...")]` above — `#[derive(Default)]` would silently ignore
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
@@ -290,9 +290,10 @@ impl Default for Puzzle3dRuntime {
 /// record (an alias, not a new type) so every helper taking `&Puzzle3dRuntime`/`&mut Puzzle3dRuntime`
 /// keeps working unchanged; every read comes from `cfg.snapshot`, every write flows out as a
 /// `Puzzle3dConfigMutation` in the returned `Emit` instead of a silent `self` mutation.
-pub type Puzzle3dConfig = Puzzle3dRuntime;
+/// 🏷️ Alias kept for call sites that still name the runtime.
+pub type Puzzle3dRuntime = Puzzle3dConfig;
 
-impl store::DocumentDsl for Puzzle3dRuntime {
+impl store::DocumentDsl for Puzzle3dConfig {
     const EXTENSION: &'static str = "puzzle3dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -304,7 +305,7 @@ impl store::DocumentDsl for Puzzle3dRuntime {
     }
 }
 
-impl store::DocumentPack for Puzzle3dRuntime {
+impl store::DocumentPack for Puzzle3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
@@ -315,7 +316,7 @@ impl store::DocumentPack for Puzzle3dRuntime {
     }
 }
 
-store::impl_whole_record_config!(Puzzle3dRuntime);
+store::impl_whole_record_config!(Puzzle3dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️WindowOptions
@@ -373,7 +374,7 @@ impl Default for Puzzle3dWindowOptions {
     }
 }
 
-impl Puzzle3dRuntime {
+impl Puzzle3dConfig {
     /// 🪟️ Snapshots this runtime's currently-materialized flat window-option fields into a
     /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`.
     fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {

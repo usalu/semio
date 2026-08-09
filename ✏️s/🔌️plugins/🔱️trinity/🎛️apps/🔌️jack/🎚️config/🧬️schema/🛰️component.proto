@@ -1,0 +1,41 @@
+syntax = "proto3";
+package semio.app.trinity.jack;
+message JackConfig {
+  // @state local-ui
+  repeated string selected_node_ids = 1;
+  // @state local-ui
+  Camera camera = 2;
+  // @state local-ui
+  string active_fixture_id = 3;
+  // @state local-ui
+  string jack_query = 4;
+  // @state local-ui
+  string jack_result_json = 5;
+  // @state local-ui
+  string editor_engagement_input = 6;
+  // @state local-ui
+  string graph_engagement_input = 7;
+  // @state local-ui
+  string results_engagement_input = 8;
+  // @state local-ui
+  int64 reorganize_epoch = 9;
+  // @state local-ui
+  optional JackEditorSelection editor_selection = 10;
+  // @state local-ui
+  map<string, string> lod_mode_by_window = 11;
+  // @state local-ui
+  int64 revision = 12;
+  // @state local-ui
+  string locale = 13;
+}
+
+message JackEditorSelection {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

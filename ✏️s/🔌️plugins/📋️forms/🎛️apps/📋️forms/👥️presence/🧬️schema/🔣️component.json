@@ -1,0 +1,8 @@
+{
+  "$id": "https://semio.tech/schema/app/forms/forms/presence.json",
+  "title": "FormsPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}

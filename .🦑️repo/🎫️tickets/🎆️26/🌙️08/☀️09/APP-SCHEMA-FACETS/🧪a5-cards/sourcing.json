@@ -1,0 +1,17 @@
+{
+  "plugin": "🪵️sourcing",
+  "crate": "semio-s-plugin-sourcing",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config",
+      "configType": "SourcingCurateConfig",
+      "presenceType": "SourcingCuratePresence",
+      "apps": [
+        "🪵️sourcing/🗂️curate"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🪵️sourcing",
+  "skip_if_lowpoly_done": false
+}

@@ -1,0 +1,25 @@
+{
+  "plugin": "🪐️space",
+  "crate": "semio-s-plugin-space",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config",
+      "configType": "HomeConfig",
+      "presenceType": "HomePresence",
+      "apps": [
+        "🪐️space/🏠️home"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config",
+      "configType": "SpaceConfig",
+      "presenceType": "SpacePresence",
+      "apps": [
+        "🪐️space/🪐️space"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🪐️space",
+  "skip_if_lowpoly_done": false
+}

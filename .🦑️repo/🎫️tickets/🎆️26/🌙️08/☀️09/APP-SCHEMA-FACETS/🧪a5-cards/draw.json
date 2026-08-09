@@ -1,0 +1,17 @@
+{
+  "plugin": "🖍️draw",
+  "crate": "semio-s-plugin-draw",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config",
+      "configType": "DrawConfig",
+      "presenceType": "DrawPresence",
+      "apps": [
+        "🖍️draw/🖍️draw"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🖍️draw",
+  "skip_if_lowpoly_done": false
+}

@@ -1,0 +1,38 @@
+{
+  "$id": "https://semio.tech/schema/app/dag/dag/config.json",
+  "title": "DagConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "locale"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

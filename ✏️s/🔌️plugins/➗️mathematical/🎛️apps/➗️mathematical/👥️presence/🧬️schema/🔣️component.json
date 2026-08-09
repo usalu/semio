@@ -1,0 +1,7 @@
+{
+  "$id": "https://semio.tech/schema/app/mathematical/mathematical/presence.json",
+  "title": "MathematicalPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

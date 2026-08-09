@@ -1,0 +1,135 @@
+{
+  "$id": "https://semio.tech/schema/app/shooting/shooting/config.json",
+  "title": "ShootingConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "defaultShotFormat",
+    "defaultShotShape",
+    "defaultAssetFormat",
+    "selectedShotIds",
+    "selectedAssetIds",
+    "selectionMethod",
+    "centerModel",
+    "fitRevision",
+    "cameraDraftLabel",
+    "camera",
+    "activeUtilityId",
+    "locale"
+  ],
+  "properties": {
+    "defaultShotFormat": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "defaultShotShape": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "defaultAssetFormat": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedShotIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selectedAssetIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredAssetId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "centerModel": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "fitRevision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "cameraDraftLabel": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/ShootingCamera",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "ShootingCamera": {
+      "title": "ShootingCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "projection": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

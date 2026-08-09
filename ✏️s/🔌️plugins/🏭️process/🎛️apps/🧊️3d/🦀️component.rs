@@ -14,6 +14,7 @@
 
 use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::apps::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::apps::process3d::modes::edit;
 use crate::apps::process3d::modes::edit::windows::workpiece;
 use crate::apps::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
@@ -147,6 +148,8 @@ impl DocumentApp for Process3dPlayApp {
     type ConfigMutation = Process3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = Process3dPresence;
+    type PresenceMutation = Process3dPresenceMutation;
 
     type Command = Process3dCommand;
 

@@ -1,0 +1,16 @@
+type ShootingPresence {
+  selectedShotIds: [String!]! @state(class: SHARED_UI)
+  selectedAssetIds: [String!]! @state(class: SHARED_UI)
+  hoveredAssetId: String @state(class: SHARED_UI)
+  camera: ShootingCamera! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+}
+
+type ShootingCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  up: [Float!]
+  projection: String
+}

@@ -1,0 +1,33 @@
+type Puzzle2dConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  lodModeByPane: [StringEntry!]! @state(class: LOCAL_UI)
+  engagementInputByPane: [StringEntry!]! @state(class: LOCAL_UI)
+  brushCandidateIndex: Int! @state(class: LOCAL_UI)
+  brushCandidates: [JsonValue!]! @state(class: LOCAL_UI)
+  brushCandidateSourceHandleId: String! @state(class: LOCAL_UI)
+  fillCount: Int! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridFactor: Float! @state(class: LOCAL_UI)
+  suggestionOffset: Float! @state(class: LOCAL_UI)
+  nodeKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  handleKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  activeUtilityByWindowId: [StringEntry!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type FloatEntry {
+  key: String!
+  value: Float!
+}
+
+scalar JsonValue

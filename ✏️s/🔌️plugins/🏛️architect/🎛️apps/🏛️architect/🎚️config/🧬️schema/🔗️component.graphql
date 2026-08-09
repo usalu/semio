@@ -1,0 +1,20 @@
+enum AdjacencyKind {
+  required
+  preferred
+  optional
+  prohibited
+}
+
+type ArchitectConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  activeRegister: String! @state(class: LOCAL_UI)
+  searchQuery: String! @state(class: LOCAL_UI)
+  searchHistoryJson: String! @state(class: LOCAL_UI)
+  activeReportJson: String! @state(class: LOCAL_UI)
+  lastResultJson: String! @state(class: LOCAL_UI)
+  lastAnalysisJson: String! @state(class: LOCAL_UI)
+  adjacencyKindFilter: AdjacencyKind @state(class: LOCAL_UI)
+  graphCameraX: Float! @state(class: LOCAL_UI)
+  graphCameraY: Float! @state(class: LOCAL_UI)
+  graphCameraZoom: Float! @state(class: LOCAL_UI)
+}

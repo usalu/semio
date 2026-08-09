@@ -1,0 +1,516 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle3d/config.json",
+  "title": "Puzzle3dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selection",
+    "selectionMethod",
+    "overlapBudget",
+    "fillCount",
+    "brushCandidateIndex",
+    "objectKindWeights",
+    "vortexKindWeights",
+    "lodAutomatic",
+    "lodDepthVariable",
+    "gridVisible",
+    "lodManual",
+    "gridSnapEnabled",
+    "gridSpacing",
+    "selectableKinds",
+    "engagementInput",
+    "selectionModeDefault",
+    "proximityRadius",
+    "chunkSize",
+    "voxelDims",
+    "transformMove",
+    "transformRotate",
+    "vortexShow",
+    "vortexDirection",
+    "sun",
+    "camera",
+    "windowOptions",
+    "activeUtilityByWindowId",
+    "terminology",
+    "locale",
+    "windowIds"
+  ],
+  "properties": {
+    "selection": {
+      "$ref": "#/$defs/Puzzle3dSelection",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredVortexFullId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionMenu": {
+      "$ref": "#/$defs/Puzzle3dSuggestionMenu",
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "objectKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "vortexKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "lodAutomatic": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodDepthVariable": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodManual": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSpacing": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "selectableKinds": {
+      "$ref": "#/$defs/Puzzle3dSelectableKinds",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredKindId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionModeDefault": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "proximityRadius": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "chunkSize": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "voxelDims": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "local-ui"
+    },
+    "transformMove": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "transformRotate": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "vortexShow": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "vortexDirection": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "sun": {
+      "$ref": "#/$defs/WorldSunConfig",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle3dCamera",
+      "x-semio-state": "local-ui"
+    },
+    "windowOptions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Puzzle3dWindowOptions"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowId": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "activeToolId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "windowIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "SelectionSet": {
+      "title": "SelectionSet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "WorldSunConfig": {
+      "title": "WorldSunConfig",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "azimuth",
+        "elevation",
+        "intensity",
+        "color"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "azimuth": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "WorldProjectionConfig": {
+      "title": "WorldProjectionConfig",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "orthographicView",
+        "axonometricVariant",
+        "axonometricAngleA",
+        "axonometricAngleB",
+        "axonometricQuadrant",
+        "obliqueVariant",
+        "obliqueAngle",
+        "obliqueDepth",
+        "onePointAxis",
+        "fov",
+        "twoPointShift",
+        "curvilinearFov",
+        "curvilinearStrength",
+        "curvilinearMapping"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "orthographicView": {
+          "type": "string"
+        },
+        "axonometricVariant": {
+          "type": "string"
+        },
+        "axonometricAngleA": {
+          "type": "number"
+        },
+        "axonometricAngleB": {
+          "type": "number"
+        },
+        "axonometricQuadrant": {
+          "type": "string"
+        },
+        "obliqueVariant": {
+          "type": "string"
+        },
+        "obliqueAngle": {
+          "type": "number"
+        },
+        "obliqueDepth": {
+          "type": "number"
+        },
+        "onePointAxis": {
+          "type": "string"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "twoPointShift": {
+          "type": "number"
+        },
+        "curvilinearFov": {
+          "type": "number"
+        },
+        "curvilinearStrength": {
+          "type": "number"
+        },
+        "curvilinearMapping": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dCamera": {
+      "title": "Puzzle3dCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "projection"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "projection": {
+          "$ref": "#/$defs/WorldProjectionConfig"
+        }
+      }
+    },
+    "Puzzle3dSelection": {
+      "title": "Puzzle3dSelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectIds",
+        "vortexIds",
+        "attractionIds",
+        "targetVolumeIds",
+        "referenceIds"
+      ],
+      "properties": {
+        "objectIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "vortexIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "attractionIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "targetVolumeIds": {
+          "$ref": "#/$defs/SelectionSet"
+        },
+        "referenceIds": {
+          "$ref": "#/$defs/SelectionSet"
+        }
+      }
+    },
+    "Puzzle3dSelectableKinds": {
+      "title": "Puzzle3dSelectableKinds",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objects",
+        "vortices",
+        "attractions"
+      ],
+      "properties": {
+        "objects": {
+          "type": "boolean"
+        },
+        "vortices": {
+          "type": "boolean"
+        },
+        "attractions": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Puzzle3dSuggestionMenu": {
+      "title": "Puzzle3dSuggestionMenu",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "windowId"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "windowId": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dWindowOptions": {
+      "title": "Puzzle3dWindowOptions",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectionMethod",
+        "lodAutomatic",
+        "lodDepthVariable",
+        "gridVisible",
+        "lodManual",
+        "gridSnapEnabled",
+        "gridSpacing",
+        "selectableKinds",
+        "engagementInput",
+        "selectionModeDefault",
+        "proximityRadius",
+        "chunkSize",
+        "voxelDims",
+        "transformMove",
+        "transformRotate",
+        "vortexShow",
+        "vortexDirection",
+        "sun",
+        "camera"
+      ],
+      "properties": {
+        "selectionMethod": {
+          "type": "string"
+        },
+        "lodAutomatic": {
+          "type": "boolean"
+        },
+        "lodDepthVariable": {
+          "type": "boolean"
+        },
+        "gridVisible": {
+          "type": "boolean"
+        },
+        "lodManual": {
+          "type": "number"
+        },
+        "gridSnapEnabled": {
+          "type": "boolean"
+        },
+        "gridSpacing": {
+          "type": "number"
+        },
+        "selectableKinds": {
+          "$ref": "#/$defs/Puzzle3dSelectableKinds"
+        },
+        "engagementInput": {
+          "type": "string"
+        },
+        "selectionModeDefault": {
+          "type": "string"
+        },
+        "proximityRadius": {
+          "type": "number"
+        },
+        "chunkSize": {
+          "type": "number"
+        },
+        "voxelDims": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "transformMove": {
+          "type": "boolean"
+        },
+        "transformRotate": {
+          "type": "boolean"
+        },
+        "vortexShow": {
+          "type": "string"
+        },
+        "vortexDirection": {
+          "type": "string"
+        },
+        "sun": {
+          "$ref": "#/$defs/WorldSunConfig"
+        },
+        "camera": {
+          "$ref": "#/$defs/Puzzle3dCamera"
+        }
+      }
+    }
+  }
+}

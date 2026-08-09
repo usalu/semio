@@ -14,6 +14,7 @@ use crate::artifacts::en1998::engine::En1998Family;
 use crate::artifacts::en1998::op::En1998Mutation;
 use crate::artifacts::en1998::En1998Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
+use crate::presence::{NormPresence, NormPresenceMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -53,6 +54,8 @@ impl DocumentApp for En1998PlayApp {
     type ConfigMutation = NormConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = NormPresence;
+    type PresenceMutation = NormPresenceMutation;
 
     type Command = En1998Command;
 

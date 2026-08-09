@@ -1,0 +1,2 @@
+/** 🧬️ FormsPresence */
+export interface FormsPresence {}

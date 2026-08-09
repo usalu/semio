@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.app.sequence.sequence;
+message SequenceConfig {
+  // @state local-ui
+  repeated string selected_step_ids = 1;
+  // @state local-ui
+  string last_run_json = 2;
+  // @state local-ui
+  string orientation = 3;
+  // @state local-ui
+  SequenceCamera camera = 4;
+  // @state local-ui
+  string locale = 5;
+}
+message SequenceCamera { double x = 1; double y = 2; double zoom = 3; }

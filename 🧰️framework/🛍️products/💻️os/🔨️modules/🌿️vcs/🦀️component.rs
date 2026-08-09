@@ -197,9 +197,8 @@ pub trait Patchable<TPatch>: Sized {
 
 /// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
 ///
-/// 🎞️ `crate::os_spr::command::CollectionMutation` is the frozen-contract twin (`Add { id, item, at }`,
-/// `Move { id, to }`). This VCS shape keeps `index`/`to_index` for `apply_collection_mutation` below —
-/// schemas differ, so these are NOT `pub use` aliases of spr.
+/// 🎞️ `crate::os_spr::command` re-exports this very type, so `index`/`to_index` is the one wire shape
+/// every caller sees — there is no second spr-side schema to keep in step.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum CollectionMutation<TId, TItem, TPatch> {
@@ -362,12 +361,14 @@ mod tests {
     }
 
     impl Patchable<DemoItemPatch> for DemoItem {
-        fn apply_patch(&mut self, patch: &DemoItemPatch) -> DemoItemPatch {
-            let inverse = DemoItemPatch { value: Some(self.value) };
+        fn apply_patch(&mut self, patch: &DemoItemPatch) {
             if let Some(value) = patch.value {
                 self.value = value;
             }
-            inverse
+        }
+
+        fn diff_patch(&self, other: &Self) -> Option<DemoItemPatch> {
+            (self.value != other.value).then(|| DemoItemPatch { value: Some(other.value) })
         }
     }
 

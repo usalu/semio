@@ -1,0 +1,21 @@
+{
+  "$id": "https://semio.tech/schema/app/gis/gis3d/presence.json",
+  "title": "Gis3dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cameraJson",
+    "selectedIds"
+  ],
+  "properties": {
+    "cameraJson": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

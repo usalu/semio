@@ -1,0 +1,25 @@
+type Procedural3dConfig {
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  lodMode: String! @state(class: LOCAL_UI)
+  showMode: String! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: LOCAL_UI)
+  camera: CameraJson! @state(class: LOCAL_UI)
+  previewCamera: Procedural3dPreviewCamera! @state(class: LOCAL_UI)
+  sunJson: String! @state(class: LOCAL_UI)
+  selectedGenerationId: String @state(class: LOCAL_UI)
+  generationPreviewText: String @state(class: LOCAL_UI)
+  activeUtilityId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type Procedural3dPreviewCamera {
+  position: [Float!]!
+  target: [Float!]!
+  fov: Float!
+}

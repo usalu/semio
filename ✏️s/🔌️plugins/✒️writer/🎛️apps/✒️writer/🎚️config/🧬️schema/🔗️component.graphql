@@ -1,0 +1,31 @@
+type WriterConfig {
+  selectedAstIds: [String!]! @state(class: LOCAL_UI)
+  editorSelection: WriterEditorSelection @state(class: LOCAL_UI)
+  formatSignal: Int! @state(class: LOCAL_UI)
+  lintSignal: Int! @state(class: LOCAL_UI)
+  revision: Int! @state(class: LOCAL_UI)
+  editorSettings: WriterEditorSettings! @state(class: LOCAL_UI)
+  treeHoveredAstId: String @state(class: LOCAL_UI)
+  editorHoverOffset: Int @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  camera: WriterCamera! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type WriterEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type WriterEditorSettings {
+  showLineNumbers: Boolean!
+  fontPx: Int!
+  lineHeight: Int!
+  tabSize: Int!
+}
+
+type WriterCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

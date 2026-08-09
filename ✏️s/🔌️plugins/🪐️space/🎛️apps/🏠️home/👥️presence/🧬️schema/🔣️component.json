@@ -1,0 +1,8 @@
+{
+  "$id": "https://semio.tech/schema/app/space/home/presence.json",
+  "title": "HomePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}

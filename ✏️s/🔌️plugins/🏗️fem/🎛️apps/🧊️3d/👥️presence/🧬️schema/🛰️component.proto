@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.app.fem.3d.presence;
+message Fem3dPresence {
+}

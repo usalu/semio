@@ -1,0 +1,66 @@
+{
+  "$id": "https://semio.tech/schema/app/raster/raster/presence.json",
+  "title": "RasterPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "brushSize",
+    "brushOpacity",
+    "camera",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "brushSize": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "shared-ui"
+    },
+    "brushOpacity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/RasterCamera",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "RasterCamera": {
+      "title": "RasterCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

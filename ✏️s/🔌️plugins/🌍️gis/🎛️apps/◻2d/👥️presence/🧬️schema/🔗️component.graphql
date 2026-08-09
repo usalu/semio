@@ -1,0 +1,8 @@
+type Gis2dPresence {
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  cameraJson: String! @state(class: SHARED_UI)
+  featureSelectionJson: String! @state(class: SHARED_UI)
+  hoverJson: String! @state(class: SHARED_UI)
+  selectionMethod: String! @state(class: SHARED_UI)
+  selectionMode: String! @state(class: SHARED_UI)
+}

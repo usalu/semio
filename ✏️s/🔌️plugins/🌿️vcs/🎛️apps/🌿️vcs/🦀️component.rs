@@ -9,6 +9,7 @@
 
 use crate::apps::vcs::commands::{canvas, counter, locale, patch, selection};
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use crate::apps::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::apps::vcs::modes::edit;
 use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
@@ -167,6 +168,8 @@ impl DocumentApp for VcsPlayApp {
     type ConfigMutation = VcsDemoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = VcsDemoPresence;
+    type PresenceMutation = VcsDemoPresenceMutation;
 
     type Command = VcsCommand;
 

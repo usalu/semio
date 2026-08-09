@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.imperative.imperative;
+message ImperativePresence {
+  // @state shared-ui
+  repeated string selected_step_ids = 1;
+}

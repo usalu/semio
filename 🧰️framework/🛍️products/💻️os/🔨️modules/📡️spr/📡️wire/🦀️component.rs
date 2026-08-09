@@ -671,15 +671,52 @@ pub struct PresenceViewport {
     pub zoom: f64,
 }
 
+
+//#region 🔖️PresencePackSerde
+/// 🔐️ Base64 (std) codec for `PresencePeer.presence_pack` so `presence_peers_json` emits `presencePack`
+/// as a string rather than a JSON byte array.
+mod presence_pack_serde {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(value: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error> {
+        match value {
+            None => serializer.serialize_none(),
+            Some(bytes) => {
+                let encoded = ::base64::Engine::encode(&::base64::engine::general_purpose::STANDARD, bytes);
+                serializer.serialize_some(&encoded)
+            }
+        }
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error> {
+        let encoded: Option<String> = Option::deserialize(deserializer)?;
+        match encoded {
+            None => Ok(None),
+            Some(s) => {
+                let bytes = ::base64::Engine::decode(&::base64::engine::general_purpose::STANDARD, s.as_bytes())
+                    .map_err(serde::de::Error::custom)?;
+                Ok(Some(bytes))
+            }
+        }
+    }
+}
+//#endregion 🔖️PresencePackSerde
+
 /// @emoji 📡️ Presence roster entry broadcast to every peer connected to a document.
+///
+/// `presence_pack` carries the app's typed `DocumentApp::Presence` encoded through `DocumentPack`.
+/// When serialised for `ViewModel.presence_peers_json`, that pack is base64-encoded under the
+/// camelCase key `presencePack` (this layer has no app-specific `DocumentPack` decoder, so the
+/// renderer JSON contract keeps the opaque pack rather than a decoded `presence` object).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PresencePeer {
     pub actor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub selection_json: Option<String>,
+    /// @emoji 👥️ App-typed presence encoded as `DocumentPack` bytes (flag bit 1 on the wire).
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "presence_pack_serde")]
+    pub presence_pack: Option<Vec<u8>>,
     pub connected_at_ms: i64,
     /// @emoji 🪪️ Authenticated semio_hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -702,7 +739,8 @@ pub struct PresencePeer {
 /// varint | fields present per bitmask`. `protocol_wire::ClientFrame::Presence`/`ServerFrame::
 /// Presence` carry the resulting bytes opaquely (that crate has no dependency on this one) —
 /// this is the encode/decode pair store_sync calls on either side of the wire.
-/// `selection_json`/`drag_ghost_json` stay opaque app-owned text (never re-parsed as JSON here,
+/// `presence_pack` is length-prefixed bytes in flag bit 1 (formerly `selection_json`);
+/// `drag_ghost_json` stays opaque app-owned text (never re-parsed as JSON here,
 /// same as `DocumentDiff.payload` staying opaque bytes).
 pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
@@ -711,7 +749,7 @@ pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.label.is_some() {
         presence |= 1 << 0;
     }
-    if peer.selection_json.is_some() {
+    if peer.presence_pack.is_some() {
         presence |= 1 << 1;
     }
     if peer.user_id.is_some() {
@@ -734,8 +772,8 @@ pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if let Some(label) = &peer.label {
         crate::os_spr::write_str(&mut out, label);
     }
-    if let Some(selection_json) = &peer.selection_json {
-        crate::os_spr::write_str(&mut out, selection_json);
+    if let Some(presence_pack) = &peer.presence_pack {
+        crate::os_spr::write_bytes(&mut out, presence_pack);
     }
     if let Some(user_id) = &peer.user_id {
         crate::os_spr::write_str(&mut out, user_id);
@@ -766,7 +804,7 @@ pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr:
     pos += 1;
     let connected_at_ms = crate::os_spr::read_varint_u64(bytes, &mut pos)? as i64;
     let label = if presence & (1 << 0) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    let selection_json = if presence & (1 << 1) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let presence_pack = if presence & (1 << 1) != 0 { Some(crate::os_spr::read_bytes(bytes, &mut pos)?) } else { None };
     let user_id = if presence & (1 << 2) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
     let role = if presence & (1 << 3) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
     let cursor = if presence & (1 << 4) != 0 {
@@ -785,7 +823,7 @@ pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr:
         None
     };
     let drag_ghost_json = if presence & (1 << 6) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    Ok(PresencePeer { actor, label, selection_json, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json })
+    Ok(PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json })
 }
 
 #[cfg(test)]
@@ -794,7 +832,7 @@ mod presence_codec_tests {
 
     #[test]
     fn presence_peer_binary_round_trips_with_every_field_absent() {
-        let peer = PresencePeer { actor: "peer-1".into(), label: None, selection_json: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None };
+        let peer = PresencePeer { actor: "peer-1".into(), label: None, presence_pack: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None };
         let bytes = encode_presence_peer(&peer);
         assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
@@ -804,7 +842,7 @@ mod presence_codec_tests {
         let peer = PresencePeer {
             actor: "peer-2".into(),
             label: Some("Ada".into()),
-            selection_json: Some("{\"ids\":[1,2]}".into()),
+            presence_pack: Some(b"{\"ids\":[1,2]}".to_vec()),
             connected_at_ms: 1_700_000_000_000,
             user_id: Some("user-9".into()),
             role: Some("owner".into()),

@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.app.raster.raster;
+
+message RasterCamera {
+  // @state local-ui
+  double x = 1;
+  // @state local-ui
+  double y = 2;
+  // @state local-ui
+  double zoom = 3;
+}
+
+message RasterConfigViewportSize {
+  // @state local-ui
+  double width = 1;
+  // @state local-ui
+  double height = 2;
+}
+
+message RasterConfig {
+  // @state local-ui
+  repeated string selected_ids = 1;
+  // @state local-ui
+  optional string hovered_id = 2;
+  // @state local-ui
+  double brush_size = 3;
+  // @state local-ui
+  double brush_opacity = 4;
+  // @state local-ui
+  optional RasterConfigViewportSize composite_viewport = 5;
+  // @state local-ui
+  RasterCamera camera = 6;
+  // @state local-ui
+  string active_utility_id = 7;
+  // @state local-ui
+  string locale = 8;
+}

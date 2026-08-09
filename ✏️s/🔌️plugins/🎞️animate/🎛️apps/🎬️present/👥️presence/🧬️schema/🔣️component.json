@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/app/animate/present/presence.json",
+  "title": "PresentPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

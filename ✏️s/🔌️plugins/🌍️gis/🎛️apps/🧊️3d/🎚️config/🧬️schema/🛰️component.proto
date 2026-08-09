@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.gis.gis3d;
+message Gis3dConfig {
+  // @state local-ui
+  string camera_json = 1;
+  // @state local-ui
+  repeated string selected_ids = 2;
+  // @state local-ui
+  string locale = 3;
+}

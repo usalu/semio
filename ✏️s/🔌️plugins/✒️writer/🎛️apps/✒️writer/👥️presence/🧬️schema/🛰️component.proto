@@ -1,0 +1,25 @@
+syntax = "proto3";
+package semio.app.writer.writer;
+message WriterPresence {
+  // @state shared-ui
+  repeated string selected_ast_ids = 1;
+  // @state shared-ui
+  optional WriterEditorSelection editor_selection = 2;
+  // @state shared-ui
+  optional string tree_hovered_ast_id = 3;
+  // @state shared-ui
+  optional uint32 editor_hover_offset = 4;
+  // @state shared-ui
+  WriterCamera camera = 5;
+}
+
+message WriterEditorSelection {
+  uint32 start = 1;
+  uint32 end = 2;
+}
+
+message WriterCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

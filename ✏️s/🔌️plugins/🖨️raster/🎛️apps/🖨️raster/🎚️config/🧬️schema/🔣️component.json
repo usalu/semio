@@ -1,0 +1,91 @@
+{
+  "$id": "https://semio.tech/schema/app/raster/raster/config.json",
+  "title": "RasterConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "brushSize",
+    "brushOpacity",
+    "camera",
+    "activeUtilityId",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "brushSize": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "brushOpacity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "compositeViewport": {
+      "$ref": "#/$defs/RasterConfigViewportSize",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/RasterCamera",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "RasterCamera": {
+      "title": "RasterCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "RasterConfigViewportSize": {
+      "title": "RasterConfigViewportSize",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+type JackConfig {
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  camera: Camera! @state(class: LOCAL_UI)
+  activeFixtureId: String! @state(class: LOCAL_UI)
+  jackQuery: String! @state(class: LOCAL_UI)
+  jackResultJson: String! @state(class: LOCAL_UI)
+  editorEngagementInput: String! @state(class: LOCAL_UI)
+  graphEngagementInput: String! @state(class: LOCAL_UI)
+  resultsEngagementInput: String! @state(class: LOCAL_UI)
+  reorganizeEpoch: Int! @state(class: LOCAL_UI)
+  editorSelection: JackEditorSelection @state(class: LOCAL_UI)
+  lodModeByWindow: [StringEntry!]! @state(class: LOCAL_UI)
+  revision: Int! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type JackEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

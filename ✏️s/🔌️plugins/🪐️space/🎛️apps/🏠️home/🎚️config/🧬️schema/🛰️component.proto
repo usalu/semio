@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.app.space.home;
+message HomeConfig {
+  // @state local-ui
+  string active_panel_tab = 1;
+  // @state local-ui
+  string locale = 2;
+}

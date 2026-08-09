@@ -1,0 +1,22 @@
+type RewriteConfig {
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  beforePaneCamera: Camera! @state(class: LOCAL_UI)
+  reorganizeEpoch: Int! @state(class: LOCAL_UI)
+  activeHoverVar: String! @state(class: LOCAL_UI)
+  hoverEpoch: Int! @state(class: LOCAL_UI)
+  activeSelectVar: String! @state(class: LOCAL_UI)
+  selectEpoch: Int! @state(class: LOCAL_UI)
+  lodModeByWindow: [StringEntry!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

@@ -1,0 +1,73 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/rewrite/config.json",
+  "title": "RewriteConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "beforePaneCamera",
+    "reorganizeEpoch",
+    "activeHoverVar",
+    "hoverEpoch",
+    "activeSelectVar",
+    "selectEpoch",
+    "lodModeByWindow",
+    "locale"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "local-ui"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "activeHoverVar": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoverEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "activeSelectVar": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

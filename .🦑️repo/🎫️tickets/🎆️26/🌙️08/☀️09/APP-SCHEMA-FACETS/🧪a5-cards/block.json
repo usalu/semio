@@ -1,0 +1,33 @@
+{
+  "plugin": "🧱️block",
+  "crate": "semio-s-plugin-block",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config",
+      "configType": "Block2dConfig",
+      "presenceType": "Block2dPresence",
+      "apps": [
+        "🧱️block/◻2d"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config",
+      "configType": "Block5dConfig",
+      "presenceType": "Block5dPresence",
+      "apps": [
+        "🧱️block/🖐️5d"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config",
+      "configType": "Block3dConfig",
+      "presenceType": "Block3dPresence",
+      "apps": [
+        "🧱️block/🧊️3d"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🧱️block",
+  "skip_if_lowpoly_done": false
+}

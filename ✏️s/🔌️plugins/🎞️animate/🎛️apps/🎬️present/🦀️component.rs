@@ -137,6 +137,8 @@ impl DocumentApp for AnimatePresentPlayApp {
     type ConfigMutation = PresentConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::present::presence::PresentPresence;
+    type PresenceMutation = crate::apps::present::presence::PresentPresenceMutation;
 
     type Command = PresentCommand;
 

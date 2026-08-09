@@ -1,0 +1,28 @@
+syntax = "proto3";
+package semio.app.gis.gis2d;
+message Gis2dConfig {
+  // @state local-ui
+  repeated string selected_ids = 1;
+  // @state local-ui
+  map<string, bool> layer_visibility = 2;
+  // @state local-ui
+  string camera_json = 3;
+  // @state local-ui
+  string render_mode = 4;
+  // @state local-ui
+  string vector_style = 5;
+  // @state local-ui
+  string lod_mode = 6;
+  // @state local-ui
+  string feature_selection_json = 7;
+  // @state local-ui
+  string hover_json = 8;
+  // @state local-ui
+  string selection_method = 9;
+  // @state local-ui
+  string selection_mode = 10;
+  // @state local-ui
+  map<string, double> layer_stroke_scale = 11;
+  // @state local-ui
+  string locale = 12;
+}

@@ -1,0 +1,5 @@
+type PresentConfig {
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

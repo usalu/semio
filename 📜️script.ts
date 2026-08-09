@@ -723,6 +723,16 @@ export class VerifyScript extends Script {
         throw new Error(`[verify] ${artifactSchemaBreaches.length} artifact-schema policy breach(es)`);
       }
     }
+    console.log("[verify] app-schema facet policies…");
+    {
+      const appSchemaBreaches = policyAppSchemaBreaches(this.root);
+      if (appSchemaBreaches.length > 0) {
+        for (const b of appSchemaBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${appSchemaBreaches.length} app-schema policy breach(es)`);
+      }
+    }
     console.log("[verify] dissolve-core / plugin-root policies…");
     {
       const dissolveBreaches = [
@@ -5542,6 +5552,39 @@ function policyExpectedSchemaTypeName(prefix: string, facetRel: string): string 
   return `${prefix}Diff`;
 }
 
+/**
+ * 🔎Locate the declaration a schema leaf is expected to carry, by name rather than by position.
+ * Helper types may legally precede the facet type in a leaf, so scanning for the first declaration
+ * would silently compare the wrong body; when `expected` is absent or undeclared the first
+ * declaration is returned so the type-name-parity rule still reports the mismatch.
+ */
+function policyFindSchemaDeclaration(
+  text: string,
+  declRe: RegExp,
+  expected: string | null,
+): { typeName: string; bodyStart: number } | null {
+  const re = new RegExp(declRe.source, declRe.flags.includes("g") ? declRe.flags : `${declRe.flags}g`);
+  let first: { typeName: string; bodyStart: number } | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const found = { typeName: m[1]!, bodyStart: m.index + m[0].length };
+    first ??= found;
+    if (expected && found.typeName === expected) return found;
+  }
+  return first;
+}
+
+/** 🏷️Expected type name for a facet path such as `…/🗿️artifacts/X/📸️snapshot/🧬️schema`. */
+function policyExpectedSchemaTypeNameForFacetPath(facetAbs: string): string | null {
+  const rel = facetAbs.replaceAll("\\", "/");
+  const facetRel = [...POLICY_SCHEMA_FACET_RELS]
+    .sort((a, b) => b.length - a.length)
+    .find((f) => rel.endsWith(`/${f}`));
+  if (!facetRel) return null;
+  const prefix = policyArtifactSchemaPrefix(rel.slice(0, rel.length - facetRel.length - 1));
+  return prefix ? policyExpectedSchemaTypeName(prefix, facetRel) : null;
+}
+
 /** 🧩Parse Rust type into optional/cardinality/scalar. */
 function policyParseRustFieldType(typeText: string): Pick<PolicySchemaFieldShape, "optional" | "cardinality" | "scalar"> {
   let t = typeText.replace(/\s+/g, " ").trim();
@@ -5571,11 +5614,10 @@ function policyParseRustFieldType(typeText: string): Pick<PolicySchemaFieldShape
 /**
  * 🦀️Extract pub fields of the single top-level pub struct, reading state field attributes.
  */
-export function policyExtractRustSchemaFields(text: string): PolicySchemaLeafExtract {
-  const structMatch = /\bpub\s+struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(text);
-  if (!structMatch) return { typeName: "", fields: [] };
-  const typeName = structMatch[1]!;
-  const bodyStart = structMatch.index! + structMatch[0].length;
+export function policyExtractRustSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
+  const decl = policyFindSchemaDeclaration(text, /\bpub\s+struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
+  if (!decl) return { typeName: "", fields: [] };
+  const { typeName, bodyStart } = decl;
   let depth = 1;
   let i = bodyStart;
   for (; i < text.length; i++) {
@@ -5644,11 +5686,10 @@ function policyParseTsFieldType(typeText: string, optionalMark: boolean): Pick<P
 /**
  * 🟦️Extract members of the single exported interface, reading the state JSDoc tag above each property.
  */
-export function policyExtractTypescriptSchemaFields(text: string): PolicySchemaLeafExtract {
-  const ifaceMatch = /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(text);
-  if (!ifaceMatch) return { typeName: "", fields: [] };
-  const typeName = ifaceMatch[1]!;
-  const bodyStart = ifaceMatch.index! + ifaceMatch[0].length;
+export function policyExtractTypescriptSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
+  const decl = policyFindSchemaDeclaration(text, /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
+  if (!decl) return { typeName: "", fields: [] };
+  const { typeName, bodyStart } = decl;
   let depth = 1;
   let i = bodyStart;
   for (; i < text.length; i++) {
@@ -5679,11 +5720,10 @@ export function policyExtractTypescriptSchemaFields(text: string): PolicySchemaL
 /**
  * 🔗️Extract fields of the single GraphQL type, reading the state directive on each field.
  */
-export function policyExtractGraphqlSchemaFields(text: string): PolicySchemaLeafExtract {
-  const typeMatch = /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(text);
-  if (!typeMatch) return { typeName: "", fields: [] };
-  const typeName = typeMatch[1]!;
-  const bodyStart = typeMatch.index! + typeMatch[0].length;
+export function policyExtractGraphqlSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
+  const decl = policyFindSchemaDeclaration(text, /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
+  if (!decl) return { typeName: "", fields: [] };
+  const { typeName, bodyStart } = decl;
   let depth = 1;
   let i = bodyStart;
   for (; i < text.length; i++) {
@@ -5822,11 +5862,10 @@ function policyParseProtoFieldType(
 /**
  * 🛰️Extract fields of the single protobuf message, reading leading state comments on each field.
  */
-export function policyExtractProtobufSchemaFields(text: string): PolicySchemaLeafExtract {
-  const msgMatch = /\bmessage\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(text);
-  if (!msgMatch) return { typeName: "", fields: [] };
-  const typeName = msgMatch[1]!;
-  const bodyStart = msgMatch.index! + msgMatch[0].length;
+export function policyExtractProtobufSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
+  const decl = policyFindSchemaDeclaration(text, /\bmessage\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
+  if (!decl) return { typeName: "", fields: [] };
+  const { typeName, bodyStart } = decl;
   let depth = 1;
   let i = bodyStart;
   for (; i < text.length; i++) {
@@ -5861,6 +5900,7 @@ function policyLoadSchemaFacetLeaves(
 ): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
   const taxonomy = loadTaxonomy();
   const formats = taxonomy.schemaFormats ?? {};
+  const expected = policyExpectedSchemaTypeNameForFacetPath(facetRel);
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
   for (const [formatId, format] of Object.entries(formats)) {
     const leafFilename = format.leafFilename;
@@ -5874,19 +5914,19 @@ function policyLoadSchemaFacetLeaves(
     let extract: PolicySchemaLeafExtract;
     switch (formatId) {
       case "🦀️rust":
-        extract = policyExtractRustSchemaFields(text);
+        extract = policyExtractRustSchemaFields(text, expected);
         break;
       case "🟦️typescript":
-        extract = policyExtractTypescriptSchemaFields(text);
+        extract = policyExtractTypescriptSchemaFields(text, expected);
         break;
       case "🔗️graphql":
-        extract = policyExtractGraphqlSchemaFields(text);
+        extract = policyExtractGraphqlSchemaFields(text, expected);
         break;
       case "🔣️jsonschema":
         extract = policyExtractJsonSchemaFields(text);
         break;
       case "🛰️protobuf":
-        extract = policyExtractProtobufSchemaFields(text);
+        extract = policyExtractProtobufSchemaFields(text, expected);
         break;
       default:
         extract = { typeName: "", fields: [] };
@@ -5956,7 +5996,10 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
 
 /**
  * 📏️Field parity: all five leaves of one facet declare the identical canonical field set with identical
- * optionality and cardinality; JSON Schema is the truth when others disagree.
+ * optionality and cardinality; JSON Schema is the truth when others disagree. Optionality of a `map`
+ * field is exempt for protobuf only, because proto3 rejects an `optional` label on a map entry field
+ * and therefore cannot express presence for it at all.
+ * @see https://protobuf.dev/programming-guides/proto3/#maps
  */
 function policyArtifactSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -5986,7 +6029,13 @@ function policyArtifactSchemaFieldParityBreaches(repoRoot: string): BreachRecord
             });
             continue;
           }
-          if (other.optional !== truthField.optional || other.cardinality !== truthField.cardinality) {
+          const optionalityComparable = !(leaf.formatId === "🛰️protobuf" && truthField.cardinality === "map");
+          const cardinalityComparable = !(
+            truthField.cardinality === "fixedList"
+            && other.cardinality === "list"
+            && (leaf.formatId === "🟦️typescript" || leaf.formatId === "🔗️graphql" || leaf.formatId === "🛰️protobuf")
+          );
+          if ((optionalityComparable && other.optional !== truthField.optional) || (cardinalityComparable && other.cardinality !== truthField.cardinality)) {
             breaches.push({
               id: `artifact-schema-field-parity-shape-${leaf.relPath}-${name}`,
               summary: `"${leaf.relPath}" field "${name}" disagrees with normative JSON Schema optionality/cardinality`,
@@ -6219,6 +6268,473 @@ export function policyArtifactSchemaBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧️PolicyRuleArtifactSchemas
 
+//#region 🔧️PolicyRuleAppSchemas
+/**
+ * 🧬️Wave A2 app-schema facet scanners (APP-SCHEMA-FACETS).
+ * Two facets (config + presence) × five `schemaFormats` leaves; the five per-format extractors from
+ * `PolicyRuleArtifactSchemas` are reused unchanged. Owners are derived from each app's
+ * `type Config = …` binding — never a hand-maintained prefix table.
+ */
+
+/** 🎚️Canonical app config dir (level-slider). */
+const POLICY_APP_CONFIG_DIR = "🎚️config";
+/** 🧮Legacy abacus config dir — forbidden by `app-schema/config-relocation`. */
+const POLICY_APP_CONFIG_LEGACY_DIR = "🧮️config";
+/** 👥️App presence dir, sibling of the config owner. */
+const POLICY_APP_PRESENCE_DIR = "👥️presence";
+/** 🕸️Legacy wasm dir — forbidden by `app-schema/config-relocation`. */
+const POLICY_APP_WASM_LEGACY_DIR = "🕸️wasm";
+/** 🧬️Schema facet folder under a config or presence owner. */
+const POLICY_APP_SCHEMA_FACET = "🧬️schema";
+
+/** 🪪One discovered app-schema owner (deduped by owner path). */
+export type PolicyAppSchemaOwner = {
+  ownerRel: string;
+  configType: string;
+  presenceType: string;
+  presenceRel: string;
+  apps: string[];
+};
+
+/** 🏷️`XPresence` from `XConfig` by replacing the trailing `Config`. */
+function policyAppPresenceTypeName(configType: string): string {
+  return configType.endsWith("Config")
+    ? `${configType.slice(0, -"Config".length)}Presence`
+    : `${configType}Presence`;
+}
+
+/**
+ * 🗂️Walk every plugin app `🦀️component.rs`, parse `type Config = XConfig;`, and resolve
+ * the config owner dir (app `🎚️config`, else legacy `🧮️config`, else plugin-level `🎚️config` that
+ * declares `pub struct XConfig`). Presence owner is the sibling `👥️presence` under the same parent.
+ */
+export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchemaOwner[] {
+  const pluginsRoot = "✏️s/🔌️plugins";
+  const byOwner = new Map<string, PolicyAppSchemaOwner>();
+  for (const plugin of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!plugin.isDirectory) continue;
+    const appsRel = `${pluginsRoot}/${plugin.name}/🎛️apps`;
+    for (const app of policyReaddirSafe(repoRoot, appsRel)) {
+      if (!app.isDirectory) continue;
+      const appRel = `${appsRel}/${app.name}`;
+      const componentRel = `${appRel}/🦀️component.rs`;
+      if (!existsSync(join(repoRoot, componentRel))) continue;
+      const text = readFileSync(join(repoRoot, componentRel), "utf8");
+      const m = /\btype\s+Config\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(text);
+      if (!m) continue;
+      const configType = m[1]!;
+      const sliderRel = `${appRel}/${POLICY_APP_CONFIG_DIR}`;
+      const legacyRel = `${appRel}/${POLICY_APP_CONFIG_LEGACY_DIR}`;
+      const pluginConfigRel = `${pluginsRoot}/${plugin.name}/${POLICY_APP_CONFIG_DIR}`;
+      let ownerRel: string | null = null;
+      if (existsSync(join(repoRoot, sliderRel))) {
+        ownerRel = sliderRel;
+      } else if (existsSync(join(repoRoot, legacyRel))) {
+        ownerRel = legacyRel;
+      } else {
+        const pluginCfgRs = `${pluginConfigRel}/🦀️component.rs`;
+        if (
+          existsSync(join(repoRoot, pluginCfgRs)) &&
+          new RegExp(`\\bpub\\s+struct\\s+${configType}\\b`).test(readFileSync(join(repoRoot, pluginCfgRs), "utf8"))
+        ) {
+          ownerRel = pluginConfigRel;
+        }
+      }
+      if (!ownerRel) continue;
+      const presenceType = policyAppPresenceTypeName(configType);
+      const parentRel = ownerRel.split("/").slice(0, -1).join("/");
+      const presenceRel = `${parentRel}/${POLICY_APP_PRESENCE_DIR}`;
+      const appId = `${plugin.name}/${app.name}`;
+      const existing = byOwner.get(ownerRel);
+      if (existing) {
+        existing.apps.push(appId);
+        continue;
+      }
+      byOwner.set(ownerRel, { ownerRel, configType, presenceType, presenceRel, apps: [appId] });
+    }
+  }
+  return [...byOwner.values()].sort((a, b) => a.ownerRel.localeCompare(b.ownerRel));
+}
+
+/**
+ * 🗂️Load every schemaFormats leaf for one app facet; reuses the five artifact extractors unchanged,
+ * selecting the declared type by `expectedTypeName` via `policyFindSchemaDeclaration`.
+ */
+function policyLoadAppSchemaFacetLeaves(
+  repoRoot: string,
+  facetAbs: string,
+  expectedTypeName: string | null,
+): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
+  const taxonomy = loadTaxonomy();
+  const formats = taxonomy.schemaFormats ?? {};
+  const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
+  for (const [formatId, format] of Object.entries(formats)) {
+    const leafFilename = format.leafFilename;
+    const relPath = `${facetAbs}/${leafFilename}`;
+    const abs = join(repoRoot, relPath);
+    if (!existsSync(abs)) {
+      out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract: null });
+      continue;
+    }
+    const text = readFileSync(abs, "utf8");
+    let extract: PolicySchemaLeafExtract;
+    switch (formatId) {
+      case "🦀️rust":
+        extract = policyExtractRustSchemaFields(text, expectedTypeName);
+        break;
+      case "🟦️typescript":
+        extract = policyExtractTypescriptSchemaFields(text, expectedTypeName);
+        break;
+      case "🔗️graphql":
+        extract = policyExtractGraphqlSchemaFields(text, expectedTypeName);
+        break;
+      case "🔣️jsonschema":
+        extract = policyExtractJsonSchemaFields(text);
+        break;
+      case "🛰️protobuf":
+        extract = policyExtractProtobufSchemaFields(text, expectedTypeName);
+        break;
+      default:
+        extract = { typeName: "", fields: [] };
+        break;
+    }
+    out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract });
+  }
+  return out;
+}
+
+/** 🧭️Taxonomy `appSchemaSpecFilenames` key for a config or presence facet. */
+function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
+  return kind === "config"
+    ? `${POLICY_APP_CONFIG_DIR}/${POLICY_APP_SCHEMA_FACET}`
+    : `${POLICY_APP_PRESENCE_DIR}/${POLICY_APP_SCHEMA_FACET}`;
+}
+
+/**
+ * 📏️Facet completeness + normative leaf: both config and presence schema facets, each with every
+ * schemaFormats leaf and the `appSchemaSpecFilenames` normative JSON Schema leaf.
+ */
+function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const formats = Object.entries(taxonomy.schemaFormats ?? {});
+  const normativeByFacet = taxonomy.appSchemaSpecFilenames ?? {};
+  const breaches: BreachRecord[] = [];
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    const facets: { kind: "config" | "presence"; facetAbs: string }[] = [
+      { kind: "config", facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}` },
+      { kind: "presence", facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}` },
+    ];
+    for (const { kind, facetAbs } of facets) {
+      if (!existsSync(join(repoRoot, facetAbs))) {
+        breaches.push({
+          id: `app-schema-facet-missing-${facetAbs}`,
+          summary: `"${owner.ownerRel}" is missing required ${kind} schema facet ${facetAbs}/`,
+          kind: "app-schema/facet-completeness",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: "Every app-schema owner must expose 🎚️config/🧬️schema and 👥️presence/🧬️schema facets.",
+          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative 🔣️component.json).`,
+        });
+        continue;
+      }
+      for (const [formatId, format] of formats) {
+        const leafRel = `${facetAbs}/${format.leafFilename}`;
+        if (existsSync(join(repoRoot, leafRel))) continue;
+        breaches.push({
+          id: `app-schema-leaf-missing-${leafRel}`,
+          summary: `"${facetAbs}" is missing schemaFormats leaf ${format.leafFilename} (${formatId})`,
+          kind: "app-schema/facet-completeness",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: "Each schema facet must carry every schemaFormats leaf filename from 🔣️taxonomy.json.",
+          solution: `Add handcrafted ${leafRel}.`,
+        });
+      }
+      const normative = normativeByFacet[policyAppSchemaFacetRole(kind)] ?? "🔣️component.json";
+      const normativeRel = `${facetAbs}/${normative}`;
+      if (!existsSync(join(repoRoot, normativeRel))) {
+        breaches.push({
+          id: `app-schema-normative-missing-${normativeRel}`,
+          summary: `"${facetAbs}" is missing normative appSchemaSpecFilenames leaf ${normative}`,
+          kind: "app-schema/facet-completeness",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: "Within a facet the 🔣️component.json JSON Schema leaf is normative; the other four mirror it.",
+          solution: `Add ${normativeRel} as the source of truth for this facet's fields.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Field parity: all five leaves of one facet declare the identical canonical field set with identical
+ * optionality and cardinality; JSON Schema is the truth when others disagree. Optionality of a `map`
+ * field is exempt for protobuf only (proto3 rejects `optional` on a map entry field).
+ * @see https://protobuf.dev/programming-guides/proto3/#maps
+ */
+function policyAppSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    const facets: { facetAbs: string; expectedTypeName: string }[] = [
+      { facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, expectedTypeName: owner.configType },
+      { facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`, expectedTypeName: owner.presenceType },
+    ];
+    for (const { facetAbs, expectedTypeName } of facets) {
+      if (!existsSync(join(repoRoot, facetAbs))) continue;
+      const leaves = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expectedTypeName);
+      if (leaves.some((l) => l.extract === null)) continue;
+      const jsonLeaf = leaves.find((l) => l.formatId === "🔣️jsonschema");
+      if (!jsonLeaf?.extract) continue;
+      const truth = new Map(jsonLeaf.extract.fields.map((f) => [f.name, f]));
+      for (const leaf of leaves) {
+        if (leaf.formatId === "🔣️jsonschema" || !leaf.extract) continue;
+        const seen = new Map(leaf.extract.fields.map((f) => [f.name, f]));
+        for (const [name, truthField] of truth) {
+          const other = seen.get(name);
+          if (!other) {
+            breaches.push({
+              id: `app-schema-field-parity-missing-${leaf.relPath}-${name}`,
+              summary: `"${leaf.relPath}" is missing field "${name}" present in normative JSON Schema`,
+              kind: "app-schema/field-parity",
+              scope: owner.ownerRel,
+              priority: "high",
+              reason: `Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
+              solution: `Add field "${name}" to ${leaf.relPath} matching ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}, scalar=${truthField.scalar}).`,
+            });
+            continue;
+          }
+          const optionalityComparable = !(leaf.formatId === "🛰️protobuf" && truthField.cardinality === "map");
+          const cardinalityComparable = !(
+            truthField.cardinality === "fixedList"
+            && other.cardinality === "list"
+            && (leaf.formatId === "🟦️typescript" || leaf.formatId === "🔗️graphql" || leaf.formatId === "🛰️protobuf")
+          );
+          if ((optionalityComparable && other.optional !== truthField.optional) || (cardinalityComparable && other.cardinality !== truthField.cardinality)) {
+            breaches.push({
+              id: `app-schema-field-parity-shape-${leaf.relPath}-${name}`,
+              summary: `"${leaf.relPath}" field "${name}" disagrees with normative JSON Schema optionality/cardinality`,
+              kind: "app-schema/field-parity",
+              scope: owner.ownerRel,
+              priority: "high",
+              reason: `Normative ${jsonLeaf.relPath} declares "${name}" as optional=${truthField.optional}, cardinality=${truthField.cardinality}; ${leaf.formatId} has optional=${other.optional}, cardinality=${other.cardinality}.`,
+              solution: `Change "${name}" in ${leaf.relPath} to match ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
+            });
+          }
+        }
+        for (const name of seen.keys()) {
+          if (truth.has(name)) continue;
+          breaches.push({
+            id: `app-schema-field-parity-extra-${leaf.relPath}-${name}`,
+            summary: `"${leaf.relPath}" declares extra field "${name}" absent from normative JSON Schema`,
+            kind: "app-schema/field-parity",
+            scope: owner.ownerRel,
+            priority: "high",
+            reason: `JSON Schema at ${jsonLeaf.relPath} is normative; extra fields in other formats break cross-format identity.`,
+            solution: `Remove "${name}" from ${leaf.relPath}, or add it to ${jsonLeaf.relPath} if it is a real app field.`,
+          });
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Config fidelity: the config facet's normative field set equals the fields of the owner's real
+ * `XConfig` Rust struct in `🎚️config/🦀️component.rs` (or legacy `🧮️config`).
+ */
+function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    const cfgRs = `${owner.ownerRel}/🦀️component.rs`;
+    const facetAbs = `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`;
+    if (!existsSync(join(repoRoot, cfgRs)) || !existsSync(join(repoRoot, facetAbs))) continue;
+    const real = policyExtractRustSchemaFields(readFileSync(join(repoRoot, cfgRs), "utf8"), owner.configType);
+    const jsonLeaf = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, owner.configType).find((l) => l.formatId === "🔣️jsonschema");
+    if (!jsonLeaf?.extract) continue;
+    const truth = new Map(real.fields.map((f) => [f.name, f]));
+    const seen = new Map(jsonLeaf.extract.fields.map((f) => [f.name, f]));
+    for (const [name, realField] of truth) {
+      const facetField = seen.get(name);
+      if (!facetField) {
+        breaches.push({
+          id: `app-schema-config-fidelity-missing-${owner.ownerRel}-${name}`,
+          summary: `Config facet is missing field "${name}" from real ${owner.configType}`,
+          kind: "app-schema/config-fidelity",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: `The config facet must document exactly the fields of ${owner.configType} in ${cfgRs}.`,
+          solution: `Add "${name}" to ${jsonLeaf.relPath} (and the other four leaves) matching ${cfgRs} (optional=${realField.optional}, cardinality=${realField.cardinality}).`,
+        });
+        continue;
+      }
+      if (facetField.optional !== realField.optional || facetField.cardinality !== realField.cardinality) {
+        breaches.push({
+          id: `app-schema-config-fidelity-shape-${owner.ownerRel}-${name}`,
+          summary: `Config facet field "${name}" disagrees with real ${owner.configType}`,
+          kind: "app-schema/config-fidelity",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: `Real ${owner.configType}.${name} is optional=${realField.optional}, cardinality=${realField.cardinality}; facet has optional=${facetField.optional}, cardinality=${facetField.cardinality}.`,
+          solution: `Align "${name}" in ${jsonLeaf.relPath} with ${cfgRs}.`,
+        });
+      }
+    }
+    for (const name of seen.keys()) {
+      if (truth.has(name)) continue;
+      breaches.push({
+        id: `app-schema-config-fidelity-extra-${owner.ownerRel}-${name}`,
+        summary: `Config facet declares extra field "${name}" absent from real ${owner.configType}`,
+        kind: "app-schema/config-fidelity",
+        scope: owner.ownerRel,
+        priority: "high",
+        reason: `The config facet may not invent fields beyond ${owner.configType} in ${cfgRs}.`,
+        solution: `Remove "${name}" from ${jsonLeaf.relPath}, or add it to ${cfgRs} if it belongs on the real struct.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️State purity: every config-facet field is `local-ui`; every presence-facet field is `shared-ui`.
+ */
+function policyAppSchemaStatePurityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    const checks: { facetAbs: string; expectedState: string; expectedTypeName: string; label: string }[] = [
+      {
+        facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`,
+        expectedState: "local-ui",
+        expectedTypeName: owner.configType,
+        label: "config",
+      },
+      {
+        facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`,
+        expectedState: "shared-ui",
+        expectedTypeName: owner.presenceType,
+        label: "presence",
+      },
+    ];
+    for (const { facetAbs, expectedState, expectedTypeName, label } of checks) {
+      if (!existsSync(join(repoRoot, facetAbs))) continue;
+      const jsonLeaf = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expectedTypeName).find((l) => l.formatId === "🔣️jsonschema");
+      if (!jsonLeaf?.extract) continue;
+      for (const field of jsonLeaf.extract.fields) {
+        if (field.state === expectedState) continue;
+        breaches.push({
+          id: `app-schema-state-purity-${facetAbs}-${field.name}`,
+          summary: `${label} facet field "${field.name}" must be ${expectedState} (got ${field.state || "missing"})`,
+          kind: "app-schema/state-purity",
+          scope: owner.ownerRel,
+          priority: "high",
+          reason: `App ${label} facet fields are by definition ${expectedState}; other state classes belong elsewhere.`,
+          solution: `Set x-semio-state (and the matching per-format state annotation) for "${field.name}" in ${jsonLeaf.relPath} to ${expectedState}.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Type-name parity: `XConfig` / `XPresence` spelled identically across all five leaves of their facet;
+ * `XPresence` is derived from the owner's `type Config` binding (trailing `Config` → `Presence`).
+ */
+function policyAppSchemaTypeNameParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    const facets: { facetAbs: string; expected: string }[] = [
+      { facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, expected: owner.configType },
+      { facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`, expected: owner.presenceType },
+    ];
+    for (const { facetAbs, expected } of facets) {
+      if (!existsSync(join(repoRoot, facetAbs))) continue;
+      const leaves = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expected);
+      for (const leaf of leaves) {
+        if (!leaf.extract) continue;
+        if (!leaf.extract.typeName) {
+          breaches.push({
+            id: `app-schema-type-name-missing-${leaf.relPath}`,
+            summary: `"${leaf.relPath}" does not declare top-level type ${expected}`,
+            kind: "app-schema/type-name-parity",
+            scope: owner.ownerRel,
+            priority: "high",
+            reason: `Every leaf of this facet must declare the same top-level type name ${expected}.`,
+            solution: `Declare ${expected} as the top-level type in ${leaf.relPath}.`,
+          });
+          continue;
+        }
+        if (leaf.extract.typeName !== expected) {
+          breaches.push({
+            id: `app-schema-type-name-${leaf.relPath}`,
+            summary: `"${leaf.relPath}" declares ${leaf.extract.typeName} but expects ${expected}`,
+            kind: "app-schema/type-name-parity",
+            scope: owner.ownerRel,
+            priority: "high",
+            reason: `Type-name parity requires ${expected} in all five leaves (from the app's type Config binding).`,
+            solution: `Rename the top-level type in ${leaf.relPath} to ${expected}.`,
+          });
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Config relocation: no `🧮️config` (abacus) and no `🕸️wasm` anywhere under `✏️s/🔌️plugins`.
+ */
+function policyAppSchemaConfigRelocationBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const banned = new Set([POLICY_APP_CONFIG_LEGACY_DIR, POLICY_APP_WASM_LEGACY_DIR]);
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (banned.has(ent.name)) {
+        const kindLabel = ent.name === POLICY_APP_CONFIG_LEGACY_DIR ? "legacy abacus config" : "legacy spider-web wasm";
+        const replacement = ent.name === POLICY_APP_CONFIG_LEGACY_DIR ? POLICY_APP_CONFIG_DIR : "🌉️wasm";
+        breaches.push({
+          id: `app-schema-config-relocation-${childRel}`,
+          summary: `"${childRel}" must move to ${replacement}`,
+          kind: "app-schema/config-relocation",
+          scope: childRel,
+          priority: "high",
+          reason: `${kindLabel} dirs are forbidden under ✏️s/🔌️plugins; consolidate onto the canonical emoji.`,
+          solution: `Rename ${childRel}/ to use ${replacement}/ and update glue #[path] mounts.`,
+        });
+      }
+      walk(childRel);
+    }
+  };
+  walk("✏️s/🔌️plugins");
+  return breaches;
+}
+
+/** ⚖️Aggregates app-schema facet scanners (completeness, parity, fidelity, purity, relocation). */
+export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyAppSchemaFacetCompletenessBreaches(repoRoot),
+    ...policyAppSchemaFieldParityBreaches(repoRoot),
+    ...policyAppSchemaConfigFidelityBreaches(repoRoot),
+    ...policyAppSchemaStatePurityBreaches(repoRoot),
+    ...policyAppSchemaTypeNameParityBreaches(repoRoot),
+    ...policyAppSchemaConfigRelocationBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleAppSchemas
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -6276,6 +6792,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
   breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyArtifactSchemaBreaches(repoRoot));
+  breaches.push(...policyAppSchemaBreaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyOsStateAuthorityBreaches(repoRoot));

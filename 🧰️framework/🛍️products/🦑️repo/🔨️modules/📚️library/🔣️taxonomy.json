@@ -257,15 +257,21 @@
     "🔧️ops",
     "📡️sprs"
   ],
+  "appComponentDirs": [
+    "⚙️engine",
+    "🎮️commands",
+    "🎚️config",
+    "👥️presence"
+  ],
   "appChildDirs": [
     "⚙️engine",
     "🎭️modes",
     "🎮️commands",
     "📌️panels",
     "🎚️config",
+    "👥️presence",
     "🗣️terminology",
     "🌉️wasm",
-    "🧮️config",
     "📚️examples"
   ],
   "semioDataLeafPrefix": "🧬️component.",
@@ -281,6 +287,10 @@
     "🧬️schema": "🔣️component.json",
     "📸️snapshot/🧬️schema": "🔣️component.json",
     "🔺️diff/🧬️schema": "🔣️component.json"
+  },
+  "appSchemaSpecFilenames": {
+    "🎚️config/🧬️schema": "🔣️component.json",
+    "👥️presence/🧬️schema": "🔣️component.json"
   },
   "windowChildDirs": [
     "🍱️panes",
@@ -306,7 +316,9 @@
     "🎚️options",
     "🎮️commands",
     "🛠️tools",
-    "📌️panels"
+    "📌️panels",
+    "🎚️config",
+    "👥️presence"
   ],
   "taxonomyLeafFilenames": {
     "🦀️rust": "🦀️component.rs",
@@ -394,6 +406,12 @@
     "🎒️pack"
   ],
   "diffChildDirs": [
+    "🧬️schema"
+  ],
+  "configChildDirs": [
+    "🧬️schema"
+  ],
+  "presenceChildDirs": [
     "🧬️schema"
   ]
 }

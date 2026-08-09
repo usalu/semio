@@ -1,0 +1,68 @@
+{
+  "$id": "https://semio.tech/schema/app/remodel/remodel/presence.json",
+  "title": "RemodelPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectionMode",
+    "selectionIds",
+    "worldCameraPosition",
+    "worldCameraTarget",
+    "worldCameraFov",
+    "frameIndex",
+    "activeUtilityId",
+    "reportTable"
+  ],
+  "properties": {
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraFov": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "frameStreamId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "frameIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "reportTable": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

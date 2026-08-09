@@ -15,6 +15,7 @@ use crate::apps::writer::commands::locale::set_locale;
 use crate::apps::writer::commands::selection::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
 use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
+use crate::apps::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::apps::writer::modes::edit;
 use crate::apps::writer::modes::edit::windows::main;
 use crate::apps::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -186,6 +187,8 @@ impl DocumentApp for WriterPlayApp {
     type ConfigMutation = WriterConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = WriterPresence;
+    type PresenceMutation = WriterPresenceMutation;
 
     type Command = WriterCommand;
 

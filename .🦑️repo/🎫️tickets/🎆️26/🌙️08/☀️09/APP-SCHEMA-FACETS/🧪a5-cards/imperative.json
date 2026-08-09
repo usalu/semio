@@ -1,0 +1,17 @@
+{
+  "plugin": "📜️imperative",
+  "crate": "semio-s-plugin-imperative",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config",
+      "configType": "ImperativeConfig",
+      "presenceType": "ImperativePresence",
+      "apps": [
+        "📜️imperative/📜️imperative"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "📜️imperative",
+  "skip_if_lowpoly_done": false
+}

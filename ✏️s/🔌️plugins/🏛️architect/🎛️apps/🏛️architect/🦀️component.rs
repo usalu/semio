@@ -17,6 +17,7 @@ use crate::apps::architect::commands::search::query;
 use crate::apps::architect::commands::selection::set_selection;
 use crate::apps::architect::commands::template::apply;
 use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+use crate::apps::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
 use crate::apps::architect::modes::edit as edit_mode;
 use crate::apps::architect::modes::edit::windows::{adjacency as adjacency_window, graph as graph_window, register as register_window, report as report_window, trace as trace_window};
 use crate::apps::architect::modes::{report as report_mode, review as review_mode};
@@ -88,6 +89,8 @@ impl DocumentApp for ArchitectPlayApp {
     type ConfigMutation = ArchitectConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = ArchitectPresence;
+    type PresenceMutation = ArchitectPresenceMutation;
 
     type Command = ArchitectCommand;
 

@@ -661,35 +661,28 @@ export async function runPolicyScript(
   breachs: BreachRecord[];
   cachePath: string;
 }> {
-  console.log("[DEBUG] runPolicyScript starting for", scriptPath);
   const absScript = scriptPath.includes(":") || scriptPath.startsWith("/") || /^[A-Za-z]:\\/.test(scriptPath) ? scriptPath : join(repoRoot, scriptPath);
   const base = basename(absScript);
   if (base !== "📜️script.ts") {
     throw new Error(`[policy-runner] expected 📜️script.ts, got ${base}`);
   }
 
-  console.log("[DEBUG] runPolicyScript parsing policy file export");
   const policyFile = parsePolicyFileExport(absScript);
   let entity: ResolvedLintEntity;
   if (policyFile) {
-    console.log("[DEBUG] runPolicyScript resolving file entity for", policyFile);
     const target = join(dirname(absScript), policyFile).replaceAll("\\", "/");
     entity = { kind: "file", id: fileEntityId(repoRoot, target), path: target };
   } else {
-    console.log("[DEBUG] runPolicyScript resolving folder/bundle entity");
     entity = resolvePolicyScriptEntity(repoRoot, absScript);
   }
 
-  console.log("[DEBUG] runPolicyScript importing module dynamically from url", absScript);
   const href = pathToFileURL(absScript).href;
   const mod = (await import(href)) as LintScriptModule;
-  console.log("[DEBUG] runPolicyScript imported module successfully");
   const fn = mod.policy;
   if (typeof fn !== "function") {
     throw new Error(`[policy-runner] ${absScript} must export const policy = defineLint(...)`);
   }
 
-  console.log("[DEBUG] runPolicyScript invoking policy function for kind", entity.kind);
   let breachs: BreachRecord[];
   switch (entity.kind) {
     case "file":
@@ -723,10 +716,31 @@ export async function runPolicyScript(
   return { entityId: entity.id, breachs, cachePath };
 }
 
-/** 🚪️Runs `policy` on this `script.ts` and exits 1 when any high-priority breach exists. */
+/** 🧾️Renders a breach set as a per-kind tally followed by one line per breach. */
+export function formatBreachReport(breachs: BreachRecord[], cachePath: string): string {
+  const tally = new Map<string, number>();
+  for (const b of breachs) tally.set(b.kind, (tally.get(b.kind) ?? 0) + 1);
+  const lines = [`${breachs.length} high-priority breach(es) across ${tally.size} rule(s):`];
+  for (const [kind, count] of [...tally].sort((a, b) => b[1] - a[1])) lines.push(`  ${String(count).padStart(5)}  ${kind}`);
+  lines.push("");
+  for (const b of breachs) lines.push(`  ${b.kind}  ${b.scope}${b.line ? `:${b.line}` : ""}  ${b.summary}`);
+  lines.push("", `full breach set (including non-blocking priorities): ${cachePath}`);
+  return lines.join("\n");
+}
+
+/**
+ * 🚪️Runs `policy` on this `script.ts`, reports every high-priority breach, and exits 1 when any exists.
+ * The report is mandatory: a gate that exits non-zero without naming what it rejected is unactionable.
+ */
 export async function runPolicyExit(scriptPath: string): Promise<void> {
-  const { breachs } = await runPolicyScript(scriptPath);
-  if (breachs.some((b) => b.priority === "high")) process.exit(1);
+  const { breachs, cachePath } = await runPolicyScript(scriptPath);
+  const high = breachs.filter((b) => b.priority === "high");
+  if (high.length === 0) {
+    console.log(`policy: no high-priority breaches (${breachs.length} total recorded at ${cachePath})`);
+    return;
+  }
+  console.error(formatBreachReport(high, cachePath));
+  process.exit(1);
 }
 //#endregion 🔖️policy-runner
 

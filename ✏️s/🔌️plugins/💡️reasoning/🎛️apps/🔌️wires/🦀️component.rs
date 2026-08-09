@@ -81,6 +81,8 @@ impl DocumentApp for ReasoningWiresPlayApp {
     type ConfigMutation = WiresConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::wires::presence::WiresPresence;
+    type PresenceMutation = crate::apps::wires::presence::WiresPresenceMutation;
 
     type Command = WiresCommand;
 

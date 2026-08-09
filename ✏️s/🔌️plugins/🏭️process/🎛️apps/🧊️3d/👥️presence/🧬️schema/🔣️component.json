@@ -1,0 +1,63 @@
+{
+  "$id": "https://semio.tech/schema/app/process/3d/presence.json",
+  "title": "Process3dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectionMethod",
+    "engagementInput",
+    "cameraPosition",
+    "cameraTarget",
+    "cameraFov",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedFaceId": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraFov": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

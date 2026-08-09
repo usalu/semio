@@ -1,0 +1,68 @@
+{
+  "$id": "https://semio.tech/schema/app/architect/architect/config.json",
+  "title": "ArchitectConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "activeRegister",
+    "searchQuery",
+    "searchHistoryJson",
+    "activeReportJson",
+    "lastResultJson",
+    "lastAnalysisJson",
+    "graphCameraX",
+    "graphCameraY",
+    "graphCameraZoom"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "activeRegister": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "searchQuery": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "searchHistoryJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activeReportJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lastResultJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lastAnalysisJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "adjacencyKindFilter": {
+      "type": "string",
+      "enum": ["required", "preferred", "optional", "prohibited"],
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraX": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraY": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraZoom": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

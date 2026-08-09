@@ -33,8 +33,24 @@ extern crate semio_framework_schema as schema;
 //#region 📄️Document kernel
 #[path = "../../📄️document/🦀️component.rs"]
 pub mod document;
-#[path = "../../🎚️config/🦀️component.rs"]
-pub mod config;
+#[path = "."]
+pub mod config {
+    #[path = "../../🎚️config/🦀️component.rs"]
+    mod component;
+    pub use component::*;
+
+    #[path = "../../🎚️config/🧬️schema/🦀️component.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "../../👥️presence/🦀️component.rs"]
+    mod component;
+    pub use component::*;
+
+    #[path = "../../👥️presence/🧬️schema/🦀️component.rs"]
+    pub mod schema;
+}
 #[path = "../../🖥️app-surface/🦀️component.rs"]
 pub mod app_surface;
 //#endregion 📄️Document kernel

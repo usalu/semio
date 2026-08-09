@@ -1,0 +1,33 @@
+{
+  "plugin": "🧩️puzzle",
+  "crate": "semio-s-plugin-puzzle",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config",
+      "configType": "Puzzle2dConfig",
+      "presenceType": "Puzzle2dPresence",
+      "apps": [
+        "🧩️puzzle/◻2d"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config",
+      "configType": "Puzzle5dConfig",
+      "presenceType": "Puzzle5dPresence",
+      "apps": [
+        "🧩️puzzle/🖐️5d"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config",
+      "configType": "Puzzle3dConfig",
+      "presenceType": "Puzzle3dPresence",
+      "apps": [
+        "🧩️puzzle/🧊️3d"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🧩️puzzle",
+  "skip_if_lowpoly_done": false
+}

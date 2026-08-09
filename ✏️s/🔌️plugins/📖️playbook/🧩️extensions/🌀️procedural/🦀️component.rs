@@ -736,6 +736,8 @@ impl DocumentApp for ModuleApp {
     type ConfigMutation = semio_framework_plugin::NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
 
     type Command = Command;
 

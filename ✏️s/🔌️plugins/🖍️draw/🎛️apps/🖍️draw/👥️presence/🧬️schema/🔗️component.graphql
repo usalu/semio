@@ -1,0 +1,8 @@
+type DrawPresence {
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  hoveredId: String @state(class: SHARED_UI)
+  engagementInput: String! @state(class: SHARED_UI)
+  camera: DrawCamera! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+}
+type DrawCamera { x: Float! y: Float! zoom: Float! }

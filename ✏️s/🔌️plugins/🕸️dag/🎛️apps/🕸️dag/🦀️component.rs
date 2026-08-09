@@ -117,6 +117,8 @@ impl DocumentApp for DagPlayApp {
     type ConfigMutation = DagConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::dag::presence::DagPresence;
+    type PresenceMutation = crate::apps::dag::presence::DagPresenceMutation;
 
     type Command = DagCommand;
 

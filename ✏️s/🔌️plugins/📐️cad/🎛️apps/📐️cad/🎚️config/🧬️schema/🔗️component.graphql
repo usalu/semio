@@ -1,0 +1,71 @@
+type CadHoverTarget {
+  objectId: String
+  mode: String
+  id: Int
+}
+type CadSelectionTargets {
+  mesh: Boolean!
+  vertex: Boolean!
+  edge: Boolean!
+  face: Boolean!
+}
+type CadComponentSelection {
+  targets: CadSelectionTargets!
+  mode: String!
+  ids: [Int!]!
+}
+type CadSunConfig {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+type CadProjectionDsl {
+  kind: String!
+}
+type CadCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  projection: CadProjectionDsl!
+}
+type CadDislocateOptions {
+  moveEnabled: Boolean!
+  rotateEnabled: Boolean!
+}
+
+
+type CadConfig {
+  selectedObjectIds: [String!]! @state(class: LOCAL_UI)
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  hoveredObjectId: String @state(class: LOCAL_UI)
+  hoveredTarget: CadHoverTarget @state(class: LOCAL_UI)
+  activeObjectId: String @state(class: LOCAL_UI)
+  componentSelection: CadComponentSelection! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  engagementStep: String! @state(class: LOCAL_UI)
+  activeExampleId: String @state(class: LOCAL_UI)
+  selectedReferenceModelDefinitionId: String @state(class: LOCAL_UI)
+  selectedReferenceId: String @state(class: LOCAL_UI)
+  selectedPrimitiveId: String @state(class: LOCAL_UI)
+  selectedPrimitiveKind: String @state(class: LOCAL_UI)
+  engagementPane: String @state(class: LOCAL_UI)
+  engagementSessionJson: String @state(class: LOCAL_UI)
+  lastFinalizedInteractionId: String @state(class: LOCAL_UI)
+  sun: CadSunConfig! @state(class: LOCAL_UI)
+  camera: CadCamera! @state(class: LOCAL_UI)
+  cameraBuilding: CadCamera! @state(class: LOCAL_UI)
+  cameraEnergy: CadCamera! @state(class: LOCAL_UI)
+  cameraStructureClassic: CadCamera! @state(class: LOCAL_UI)
+  dislocateShape: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateBuilding: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateEnergy: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateStructureClassic: CadDislocateOptions! @state(class: LOCAL_UI)
+  activeUtilityId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}

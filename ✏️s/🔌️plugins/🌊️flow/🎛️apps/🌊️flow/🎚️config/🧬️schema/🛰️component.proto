@@ -1,0 +1,40 @@
+syntax = "proto3";
+package semio.app.flow.flow;
+message FlowConfig {
+  // @state local-ui
+  repeated string selected_node_ids = 1;
+  // @state local-ui
+  repeated string selected_edge_ids = 2;
+  // @state local-ui
+  repeated string selected_handle_ids = 3;
+  // @state local-ui
+  repeated string preview_off_node_ids = 4;
+  // @state local-ui
+  CameraJson camera = 5;
+  // @state local-ui
+  string lod_mode = 6;
+  // @state local-ui
+  double proximity_distance = 7;
+  // @state local-ui
+  bool grid_visible = 8;
+  // @state local-ui
+  bool grid_snap_enabled = 9;
+  // @state local-ui
+  double grid_factor = 10;
+  // @state local-ui
+  string catalogue_sections_json = 11;
+  // @state local-ui
+  string automation_enabled_json = 12;
+  // @state local-ui
+  string contributions_json = 13;
+  // @state local-ui
+  string generation_json = 14;
+  // @state local-ui
+  string locale = 15;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

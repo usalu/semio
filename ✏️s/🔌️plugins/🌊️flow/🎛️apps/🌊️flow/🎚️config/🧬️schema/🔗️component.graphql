@@ -1,0 +1,23 @@
+type FlowConfig {
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  selectedEdgeIds: [String!]! @state(class: LOCAL_UI)
+  selectedHandleIds: [String!]! @state(class: LOCAL_UI)
+  previewOffNodeIds: [String!]! @state(class: LOCAL_UI)
+  camera: CameraJson! @state(class: LOCAL_UI)
+  lodMode: String! @state(class: LOCAL_UI)
+  proximityDistance: Float! @state(class: LOCAL_UI)
+  gridVisible: Boolean! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridFactor: Float! @state(class: LOCAL_UI)
+  catalogueSectionsJson: String! @state(class: LOCAL_UI)
+  automationEnabledJson: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+  generationJson: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

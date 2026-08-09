@@ -7,6 +7,7 @@
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use crate::apps::curate::presence::{SourcingCuratePresence, SourcingCuratePresenceMutation};
 use crate::apps::curate::modes::curate;
 use crate::apps::curate::modes::curate::windows::{curated, grid, pool, preview};
 use crate::apps::curate::terminology::sourcing_curate_labels;
@@ -84,6 +85,8 @@ impl DocumentApp for SourcingCurateApp {
     type ConfigMutation = SourcingCurateConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = SourcingCuratePresence;
+    type PresenceMutation = SourcingCuratePresenceMutation;
 
     type Command = SourcingCurateCommand;
 

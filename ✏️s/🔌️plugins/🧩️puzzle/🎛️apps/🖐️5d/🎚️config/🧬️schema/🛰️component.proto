@@ -1,0 +1,90 @@
+syntax = "proto3";
+package semio.app.puzzle.puzzle5d;
+message Puzzle5dConfig {
+  // @state local-ui
+  Puzzle5dCamera2d camera2d = 1;
+  // @state local-ui
+  Puzzle5dCamera3d camera3d = 2;
+  // @state local-ui
+  Puzzle5dSelection selection = 3;
+  // @state local-ui
+  string selection_method = 4;
+  // @state local-ui
+  optional string hovered_part_id = 5;
+  // @state local-ui
+  uint32 fill_count = 6;
+  // @state local-ui
+  uint64 brush_candidate_index = 7;
+  // @state local-ui
+  double overlap_budget = 8;
+  // @state local-ui
+  string lod_mode = 9;
+  // @state local-ui
+  double suggestion_offset = 10;
+  // @state local-ui
+  bool grid_snap_enabled = 11;
+  // @state local-ui
+  double grid_factor = 12;
+  // @state local-ui
+  map<string, string> engagement_input_by_window = 13;
+  // @state local-ui
+  map<string, double> object_kind_weights = 14;
+  // @state local-ui
+  map<string, double> vortex_kind_weights = 15;
+  // @state local-ui
+  WorldSunConfig sun = 16;
+  // @state local-ui
+  map<string, string> active_utility_by_window_id = 17;
+  // @state local-ui
+  string terminology = 18;
+  // @state local-ui
+  string locale = 19;
+}
+
+message SelectionSet {
+  repeated string ids = 1;
+}
+
+message WorldSunConfig {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message WorldProjectionConfig {
+  string kind = 1;
+  string orthographic_view = 2;
+  string axonometric_variant = 3;
+  double axonometric_angle_a = 4;
+  double axonometric_angle_b = 5;
+  string axonometric_quadrant = 6;
+  string oblique_variant = 7;
+  double oblique_angle = 8;
+  double oblique_depth = 9;
+  string one_point_axis = 10;
+  double fov = 11;
+  double two_point_shift = 12;
+  double curvilinear_fov = 13;
+  double curvilinear_strength = 14;
+  string curvilinear_mapping = 15;
+}
+
+message Puzzle5dCamera2d {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message Puzzle5dCamera3d {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+}
+
+message Puzzle5dSelection {
+  SelectionSet part_ids = 1;
+  SelectionSet grip_ids = 2;
+  SelectionSet fastener_ids = 3;
+}

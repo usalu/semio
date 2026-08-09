@@ -1,0 +1,103 @@
+syntax = "proto3";
+package semio.app.cad.cad;
+
+message CadHoverTarget {
+  optional string object_id = 1;
+  optional string mode = 2;
+  optional uint32 id = 3;
+}
+message CadSelectionTargets {
+  bool mesh = 1;
+  bool vertex = 2;
+  bool edge = 3;
+  bool face = 4;
+}
+message CadComponentSelection {
+  CadSelectionTargets targets = 1;
+  string mode = 2;
+  repeated uint32 ids = 3;
+}
+message CadSunConfig {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+message CadProjectionDsl {
+  string kind = 1;
+}
+message CadCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+  double fov = 4;
+  CadProjectionDsl projection = 5;
+}
+message CadDislocateOptions {
+  bool move_enabled = 1;
+  bool rotate_enabled = 2;
+}
+
+message CadConfig {
+  // @state local-ui
+  repeated string selected_object_ids = 1;
+  // @state local-ui
+  repeated string selected_node_ids = 2;
+  // @state local-ui
+  string selection_method = 3;
+  // @state local-ui
+  optional string hovered_object_id = 4;
+  // @state local-ui
+  optional CadHoverTarget hovered_target = 5;
+  // @state local-ui
+  optional string active_object_id = 6;
+  // @state local-ui
+  CadComponentSelection component_selection = 7;
+  // @state local-ui
+  string engagement_input = 8;
+  // @state local-ui
+  string engagement_step = 9;
+  // @state local-ui
+  optional string active_example_id = 10;
+  // @state local-ui
+  optional string selected_reference_model_definition_id = 11;
+  // @state local-ui
+  optional string selected_reference_id = 12;
+  // @state local-ui
+  optional string selected_primitive_id = 13;
+  // @state local-ui
+  optional string selected_primitive_kind = 14;
+  // @state local-ui
+  optional string engagement_pane = 15;
+  // @state local-ui
+  optional string engagement_session_json = 16;
+  // @state local-ui
+  optional string last_finalized_interaction_id = 17;
+  // @state local-ui
+  CadSunConfig sun = 18;
+  // @state local-ui
+  CadCamera camera = 19;
+  // @state local-ui
+  CadCamera camera_building = 20;
+  // @state local-ui
+  CadCamera camera_energy = 21;
+  // @state local-ui
+  CadCamera camera_structure_classic = 22;
+  // @state local-ui
+  CadDislocateOptions dislocate_shape = 23;
+  // @state local-ui
+  CadDislocateOptions dislocate_building = 24;
+  // @state local-ui
+  CadDislocateOptions dislocate_energy = 25;
+  // @state local-ui
+  CadDislocateOptions dislocate_structure_classic = 26;
+  // @state local-ui
+  string active_utility_id = 27;
+  // @state local-ui
+  string locale = 28;
+  // @state local-ui
+  string terminology = 29;
+  // @state local-ui
+  string contributions_json = 30;
+}

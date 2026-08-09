@@ -1,0 +1,98 @@
+{
+  "$id": "https://semio.tech/schema/app/process/3d/config.json",
+  "title": "Process3dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectionMethod",
+    "engagementInput",
+    "cameraPosition",
+    "cameraTarget",
+    "cameraFov",
+    "sunEnabled",
+    "sunAzimuth",
+    "sunElevation",
+    "sunIntensity",
+    "sunColor",
+    "activeUtilityId",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedFaceId": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "local-ui"
+    },
+    "cameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "local-ui"
+    },
+    "cameraFov": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "sunEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "sunAzimuth": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "sunElevation": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "sunIntensity": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "sunColor": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

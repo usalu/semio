@@ -56,7 +56,7 @@ fn default_terminology() -> String {
 /// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Puzzle2dPlayRuntime {
+pub struct Puzzle2dConfig {
     #[serde(default)]
     pub selected_ids: Vec<String>,
     /// 🎥️ The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
@@ -105,7 +105,7 @@ pub struct Puzzle2dPlayRuntime {
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
-impl Default for Puzzle2dPlayRuntime {
+impl Default for Puzzle2dConfig {
     fn default() -> Self {
         Self {
             selected_ids: Vec::new(),
@@ -131,9 +131,10 @@ impl Default for Puzzle2dPlayRuntime {
     }
 }
 
-pub type Puzzle2dConfig = Puzzle2dPlayRuntime;
+/// 🏷️ Alias kept for call sites that still name the runtime.
+pub type Puzzle2dPlayRuntime = Puzzle2dConfig;
 
-impl store::DocumentDsl for Puzzle2dPlayRuntime {
+impl store::DocumentDsl for Puzzle2dConfig {
     const EXTENSION: &'static str = "puzzle2dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -145,7 +146,7 @@ impl store::DocumentDsl for Puzzle2dPlayRuntime {
     }
 }
 
-impl store::DocumentPack for Puzzle2dPlayRuntime {
+impl store::DocumentPack for Puzzle2dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
@@ -156,7 +157,7 @@ impl store::DocumentPack for Puzzle2dPlayRuntime {
     }
 }
 
-store::impl_whole_record_config!(Puzzle2dPlayRuntime);
+store::impl_whole_record_config!(Puzzle2dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation

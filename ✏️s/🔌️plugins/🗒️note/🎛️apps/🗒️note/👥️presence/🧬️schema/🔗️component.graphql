@@ -1,0 +1,8 @@
+type NotePresence {
+  selectedBlockIds: [String!]! @state(class: SHARED_UI)
+  cameraX: Float! @state(class: SHARED_UI)
+  cameraY: Float! @state(class: SHARED_UI)
+  cameraZoom: Float! @state(class: SHARED_UI)
+  hoveredBlockId: String @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+}

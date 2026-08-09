@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.app.note.note;
+message NoteConfig {
+  // @state local-ui
+  repeated string selected_block_ids = 1;
+  // @state local-ui
+  optional string hovered_block_id = 2;
+  // @state local-ui
+  string engagement_input = 3;
+  // @state local-ui
+  NoteCamera camera = 4;
+  // @state local-ui
+  string active_utility_id = 5;
+  // @state local-ui
+  string locale = 6;
+}
+
+message NoteCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

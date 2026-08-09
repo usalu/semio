@@ -1,0 +1,80 @@
+{
+  "$id": "https://semio.tech/schema/app/space/space/presence.json",
+  "title": "SpacePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "camera",
+    "collapsedNodeIds",
+    "previewOffNodeIds"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SpaceWindowCamera"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeNodeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "focusedNodeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "collapsedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "previewOffNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "SpaceWindowCamera": {
+      "title": "SpaceWindowCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

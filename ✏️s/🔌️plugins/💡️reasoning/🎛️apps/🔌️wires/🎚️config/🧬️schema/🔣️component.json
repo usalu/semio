@@ -1,0 +1,37 @@
+{
+  "$id": "https://semio.tech/schema/app/reasoning/wires/config.json",
+  "title": "WiresConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "dragLastX",
+    "dragLastY",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "dragNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "dragLastX": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "dragLastY": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

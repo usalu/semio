@@ -12,6 +12,7 @@
 
 use crate::apps::remodel::commands::{calibration, ingest, params, reset, shell, view};
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use crate::apps::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
 use crate::apps::remodel::modes::{analyze, capture, model};
 use crate::apps::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
 use crate::apps::remodel::terminology::remodel_labels;
@@ -331,6 +332,8 @@ impl DocumentApp for RemodelPlayApp {
     type ConfigMutation = RemodelConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = RemodelPresence;
+    type PresenceMutation = RemodelPresenceMutation;
 
     type Command = RemodelCommand;
 

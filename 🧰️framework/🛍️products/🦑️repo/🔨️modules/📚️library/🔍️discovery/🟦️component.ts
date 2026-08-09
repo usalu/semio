@@ -100,6 +100,25 @@ export interface Taxonomy {
   readonly artifactChildDirs: readonly string[];
   /** 🧬️ Required children of each `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
   readonly mutationChildDirs: readonly string[];
+  /** 📸️ Required children of each `📸️snapshot/` facet: its schema and the binary pack that encodes exactly it. */
+  readonly snapshotChildDirs: readonly string[];
+  /** 🔺️ Required children of each `🔺️diff/` facet, alongside the grammar and codec kept at its root. */
+  readonly diffChildDirs: readonly string[];
+  /**
+   * 🧬️ Schema serialisation formats a `🧬️schema` facet must carry, one handcrafted leaf each. `fieldCasing`
+   * is the canonical casing a field name takes in that format, which the parity scanners normalise through.
+   */
+  readonly schemaFormats: Readonly<Record<string, { readonly leafFilename: string; readonly extension: string; readonly fieldCasing: string }>>;
+  /** 🔣️ Normative JSON Schema leaf per `🧬️schema` facet path — the twin of `artifactSpecFilenames` for schema facets, which carry no `.semio` spec. */
+  readonly artifactSchemaSpecFilenames: Readonly<Record<string, string>>;
+  /** ✅️ COMPLETENESS set: every app that owns a config must carry each of these as a leaf. */
+  readonly appComponentDirs: readonly string[];
+  /** 🎛 Required children of each `🎚️config/` facet: its schema. */
+  readonly configChildDirs: readonly string[];
+  /** 👥️ Required children of each `👥️presence/` facet: its schema. */
+  readonly presenceChildDirs: readonly string[];
+  /** 🔣️ Normative JSON Schema leaf per app schema facet path. */
+  readonly appSchemaSpecFilenames: Readonly<Record<string, string>>;
   readonly exampleAssetsDirName: string;
   readonly exampleTestsDirName: string;
   readonly exampleSlugPattern: string;
@@ -150,6 +169,45 @@ export function loadTaxonomy(): Taxonomy {
   const path = join(__dirname, "../🔣️taxonomy.json");
   cachedTaxonomy.current = JSON.parse(readFileSync(path, "utf8")) as Taxonomy;
   return cachedTaxonomy.current;
+}
+
+/** 🌳️ Declared children of a nesting artifact facet, empty when the facet holds leaves only. */
+function artifactFacetChildDirs(facet: string, taxonomy: Taxonomy): readonly string[] {
+  if (facet === "📸️snapshot") return taxonomy.snapshotChildDirs ?? [];
+  if (facet === "🔺️diff") return taxonomy.diffChildDirs ?? [];
+  if (facet === "🧬️mutations") return taxonomy.mutationChildDirs ?? [];
+  return [];
+}
+
+/** 🌳️ Declared children of a nesting app facet. */
+function appFacetChildDirs(facet: string, taxonomy: Taxonomy): readonly string[] {
+  if (facet === "🎚️config") return taxonomy.configChildDirs ?? [];
+  if (facet === "👥️presence") return taxonomy.presenceChildDirs ?? [];
+  return [];
+}
+
+/** 🧭️ Whether a `/`-joined facet path such as `🎚️config/🧬️schema` walks only declared dirs from an app (or shared config owner). */
+export function appFacetPathIsDeclared(facetPath: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
+  const [root, ...rest] = facetPath.split("/");
+  if (!root || !taxonomy.appComponentDirs.includes(root)) return false;
+  let parent = root;
+  for (const segment of rest) {
+    if (!appFacetChildDirs(parent, taxonomy).includes(segment)) return false;
+    parent = segment;
+  }
+  return true;
+}
+
+/** 🧭️ Whether a `/`-joined facet path such as `📸️snapshot/🎒️pack` walks only declared dirs from an artifact root. */
+export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
+  const [root, ...rest] = facetPath.split("/");
+  if (!root || !taxonomy.artifactComponentDirs.includes(root)) return false;
+  let parent = root;
+  for (const segment of rest) {
+    if (!artifactFacetChildDirs(parent, taxonomy).includes(segment)) return false;
+    parent = segment;
+  }
+  return true;
 }
 
 /**
@@ -240,6 +298,65 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     }
   }
   //#endregion MutationFacetContract
+  //#region SchemaFacetContract
+  for (const [key, dirs] of [
+    ["snapshotChildDirs", taxonomy.snapshotChildDirs],
+    ["diffChildDirs", taxonomy.diffChildDirs],
+    ["configChildDirs", taxonomy.configChildDirs],
+    ["presenceChildDirs", taxonomy.presenceChildDirs],
+  ] as const) {
+    if (!Array.isArray(dirs) || dirs.length === 0) {
+      problems.push(`${key} must be a non-empty array.`);
+      continue;
+    }
+    for (const dir of dirs) {
+      if (!dir) problems.push(`${key} contains an empty entry.`);
+      else if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) problems.push(`${key} member "${dir}" is missing from taxonomyLeafParentDirs.`);
+    }
+  }
+  if (taxonomy.artifactComponentDirs.includes("🎒️pack") || taxonomy.artifactChildDirs.includes("🎒️pack")) {
+    problems.push(`a bare "🎒️pack" is not an artifact facet — it nests under "📸️snapshot" because it encodes exactly the snapshot.`);
+  }
+  const schemaFormats = taxonomy.schemaFormats ?? {};
+  if (Object.keys(schemaFormats).length === 0) problems.push(`schemaFormats must be a non-empty registry.`);
+  for (const [formatId, format] of Object.entries(schemaFormats)) {
+    if (!format.leafFilename.endsWith(format.extension)) {
+      problems.push(`schemaFormats["${formatId}"] leafFilename must end with its extension (${JSON.stringify(format.leafFilename)} vs ${JSON.stringify(format.extension)}).`);
+    }
+    if (format.fieldCasing !== "snake" && format.fieldCasing !== "camel") {
+      problems.push(`schemaFormats["${formatId}"].fieldCasing must be "snake" or "camel", got ${JSON.stringify(format.fieldCasing)}.`);
+    }
+  }
+  const normativeSchemaLeaf = schemaFormats["🔣️jsonschema"]?.leafFilename;
+  for (const [facet, specName] of Object.entries(taxonomy.artifactSchemaSpecFilenames ?? {})) {
+    if (!facet.split("/").every((seg, i, all) => (i === all.length - 1 ? seg === "🧬️schema" : taxonomy.artifactComponentDirs.includes(seg)))) {
+      problems.push(`artifactSchemaSpecFilenames key "${facet}" is not a 🧬️schema facet path.`);
+    }
+    if (specName !== normativeSchemaLeaf) {
+      problems.push(`artifactSchemaSpecFilenames["${facet}"] = ${JSON.stringify(specName)} must be the normative schemaFormats["🔣️jsonschema"] leaf ${JSON.stringify(normativeSchemaLeaf)}.`);
+    }
+  }
+  for (const [facet, specName] of Object.entries(taxonomy.appSchemaSpecFilenames ?? {})) {
+    if (!appFacetPathIsDeclared(facet, taxonomy)) {
+      problems.push(`appSchemaSpecFilenames key "${facet}" is not a declared app facet path.`);
+    }
+    if (specName !== normativeSchemaLeaf) {
+      problems.push(`appSchemaSpecFilenames["${facet}"] = ${JSON.stringify(specName)} must be the normative schemaFormats["🔣️jsonschema"] leaf ${JSON.stringify(normativeSchemaLeaf)}.`);
+    }
+  }
+  if (!Array.isArray(taxonomy.appComponentDirs) || taxonomy.appComponentDirs.length === 0) {
+    problems.push(`appComponentDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.appComponentDirs) {
+      if (!taxonomy.appChildDirs.includes(dir)) problems.push(`appComponentDirs member "${dir}" is missing from appChildDirs — the structural set must be a superset of the completeness set.`);
+    }
+  }
+  for (const banned of ["🧮️config", "🕸️wasm"] as const) {
+    if (taxonomy.appChildDirs.includes(banned) || taxonomy.appComponentDirs.includes(banned)) {
+      problems.push(`a bare "${banned}" is not an app facet — use "🎚️config" and "🌉️wasm".`);
+    }
+  }
+  //#endregion SchemaFacetContract
   for (const lang of taxonomy.langs) {
     const ecosystem = taxonomy.ecosystems[lang];
     if (!ecosystem) {
@@ -262,8 +379,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     if (!taxonomy.ecosystems[key] && !taxonomy.targets[key]) problems.push(`taxonomyLeafFilenames key "${key}" is neither a lang nor a target.`);
   }
   for (const [facet, specName] of Object.entries(taxonomy.artifactSpecFilenames ?? {})) {
-    if (!taxonomy.artifactComponentDirs.includes(facet)) {
-      problems.push(`artifactSpecFilenames key "${facet}" is not in artifactComponentDirs.`);
+    if (facet === "🎒️pack") {
+      problems.push(`a bare "🎒️pack" key is not an artifact facet — key it as "📸️snapshot/🎒️pack".`);
+    } else if (!artifactFacetPathIsDeclared(facet, taxonomy)) {
+      problems.push(`artifactSpecFilenames key "${facet}" is not a declared artifact facet path.`);
     }
     if (!specName.endsWith(`.${taxonomy.semioFileExtension}`)) {
       problems.push(`artifactSpecFilenames["${facet}"] must end with .${taxonomy.semioFileExtension}.`);

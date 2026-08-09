@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.app.flow.flow;
+message FlowPresence {
+  // @state shared-ui
+  repeated string selected_node_ids = 1;
+  // @state shared-ui
+  repeated string selected_edge_ids = 2;
+  // @state shared-ui
+  repeated string selected_handle_ids = 3;
+  // @state shared-ui
+  repeated string preview_off_node_ids = 4;
+  // @state shared-ui
+  CameraJson camera = 5;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

@@ -1,0 +1,13 @@
+type Puzzle5dPresence {
+  selectedPartIds: [String!]! @state(class: SHARED_UI)
+  selectedGripIds: [String!]! @state(class: SHARED_UI)
+  selectedFastenerIds: [String!]! @state(class: SHARED_UI)
+  hoveredPartId: String @state(class: SHARED_UI)
+  camera2dX: Float! @state(class: SHARED_UI)
+  camera2dY: Float! @state(class: SHARED_UI)
+  camera2dZoom: Float! @state(class: SHARED_UI)
+  camera3dPosition: [Float!]! @state(class: SHARED_UI)
+  camera3dTarget: [Float!]! @state(class: SHARED_UI)
+  camera3dZoom: Float! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+}

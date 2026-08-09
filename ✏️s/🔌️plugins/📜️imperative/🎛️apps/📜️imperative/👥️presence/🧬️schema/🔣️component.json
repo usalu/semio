@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/app/imperative/imperative/presence.json",
+  "title": "ImperativePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedStepIds"
+  ],
+  "properties": {
+    "selectedStepIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

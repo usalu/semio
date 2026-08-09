@@ -476,7 +476,7 @@ mod tests {
         apply_collection_mutation(&mut items, &inverse);
         assert_eq!(items, original);
 
-        let mov = CollectionMutation::<String, Item, i64>::Move { id: "b".into(), to: 0 };
+        let mov = CollectionMutation::<String, Item, i64>::Move { id: "b".into(), to_index: 0 };
         let mut items = original.clone();
         apply_collection_mutation(&mut items, &mov);
         let inverse = inverse_collection_mutation(&original, &mov);
@@ -502,7 +502,7 @@ mod tests {
     fn collection_diff_from_operation_projects_each_kind() {
         let items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        let add = CollectionMutation::<String, Item, i64>::Add { id: "c".into(), item: Item { id: "c".into(), value: 3 }, at: 0 };
+        let add = CollectionMutation::<String, Item, i64>::Add { index: 0, item: Item { id: "c".into(), value: 3 } };
         let diff = collection_diff_from_mutation(&items, &add);
         assert_eq!(diff.added, vec![Item { id: "c".into(), value: 3 }]);
         assert!(diff.removed.is_empty() && diff.modified.is_empty());
@@ -515,7 +515,7 @@ mod tests {
         let diff = collection_diff_from_mutation(&items, &patch);
         assert_eq!(diff.modified, vec![ItemPatch { id: "b".into(), patch: 5i64 }]);
 
-        let mov = CollectionMutation::<String, Item, i64>::Move { id: "a".into(), to: 1 };
+        let mov = CollectionMutation::<String, Item, i64>::Move { id: "a".into(), to_index: 1 };
         let diff = collection_diff_from_mutation(&items, &mov);
         assert_eq!(diff.removed, vec!["a".to_string()]);
         assert_eq!(diff.added, vec![Item { id: "a".into(), value: 1 }]);

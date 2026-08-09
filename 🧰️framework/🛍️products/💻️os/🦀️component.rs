@@ -1869,6 +1869,9 @@ pub mod host_runtime {
     /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewModel.presence_peers_json` contract
     /// plugins already read (`semio_framework::PresencePeer` → JSON array) — the new (only) source
     /// of presence data; the deleted `presence:` backbone hack used to be it.
+    ///
+    /// Each peer's typed app presence is carried as `presencePack` (base64 of `DocumentPack` bytes),
+    /// replacing the former untyped `selectionJson` string.
     pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
         match event {
             DocumentEvent::Presence { peers } => serde_json::to_string(peers).ok(),
@@ -1899,7 +1902,7 @@ pub mod host_runtime {
         #[test]
         fn presence_peers_json_only_matches_presence_events() {
             use semio_framework::PresencePeer;
-            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), selection_json: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
+            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
             let json = presence_peers_json(&DocumentEvent::Presence { peers: peers.clone() }).expect("json");
             assert!(json.contains("\"actor\":\"a\""));
             assert!(presence_peers_json(&DocumentEvent::Status(Default::default())).is_none());

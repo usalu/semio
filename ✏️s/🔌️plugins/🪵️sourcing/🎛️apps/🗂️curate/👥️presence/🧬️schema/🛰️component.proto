@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.app.sourcing.curate;
+message SourcingCuratePresence {
+  // @state shared-ui
+  optional string selected_object_id = 1;
+  // @state shared-ui
+  repeated double world_camera_position = 2;
+  // @state shared-ui
+  repeated double world_camera_target = 3;
+  // @state shared-ui
+  double world_camera_fov = 4;
+}

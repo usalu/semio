@@ -1,0 +1,104 @@
+{
+  "$id": "https://semio.tech/schema/app/lowpoly/lowpoly/presence.json",
+  "title": "LowpolyPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectionMode",
+    "selectionIds",
+    "selectionTargetsMesh",
+    "selectionTargetsVertex",
+    "selectionTargetsEdge",
+    "selectionTargetsFace",
+    "selectedObjectIds",
+    "worldCameraPosition",
+    "worldCameraTarget",
+    "worldCameraFov",
+    "activeUtilityId",
+    "paintUtility"
+  ],
+  "properties": {
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectionTargetsMesh": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionTargetsVertex": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionTargetsEdge": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionTargetsFace": {
+      "type": "boolean",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedObjectIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredTargetId": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "worldCameraFov": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "paintUtility": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

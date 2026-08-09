@@ -1,0 +1,50 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/rewrite/presence.json",
+  "title": "RewritePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "activeHoverVar",
+    "activeSelectVar",
+    "beforePaneCamera",
+    "lodModeByWindow"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    },
+    "activeHoverVar": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "activeSelectVar": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "shared-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

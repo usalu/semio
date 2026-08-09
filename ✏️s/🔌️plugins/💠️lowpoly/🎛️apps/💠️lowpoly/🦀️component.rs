@@ -6,7 +6,7 @@
 //! byte-identical between windows — see the master ticket's TEMPLATE.md §12.2 shared-options pattern,
 //! extended here across mode boundaries since the Model window is reused by both `edit` and `paint`),
 //! panel trees in `📌️panels/*`, labels in `🗣️terminology/🦀️component.rs`, view state in
-//! `🧮️config/🦀️component.rs`, scratch (mid-gesture) state in `🖌️session/🦀️component.rs`, shared
+//! `🎚️config/🦀️component.rs`, scratch (mid-gesture) state in `🖌️session/🦀️component.rs`, shared
 //! read-view/selection helpers in `🧭️view/🦀️component.rs`.
 
 use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv, world};
@@ -257,6 +257,8 @@ impl DocumentApp for LowpolyPlayApp {
     type ConfigMutation = LowpolyConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::lowpoly::presence::LowpolyPresence;
+    type PresenceMutation = crate::apps::lowpoly::presence::LowpolyPresenceMutation;
 
     type Command = LowpolyCommand;
 

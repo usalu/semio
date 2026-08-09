@@ -1,0 +1,44 @@
+syntax = "proto3";
+package semio.app.writer.writer;
+message WriterConfig {
+  // @state local-ui
+  repeated string selected_ast_ids = 1;
+  // @state local-ui
+  optional WriterEditorSelection editor_selection = 2;
+  // @state local-ui
+  uint32 format_signal = 3;
+  // @state local-ui
+  uint32 lint_signal = 4;
+  // @state local-ui
+  uint32 revision = 5;
+  // @state local-ui
+  WriterEditorSettings editor_settings = 6;
+  // @state local-ui
+  optional string tree_hovered_ast_id = 7;
+  // @state local-ui
+  optional uint32 editor_hover_offset = 8;
+  // @state local-ui
+  string engagement_input = 9;
+  // @state local-ui
+  WriterCamera camera = 10;
+  // @state local-ui
+  string locale = 11;
+}
+
+message WriterEditorSelection {
+  uint32 start = 1;
+  uint32 end = 2;
+}
+
+message WriterEditorSettings {
+  bool show_line_numbers = 1;
+  uint32 font_px = 2;
+  uint32 line_height = 3;
+  uint32 tab_size = 4;
+}
+
+message WriterCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

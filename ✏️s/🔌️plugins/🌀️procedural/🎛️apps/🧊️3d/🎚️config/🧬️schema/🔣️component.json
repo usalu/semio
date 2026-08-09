@@ -1,0 +1,135 @@
+{
+  "$id": "https://semio.tech/schema/app/procedural/3d/config.json",
+  "title": "Procedural3dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "lodMode",
+    "showMode",
+    "selectionMethod",
+    "camera",
+    "previewCamera",
+    "sunJson",
+    "activeUtilityId",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "local-ui"
+    },
+    "previewCamera": {
+      "$ref": "#/$defs/Procedural3dPreviewCamera",
+      "x-semio-state": "local-ui"
+    },
+    "sunJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedGenerationId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "generationPreviewText": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Procedural3dPreviewCamera": {
+      "title": "Procedural3dPreviewCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

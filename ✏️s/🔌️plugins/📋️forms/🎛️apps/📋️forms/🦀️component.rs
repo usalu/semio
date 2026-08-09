@@ -13,6 +13,7 @@
 
 use crate::apps::forms::commands::{contribution, export, import, locale, option, question, selection, step, try_wizard, vector};
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::apps::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::apps::forms::modes::blueprint;
 use crate::apps::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::apps::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -251,6 +252,8 @@ impl DocumentApp for FormsPlayApp {
     type ConfigMutation = FormsConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = FormsPresence;
+    type PresenceMutation = FormsPresenceMutation;
 
     type Command = FormsCommand;
 

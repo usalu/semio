@@ -1,0 +1,132 @@
+type Puzzle3dConfig {
+  selection: Puzzle3dSelection! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  hoveredObjectId: String @state(class: LOCAL_UI)
+  hoveredVortexFullId: String @state(class: LOCAL_UI)
+  suggestionMenu: Puzzle3dSuggestionMenu @state(class: LOCAL_UI)
+  overlapBudget: Float! @state(class: LOCAL_UI)
+  fillCount: Int! @state(class: LOCAL_UI)
+  brushCandidateIndex: Int! @state(class: LOCAL_UI)
+  objectKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  vortexKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  lodAutomatic: Boolean! @state(class: LOCAL_UI)
+  lodDepthVariable: Boolean! @state(class: LOCAL_UI)
+  gridVisible: Boolean! @state(class: LOCAL_UI)
+  lodManual: Float! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridSpacing: Float! @state(class: LOCAL_UI)
+  selectableKinds: Puzzle3dSelectableKinds! @state(class: LOCAL_UI)
+  hoveredKindId: String @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  selectionModeDefault: String! @state(class: LOCAL_UI)
+  proximityRadius: Float! @state(class: LOCAL_UI)
+  chunkSize: Float! @state(class: LOCAL_UI)
+  voxelDims: [Int!]! @state(class: LOCAL_UI)
+  transformMove: Boolean! @state(class: LOCAL_UI)
+  transformRotate: Boolean! @state(class: LOCAL_UI)
+  vortexShow: String! @state(class: LOCAL_UI)
+  vortexDirection: String! @state(class: LOCAL_UI)
+  sun: WorldSunConfig! @state(class: LOCAL_UI)
+  camera: Puzzle3dCamera! @state(class: LOCAL_UI)
+  windowOptions: [Puzzle3dWindowOptionsEntry!]! @state(class: LOCAL_UI)
+  activeUtilityByWindowId: [StringEntry!]! @state(class: LOCAL_UI)
+  activeToolId: String @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  windowIds: [String!]! @state(class: LOCAL_UI)
+}
+
+type SelectionSet {
+  ids: [String!]!
+}
+
+type WorldSunConfig {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type WorldProjectionConfig {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type FloatEntry {
+  key: String!
+  value: Float!
+}
+
+type Puzzle3dCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  up: [Float!]
+  projection: WorldProjectionConfig!
+}
+
+type Puzzle3dSelection {
+  objectIds: SelectionSet!
+  vortexIds: SelectionSet!
+  attractionIds: SelectionSet!
+  targetVolumeIds: SelectionSet!
+  referenceIds: SelectionSet!
+}
+
+type Puzzle3dSelectableKinds {
+  objects: Boolean!
+  vortices: Boolean!
+  attractions: Boolean!
+}
+
+type Puzzle3dSuggestionMenu {
+  x: Float!
+  y: Float!
+  windowId: String!
+}
+
+type Puzzle3dWindowOptions {
+  selectionMethod: String!
+  lodAutomatic: Boolean!
+  lodDepthVariable: Boolean!
+  gridVisible: Boolean!
+  lodManual: Float!
+  gridSnapEnabled: Boolean!
+  gridSpacing: Float!
+  selectableKinds: Puzzle3dSelectableKinds!
+  engagementInput: String!
+  selectionModeDefault: String!
+  proximityRadius: Float!
+  chunkSize: Float!
+  voxelDims: [Int!]!
+  transformMove: Boolean!
+  transformRotate: Boolean!
+  vortexShow: String!
+  vortexDirection: String!
+  sun: WorldSunConfig!
+  camera: Puzzle3dCamera!
+}
+
+type Puzzle3dWindowOptionsEntry {
+  key: String!
+  value: Puzzle3dWindowOptions!
+}

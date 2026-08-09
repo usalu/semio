@@ -1,0 +1,50 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/jack/presence.json",
+  "title": "JackPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "activeFixtureId",
+    "jackQuery",
+    "camera",
+    "lodModeByWindow"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    },
+    "activeFixtureId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "jackQuery": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "shared-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

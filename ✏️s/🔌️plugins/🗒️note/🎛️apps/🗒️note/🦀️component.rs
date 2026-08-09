@@ -21,6 +21,7 @@ use crate::apps::note::commands::selection::{clear_selection, select_all, set_ho
 use crate::apps::note::commands::snap::{set_snap_enabled, set_snap_grid_spacing};
 use crate::apps::note::commands::utility::set_active_utility;
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::apps::note::presence::{NotePresence, NotePresenceMutation};
 use crate::apps::note::modes::edit;
 use crate::apps::note::modes::edit::windows::{composite, navigator};
 use crate::apps::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -129,6 +130,8 @@ impl DocumentApp for NotePlayApp {
     type ConfigMutation = NoteConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = NotePresence;
+    type PresenceMutation = NotePresenceMutation;
 
     type Command = NoteCommand;
 

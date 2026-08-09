@@ -1,0 +1,205 @@
+[
+  {
+    "slug": "writer",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-writer",
+    "plugin": "\u2712\ufe0fwriter",
+    "prompt_len": 3547
+  },
+  {
+    "slug": "mathematical",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-mathematical",
+    "plugin": "\u2797\ufe0fmathematical",
+    "prompt_len": 3637
+  },
+  {
+    "slug": "procedural",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-procedural",
+    "plugin": "\ud83c\udf00\ufe0fprocedural",
+    "prompt_len": 3796
+  },
+  {
+    "slug": "flow",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-flow",
+    "plugin": "\ud83c\udf0a\ufe0fflow",
+    "prompt_len": 3517
+  },
+  {
+    "slug": "gis",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-gis",
+    "plugin": "\ud83c\udf0d\ufe0fgis",
+    "prompt_len": 3677
+  },
+  {
+    "slug": "vcs",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-vcs",
+    "plugin": "\ud83c\udf3f\ufe0fvcs",
+    "prompt_len": 3510
+  },
+  {
+    "slug": "animate",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-animate",
+    "plugin": "\ud83c\udf9e\ufe0fanimate",
+    "prompt_len": 3562
+  },
+  {
+    "slug": "shooting",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-shooting",
+    "plugin": "\ud83c\udfa5\ufe0fshooting",
+    "prompt_len": 3577
+  },
+  {
+    "slug": "sequence",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-sequence",
+    "plugin": "\ud83c\udfac\ufe0fsequence",
+    "prompt_len": 3577
+  },
+  {
+    "slug": "fem",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-fem",
+    "plugin": "\ud83c\udfd7\ufe0ffem",
+    "prompt_len": 3677
+  },
+  {
+    "slug": "architect",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-architect",
+    "plugin": "\ud83c\udfdb\ufe0farchitect",
+    "prompt_len": 3592
+  },
+  {
+    "slug": "process",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-process",
+    "plugin": "\ud83c\udfed\ufe0fprocess",
+    "prompt_len": 3556
+  },
+  {
+    "slug": "reasoning-mindmap",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-reasoning-mindmap",
+    "plugin": "\ud83d\udca1\ufe0freasoning",
+    "prompt_len": 3632
+  },
+  {
+    "slug": "forms",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-forms",
+    "plugin": "\ud83d\udccb\ufe0fforms",
+    "prompt_len": 3532
+  },
+  {
+    "slug": "layout",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-layout",
+    "plugin": "\ud83d\udccf\ufe0flayout",
+    "prompt_len": 3547
+  },
+  {
+    "slug": "cad",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-cad",
+    "plugin": "\ud83d\udcd0\ufe0fcad",
+    "prompt_len": 3502
+  },
+  {
+    "slug": "norm",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-norm",
+    "plugin": "\ud83d\udcd5\ufe0fnorm",
+    "prompt_len": 3863
+  },
+  {
+    "slug": "playbook",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-playbook",
+    "plugin": "\ud83d\udcd6\ufe0fplaybook",
+    "prompt_len": 3577
+  },
+  {
+    "slug": "imperative",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-imperative",
+    "plugin": "\ud83d\udcdc\ufe0fimperative",
+    "prompt_len": 3607
+  },
+  {
+    "slug": "remodel",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-remodel",
+    "plugin": "\ud83d\udcf8\ufe0fremodel",
+    "prompt_len": 3562
+  },
+  {
+    "slug": "trinity",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-trinity",
+    "plugin": "\ud83d\udd31\ufe0ftrinity",
+    "prompt_len": 3747
+  },
+  {
+    "slug": "dag",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-dag",
+    "plugin": "\ud83d\udd78\ufe0fdag",
+    "prompt_len": 3502
+  },
+  {
+    "slug": "draw",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-draw",
+    "plugin": "\ud83d\udd8d\ufe0fdraw",
+    "prompt_len": 3517
+  },
+  {
+    "slug": "raster",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-raster",
+    "plugin": "\ud83d\udda8\ufe0fraster",
+    "prompt_len": 3547
+  },
+  {
+    "slug": "note",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-note",
+    "plugin": "\ud83d\uddd2\ufe0fnote",
+    "prompt_len": 3517
+  },
+  {
+    "slug": "puzzle",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-puzzle",
+    "plugin": "\ud83e\udde9\ufe0fpuzzle",
+    "prompt_len": 3915
+  },
+  {
+    "slug": "block",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-block",
+    "plugin": "\ud83e\uddf1\ufe0fblock",
+    "prompt_len": 3894
+  },
+  {
+    "slug": "space",
+    "model": "cursor-grok-4.5-high",
+    "crate": "semio-s-plugin-space",
+    "plugin": "\ud83e\ude90\ufe0fspace",
+    "prompt_len": 3713
+  },
+  {
+    "slug": "sourcing",
+    "model": "composer-2.5",
+    "crate": "semio-s-plugin-sourcing",
+    "plugin": "\ud83e\udeb5\ufe0fsourcing",
+    "prompt_len": 3585
+  }
+]

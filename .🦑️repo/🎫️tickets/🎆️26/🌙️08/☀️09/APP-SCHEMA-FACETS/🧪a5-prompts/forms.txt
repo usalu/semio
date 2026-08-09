@@ -1,0 +1,60 @@
+You are implementing wave A5 of ticket 26/08/09/APP-SCHEMA-FACETS in /Users/ueli/Documents/semio.
+
+## Read first (full)
+Discover the ticket folder with: `python3 -c "from pathlib import Path; print(next(Path('/Users/ueli/Documents/semio').rglob('APP-SCHEMA-FACETS')))"`
+Then read in full:
+1. `📜️normative-spec.md` — especially §2 ownership, §3 layout, §5–§6 fields, §11–§12, and **§13 lowpoly pilot leaves** (your template)
+2. `📋️fanout-brief.md`
+3. Your card: `🧪a5-cards/forms.json`
+
+## Assignment
+- Plugin folder: `📋️forms/` under `✏️s/🔌️plugins/` — the ONLY production tree you may touch, plus the ticket folder for your report
+- Crate: `semio-s-plugin-forms`
+- Owners (bijection of config types — do NOT invent extra owners):
+[
+  {
+    "owner": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config",
+    "configType": "FormsConfig",
+    "presenceType": "FormsPresence",
+    "apps": [
+      "📋️forms/📋️forms"
+    ]
+  }
+]
+
+## Already done for you
+- Taxonomy + policy scanners exist (`policyAppSchemaBreaches`)
+- Kernel has `DocumentApp::Presence` + `NoPresence` / `NoPresenceMutation`
+- Your DocumentApp currently has temporary `type Presence = semio_framework_plugin::NoPresence` — **replace** with your real `XPresence` / `XPresenceMutation` (import from your presence module; you may switch the use-path to bare `NoPresence` only if the app truly has empty presence AND you still create the empty presence module+schema leaves)
+- Lowpoly pilot is the binding template (config schema twin + presence runtime + presence schema)
+
+## Deliverable per owner
+```
+<owner>/🧬️schema/{🦀️component.rs,🟦️component.ts,🔗️component.graphql,🔣️component.json,🛰️component.proto}
+# presence is sibling of config dir:
+<parent>/👥️presence/🦀️component.rs          # real XPresence + XPresenceMutation + DocumentDsl/Pack
+<parent>/👥️presence/🧬️schema/{five leaves}
+```
+- Config schema type name = configType; every field `local-ui` / state local_ui; fields MUST match real Rust `XConfig` (config-fidelity).
+- Presence type name = presenceType; every field `shared-ui`; empty `{}` struct is valid if nothing shareable — still ship all five leaves + mutation (Snapshot/Noop pattern like lowpoly/NoPresence).
+- Wire `📦️glue.rs`: nest `config { component; schema }` and `presence { component; schema }` like lowpoly.
+- Set `type Presence = …; type PresenceMutation = …;` on each DocumentApp that uses this owner.
+
+## Absolute rules
+1. Touch ONLY this plugin + ticket report. No root script, taxonomy, kernel, framework schema.
+2. Do NOT use the broken codebase search tool; use pathlib / rg carefully / Read.
+3. Gate ONLY with scoped policy (never `bun ./📜️script.ts policy`):
+```
+bun -e 'const m=await import("./📜️script.ts"); const b=m.policyAppSchemaBreaches(process.cwd()).filter(x=>JSON.stringify(x).includes("forms")||JSON.stringify(x).includes("📋️forms")|| (x.scope||"").includes("forms")); console.log(b.length); for (const x of b) console.log(x.kind, x.summary||x);'
+```
+Iterate until scoped breaches are **0**.
+4. `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-s-plugin-forms`
+5. `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p semio-s-plugin-forms --lib`
+6. fixedList↔list exemption already in policy for TS/GraphQL/protobuf; JSON+Rust keep fixedList.
+7. Proto3: no `optional` on maps.
+8. Do not stop halfway; do not ask questions.
+
+## Report
+Write `🧪a5-forms-report.md` in the ticket folder with: summary, files touched, three gate tails, anything unverified.
+
+Reply with a 5-10 line summary + gate results.

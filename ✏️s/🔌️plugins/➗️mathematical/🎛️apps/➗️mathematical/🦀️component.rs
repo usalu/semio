@@ -15,6 +15,7 @@ use crate::apps::mathematical::commands::geometry::set_points;
 use crate::apps::mathematical::commands::graph::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::apps::mathematical::commands::locale::set_locale;
 use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use crate::apps::mathematical::presence::{MathematicalPresence, MathematicalPresenceMutation};
 use crate::apps::mathematical::modes::edit;
 use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::artifacts::mathematical::op::MathematicalMutation;
@@ -65,6 +66,8 @@ impl DocumentApp for MathematicalPlayApp {
     type ConfigMutation = MathematicalConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = MathematicalPresence;
+    type PresenceMutation = MathematicalPresenceMutation;
 
     type Command = MathematicalCommand;
 

@@ -1,0 +1,26 @@
+syntax = "proto3";
+package semio.app.layout.layout;
+message LayoutPresence {
+  // @state shared-ui
+  string active_page_id = 1;
+  // @state shared-ui
+  repeated string selected_ids = 2;
+  // @state shared-ui
+  optional string hovered_id = 3;
+  // @state shared-ui
+  LayoutDropPreviewState drop_preview = 4;
+  // @state shared-ui
+  LayoutCamera camera = 5;
+  // @state shared-ui
+  LayoutCamera preview_camera = 6;
+}
+message LayoutDropPreviewState {
+  string kind = 1;
+  double x = 2;
+  double y = 3;
+}
+message LayoutCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

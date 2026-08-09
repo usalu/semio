@@ -1,0 +1,30 @@
+type SpaceConfig {
+  camera: [SpaceWindowCameraEntry!]! @state(class: LOCAL_UI)
+  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: LOCAL_UI)
+  collapsedNodeIds: [String!]! @state(class: LOCAL_UI)
+  previewOffNodeIds: [String!]! @state(class: LOCAL_UI)
+  activeNodeId: String @state(class: LOCAL_UI)
+  focusedNodeId: String @state(class: LOCAL_UI)
+  clipboardNodeIds: [String!]! @state(class: LOCAL_UI)
+  workflowEngagementInput: String! @state(class: LOCAL_UI)
+  compiledDagEngagementInput: String! @state(class: LOCAL_UI)
+  pendingImportNodeId: String @state(class: LOCAL_UI)
+  pendingImportFormat: String @state(class: LOCAL_UI)
+  activePanelTab: String! @state(class: LOCAL_UI)
+  spaceId: String @state(class: LOCAL_UI)
+  clientId: String @state(class: LOCAL_UI)
+  clientName: String @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type SpaceWindowCameraEntry {
+  key: String!
+  value: SpaceWindowCamera!
+}
+
+type SpaceWindowCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

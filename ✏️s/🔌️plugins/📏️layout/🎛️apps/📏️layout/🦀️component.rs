@@ -134,6 +134,8 @@ impl DocumentApp for LayoutPlayApp {
     type ConfigMutation = LayoutConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::layout::presence::LayoutPresence;
+    type PresenceMutation = crate::apps::layout::presence::LayoutPresenceMutation;
 
     type Command = LayoutCommand;
 

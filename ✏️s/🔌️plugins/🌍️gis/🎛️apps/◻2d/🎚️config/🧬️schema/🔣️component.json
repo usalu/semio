@@ -1,0 +1,73 @@
+{
+  "$id": "https://semio.tech/schema/app/gis/gis2d/config.json",
+  "title": "Gis2dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "layerVisibility",
+    "cameraJson",
+    "renderMode",
+    "vectorStyle",
+    "lodMode",
+    "featureSelectionJson",
+    "hoverJson",
+    "selectionMethod",
+    "selectionMode",
+    "layerStrokeScale",
+    "locale"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "layerVisibility": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" },
+      "x-semio-state": "local-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "renderMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "vectorStyle": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "featureSelectionJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoverJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "layerStrokeScale": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

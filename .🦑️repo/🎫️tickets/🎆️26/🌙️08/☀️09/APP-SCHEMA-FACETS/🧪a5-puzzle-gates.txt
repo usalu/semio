@@ -1,0 +1,17 @@
+=== POLICY ===
+0
+=== CARGO CHECK (tail) ===
+
+warning: `semio-s-plugin-puzzle` (lib) generated 76 warnings (run `cargo fix --lib -p semio-s-plugin-puzzle` to apply 56 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.20s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+=== CARGO TEST (tail) ===
+test artifacts::puzzle3d::dsl::tests::puzzle3d_example_fixtures_parse_and_round_trip_as_dsl ... ok
+test artifacts::puzzle5d::dsl::tests::puzzle5d_example_fixtures_parse_and_round_trip_as_dsl ... ok
+test apps::puzzle2d::component::tests::repeated_actions_do_not_duplicate_edges ... ok
+test examples::puzzle3d::nakagin_capsule_tower_tests::dsl_asset_parses_and_round_trips ... ok
+test examples::puzzle5d::nakagin_capsule_tower_tests::dsl_asset_parses_and_round_trips ... ok
+
+test result: ok. 390 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.43s
+

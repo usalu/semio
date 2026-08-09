@@ -1,0 +1,17 @@
+{
+  "plugin": "🗒️note",
+  "crate": "semio-s-plugin-note",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config",
+      "configType": "NoteConfig",
+      "presenceType": "NotePresence",
+      "apps": [
+        "🗒️note/🗒️note"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🗒️note",
+  "skip_if_lowpoly_done": false
+}

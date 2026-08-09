@@ -1598,6 +1598,8 @@ pub mod app {
             let artifact_components = string_array(&taxonomy, "artifactComponentDirs");
             let snapshot_child_dirs = string_array(&taxonomy, "snapshotChildDirs");
             let diff_child_dirs = string_array(&taxonomy, "diffChildDirs");
+            let config_child_dirs = string_array(&taxonomy, "configChildDirs");
+            let presence_child_dirs = string_array(&taxonomy, "presenceChildDirs");
             let schema_leaf_filenames = schema_format_leaf_filenames(&taxonomy);
             let forbidden_example_plurals = string_array(&taxonomy, "forbiddenExamplePluralDirs");
             let example_asset_kind_prefixes = object_string_values(&taxonomy, "exampleAssetKindPrefixes");
@@ -1616,6 +1618,9 @@ pub mod app {
             let snapshot_dir = "📸️snapshot";
             let diff_dir = "🔺️diff";
             let schema_dir = "🧬️schema";
+            let config_dir = "🎚️config";
+            let presence_dir = "👥️presence";
+            let legacy_config_dir = "🧮️config";
             assert!(
                 !example_asset_kind_prefixes.is_empty(),
                 "taxonomy gate: exampleAssetKindPrefixes must be non-empty in 🔣️taxonomy.json"
@@ -1730,6 +1735,46 @@ pub mod app {
 
             let apps = subdirectories(app_root);
             assert!(!apps.is_empty(), "taxonomy gate: {} declares no apps", app_root.display());
+            let assert_app_schema_owner = |owner_label: &str, parent: &std::path::Path| {
+                let config_root = parent.join(config_dir);
+                if !config_root.is_dir() {
+                    return;
+                }
+                for child in &config_child_dirs {
+                    let child_dir = config_root.join(child);
+                    if child == schema_dir {
+                        assert!(child_dir.is_dir(), "taxonomy gate: {owner_label} is missing {config_dir}/{child}");
+                        let missing_leaves: Vec<&str> = schema_leaf_filenames
+                            .iter()
+                            .map(String::as_str)
+                            .filter(|name| !child_dir.join(name).is_file())
+                            .collect();
+                        assert!(
+                            missing_leaves.is_empty(),
+                            "taxonomy gate: {owner_label} is missing {config_dir}/{child} leaf(ves): {}",
+                            missing_leaves.join(", ")
+                        );
+                    }
+                }
+                let presence_root = parent.join(presence_dir);
+                assert!(presence_root.is_dir(), "taxonomy gate: {owner_label} is missing {presence_dir}");
+                for child in &presence_child_dirs {
+                    let child_dir = presence_root.join(child);
+                    if child == schema_dir {
+                        assert!(child_dir.is_dir(), "taxonomy gate: {owner_label} is missing {presence_dir}/{child}");
+                        let missing_leaves: Vec<&str> = schema_leaf_filenames
+                            .iter()
+                            .map(String::as_str)
+                            .filter(|name| !child_dir.join(name).is_file())
+                            .collect();
+                        assert!(
+                            missing_leaves.is_empty(),
+                            "taxonomy gate: {owner_label} is missing {presence_dir}/{child} leaf(ves): {}",
+                            missing_leaves.join(", ")
+                        );
+                    }
+                }
+            };
             for app in &apps {
                 assert!(app.join(leaf).is_file(), "taxonomy gate: app {} is missing its {leaf}", app.display());
                 assert!(
@@ -1737,7 +1782,18 @@ pub mod app {
                     "taxonomy gate: app {} is missing ⚙️engine/{examples}",
                     app.display()
                 );
+                assert!(
+                    !app.join(legacy_config_dir).is_dir(),
+                    "taxonomy gate: app {} still has {legacy_config_dir} — rename to {config_dir}",
+                    app.display()
+                );
+                assert_app_schema_owner(&format!("app {}", app.display()), app);
             }
+            assert!(
+                !plugin_root.join(legacy_config_dir).is_dir(),
+                "taxonomy gate: plugin-root still has {legacy_config_dir} — rename to {config_dir}"
+            );
+            assert_app_schema_owner(&format!("plugin-root {}", plugin_root.display()), plugin_root);
         }
 
         //#region TaxonomyJson
@@ -1948,7 +2004,7 @@ pub mod app {
         mod testkit_tests {
             //! 🧪️ Proves each `testkit` primitive against a minimal dummy `DocumentApp` before any real app
             //! adopts them.
-            use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation};
+            use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
             use super::*;
             use crate::app::{DocumentView, Emit};
             use store::EngineHandles;
@@ -2124,6 +2180,8 @@ pub mod app {
                 type ConfigMutation = NoConfigMutation;
                 type Draft = NoDraft;
                 type DraftMutation = NoDraftMutation;
+                type Presence = NoPresence;
+                type PresenceMutation = NoPresenceMutation;
                 type Command = DummyCommand;
 
                 fn initial_snapshot() -> DummySnapshot {
@@ -3049,6 +3107,99 @@ pub mod app {
     pub type NoDraftMutation = NoConfigMutation;
     //#endregion 🔖️NoDraft
 
+    //#region 🔖️NoPresence
+    /// @emoji 👥️ Default `DocumentApp::Presence` for apps with no shareable live state yet.
+    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct NoPresence {}
+
+    impl store::DocumentDsl for NoPresence {
+        const EXTENSION: &'static str = "nopres";
+        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+            if text.trim().is_empty() {
+                return Ok(Self::default());
+            }
+            Err(store::TextError::new("no presence", store::TextSpan::at(1, 1)))
+        }
+        fn print_dsl(&self) -> String {
+            String::new()
+        }
+    }
+
+    impl DocumentPack for NoPresence {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            Ok(Vec::new())
+        }
+        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            Ok(Self::default())
+        }
+    }
+
+    impl ::protocol::MutationDiff<NoPresence> for NoPresence {
+        fn apply(&self, base: &NoPresence) -> NoPresence {
+            base.clone()
+        }
+        fn absorb(&mut self, _other: Self) {}
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    #[serde(rename_all = "camelCase")]
+    pub enum NoPresenceMutation {
+        Noop,
+    }
+
+    impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
+        type Diff = NoPresence;
+
+        fn diff(&self, _base: &NoPresence) -> NoPresence {
+            NoPresence::default()
+        }
+
+        fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
+            vec![NoPresenceMutation::Noop]
+        }
+    }
+
+    impl ::protocol::OpText for NoPresenceMutation {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{keyword} ");
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                    let record = ::dsl::parse(
+                        body,
+                        &spec_fn(),
+                        &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                    )?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                }
+            }
+            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        }
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+            if body.is_empty() {
+                keyword
+            } else {
+                format!("{keyword} {body}")
+            }
+        }
+    }
+
+    impl ::protocol::OpBinary for NoPresenceMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
+        }
+    }
+    //#endregion 🔖️NoPresence
+
     //#region 🔖️CommandLog
     /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -3834,6 +3985,10 @@ pub mod app {
         type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
         type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        /// @emoji 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+        /// @emoji 👥️ Presence-lane operations applied to the app's typed presence snapshot.
+        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
         /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
         /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
@@ -6720,7 +6875,7 @@ pub mod plugin_runtime {
         use ui_wgpu::wgpu::{Label, LocalizedLabel};
 
         use super::ContextMenuWireRequest;
-        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, PluginApp, VcsDocumentApp};
+        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, VcsDocumentApp};
         use store::EngineHandles;
         use semio_framework::Fault;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
@@ -7051,6 +7206,8 @@ pub mod plugin_runtime {
             type ConfigMutation = TestConfigMutation;
             type Draft = NoDraft;
             type DraftMutation = NoDraftMutation;
+            type Presence = NoPresence;
+            type PresenceMutation = NoPresenceMutation;
             type Command = TestCommand;
 
             fn initial_snapshot() -> TestSnapshot {
@@ -8913,7 +9070,7 @@ pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView, KeybindingSpec,
-    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
+    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

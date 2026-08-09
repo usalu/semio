@@ -70,6 +70,8 @@ impl DocumentApp for PlaybookPlayApp {
     type ConfigMutation = PlaybookConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::playbook::presence::PlaybookPresence;
+    type PresenceMutation = crate::apps::playbook::presence::PlaybookPresenceMutation;
 
     type Command = PlaybookCommand;
 

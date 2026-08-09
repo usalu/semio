@@ -1,0 +1,4 @@
+type VcsDemoConfig {
+  selectedCheckpointIds: [String!]! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

@@ -1,0 +1,328 @@
+[
+  {
+    "owner": "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config",
+    "configType": "WriterConfig",
+    "presenceType": "WriterPresence",
+    "apps": [
+      "✒️writer/✒️writer"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config",
+    "configType": "MathematicalConfig",
+    "presenceType": "MathematicalPresence",
+    "apps": [
+      "➗️mathematical/➗️mathematical"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config",
+    "configType": "Procedural2dConfig",
+    "presenceType": "Procedural2dPresence",
+    "apps": [
+      "🌀️procedural/◻2d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Procedural3dConfig",
+    "presenceType": "Procedural3dPresence",
+    "apps": [
+      "🌀️procedural/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config",
+    "configType": "FlowConfig",
+    "presenceType": "FlowPresence",
+    "apps": [
+      "🌊️flow/🌊️flow"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config",
+    "configType": "Gis2dConfig",
+    "presenceType": "Gis2dPresence",
+    "apps": [
+      "🌍️gis/◻2d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Gis3dConfig",
+    "presenceType": "Gis3dPresence",
+    "apps": [
+      "🌍️gis/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config",
+    "configType": "VcsDemoConfig",
+    "presenceType": "VcsDemoPresence",
+    "apps": [
+      "🌿️vcs/🌿️vcs"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config",
+    "configType": "PresentConfig",
+    "presenceType": "PresentPresence",
+    "apps": [
+      "🎞️animate/🎬️present"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config",
+    "configType": "ShootingConfig",
+    "presenceType": "ShootingPresence",
+    "apps": [
+      "🎥️shooting/🎥️shooting"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config",
+    "configType": "SequenceConfig",
+    "presenceType": "SequencePresence",
+    "apps": [
+      "🎬️sequence/🎬️sequence"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config",
+    "configType": "Fem2dConfig",
+    "presenceType": "Fem2dPresence",
+    "apps": [
+      "🏗️fem/◻2d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Fem3dConfig",
+    "presenceType": "Fem3dPresence",
+    "apps": [
+      "🏗️fem/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config",
+    "configType": "ArchitectConfig",
+    "presenceType": "ArchitectPresence",
+    "apps": [
+      "🏛️architect/🏛️architect"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Process3dConfig",
+    "presenceType": "Process3dPresence",
+    "apps": [
+      "🏭️process/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config",
+    "configType": "LowpolyConfig",
+    "presenceType": "LowpolyPresence",
+    "apps": [
+      "💠️lowpoly/💠️lowpoly"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config",
+    "configType": "WiresConfig",
+    "presenceType": "WiresPresence",
+    "apps": [
+      "💡️reasoning/🔌️wires"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config",
+    "configType": "FormsConfig",
+    "presenceType": "FormsPresence",
+    "apps": [
+      "📋️forms/📋️forms"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config",
+    "configType": "LayoutConfig",
+    "presenceType": "LayoutPresence",
+    "apps": [
+      "📏️layout/📏️layout"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config",
+    "configType": "CadConfig",
+    "presenceType": "CadPresence",
+    "apps": [
+      "📐️cad/📐️cad"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📕️norm/🎚️config",
+    "configType": "NormConfig",
+    "presenceType": "NormPresence",
+    "apps": [
+      "📕️norm/📓️iso16757",
+      "📕️norm/📔️vdi3805",
+      "📕️norm/📕️din4108",
+      "📕️norm/📗️din16798",
+      "📕️norm/📘️en1990",
+      "📕️norm/📘️en1991",
+      "📕️norm/📘️en1992",
+      "📕️norm/📘️en1993",
+      "📕️norm/📘️en1994",
+      "📕️norm/📘️en1995",
+      "📕️norm/📘️en1996",
+      "📕️norm/📘️en1997",
+      "📕️norm/📘️en1998",
+      "📕️norm/📘️en1999",
+      "📕️norm/📙️din18599"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config",
+    "configType": "PlaybookConfig",
+    "presenceType": "PlaybookPresence",
+    "apps": [
+      "📖️playbook/📖️playbook"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config",
+    "configType": "ImperativeConfig",
+    "presenceType": "ImperativePresence",
+    "apps": [
+      "📜️imperative/📜️imperative"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config",
+    "configType": "RemodelConfig",
+    "presenceType": "RemodelPresence",
+    "apps": [
+      "📸️remodel/📸️remodel"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config",
+    "configType": "RewriteConfig",
+    "presenceType": "RewritePresence",
+    "apps": [
+      "🔱️trinity/♻️rewrite"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config",
+    "configType": "JackConfig",
+    "presenceType": "JackPresence",
+    "apps": [
+      "🔱️trinity/🔌️jack"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config",
+    "configType": "DagConfig",
+    "presenceType": "DagPresence",
+    "apps": [
+      "🕸️dag/🕸️dag"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config",
+    "configType": "DrawConfig",
+    "presenceType": "DrawPresence",
+    "apps": [
+      "🖍️draw/🖍️draw"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config",
+    "configType": "RasterConfig",
+    "presenceType": "RasterPresence",
+    "apps": [
+      "🖨️raster/🖨️raster"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config",
+    "configType": "NoteConfig",
+    "presenceType": "NotePresence",
+    "apps": [
+      "🗒️note/🗒️note"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config",
+    "configType": "Puzzle2dConfig",
+    "presenceType": "Puzzle2dPresence",
+    "apps": [
+      "🧩️puzzle/◻2d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config",
+    "configType": "Puzzle5dConfig",
+    "presenceType": "Puzzle5dPresence",
+    "apps": [
+      "🧩️puzzle/🖐️5d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Puzzle3dConfig",
+    "presenceType": "Puzzle3dPresence",
+    "apps": [
+      "🧩️puzzle/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config",
+    "configType": "Block2dConfig",
+    "presenceType": "Block2dPresence",
+    "apps": [
+      "🧱️block/◻2d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config",
+    "configType": "Block5dConfig",
+    "presenceType": "Block5dPresence",
+    "apps": [
+      "🧱️block/🖐️5d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config",
+    "configType": "Block3dConfig",
+    "presenceType": "Block3dPresence",
+    "apps": [
+      "🧱️block/🧊️3d"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config",
+    "configType": "HomeConfig",
+    "presenceType": "HomePresence",
+    "apps": [
+      "🪐️space/🏠️home"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config",
+    "configType": "SpaceConfig",
+    "presenceType": "SpacePresence",
+    "apps": [
+      "🪐️space/🪐️space"
+    ]
+  },
+  {
+    "owner": "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config",
+    "configType": "SourcingCurateConfig",
+    "presenceType": "SourcingCuratePresence",
+    "apps": [
+      "🪵️sourcing/🗂️curate"
+    ]
+  }
+]

@@ -1,0 +1,357 @@
+{
+  "$id": "https://semio.tech/schema/app/cad/cad/config.json",
+  "title": "CadConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedObjectIds",
+    "selectedNodeIds",
+    "selectionMethod",
+    "componentSelection",
+    "engagementInput",
+    "engagementStep",
+    "sun",
+    "camera",
+    "cameraBuilding",
+    "cameraEnergy",
+    "cameraStructureClassic",
+    "dislocateShape",
+    "dislocateBuilding",
+    "dislocateEnergy",
+    "dislocateStructureClassic",
+    "activeUtilityId",
+    "locale",
+    "terminology",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedObjectIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredTarget": {
+      "$ref": "#/$defs/CadHoverTarget",
+      "x-semio-state": "local-ui"
+    },
+    "activeObjectId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "componentSelection": {
+      "$ref": "#/$defs/CadComponentSelection",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementStep": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activeExampleId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedReferenceModelDefinitionId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedReferenceId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedPrimitiveId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedPrimitiveKind": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementPane": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementSessionJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lastFinalizedInteractionId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "sun": {
+      "$ref": "#/$defs/CadSunConfig",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/CadCamera",
+      "x-semio-state": "local-ui"
+    },
+    "cameraBuilding": {
+      "$ref": "#/$defs/CadCamera",
+      "x-semio-state": "local-ui"
+    },
+    "cameraEnergy": {
+      "$ref": "#/$defs/CadCamera",
+      "x-semio-state": "local-ui"
+    },
+    "cameraStructureClassic": {
+      "$ref": "#/$defs/CadCamera",
+      "x-semio-state": "local-ui"
+    },
+    "dislocateShape": {
+      "$ref": "#/$defs/CadDislocateOptions",
+      "x-semio-state": "local-ui"
+    },
+    "dislocateBuilding": {
+      "$ref": "#/$defs/CadDislocateOptions",
+      "x-semio-state": "local-ui"
+    },
+    "dislocateEnergy": {
+      "$ref": "#/$defs/CadDislocateOptions",
+      "x-semio-state": "local-ui"
+    },
+    "dislocateStructureClassic": {
+      "$ref": "#/$defs/CadDislocateOptions",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CadHoverTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadSelectionTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh",
+        "vertex",
+        "edge",
+        "face"
+      ],
+      "properties": {
+        "mesh": {
+          "type": "boolean"
+        },
+        "vertex": {
+          "type": "boolean"
+        },
+        "edge": {
+          "type": "boolean"
+        },
+        "face": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CadComponentSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets",
+        "mode",
+        "ids"
+      ],
+      "properties": {
+        "targets": {
+          "$ref": "#/$defs/CadSelectionTargets"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "CadSunConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "azimuth",
+        "elevation",
+        "intensity",
+        "color"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "azimuth": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "CadProjectionDsl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "orthographicView": {
+          "type": "string"
+        },
+        "axonometricVariant": {
+          "type": "string"
+        },
+        "axonometricAngleA": {
+          "type": "number"
+        },
+        "axonometricAngleB": {
+          "type": "number"
+        },
+        "axonometricQuadrant": {
+          "type": "string"
+        },
+        "obliqueVariant": {
+          "type": "string"
+        },
+        "obliqueAngle": {
+          "type": "number"
+        },
+        "obliqueDepth": {
+          "type": "number"
+        },
+        "onePointAxis": {
+          "type": "string"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "twoPointShift": {
+          "type": "number"
+        },
+        "curvilinearFov": {
+          "type": "number"
+        },
+        "curvilinearStrength": {
+          "type": "number"
+        },
+        "curvilinearMapping": {
+          "type": "string"
+        }
+      }
+    },
+    "CadCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "fov",
+        "projection"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "projection": {
+          "$ref": "#/$defs/CadProjectionDsl"
+        }
+      }
+    },
+    "CadDislocateOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moveEnabled",
+        "rotateEnabled"
+      ],
+      "properties": {
+        "moveEnabled": {
+          "type": "boolean"
+        },
+        "rotateEnabled": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

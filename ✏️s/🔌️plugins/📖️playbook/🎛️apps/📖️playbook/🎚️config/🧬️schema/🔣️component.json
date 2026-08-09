@@ -1,0 +1,28 @@
+{
+  "$id": "https://semio.tech/schema/app/playbook/playbook/config.json",
+  "title": "PlaybookConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

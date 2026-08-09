@@ -1,0 +1,20 @@
+type LayoutConfig {
+  activePageId: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: LOCAL_UI)
+  hoveredId: String @state(class: LOCAL_UI)
+  dropPreview: LayoutDropPreviewState! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  camera: LayoutCamera! @state(class: LOCAL_UI)
+  previewCamera: LayoutCamera! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+type LayoutDropPreviewState {
+  kind: String!
+  x: Float!
+  y: Float!
+}
+type LayoutCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

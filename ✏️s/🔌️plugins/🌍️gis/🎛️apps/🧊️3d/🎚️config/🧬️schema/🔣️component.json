@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/app/gis/gis3d/config.json",
+  "title": "Gis3dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cameraJson",
+    "selectedIds",
+    "locale"
+  ],
+  "properties": {
+    "cameraJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

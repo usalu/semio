@@ -1,0 +1,130 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle2d/config.json",
+  "title": "Puzzle2dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "lodModeByPane",
+    "engagementInputByPane",
+    "brushCandidateIndex",
+    "brushCandidates",
+    "brushCandidateSourceHandleId",
+    "fillCount",
+    "selectionMethod",
+    "gridSnapEnabled",
+    "gridFactor",
+    "suggestionOffset",
+    "nodeKindWeights",
+    "handleKindWeights",
+    "activeUtilityByWindowId",
+    "locale",
+    "terminology"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByPane": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "engagementInputByPane": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidates": {
+      "type": "array",
+      "items": {
+        "title": "Value",
+        "type": "object"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateSourceHandleId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "x-semio-state": "local-ui"
+    },
+    "nodeKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "handleKindWeights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowId": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

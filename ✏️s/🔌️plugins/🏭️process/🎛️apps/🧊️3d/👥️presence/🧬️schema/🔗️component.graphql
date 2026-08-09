@@ -1,0 +1,11 @@
+type Process3dPresence {
+  selectedId: String @state(class: SHARED_UI)
+  hoveredId: String @state(class: SHARED_UI)
+  selectedFaceId: Int @state(class: SHARED_UI)
+  selectionMethod: String! @state(class: SHARED_UI)
+  engagementInput: String! @state(class: SHARED_UI)
+  cameraPosition: [Float!]! @state(class: SHARED_UI)
+  cameraTarget: [Float!]! @state(class: SHARED_UI)
+  cameraFov: Float! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+}

@@ -1,0 +1,41 @@
+{
+  "$id": "https://semio.tech/schema/app/gis/gis2d/presence.json",
+  "title": "Gis2dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "cameraJson",
+    "featureSelectionJson",
+    "hoverJson",
+    "selectionMethod",
+    "selectionMode"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "featureSelectionJson": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoverJson": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

@@ -45,3 +45,44 @@ export class ArtifactSchemaRegistry {
   }
 }
 //#endregion 🔖️ArtifactSchemaRegistry
+
+//#region 🔖️AppSchemaDescriptor
+/** 🧬️ Registered descriptor for one app owner's config + presence schema facets. */
+export type AppSchemaDescriptor = {
+  readonly id: string;
+  readonly config: FacetLeaves;
+  readonly presence: FacetLeaves;
+};
+//#endregion 🔖️AppSchemaDescriptor
+
+//#region 🔖️AppSchemaRegistry
+/** 📚 Runtime registry of {@link AppSchemaDescriptor} values — app twin of {@link ArtifactSchemaRegistry}. */
+export class AppSchemaRegistry {
+  readonly #byId = new Map<string, AppSchemaDescriptor>();
+
+  /** 📎 Insert or replace a descriptor by owner id. */
+  register(descriptor: AppSchemaDescriptor): void {
+    this.#byId.set(descriptor.id, descriptor);
+  }
+
+  /** 🔎 Lookup by app schema owner id. */
+  get(id: string): AppSchemaDescriptor | undefined {
+    return this.#byId.get(id);
+  }
+
+  /** 🚶 Walk every registered descriptor. */
+  *iter(): IterableIterator<AppSchemaDescriptor> {
+    yield* this.#byId.values();
+  }
+
+  /** 🔢 Count of registered app schema owner ids. */
+  get size(): number {
+    return this.#byId.size;
+  }
+
+  /** 📭 Whether no owners are registered yet (A6 fills the catalog). */
+  get isEmpty(): boolean {
+    return this.#byId.size === 0;
+  }
+}
+//#endregion 🔖️AppSchemaRegistry

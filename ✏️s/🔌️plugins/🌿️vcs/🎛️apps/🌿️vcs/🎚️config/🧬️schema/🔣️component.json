@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/app/vcs/vcs/config.json",
+  "title": "VcsDemoConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedCheckpointIds",
+    "locale"
+  ],
+  "properties": {
+    "selectedCheckpointIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

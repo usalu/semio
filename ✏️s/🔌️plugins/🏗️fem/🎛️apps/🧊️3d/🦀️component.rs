@@ -134,6 +134,8 @@ impl DocumentApp for Fem3dPlayApp {
     type ConfigMutation = Fem3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::fem3d::presence::Fem3dPresence;
+    type PresenceMutation = crate::apps::fem3d::presence::Fem3dPresenceMutation;
 
     type Command = Fem3dCommand;
 

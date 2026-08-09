@@ -1,0 +1,18 @@
+type WriterPresence {
+  selectedAstIds: [String!]! @state(class: SHARED_UI)
+  editorSelection: WriterEditorSelection @state(class: SHARED_UI)
+  treeHoveredAstId: String @state(class: SHARED_UI)
+  editorHoverOffset: Int @state(class: SHARED_UI)
+  camera: WriterCamera! @state(class: SHARED_UI)
+}
+
+type WriterEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type WriterCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

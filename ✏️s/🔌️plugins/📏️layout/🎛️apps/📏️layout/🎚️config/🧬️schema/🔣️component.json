@@ -1,0 +1,76 @@
+{
+  "$id": "https://semio.tech/schema/app/layout/layout/config.json",
+  "title": "LayoutConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activePageId",
+    "selectedIds",
+    "dropPreview",
+    "engagementInput",
+    "camera",
+    "previewCamera",
+    "locale"
+  ],
+  "properties": {
+    "activePageId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "dropPreview": {
+      "$ref": "#/$defs/LayoutDropPreviewState",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/LayoutCamera",
+      "x-semio-state": "local-ui"
+    },
+    "previewCamera": {
+      "$ref": "#/$defs/LayoutCamera",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "LayoutDropPreviewState": {
+      "title": "LayoutDropPreviewState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y"],
+      "properties": {
+        "kind": { "type": "string" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" }
+      }
+    },
+    "LayoutCamera": {
+      "title": "LayoutCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

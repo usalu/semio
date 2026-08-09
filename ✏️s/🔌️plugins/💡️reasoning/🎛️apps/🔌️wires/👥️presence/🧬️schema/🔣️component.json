@@ -1,0 +1,32 @@
+{
+  "$id": "https://semio.tech/schema/app/reasoning/wires/presence.json",
+  "title": "WiresPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "dragLastX",
+    "dragLastY"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "dragNodeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "dragLastX": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "dragLastY": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

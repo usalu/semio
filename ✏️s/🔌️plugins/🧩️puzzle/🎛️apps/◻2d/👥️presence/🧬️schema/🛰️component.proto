@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.app.puzzle.puzzle2d;
+message Puzzle2dPresence {
+  // @state shared-ui
+  repeated string selected_ids = 1;
+  // @state shared-ui
+  double camera_x = 2;
+  // @state shared-ui
+  double camera_y = 3;
+  // @state shared-ui
+  double camera_zoom = 4;
+  // @state shared-ui
+  string selection_method = 5;
+  // @state shared-ui
+  string active_utility_id = 6;
+}

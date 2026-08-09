@@ -73,6 +73,8 @@ impl DocumentApp for Block2dPlayApp {
     type ConfigMutation = Block2dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::block2d::presence::Block2dPresence;
+    type PresenceMutation = crate::apps::block2d::presence::Block2dPresenceMutation;
 
     type Command = Block2dCommand;
 

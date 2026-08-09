@@ -1,0 +1,18 @@
+type LayoutPresence {
+  activePageId: String! @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  hoveredId: String @state(class: SHARED_UI)
+  dropPreview: LayoutDropPreviewState! @state(class: SHARED_UI)
+  camera: LayoutCamera! @state(class: SHARED_UI)
+  previewCamera: LayoutCamera! @state(class: SHARED_UI)
+}
+type LayoutDropPreviewState {
+  kind: String!
+  x: Float!
+  y: Float!
+}
+type LayoutCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

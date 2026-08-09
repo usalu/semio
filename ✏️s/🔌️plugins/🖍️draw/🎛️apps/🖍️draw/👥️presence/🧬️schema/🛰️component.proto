@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.app.draw.draw;
+message DrawPresence {
+  // @state shared-ui
+  repeated string selected_ids = 1;
+  // @state shared-ui
+  optional string hovered_id = 2;
+  // @state shared-ui
+  string engagement_input = 3;
+  // @state shared-ui
+  DrawCamera camera = 4;
+  // @state shared-ui
+  string active_utility_id = 5;
+}
+message DrawCamera { double x = 1; double y = 2; double zoom = 3; }

@@ -1,0 +1,58 @@
+{
+  "$id": "https://semio.tech/schema/app/procedural/2d/presence.json",
+  "title": "Procedural2dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "camera",
+    "showMode"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "shared-ui"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedGenerationId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

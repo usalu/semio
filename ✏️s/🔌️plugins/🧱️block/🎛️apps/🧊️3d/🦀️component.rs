@@ -124,6 +124,8 @@ impl DocumentApp for Block3dPlayApp {
     type ConfigMutation = Block3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::block3d::presence::Block3dPresence;
+    type PresenceMutation = crate::apps::block3d::presence::Block3dPresenceMutation;
 
     type Command = Block3dCommand;
 

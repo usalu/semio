@@ -1,0 +1,18 @@
+type Process3dConfig {
+  selectedId: String @state(class: LOCAL_UI)
+  hoveredId: String @state(class: LOCAL_UI)
+  selectedFaceId: Int @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  cameraPosition: [Float!]! @state(class: LOCAL_UI)
+  cameraTarget: [Float!]! @state(class: LOCAL_UI)
+  cameraFov: Float! @state(class: LOCAL_UI)
+  sunEnabled: Boolean! @state(class: LOCAL_UI)
+  sunAzimuth: Float! @state(class: LOCAL_UI)
+  sunElevation: Float! @state(class: LOCAL_UI)
+  sunIntensity: Float! @state(class: LOCAL_UI)
+  sunColor: String! @state(class: LOCAL_UI)
+  activeUtilityId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+}

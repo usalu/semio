@@ -1,0 +1,24 @@
+type ShootingConfig {
+  defaultShotFormat: String! @state(class: LOCAL_UI)
+  defaultShotShape: String! @state(class: LOCAL_UI)
+  defaultAssetFormat: String! @state(class: LOCAL_UI)
+  selectedShotIds: [String!]! @state(class: LOCAL_UI)
+  selectedAssetIds: [String!]! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  hoveredAssetId: String @state(class: LOCAL_UI)
+  centerModel: Boolean! @state(class: LOCAL_UI)
+  fitRevision: Int! @state(class: LOCAL_UI)
+  cameraDraftLabel: String! @state(class: LOCAL_UI)
+  camera: ShootingCamera! @state(class: LOCAL_UI)
+  activeUtilityId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type ShootingCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  up: [Float!]
+  projection: String
+}

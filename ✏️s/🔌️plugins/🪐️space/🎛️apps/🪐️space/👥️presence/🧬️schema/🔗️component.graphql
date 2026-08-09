@@ -1,0 +1,20 @@
+type SpacePresence {
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  hoveredNodeId: String @state(class: SHARED_UI)
+  camera: [SpaceWindowCameraEntry!]! @state(class: SHARED_UI)
+  activeNodeId: String @state(class: SHARED_UI)
+  focusedNodeId: String @state(class: SHARED_UI)
+  collapsedNodeIds: [String!]! @state(class: SHARED_UI)
+  previewOffNodeIds: [String!]! @state(class: SHARED_UI)
+}
+
+type SpaceWindowCameraEntry {
+  key: String!
+  value: SpaceWindowCamera!
+}
+
+type SpaceWindowCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

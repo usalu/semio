@@ -1,0 +1,39 @@
+{
+  "$id": "https://semio.tech/schema/app/forms/forms/config.json",
+  "title": "FormsConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "currentStepIndex",
+    "tryValuesJson",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "currentStepIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "tryValuesJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

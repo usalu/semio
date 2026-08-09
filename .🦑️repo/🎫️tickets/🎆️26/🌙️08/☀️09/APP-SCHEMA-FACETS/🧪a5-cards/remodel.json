@@ -1,0 +1,17 @@
+{
+  "plugin": "📸️remodel",
+  "crate": "semio-s-plugin-remodel",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config",
+      "configType": "RemodelConfig",
+      "presenceType": "RemodelPresence",
+      "apps": [
+        "📸️remodel/📸️remodel"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "📸️remodel",
+  "skip_if_lowpoly_done": false
+}

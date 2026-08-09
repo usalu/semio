@@ -1,0 +1,25 @@
+{
+  "plugin": "🌍️gis",
+  "crate": "semio-s-plugin-gis",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config",
+      "configType": "Gis2dConfig",
+      "presenceType": "Gis2dPresence",
+      "apps": [
+        "🌍️gis/◻2d"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config",
+      "configType": "Gis3dConfig",
+      "presenceType": "Gis3dPresence",
+      "apps": [
+        "🌍️gis/🧊️3d"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🌍️gis",
+  "skip_if_lowpoly_done": false
+}

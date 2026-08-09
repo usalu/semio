@@ -1,0 +1,92 @@
+{
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle3d/presence.json",
+  "title": "Puzzle3dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedObjectIds",
+    "selectedVortexIds",
+    "selectedAttractionIds",
+    "selectedTargetVolumeIds",
+    "selectedReferenceIds",
+    "cameraPosition",
+    "cameraTarget",
+    "cameraZoom",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedObjectIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedVortexIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedAttractionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedTargetVolumeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedReferenceIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredVortexFullId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "shared-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "activeToolId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

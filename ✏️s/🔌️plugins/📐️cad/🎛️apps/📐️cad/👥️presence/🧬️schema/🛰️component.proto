@@ -1,0 +1,45 @@
+syntax = "proto3";
+package semio.app.cad.cad;
+
+message CadPresence {
+  // @state shared-ui
+  repeated string selected_object_ids = 1;
+  // @state shared-ui
+  repeated string selected_node_ids = 2;
+  // @state shared-ui
+  optional string hovered_object_id = 3;
+  // @state shared-ui
+  optional string hovered_target_object_id = 4;
+  // @state shared-ui
+  optional string hovered_target_mode = 5;
+  // @state shared-ui
+  optional uint32 hovered_target_id = 6;
+  // @state shared-ui
+  optional string active_object_id = 7;
+  // @state shared-ui
+  string component_selection_mode = 8;
+  // @state shared-ui
+  repeated uint32 component_selection_ids = 9;
+  // @state shared-ui
+  bool component_selection_targets_mesh = 10;
+  // @state shared-ui
+  bool component_selection_targets_vertex = 11;
+  // @state shared-ui
+  bool component_selection_targets_edge = 12;
+  // @state shared-ui
+  bool component_selection_targets_face = 13;
+  // @state shared-ui
+  repeated double camera_position = 14;
+  // @state shared-ui
+  repeated double camera_target = 15;
+  // @state shared-ui
+  double camera_zoom = 16;
+  // @state shared-ui
+  double camera_fov = 17;
+  // @state shared-ui
+  string active_utility_id = 18;
+  // @state shared-ui
+  string engagement_step = 19;
+  // @state shared-ui
+  optional string engagement_pane = 20;
+}

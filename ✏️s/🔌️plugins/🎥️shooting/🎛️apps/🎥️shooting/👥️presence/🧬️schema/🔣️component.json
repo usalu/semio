@@ -1,0 +1,93 @@
+{
+  "$id": "https://semio.tech/schema/app/shooting/shooting/presence.json",
+  "title": "ShootingPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedShotIds",
+    "selectedAssetIds",
+    "camera",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedShotIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedAssetIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredAssetId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/ShootingCamera",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "ShootingCamera": {
+      "title": "ShootingCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "projection": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

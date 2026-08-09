@@ -1,0 +1,2 @@
+/** 🧬️ NormPresence */
+export interface NormPresence {}

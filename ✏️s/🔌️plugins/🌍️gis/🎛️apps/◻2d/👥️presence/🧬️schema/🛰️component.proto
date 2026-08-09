@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.app.gis.gis2d;
+message Gis2dPresence {
+  // @state shared-ui
+  repeated string selected_ids = 1;
+  // @state shared-ui
+  string camera_json = 2;
+  // @state shared-ui
+  string feature_selection_json = 3;
+  // @state shared-ui
+  string hover_json = 4;
+  // @state shared-ui
+  string selection_method = 5;
+  // @state shared-ui
+  string selection_mode = 6;
+}

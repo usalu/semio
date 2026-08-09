@@ -101,7 +101,7 @@ impl Mutation<Puzzle2dSnapshot> for Puzzle2dMutation {
 // `serde_json::Value` scratch fixture (out of scope for this ticket — see
 // `.🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dMutation`/`Puzzle2dDiff`
 // onto that `Value` boundary too keeps `puzzle2d_document_delta_operations(&Value, &Value)` and the
-// plugin's `DocumentApp::Projection = Value` compiling unchanged: `apply` serializes the typed
+// plugin's `DocumentApp::Snapshot = Value` compiling unchanged: `apply` serializes the typed
 // payload back to JSON and splices it into the id-keyed array/field exactly like the pre-migration
 // untyped operation did.
 fn puzzle2d_value_item_id(item: &Value) -> Option<&str> {
@@ -362,7 +362,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// 🌱️ The `Puzzle2dPlayApp` predates the typed `Puzzle2dSnapshot` above and stays on this ad-hoc
 /// `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
 /// helpers (see the app's own module docs) — out of scope to retrofit onto the typed struct.
-/// This newtype exists only to satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack`
+/// This newtype exists only to satisfy `DocumentApp::Snapshot: store::DocumentDsl + store::DocumentPack`
 /// post the repo-wide `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
 /// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
 /// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack

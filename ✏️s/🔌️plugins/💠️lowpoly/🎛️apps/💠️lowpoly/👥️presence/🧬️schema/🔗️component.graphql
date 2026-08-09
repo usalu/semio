@@ -1,0 +1,18 @@
+type LowpolyPresence {
+  selectionMode: String! @state(class: SHARED_UI)
+  selectionIds: [Int!]! @state(class: SHARED_UI)
+  selectionTargetsMesh: Boolean! @state(class: SHARED_UI)
+  selectionTargetsVertex: Boolean! @state(class: SHARED_UI)
+  selectionTargetsEdge: Boolean! @state(class: SHARED_UI)
+  selectionTargetsFace: Boolean! @state(class: SHARED_UI)
+  selectedObjectIds: [String!]! @state(class: SHARED_UI)
+  hoveredObjectId: String @state(class: SHARED_UI)
+  hoveredTargetObjectId: String @state(class: SHARED_UI)
+  hoveredTargetMode: String @state(class: SHARED_UI)
+  hoveredTargetId: Int @state(class: SHARED_UI)
+  worldCameraPosition: [Float!]! @state(class: SHARED_UI)
+  worldCameraTarget: [Float!]! @state(class: SHARED_UI)
+  worldCameraFov: Float! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  paintUtility: String! @state(class: SHARED_UI)
+}

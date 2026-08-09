@@ -267,23 +267,23 @@ pub struct UnitSpec {
     pub factor: f64,
 }
 
-const DIM_LENGTH: Dimension = Dimension { m: 1, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_MASS: Dimension = Dimension { m: 0, kg: 1, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_TIME: Dimension = Dimension { m: 0, kg: 0, s: 1, k: 0, a: 0, rad: 0 };
-const DIM_TEMPERATURE: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 1, a: 0, rad: 0 };
-const DIM_ANGLE: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 0, a: 0, rad: 1 };
-const DIM_DIMENSIONLESS: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_FORCE: Dimension = Dimension { m: 1, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
-const DIM_PRESSURE: Dimension = Dimension { m: -1, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
-const DIM_ENERGY: Dimension = Dimension { m: 2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
-const DIM_POWER: Dimension = Dimension { m: 2, kg: 1, s: -3, k: 0, a: 0, rad: 0 };
-const DIM_AREA: Dimension = Dimension { m: 2, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_VOLUME: Dimension = Dimension { m: 3, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_DENSITY: Dimension = Dimension { m: -3, kg: 1, s: 0, k: 0, a: 0, rad: 0 };
-const DIM_VELOCITY: Dimension = Dimension { m: 1, kg: 0, s: -1, k: 0, a: 0, rad: 0 };
-const DIM_ACCELERATION: Dimension = Dimension { m: 1, kg: 0, s: -2, k: 0, a: 0, rad: 0 };
-const DIM_AREAL_LOAD: Dimension = Dimension { m: -2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
-const DIM_HEAT_TRANSFER: Dimension = Dimension { m: 0, kg: 1, s: -3, k: -1, a: 0, rad: 0 };
+pub(crate) const DIM_LENGTH: Dimension = Dimension { m: 1, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_MASS: Dimension = Dimension { m: 0, kg: 1, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_TIME: Dimension = Dimension { m: 0, kg: 0, s: 1, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_TEMPERATURE: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 1, a: 0, rad: 0 };
+pub(crate) const DIM_ANGLE: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 0, a: 0, rad: 1 };
+pub(crate) const DIM_DIMENSIONLESS: Dimension = Dimension { m: 0, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_FORCE: Dimension = Dimension { m: 1, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_PRESSURE: Dimension = Dimension { m: -1, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_ENERGY: Dimension = Dimension { m: 2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_POWER: Dimension = Dimension { m: 2, kg: 1, s: -3, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_AREA: Dimension = Dimension { m: 2, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_VOLUME: Dimension = Dimension { m: 3, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_DENSITY: Dimension = Dimension { m: -3, kg: 1, s: 0, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_VELOCITY: Dimension = Dimension { m: 1, kg: 0, s: -1, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_ACCELERATION: Dimension = Dimension { m: 1, kg: 0, s: -2, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_AREAL_LOAD: Dimension = Dimension { m: -2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub(crate) const DIM_HEAT_TRANSFER: Dimension = Dimension { m: 0, kg: 1, s: -3, k: -1, a: 0, rad: 0 };
 
 /// @emoji 📚️ The static unit vocabulary every `Shape::Quantity`/`Shape::Angle` field draws from.
 /// Symbols are matched verbatim against the ident glued onto a numeric literal

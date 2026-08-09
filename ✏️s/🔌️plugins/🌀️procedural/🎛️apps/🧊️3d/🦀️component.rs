@@ -127,6 +127,8 @@ impl DocumentApp for Procedural3dPlayApp {
     type ConfigMutation = Procedural3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::procedural3d::presence::Procedural3dPresence;
+    type PresenceMutation = crate::apps::procedural3d::presence::Procedural3dPresenceMutation;
 
     type Command = Procedural3dCommand;
 

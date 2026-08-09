@@ -1,0 +1,138 @@
+{
+  "$id": "https://semio.tech/schema/app/remodel/remodel/config.json",
+  "title": "RemodelConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera",
+    "selection",
+    "layers",
+    "frameCursor",
+    "reportTable",
+    "activeUtilityId",
+    "locale"
+  ],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-state": "local-ui"
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-state": "local-ui"
+        },
+        "fov": {
+          "type": "number",
+          "x-semio-state": "local-ui"
+        }
+      },
+      "x-semio-state": "local-ui"
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "ids"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "x-semio-state": "local-ui"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-state": "local-ui"
+        }
+      },
+      "x-semio-state": "local-ui"
+    },
+    "layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh",
+        "dense",
+        "sparse",
+        "cameras",
+        "gcps"
+      ],
+      "properties": {
+        "mesh": {
+          "type": "boolean",
+          "x-semio-state": "local-ui"
+        },
+        "dense": {
+          "type": "boolean",
+          "x-semio-state": "local-ui"
+        },
+        "sparse": {
+          "type": "boolean",
+          "x-semio-state": "local-ui"
+        },
+        "cameras": {
+          "type": "boolean",
+          "x-semio-state": "local-ui"
+        },
+        "gcps": {
+          "type": "boolean",
+          "x-semio-state": "local-ui"
+        }
+      },
+      "x-semio-state": "local-ui"
+    },
+    "frameCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameIndex"
+      ],
+      "properties": {
+        "streamId": {
+          "type": "string",
+          "x-semio-state": "local-ui"
+        },
+        "frameIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-state": "local-ui"
+        }
+      },
+      "x-semio-state": "local-ui"
+    },
+    "reportTable": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

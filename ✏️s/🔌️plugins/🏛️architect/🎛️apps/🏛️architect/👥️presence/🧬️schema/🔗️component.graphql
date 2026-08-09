@@ -1,0 +1,15 @@
+enum AdjacencyKind {
+  required
+  preferred
+  optional
+  prohibited
+}
+
+type ArchitectPresence {
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeRegister: String! @state(class: SHARED_UI)
+  adjacencyKindFilter: AdjacencyKind @state(class: SHARED_UI)
+  graphCameraX: Float! @state(class: SHARED_UI)
+  graphCameraY: Float! @state(class: SHARED_UI)
+  graphCameraZoom: Float! @state(class: SHARED_UI)
+}

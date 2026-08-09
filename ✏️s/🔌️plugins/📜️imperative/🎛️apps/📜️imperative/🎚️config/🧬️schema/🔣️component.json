@@ -1,0 +1,33 @@
+{
+  "$id": "https://semio.tech/schema/app/imperative/imperative/config.json",
+  "title": "ImperativeConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedStepIds",
+    "runOutputJson",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "selectedStepIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "runOutputJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

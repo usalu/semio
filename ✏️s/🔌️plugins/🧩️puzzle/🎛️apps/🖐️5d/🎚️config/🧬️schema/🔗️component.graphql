@@ -1,0 +1,79 @@
+type Puzzle5dConfig {
+  camera2d: Puzzle5dCamera2d! @state(class: LOCAL_UI)
+  camera3d: Puzzle5dCamera3d! @state(class: LOCAL_UI)
+  selection: Puzzle5dSelection! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  hoveredPartId: String @state(class: LOCAL_UI)
+  fillCount: Int! @state(class: LOCAL_UI)
+  brushCandidateIndex: Int! @state(class: LOCAL_UI)
+  overlapBudget: Float! @state(class: LOCAL_UI)
+  lodMode: String! @state(class: LOCAL_UI)
+  suggestionOffset: Float! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridFactor: Float! @state(class: LOCAL_UI)
+  engagementInputByWindow: [StringEntry!]! @state(class: LOCAL_UI)
+  objectKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  vortexKindWeights: [FloatEntry!]! @state(class: LOCAL_UI)
+  sun: WorldSunConfig! @state(class: LOCAL_UI)
+  activeUtilityByWindowId: [StringEntry!]! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type SelectionSet {
+  ids: [String!]!
+}
+
+type WorldSunConfig {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type WorldProjectionConfig {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type FloatEntry {
+  key: String!
+  value: Float!
+}
+
+type Puzzle5dCamera2d {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type Puzzle5dCamera3d {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+}
+
+type Puzzle5dSelection {
+  partIds: SelectionSet!
+  gripIds: SelectionSet!
+  fastenerIds: SelectionSet!
+}

@@ -1,0 +1,17 @@
+{
+  "plugin": "🎥️shooting",
+  "crate": "semio-s-plugin-shooting",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config",
+      "configType": "ShootingConfig",
+      "presenceType": "ShootingPresence",
+      "apps": [
+        "🎥️shooting/🎥️shooting"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🎥️shooting",
+  "skip_if_lowpoly_done": false
+}

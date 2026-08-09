@@ -1,0 +1,142 @@
+{
+  "$id": "https://semio.tech/schema/app/writer/writer/config.json",
+  "title": "WriterConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedAstIds",
+    "formatSignal",
+    "lintSignal",
+    "revision",
+    "editorSettings",
+    "engagementInput",
+    "camera",
+    "locale"
+  ],
+  "properties": {
+    "selectedAstIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "editorSelection": {
+      "$ref": "#/$defs/WriterEditorSelection",
+      "x-semio-state": "local-ui"
+    },
+    "formatSignal": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lintSignal": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "editorSettings": {
+      "$ref": "#/$defs/WriterEditorSettings",
+      "x-semio-state": "local-ui"
+    },
+    "treeHoveredAstId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "editorHoverOffset": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/WriterCamera",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "WriterEditorSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WriterEditorSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "showLineNumbers",
+        "fontPx",
+        "lineHeight",
+        "tabSize"
+      ],
+      "properties": {
+        "showLineNumbers": {
+          "type": "boolean"
+        },
+        "fontPx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lineHeight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "tabSize": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "WriterCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

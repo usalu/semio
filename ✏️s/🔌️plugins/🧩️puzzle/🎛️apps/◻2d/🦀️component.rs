@@ -5,12 +5,13 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Projection` is the `Puzzle2dPlaySnapshot` newtype over a bare
+//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle2d::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle2dSnapshot` — every helper below therefore works on `Value`, and each action emits the
 //! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
 //! the new one.
 
+use crate::apps::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
 use crate::apps::puzzle2d::commands::{board, brush, camera, engagement, example, grid, locale, lod, node, selection as selection_commands, utility};
 use crate::apps::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::apps::puzzle2d::modes::edit;
@@ -53,7 +54,7 @@ const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
 
-/// 🌉️ This app's own fixture (and `DocumentApp::Projection`) stays a bare `serde_json::Value`, so the
+/// 🌉️ This app's own fixture (and `DocumentApp::Snapshot`) stays a bare `serde_json::Value`, so the
 /// DSL-text example fixtures are parsed once into the typed `Puzzle2dSnapshot` and re-serialized to
 /// the JSON string this module's `serde_json::from_str`/`.example(...)` call sites expect. The typed
 /// bridge still carries a mandatory `camera` block — strip it before handing the JSON back, since the
@@ -842,6 +843,8 @@ impl DocumentApp for Puzzle2dPlayApp {
     type ConfigMutation = Puzzle2dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = Puzzle2dPresence;
+    type PresenceMutation = Puzzle2dPresenceMutation;
     type Command = Puzzle2dCommand;
 
     fn initial_snapshot() -> Puzzle2dPlaySnapshot {

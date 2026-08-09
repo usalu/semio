@@ -1,0 +1,10 @@
+type MathematicalCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type MathematicalConfig {
+  camera: MathematicalCamera! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

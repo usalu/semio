@@ -1,0 +1,17 @@
+{
+  "plugin": "🌊️flow",
+  "crate": "semio-s-plugin-flow",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config",
+      "configType": "FlowConfig",
+      "presenceType": "FlowPresence",
+      "apps": [
+        "🌊️flow/🌊️flow"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🌊️flow",
+  "skip_if_lowpoly_done": false
+}

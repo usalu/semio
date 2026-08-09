@@ -1,0 +1,41 @@
+{
+  "$id": "https://semio.tech/schema/app/dag/dag/presence.json",
+  "title": "DagPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedNodeIds",
+    "cameraX",
+    "cameraY",
+    "cameraZoom"
+  ],
+  "properties": {
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredEdgeId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

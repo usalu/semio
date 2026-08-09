@@ -6,12 +6,13 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/🧊️main`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Projection` is the `Puzzle3dPlaySnapshot` newtype over a bare
+//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle3dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle3d::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle3dSnapshot` — the `Puzzle3dFixture` model below is this app's own structural twin of it,
 //! and each action emits the granular typed operation delta
 //! (`puzzle3d_operations_from_fixture_change`) turning the old fixture into the new one.
 
+use crate::apps::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
 use store::EngineHandles;
 use crate::apps::puzzle3d::commands::{attraction, brush, camera, engagement, example, fill, grid, hover, locale, lod, object, selection as selection_commands, settings, sun, transform, utility, volume};
 use crate::apps::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime, Puzzle3dSelection};
@@ -66,7 +67,7 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// the export handlers' plain-function-pointer signature.
 pub static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `DocumentApp::Projection`) stays a
+/// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `DocumentApp::Snapshot`) stays a
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dSnapshot`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
@@ -2198,6 +2199,8 @@ impl DocumentApp for Puzzle3dPlayApp {
     type ConfigMutation = Puzzle3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = Puzzle3dPresence;
+    type PresenceMutation = Puzzle3dPresenceMutation;
     type Command = Puzzle3dCommand;
 
 

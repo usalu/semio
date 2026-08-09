@@ -142,6 +142,8 @@ impl DocumentApp for Gis2dPlayApp {
     type ConfigMutation = Gis2dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::gis2d::presence::Gis2dPresence;
+    type PresenceMutation = crate::apps::gis2d::presence::Gis2dPresenceMutation;
 
     type Command = Gis2dCommand;
 

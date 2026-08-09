@@ -1,0 +1,4 @@
+type Gis3dPresence {
+  cameraJson: String! @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+}

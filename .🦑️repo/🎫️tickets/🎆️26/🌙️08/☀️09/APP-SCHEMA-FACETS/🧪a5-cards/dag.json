@@ -1,0 +1,17 @@
+{
+  "plugin": "🕸️dag",
+  "crate": "semio-s-plugin-dag",
+  "owners": [
+    {
+      "owner": "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config",
+      "configType": "DagConfig",
+      "presenceType": "DagPresence",
+      "apps": [
+        "🕸️dag/🕸️dag"
+      ]
+    }
+  ],
+  "ticket": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS",
+  "plugin_dir_fragment": "🕸️dag",
+  "skip_if_lowpoly_done": false
+}

@@ -34,10 +34,10 @@ todos:
     status: completed
   - id: w7-register
     content: "W7 (Composer): register every artifact GraphQL and JSON Schema leaf with the hub/OS schema catalog and confirm at runtime with a logged catalog dump"
-    status: in_progress
+    status: completed
   - id: w8-gate
     content: "W8 (Grok): full gate, registry generate to refresh launch.json, zero-legacy Projection sweep excluding the db read-model, ticket_close with the full file list"
-    status: pending
+    status: completed
 isProject: false
 ---
 

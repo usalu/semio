@@ -1,0 +1,50 @@
+{
+  "$id": "https://semio.tech/schema/app/draw/draw/presence.json",
+  "title": "DrawPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds",
+    "engagementInput",
+    "camera",
+    "activeUtilityId"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/DrawCamera",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  },
+  "$defs": {
+    "DrawCamera": {
+      "title": "DrawCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

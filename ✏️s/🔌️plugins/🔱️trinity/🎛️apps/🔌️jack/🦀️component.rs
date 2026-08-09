@@ -8,6 +8,7 @@
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
 use crate::apps::jack::config::{JackConfig, JackConfigMutation};
+use crate::apps::jack::presence::{JackPresence, JackPresenceMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -263,6 +264,8 @@ impl DocumentApp for TrinityJackPlayApp {
     type ConfigMutation = JackConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = JackPresence;
+    type PresenceMutation = JackPresenceMutation;
 
     type Command = TrinityJackCommand;
 

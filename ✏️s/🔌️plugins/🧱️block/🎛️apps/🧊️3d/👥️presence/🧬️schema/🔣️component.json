@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/app/block/3d/presence.json",
+  "title": "Block3dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedIds"
+  ],
+  "properties": {
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "hoveredVortexFullId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

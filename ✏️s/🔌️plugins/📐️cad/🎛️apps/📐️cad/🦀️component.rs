@@ -941,6 +941,8 @@ impl DocumentApp for CadPlayApp {
     type ConfigMutation = CadConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
+    type Presence = crate::apps::cad::presence::CadPresence;
+    type PresenceMutation = crate::apps::cad::presence::CadPresenceMutation;
     type Command = CadCommand;
 
     const APP_ID: &'static str = CAD_PLAY_APP_ID;

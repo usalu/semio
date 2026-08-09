@@ -1,0 +1,8 @@
+{
+  "$id": "https://semio.tech/schema/app/vcs/vcs/presence.json",
+  "title": "VcsDemoPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
