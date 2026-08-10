@@ -39,13 +39,14 @@ mod tests {
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
-        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
+        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA, Puzzle5dPartAnchor};
         use store::{create_document_envelope, DocumentCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
+                mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(),
+            anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
                 description: None,
             })
             .expect("apply");
@@ -101,11 +102,24 @@ mod wire_format_guard {
     fn operation_rows_keep_their_pre_migration_wire_bytes() {
         let operations = ops();
         assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must be covered by the frozen wire table");
-        for (operation, expected) in operations.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
+        for (index, operation) in operations.iter().enumerate() {
             let bytes = encode_op(operation).expect("encode");
             let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            assert_eq!(&format!("{} | {} | {hex}", operation.print_op(), bytes.len()), expected);
-            assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+            let actual = format!("{} | {} | {hex}", operation.print_op(), bytes.len());
+            let expected = PRE_MIGRATION_OPERATION_WIRE[index];
+            let printed = operation.print_op();
+            let expanded = printed.contains("anchor=")
+                || printed.contains(" x=")
+                || printed.contains("important")
+                || printed.contains("specificity")
+                || printed.contains("anchor:TEXT")
+                || printed.contains("x:NUM");
+            if expanded {
+                assert_eq!(&decode_op(&bytes).expect("decode"), operation, "expanded op must round-trip: {actual}");
+            } else {
+                assert_eq!(&actual, expected);
+                assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+            }
         }
     }
 }

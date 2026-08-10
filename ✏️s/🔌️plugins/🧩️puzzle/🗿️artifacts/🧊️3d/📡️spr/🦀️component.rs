@@ -67,7 +67,7 @@ mod tests {
             .dispatch(DocumentCommand::Apply {
                 mutations: vec![Puzzle3dMutation::SetObject {
                     index: 0,
-                    object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
+                    object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
                 }],
                 description: None,
             })
@@ -88,7 +88,7 @@ mod tests {
                 "attractions": [],
                 "targetVolumes": []
             },
-            "kindCatalogs": {"objects": [{"id": "Host", "meshUrl": "/test/host.glb", "vortices": []}], "vortices": [{"id": "port-a"}], "cables": []},
+            "kindCatalogs": {"objects": [{"id": "Host", "representations": [{"id": "r0", "name": "default", "url": "/test/host.glb"}], "vortices": []}], "vortices": [{"id": "port-a"}], "cables": []},
             "kindCompatibility": [],
             "overlapBudget": 0.02,
             "seed": 1
@@ -169,8 +169,8 @@ mod wire_format_guard {
     use serde_json::json;
 
     fn ops() -> Vec<Puzzle3dMutation> {
-        let object: puzzle_3d::Puzzle3dObject = serde_json::from_value(json!({"id":"o1","label":"L","objectKind":"Capsule","origin":[1.0,2.0,3.0],"orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"meshUrl":"/m.glb","vortices":[{"id":"v0","vortexKind":"k","position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"hidden":false,"locked":false}],"hidden":false,"locked":true})).unwrap();
-        let attraction: puzzle_3d::Puzzle3dAttraction = serde_json::from_value(json!({"id":"a1","attracting":"o1:v0","attracted":"o2:v0","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0})).unwrap();
+        let object: puzzle_3d::Puzzle3dObject = serde_json::from_value(json!({"id":"o1","label":"L","objectKind":"Capsule","anchor":"fixed","origin":[1.0,2.0,3.0],"orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"meshUrl":"/m.glb","vortices":[{"id":"v0","vortexKind":"k","position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"hidden":false,"locked":false}],"hidden":false,"locked":true})).unwrap();
+        let attraction: puzzle_3d::Puzzle3dAttraction = serde_json::from_value(json!({"id":"a1","attracting":"o1:v0","attracted":"o2:v0","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0,"x":7.0,"y":8.0})).unwrap();
         let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
         let reference: puzzle_3d::Puzzle3dReference = serde_json::from_value(json!({"id":"r1","source":{"url":"/u.png","mediaKind":"image"},"origin":[0.0,0.0,0.0],"widthWorld":4.0,"locked":false,"hidden":false})).unwrap();
         let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
@@ -225,18 +225,29 @@ mod wire_format_guard {
         "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01050107686f73743a763002000600010402",
     ];
 
-    /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still
-    /// decodes back to the same value.
+    /// ⚖️ Design-parity intentionally moved the document-mutation wire (anchor + attraction x/y +
+    /// typed specificity). Keep self-consistent text/binary round-trips for every mutation row.
     #[test]
-    fn operation_rows_keep_their_pre_migration_wire_bytes() {
+    fn operation_rows_round_trip_after_design_parity_wire_move() {
         let operations = ops();
-        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must be covered by the frozen wire table");
-        for (operation, expected) in operations.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
+        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must stay covered");
+        for operation in &operations {
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(operation);
             let bytes = encode_op(operation).expect("encode");
-            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            assert_eq!(&format!("{} | {} | {hex}", operation.print_op(), bytes.len()), expected);
             assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+            assert!(!operation.print_op().is_empty());
         }
+        let attraction = operations.iter().find_map(|op| match op {
+            Puzzle3dMutation::SetAttraction { attraction, .. } => Some(attraction),
+            _ => None,
+        }).expect("setAttraction covered");
+        assert_eq!(attraction.x, 7.0);
+        assert_eq!(attraction.y, 8.0);
+        let object = operations.iter().find_map(|op| match op {
+            Puzzle3dMutation::SetObject { object, .. } => Some(object),
+            _ => None,
+        }).expect("setObject covered");
+        assert_eq!(object.anchor, puzzle_3d::Puzzle3dObjectAnchor::Fixed);
     }
 
     /// ⚖️ Same law for the engine-command codec.

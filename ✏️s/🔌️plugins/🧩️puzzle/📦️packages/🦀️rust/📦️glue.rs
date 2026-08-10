@@ -413,8 +413,8 @@ pub mod artifacts {
 
             #[path = "../../🗿️artifacts/🖐️5d/⚙️engine/✂️transfer/🦀️component.rs"]
             pub mod transfer;
-            #[path = "../../🗿️artifacts/🖐️5d/⚙️engine/🌉️compose/🦀️component.rs"]
-            pub mod compose;
+            #[path = "../../🗿️artifacts/🖐️5d/⚙️engine/📐️flatten/🦀️component.rs"]
+            pub mod flatten;
         }
     }
 }
@@ -708,6 +708,8 @@ pub mod apps {
             pub mod selection;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🧩️part/🦀️component.rs"]
             pub mod part;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔗️fastener/🦀️component.rs"]
+            pub mod fastener;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/✏️patch/🦀️component.rs"]
             pub mod patch;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/👆️hover/🦀️component.rs"]
@@ -856,9 +858,13 @@ pub mod examples {
     pub mod puzzle5d {
         #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
         pub mod nakagin_capsule_tower;
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/🦀️component.rs"]
+        pub mod capsule_dream;
         #[cfg(test)]
         #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
         mod nakagin_capsule_tower_tests;
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/🧪️tests/🦀️test.rs"]
+        mod capsule_dream_tests;
         #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
         pub mod concrete_forest;
         #[cfg(test)]

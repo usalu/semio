@@ -2,6 +2,8 @@
 emoji: 🏘️
 ---
 
+IMPORTANT: This is legacy technology and is to be migrated complety to the the architecture of os, s with apps, etc. All ideas in framework are generalizations of what is part of compose.
+
 # 🧾 Specification
 
 ## Strict layering (compose wasm host)

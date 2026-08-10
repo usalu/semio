@@ -81,13 +81,22 @@ message Puzzle5dStringList { repeated string values = 1; }
 message Puzzle5dPartsDelta { repeated Puzzle5dPart added = 1; repeated string removed = 2; repeated Puzzle5dPartPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle5dPartPatchEntry { string id = 1; Puzzle5dPartPatch patch = 2; }
 message Puzzle5dPartPatch { optional Puzzle5dPart replacement = 1; }
-message Puzzle5dPart { string id = 1; }
+message Puzzle5dPart { string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3; }
 message Puzzle5dFastenersDelta { repeated Puzzle5dFastener added = 1; repeated string removed = 2; repeated Puzzle5dFastenerPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle5dFastenerPatchEntry { string id = 1; Puzzle5dFastenerPatch patch = 2; }
 message Puzzle5dFastenerPatch { optional Puzzle5dFastener replacement = 1; }
-message Puzzle5dFastener { string id = 1; }
-message Puzzle5dKindCompatibility { string id = 1; }
+message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; double gap = 4; double shift = 5; double rise = 6; double rotation = 7; double turn = 8; double tilt = 9; double x = 10; double y = 11; }
+message Puzzle5dKindCompatibility { string source = 1; string target = 2; bool bidirectional = 3; bool important = 4; Puzzle5dCompatSpecificity specificity = 5; }
 message Puzzle5dMeta { bool _placeholder = 1; }
 message Puzzle5dKindCatalogs { bool _placeholder = 1; }
 
 message Puzzle5dKindCompatibilityList { repeated Puzzle5dKindCompatibility values = 1; }
+
+enum Puzzle5dPartAnchor { PUZZLE5D_PART_ANCHOR_FIXED = 0; PUZZLE5D_PART_ANCHOR_DERIVED = 1; }
+enum Puzzle5dCompatSpecificity {
+  PUZZLE5D_COMPAT_SPECIFICITY_GENERAL = 0;
+  PUZZLE5D_COMPAT_SPECIFICITY_PART = 1;
+  PUZZLE5D_COMPAT_SPECIFICITY_FASTENER = 2;
+  PUZZLE5D_COMPAT_SPECIFICITY_GRIP = 3;
+  PUZZLE5D_COMPAT_SPECIFICITY_ROPE = 4;
+}

@@ -13,7 +13,7 @@
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
 use crate::apps::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::apps::puzzle5d::commands::{board, brush, camera, engagement, example, fill, grid, hover, lod, part, patch, selection as selection_commands, sun, transform, utility};
+use crate::apps::puzzle5d::commands::{board, brush, camera, engagement, example, fastener, fill, grid, hover, lod, part, patch, selection as selection_commands, sun, transform, utility};
 use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime, Puzzle5dSelection};
 use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
@@ -43,6 +43,7 @@ pub const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 pub const PUZZLE5D_BOARD_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
 pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
 pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
+pub const PUZZLE5D_EXAMPLE_CAPSULE_DREAM: &str = "capsule-dream";
 
 pub const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧰️ Host-owned active utility (`Puzzle5dConfig::active_utility_by_window_id`) when the host hasn't set one yet — the first declared utility.
@@ -63,6 +64,7 @@ pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
 pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT, "capsule-dream"));
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dSnapshot as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -123,6 +125,14 @@ pub struct Puzzle5dGrip {
     pub grip_3d: Puzzle5dGrip3d,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Puzzle5dPartAnchor {
+    #[default]
+    Fixed,
+    Derived,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dFastener {
@@ -143,6 +153,10 @@ pub struct Puzzle5dFastener {
     pub turn: f64,
     #[serde(default)]
     pub tilt: f64,
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -191,6 +205,8 @@ pub struct Puzzle5dPart {
     pub id: String,
     #[serde(rename = "partKind")]
     pub part_kind: String,
+    #[serde(default)]
+    pub anchor: Puzzle5dPartAnchor,
     #[serde(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
     #[serde(default, rename = "3d")]
@@ -481,6 +497,7 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
     let grips = grips_from_templates(&envelope.document, part_kind);
     envelope.document.parts.push(Puzzle5dPart {
         id: id.clone(),
+        anchor: Default::default(),
         part_kind: part_kind.into(),
         part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
         part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
@@ -702,6 +719,7 @@ pub fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Opt
             new_ids.push(id.clone());
             Some(Puzzle5dPart {
                 id,
+                anchor: Default::default(),
                 part_kind: part_kind.clone(),
                 part_2d: Puzzle5dPart2d { x: 0.0, y: 0.0, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind, icon_kind: None, hidden: None, locked: None },
                 part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: orientation.or(Some([0.0, 0.0, 0.0, 1.0])), scale, label: None },
@@ -731,6 +749,8 @@ pub fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Opt
                 rotation,
                 turn,
                 tilt,
+                x: attraction.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
+                y: attraction.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
             })
         })
         .collect();
@@ -1041,7 +1061,7 @@ struct Puzzle5dKitInVortexKindFragment {
 /// with the same id, else appends. Deterministic/order-independent in the resulting SET of ids (a
 /// `multiplicity: Many` port may fan in from several producers across several `import_media` calls);
 /// when two producers disagree on one id's content, the most-recently-applied wins.
-fn puzzle5d_upsert_catalog_parts(existing: &mut Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPart>, incoming: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPart>) {
+fn puzzle5d_upsert_catalog_parts(existing: &mut Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind>, incoming: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind>) {
     for row in incoming {
         match existing.iter().position(|entry| entry.id == row.id) {
             Some(index) => existing[index] = row,
@@ -1052,7 +1072,7 @@ fn puzzle5d_upsert_catalog_parts(existing: &mut Vec<crate::artifacts::puzzle5d::
 
 /// 🔌️ `kit:in` seam helper: keyed UPSERT of catalog GRIP-KIND rows (by `id`) — see
 /// `puzzle5d_upsert_catalog_parts`'s doc for the upsert/idempotency contract.
-fn puzzle5d_upsert_catalog_grips(existing: &mut Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGrip>, incoming: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGrip>) {
+fn puzzle5d_upsert_catalog_grips(existing: &mut Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind>, incoming: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind>) {
     for row in incoming {
         match existing.iter().position(|entry| entry.id == row.id) {
             Some(index) => existing[index] = row,
@@ -1189,7 +1209,11 @@ puzzle5d_command_variants! {
     PatchPart = "patchPart",
     PatchGrip = "patchGrip",
     PatchFastener = "patchFastener",
-    ImportComposeKit = "importComposeKit",
+    CreateFastener = "createFastener",
+    DeleteFastener = "deleteFastener",
+    RetargetFastener = "retargetFastener",
+    EditFastener = "editFastener",
+    ProximityConnect = "proximityConnect",
     TranslateSelection = "translateSelection",
     RotateSelection = "rotateSelection",
     ScaleSelection = "scaleSelection",
@@ -1345,6 +1369,7 @@ impl Puzzle5dPlayApp {
         let origin = source_world.map_or([0.0, 0.0, 0.0], |(position, direction)| [position[0] + direction[0], position[1] + direction[1], position[2] + direction[2]]);
         envelope.document.parts.push(Puzzle5dPart {
             id: id.clone(),
+            anchor: Default::default(),
             part_kind: node_kind.clone(),
             part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: node_kind, icon_kind: None, hidden: None, locked: None },
             part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
@@ -1364,6 +1389,8 @@ impl Puzzle5dPlayApp {
                     rotation: 0.0,
                     turn: 0.0,
                     tilt: 0.0,
+                    x: 0.0,
+                    y: 0.0,
                 });
             }
         }
@@ -1420,6 +1447,8 @@ impl Puzzle5dPlayApp {
                             rotation: 0.0,
                             turn: 0.0,
                             tilt: 0.0,
+                            x: 0.0,
+                            y: 0.0,
                         });
                     }
                 }
@@ -1487,7 +1516,6 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     match action {
         "setFixtureJson" => example::set_fixture_json(ctx, args),
         "setActiveExample" => example::set_active_example(ctx, args),
-        "importComposeKit" => example::import_compose_kit(ctx, args),
         "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
         "clearSelection" => selection_commands::clear_selection(ctx),
         "selectAll" => selection_commands::select_all(ctx),
@@ -1503,6 +1531,11 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "patchPart" => patch::patch_part(ctx, args),
         "patchGrip" => patch::patch_grip(ctx, args),
         "patchFastener" => patch::patch_fastener(ctx, args),
+        "createFastener" => fastener::create_fastener(ctx, args),
+        "deleteFastener" => fastener::delete_fastener(ctx, args),
+        "retargetFastener" => fastener::retarget_fastener(ctx, args),
+        "editFastener" => fastener::edit_fastener(ctx, args),
+        "proximityConnect" => fastener::proximity_connect(ctx, args),
         "worldHover" => hover::world_hover(ctx, args),
         "setHover" => hover::set_hover(ctx, args),
         "worldVortexHover" => hover::world_vortex_hover(ctx, args),
@@ -1690,35 +1723,55 @@ impl DocumentApp for Puzzle5dPlayApp {
         let mut catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = document.kind_catalogs.as_ref().and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
 
         if let Some(incoming_parts) = fragment.get("objectKinds").and_then(Value::as_array) {
-            let parsed: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPart> = incoming_parts
+            let parsed: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind> = incoming_parts
                 .iter()
                 .filter_map(|row| {
                     let parsed_row: Puzzle5dKitInObjectKindFragment = serde_json::from_value(row.clone()).ok()?;
-                    Some(crate::artifacts::puzzle5d::Puzzle5dCatalogPart {
-                        id: parsed_row.id,
+                    Some(crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind {
+                        id: parsed_row.id.clone(),
                         name: parsed_row.name,
                         label: parsed_row.label,
-                        mesh_url: parsed_row.mesh_url,
+                        representations: parsed_row.mesh_url.map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation {
+                            id: "mesh".into(),
+                            name: "mesh".into(),
+                            url,
+                            mime: "model/gltf-binary".into(),
+                            ..Default::default()
+                        }]).unwrap_or_default(),
                         grips: parsed_row
                             .vortices
                             .into_iter()
-                            .map(|vortex| crate::artifacts::puzzle5d::Puzzle5dCatalogGripTemplate {
-                                grip_kind: vortex.vortex_kind,
-                                grip_2d: None,
-                                grip_3d: Some(crate::artifacts::puzzle5d::Puzzle5dCatalogGripTemplate3d { position: vortex.position, direction: vortex.direction, radius: vortex.radius }),
+                            .enumerate()
+                            .map(|(index, vortex)| crate::artifacts::puzzle5d::Puzzle5dGripTemplate {
+                                id: format!("g{index}"),
+                                name: vortex.vortex_kind.clone(),
+                                label: vortex.vortex_kind.clone(),
+                                grip_kind: Some(vortex.vortex_kind),
+                                point: vortex.position,
+                                direction: vortex.direction,
+                                radius: Some(vortex.radius),
+                                ..Default::default()
                             })
                             .collect(),
+                        ..Default::default()
                     })
                 })
                 .collect();
             puzzle5d_upsert_catalog_parts(&mut catalogs.parts, parsed);
         }
         if let Some(incoming_grips) = fragment.get("vortexKinds").and_then(Value::as_array) {
-            let parsed: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGrip> = incoming_grips
+            let parsed: Vec<crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind> = incoming_grips
                 .iter()
                 .filter_map(|row| {
                     let parsed_row: Puzzle5dKitInVortexKindFragment = serde_json::from_value(row.clone()).ok()?;
-                    Some(crate::artifacts::puzzle5d::Puzzle5dCatalogGrip { id: parsed_row.id, name: parsed_row.name, label: parsed_row.label, color: parsed_row.color, default_rope_kind: parsed_row.default_cable_kind })
+                    Some(crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind {
+                        id: parsed_row.id,
+                        code: Some(parsed_row.name),
+                        label: Some(parsed_row.label),
+                        color: parsed_row.color,
+                        default_rope_kind: parsed_row.default_cable_kind,
+                        ..Default::default()
+                    })
                 })
                 .collect();
             puzzle5d_upsert_catalog_grips(&mut catalogs.grips, parsed);
@@ -1861,7 +1914,11 @@ pub fn create_puzzle5d_app() -> App {
             .mutation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
             .mutation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
             .mutation("patchFastener", LocalizedLabel::native("Patch Fastener", "Verbinder aktualisieren"))
-            .mutation("importComposeKit", LocalizedLabel::native("Import Compose Kit", "Compose-Kit importieren"))
+            .mutation("createFastener", LocalizedLabel::native("Create Fastener", "Verbinder erstellen"))
+            .mutation("deleteFastener", LocalizedLabel::native("Delete Fastener", "Verbinder löschen"))
+            .mutation("retargetFastener", LocalizedLabel::native("Retarget Fastener", "Verbinder umhängen"))
+            .mutation("editFastener", LocalizedLabel::native("Edit Fastener", "Verbinder bearbeiten"))
+            .mutation("proximityConnect", LocalizedLabel::native("Proximity Connect", "Näherungsverbinden"))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
@@ -1925,6 +1982,7 @@ pub fn create_puzzle5d_app() -> App {
     )
     .example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, puzzle5d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
     .example(PUZZLE5D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
+    .example(PUZZLE5D_EXAMPLE_CAPSULE_DREAM, LocalizedLabel::native("Capsule Dream", "Kapseltraum"), CAPSULE_DREAM_EXAMPLE_JSON.clone(), "building")
     .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 
@@ -2127,32 +2185,6 @@ mod tests {
         assert_eq!(fastener3["rotation"], 0.0, "undo restores the pre-rotation-edit value");
         assert_eq!(fastener3["gap"], 2.5, "undo of rotation edit must not also revert the earlier gap edit");
     }
-
-    #[test]
-    fn import_compose_kit_replaces_parts_and_fasteners_and_undoes_as_one_edit() {
-        let mut app = app();
-        let before_count = part_count(&app);
-        let compose_design = json!({
-            "id": "design-1",
-            "name": "Imported Tower",
-            "pieces": { "items": [
-                { "id": "piece-a", "type": { "id": "type-x" }, "pose": { "center": { "u": 1.0, "v": 2.0 }, "plane": { "origin": { "x": 0.0, "y": 0.0, "z": 0.0 }, "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 }, "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 } } } },
-                { "id": "piece-b", "type": { "id": "type-x" }, "pose": { "center": { "u": 3.0, "v": 4.0 }, "plane": { "origin": { "x": 1.0, "y": 1.0, "z": 1.0 }, "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 }, "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 } } } },
-            ] },
-            "connections": { "items": [
-                { "id": "conn-1", "parent": { "piece": { "id": "piece-a" }, "connector": { "id": "c1" } }, "child": { "piece": { "id": "piece-b" }, "connector": { "id": "c2" } }, "gap": 0.5, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0 },
-            ] },
-        });
-        dispatch(&mut app, "importComposeKit", Some(&json!({ "design": compose_design })), None).expect("import");
-        assert_eq!(part_count(&app), 2);
-        let projection = projection_of(&app);
-        assert_eq!(projection["label"], "Imported Tower");
-        assert_eq!(projection["fasteners"].as_array().unwrap().len(), 1);
-        assert_eq!(projection["fasteners"][0]["gap"], 0.5);
-        assert_eq!(projection["fasteners"][0]["source"], "piece-a:c1");
-        app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert_eq!(part_count(&app), before_count, "one undo restores the pre-import document");
-    }
     //#endregion 🔖️Operations
 
     //#region 🔖️CommandEnvelopeTests
@@ -2170,7 +2202,7 @@ mod tests {
         use store::{create_document_envelope, EngineHandles};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
-        let part = Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
+        let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

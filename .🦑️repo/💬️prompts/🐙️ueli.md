@@ -366,6 +366,31 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Artifacts must be versionable independantely.
+
+```
+<artifact>
+  <version> e.g. v1, 1.0.0 or 2022.1, etc
+```
+
+---
+
+Every artifact must be importable and exportable to existing file types.
+
+```
+<artifact>
+  io
+    <format>
+      import
+        component.rs
+        component.ts
+        …
+      export
+        component.rs
+        component.ts
+    …
+```
+
 ---
 
 Every artifact has a text and binary representation.

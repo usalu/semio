@@ -22,3 +22,56 @@ message Puzzle5dSnapshot {
   repeated Puzzle5dFastener fasteners = 8;
 }
 
+
+
+enum Puzzle5dPartAnchor { PUZZLE5D_PART_ANCHOR_FIXED = 0; PUZZLE5D_PART_ANCHOR_DERIVED = 1; }
+enum Puzzle5dCompatSpecificity {
+  PUZZLE5D_COMPAT_SPECIFICITY_GENERAL = 0;
+  PUZZLE5D_COMPAT_SPECIFICITY_PART = 1;
+  PUZZLE5D_COMPAT_SPECIFICITY_FASTENER = 2;
+  PUZZLE5D_COMPAT_SPECIFICITY_GRIP = 3;
+  PUZZLE5D_COMPAT_SPECIFICITY_ROPE = 4;
+}
+message Puzzle5dAttribute { string id = 1; string key = 2; string value = 3; optional string definition = 4; }
+message Puzzle5dAuthor { string id = 1; string name = 2; string email = 3; optional string role = 4; optional int32 rank = 5; }
+message Puzzle5dRepresentation {
+  string id = 1; string name = 2; string url = 3; string mime = 4;
+  repeated string tags = 5; optional string lod = 6; string description = 7;
+}
+message Puzzle5dGripTemplate {
+  string id = 1; string name = 2; string label = 3; string description = 4; string icon = 5;
+  optional string grip_kind = 6; repeated double point = 7; repeated double direction = 8;
+  optional double t = 9; optional bool mandatory = 10; optional double radius = 11;
+}
+message Puzzle5dCatalogPartKind {
+  string id = 1; string name = 2; string label = 3; string description = 4; string icon = 5;
+  string image = 6; string unit = 7; bool abstract = 8; repeated string base_kinds = 9;
+  repeated Puzzle5dRepresentation representations = 10; repeated Puzzle5dGripTemplate grips = 11;
+  repeated Puzzle5dAttribute attributes = 12; repeated Puzzle5dAuthor authors = 13;
+}
+message Puzzle5dCatalogGripKind {
+  string id = 1; optional string code = 2; optional string label = 3; optional int32 order = 4;
+  repeated string compatible_with = 5; string description = 6; string icon = 7; string color = 8;
+  string default_rope_kind = 9;
+}
+message Puzzle5dCatalogFastenerKind { string id = 1; string name = 2; optional string label = 3; }
+message Puzzle5dCatalogRopeKind { string id = 1; string name = 2; string label = 3; string default_fastener_kind = 4; }
+message Puzzle5dKindCatalogs {
+  repeated Puzzle5dCatalogPartKind parts = 1;
+  repeated Puzzle5dCatalogGripKind grips = 2;
+  repeated Puzzle5dCatalogFastenerKind fasteners = 3;
+  repeated Puzzle5dCatalogRopeKind ropes = 4;
+}
+message Puzzle5dKindCompatibility {
+  string source = 1; string target = 2; bool bidirectional = 3; bool important = 4;
+  Puzzle5dCompatSpecificity specificity = 5;
+}
+message Puzzle5dMeta { string description = 1; }
+message Puzzle5dPart {
+  string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3;
+}
+message Puzzle5dFastener {
+  string id = 1; string source = 2; string target = 3; optional string fastener_kind = 4;
+  double gap = 5; double shift = 6; double rise = 7; double rotation = 8; double turn = 9; double tilt = 10;
+  double x = 11; double y = 12;
+}

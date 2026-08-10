@@ -65,6 +65,7 @@ mod tests {
             scale: None,
             visible: None,
             locked: None,
+            anchor: Default::default(),
             handles: vec![Puzzle2dHandle { id: "n1:v0".into(), handle_kind: Some("b-l".into()), angle: 0.0, radius: Some(3.0), color: None, icon_kind: None, scale: None, visible: None, locked: None }],
         });
         with_content.nodes.push(Puzzle2dNode {
@@ -82,12 +83,13 @@ mod tests {
             scale: Some(1.5),
             visible: Some(false),
             locked: Some(true),
+            anchor: Default::default(),
             handles: Vec::new(),
         });
-        with_content.edges.push(Puzzle2dEdge { id: "e1".into(), source: "n1:v0".into(), target: "n2".into(), edge_kind: Some("edge.link".into()), source_tip: None, target_tip: Some("arrow".into()), visible: None, locked: None });
+        with_content.edges.push(Puzzle2dEdge { id: "e1".into(), source: "n1:v0".into(), target: "n2".into(), edge_kind: Some("edge.link".into()), source_tip: None, target_tip: Some("arrow".into()), visible: None, locked: None, ..Default::default() });
         with_content.meta = Puzzle2dMeta {
             manifest_id: Some("concrete-forest".into()),
-            kind_compatibility: vec![Puzzle2dKindCompatibility { bidirectional: true, specificity: Puzzle2dCompatSpecificity::Vortex, source: "b-l".into(), target: "b-l".into() }],
+            kind_compatibility: vec![Puzzle2dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle2dCompatSpecificity::Vortex }],
             kind_catalogs: None,
         };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_content);
@@ -108,11 +110,41 @@ mod tests {
         use store::{create_document_envelope, DocumentCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None));
-        let node = Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() };
+        let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
         let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
+
+    #[test]
+    fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
+        let text = r#"semio puzzle.puzzle2d.dsl v1
+schema=puzzle.2d.fixture
+camera {
+  x=0 y=0 zoom=1
+}
+meta {
+}
+nodes [id:TEXT x:NUM y:NUM] {
+  n1 0 0
+  n2 10 0
+}
+edges [id:TEXT source:TEXT target:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM] {
+  e1 n1 n2 1 2 3 10 20 30 4 5
+}
+"#;
+        let snapshot = parse_dsl(text).expect("minimal edge with 8 params parses");
+        assert_eq!(snapshot.edges.len(), 1);
+        let edge = &snapshot.edges[0];
+        assert_eq!(edge.gap, 1.0);
+        assert_eq!(edge.shift, 2.0);
+        assert_eq!(edge.rise, 3.0);
+        assert_eq!(edge.rotation, 10.0);
+        assert_eq!(edge.turn, 20.0);
+        assert_eq!(edge.tilt, 30.0);
+        assert_eq!(edge.x, 4.0);
+        assert_eq!(edge.y, 5.0);
+    }
 }
 //#endregion 🧪️Tests

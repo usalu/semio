@@ -1,0 +1,16 @@
+{
+  "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\udde9\ufe0fpuzzle/\ud83c\udf9b\ufe0fapps/\ud83d\udd90\ufe0f5d/\ud83c\udfae\ufe0fcommands/\ud83d\udd17\ufe0ffastener/\ud83e\udd80\ufe0fcomponent.rs",
+  "bytes": 12427,
+  "lines": 258,
+  "pub_fns": [
+    "create_fastener",
+    "delete_fastener",
+    "retarget_fastener",
+    "edit_fastener",
+    "proximity_connect"
+  ],
+  "missing_fns": [],
+  "handles_eight_params": true,
+  "app_twin_has_xy": false,
+  "artifact_has_xy": true
+}

@@ -58,27 +58,434 @@
     "Puzzle5dMeta": {
       "title": "Puzzle5dMeta",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      }
     },
     "Puzzle5dKindCatalogs": {
       "title": "Puzzle5dKindCatalogs",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dCatalogPartKind"
+          }
+        },
+        "grips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dCatalogGripKind"
+          }
+        },
+        "fasteners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dCatalogFastenerKind"
+          }
+        },
+        "ropes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dCatalogRopeKind"
+          }
+        }
+      }
     },
     "Puzzle5dKindCompatibility": {
       "title": "Puzzle5dKindCompatibility",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "target"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "bidirectional": {
+          "type": "boolean"
+        },
+        "important": {
+          "type": "boolean"
+        },
+        "specificity": {
+          "$ref": "#/$defs/Puzzle5dCompatSpecificity"
+        }
+      }
     },
     "Puzzle5dPart": {
       "title": "Puzzle5dPart",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "partKind": {
+          "type": "string"
+        },
+        "anchor": {
+          "$ref": "#/$defs/Puzzle5dPartAnchor"
+        },
+        "2d": {
+          "type": "object"
+        },
+        "3d": {
+          "type": "object"
+        },
+        "grips": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
     },
     "Puzzle5dFastener": {
       "title": "Puzzle5dFastener",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "fastenerKind": {
+          "type": "string"
+        },
+        "gap": {
+          "type": "number"
+        },
+        "shift": {
+          "type": "number"
+        },
+        "rise": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "turn": {
+          "type": "number"
+        },
+        "tilt": {
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "Puzzle5dPartAnchor": {
+      "title": "Puzzle5dPartAnchor",
+      "type": "string",
+      "enum": [
+        "fixed",
+        "derived"
+      ]
+    },
+    "Puzzle5dCompatSpecificity": {
+      "title": "Puzzle5dCompatSpecificity",
+      "type": "string",
+      "enum": [
+        "general",
+        "part",
+        "fastener",
+        "grip",
+        "rope"
+      ]
+    },
+    "Puzzle5dAttribute": {
+      "title": "Puzzle5dAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dAuthor": {
+      "title": "Puzzle5dAuthor",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer"
+        }
+      }
+    },
+    "Puzzle5dRepresentation": {
+      "title": "Puzzle5dRepresentation",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dGripTemplate": {
+      "title": "Puzzle5dGripTemplate",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "gripKind": {
+          "type": "string"
+        },
+        "point": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "t": {
+          "type": "number"
+        },
+        "mandatory": {
+          "type": "boolean"
+        },
+        "radius": {
+          "type": "number"
+        }
+      }
+    },
+    "Puzzle5dCatalogPartKind": {
+      "title": "Puzzle5dCatalogPartKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "abstract": {
+          "type": "boolean"
+        },
+        "baseKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dRepresentation"
+          }
+        },
+        "grips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dGripTemplate"
+          }
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dAttribute"
+          }
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dAuthor"
+          }
+        }
+      }
+    },
+    "Puzzle5dCatalogGripKind": {
+      "title": "Puzzle5dCatalogGripKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "compatibleWith": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultRopeKind": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dCatalogFastenerKind": {
+      "title": "Puzzle5dCatalogFastenerKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dCatalogRopeKind": {
+      "title": "Puzzle5dCatalogRopeKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "defaultFastenerKind": {
+          "type": "string"
+        }
+      }
     }
   }
 }

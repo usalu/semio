@@ -5,7 +5,7 @@
 //! document helpers.
 //!
 //! 📚️ Sibling topic files: `🦀️transfer.rs` (the copy/paste closure rules and the translate/replace-kind
-//! helpers), `🦀️compose.rs` (the semio-compose Design → `Puzzle5dSnapshot` importer).
+//! helpers). Compose design import was removed in PUZZLE-DESIGN-PARITY Wave 1 (parity harness is Wave 5).
 //!
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here. Helpers taking an app-only view-state
@@ -19,8 +19,8 @@ use std::collections::HashSet;
 // 🧩️ The sibling topic modules are declared (with their `#[path]`s) in the plugin-root `📦️glue.rs`,
 // beside every other taxonomy component; these re-exports keep the whole engine surface reachable
 // under one `crate::artifacts::puzzle5d::engine::…` name regardless of which topic file owns it.
-pub use crate::artifacts::puzzle5d::engine::compose::import_compose_design_json;
 pub use crate::artifacts::puzzle5d::engine::transfer::{centroid_2d, copy_selection, find_replaceable_kinds, paste_selection, translate_parts};
+pub use crate::artifacts::puzzle5d::engine::flatten::{flatten_snapshot, flatten_snapshot_inplace};
 //#endregion 🔖️Reexports
 
 //#region 🔖️BrushEngine
@@ -151,6 +151,12 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 pub fn empty_puzzle5d_snapshot() -> Puzzle5dSnapshot {
     Puzzle5dSnapshot::default()
 }
+
+
+//#region ⚠️ComposeImportShim
+/// ⚠️ Temporary empty shim after deleting `⚙️engine/🌉️compose/` (PUZZLE-DESIGN-PARITY Wave 1).
+//#endregion ⚠️ComposeImportShim
+
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
 pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {

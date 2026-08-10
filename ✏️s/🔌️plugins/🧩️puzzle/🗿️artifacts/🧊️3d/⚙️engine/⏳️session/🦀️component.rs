@@ -819,7 +819,7 @@ impl Puzzle3dPrecomputeSession {
 mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::engine::testkit::*;
-    use crate::artifacts::puzzle3d::engine::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+    use crate::artifacts::puzzle3d::engine::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
     #[test]
     fn brush_candidates_allow_separated_boxes() {
@@ -836,6 +836,7 @@ mod tests {
                     FixtureObject {
                         id: "obstacle".to_string(),
                         object_kind: Some("Kind".to_string()),
+                        anchor: Default::default(),
                         mesh_url: Some("/test/obstacle.glb".to_string()),
                         origin: [0.0, 0.0, 0.0],
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
@@ -846,6 +847,7 @@ mod tests {
                     FixtureObject {
                         id: "host".to_string(),
                         object_kind: Some("Host".to_string()),
+                        anchor: Default::default(),
                         mesh_url: Some("/test/unregistered.glb".to_string()),
                         origin: [12.0, 0.0, 0.0],
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
@@ -858,12 +860,12 @@ mod tests {
             kind_catalogs: Some(KindCatalogBundle {
                 objects: vec![ObjectKind {
                     id: "Kind".to_string(),
-                    mesh_url: Some("/test/preview.glb".to_string()),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/preview.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
                     scale: None,
-                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) , ..Default::default() }],
                 }],
-                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
-                cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None }],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None , ..Default::default() }],
+                cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None , ..Default::default() }],
             }),
             kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
             overlap_budget: DEFAULT_OVERLAP_BUDGET,

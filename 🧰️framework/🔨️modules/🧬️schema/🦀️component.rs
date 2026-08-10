@@ -343,6 +343,673 @@ pub fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
     register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor));
 }
 
+/// 📎 Registers every app-schema owner (39) into the OS-wide catalog via handcrafted leaf includes.
+pub fn register_all_app_schema_descriptors() {
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.writer.writer",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.mathematical.mathematical",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.procedural.2d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.procedural.3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.flow.flow",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.gis.gis2d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.gis.gis3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.vcs.vcs",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.animate.present",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.shooting.shooting",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.sequence.sequence",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.fem.2d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.fem.3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.architect.architect",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.process.3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.lowpoly.lowpoly",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.reasoning.wires",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.forms.forms",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.layout.layout",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.cad.cad",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.norm.norm",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📕️norm/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📕️norm/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📕️norm/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📕️norm/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📕️norm/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.playbook.playbook",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.imperative.imperative",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.remodel.remodel.remodelworldcamera",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.trinity.rewrite",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.trinity.jack",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.dag.dag",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.draw.draw",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.raster.raster",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.note.note",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.puzzle.puzzle2d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.puzzle.puzzle5d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.puzzle.puzzle3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.block.2d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.block.5d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.block.3d",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.space.home",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.space.space",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+    register_app_schema_descriptor(AppSchemaDescriptor {
+        id: "s.sourcing.curate",
+        config: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🧬️schema/🛰️component.proto"),
+        },
+        presence: FacetLeaves {
+            rust: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+}
+
 /// 🔎 Whether `id` is present in the OS-wide app descriptor registry.
 pub fn app_schema_descriptor_registered(id: &str) -> bool {
     semio_framework_os_kernel::kernel_app_schema_descriptor_registered(id)
@@ -797,6 +1464,25 @@ semio_s_plugin_writer::apps::writer::config::schema::register_app_schema();
 //#endregion 🔖️CatalogIntegration
 
     //#region 🔖️AppSchemaRegistryParity
+
+    #[test]
+    fn app_schema_registry_registers_and_validates_all_thirty_nine_owners() {
+        register_all_app_schema_descriptors();
+        let mut registry = AppSchemaRegistry::new();
+        with_kernel_app_schema_catalog(|entries| {
+            for entry in entries {
+                registry.register(app_descriptor_from_kernel(entry));
+            }
+        });
+        assert_eq!(registry.len(), 39, "A6 registers all 39 app schema owners");
+        let mut walked = 0usize;
+        for descriptor in registry.iter() {
+            walked += 1;
+            validate_registered_app_descriptor(descriptor);
+        }
+        assert_eq!(walked, registry.len());
+    }
+
     fn empty_app_facet_leaves() -> FacetLeaves {
         FacetLeaves {
             rust: "",
@@ -847,47 +1533,7 @@ semio_s_plugin_writer::apps::writer::config::schema::register_app_schema();
         }
     }
 
-    #[cfg(feature = "catalog-integration")]
-    #[test]
-    fn app_schema_registry_registers_and_validates_all_thirty_nine_owners() {
-        register_all_plugin_app_schema_descriptors();
-        let mut registry = AppSchemaRegistry::new();
-        with_kernel_app_schema_catalog(|entries| {
-            for entry in entries {
-                registry.register(app_descriptor_from_kernel(entry));
-            }
-        });
-        assert_eq!(registry.len(), 39, "A6 registers all 39 app schema owners");
-        let mut walked = 0usize;
-        for descriptor in registry.iter() {
-            walked += 1;
-            validate_registered_app_descriptor(descriptor);
-        }
-        assert_eq!(walked, registry.len());
-    }
 
-    #[test]
-    fn app_schema_registry_is_empty_without_catalog_integration_feature() {
-        let mut registry = AppSchemaRegistry::new();
-        with_kernel_app_schema_catalog(|entries| {
-            for entry in entries {
-                registry.register(app_descriptor_from_kernel(entry));
-            }
-        });
-        #[cfg(not(feature = "catalog-integration"))]
-        assert_eq!(registry.len(), 0);
-        #[cfg(feature = "catalog-integration")]
-        {
-            register_all_plugin_app_schema_descriptors();
-            let mut registry = AppSchemaRegistry::new();
-            with_kernel_app_schema_catalog(|entries| {
-                for entry in entries {
-                    registry.register(app_descriptor_from_kernel(entry));
-                }
-            });
-            assert_eq!(registry.len(), 39);
-        }
-    }
 
     #[test]
     fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {

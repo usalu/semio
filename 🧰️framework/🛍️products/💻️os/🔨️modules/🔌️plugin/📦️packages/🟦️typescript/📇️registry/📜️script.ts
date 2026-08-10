@@ -1309,7 +1309,6 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       }
     }
   };
-  const appsDir = join(pluginRoot, APPS_DIRNAME);
   for (const app of listDirs(appsDir)) {
     const appAbs = join(appsDir, app);
     if (existsSync(join(appAbs, LEGACY_CONFIG_FACET_DIR))) {

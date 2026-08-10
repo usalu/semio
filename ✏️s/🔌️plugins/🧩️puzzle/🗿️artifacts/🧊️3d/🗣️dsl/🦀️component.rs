@@ -30,7 +30,7 @@ pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex};
+    use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex};
 
     /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
@@ -57,6 +57,7 @@ mod tests {
             id: "seed-left-001".into(),
             label: Some("Seed Left".into()),
             object_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
+            anchor: Default::default(),
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: Some(Puzzle3dScale::Uniform(1.5)),
@@ -68,7 +69,7 @@ mod tests {
             hidden: false,
             locked: false,
         });
-        projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
+        projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0});
         projection.target_volumes.push(Puzzle3dTargetVolume { id: "tv1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: Some(Puzzle3dScale::Vec3([2.0, 3.0, 4.0])), hidden: false, locked: false });
         projection.references.push(Puzzle3dReference {
             id: "r1".into(),
@@ -78,7 +79,7 @@ mod tests {
             locked: false,
             hidden: false,
         });
-        projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
+        projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::artifacts::puzzle3d::Puzzle3dCompatSpecificity::Vortex }] };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
@@ -97,7 +98,7 @@ mod tests {
         use store::{create_document_envelope, DocumentCommand};
 
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
-        let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+        let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
         let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

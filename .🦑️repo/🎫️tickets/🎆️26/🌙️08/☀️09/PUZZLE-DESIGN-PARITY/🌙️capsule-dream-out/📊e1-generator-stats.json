@@ -1,0 +1,30 @@
+{
+  "input_pieces": 2880,
+  "input_connections": 2864,
+  "used_types": 34,
+  "used_ports": 15,
+  "5d": {
+    "parts": 2880,
+    "fasteners": 2864,
+    "part_kinds": 34,
+    "grip_kinds": 15,
+    "fixed": 16,
+    "derived": 2864,
+    "bytes": 2844327
+  },
+  "3d": {
+    "objects": 2880,
+    "attractions": 2864,
+    "bytes": 2154124
+  },
+  "2d": {
+    "nodes": 2880,
+    "edges": 2864,
+    "bytes": 2038176
+  },
+  "golden": {
+    "poses": 2880,
+    "missing": 0,
+    "bytes": 990237
+  }
+}

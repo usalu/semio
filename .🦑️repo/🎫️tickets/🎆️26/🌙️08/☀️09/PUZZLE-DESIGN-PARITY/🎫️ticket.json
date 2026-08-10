@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle Design Parity",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Give puzzle 5d full compose-sketchpad design-app functionality: uniform connection parameters and type-like kinds across puzzle 2d/3d/5d, an exact port of compose flatten solver, Capsule Dream example transferred with golden position parity, and supporting example/schema/verify mechanisms. Compose is legacy; handcraft puzzle assets; test-only parity harness; no runtime compose bridge.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪916b5fe1e2994e3685a1e07e79c25922"
+  ]
+}

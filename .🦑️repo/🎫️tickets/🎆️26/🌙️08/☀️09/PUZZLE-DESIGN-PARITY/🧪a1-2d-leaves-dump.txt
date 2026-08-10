@@ -1,0 +1,1353 @@
+
+
+===== 🧬️schema/🦀️component.rs (5926 bytes) =====
+//! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
+
+use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dSnapshot, PUZZLE_2D_SCHEMA};
+use artifact_schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Artifact
+/// 🧬️ Full puzzle2d artifact state across persistent, shared-ui, local-ui and preview classes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.puzzle.puzzle2d")]
+pub struct Puzzle2dArtifact {
+    #[state(persistent)] pub schema: String,
+    #[state(persistent)] pub camera: Puzzle2dCamera,
+    #[state(persistent)] pub nodes: Vec<Puzzle2dNode>,
+    #[state(persistent)] pub edges: Vec<Puzzle2dEdge>,
+    #[state(persistent)] pub meta: Puzzle2dMeta,
+    #[state(shared_ui)] pub selected_ids: Vec<String>,
+    #[state(shared_ui)] pub active_utility_id: String,
+    #[state(local_ui)] pub camera_x: f64,
+    #[state(local_ui)] pub camera_y: f64,
+    #[state(local_ui)] pub camera_zoom: f64,
+    #[state(local_ui)] pub selection_method: String,
+    #[state(local_ui)] pub grid_snap_enabled: bool,
+    #[state(local_ui)] pub grid_factor: f64,
+    #[state(local_ui)] pub suggestion_offset: f64,
+    #[state(local_ui)] pub fill_count: u32,
+    #[state(local_ui)] pub brush_candidate_index: u32,
+    #[state(local_ui)] pub brush_candidate_source_handle_id: String,
+    #[state(local_ui)] pub locale: String,
+    #[state(local_ui)] pub terminology: String,
+    #[state(local_ui)] pub lod_mode_by_pane_json: String,
+    #[state(local_ui)] pub engagement_input_by_pane_json: String,
+    #[state(local_ui)] pub brush_candidates_json: String,
+    #[state(local_ui)] pub node_kind_weights_json: String,
+    #[state(local_ui)] pub handle_kind_weights_json: String,
+    #[state(local_ui)] pub active_utility_by_window_id_json: String,
+    #[state(preview)] pub hovered_node_id: Option<String>,
+    #[state(preview)] pub preview_seq: i64,
+}
+//#endregion 🔖️Artifact
+
+//#region 🔖️Conversions
+impl Default for Puzzle2dArtifact {
+    fn default() -> Self {
+        Self::from_snapshot(Puzzle2dSnapshot::default())
+    }
+}
+
+impl Puzzle2dArtifact {
+    /// 📸️ Persisted subset.
+    pub fn to_snapshot(&self) -> Puzzle2dSnapshot {
+        Puzzle2dSnapshot {
+            schema: self.schema.clone(),
+            camera: self.camera.clone(),
+            nodes: self.nodes.clone(),
+            edges: self.edges.clone(),
+            meta: self.meta.clone(),
+        }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    pub fn from_snapshot(snapshot: Puzzle2dSnapshot) -> Self {
+        Self {
+            schema: snapshot.schema,
+            camera: snapshot.camera,
+            nodes: snapshot.nodes,
+            edges: snapshot.edges,
+            meta: snapshot.meta,
+            selected_ids: Vec::new(),
+            active_utility_id: "select".into(),
+            camera_x: 0.0,
+            camera_y: 0.0,
+            camera_zoom: 1.0,
+            selection_method: "rectangle".into(),
+            grid_snap_enabled: false,
+            grid_factor: 1.0,
+            suggestion_offset: 80.0,
+            fill_count: 0,
+            brush_candidate_index: 0,
+            brush_candidate_source_handle_id: String::new(),
+            locale: "en-US".into(),
+            terminology: "native".into(),
+            lod_mode_by_pane_json: "{}".into(),
+            engagement_input_by_pane_json: "{}".into(),
+            brush_candidates_json: "{}".into(),
+            node_kind_weights_json: "{}".into(),
+            handle_kind_weights_json: "{}".into(),
+            active_utility_by_window_id_json: "{}".into(),
+            hovered_node_id: None,
+            preview_seq: 0,
+        }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    pub fn set_snapshot(&mut self, snapshot: Puzzle2dSnapshot) {
+        self.schema = snapshot.schema;
+        self.camera = snapshot.camera;
+        self.nodes = snapshot.nodes;
+        self.edges = snapshot.edges;
+        self.meta = snapshot.meta;
+    }
+}
+//#endregion 🔖️Conversions
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.puzzle.puzzle2d` — fifteen handcrafted schema leaves.
+pub fn puzzle2d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
+    artifact_schema::ArtifactSchemaDescriptor {
+        id: "s.puzzle.puzzle2d",
+        artifact: artifact_schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        snapshot: artifact_schema::FacetLeaves {
+            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+        },
+        diff: artifact_schema::FacetLeaves {
+            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor
+
+
+
+===== 🧬️schema/🟦️component.ts (1517 bytes) =====
+/** 🧬️ Puzzle2d artifact schema — every field with its state class. */
+
+export interface Puzzle2dArtifact {
+  /** @state persistent */
+  schema: string;
+  /** @state persistent */
+  camera: Puzzle2dCamera;
+  /** @state persistent */
+  nodes: Puzzle2dNode[];
+  /** @state persistent */
+  edges: Puzzle2dEdge[];
+  /** @state persistent */
+  meta: Puzzle2dMeta;
+  /** @state shared-ui */
+  selectedIds: string[];
+  /** @state shared-ui */
+  activeUtilityId: string;
+  /** @state local-ui */
+  cameraX: number;
+  /** @state local-ui */
+  cameraY: number;
+  /** @state local-ui */
+  cameraZoom: number;
+  /** @state local-ui */
+  selectionMethod: string;
+  /** @state local-ui */
+  gridSnapEnabled: boolean;
+  /** @state local-ui */
+  gridFactor: number;
+  /** @state local-ui */
+  suggestionOffset: number;
+  /** @state local-ui */
+  fillCount: number;
+  /** @state local-ui */
+  brushCandidateIndex: number;
+  /** @state local-ui */
+  brushCandidateSourceHandleId: string;
+  /** @state local-ui */
+  locale: string;
+  /** @state local-ui */
+  terminology: string;
+  /** @state local-ui */
+  lodModeByPaneJson: string;
+  /** @state local-ui */
+  engagementInputByPaneJson: string;
+  /** @state local-ui */
+  brushCandidatesJson: string;
+  /** @state local-ui */
+  nodeKindWeightsJson: string;
+  /** @state local-ui */
+  handleKindWeightsJson: string;
+  /** @state local-ui */
+  activeUtilityByWindowIdJson: string;
+  /** @state preview */
+  hoveredNodeId?: string;
+  /** @state preview */
+  previewSeq: number;
+}
+
+
+
+===== 🧬️schema/🔗️component.graphql (1460 bytes) =====
+# 🧬️ Puzzle2d artifact schema — every field with its state class.
+
+type Puzzle2dArtifact {
+  schema: String! @state(class: PERSISTENT)
+  camera: Puzzle2dCamera! @state(class: PERSISTENT)
+  nodes: [Puzzle2dNode!]! @state(class: PERSISTENT)
+  edges: [Puzzle2dEdge!]! @state(class: PERSISTENT)
+  meta: Puzzle2dMeta! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridFactor: Float! @state(class: LOCAL_UI)
+  suggestionOffset: Float! @state(class: LOCAL_UI)
+  fillCount: Int! @state(class: LOCAL_UI)
+  brushCandidateIndex: Int! @state(class: LOCAL_UI)
+  brushCandidateSourceHandleId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  lodModeByPaneJson: String! @state(class: LOCAL_UI)
+  engagementInputByPaneJson: String! @state(class: LOCAL_UI)
+  brushCandidatesJson: String! @state(class: LOCAL_UI)
+  nodeKindWeightsJson: String! @state(class: LOCAL_UI)
+  handleKindWeightsJson: String! @state(class: LOCAL_UI)
+  activeUtilityByWindowIdJson: String! @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: PREVIEW)
+  previewSeq: Int! @state(class: PREVIEW)
+}
+
+
+
+===== 🧬️schema/🔣️component.json (4373 bytes) =====
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json",
+  "title": "Puzzle2dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "nodes",
+    "edges",
+    "meta",
+    "selectedIds",
+    "activeUtilityId",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "selectionMethod",
+    "gridSnapEnabled",
+    "gridFactor",
+    "suggestionOffset",
+    "fillCount",
+    "brushCandidateIndex",
+    "brushCandidateSourceHandleId",
+    "locale",
+    "terminology",
+    "lodModeByPaneJson",
+    "engagementInputByPaneJson",
+    "brushCandidatesJson",
+    "nodeKindWeightsJson",
+    "handleKindWeightsJson",
+    "activeUtilityByWindowIdJson",
+    "previewSeq"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle2dCamera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dEdge"
+      },
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle2dMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateSourceHandleId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInputByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidatesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "nodeKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "handleKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowIdJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle2dCamera": {
+      "title": "Puzzle2dCamera",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dNode": {
+      "title": "Puzzle2dNode",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dEdge": {
+      "title": "Puzzle2dEdge",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dMeta": {
+      "title": "Puzzle2dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
+
+
+===== 🧬️schema/🛰️component.proto (1624 bytes) =====
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.artifact;
+
+// 🧬️ Puzzle2d artifact schema — every field with its state class.
+
+message Puzzle2dArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  Puzzle2dCamera camera = 2;
+  // @state persistent
+  repeated Puzzle2dNode nodes = 3;
+  // @state persistent
+  repeated Puzzle2dEdge edges = 4;
+  // @state persistent
+  Puzzle2dMeta meta = 5;
+  // @state shared-ui
+  repeated string selected_ids = 6;
+  // @state shared-ui
+  string active_utility_id = 7;
+  // @state local-ui
+  double camera_x = 8;
+  // @state local-ui
+  double camera_y = 9;
+  // @state local-ui
+  double camera_zoom = 10;
+  // @state local-ui
+  string selection_method = 11;
+  // @state local-ui
+  bool grid_snap_enabled = 12;
+  // @state local-ui
+  double grid_factor = 13;
+  // @state local-ui
+  double suggestion_offset = 14;
+  // @state local-ui
+  uint32 fill_count = 15;
+  // @state local-ui
+  uint32 brush_candidate_index = 16;
+  // @state local-ui
+  string brush_candidate_source_handle_id = 17;
+  // @state local-ui
+  string locale = 18;
+  // @state local-ui
+  string terminology = 19;
+  // @state local-ui
+  string lod_mode_by_pane_json = 20;
+  // @state local-ui
+  string engagement_input_by_pane_json = 21;
+  // @state local-ui
+  string brush_candidates_json = 22;
+  // @state local-ui
+  string node_kind_weights_json = 23;
+  // @state local-ui
+  string handle_kind_weights_json = 24;
+  // @state local-ui
+  string active_utility_by_window_id_json = 25;
+  // @state preview
+  optional string hovered_node_id = 26;
+  // @state preview
+  int64 preview_seq = 27;
+}
+
+
+
+===== 📸️snapshot/🧬️schema/🦀️component.rs (4050 bytes) =====
+//! 🧬️ Puzzle2d snapshot schema — persistent fields only.
+
+use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
+use artifact_schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted puzzle2d document snapshot (persistent fields of the artifact).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[dsl(id = "puzzle.puzzle2d", layout = "lines")]
+#[artifact_schema(id = "s.puzzle.puzzle2d")]
+pub struct Puzzle2dSnapshot {
+    #[state(persistent)]
+    pub schema: String,
+    #[serde(default)]
+    #[dsl(block)]
+    #[state(persistent)]
+    pub camera: Puzzle2dCamera,
+    #[serde(default)]
+    #[dsl(table)]
+    #[state(persistent)]
+    pub nodes: Vec<Puzzle2dNode>,
+    #[serde(default)]
+    #[dsl(table)]
+    #[state(persistent)]
+    pub edges: Vec<Puzzle2dEdge>,
+    #[serde(default)]
+    #[dsl(block)]
+    #[state(persistent)]
+    pub meta: Puzzle2dMeta,
+}
+//#endregion 🔖️Snapshot
+
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
+impl store::DocumentDsl for Puzzle2dSnapshot {
+    const EXTENSION: &'static str = "puzzle2d";
+    fn envelope_id() -> &'static str { "puzzle.puzzle2d" }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        ).expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for Puzzle2dSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+}
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+impl Default for Puzzle2dSnapshot {
+    fn default() -> Self {
+        Self {
+            schema: PUZZLE_2D_SCHEMA.to_string(),
+            camera: Default::default(),
+            nodes: Vec::new(),
+            edges: Vec::new(),
+            meta: Default::default(),
+        }
+    }
+}
+
+
+
+===== 📸️snapshot/🧬️schema/🟦️component.ts (359 bytes) =====
+/** 🧬️ Puzzle2d snapshot schema — persistent fields only. */
+
+export interface Puzzle2dSnapshot {
+  /** @state persistent */
+  schema: string;
+  /** @state persistent */
+  camera: Puzzle2dCamera;
+  /** @state persistent */
+  nodes: Puzzle2dNode[];
+  /** @state persistent */
+  edges: Puzzle2dEdge[];
+  /** @state persistent */
+  meta: Puzzle2dMeta;
+}
+
+
+
+===== 📸️snapshot/🧬️schema/🔗️component.graphql (339 bytes) =====
+# 🧬️ Puzzle2d snapshot schema — persistent fields only.
+
+type Puzzle2dSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  camera: Puzzle2dCamera! @state(class: PERSISTENT)
+  nodes: [Puzzle2dNode!]! @state(class: PERSISTENT)
+  edges: [Puzzle2dEdge!]! @state(class: PERSISTENT)
+  meta: Puzzle2dMeta! @state(class: PERSISTENT)
+}
+
+
+
+===== 📸️snapshot/🧬️schema/🔣️component.json (1331 bytes) =====
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/snapshot.json",
+  "title": "Puzzle2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "nodes",
+    "edges",
+    "meta"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle2dCamera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dEdge"
+      },
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle2dMeta",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "Puzzle2dCamera": {
+      "title": "Puzzle2dCamera",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dNode": {
+      "title": "Puzzle2dNode",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dEdge": {
+      "title": "Puzzle2dEdge",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dMeta": {
+      "title": "Puzzle2dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
+
+
+===== 📸️snapshot/🧬️schema/🛰️component.proto (417 bytes) =====
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.snapshot;
+
+// 🧬️ Puzzle2d snapshot schema — persistent fields only.
+
+message Puzzle2dSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  Puzzle2dCamera camera = 2;
+  // @state persistent
+  repeated Puzzle2dNode nodes = 3;
+  // @state persistent
+  repeated Puzzle2dEdge edges = 4;
+  // @state persistent
+  Puzzle2dMeta meta = 5;
+}
+
+
+
+===== 🔺️diff/🧬️schema/🦀️component.rs (4361 bytes) =====
+//! 🧬️ Puzzle2d diff schema — sparse field delta over the artifact.
+
+use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode};
+use crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
+use artifact_schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Diff
+/// 🔺️ Sparse field delta for the puzzle2d artifact.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase", default)]
+#[artifact_schema(id = "s.puzzle.puzzle2d")]
+pub struct Puzzle2dDiff {
+    #[state(persistent)] pub artifact: Option<Box<Puzzle2dArtifact>>,
+    #[state(persistent)] pub schema: Option<String>,
+    #[state(persistent)] pub camera: Option<Puzzle2dCamera>,
+    #[state(persistent)] pub nodes: Option<Puzzle2dNodesDelta>,
+    #[state(persistent)] pub edges: Option<Puzzle2dEdgesDelta>,
+    #[state(persistent)] pub meta: Option<Puzzle2dMeta>,
+    #[state(shared_ui)] pub selected_ids: Option<Puzzle2dStringList>,
+    #[state(shared_ui)] pub active_utility_id: Option<String>,
+    #[state(local_ui)] pub camera_x: Option<f64>,
+    #[state(local_ui)] pub camera_y: Option<f64>,
+    #[state(local_ui)] pub camera_zoom: Option<f64>,
+    #[state(local_ui)] pub selection_method: Option<String>,
+    #[state(local_ui)] pub grid_snap_enabled: Option<bool>,
+    #[state(local_ui)] pub grid_factor: Option<f64>,
+    #[state(local_ui)] pub suggestion_offset: Option<f64>,
+    #[state(local_ui)] pub fill_count: Option<u32>,
+    #[state(local_ui)] pub brush_candidate_index: Option<u32>,
+    #[state(local_ui)] pub brush_candidate_source_handle_id: Option<String>,
+    #[state(local_ui)] pub locale: Option<String>,
+    #[state(local_ui)] pub terminology: Option<String>,
+    #[state(local_ui)] pub lod_mode_by_pane_json: Option<String>,
+    #[state(local_ui)] pub engagement_input_by_pane_json: Option<String>,
+    #[state(local_ui)] pub brush_candidates_json: Option<String>,
+    #[state(local_ui)] pub node_kind_weights_json: Option<String>,
+    #[state(local_ui)] pub handle_kind_weights_json: Option<String>,
+    #[state(local_ui)] pub active_utility_by_window_id_json: Option<String>,
+    #[state(preview)] pub hovered_node_id: Option<Option<String>>,
+    #[state(preview)] pub preview_seq: Option<i64>,
+}
+//#endregion 🔖️Diff
+
+//#region 🔖️DeltaHelpers
+/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Puzzle2dStringList {
+    pub values: Vec<String>,
+}
+
+/// 🧩 Identified-collection delta for `nodes`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Puzzle2dNodesDelta {
+    pub added: Vec<Puzzle2dNode>,
+    pub removed: Vec<String>,
+    pub patched: Vec<Puzzle2dNodePatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `Puzzle2dNode` entry.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dNodePatchEntry {
+    pub id: String,
+    pub patch: Puzzle2dNodePatch,
+}
+
+/// 🩹 Sparse patch over `Puzzle2dNode` — whole-item replacement via `replacement`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Puzzle2dNodePatch {
+    pub replacement: Option<Puzzle2dNode>,
+}
+
+/// 🧩 Identified-collection delta for `edges`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Puzzle2dEdgesDelta {
+    pub added: Vec<Puzzle2dEdge>,
+    pub removed: Vec<String>,
+    pub patched: Vec<Puzzle2dEdgePatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `Puzzle2dEdge` entry.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dEdgePatchEntry {
+    pub id: String,
+    pub patch: Puzzle2dEdgePatch,
+}
+
+/// 🩹 Sparse patch over `Puzzle2dEdge` — whole-item replacement via `replacement`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Puzzle2dEdgePatch {
+    pub replacement: Option<Puzzle2dEdge>,
+}
+
+//#endregion 🔖️DeltaHelpers
+
+
+
+===== 🔺️diff/🧬️schema/🟦️component.ts (2559 bytes) =====
+/** 🧬️ Puzzle2d diff schema — sparse field delta. */
+
+export interface Puzzle2dDiff {
+  /** @state persistent */
+  artifact?: Puzzle2dArtifact;
+  /** @state persistent */
+  schema?: string;
+  /** @state persistent */
+  camera?: Puzzle2dCamera;
+  /** @state persistent */
+  nodes?: Puzzle2dNodesDelta;
+  /** @state persistent */
+  edges?: Puzzle2dEdgesDelta;
+  /** @state persistent */
+  meta?: Puzzle2dMeta;
+  /** @state shared-ui */
+  selectedIds?: Puzzle2dStringList;
+  /** @state shared-ui */
+  activeUtilityId?: string;
+  /** @state local-ui */
+  cameraX?: number;
+  /** @state local-ui */
+  cameraY?: number;
+  /** @state local-ui */
+  cameraZoom?: number;
+  /** @state local-ui */
+  selectionMethod?: string;
+  /** @state local-ui */
+  gridSnapEnabled?: boolean;
+  /** @state local-ui */
+  gridFactor?: number;
+  /** @state local-ui */
+  suggestionOffset?: number;
+  /** @state local-ui */
+  fillCount?: number;
+  /** @state local-ui */
+  brushCandidateIndex?: number;
+  /** @state local-ui */
+  brushCandidateSourceHandleId?: string;
+  /** @state local-ui */
+  locale?: string;
+  /** @state local-ui */
+  terminology?: string;
+  /** @state local-ui */
+  lodModeByPaneJson?: string;
+  /** @state local-ui */
+  engagementInputByPaneJson?: string;
+  /** @state local-ui */
+  brushCandidatesJson?: string;
+  /** @state local-ui */
+  nodeKindWeightsJson?: string;
+  /** @state local-ui */
+  handleKindWeightsJson?: string;
+  /** @state local-ui */
+  activeUtilityByWindowIdJson?: string;
+  /** @state preview */
+  hoveredNodeId?: string | null;
+  /** @state preview */
+  previewSeq?: number;
+}
+
+export interface Puzzle2dStringList { values: string[]; }
+export interface Puzzle2dNodesDelta { added: Puzzle2dNode[]; removed: string[]; patched: Puzzle2dNodePatchEntry[]; reordered?: string[]; }
+export interface Puzzle2dNodePatchEntry { id: string; patch: Puzzle2dNodePatch; }
+export interface Puzzle2dNodePatch { replacement?: Puzzle2dNode; }
+export interface Puzzle2dNode { id: string; [key: string]: unknown; }
+export interface Puzzle2dEdgesDelta { added: Puzzle2dEdge[]; removed: string[]; patched: Puzzle2dEdgePatchEntry[]; reordered?: string[]; }
+export interface Puzzle2dEdgePatchEntry { id: string; patch: Puzzle2dEdgePatch; }
+export interface Puzzle2dEdgePatch { replacement?: Puzzle2dEdge; }
+export interface Puzzle2dEdge { id: string; [key: string]: unknown; }
+export interface Puzzle2dArtifact { [key: string]: unknown; }
+export interface Puzzle2dCamera { [key: string]: unknown; }
+export interface Puzzle2dMeta { [key: string]: unknown; }
+
+
+
+===== 🔺️diff/🧬️schema/🔗️component.graphql (2234 bytes) =====
+# 🧬️ Puzzle2d diff schema — sparse field delta.
+
+type Puzzle2dDiff {
+  artifact: Puzzle2dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  camera: Puzzle2dCamera @state(class: PERSISTENT)
+  nodes: Puzzle2dNodesDelta @state(class: PERSISTENT)
+  edges: Puzzle2dEdgesDelta @state(class: PERSISTENT)
+  meta: Puzzle2dMeta @state(class: PERSISTENT)
+  selectedIds: Puzzle2dStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean @state(class: LOCAL_UI)
+  gridFactor: Float @state(class: LOCAL_UI)
+  suggestionOffset: Float @state(class: LOCAL_UI)
+  fillCount: Int @state(class: LOCAL_UI)
+  brushCandidateIndex: Int @state(class: LOCAL_UI)
+  brushCandidateSourceHandleId: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  terminology: String @state(class: LOCAL_UI)
+  lodModeByPaneJson: String @state(class: LOCAL_UI)
+  engagementInputByPaneJson: String @state(class: LOCAL_UI)
+  brushCandidatesJson: String @state(class: LOCAL_UI)
+  nodeKindWeightsJson: String @state(class: LOCAL_UI)
+  handleKindWeightsJson: String @state(class: LOCAL_UI)
+  activeUtilityByWindowIdJson: String @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: PREVIEW)
+  previewSeq: Int @state(class: PREVIEW)
+}
+
+type Puzzle2dStringList { values: [String!]! }
+type Puzzle2dNodesDelta { added: [Puzzle2dNode!]! removed: [String!]! patched: [Puzzle2dNodePatchEntry!]! reordered: [String!] }
+type Puzzle2dNodePatchEntry { id: String! patch: Puzzle2dNodePatch! }
+type Puzzle2dNodePatch { replacement: Puzzle2dNode }
+type Puzzle2dNode { id: String! }
+type Puzzle2dEdgesDelta { added: [Puzzle2dEdge!]! removed: [String!]! patched: [Puzzle2dEdgePatchEntry!]! reordered: [String!] }
+type Puzzle2dEdgePatchEntry { id: String! patch: Puzzle2dEdgePatch! }
+type Puzzle2dEdgePatch { replacement: Puzzle2dEdge }
+type Puzzle2dEdge { id: String! }
+type Puzzle2dArtifact { schema: String! }
+type Puzzle2dCamera { _placeholder: Boolean }
+type Puzzle2dMeta { _placeholder: Boolean }
+
+
+
+===== 🔺️diff/🧬️schema/🔣️component.json (7175 bytes) =====
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/diff.json",
+  "title": "Puzzle2dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Puzzle2dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle2dCamera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "$ref": "#/$defs/Puzzle2dNodesDelta",
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "$ref": "#/$defs/Puzzle2dEdgesDelta",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle2dMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/Puzzle2dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateSourceHandleId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInputByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidatesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "nodeKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "handleKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowIdJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredNodeId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle2dStringList": {
+      "title": "Puzzle2dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle2dNodesDelta": {
+      "title": "Puzzle2dNodesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dNode"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dNodePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle2dNodePatchEntry": {
+      "title": "Puzzle2dNodePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle2dNodePatch"
+        }
+      }
+    },
+    "Puzzle2dNodePatch": {
+      "title": "Puzzle2dNodePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle2dNode"
+        }
+      }
+    },
+    "Puzzle2dNode": {
+      "title": "Puzzle2dNode",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle2dEdgesDelta": {
+      "title": "Puzzle2dEdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dEdge"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dEdgePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle2dEdgePatchEntry": {
+      "title": "Puzzle2dEdgePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle2dEdgePatch"
+        }
+      }
+    },
+    "Puzzle2dEdgePatch": {
+      "title": "Puzzle2dEdgePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle2dEdge"
+        }
+      }
+    },
+    "Puzzle2dEdge": {
+      "title": "Puzzle2dEdge",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle2dCamera": {
+      "title": "Puzzle2dCamera",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dMeta": {
+      "title": "Puzzle2dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
+
+
+===== 🔺️diff/🧬️schema/🛰️component.proto (2815 bytes) =====
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.diff;
+
+// 🧬️ Puzzle2d diff schema — sparse field delta.
+
+message Puzzle2dDiff {
+  // @state persistent
+  optional Puzzle2dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional Puzzle2dCamera camera = 3;
+  // @state persistent
+  optional Puzzle2dNodesDelta nodes = 4;
+  // @state persistent
+  optional Puzzle2dEdgesDelta edges = 5;
+  // @state persistent
+  optional Puzzle2dMeta meta = 6;
+  // @state shared-ui
+  optional Puzzle2dStringList selected_ids = 7;
+  // @state shared-ui
+  optional string active_utility_id = 8;
+  // @state local-ui
+  optional double camera_x = 9;
+  // @state local-ui
+  optional double camera_y = 10;
+  // @state local-ui
+  optional double camera_zoom = 11;
+  // @state local-ui
+  optional string selection_method = 12;
+  // @state local-ui
+  optional bool grid_snap_enabled = 13;
+  // @state local-ui
+  optional double grid_factor = 14;
+  // @state local-ui
+  optional double suggestion_offset = 15;
+  // @state local-ui
+  optional uint32 fill_count = 16;
+  // @state local-ui
+  optional uint32 brush_candidate_index = 17;
+  // @state local-ui
+  optional string brush_candidate_source_handle_id = 18;
+  // @state local-ui
+  optional string locale = 19;
+  // @state local-ui
+  optional string terminology = 20;
+  // @state local-ui
+  optional string lod_mode_by_pane_json = 21;
+  // @state local-ui
+  optional string engagement_input_by_pane_json = 22;
+  // @state local-ui
+  optional string brush_candidates_json = 23;
+  // @state local-ui
+  optional string node_kind_weights_json = 24;
+  // @state local-ui
+  optional string handle_kind_weights_json = 25;
+  // @state local-ui
+  optional string active_utility_by_window_id_json = 26;
+  // @state preview
+  optional string hovered_node_id = 27;
+  // @state preview
+  optional int64 preview_seq = 28;
+}
+
+message Puzzle2dArtifact { string schema = 1; }
+message Puzzle2dStringList { repeated string values = 1; }
+message Puzzle2dNodesDelta { repeated Puzzle2dNode added = 1; repeated string removed = 2; repeated Puzzle2dNodePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dNodePatchEntry { string id = 1; Puzzle2dNodePatch patch = 2; }
+message Puzzle2dNodePatch { optional Puzzle2dNode replacement = 1; }
+message Puzzle2dNode { string id = 1; }
+message Puzzle2dEdgesDelta { repeated Puzzle2dEdge added = 1; repeated string removed = 2; repeated Puzzle2dEdgePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dEdgePatchEntry { string id = 1; Puzzle2dEdgePatch patch = 2; }
+message Puzzle2dEdgePatch { optional Puzzle2dEdge replacement = 1; }
+message Puzzle2dEdge { string id = 1; }
+message Puzzle2dCamera { bool _placeholder = 1; }
+message Puzzle2dMeta { bool _placeholder = 1; }
+

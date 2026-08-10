@@ -30,3 +30,123 @@ type Puzzle2dArtifact {
   previewSeq: Int! @state(class: PREVIEW)
 }
 
+
+enum Puzzle2dNodeAnchor { FIXED DERIVED }
+
+type Puzzle2dCamera { x: Float! y: Float! zoom: Float! }
+
+type Puzzle2dHandle {
+  id: String!
+  handleKind: String
+  angle: Float!
+  radius: Float
+  color: String
+  iconKind: String
+  scale: Float
+  visible: Boolean
+  locked: Boolean
+}
+
+type Puzzle2dNode {
+  id: String!
+  nodeKind: String
+  shape: String
+  x: Float!
+  y: Float!
+  radius: Float
+  width: Float
+  height: Float
+  text: String
+  iconKind: String
+  root: Boolean
+  scale: Float
+  visible: Boolean
+  locked: Boolean
+  anchor: Puzzle2dNodeAnchor!
+  handles: [Puzzle2dHandle!]!
+}
+
+type Puzzle2dEdge {
+  id: String!
+  source: String!
+  target: String!
+  edgeKind: String
+  gap: Float!
+  shift: Float!
+  rise: Float!
+  rotation: Float!
+  turn: Float!
+  tilt: Float!
+  x: Float!
+  y: Float!
+  sourceTip: String
+  targetTip: String
+  visible: Boolean
+  locked: Boolean
+}
+
+enum Puzzle2dCompatSpecificity { GENERAL NODE EDGE HANDLE WIRE VORTEX }
+
+type Puzzle2dKindCompatibility {
+  source: String!
+  target: String!
+  bidirectional: Boolean!
+  important: Boolean!
+  specificity: Puzzle2dCompatSpecificity!
+}
+
+type Puzzle2dAttribute { id: String! key: String! value: String! definition: String }
+type Puzzle2dAuthor { id: String! name: String! email: String! role: String rank: Int }
+type Puzzle2dRepresentation { id: String! name: String! url: String! mime: String! tags: [String!]! lod: String description: String! }
+type Puzzle2dHandleTemplate {
+  id: String!
+  name: String!
+  label: String!
+  description: String!
+  icon: String!
+  handleKind: String
+  angle: Float!
+  t: Float
+  mandatory: Boolean
+  radius: Float
+}
+type Puzzle2dCatalogNodeKind {
+  id: String!
+  name: String!
+  label: String!
+  description: String!
+  icon: String!
+  image: String!
+  unit: String!
+  abstract: Boolean!
+  baseKinds: [String!]!
+  representations: [Puzzle2dRepresentation!]!
+  handles: [Puzzle2dHandleTemplate!]!
+  attributes: [Puzzle2dAttribute!]!
+  authors: [Puzzle2dAuthor!]!
+}
+type Puzzle2dCatalogHandleKind {
+  id: String!
+  code: String
+  label: String
+  order: Int
+  compatibleWith: [String!]!
+  description: String!
+  icon: String!
+  color: String!
+  defaultWireKind: String!
+}
+type Puzzle2dCatalogEdgeKind { id: String! name: String! label: String! description: String! icon: String! color: String! }
+type Puzzle2dCatalogWireKind { id: String! name: String! label: String! description: String! icon: String! color: String! defaultEdgeKind: String! }
+type Puzzle2dKindCatalogs {
+  nodes: [Puzzle2dCatalogNodeKind!]!
+  handles: [Puzzle2dCatalogHandleKind!]!
+  edges: [Puzzle2dCatalogEdgeKind!]!
+  wires: [Puzzle2dCatalogWireKind!]!
+}
+type Puzzle2dMeta {
+  manifestId: String
+  kindCompatibility: [Puzzle2dKindCompatibility!]!
+  kindCatalogs: Puzzle2dKindCatalogs
+}
+

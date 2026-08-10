@@ -47,7 +47,7 @@ mod tests {
             .dispatch(DocumentCommand::Apply {
                 mutations: vec![Puzzle2dMutation::SetNode {
                     index: 0,
-                    node: Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() },
+                    node: Puzzle2dNode { id: "n1".into(), ..Default::default() },
                 }],
                 description: None,
             })

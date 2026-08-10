@@ -90,31 +90,100 @@ pub struct KindCompatEntry {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ObjectKindVortexTemplate {
+    #[serde(default)]
+    pub(crate) id: String,
+    #[serde(default)]
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) label: String,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) icon: String,
     #[serde(rename = "vortexKind", default)]
     pub(crate) vortex_kind: Option<String>,
-    pub(crate) position: Vec3,
+    #[serde(default)]
+    pub(crate) point: Vec3,
+    #[serde(default)]
     pub(crate) direction: Option<Vec3>,
+    #[serde(default)]
+    pub(crate) t: Option<f64>,
+    #[serde(default)]
+    pub(crate) mandatory: Option<bool>,
+    #[serde(default)]
+    pub(crate) radius: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+impl Default for ObjectKindVortexTemplate {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            label: String::new(),
+            description: String::new(),
+            icon: String::new(),
+            vortex_kind: None,
+            point: [0.0, 0.0, 0.0],
+            direction: None,
+            t: None,
+            mandatory: None,
+            radius: None,
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+pub struct ObjectKindRepresentation {
+    #[serde(default)]
+    pub(crate) id: String,
+    #[serde(default)]
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) url: String,
+    #[serde(default)]
+    pub(crate) mime: String,
+    #[serde(default)]
+    pub(crate) tags: Vec<String>,
+    #[serde(default)]
+    pub(crate) lod: Option<String>,
+    #[serde(default)]
+    pub(crate) description: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct ObjectKind {
     pub(crate) id: String,
-    #[serde(rename = "meshUrl", default)]
-    pub(crate) mesh_url: Option<String>,
+    #[serde(default)]
+    pub(crate) representations: Vec<ObjectKindRepresentation>,
     #[serde(default)]
     pub(crate) scale: Option<dsl::DslValue>,
     #[serde(default)]
     pub(crate) vortices: Vec<ObjectKindVortexTemplate>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct VortexKindCatalog {
     pub(crate) id: String,
+    #[serde(default)]
+    pub(crate) code: Option<String>,
+    #[serde(default)]
+    pub(crate) label: Option<String>,
+    #[serde(default)]
+    pub(crate) order: Option<i32>,
+    #[serde(default, rename = "compatibleWith")]
+    pub(crate) compatible_with: Vec<String>,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) icon: String,
+    #[serde(default)]
+    pub(crate) color: String,
     #[serde(rename = "defaultCableKind", default)]
     pub(crate) default_cable_kind: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct CableKindCatalog {
     pub(crate) id: String,
     #[serde(rename = "defaultAttractionKind", default)]
@@ -123,7 +192,7 @@ pub struct CableKindCatalog {
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct KindCatalogBundle {
     #[serde(default)]
     pub(crate) objects: Vec<ObjectKind>,
@@ -147,6 +216,8 @@ pub struct FixtureObject {
     pub id: String,
     #[serde(rename = "objectKind", default)]
     pub object_kind: Option<String>,
+    #[serde(default)]
+    pub anchor: crate::artifacts::puzzle3d::Puzzle3dObjectAnchor,
     #[serde(rename = "meshUrl", default)]
     pub mesh_url: Option<String>,
     pub origin: Vec3,
@@ -180,6 +251,10 @@ pub struct AttractionProps {
     pub turn: f64,
     #[serde(default)]
     pub tilt: f64,
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -360,6 +435,7 @@ pub(crate) mod testkit {
                 objects: vec![FixtureObject {
                     id: "host".to_string(),
                     object_kind: Some("Host".to_string()),
+                    anchor: Default::default(),
                     mesh_url: Some("/test/host.glb".to_string()),
                     origin: [0.0, 0.0, 0.0],
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
@@ -369,8 +445,8 @@ pub(crate) mod testkit {
                 }],
             },
             kind_catalogs: Some(KindCatalogBundle {
-                objects: vec![ObjectKind { id: "Host".to_string(), mesh_url: Some("/test/host.glb".to_string()), scale: None, vortices: vec![] }],
-                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }],
+                objects: vec![ObjectKind { id: "Host".to_string(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }],
                 cables: vec![],
             }),
             kind_compatibility: vec![],
@@ -388,6 +464,7 @@ pub(crate) mod testkit {
         FixtureObject {
             id: id.to_string(),
             object_kind: Some("Placed".to_string()),
+            anchor: Default::default(),
             mesh_url: Some("/test/placed.glb".to_string()),
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
@@ -398,7 +475,7 @@ pub(crate) mod testkit {
     }
 
     pub(crate) fn fill_plan_attraction(index: usize) -> AttractionProps {
-        AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 }
+        AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }
     }
 
     pub(crate) fn fill_plan_payload(index: usize) -> BrushPlacePayload {

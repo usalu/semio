@@ -287,12 +287,61 @@
       }
     },
     "Puzzle3dObject": {
-      "title": "Puzzle3dObject",
       "type": "object",
-      "additionalProperties": true,
+      "title": "Puzzle3dObject",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "objectKind": {
+          "type": "string"
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "derived"
+          ],
+          "default": "fixed"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "scale": {},
+        "meshUrl": {
+          "type": "string"
+        },
+        "vortices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dVortex"
+          }
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       }
     },
@@ -361,12 +410,59 @@
       }
     },
     "Puzzle3dAttraction": {
-      "title": "Puzzle3dAttraction",
       "type": "object",
-      "additionalProperties": true,
+      "title": "Puzzle3dAttraction",
+      "additionalProperties": false,
+      "required": [
+        "attracting",
+        "attracted"
+      ],
       "properties": {
         "id": {
           "type": "string"
+        },
+        "attracting": {
+          "type": "string"
+        },
+        "attracted": {
+          "type": "string"
+        },
+        "gap": {
+          "type": "number",
+          "default": 0.0
+        },
+        "shift": {
+          "type": "number",
+          "default": 0.0
+        },
+        "rise": {
+          "type": "number",
+          "default": 0.0
+        },
+        "rotation": {
+          "type": "number",
+          "default": 0.0,
+          "description": "degrees"
+        },
+        "turn": {
+          "type": "number",
+          "default": 0.0,
+          "description": "degrees"
+        },
+        "tilt": {
+          "type": "number",
+          "default": 0.0,
+          "description": "degrees"
+        },
+        "x": {
+          "type": "number",
+          "default": 0.0,
+          "description": "diagram offset (compose u)"
+        },
+        "y": {
+          "type": "number",
+          "default": 0.0,
+          "description": "diagram offset (compose v)"
         }
       }
     },
@@ -519,9 +615,294 @@
       }
     },
     "Puzzle3dMeta": {
-      "title": "Puzzle3dMeta",
       "type": "object",
-      "additionalProperties": true
+      "title": "Puzzle3dMeta",
+      "additionalProperties": false,
+      "properties": {
+        "kindCatalogs": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "kindCompatibility": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dKindCompatibility"
+          }
+        }
+      }
+    },
+    "Puzzle3dVortex": {
+      "type": "object",
+      "title": "Puzzle3dVortex",
+      "additionalProperties": true,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vortexKind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "radius": {
+          "type": "number"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Puzzle3dKindCompatibility": {
+      "type": "object",
+      "title": "Puzzle3dKindCompatibility",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "target"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "bidirectional": {
+          "type": "boolean",
+          "default": false
+        },
+        "important": {
+          "type": "boolean",
+          "default": false
+        },
+        "specificity": {
+          "type": "string",
+          "enum": [
+            "general",
+            "object",
+            "attraction",
+            "vortex",
+            "cable"
+          ],
+          "default": "general"
+        }
+      }
+    },
+    "Puzzle3dRepresentation": {
+      "type": "object",
+      "title": "Puzzle3dRepresentation",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "url"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dCatalogVortexTemplate": {
+      "type": "object",
+      "title": "Puzzle3dCatalogVortexTemplate",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "vortexKind": {
+          "type": "string"
+        },
+        "point": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "t": {
+          "type": "number"
+        },
+        "mandatory": {
+          "type": "boolean"
+        },
+        "radius": {
+          "type": "number"
+        }
+      }
+    },
+    "Puzzle3dCatalogObjectKind": {
+      "type": "object",
+      "title": "Puzzle3dCatalogObjectKind",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "abstract": {
+          "type": "boolean",
+          "default": false
+        },
+        "baseKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dRepresentation"
+          }
+        },
+        "vortices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dCatalogVortexTemplate"
+          }
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "Puzzle3dCatalogVortexKind": {
+      "type": "object",
+      "title": "Puzzle3dCatalogVortexKind",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "compatibleWith": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultCableKind": {
+          "type": "string"
+        }
+      }
     }
   }
 }

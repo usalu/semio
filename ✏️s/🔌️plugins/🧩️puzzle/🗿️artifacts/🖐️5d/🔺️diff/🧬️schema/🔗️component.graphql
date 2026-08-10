@@ -42,14 +42,17 @@ type Puzzle5dStringList { values: [String!]! }
 type Puzzle5dPartsDelta { added: [Puzzle5dPart!]! removed: [String!]! patched: [Puzzle5dPartPatchEntry!]! reordered: [String!] }
 type Puzzle5dPartPatchEntry { id: String! patch: Puzzle5dPartPatch! }
 type Puzzle5dPartPatch { replacement: Puzzle5dPart }
-type Puzzle5dPart { id: String! }
+type Puzzle5dPart { id: String! partKind: String anchor: Puzzle5dPartAnchor }
 type Puzzle5dFastenersDelta { added: [Puzzle5dFastener!]! removed: [String!]! patched: [Puzzle5dFastenerPatchEntry!]! reordered: [String!] }
 type Puzzle5dFastenerPatchEntry { id: String! patch: Puzzle5dFastenerPatch! }
 type Puzzle5dFastenerPatch { replacement: Puzzle5dFastener }
-type Puzzle5dFastener { id: String! }
-type Puzzle5dKindCompatibility { id: String! }
+type Puzzle5dFastener { id: String! source: String target: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
+type Puzzle5dKindCompatibility { source: String target: String bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
 type Puzzle5dArtifact { schema: String! }
 type Puzzle5dMeta { _placeholder: Boolean }
 type Puzzle5dKindCatalogs { _placeholder: Boolean }
 
 type Puzzle5dKindCompatibilityList { values: [Puzzle5dKindCompatibility!]! }
+
+enum Puzzle5dPartAnchor { FIXED DERIVED }
+enum Puzzle5dCompatSpecificity { GENERAL PART FASTENER GRIP ROPE }

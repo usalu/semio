@@ -91,11 +91,65 @@ message Puzzle3dStringList { repeated string values = 1; }
 message Puzzle3dObjectsDelta { repeated Puzzle3dObject added = 1; repeated string removed = 2; repeated Puzzle3dObjectPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle3dObjectPatchEntry { string id = 1; Puzzle3dObjectPatch patch = 2; }
 message Puzzle3dObjectPatch { optional Puzzle3dObject replacement = 1; }
-message Puzzle3dObject { string id = 1; }
 message Puzzle3dAttractionsDelta { repeated Puzzle3dAttraction added = 1; repeated string removed = 2; repeated Puzzle3dAttractionPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle3dAttractionPatchEntry { string id = 1; Puzzle3dAttractionPatch patch = 2; }
 message Puzzle3dAttractionPatch { optional Puzzle3dAttraction replacement = 1; }
-message Puzzle3dAttraction { string id = 1; }
+enum Puzzle3dObjectAnchor {
+  PUZZLE3D_OBJECT_ANCHOR_FIXED = 0;
+  PUZZLE3D_OBJECT_ANCHOR_DERIVED = 1;
+}
+enum Puzzle3dCompatSpecificity {
+  PUZZLE3D_COMPAT_SPECIFICITY_GENERAL = 0;
+  PUZZLE3D_COMPAT_SPECIFICITY_OBJECT = 1;
+  PUZZLE3D_COMPAT_SPECIFICITY_ATTRACTION = 2;
+  PUZZLE3D_COMPAT_SPECIFICITY_VORTEX = 3;
+  PUZZLE3D_COMPAT_SPECIFICITY_CABLE = 4;
+}
+message Puzzle3dAttraction {
+  string id = 1;
+  string attracting = 2;
+  string attracted = 3;
+  double gap = 4;
+  double shift = 5;
+  double rise = 6;
+  double rotation = 7;
+  double turn = 8;
+  double tilt = 9;
+  double x = 10;
+  double y = 11;
+}
+message Puzzle3dVortex {
+  string id = 1;
+  optional string vortex_kind = 2;
+  optional string label = 3;
+  repeated double position = 4;
+  repeated double direction = 5;
+  optional double radius = 6;
+  bool hidden = 7;
+  bool locked = 8;
+}
+message Puzzle3dObject {
+  string id = 1;
+  optional string label = 2;
+  optional string object_kind = 3;
+  Puzzle3dObjectAnchor anchor = 4;
+  repeated double origin = 5;
+  repeated double orientation = 6;
+  optional string mesh_url = 7;
+  repeated Puzzle3dVortex vortices = 8;
+  bool hidden = 9;
+  bool locked = 10;
+}
+message Puzzle3dKindCompatibility {
+  string source = 1;
+  string target = 2;
+  bool bidirectional = 3;
+  bool important = 4;
+  Puzzle3dCompatSpecificity specificity = 5;
+}
+message Puzzle3dMeta {
+  repeated Puzzle3dKindCompatibility kind_compatibility = 1;
+}
 message Puzzle3dTargetVolumesDelta { repeated Puzzle3dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle3dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle3dTargetVolumePatchEntry { string id = 1; Puzzle3dTargetVolumePatch patch = 2; }
 message Puzzle3dTargetVolumePatch { optional Puzzle3dTargetVolume replacement = 1; }
