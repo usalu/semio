@@ -1,7 +1,8 @@
 //! 🧬️ XlsxArtifact schema — full artifact state.
 
-use crate::artifacts::xlsx::schema::snapshot::XlsxEntry;
+use crate::artifacts::xlsx::schema::snapshot::XlsxWorkbook;
 use crate::artifacts::xlsx::XlsxSnapshot;
+use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +16,10 @@ pub struct XlsxArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<XlsxEntry>,
+    pub opc: OpcPackage,
+    #[state(persistent)]
+    #[serde(default)]
+    pub workbook: XlsxWorkbook,
 }
 //#endregion Artifact
 
@@ -29,24 +33,19 @@ impl Default for XlsxArtifact {
 impl XlsxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> XlsxSnapshot {
-        XlsxSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        XlsxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), workbook: self.workbook.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, opc: snapshot.opc, workbook: snapshot.workbook }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.opc = snapshot.opc;
+        self.workbook = snapshot.workbook;
     }
 }
 //#endregion Conversions

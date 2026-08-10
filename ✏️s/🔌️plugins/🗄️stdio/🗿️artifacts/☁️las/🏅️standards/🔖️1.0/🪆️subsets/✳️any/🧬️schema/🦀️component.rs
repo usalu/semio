@@ -13,7 +13,7 @@ pub struct LasArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<crate::artifacts::las::schema::snapshot::MeshVertex>,
+    pub points: Vec<crate::artifacts::las::schema::snapshot::LasPoint>,
 }
 //#endregion 🔖️Artifact
 
@@ -28,20 +28,20 @@ impl LasArtifact {
     pub fn to_snapshot(&self) -> LasSnapshot {
         LasSnapshot {
             schema: self.schema.clone(),
-            vertices: self.vertices.clone(),
+            points: self.points.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            vertices: snapshot.vertices,
+            points: snapshot.points,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
         self.schema = snapshot.schema;
-        self.vertices = snapshot.vertices;
+        self.points = snapshot.points;
     }
 }
 //#endregion 🔖️Conversions

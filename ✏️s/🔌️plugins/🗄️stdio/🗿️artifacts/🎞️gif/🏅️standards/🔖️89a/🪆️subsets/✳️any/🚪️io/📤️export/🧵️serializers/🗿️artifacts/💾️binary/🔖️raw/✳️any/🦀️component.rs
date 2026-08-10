@@ -1,0 +1,12 @@
+//! Serialize stdio.gif to stdio.binary.
+
+use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+
+pub fn register() {}
+
+pub fn serialize(from: &GifSnapshot) -> Result<BinarySnapshot, store::PackError> {
+    let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(from)
+        .map_err(|e| store::PackError::Schema(e))?;
+    Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
+}

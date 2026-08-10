@@ -1,8 +1,30 @@
-//! 🧬️ MdSnapshot schema — persistent fields + real codecs.
+//! 🧬️ MdSnapshot schema — persistent fields (lossless raw text); real CommonMark-shaped
+//! block/inline parsing lives in `⚙️engine::parse_markdown_blocks`.
 
 use crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+
+//#region 🔖️CommonMarkModel
+/// 🧩 A real (subset) CommonMark inline run.
+#[derive(Clone, Debug, PartialEq)]
+pub enum MdInline {
+    Text(String),
+    Strong(Vec<MdInline>),
+    Emphasis(Vec<MdInline>),
+    Code(String),
+    Link { text: Vec<MdInline>, url: String, title: Option<String> },
+}
+
+/// 🧱 A real (subset) CommonMark block.
+#[derive(Clone, Debug, PartialEq)]
+pub enum MdBlock {
+    Heading { level: u8, inline: Vec<MdInline> },
+    Paragraph { inline: Vec<MdInline> },
+    CodeBlock { info: Option<String>, code: String, fenced: bool },
+    List { ordered: bool, start: Option<u64>, items: Vec<Vec<MdInline>> },
+}
+//#endregion 🔖️CommonMarkModel
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.md` snapshot (lossless markdown text).

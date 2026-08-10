@@ -11,9 +11,10 @@ use serde::{Deserialize, Serialize};
 pub struct StepArtifact {
     #[state(persistent)]
     pub schema: String,
+    /// 📦️ The full, lossless generic Part-21 graph — the actual persisted state.
     #[state(persistent)]
     #[serde(default)]
-    pub brep: crate::artifacts::step::schema::snapshot::BrepMesh,
+    pub document: crate::artifacts::step::engine::part21::Part21Document,
 }
 //#endregion 🔖️Artifact
 
@@ -28,20 +29,25 @@ impl StepArtifact {
     pub fn to_snapshot(&self) -> StepSnapshot {
         StepSnapshot {
             schema: self.schema.clone(),
-            brep: self.brep.clone(),
+            document: self.document.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: StepSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            brep: snapshot.brep,
+            document: snapshot.document,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: StepSnapshot) {
         self.schema = snapshot.schema;
-        self.brep = snapshot.brep;
+        self.document = snapshot.document;
+    }
+
+    /// 🧐️ Derived BrepMesh analyzer view — computed on demand, never stored.
+    pub fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
+        crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.document)
     }
 }
 //#endregion 🔖️Conversions

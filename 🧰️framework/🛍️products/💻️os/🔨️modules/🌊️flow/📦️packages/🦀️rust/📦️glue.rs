@@ -46,9 +46,9 @@ pub mod neural_dag;
 pub mod playbook;
 //#endregion 🔖️Playbook
 
-#[path = "../../📄️document/🦀️component.rs"]
-pub mod document;
-pub use document::*;
+#[path = "../../📄️artifact/🦀️component.rs"]
+pub mod artifact;
+pub use artifact::*;
 
 #[path = "../../📚️catalogue/🦀️component.rs"]
 pub mod catalogue;

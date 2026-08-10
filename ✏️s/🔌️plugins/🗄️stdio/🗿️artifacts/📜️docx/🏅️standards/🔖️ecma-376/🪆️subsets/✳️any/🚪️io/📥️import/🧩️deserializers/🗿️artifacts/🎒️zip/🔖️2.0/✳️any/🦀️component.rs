@@ -10,7 +10,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a DocxSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<DocxSnapshot, store::PackError> {
     let mut snap = crate::artifacts::docx::engine::decode_docx(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_DOCX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

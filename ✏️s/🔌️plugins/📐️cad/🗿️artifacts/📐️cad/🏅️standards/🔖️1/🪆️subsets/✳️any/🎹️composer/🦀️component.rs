@@ -1,5 +1,5 @@
 //! 🎹️ CadComposer (1/✳️any) — analyzer + builder glued. Reads native `s.cad` sources
-//! plus any of: stdio.dwg, stdio.glb, stdio.gltf, stdio.ifc, stdio.json, stdio.obj, stdio.png, stdio.step, stdio.stl. Writes one `s.cad` (1/✳️any) snapshot.
+//! plus any of: stdio.dwg, stdio.gltf, stdio.ifc, stdio.json, stdio.obj, stdio.png, stdio.step, stdio.stl. Writes one `s.cad` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::cad::CadSnapshot;
@@ -8,7 +8,6 @@ use semio_framework_plugin::ArtifactAnalyzer as _;
 
 const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
 const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-const DEP_GLB: Dialect = Dialect { artifact_kind: "s.stdio.glb", standard: StandardId("2.0"), subset: SubsetId("*") };
 const DEP_GLTF: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 const DEP_IFC: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
 const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -25,7 +24,7 @@ impl ArtifactComposer for CadComposer {
     const WRITES: Dialect = DIALECT;
 
     fn reads() -> &'static [Dialect] {
-        &[DIALECT, DEP_DWG, DEP_GLB, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL]
+        &[DIALECT, DEP_DWG, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL]
     }
 
     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -47,17 +46,6 @@ impl ArtifactComposer for CadComposer {
                 };
                 if let Some(text) = text {
                     if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_text(&text) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-            }
-            if source.dialect == DEP_GLB {
-                let text: Option<String> = match &source.payload {
-                    AnalyzeSource::Text(t) => Some(t.to_string()),
-                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                };
-                if let Some(text) = text {
-                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::glb::v2_0::any::deserialize_text(&text) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }

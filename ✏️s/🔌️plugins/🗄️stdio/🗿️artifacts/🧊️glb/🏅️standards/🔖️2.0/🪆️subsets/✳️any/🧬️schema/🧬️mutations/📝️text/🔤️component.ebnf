@@ -1,3 +1,0 @@
-(* ebnf stdio.glb mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.glb', newline ;

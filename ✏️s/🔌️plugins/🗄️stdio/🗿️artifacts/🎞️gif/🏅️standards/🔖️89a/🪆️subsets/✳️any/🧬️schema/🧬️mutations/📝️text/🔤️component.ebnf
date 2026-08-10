@@ -1,0 +1,3 @@
+(* ebnf stdio.gif mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.gif', newline ;

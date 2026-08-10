@@ -1,5 +1,5 @@
 //! 🎹️ CurateComposer (1/✳️any) — analyzer + builder glued. Reads native `s.curate` sources
-//! plus any of: stdio.glb, stdio.json, stdio.obj, stdio.png, stdio.stl, stdio.txt, stdio.zip. Writes one `s.curate` (1/✳️any) snapshot.
+//! plus any of: stdio.json, stdio.obj, stdio.png, stdio.stl, stdio.txt, stdio.zip. Writes one `s.curate` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::curate::CurateSnapshot;
@@ -7,7 +7,6 @@ use crate::artifacts::curate::standards::v1::subsets::any::analyzer::CurateAnaly
 use semio_framework_plugin::ArtifactAnalyzer as _;
 
 const DIALECT: Dialect = Dialect { artifact_kind: "s.curate", standard: StandardId("1"), subset: SubsetId("*") };
-const DEP_GLB: Dialect = Dialect { artifact_kind: "s.stdio.glb", standard: StandardId("2.0"), subset: SubsetId("*") };
 const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 const DEP_OBJ: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
 const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
@@ -23,7 +22,7 @@ impl ArtifactComposer for CurateComposer {
     const WRITES: Dialect = DIALECT;
 
     fn reads() -> &'static [Dialect] {
-        &[DIALECT, DEP_GLB, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
+        &[DIALECT, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
     }
 
     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -36,15 +35,6 @@ impl ArtifactComposer for CurateComposer {
                 let analysis = CurateAnalyzer::analyze(&[native]);
                 if let Some(snapshot) = analysis.parts.snapshot {
                     return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                }
-            }
-            if source.dialect == DEP_GLB {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
-                };
-                if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::glb::v2_0::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                 }
             }
             if source.dialect == DEP_JSON {

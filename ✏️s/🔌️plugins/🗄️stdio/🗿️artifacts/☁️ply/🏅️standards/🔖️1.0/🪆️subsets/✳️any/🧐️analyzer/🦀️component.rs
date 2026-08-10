@@ -20,8 +20,26 @@ impl ArtifactAnalyzer for PlyAnalyzer {
     type Parts = PlyParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        // 🔍 PLY files (ascii or either binary variant) always start with a literal ASCII
+        // "ply" magic line — `ply\n` or `ply\r\n` — per the format spec. Unlike png/las,
+        // stdio.ply's text envelope embeds the raw ply bytes directly (no hex dump), so both
+        // sources are checked against the same literal prefix.
+        const MAGIC_LF: &[u8] = b"ply\n";
+        const MAGIC_CRLF: &[u8] = b"ply\r\n";
+        let starts_with_magic = |bytes: &[u8]| bytes.starts_with(MAGIC_LF) || bytes.starts_with(MAGIC_CRLF);
+        match source {
+            AnalyzeSource::Binary(bytes) => {
+                if starts_with_magic(bytes) { IoConfidence::High } else { IoConfidence::Low }
+            }
+            AnalyzeSource::Text(text) => {
+                let body = match store::semio_format::split_text_preamble(text) {
+                    Ok((_, rest)) => rest,
+                    Err(_) => text,
+                };
+                if starts_with_magic(body.as_bytes()) { IoConfidence::High } else { IoConfidence::Low }
+            }
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

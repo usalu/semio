@@ -12,20 +12,64 @@ pub struct BcfEntry {
     pub data: Vec<u8>,
 }
 
+//#region 🔖️TopicModel
+/// 💬 One `<Comment>` under a topic's `markup.bcf` (BCF-XML 2.1 §Comment): `Guid` is the
+/// comment's own identity (distinct from the topic's), `date`/`author`/`comment` are the
+/// required child elements `<Date>`/`<Author>`/`<Comment>` verbatim (ISO-8601 date text and
+/// free-form comment body, kept as literal strings -- not reinterpreted).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BcfComment {
+    pub guid: String,
+    pub date: String,
+    pub author: String,
+    pub comment: String,
+}
+
+/// 🗂️ One BCF topic (one `<guid>/markup.bcf` entry inside the container): `guid`/`status` mirror
+/// the `Topic` element's `Guid`/`TopicStatus` XML *attributes* (not child elements -- BCF-XML
+/// 2.1's `markup.xsd` declares both as `xs:attribute`), `title` is the required `<Title>` child
+/// element's text, `comments` are the sibling `<Comment>` elements under `<Markup>`, and
+/// `viewpoint_ref` is the referenced viewpoint filename read off `<Viewpoints Viewpoint="...">`
+/// (the `.bcfv` file's own camera/visibility content is deliberately left unparsed -- only the
+/// filename reference is modeled, per this artifact's D2 minimum-depth scope).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BcfTopic {
+    pub guid: String,
+    pub title: String,
+    pub status: String,
+    #[serde(default)]
+    pub comments: Vec<BcfComment>,
+    #[serde(default)]
+    pub viewpoint_ref: Option<String>,
+}
+//#endregion 🔖️TopicModel
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfSnapshot {
     #[state(persistent)]
     pub schema: String,
+    /// 🗄️ Lossless raw zip-entry substrate: every entry (root `bcf.version`, `markup.bcf`,
+    /// `.bcfv` viewpoints, snapshot images, ...) verbatim. This is what actually round-trips
+    /// through `encode_bcf`/`decode_bcf`; `topics` below is a derived/reconciled typed view.
     #[state(persistent)]
     #[serde(default)]
     pub entries: Vec<BcfEntry>,
+    /// 🧬 Typed view derived from `entries` on decode (parsed out of each topic folder's
+    /// `markup.bcf`). `encode_bcf` reconciles this back into `entries` -- regenerating/creating
+    /// the corresponding `markup.bcf` XML for every topic present here -- so setting `topics`
+    /// directly (without touching `entries`) still round-trips through encode.
+    #[state(persistent)]
+    #[serde(default)]
+    pub topics: Vec<BcfTopic>,
 }
 
 impl Default for BcfSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), entries: Vec::new() }
+        Self { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), entries: Vec::new(), topics: Vec::new() }
     }
 }
 

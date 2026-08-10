@@ -7,7 +7,6 @@ application/zip,.zip,ZIP,Zip Archive,Archive,🎒️zip,stdio.zip
 application/json,.json,JSON,JavaScript Object Notation,Value,🔣️json,stdio.json
 text/csv,.csv,CSV,Comma-Separated Values,TableDoc,📊️csv,stdio.csv
 text/markdown,.md,Markdown,Markdown Text,TextDoc,📝️md,stdio.md
-model/gltf-binary,.glb,GLB,GL Transmission Format Binary,MeshData,🧊️glb,stdio.glb
 model/gltf+json,.gltf,GLTF,GL Transmission Format JSON,MeshData,🧊️gltf,stdio.gltf
 model/obj,.obj,OBJ,Wavefront Object,MeshData,🧊️obj,stdio.obj
 model/stl,.stl,STL,Stereolithography,MeshData,🟪️stl,stdio.stl

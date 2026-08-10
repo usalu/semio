@@ -217,6 +217,15 @@ pub mod os_spr {
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
 pub mod os_vcs;
 
+// 🚪️ `io`'s `ArtifactDialect`/`Dialect` vocabulary is mounted independently in every crate that
+// needs it (`semio-framework`, each plugin's own glue.rs) rather than depended on, because
+// `semio-framework` itself depends on `semio-framework-os-kernel` — a kernel-side dependency on
+// `semio-framework` would be circular. This mount exists solely so `store::ArtifactEnvelope` can
+// carry a persisted `dialect`/`migrated_from` coordinate (26/08/10 D4 evolution slice); it is the
+// same file, same nominal-type-per-compilation-unit tradeoff every other mount already accepts.
+#[path = "../../../../🔨️modules/🚪️io/🦀️component.rs"]
+pub mod os_io;
+
 #[path = "."]
 pub mod os_store {
   #[path = "../../🔨️modules/🏪️store/🦀️component.rs"]

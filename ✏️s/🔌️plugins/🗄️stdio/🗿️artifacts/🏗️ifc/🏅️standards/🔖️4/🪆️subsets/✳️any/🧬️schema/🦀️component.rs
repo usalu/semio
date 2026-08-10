@@ -11,9 +11,10 @@ use serde::{Deserialize, Serialize};
 pub struct IfcArtifact {
     #[state(persistent)]
     pub schema: String,
+    /// 📦️ The full, lossless generic Part-21 graph — the actual persisted state.
     #[state(persistent)]
     #[serde(default)]
-    pub brep: crate::artifacts::ifc::schema::snapshot::BrepMesh,
+    pub document: crate::artifacts::step::engine::part21::Part21Document,
 }
 //#endregion 🔖️Artifact
 
@@ -28,20 +29,25 @@ impl IfcArtifact {
     pub fn to_snapshot(&self) -> IfcSnapshot {
         IfcSnapshot {
             schema: self.schema.clone(),
-            brep: self.brep.clone(),
+            document: self.document.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            brep: snapshot.brep,
+            document: snapshot.document,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
         self.schema = snapshot.schema;
-        self.brep = snapshot.brep;
+        self.document = snapshot.document;
+    }
+
+    /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never stored.
+    pub fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
+        crate::artifacts::ifc::engine::spatial::analyze_spatial(&self.document)
     }
 }
 //#endregion 🔖️Conversions

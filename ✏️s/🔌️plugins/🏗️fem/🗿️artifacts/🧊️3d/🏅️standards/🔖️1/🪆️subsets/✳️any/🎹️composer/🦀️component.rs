@@ -1,5 +1,5 @@
 //! 🎹️ Fem3dComposer (1/✳️any) — analyzer + builder glued. Reads native `s.fem3d` sources
-//! plus any of: stdio.csv, stdio.glb, stdio.json, stdio.md, stdio.obj, stdio.png, stdio.stl, stdio.txt, stdio.zip. Writes one `s.fem3d` (1/✳️any) snapshot.
+//! plus any of: stdio.csv, stdio.json, stdio.md, stdio.obj, stdio.png, stdio.stl, stdio.txt, stdio.zip. Writes one `s.fem3d` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::fem3d::Fem3dSnapshot;

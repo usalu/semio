@@ -1050,7 +1050,7 @@ pub struct StdioFormatEntry {
     pub is_binary: bool,
 }
 
-/// 🗄️ Closed stdio format catalog (29 artifacts) — SSOT for accept filters / mimes.csv.
+/// 🗄️ Closed stdio format catalog (28 artifacts) — SSOT for accept filters / mimes.csv.
 pub const STDIO_FORMAT_CATALOG: &[StdioFormatEntry] = &[
     StdioFormatEntry { id: "stdio.binary", short_id: "binary", mime: "application/octet-stream", extension: ".bin", name: "Binary", full_name: "Raw Binary Bytes", neutral: "Bytes", dir_name: "💾️binary", is_binary: true },
     StdioFormatEntry { id: "stdio.txt", short_id: "txt", mime: "text/plain", extension: ".txt", name: "Text", full_name: "Plain Text", neutral: "TextDoc", dir_name: "📄txt", is_binary: false },
@@ -1060,7 +1060,6 @@ pub const STDIO_FORMAT_CATALOG: &[StdioFormatEntry] = &[
     StdioFormatEntry { id: "stdio.json", short_id: "json", mime: "application/json", extension: ".json", name: "JSON", full_name: "JavaScript Object Notation", neutral: "Value", dir_name: "🔣️json", is_binary: false },
     StdioFormatEntry { id: "stdio.csv", short_id: "csv", mime: "text/csv", extension: ".csv", name: "CSV", full_name: "Comma-Separated Values", neutral: "TableDoc", dir_name: "📊️csv", is_binary: false },
     StdioFormatEntry { id: "stdio.md", short_id: "md", mime: "text/markdown", extension: ".md", name: "Markdown", full_name: "Markdown Text", neutral: "TextDoc", dir_name: "📝️md", is_binary: false },
-    StdioFormatEntry { id: "stdio.glb", short_id: "glb", mime: "model/gltf-binary", extension: ".glb", name: "GLB", full_name: "GL Transmission Format Binary", neutral: "MeshData", dir_name: "🧊️glb", is_binary: true },
     StdioFormatEntry { id: "stdio.gltf", short_id: "gltf", mime: "model/gltf+json", extension: ".gltf", name: "GLTF", full_name: "GL Transmission Format JSON", neutral: "MeshData", dir_name: "🧊️gltf", is_binary: false },
     StdioFormatEntry { id: "stdio.obj", short_id: "obj", mime: "model/obj", extension: ".obj", name: "OBJ", full_name: "Wavefront Object", neutral: "MeshData", dir_name: "🧊️obj", is_binary: false },
     StdioFormatEntry { id: "stdio.stl", short_id: "stl", mime: "model/stl", extension: ".stl", name: "STL", full_name: "Stereolithography", neutral: "MeshData", dir_name: "🟪️stl", is_binary: true },

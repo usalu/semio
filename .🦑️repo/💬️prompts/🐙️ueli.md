@@ -366,10 +366,123 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+```
+s
+  plugins
+    stdio
+      artifacts
+        <artifact> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+          standards
+            <standard> # e.g. 1.6 for pdf, 2x3 for ifc, AP225 for STEP, etc,
+              builder # only for creating new artifacts
+                component.rs
+                component.ts
+                …
+              analyzer # read-only for existing artifacts - former decomposer
+                component.rs
+                component.ts
+                …
+              composer # combining builder and analyzer
+                component.rs
+                component.ts
+                …
+              subsets
+                <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                  snapshot
+                    …
+                  diff
+                    …
+                  mutations
+                    …
+                  builder # only for creating new artifacts
+                    component.rs
+                    component.ts
+                    …
+                  analyzer # read-only for existing artifacts - former decomposer
+                    component.rs
+                    component.ts
+                    …
+                  composer # combining builder and analyzer
+                    component.rs
+                    component.ts
+                    …
+                  io
+                    import
+                      deserializers
+                        artifacts
+                          <artifact> # e.g. json for gltf, binary for glb, etc
+                            <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                                component.rs
+                                component.ts
+                                …
+                              component.rs
+                              component.ts
+                              …
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
+                        component.rs
+                        component.ts
+                        …
+                      component.rs
+                      component.ts
+                      …
+```
+
+---
+
+The standard subsets are not correctly implemented.
+
+e.g. pdf has a,x,e,ua,vt,h subsets.
+PDF/A (Archiving): Designed for long-term document preservation. It ensures a document looks exactly the same in the future by embedding all necessary information, such as fonts and colors.
+PDF/X (Exchange): Created for the printing and publishing industry to ensure high-quality, professional printing.
+PDF/E (Engineering): Used for technical documents, allowing for the embedding of 3D models and interactive visualizations.
+PDF/UA (Universal Accessibility): Designed to ensure files can be navigated and read by assistive technologies, such as screen readers.
+PDF/VT (Variable and Transactional): Tailored for high-volume variable data printing, such as customized invoices or bank statements.
+PDF/H (Healthcare): A set of best practices (though not an official ISO standard) for securely storing and exchanging medical records
+
+e.g. step has cc0, cc1, cc2, cc3, cc4, cc5, cc6 subsets.
+CC1 (Configuration Data Only): Only includes metadata like part versioning, release status, assembly structure, and authorization data. It contains no 3D shape data.
+CC2 (Basic Surfaces/Wireframes): Includes CC1 plus basic shape representations using bounded wireframes and simple surface models.
+CC3 (Wireframes with Topology): Includes CC1 plus advanced 3D wireframe models that include topological data (how the lines connect).
+CC4 (Manifold Surfaces): Includes CC1 plus manifold surface models with topology (essentially "hollow" 3D shells).
+CC5 (Faceted B-Rep): Includes CC1 plus faceted boundary representation (models made up of flat polygons/triangles, similar to an STL file).
+CC6 (Advanced B-Rep): Includes CC1 plus advanced boundary representation. This is the standard solid 3D model. When you export a standard, solid STEP file from CAD software like SolidWorks, Inventor, or NX, you are usually utilizing CC6.
+
+e.g. ifc 2x3 has cv20, sav, cobie subsets.
+Coordination View 2.0 (CV 2.0)	The industry standard for coordinating 3D models between architectural, structural, and MEP (mechanical, electrical, plumbing) disciplines. It focuses heavily on spatial geometry.
+Structural Analysis View	Transfers analytical structural models (nodes, loads, and connections) to structural engineering and calculation software.
+Basic FM Handover (COBie)
+
+e.g. ifc 4 has rv, dtv subsets.
+Reference View (RV)	Designed for read-only coordination (like clash detection). It simplifies complex geometries into basic shapes. Because the model cannot be easily reverse-engineered, it protects the author's intellectual property.
+Design Transfer View (DTV)	Designed for a higher-fidelity, one-way handover. It attempts to retain parametric data (like an extruded wall) so the receiving party can import and edit the elements in their own software.
+
+etc.
+
+---
+
 The current codebase doesnt follow clean architecture.
-e.g. the open closed principle is violated a lot such as:
-- s is an os. os shouldnt depend on anything from s.
+e.g. the open closed principle is extensively violated a lot such as:
+- s is an os. os shouldnt depend or know anything from s.
   - 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs implements plenty of stdio functionality which is part of s studio plugin.
+  - wrong registrations such as 🧰️framework/🔨️modules/🚪️io/📇️registry/📇️catalog.json
+- s must not depend or know anything from any plugin.
+  - plugins can have dependencies on other plugins.
+- any plugin must not depend or know anything from any extension.
+  - extensions can have dependencies on other extensions and/or dependencies.
+
+---
+
+The current schemas are extremely adhoc.
+Every snapshot must be a complete semantic model of the artifact.
+Every diff must be handcrafted and be able to change every single field of the artifact - Analyze how the old compose pattern for diffs worked (both strong and weak entities) compose/client/schema/graphql/schema.golden.graphql
+Ever mutation must return a handcrafted diff.
+Find all generic code and replace it with specific code.
 
 ---
 

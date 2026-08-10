@@ -71,16 +71,6 @@
       ],
       "neutral": "TextDoc"
     },
-    "glb": {
-      "dir": "🧊️glb",
-      "mime": "model/gltf-binary",
-      "ext": ".glb",
-      "depends": [
-        "binary",
-        "gltf"
-      ],
-      "neutral": "MeshData"
-    },
     "gltf": {
       "dir": "🧊️gltf",
       "mime": "model/gltf+json",
@@ -303,14 +293,6 @@
       "to": "txt"
     },
     {
-      "from": "glb",
-      "to": "binary"
-    },
-    {
-      "from": "glb",
-      "to": "gltf"
-    },
-    {
       "from": "gltf",
       "to": "json"
     },
@@ -505,7 +487,6 @@
       "kind_id": "3d.procedural",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -516,7 +497,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -527,7 +507,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -565,7 +544,6 @@
       "kind_id": "3d.mesh",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -576,7 +554,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -587,7 +564,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -838,7 +814,6 @@
       "kind_id": "saw",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -849,7 +824,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -860,7 +834,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -877,7 +850,6 @@
       "kind_id": "3d.lowpoly",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -888,7 +860,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -899,7 +870,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -997,7 +967,6 @@
       "kind_id": "cad",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -1008,7 +977,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -1019,7 +987,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "ifc",
         "json",
@@ -1444,7 +1411,6 @@
       "kind_id": "3d.remodel",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1455,7 +1421,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1466,7 +1431,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1716,7 +1680,6 @@
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
       "kind_id": "5d.puzzle",
       "stdio_artifacts": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1724,7 +1687,6 @@
         "zip"
       ],
       "import": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1732,7 +1694,6 @@
         "zip"
       ],
       "export": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1747,7 +1708,6 @@
       "kind_id": "3d.puzzle",
       "stdio_artifacts": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1758,7 +1718,6 @@
       ],
       "import": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1769,7 +1728,6 @@
       ],
       "export": [
         "dwg",
-        "glb",
         "gltf",
         "json",
         "las",
@@ -1785,7 +1743,6 @@
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
       "kind_id": "2d.block",
       "stdio_artifacts": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1793,7 +1750,6 @@
         "zip"
       ],
       "import": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1801,7 +1757,6 @@
         "zip"
       ],
       "export": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1815,7 +1770,6 @@
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
       "kind_id": "5d.block",
       "stdio_artifacts": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1823,7 +1777,6 @@
         "zip"
       ],
       "import": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1831,7 +1784,6 @@
         "zip"
       ],
       "export": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1845,7 +1797,6 @@
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
       "kind_id": "3d.block",
       "stdio_artifacts": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1853,7 +1804,6 @@
         "zip"
       ],
       "import": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1861,7 +1811,6 @@
         "zip"
       ],
       "export": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1899,7 +1848,6 @@
       "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
       "kind_id": "catalogue.sourcing",
       "stdio_artifacts": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1907,7 +1855,6 @@
         "zip"
       ],
       "import": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1915,7 +1862,6 @@
         "zip"
       ],
       "export": [
-        "glb",
         "json",
         "obj",
         "png",
@@ -1925,8 +1871,8 @@
     }
   ],
   "counts": {
-    "stdio_artifacts": 29,
+    "stdio_artifacts": 28,
     "domain_artifacts": 54,
-    "curated_io_pairs": 285
+    "curated_io_pairs": 273
   }
 }

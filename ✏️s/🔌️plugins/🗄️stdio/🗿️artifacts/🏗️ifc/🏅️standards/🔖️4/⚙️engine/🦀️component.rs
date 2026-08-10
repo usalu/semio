@@ -2,6 +2,13 @@
 
 use crate::artifacts::ifc::{IfcArtifact, IfcDiff, IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 
+//#region 🔖️Submodules
+/// 🏛️ Spatial structure + placement matrices + property sets, built on the shared
+/// `step::engine::part21` generic graph — never persisted itself.
+#[path = "🏛️spatial/🦀️component.rs"]
+pub mod spatial;
+//#endregion 🔖️Submodules
+
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
 pub fn empty_ifc_snapshot() -> IfcSnapshot {

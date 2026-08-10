@@ -9,9 +9,9 @@ pub fn register() {}
 
 /// 📥 Parse dxf text into a DxfSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<DxfSnapshot, store::TextError> {
-    let lines = crate::artifacts::dxf::schema::snapshot::parse_dxf_text(from.text.as_str())
+    let tags = crate::artifacts::dxf::schema::snapshot::tokenize_dxf(from.text.as_str())
         .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    Ok(DxfSnapshot { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), lines })
+    Ok(DxfSnapshot { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), tags })
 }
 
 /// 📥 Parse DSL/text bytes via txt then dxf.

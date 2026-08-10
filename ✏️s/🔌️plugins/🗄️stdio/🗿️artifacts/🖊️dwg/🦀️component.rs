@@ -3,6 +3,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use crate::artifacts::dwg::schema::snapshot::DwgSnapshot;
+pub use crate::artifacts::dwg::schema::snapshot::{DwgDecodeStatus, DwgSection, DwgSectionPage};
 pub use crate::artifacts::dwg::schema::DwgArtifact;
 pub use crate::artifacts::dwg::schema::diff::DwgDiff;
 pub use crate::artifacts::dwg::schema::mutations::DwgMutation;

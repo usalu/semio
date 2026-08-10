@@ -213,6 +213,7 @@ pub struct SvgBuilder {
     view_box: Option<ViewBox>,
     width: Option<String>,
     height: Option<String>,
+    xmlns: Option<String>,
 }
 
 impl SvgBuilder {
@@ -224,6 +225,10 @@ impl SvgBuilder {
     pub fn set_dimensions(mut self, width: impl Into<String>, height: impl Into<String>) -> Self {
         self.width = Some(width.into());
         self.height = Some(height.into());
+        self
+    }
+    pub fn set_xmlns(mut self, xmlns: impl Into<String>) -> Self {
+        self.xmlns = Some(xmlns.into());
         self
     }
     pub fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
@@ -290,10 +295,10 @@ impl ArtifactBuilder for SvgBuilder {
     type Mutation = SvgMutation;
     type Diff = SvgDiff;
     fn empty() -> Self {
-        Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None }
+        Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
     }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None }
+        Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
     }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
         Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
@@ -315,11 +320,14 @@ impl ArtifactBuilder for SvgBuilder {
     fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
         let mut snapshot = self.snapshot;
         let pending = self.elements.build();
-        if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() {
+        if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
             if snapshot.doc.root.is_none() {
                 snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: vec![], children: vec![] });
             }
             if let Some(root) = snapshot.doc.root.as_mut() {
+                if let Some(xmlns) = &self.xmlns {
+                    set_element_attr(root, "xmlns", Some(xmlns.clone()));
+                }
                 if let Some(vb) = &self.view_box {
                     set_element_attr(root, "viewBox", Some(view_box_to_string(vb)));
                 }

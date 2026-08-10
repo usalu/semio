@@ -1,0 +1,3 @@
+(* ebnf stdio.pdf snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.pdf', newline ;

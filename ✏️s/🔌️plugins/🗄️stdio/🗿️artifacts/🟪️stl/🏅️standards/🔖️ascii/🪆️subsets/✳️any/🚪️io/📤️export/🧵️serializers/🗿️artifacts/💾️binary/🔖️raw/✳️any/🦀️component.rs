@@ -6,6 +6,6 @@ use crate::artifacts::stl::StlSnapshot;
 pub fn register() {}
 
 pub fn serialize(from: &StlSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::stl::schema::snapshot::write_stl_binary(&from.vertices, &from.faces);
+    let bytes = crate::artifacts::stl::engine::encode_stl_binary(from);
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }

@@ -1,5 +1,5 @@
 //! 🎹️ Process3dComposer (1/✳️any) — analyzer + builder glued. Reads native `s.process3d` sources
-//! plus any of: stdio.dwg, stdio.glb, stdio.gltf, stdio.ifc, stdio.json, stdio.obj, stdio.png, stdio.step, stdio.stl, stdio.txt. Writes one `s.process3d` (1/✳️any) snapshot.
+//! plus any of: stdio.dwg, stdio.gltf, stdio.ifc, stdio.json, stdio.obj, stdio.png, stdio.step, stdio.stl, stdio.txt. Writes one `s.process3d` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::process3d::Process3dSnapshot;
@@ -8,7 +8,6 @@ use semio_framework_plugin::ArtifactAnalyzer as _;
 
 const DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
 const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-const DEP_GLB: Dialect = Dialect { artifact_kind: "s.stdio.glb", standard: StandardId("2.0"), subset: SubsetId("*") };
 const DEP_GLTF: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 const DEP_IFC: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
 const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -26,7 +25,7 @@ impl ArtifactComposer for Process3dComposer {
     const WRITES: Dialect = DIALECT;
 
     fn reads() -> &'static [Dialect] {
-        &[DIALECT, DEP_DWG, DEP_GLB, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL, DEP_TXT]
+        &[DIALECT, DEP_DWG, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL, DEP_TXT]
     }
 
     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -47,15 +46,6 @@ impl ArtifactComposer for Process3dComposer {
                     AnalyzeSource::Binary(b) => b.to_vec(),
                 };
                 if let Ok(snapshot) = crate::artifacts::process3d::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                }
-            }
-            if source.dialect == DEP_GLB {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
-                };
-                if let Ok(snapshot) = crate::artifacts::process3d::io::import::deserializers::artifacts::glb::v2_0::any::deserialize_bytes(&bytes) {
                     return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                 }
             }

@@ -1,0 +1,4 @@
+module Stdio_gif_snapshot;
+type Document = unit {
+    payload: bytes &eod;
+};

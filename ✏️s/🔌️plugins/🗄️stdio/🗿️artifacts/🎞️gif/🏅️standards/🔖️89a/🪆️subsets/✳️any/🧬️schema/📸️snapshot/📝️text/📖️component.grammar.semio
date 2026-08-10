@@ -1,0 +1,6 @@
+dialect grammar stdio.gif.snapshot
+root = document
+document = header body
+header = 'schema' SP 'stdio.gif' NL
+body = payload NL?
+payload = *OCTET

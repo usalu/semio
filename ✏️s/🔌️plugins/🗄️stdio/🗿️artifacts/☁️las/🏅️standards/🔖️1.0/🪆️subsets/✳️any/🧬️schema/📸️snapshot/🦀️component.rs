@@ -4,16 +4,30 @@ use crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️MeshModel
-/// 📍 Point or mesh vertex.
+//#region 🔖️PointModel
+/// 📍 One LAS point record, decomposed per LAS 1.2 §point data record formats 0-3. `gps_time`
+/// / `rgb` are `None` for point data formats that don't carry them (0/2 and 0/1 respectively).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct MeshVertex {
+pub struct LasPoint {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+    pub intensity: u16,
+    pub return_number: u8,
+    pub number_of_returns: u8,
+    pub scan_direction_flag: bool,
+    pub edge_of_flight_line: bool,
+    pub classification: u8,
+    pub scan_angle_rank: i8,
+    pub user_data: u8,
+    pub point_source_id: u16,
+    #[serde(default)]
+    pub gps_time: Option<f64>,
+    #[serde(default)]
+    pub rgb: Option<(u16, u16, u16)>,
 }
-//#endregion 🔖️MeshModel
+//#endregion 🔖️PointModel
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -24,95 +38,23 @@ pub struct LasSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<MeshVertex>,
+    pub points: Vec<LasPoint>,
 }
 
 impl Default for LasSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_LAS_DOCUMENT_SCHEMA.into(),
-            vertices: Vec::new(),
+            points: Vec::new(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️LasBinaryCodec
-
-pub fn las_vertices_from_bytes(bytes: &[u8]) -> Result<Vec<MeshVertex>, String> {
-    if bytes.len() < 227 {
-        return Err("las header too short".into());
-    }
-    if &bytes[0..4] != b"LASF" {
-        return Err("las signature missing".into());
-    }
-    let point_offset = u32::from_le_bytes(bytes[96..100].try_into().map_err(|_| "offset")?) as usize;
-    let point_count = u32::from_le_bytes(bytes[107..111].try_into().map_err(|_| "count")?) as usize;
-    let point_format = bytes[104];
-    let record_len = u16::from_le_bytes(bytes[105..107].try_into().map_err(|_| "rlen")?) as usize;
-    if record_len == 0 {
-        return Err("las record length zero".into());
-    }
-    let x_scale = f64::from_le_bytes(bytes[131..139].try_into().map_err(|_| "xs")?);
-    let y_scale = f64::from_le_bytes(bytes[139..147].try_into().map_err(|_| "ys")?);
-    let z_scale = f64::from_le_bytes(bytes[147..155].try_into().map_err(|_| "zs")?);
-    let x_off = f64::from_le_bytes(bytes[155..163].try_into().map_err(|_| "xo")?);
-    let y_off = f64::from_le_bytes(bytes[163..171].try_into().map_err(|_| "yo")?);
-    let z_off = f64::from_le_bytes(bytes[171..179].try_into().map_err(|_| "zo")?);
-    let data_start = if point_offset >= 227 { point_offset } else { 227 };
-    if point_format != 0 {
-        return Err(format!("unsupported las point format {point_format}"));
-    }
-    let mut verts = Vec::with_capacity(point_count.min(1_000_000));
-    let mut pos = data_start;
-    for _ in 0..point_count {
-        if pos + 20 > bytes.len() {
-            break;
-        }
-        let xi = i32::from_le_bytes(bytes[pos..pos + 4].try_into().unwrap());
-        let yi = i32::from_le_bytes(bytes[pos + 4..pos + 8].try_into().unwrap());
-        let zi = i32::from_le_bytes(bytes[pos + 8..pos + 12].try_into().unwrap());
-        verts.push(MeshVertex {
-            x: xi as f64 * x_scale + x_off,
-            y: yi as f64 * y_scale + y_off,
-            z: zi as f64 * z_scale + z_off,
-        });
-        pos += record_len;
-    }
-    Ok(verts)
-}
-
-pub fn las_bytes_from_vertices(verts: &[MeshVertex]) -> Vec<u8> {
-    let header_size = 227usize;
-    let record_len = 20u16;
-    let count = verts.len() as u32;
-    let mut out = vec![0u8; header_size + verts.len() * record_len as usize];
-    out[0..4].copy_from_slice(b"LASF");
-    out[24..26].copy_from_slice(&1u16.to_le_bytes());
-    out[104] = 0;
-    out[105..107].copy_from_slice(&record_len.to_le_bytes());
-    out[107..111].copy_from_slice(&count.to_le_bytes());
-    let x_scale = 0.01f64;
-    let y_scale = 0.01f64;
-    let z_scale = 0.01f64;
-    out[131..139].copy_from_slice(&x_scale.to_le_bytes());
-    out[139..147].copy_from_slice(&y_scale.to_le_bytes());
-    out[147..155].copy_from_slice(&z_scale.to_le_bytes());
-    out[96..100].copy_from_slice(&(header_size as u32).to_le_bytes());
-    let mut pos = header_size;
-    for v in verts {
-        let xi = ((v.x) / x_scale).round() as i32;
-        let yi = ((v.y) / y_scale).round() as i32;
-        let zi = ((v.z) / z_scale).round() as i32;
-        out[pos..pos + 4].copy_from_slice(&xi.to_le_bytes());
-        out[pos + 4..pos + 8].copy_from_slice(&yi.to_le_bytes());
-        out[pos + 8..pos + 12].copy_from_slice(&zi.to_le_bytes());
-        pos += record_len as usize;
-    }
-    out
-}
-
-
+//#region 🔖️HandcraftedArtifactCodecs
+// 📌 The real byte-level las codec (header field reads, point-data-format 0-3 record
+// layouts) lives in `engine::{encode_las, decode_las}` per the png/jpg precedent; this
+// impl block only wraps the hex-dump DSL envelope and the binary pack envelope around it.
 impl store::ArtifactDsl for LasSnapshot {
     const EXTENSION: &'static str = "las";
     fn envelope_id() -> &'static str { "stdio.las" }
@@ -135,13 +77,11 @@ impl store::ArtifactDsl for LasSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        let vertices = las_vertices_from_bytes(&bytes).map_err(|e| {
-            store::TextError::new(e, dsl::TextSpan::at(1, 1))
-        })?;
-        Ok(Self { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), vertices })
+        crate::artifacts::las::engine::decode_las(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body: String = las_bytes_from_vertices(&self.vertices).iter().map(|b| format!("{b:02x}")).collect();
+        let bytes = crate::artifacts::las::engine::encode_las(self).unwrap_or_default();
+        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -154,7 +94,7 @@ impl store::ArtifactDsl for LasSnapshot {
 impl store::ArtifactPack for LasSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = las_bytes_from_vertices(&self.vertices);
+        let raw = crate::artifacts::las::engine::encode_las(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -173,8 +113,7 @@ impl store::ArtifactPack for LasSnapshot {
             )));
         }
         let _ = options;
-        let vertices = las_vertices_from_bytes(&inner).map_err(|e| store::PackError::Schema(e))?;
-        Ok(Self { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), vertices })
+        crate::artifacts::las::engine::decode_las(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
-//#endregion 🔖️LasBinaryCodec
+//#endregion 🔖️HandcraftedArtifactCodecs

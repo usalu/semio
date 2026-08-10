@@ -1,3 +1,0 @@
-dialect protocol stdio.glb.mutations
-magic = %x00
-payload = *OCTET

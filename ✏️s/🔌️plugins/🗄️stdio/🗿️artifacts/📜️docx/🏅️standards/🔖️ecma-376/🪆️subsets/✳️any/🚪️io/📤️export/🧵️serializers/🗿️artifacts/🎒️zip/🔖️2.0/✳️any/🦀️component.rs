@@ -10,7 +10,7 @@ pub fn register() {}
 /// 🎒️ Encode DocxSnapshot as ZIP container bytes.
 pub fn serialize(from: &DocxSnapshot) -> Result<BinarySnapshot, store::PackError> {
     let bytes = crate::artifacts::docx::engine::encode_docx(from)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         bytes,

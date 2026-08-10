@@ -1,7 +1,8 @@
 //! 🧬️ PptxArtifact schema — full artifact state.
 
-use crate::artifacts::pptx::schema::snapshot::PptxEntry;
+use crate::artifacts::pptx::schema::snapshot::PptxPresentation;
 use crate::artifacts::pptx::PptxSnapshot;
+use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +16,10 @@ pub struct PptxArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<PptxEntry>,
+    pub opc: OpcPackage,
+    #[state(persistent)]
+    #[serde(default)]
+    pub presentation: PptxPresentation,
 }
 //#endregion Artifact
 
@@ -29,24 +33,19 @@ impl Default for PptxArtifact {
 impl PptxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PptxSnapshot {
-        PptxSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), presentation: self.presentation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, opc: snapshot.opc, presentation: snapshot.presentation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.opc = snapshot.opc;
+        self.presentation = snapshot.presentation;
     }
 }
 //#endregion Conversions

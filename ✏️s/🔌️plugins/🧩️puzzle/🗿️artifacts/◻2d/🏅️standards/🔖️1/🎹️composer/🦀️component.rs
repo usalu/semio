@@ -90,12 +90,6 @@ fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifac
     let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::stl::v_ascii::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
-const EXPORT_GLB_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.glb", standard: StandardId("2.0"), subset: SubsetId("*") };
-fn compose_export_glb(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::glb::v2_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_GLB_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
 fn compose_export_obj(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -116,7 +110,6 @@ pub fn entries() -> &'static [ComposerEntry] {
         ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_dwg },
         ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_dxf },
         ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_stl },
-        ComposerEntry { writes: EXPORT_GLB_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_glb },
         ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_obj },
     ]).as_slice()
 }

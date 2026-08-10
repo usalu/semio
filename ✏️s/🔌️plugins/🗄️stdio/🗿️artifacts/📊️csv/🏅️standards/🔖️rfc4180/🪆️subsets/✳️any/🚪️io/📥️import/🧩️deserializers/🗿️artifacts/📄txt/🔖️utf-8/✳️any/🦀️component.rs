@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.csv` from stdio.txt.
 
 use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use crate::artifacts::csv::CsvSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -9,8 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse csv text into a CsvSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<CsvSnapshot, store::TextError> {
-    let (headers, rows) = crate::artifacts::csv::schema::snapshot::csv_table_from_text(from.text.as_str());
-    Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
+    Ok(crate::artifacts::csv::engine::decode_csv_with(from.text.as_str(), true))
 }
 
 /// 📥 Parse DSL/text bytes via txt then csv.

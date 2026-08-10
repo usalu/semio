@@ -1162,11 +1162,18 @@ pub fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
     }
 }
 
+/// 🏷️ Sets `name` to `value` (updating the existing attribute IN PLACE if present, so its position
+/// in the attribute list is preserved -- only a genuinely new attribute gets appended); `None`
+/// removes it. Update-in-place (rather than remove-then-append) matters for `SetAttribute`'s
+/// apply/inverse round trip to reproduce the exact original attribute order.
 pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
     if let XmlNode::Element { attrs, .. } = node {
-        attrs.retain(|a| a.name != name);
-        if let Some(v) = value {
-            attrs.push(XmlAttr { name: name.to_string(), value: v });
+        match value {
+            Some(v) => match attrs.iter_mut().find(|a| a.name == name) {
+                Some(existing) => existing.value = v,
+                None => attrs.push(XmlAttr { name: name.to_string(), value: v }),
+            },
+            None => attrs.retain(|a| a.name != name),
         }
     }
 }
@@ -1351,7 +1358,9 @@ mod tests {
     //#region TypedParse
     #[test]
     fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path() {
-        let text = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        // 🚧️ `r##"..."##` (not `r#"..."#`) because the fixture's `stop-color="#ff0000"` contains
+        // the literal 2-char sequence `"#`, which would otherwise close a single-hash raw string.
+        let text = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#ff0000"/>
@@ -1363,28 +1372,35 @@ mod tests {
     <circle cx="60" cy="20" r="15" style="fill: green; stroke: black; stroke-width: 2"/>
     <path d="M10,50 L40,50 A5 5 0 108 8 Z"/>
   </g>
-</svg>"#;
+</svg>"##;
         let doc = xml_document_from_text(text).expect("xml parses");
         let typed = svg_document_to_typed(&doc).expect("typed conversion");
 
+        // 🧵 The fixture is pretty-printed, so raw XML children include whitespace-only text nodes
+        // between elements (preserved losslessly, per the typed model's design) -- filter those
+        // out before indexing into the REAL element children.
+        fn elements_only(v: &[SvgElement]) -> Vec<&SvgElement> {
+            v.iter().filter(|c| !matches!(c, SvgElement::TextNode(_))).collect()
+        }
+
         let (view_box, children) = match &typed {
-            SvgElement::Svg { view_box, children, .. } => (view_box.clone(), children),
+            SvgElement::Svg { view_box, children, .. } => (view_box.clone(), elements_only(children)),
             other => panic!("expected Svg root, got {other:?}"),
         };
         assert_eq!(view_box, Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 100.0 }));
         assert_eq!(children.len(), 2, "expected <defs> and <g> as direct children");
 
-        let defs_children = match &children[0] {
-            SvgElement::Defs { children, .. } => children,
+        let defs_children = match children[0] {
+            SvgElement::Defs { children, .. } => elements_only(children),
             other => panic!("expected Defs, got {other:?}"),
         };
-        let (id, stops) = match &defs_children[0] {
-            SvgElement::LinearGradient { id, children, .. } => (id.clone(), children),
+        let (id, stops) = match defs_children[0] {
+            SvgElement::LinearGradient { id, children, .. } => (id.clone(), elements_only(children)),
             other => panic!("expected LinearGradient, got {other:?}"),
         };
         assert_eq!(id.as_deref(), Some("g1"));
         assert_eq!(stops.len(), 2);
-        match &stops[0] {
+        match stops[0] {
             SvgElement::Stop { offset, stop_color, .. } => {
                 assert_eq!(offset, "0%");
                 assert_eq!(stop_color.as_deref(), Some("#ff0000"));
@@ -1392,22 +1408,22 @@ mod tests {
             other => panic!("expected Stop, got {other:?}"),
         }
 
-        let (group_common, group_children) = match &children[1] {
-            SvgElement::Group { common, children } => (common, children),
+        let (group_common, group_children) = match children[1] {
+            SvgElement::Group { common, children } => (common, elements_only(children)),
             other => panic!("expected Group, got {other:?}"),
         };
         assert_eq!(group_common.id.as_deref(), Some("shapes"));
         assert_eq!(group_common.transform, Some(vec![TransformOp::Translate { x: 5.0, y: Some(5.0) }]));
         assert_eq!(group_children.len(), 3);
 
-        match &group_children[0] {
+        match group_children[0] {
             SvgElement::Rect { common, x, y, width, height, .. } => {
                 assert_eq!((*x, *y, *width, *height), (0.0, 0.0, 40.0, 20.0));
                 assert_eq!(common.presentation.fill.as_deref(), Some("url(#g1)"));
             }
             other => panic!("expected Rect, got {other:?}"),
         }
-        match &group_children[1] {
+        match group_children[1] {
             SvgElement::Circle { common, cx, cy, r } => {
                 assert_eq!((*cx, *cy, *r), (60.0, 20.0, 15.0));
                 // 🎨 style="" must win and be REAL-parsed, not string-matched.
@@ -1417,7 +1433,7 @@ mod tests {
             }
             other => panic!("expected Circle, got {other:?}"),
         }
-        match &group_children[2] {
+        match group_children[2] {
             SvgElement::Path { d, .. } => {
                 assert_eq!(
                     d,
@@ -1425,6 +1441,7 @@ mod tests {
                         PathCommand::MoveTo { x: 10.0, y: 50.0, relative: false },
                         PathCommand::LineTo { x: 40.0, y: 50.0, relative: false },
                         PathCommand::Arc { rx: 5.0, ry: 5.0, x_axis_rotation: 0.0, large_arc: true, sweep: false, x: 8.0, y: 8.0, relative: false },
+                        PathCommand::ClosePath,
                     ]
                 );
             }

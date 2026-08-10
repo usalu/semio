@@ -28,4 +28,3 @@ export * as docx from "../../🗿️artifacts/📜️docx/🟦️component.ts";
 export * as pptx from "../../🗿️artifacts/🎞️pptx/🟦️component.ts";
 export * as xlsx from "../../🗿️artifacts/📕️xlsx/🟦️component.ts";
 export * as bcf from "../../🗿️artifacts/💬️bcf/🟦️component.ts";
-export * as glb from "../../🗿️artifacts/🧊️glb/🟦️component.ts";

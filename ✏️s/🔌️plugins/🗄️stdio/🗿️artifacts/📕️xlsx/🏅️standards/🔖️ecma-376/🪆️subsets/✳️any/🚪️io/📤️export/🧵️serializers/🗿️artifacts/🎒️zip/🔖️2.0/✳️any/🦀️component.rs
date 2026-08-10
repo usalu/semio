@@ -10,7 +10,7 @@ pub fn register() {}
 /// 🎒️ Encode XlsxSnapshot as ZIP container bytes.
 pub fn serialize(from: &XlsxSnapshot) -> Result<BinarySnapshot, store::PackError> {
     let bytes = crate::artifacts::xlsx::engine::encode_xlsx(from)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         bytes,

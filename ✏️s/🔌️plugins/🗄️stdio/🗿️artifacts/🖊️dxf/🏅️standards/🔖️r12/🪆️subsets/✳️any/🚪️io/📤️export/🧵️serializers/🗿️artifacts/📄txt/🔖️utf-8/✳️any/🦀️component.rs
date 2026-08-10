@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📤️ Encode dxf into a TxtSnapshot.
 pub fn serialize(from: &DxfSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::dxf::schema::snapshot::write_dxf_text(&from.lines);
+    let text = crate::artifacts::dxf::schema::snapshot::write_dxf_tags(&from.tags);
     Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
 }
 

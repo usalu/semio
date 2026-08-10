@@ -1,40 +1,15 @@
-//! 🧬️ IfcSnapshot schema — persistent fields + real codecs.
+//! 🧬️ IfcSnapshot schema — persistent fields + real Part-21 codecs (shared `step::engine::part21`
+//! tokenizer — IFC4 is STEP Part-21 syntax with a different EXPRESS schema layered on top).
 
+use crate::artifacts::step::engine::part21::{parse_part21, write_part21, Part21Document};
 use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️BrepModel
-/// 📍 B-rep vertex.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct BrepVertex {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-
-/// 🔺 B-rep face as polygon vertex indices.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct BrepFace {
-    #[serde(default)]
-    pub indices: Vec<usize>,
-}
-
-/// 📐 Neutral B-rep mesh extracted from CAD text.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct BrepMesh {
-    #[serde(default)]
-    pub vertices: Vec<BrepVertex>,
-    #[serde(default)]
-    pub faces: Vec<BrepFace>,
-}
-//#endregion 🔖️BrepModel
-
 //#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.ifc` snapshot.
+/// 📸️ Persisted `stdio.ifc` snapshot — the full, lossless generic Part-21 graph. Spatial
+/// structure/placements/psets are derived analyzer views (`crate::artifacts::ifc::engine::spatial`),
+/// not stored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
@@ -43,149 +18,20 @@ pub struct IfcSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub brep: BrepMesh,
+    pub document: Part21Document,
 }
 
 impl Default for IfcSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
-            brep: BrepMesh::default(),
+            document: Part21Document::default(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️CadTextCodec
-
-fn ifc_collect_entities(text: &str) -> std::collections::HashMap<u64, String> {
-    let mut map = std::collections::HashMap::new();
-    for line in text.lines() {
-        let line = line.trim();
-        if !line.starts_with('#') {
-            continue;
-        }
-        let rest = &line[1..];
-        let Some((id_s, after)) = rest.split_once('=') else { continue };
-        let Ok(id) = id_s.trim().parse::<u64>() else { continue };
-        let body = after.trim().trim_end_matches(';').to_string();
-        map.insert(id, body);
-    }
-    map
-}
-
-fn ifc_parse_point(body: &str) -> Option<BrepVertex> {
-    let upper = body.to_ascii_uppercase();
-    if !upper.starts_with("IFCCARTESIANPOINT") {
-        return None;
-    }
-    let open = body.find('(')?;
-    let inner = &body[open..];
-    let nums: Vec<f64> = inner
-        .split(|c: char| c == '(' || c == ')' || c == ',')
-        .filter_map(|p| p.trim().parse().ok())
-        .collect();
-    if nums.len() >= 3 {
-        Some(BrepVertex { x: nums[0], y: nums[1], z: nums[2] })
-    } else {
-        None
-    }
-}
-
-fn ifc_refs(body: &str) -> Vec<u64> {
-    let mut out = Vec::new();
-    for part in body.split('#') {
-        let id_s: String = part.chars().take_while(|c| c.is_ascii_digit()).collect();
-        if let Ok(id) = id_s.parse() {
-            out.push(id);
-        }
-    }
-    out
-}
-
-pub fn ifc_brep_from_text(text: &str) -> Result<BrepMesh, String> {
-    let entities = ifc_collect_entities(text);
-    let mut id_to_idx = std::collections::HashMap::new();
-    let mut mesh = BrepMesh::default();
-    for (id, body) in &entities {
-        if let Some(v) = ifc_parse_point(body) {
-            id_to_idx.insert(*id, mesh.vertices.len());
-            mesh.vertices.push(v);
-        }
-    }
-    for (_id, body) in &entities {
-        let upper = body.to_ascii_uppercase();
-        if upper.starts_with("IFCPOLYLOOP") {
-            let mut idx = Vec::new();
-            for rid in ifc_refs(body) {
-                if let Some(&i) = id_to_idx.get(&rid) {
-                    idx.push(i);
-                }
-            }
-            if idx.len() >= 3 {
-                mesh.faces.push(BrepFace { indices: idx });
-            }
-        }
-    }
-    for (_id, body) in &entities {
-        let upper = body.to_ascii_uppercase();
-        if upper.starts_with("IFCFACE") && mesh.faces.is_empty() {
-            for rid in ifc_refs(body) {
-                if let Some(bound) = entities.get(&rid) {
-                    let bu = bound.to_ascii_uppercase();
-                    if bu.starts_with("IFCFACEOUTERBOUND") {
-                        for br in ifc_refs(bound) {
-                            if let Some(loop_body) = entities.get(&br) {
-                                if loop_body.to_ascii_uppercase().starts_with("IFCPOLYLOOP") {
-                                    let mut idx = Vec::new();
-                                    for pr in ifc_refs(loop_body) {
-                                        if let Some(&i) = id_to_idx.get(&pr) {
-                                            idx.push(i);
-                                        }
-                                    }
-                                    if idx.len() >= 3 {
-                                        mesh.faces.push(BrepFace { indices: idx });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    Ok(mesh)
-}
-
-pub fn ifc_brep_to_text(mesh: &BrepMesh) -> String {
-    let mut out = String::from("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');\nFILE_NAME('semio.ifc','',(''),(''),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n");
-    let mut next = 1u64;
-    let mut pt_ids = Vec::new();
-    for v in &mesh.vertices {
-        out.push_str(&format!("#{next}=IFCCARTESIANPOINT(({},{},{}));\n", v.x, v.y, v.z));
-        pt_ids.push(next);
-        next += 1;
-    }
-    for face in &mesh.faces {
-        let refs: Vec<String> = face.indices.iter().filter_map(|&i| pt_ids.get(i).map(|id| format!("#{id}"))).collect();
-        if refs.len() < 3 {
-            continue;
-        }
-        let loop_id = next;
-        next += 1;
-        out.push_str(&format!("#{loop_id}=IFCPOLYLOOP(({refs}));\n", refs = refs.join(",")));
-        let bound_id = next;
-        next += 1;
-        out.push_str(&format!("#{bound_id}=IFCFACEOUTERBOUND(#{loop_id},.T.);\n"));
-        let face_id = next;
-        next += 1;
-        out.push_str(&format!("#{face_id}=IFCFACE((#{bound_id}));\n"));
-    }
-    out.push_str("ENDSEC;\nEND-ISO-10303-21;\n");
-    out
-}
-
-
+//#region 🔖️Part21Codec
 impl store::ArtifactDsl for IfcSnapshot {
     const EXTENSION: &'static str = "ifc";
     fn envelope_id() -> &'static str { "stdio.ifc" }
@@ -195,13 +41,13 @@ impl store::ArtifactDsl for IfcSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let brep = ifc_brep_from_text(body).map_err(|e| {
+        let document = parse_part21(body).map_err(|e| {
             store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1))
         })?;
-        Ok(Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), brep })
+        Ok(Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), document })
     }
     fn print_dsl(&self) -> String {
-        let body = ifc_brep_to_text(&self.brep);
+        let body = write_part21(&self.document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -214,7 +60,7 @@ impl store::ArtifactDsl for IfcSnapshot {
 impl store::ArtifactPack for IfcSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = ifc_brep_to_text(&self.brep).into_bytes();
+        let raw = write_part21(&self.document).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -234,8 +80,8 @@ impl store::ArtifactPack for IfcSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let brep = ifc_brep_from_text(&text).map_err(|e| store::PackError::Schema(e))?;
-        Ok(Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), brep })
+        let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), document })
     }
 }
-//#endregion 🔖️CadTextCodec
+//#endregion 🔖️Part21Codec

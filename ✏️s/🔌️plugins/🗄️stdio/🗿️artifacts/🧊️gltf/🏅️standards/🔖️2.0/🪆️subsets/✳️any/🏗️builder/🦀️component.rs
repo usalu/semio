@@ -212,11 +212,17 @@ impl GltfBuilder {
         idx
     }
 
-    /// 🎬️ Appends a `scene` referencing `nodes` (root node indices). Returns the new index.
-    pub fn add_scene(&mut self, nodes: Vec<usize>) -> usize {
+    /// 🎬️ Appends a `scene` referencing `nodes` (root node indices), with an optional passthrough
+    /// `extensions` object (real documents sometimes carry a declared-but-empty `{}` here).
+    /// Returns the new index.
+    pub fn add_scene(&mut self, nodes: Vec<usize>, extensions: Option<Value>) -> usize {
+        let mut entry = json!({ "nodes": nodes });
+        if let Some(ext) = extensions {
+            entry["extensions"] = ext;
+        }
         let scenes = ensure_array(&mut self.snapshot.document, "scenes");
         let idx = scenes.len();
-        scenes.push(json!({ "nodes": nodes }));
+        scenes.push(entry);
         idx
     }
 
@@ -265,7 +271,7 @@ mod tests {
         let mesh = b.add_mesh();
         b.add_mesh_primitive(mesh, &[("POSITION", acc)], None, Some(mat), None);
         let node = b.add_node(Some(mesh));
-        let scene = b.add_scene(vec![node]);
+        let scene = b.add_scene(vec![node], None);
         b.set_default_scene(scene);
         let snapshot = b.build().expect("build");
 

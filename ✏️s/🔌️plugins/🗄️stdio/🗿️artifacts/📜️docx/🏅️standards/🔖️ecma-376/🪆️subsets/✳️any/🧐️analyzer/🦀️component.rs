@@ -20,8 +20,14 @@ impl ArtifactAnalyzer for DocxAnalyzer {
     type Parts = DocxParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        // 🕵️ Real sniff: OPC-shaped bytes (real `[Content_Types].xml`) whose root officeDocument
+        // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
+        // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
+        match source {
+            AnalyzeSource::Binary(bytes) if crate::artifacts::docx::engine::sniff_docx_bytes(bytes) => IoConfidence::High,
+            AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

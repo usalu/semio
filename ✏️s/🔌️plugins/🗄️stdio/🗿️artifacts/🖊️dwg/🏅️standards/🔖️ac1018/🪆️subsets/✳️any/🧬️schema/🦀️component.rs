@@ -36,6 +36,10 @@ impl DwgArtifact {
             version: self.version.clone(),
             bytes: self.bytes.clone(),
             section_names: self.section_names.clone(),
+            // 🚧️ ac1018 is a legacy shim (nothing real behind it, per Decision #5) — it never ran
+            // the real ac1024 D1/D2 decode pipeline, so it has no structural insight to carry.
+            sections: Vec::new(),
+            decode_status: Default::default(),
         }
     }
 

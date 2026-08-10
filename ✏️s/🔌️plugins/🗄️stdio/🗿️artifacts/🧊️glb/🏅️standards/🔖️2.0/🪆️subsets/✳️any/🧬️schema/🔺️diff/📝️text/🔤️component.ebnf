@@ -1,3 +1,0 @@
-(* ebnf stdio.glb diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.glb', newline ;

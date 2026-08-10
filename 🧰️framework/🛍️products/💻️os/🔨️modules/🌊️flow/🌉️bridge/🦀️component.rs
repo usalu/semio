@@ -19,7 +19,7 @@ use neural::{
 use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
-use crate::document::*;
+use crate::artifact::*;
 use crate::catalogue::*;
 use crate::registry::*;
 use crate::host::*;

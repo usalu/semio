@@ -1,0 +1,3 @@
+dialect protocol stdio.gif.snapshot
+magic = %x00
+payload = *OCTET

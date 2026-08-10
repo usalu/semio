@@ -1,5 +1,5 @@
 //! 🎹️ Puzzle2dComposer (1/✳️any) — analyzer + builder glued. Reads native `s.puzzle2d` sources
-//! plus any of: stdio.dwg, stdio.dxf, stdio.glb, stdio.json, stdio.obj, stdio.pdf, stdio.png, stdio.stl, stdio.svg, stdio.txt, stdio.zip. Writes one `s.puzzle2d` (1/✳️any) snapshot.
+//! plus any of: stdio.dwg, stdio.dxf, stdio.json, stdio.obj, stdio.pdf, stdio.png, stdio.stl, stdio.svg, stdio.txt, stdio.zip. Writes one `s.puzzle2d` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;

@@ -14,7 +14,7 @@ pub struct DxfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub lines: Vec<crate::artifacts::dxf::schema::snapshot::DxfLine>,
+    pub tags: Vec<crate::artifacts::dxf::schema::snapshot::DxfTag>,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +30,7 @@ impl DxfArtifact {
     pub fn to_snapshot(&self) -> DxfSnapshot {
         DxfSnapshot {
             schema: self.schema.clone(),
-            lines: self.lines.clone(),
+            tags: self.tags.clone(),
         }
     }
 
@@ -38,14 +38,14 @@ impl DxfArtifact {
     pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            lines: snapshot.lines,
+            tags: snapshot.tags,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
         self.schema = snapshot.schema;
-        self.lines = snapshot.lines;
+        self.tags = snapshot.tags;
     }
 }
 //#endregion 🔖️Conversions

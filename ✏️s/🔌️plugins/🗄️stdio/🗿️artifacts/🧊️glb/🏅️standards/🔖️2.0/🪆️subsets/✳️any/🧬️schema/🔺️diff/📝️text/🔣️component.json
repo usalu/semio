@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.glb/diff/text.json",
-  "title": "GlbDiffText",
-  "type": "object"
-}

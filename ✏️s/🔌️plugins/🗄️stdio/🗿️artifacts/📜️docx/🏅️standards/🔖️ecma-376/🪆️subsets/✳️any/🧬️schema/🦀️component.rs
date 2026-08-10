@@ -1,7 +1,8 @@
 //! 🧬️ DocxArtifact schema — full artifact state.
 
-use crate::artifacts::docx::schema::snapshot::DocxEntry;
+use crate::artifacts::docx::schema::snapshot::DocxDocument;
 use crate::artifacts::docx::DocxSnapshot;
+use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +16,10 @@ pub struct DocxArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<DocxEntry>,
+    pub opc: OpcPackage,
+    #[state(persistent)]
+    #[serde(default)]
+    pub document: DocxDocument,
 }
 //#endregion Artifact
 
@@ -29,24 +33,19 @@ impl Default for DocxArtifact {
 impl DocxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> DocxSnapshot {
-        DocxSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        DocxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: DocxSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, opc: snapshot.opc, document: snapshot.document }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: DocxSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.opc = snapshot.opc;
+        self.document = snapshot.document;
     }
 }
 //#endregion Conversions

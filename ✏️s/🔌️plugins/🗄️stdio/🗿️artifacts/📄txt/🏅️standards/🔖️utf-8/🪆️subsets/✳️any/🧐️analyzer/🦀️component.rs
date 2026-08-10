@@ -16,12 +16,30 @@ pub struct TxtParts {
 /// 🧐️ Analyzes `stdio.txt` (utf-8/✳️any) sources.
 pub struct TxtAnalyzer;
 
+/// 🔍 `stdio.txt` accepts anything that is real, valid UTF-8 — a `Text` source is
+/// trivially valid by construction (`High`); a `Binary` source is inspected for actual
+/// UTF-8 validity and the presence of NUL bytes (the standard "probably not text"
+/// signal binary sniffers use).
+fn classify_bytes(bytes: &[u8]) -> IoConfidence {
+    match std::str::from_utf8(bytes) {
+        Ok(_) if !bytes.contains(&0) => IoConfidence::High,
+        Ok(_) => IoConfidence::Medium,
+        Err(_) => IoConfidence::Low,
+    }
+}
+
 impl ArtifactAnalyzer for TxtAnalyzer {
     type Parts = TxtParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        match source {
+            AnalyzeSource::Text(_) => IoConfidence::High,
+            AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
+                Ok((_, inner)) => classify_bytes(&inner),
+                Err(_) => classify_bytes(bytes),
+            },
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
@@ -58,3 +76,27 @@ impl ArtifactAnalyzer for TxtAnalyzer {
     }
 }
 //#endregion 🔖️Analyzer
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sniff_text_source_is_high() {
+        assert_eq!(TxtAnalyzer::sniff(&AnalyzeSource::Text("anything at all")), IoConfidence::High);
+    }
+
+    #[test]
+    fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
+        let bytes: &[u8] = b"\x00\x01\x02binary garbage\x00";
+        assert_ne!(TxtAnalyzer::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::High);
+    }
+
+    #[test]
+    fn sniff_invalid_utf8_binary_is_low() {
+        let bytes: &[u8] = &[0xff, 0xfe, 0xfd];
+        assert_eq!(TxtAnalyzer::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::Low);
+    }
+}
+//#endregion 🧪️Tests

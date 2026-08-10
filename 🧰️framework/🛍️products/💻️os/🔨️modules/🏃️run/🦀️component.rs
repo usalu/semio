@@ -1176,9 +1176,13 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 /// `consume/produce-media`) is now just a caller-encoded `AppCommand` batch on this one WIT call.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct WasmtimeNodeHost {
-    runtimes: HashMap<String, semio_framework_plugin_host::WasmPluginRuntime>,
+    runtimes: HashMap<String, Arc<semio_framework_plugin_host::WasmPluginRuntime>>,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
     blob_store: Arc<dyn BlobStore>,
+    /// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): shared
+    /// across every runtime this host lazily loads, so any loaded plugin's `host.io-compose` can
+    /// reach any OTHER loaded plugin's composer roster — see `IoRouter`'s own doc comment.
+    io_router: Arc<semio_framework_plugin_host::IoRouter>,
     next_handle: u32,
     instances: HashMap<u32, (String, u32)>,
 }
@@ -1189,14 +1193,30 @@ impl WasmtimeNodeHost {
     /// `PLUGIN_WASM_ARTIFACTS`' first tuple element names) to the compiled `.wasm` component path the
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
     pub fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<dyn BlobStore>) -> Self {
-        Self { runtimes: HashMap::new(), plugin_path_for_plugin, blob_store, next_handle: 1, instances: HashMap::new() }
+        Self {
+            runtimes: HashMap::new(),
+            plugin_path_for_plugin,
+            blob_store,
+            io_router: Arc::new(semio_framework_plugin_host::IoRouter::new()),
+            next_handle: 1,
+            instances: HashMap::new(),
+        }
     }
 
-    fn runtime_for(&mut self, plugin_id: &str) -> Result<&semio_framework_plugin_host::WasmPluginRuntime, RunError> {
+    /// 📊️ `(plugins loaded so far, distinct route keys)` — surfaced by the dev-boot smoke test so a
+    /// zero-plugin/zero-key router (the router silently doing nothing) is visible, not just "boot
+    /// didn't crash."
+    pub fn io_router_stats(&self) -> (usize, usize) {
+        self.io_router.stats()
+    }
+
+    fn runtime_for(&mut self, plugin_id: &str) -> Result<&Arc<semio_framework_plugin_host::WasmPluginRuntime>, RunError> {
         if !self.runtimes.contains_key(plugin_id) {
             let path = self.plugin_path_for_plugin.get(plugin_id).ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
-            let runtime = semio_framework_plugin_host::WasmPluginRuntime::load(path).map_err(|error| RunError::Host(error.to_string()))?;
+            let runtime = Arc::new(semio_framework_plugin_host::WasmPluginRuntime::load(path).map_err(|error| RunError::Host(error.to_string()))?);
             runtime.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
+            runtime.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
+            self.io_router.register_plugin(plugin_id, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
             self.runtimes.insert(plugin_id.to_string(), runtime);
         }
         Ok(self.runtimes.get(plugin_id).expect("just inserted"))

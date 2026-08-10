@@ -20,8 +20,8 @@ impl ArtifactAnalyzer for GifAnalyzer {
     type Parts = GifParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF87a")
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

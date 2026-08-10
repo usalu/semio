@@ -1,3 +1,0 @@
-; abnf stdio.glb mutations
-document = payload
-payload = *OCTET

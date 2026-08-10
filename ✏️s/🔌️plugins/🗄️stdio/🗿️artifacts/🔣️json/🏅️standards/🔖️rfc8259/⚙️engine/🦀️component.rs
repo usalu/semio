@@ -101,5 +101,25 @@ mod tests {
         let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
+
+    #[test]
+    fn nontrivial_nested_value_round_trip() {
+        let value = serde_json::json!({
+            "name": "semio",
+            "count": 42,
+            "ratio": 3.5,
+            "active": true,
+            "missing": null,
+            "tags": ["a", "b", "c"],
+            "nested": { "deep": { "deeper": [1, 2, 3] } }
+        });
+        let snap = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value };
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed.value, snap.value);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded.value, snap.value);
+    }
 }
 //#endregion 🧪️Tests

@@ -1,8 +1,10 @@
-//! 🏗️ DwgBuilder (final, artifact-level) — delegates to the ac1018 standard.
+//! 🏗️ DwgBuilder (final, artifact-level) — delegates to the ac1024 standard (real R2004+ D1/D2
+//! decode; ac1018 was never real per Decision #5 and stays mounted separately, untouched, only
+//! because other plugins' composer entries target it directly).
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::dwg::{DwgDiff, DwgMutation, DwgSnapshot};
-use crate::artifacts::dwg::standards::v_ac1018::builder::DwgBuilder as DwgRawBuilder;
+use crate::artifacts::dwg::standards::v_ac1024::builder::DwgBuilder as DwgRawBuilder;
 
 #[derive(Clone, Debug, Default)]
 pub struct DwgBuilder(DwgRawBuilder);

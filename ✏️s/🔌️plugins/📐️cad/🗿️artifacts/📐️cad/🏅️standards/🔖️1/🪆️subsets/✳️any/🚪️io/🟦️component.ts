@@ -1,5 +1,5 @@
 /** CAD IO facet — curated stdio matrix. */
-export const CAD_IO_FORMATS = ["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"] as const;
+export const CAD_IO_FORMATS = ["dwg", "gltf", "ifc", "json", "obj", "png", "step", "stl"] as const;
 export type CadIoFormat = (typeof CAD_IO_FORMATS)[number];
 
 export function cadIoAcceptFilter(formats: readonly CadIoFormat[] = CAD_IO_FORMATS): string {

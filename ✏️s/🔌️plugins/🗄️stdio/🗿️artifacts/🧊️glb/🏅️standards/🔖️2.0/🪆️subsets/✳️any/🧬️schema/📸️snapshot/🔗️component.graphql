@@ -1,8 +1,0 @@
-type GlbEntry {
-  name: String!
-  data: [Int!]!
-}
-type GlbSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [GlbEntry!]! @state(class: PERSISTENT)
-}

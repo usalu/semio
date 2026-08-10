@@ -10,7 +10,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a PptxSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<PptxSnapshot, store::PackError> {
     let mut snap = crate::artifacts::pptx::engine::decode_pptx(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PPTX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

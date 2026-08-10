@@ -746,7 +746,7 @@ pub mod apps {
         pub mod panels {
             #[path = "."]
             pub(crate) mod document {
-                #[path = "../../🎛️apps/🔌️jack/📌️panels/📄️document/🦀️component.rs"]
+                #[path = "../../🎛️apps/🔌️jack/📌️panels/📄️artifact/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -873,7 +873,7 @@ pub mod apps {
         pub mod panels {
             #[path = "."]
             pub(crate) mod document {
-                #[path = "../../🎛️apps/♻️rewrite/📌️panels/📄️document/🦀️component.rs"]
+                #[path = "../../🎛️apps/♻️rewrite/📌️panels/📄️artifact/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }

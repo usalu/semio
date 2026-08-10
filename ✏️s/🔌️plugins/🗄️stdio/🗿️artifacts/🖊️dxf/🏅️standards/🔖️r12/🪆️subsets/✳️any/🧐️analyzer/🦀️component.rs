@@ -20,8 +20,34 @@ impl ArtifactAnalyzer for DxfAnalyzer {
     type Parts = DxfParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    /// 🧭️ DXF ASCII has no fixed magic byte (unlike binary formats), so this is a structural
+    /// heuristic rather than an exact match: the first non-blank line must trim to a valid
+    /// integer group code, and one of the DXF section/version markers (`SECTION`, `HEADER`,
+    /// `ENTITIES`, or an `AC10xx`-style version string) must appear among the first tags.
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        let text = match source {
+            AnalyzeSource::Text(text) => Some(*text),
+            AnalyzeSource::Binary(_) => None,
+        };
+        let Some(text) = text else { return IoConfidence::Low };
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let lines: Vec<&str> = body.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
+        let Some(first) = lines.first() else { return IoConfidence::Low };
+        if first.parse::<i32>().is_err() {
+            return IoConfidence::Low;
+        }
+        let has_marker = lines.iter().take(64).any(|l| {
+            matches!(*l, "SECTION" | "HEADER" | "ENTITIES" | "EOF")
+                || (l.len() == 6 && l.starts_with("AC") && l[2..].chars().all(|c| c.is_ascii_digit()))
+        });
+        if has_marker {
+            IoConfidence::High
+        } else {
+            IoConfidence::Medium
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

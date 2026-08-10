@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📤️ Encode stl into a TxtSnapshot.
 pub fn serialize(from: &StlSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::stl::schema::snapshot::write_stl_text(&from.vertices, &from.faces);
+    let text = crate::artifacts::stl::engine::encode_stl_ascii(from);
     Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
 }
 

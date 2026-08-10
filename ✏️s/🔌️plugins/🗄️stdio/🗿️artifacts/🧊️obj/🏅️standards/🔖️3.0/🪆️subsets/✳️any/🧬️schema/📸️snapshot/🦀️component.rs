@@ -1,27 +1,62 @@
-//! 🧬️ ObjSnapshot schema — persistent fields + real codecs.
+//! 🧬️ ObjSnapshot schema — persistent fields; real byte codec lives in `⚙️engine`.
 
 use crate::artifacts::obj::STDIO_OBJ_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️MeshModel
-
+/// 📍 A `v` position line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct MeshVertex {
+pub struct ObjVertex {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
+/// 🧵 A `vt` texture-coordinate line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct MeshTriangle {
-    pub i0: u32,
-    pub i1: u32,
-    pub i2: u32,
+pub struct ObjTexCoord {
+    pub u: f32,
+    pub v: f32,
 }
 
+/// 📐 A `vn` normal line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjNormal {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+/// 🔗 One `v[/vt][/vn]` reference inside an `f` line (0-based, negative indices already resolved).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjFaceVertex {
+    pub vertex: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub texcoord: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub normal: Option<u32>,
+}
+
+/// 🧩 A `f` line (kept as its original n-gon, not eagerly triangulated), tagged with the
+/// `o`/`g`/`usemtl`/`s` state active when it was parsed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjFace {
+    pub vertices: Vec<ObjFaceVertex>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub object: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smoothing_group: Option<u32>,
+}
 //#endregion 🔖️MeshModel
 
 //#region 🔖️Snapshot
@@ -34,10 +69,16 @@ pub struct ObjSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<MeshVertex>,
+    pub vertices: Vec<ObjVertex>,
     #[state(persistent)]
     #[serde(default)]
-    pub faces: Vec<MeshTriangle>,
+    pub texcoords: Vec<ObjTexCoord>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub normals: Vec<ObjNormal>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub faces: Vec<ObjFace>,
 }
 
 impl Default for ObjSnapshot {
@@ -45,87 +86,17 @@ impl Default for ObjSnapshot {
         Self {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
             vertices: Vec::new(),
+            texcoords: Vec::new(),
+            normals: Vec::new(),
             faces: Vec::new(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️FormatCodec
-
-fn parse_face_indices(token: &str) -> Result<Vec<u32>, String> {
-    let mut out = Vec::new();
-    for part in token.split('/') {
-        let idx = part.trim();
-        if idx.is_empty() {
-            continue;
-        }
-        let n: i32 = idx.parse::<i32>().map_err(|e| e.to_string())?;
-        let u = if n > 0 { n as u32 - 1 } else { 0 };
-        out.push(u);
-        break;
-    }
-    Ok(out)
-}
-
-fn triangulate_face(indices: &[u32]) -> Vec<MeshTriangle> {
-    if indices.len() < 3 {
-        return Vec::new();
-    }
-    let mut tris = Vec::new();
-    for i in 1..indices.len() - 1 {
-        tris.push(MeshTriangle { i0: indices[0], i1: indices[i], i2: indices[i + 1] });
-    }
-    tris
-}
-
-
-
-pub fn parse_obj_text(text: &str) -> Result<(Vec<MeshVertex>, Vec<MeshTriangle>), String> {
-    let mut vertices = Vec::new();
-    let mut faces = Vec::new();
-    for line in text.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-        let mut parts = line.split_whitespace();
-        match parts.next() {
-            Some("v") => {
-                let x: f32 = parts.next().ok_or("v x")?.parse::<f32>().map_err(|e| e.to_string())?;
-                let y: f32 = parts.next().ok_or("v y")?.parse::<f32>().map_err(|e| e.to_string())?;
-                let z: f32 = parts.next().ok_or("v z")?.parse::<f32>().map_err(|e| e.to_string())?;
-                vertices.push(MeshVertex { x, y, z });
-            }
-            Some("f") => {
-                let tokens: Vec<&str> = parts.collect();
-                let mut idxs = Vec::new();
-                for t in tokens {
-                    let mut got = parse_face_indices(t)?;
-                    idxs.append(&mut got);
-                }
-                faces.extend(triangulate_face(&idxs));
-            }
-            _ => {}
-        }
-    }
-    Ok((vertices, faces))
-}
-
-pub fn write_obj_text(vertices: &[MeshVertex], faces: &[MeshTriangle]) -> String {
-    let mut out = String::from("# Wavefront OBJ\n");
-    for v in vertices {
-        out.push_str(&format!("v {} {} {}\n", v.x, v.y, v.z));
-    }
-    for f in faces {
-        out.push_str(&format!("f {} {} {}\n", f.i0 + 1, f.i1 + 1, f.i2 + 1));
-    }
-    out
-}
-
-//#endregion 🔖️FormatCodec
-
 //#region 🔖️HandcraftedArtifactCodecs
+// 🔗 Real grammar lives in `⚙️engine::encode_obj`/`decode_obj` — see
+// https://www.fileformat.info/format/wavefrontobj/egff.htm for the grammar this mirrors.
 impl store::ArtifactDsl for ObjSnapshot {
     const EXTENSION: &'static str = "obj";
     fn envelope_id() -> &'static str { "stdio.obj" }
@@ -135,13 +106,11 @@ impl store::ArtifactDsl for ObjSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let (vertices, faces) = parse_obj_text(body).map_err(|e| {
-            store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1))
-        })?;
-        Ok(Self { schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(), vertices, faces })
+        crate::artifacts::obj::engine::decode_obj(body)
+            .map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = write_obj_text(&self.vertices, &self.faces);
+        let body = crate::artifacts::obj::engine::encode_obj(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -154,7 +123,7 @@ impl store::ArtifactDsl for ObjSnapshot {
 impl store::ArtifactPack for ObjSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_obj_text(&self.vertices, &self.faces).into_bytes();
+        let raw = crate::artifacts::obj::engine::encode_obj(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -174,8 +143,7 @@ impl store::ArtifactPack for ObjSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let (vertices, faces) = parse_obj_text(&text).map_err(|e| store::PackError::Schema(e))?;
-        Ok(Self { schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(), vertices, faces })
+        crate::artifacts::obj::engine::decode_obj(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

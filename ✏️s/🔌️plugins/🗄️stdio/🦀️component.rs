@@ -16,12 +16,12 @@ pub fn plugin() -> Plugin {
     crate::artifacts::ifc::engine::register();
     crate::artifacts::step::engine::register();
     crate::artifacts::deflate::engine::register();
-    crate::artifacts::glb::engine::register();
     crate::artifacts::bcf::engine::register();
     crate::artifacts::xlsx::engine::register();
     crate::artifacts::pptx::engine::register();
     crate::artifacts::docx::engine::register();
     crate::artifacts::pdf::engine::register();
+    crate::artifacts::pdf::standards::v1_7::engine::register();
     crate::artifacts::tiff::engine::register();
     crate::artifacts::gif::engine::register();
     crate::artifacts::jpg::engine::register();
@@ -48,7 +48,6 @@ pub fn plugin() -> Plugin {
         .artifact_kind(crate::artifacts::ifc::artifact_kind())
         .artifact_kind(crate::artifacts::step::artifact_kind())
         .artifact_kind(crate::artifacts::deflate::artifact_kind())
-        .artifact_kind(crate::artifacts::glb::artifact_kind())
         .artifact_kind(crate::artifacts::bcf::artifact_kind())
         .artifact_kind(crate::artifacts::xlsx::artifact_kind())
         .artifact_kind(crate::artifacts::pptx::artifact_kind())

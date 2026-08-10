@@ -1,8 +1,9 @@
 //! ⚙️ GltfEngine — owns a real `GltfArtifact` plus the byte/container-level glTF 2.0 codecs
 //! (base64 data-uri, typed accessor decode, `.gltf` JSON text, `.glb` binary container). Ticket
-//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D2 gltf/glb merge steps
-//! 1-2: gltf absorbs the real container logic here; `🧊️glb` (a separate artifact_kind kept only
-//! for a transition compat window) delegates INTO these functions rather than duplicating them.
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D2 gltf/glb merge: the
+//! separate `🧊️glb` artifact_kind (steps 1-2's transition compat shim) has been folded and
+//! deleted (steps 3-5) -- every former glb caller now targets this engine's own `.glb` binary
+//! dialect directly, so there is no longer a second container implementation to keep in sync.
 
 use crate::artifacts::gltf::schema::snapshot::GltfSourceForm;
 use crate::artifacts::gltf::{GltfArtifact, GltfDiff, GltfMutation, GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};

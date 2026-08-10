@@ -14,10 +14,16 @@ pub struct ObjArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<crate::artifacts::obj::schema::snapshot::MeshVertex>,
+    pub vertices: Vec<crate::artifacts::obj::schema::snapshot::ObjVertex>,
     #[state(persistent)]
     #[serde(default)]
-    pub faces: Vec<crate::artifacts::obj::schema::snapshot::MeshTriangle>,
+    pub texcoords: Vec<crate::artifacts::obj::schema::snapshot::ObjTexCoord>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub normals: Vec<crate::artifacts::obj::schema::snapshot::ObjNormal>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub faces: Vec<crate::artifacts::obj::schema::snapshot::ObjFace>,
 }
 //#endregion 🔖️Artifact
 
@@ -33,7 +39,10 @@ impl ObjArtifact {
     pub fn to_snapshot(&self) -> ObjSnapshot {
         ObjSnapshot {
             schema: self.schema.clone(),
-            vertices: self.vertices.clone(),            faces: self.faces.clone(),
+            vertices: self.vertices.clone(),
+            texcoords: self.texcoords.clone(),
+            normals: self.normals.clone(),
+            faces: self.faces.clone(),
         }
     }
 
@@ -41,14 +50,20 @@ impl ObjArtifact {
     pub fn from_snapshot(snapshot: ObjSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            vertices: snapshot.vertices,            faces: snapshot.faces,
+            vertices: snapshot.vertices,
+            texcoords: snapshot.texcoords,
+            normals: snapshot.normals,
+            faces: snapshot.faces,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: ObjSnapshot) {
         self.schema = snapshot.schema;
-        self.vertices = snapshot.vertices;        self.faces = snapshot.faces;
+        self.vertices = snapshot.vertices;
+        self.texcoords = snapshot.texcoords;
+        self.normals = snapshot.normals;
+        self.faces = snapshot.faces;
     }
 }
 //#endregion 🔖️Conversions

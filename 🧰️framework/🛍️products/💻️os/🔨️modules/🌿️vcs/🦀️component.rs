@@ -150,6 +150,19 @@ pub enum VcsError {
     Deserialize(String),
     #[error("backbone error: {0}")]
     Backbone(String),
+    /// @emoji 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
+    /// `dialect` coordinates don't match (see `store::ArtifactEnvelope::dialect`, `26/08/10` D4
+    /// evolution slice). Not yet raised by any call site in this pass — additive only.
+    #[error("dialect mismatch: {0}")]
+    DialectMismatch(String),
+    /// @emoji 🧬️ An operation needs a dialect migration to run first (see `store::migrate_document`)
+    /// before it can proceed. Not yet raised by any call site in this pass — additive only.
+    #[error("migration required: {0}")]
+    MigrationRequired(String),
+    /// @emoji 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
+    /// this pass — additive only.
+    #[error("migration failed: {0}")]
+    MigrationFailed(String),
 }
 
 crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");

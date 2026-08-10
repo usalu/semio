@@ -6868,6 +6868,59 @@ function policyStdioArtifactsDirName(): string {
   return loadTaxonomy().artifactsDirName ?? "🗿️artifacts";
 }
 
+/**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 1: strips
+ * `//` line comments, `/* *​/` block comments (nesting-aware -- Rust block comments nest), and
+ * double-quoted string literal bodies (raw strings `r#"..."#` are NOT unescaped -- a false-negative
+ * there is far cheaper than the false-positives block/line comments would otherwise cause) so
+ * `impl <Trait> for` detection only ever sees real code, never a trait name mentioned in a doc
+ * comment or a string. Replaces the old `body.includes(traitName)` substring check, which a doc
+ * comment merely NAMING the trait (e.g. "still needs ArtifactBuilder") would satisfy without a
+ * single real `impl` block existing.
+ */
+function policyStripRustCommentsAndStrings(content: string): string {
+  let out = "";
+  let i = 0;
+  const n = content.length;
+  while (i < n) {
+    const two = content.slice(i, i + 2);
+    if (two === "//") {
+      while (i < n && content[i] !== "\n") i++;
+      continue;
+    }
+    if (two === "/*") {
+      i += 2;
+      let depth = 1;
+      while (i < n && depth > 0) {
+        const pair = content.slice(i, i + 2);
+        if (pair === "/*") { depth++; i += 2; continue; }
+        if (pair === "*/") { depth--; i += 2; continue; }
+        i++;
+      }
+      continue;
+    }
+    if (content[i] === '"') {
+      out += '"';
+      i++;
+      while (i < n && content[i] !== '"') {
+        if (content[i] === "\\") { i += 2; continue; }
+        i++;
+      }
+      if (i < n) i++;
+      out += '"';
+      continue;
+    }
+    out += content[i];
+    i++;
+  }
+  return out;
+}
+
+function policyRustFileHasRealTraitImpl(body: string, traitName: string): boolean {
+  const stripped = policyStripRustCommentsAndStrings(body);
+  return new RegExp(`\\bimpl\\s*(?:<[^>{]*>\\s*)?${traitName}\\b\\s*(?:<[^>{]*>\\s*)?for\\b`).test(stripped);
+}
+
 function policyStdioFacetRsTsBreaches(
   repoRoot: string,
   facetRel: string,
@@ -6902,15 +6955,15 @@ function policyStdioFacetRsTsBreaches(
     });
   } else {
     const body = readFileSync(join(repoRoot, rsRel), "utf8");
-    if (!body.includes(traitName)) {
+    if (!policyRustFileHasRealTraitImpl(body, traitName)) {
       breaches.push({
         id: `${kind}-trait-${facetRel}`,
-        summary: `"${rsRel}" does not mention ${traitName}`,
+        summary: `"${rsRel}" has no real "impl ${traitName} for ..." block (comment/string-stripped)`,
         kind,
         scope,
         priority: "high",
-        reason: `${POLICY_RS_COMPONENT_LEAF} must implement the SDK ${traitName} trait.`,
-        solution: `Implement ${traitName} in ${rsRel}.`,
+        reason: `${POLICY_RS_COMPONENT_LEAF} must implement the SDK ${traitName} trait with a real impl block, not just mention its name in a comment or string.`,
+        solution: `Add a real "impl ${traitName} for <YourType>" block in ${rsRel}.`,
       });
     }
   }
@@ -7577,6 +7630,158 @@ export function policyCodecFidelityBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
+/**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 2: a
+ * SELF-referential `Dialect { artifact_kind: "s.stdio.<X>", standard: StandardId("<S>"), subset:
+ * SubsetId("<U>") }` literal (one whose `artifact_kind` names the SAME stdio artifact the file
+ * lives under -- e.g. `🎞️gif`'s own `DIALECT`/`WRITES` const, never a cross-artifact `DEP_*`/`READS`
+ * dependency literal naming some OTHER artifact) must agree with the `🏅️standards/🔖️<S>/…
+ * 🪆️subsets/✳️<U>/` directory the file actually lives under. Cross-artifact references are skipped
+ * entirely -- they correctly point at a directory this file doesn't live inside, so there's nothing
+ * to verify from here. Subset checking honors the `SubsetId::ANY = SubsetId("*")` sentinel
+ * convention (the literal is `"*"`, the directory is named `✳️any`) rather than naive string
+ * equality -- moot today (every subset is `any`), meaningful once D5's PDF/A-2b pilot lands.
+ */
+const POLICY_DIALECT_LITERAL_RE = /Dialect\s*\{\s*artifact_kind:\s*"([^"]+)"\s*,\s*standard:\s*StandardId\("([^"]+)"\)\s*,\s*subset:\s*SubsetId\("([^"]+)"\)\s*\}/g;
+
+function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const table = policyLoadStdioOwnerTable(repoRoot);
+  if (!table) return breaches; // owner-table-missing is already flagged by policyStdioCatalogBreaches
+  const dirToKey = new Map<string, string>();
+  for (const [key, entry] of Object.entries(table.stdio_roster ?? {})) {
+    dirToKey.set(entry.dir, key);
+  }
+  const artifactsPrefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const cut = relPath.indexOf(artifactsPrefix);
+    if (cut === -1) continue;
+    const afterArtifacts = relPath.slice(cut + artifactsPrefix.length);
+    const ownDir = afterArtifacts.split("/")[0];
+    const ownKey = ownDir ? dirToKey.get(ownDir) : undefined;
+    if (!ownKey) continue;
+    const ownArtifactKind = `s.stdio.${ownKey}`;
+    const standardMatch = relPath.match(/🏅️standards\/🔖️([^/]+)\//);
+    const subsetMatch = relPath.match(/🪆️subsets\/✳️([^/]+)\//);
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    POLICY_DIALECT_LITERAL_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_DIALECT_LITERAL_RE.exec(content))) {
+      const [, litKind, litStandard, litSubset] = m!;
+      if (litKind !== ownArtifactKind) continue;
+      if (standardMatch && litStandard !== standardMatch[1]) {
+        breaches.push({
+          id: `dialect-literal-standard-${relPath}-${litStandard}`,
+          summary: `"${relPath}" declares StandardId("${litStandard}") but lives under 🏅️standards/🔖️${standardMatch[1]}/`,
+          kind: "artifact-io/dialect-literal-path",
+          scope: relPath,
+          priority: "high",
+          reason: "A self-referential Dialect literal's standard must match the 🔖️<standard> directory the file physically lives under, or the two will silently drift apart the next time either one changes alone.",
+          solution: `Fix StandardId("${litStandard}") in ${relPath} to "${standardMatch[1]}", or move the file to 🏅️standards/🔖️${litStandard}/ if that's the one that's wrong.`,
+        });
+      }
+      const subsetDir = litSubset === "*" ? "any" : litSubset;
+      if (subsetMatch && subsetDir !== subsetMatch[1]) {
+        breaches.push({
+          id: `dialect-literal-subset-${relPath}-${litSubset}`,
+          summary: `"${relPath}" declares SubsetId("${litSubset}") but lives under 🪆️subsets/✳️${subsetMatch[1]}/`,
+          kind: "artifact-io/dialect-literal-path",
+          scope: relPath,
+          priority: "high",
+          reason: "A self-referential Dialect literal's subset must match the ✳️<subset> directory the file physically lives under (SubsetId(\"*\") ⇔ ✳️any by convention).",
+          solution: `Fix SubsetId("${litSubset}") in ${relPath} to match ✳️${subsetMatch[1]}/, or move the file if the directory is what's wrong.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 5:
+ * flagship artifacts (svg/gltf/pdf/gif — the ones D2 explicitly names as getting real mutation
+ * vocabularies, not just `{NoMutation, SetSnapshot}`) must have a mutation enum with more than
+ * those two variants. Shrink-only allowlist for the flagships this hasn't reached yet.
+ */
+const POLICY_FLAGSHIP_MUTATION_ALLOWLIST = new Set<string>([
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+]);
+
+/** 🔎️Top-level variant names of the first `pub enum ...Mutation { ... }` found in `content`, or `null` if none found. Brace-depth-tracked (variants carry struct-style bodies with their own braces). */
+function policyRustMutationEnumVariants(content: string): string[] | null {
+  const stripped = policyStripRustCommentsAndStrings(content);
+  const headerMatch = stripped.match(/pub\s+enum\s+\w*Mutation\w*\s*\{/);
+  if (!headerMatch) return null;
+  const start = headerMatch.index! + headerMatch[0].length;
+  let depth = 1;
+  let i = start;
+  let segStart = start;
+  const variants: string[] = [];
+  const pushSeg = (raw: string) => {
+    const m = raw.match(/(?:#\[[^\]]*\]\s*)*(\w+)/);
+    if (m) variants.push(m[1]!);
+  };
+  while (i < stripped.length && depth > 0) {
+    const ch = stripped[i];
+    if (ch === "{" || ch === "(") depth++;
+    else if (ch === "}" || ch === ")") {
+      depth--;
+      if (depth === 0) {
+        pushSeg(stripped.slice(segStart, i));
+        break;
+      }
+    } else if (ch === "," && depth === 1) {
+      pushSeg(stripped.slice(segStart, i));
+      segStart = i + 1;
+    }
+    i++;
+  }
+  return variants;
+}
+
+function policyMutationVocabularyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const flagshipDirs = [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif",
+  ];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!relPath.endsWith(`🧬️mutations/${POLICY_RS_COMPONENT_LEAF}`)) continue;
+    if (!flagshipDirs.some((dir) => relPath.startsWith(`${dir}/`))) continue;
+    const normalized = policyNormalizeRelPath(relPath);
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const variants = policyRustMutationEnumVariants(content);
+    const realVariantCount = variants ? variants.filter((v) => v !== "NoMutation" && v !== "SetSnapshot").length : 0;
+    const allowlisted = POLICY_FLAGSHIP_MUTATION_ALLOWLIST.has(normalized);
+    if (realVariantCount === 0) {
+      if (allowlisted) continue;
+      breaches.push({
+        id: `mutation-vocabulary-${relPath}`,
+        summary: `"${relPath}" is a flagship mutation enum with only NoMutation/SetSnapshot`,
+        kind: "artifact-io/mutation-vocabulary",
+        scope: relPath,
+        priority: "high",
+        reason: "D2 names this artifact as a flagship that must expose a real mutation vocabulary (targeted insert/remove/set-field variants with real apply+inverse), not just the universal NoMutation/SetSnapshot pair every artifact starts with.",
+        solution: `Add real, targeted mutation variants (with real apply+inverse) to ${relPath}, or if not reached yet, add "${normalized}" to POLICY_FLAGSHIP_MUTATION_ALLOWLIST citing this ticket.`,
+      });
+    } else if (allowlisted) {
+      breaches.push({
+        id: `mutation-vocabulary-stale-${relPath}`,
+        summary: `"${relPath}" is allowlisted in POLICY_FLAGSHIP_MUTATION_ALLOWLIST but already has ${realVariantCount} real mutation variant(s)`,
+        kind: "artifact-io/mutation-vocabulary",
+        scope: relPath,
+        priority: "low",
+        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is fixed.",
+        solution: `Remove "${normalized}" from POLICY_FLAGSHIP_MUTATION_ALLOWLIST.`,
+      });
+    }
+  }
+  return breaches;
+}
+
 /** ⚖️Aggregates stdio-artifact policy scanners (catalog, builder, decomposer, schema, io matrix, DAG, codecs,
  * plus the standards/subsets migrated-side rules -- each pair is shape-partitioned: an artifact is checked
  * by exactly one side of every pair, never both, per policyArtifactIsMigrated). */
@@ -7593,6 +7798,8 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyArtifactBuilderMigratedBreaches(repoRoot),
     ...policyArtifactAnalyzerBreaches(repoRoot),
     ...policyArtifactComposerBreaches(repoRoot),
+    ...policyDialectLiteralPathBreaches(repoRoot),
+    ...policyMutationVocabularyBreaches(repoRoot),
   ];
 }
 
@@ -7677,7 +7884,6 @@ const POLICY_SNIFF_REALITY_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
   "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",

@@ -20,8 +20,13 @@ impl ArtifactAnalyzer for PptxAnalyzer {
     type Parts = PptxParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
+        // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
+        match source {
+            AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::engine::sniff_pptx_bytes(bytes) => IoConfidence::High,
+            AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

@@ -78,12 +78,6 @@ fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifac
     let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
-const EXPORT_GLB_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.glb", standard: StandardId("2.0"), subset: SubsetId("*") };
-fn compose_export_glb(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::glb::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_GLB_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 fn compose_export_gltf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -108,7 +102,6 @@ pub fn entries() -> &'static [ComposerEntry] {
         ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_json },
         ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_dwg },
         ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_stl },
-        ComposerEntry { writes: EXPORT_GLB_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_glb },
         ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_gltf },
         ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_obj },
     ]).as_slice()

@@ -79,6 +79,33 @@ pub struct ArtifactEnvelope<P, Mutation> {
     /// as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<ArtifactCursor>,
+    /// @emoji 🗣️ The dialect this envelope's `vcs.initial_snapshot` (and every replayed edit) is
+    /// currently in — absent for envelopes minted before dialect-tracking existed, or for document
+    /// kinds that never adopted more than one dialect. See `26/08/10` D4 evolution slice; nothing
+    /// in `ArtifactStore::dispatch` reads or writes this yet (that wiring is later scope) — it is
+    /// purely a persisted fact a future migration-aware caller can act on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dialect: Option<crate::os_io::ArtifactDialect>,
+    /// @emoji 🧬️ Set once, the first time this envelope's snapshot was produced by migrating a
+    /// prior document's dialect (see `migrate_document` below) rather than being authored directly
+    /// in `dialect`. Absent for every envelope that was never migrated.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migrated_from: Option<MigrationProvenance>,
+}
+
+/// @emoji 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
+/// which dialect it was in, and (if the migration ran at a specific checkpoint rather than the
+/// live tip) which checkpoint. `migrated_at` follows this crate's existing `Checkpoint.timestamp`/
+/// `Edit.started_at` convention (a caller-supplied string stamped via `now_iso()`, see below) — no
+/// new clock abstraction introduced for this one field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MigrationProvenance {
+    pub document_id: String,
+    pub dialect: crate::os_io::ArtifactDialect,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checkpoint_id: Option<String>,
+    pub migrated_at: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -622,6 +649,44 @@ pub fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
 }
 //#endregion 🔖️CodecRegistry
 
+//#region 🔖️DialectMigration
+/// @emoji 🧬️ One registered lossy/lossless pack-bytes transform between two dialects of the SAME
+/// artifact kind (`from.artifact_kind == to.artifact_kind` is a convention this registry doesn't
+/// itself enforce — callers key by the exact `(from, to)` pair they registered). `migrate_pack` is
+/// a bare `fn` pointer (same non-capturing-bridge-function shape `ArtifactCodec::of` already uses
+/// for `compile_dsl`/`print_mirror`/etc above) so a migration can be a plain top-level fn with zero
+/// closure-capture ceremony. Additive-only: nothing in `ArtifactCodec`/`document_codec`/
+/// `ArtifactStore::dispatch` reads this registry yet — see `26/08/10` D4 evolution slice scope note.
+#[derive(Clone)]
+pub struct DialectMigration {
+    pub from: crate::os_io::ArtifactDialect,
+    pub to: crate::os_io::ArtifactDialect,
+    pub lossless: bool,
+    pub migrate_pack: fn(&[u8]) -> Result<Vec<u8>, String>,
+}
+
+static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
+
+fn dialect_migration_registry() -> &'static std::sync::RwLock<HashMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>> {
+    DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
+}
+
+/// @emoji 📝️ Registers (or overwrites) the migration for `(migration.from, migration.to)` —
+/// idempotent, mirrors `register_document_codec`'s call-once-at-init-time contract.
+pub fn register_dialect_migration(migration: DialectMigration) {
+    let mut registry = dialect_migration_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
+    registry.insert((migration.from.clone(), migration.to.clone()), migration);
+}
+
+/// @emoji 🔁️ Looks up the exact `(from, to)` migration and runs its `migrate_pack` over
+/// `pack_bytes`, or a clear `Err` naming both dialect coordinates when none is registered.
+pub fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::os_io::ArtifactDialect, pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let registry = dialect_migration_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let migration = registry.get(&(from.clone(), to.clone())).ok_or_else(|| format!("no dialect migration registered for {} -> {}", from.to_coordinate(), to.to_coordinate()))?;
+    (migration.migrate_pack)(pack_bytes)
+}
+//#endregion 🔖️DialectMigration
+
 //#region 🔖️MergeHelpers
 /// @emoji 🌳️ Walks `checkpoint_id`'s ancestor chain via `parent_id` back to the root, nearest-first
 /// (`checkpoint_id` itself is the first entry). Cycle-guarded (a malformed/adversarial parent chain
@@ -723,7 +788,7 @@ pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_sna
 where
     P: Clone,
 {
-    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None }
+    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None }
 }
 
 pub fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
@@ -1307,6 +1372,8 @@ where
         backbone: None,
         active_alternative_id: log.active_alternative_id,
         cursor: cursor.clone(),
+        dialect: None,
+        migrated_from: None,
     };
 
     let snapshot = if let Some(cursor) = &cursor {
@@ -1461,7 +1528,7 @@ where
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut snapshot)?;
 
-    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone() };
+    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
@@ -4556,6 +4623,44 @@ impl OpBinary for DemoMutation {
 
         store.reset(stale_envelope, Vec::new(), Vec::new()).expect("reset");
         assert!(store.tick().expect("tick after set_state with no live backbone is a no-operation") == false, "set_state must not resurrect IO from a stale backbone descriptor either");
+    }
+
+    /// @emoji 🧬️ `26/08/10` D4 evolution slice regression check (the plan's own explicitly flagged
+    /// risk): an envelope encoded BEFORE `dialect`/`migrated_from` existed — modeled here by hand-
+    /// building the OLD JSON object shape rather than serializing a struct literal, so this test
+    /// still fails honestly if the fields ever lose their `#[serde(default)]` — must still decode,
+    /// with both new fields defaulting to `None`. Mirrors
+    /// `deserialized_envelope_with_stale_backbone_ref_never_auto_attaches`'s technique one field
+    /// family over.
+    #[test]
+    fn old_envelope_without_dialect_fields_still_decodes() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut old_shape_json: serde_json::Value = serde_json::to_value(&envelope).expect("serialize envelope");
+        let old_shape_object = old_shape_json.as_object_mut().expect("envelope serializes to a JSON object");
+        // 🕰️ Simulate bytes persisted before this wave: no `dialect`/`migratedFrom` keys present at
+        // all (not even `null`) — the exact shape every already-on-disk envelope has today.
+        old_shape_object.remove("dialect");
+        old_shape_object.remove("migratedFrom");
+        assert!(!old_shape_object.contains_key("dialect") && !old_shape_object.contains_key("migratedFrom"), "test setup must actually produce the old, field-absent shape");
+
+        let decoded: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(old_shape_json).unwrap_or_else(|error| panic!("an old-shaped envelope (predating dialect/migratedFrom) must still decode: {error}"));
+        assert_eq!(decoded.dialect, None, "dialect must default to None when the key was entirely absent");
+        assert_eq!(decoded.migrated_from, None, "migratedFrom must default to None when the key was entirely absent");
+        assert_eq!(decoded.vcs.initial_snapshot, envelope.vcs.initial_snapshot, "the rest of the envelope must be unaffected");
+
+        // 🔁️ And the forward direction: a freshly-populated envelope round-trips both new fields.
+        let mut populated = envelope.clone();
+        populated.dialect = Some(crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() });
+        populated.migrated_from = Some(MigrationProvenance {
+            document_id: "demo-old".into(),
+            dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "87a".into(), subset: "*".into() },
+            checkpoint_id: Some("ck-abc123".into()),
+            migrated_at: now_iso(),
+        });
+        let populated_json = serde_json::to_value(&populated).expect("serialize populated envelope");
+        let redecoded: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(populated_json).expect("deserialize populated envelope");
+        assert_eq!(redecoded.dialect, populated.dialect);
+        assert_eq!(redecoded.migrated_from, populated.migrated_from);
     }
 
     #[test]

@@ -14,6 +14,9 @@ pub struct CsvArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    pub has_header: bool,
+    #[state(persistent)]
+    #[serde(default)]
     pub headers: Vec<String>,
     #[state(persistent)]
     #[serde(default)]
@@ -33,7 +36,9 @@ impl CsvArtifact {
     pub fn to_snapshot(&self) -> CsvSnapshot {
         CsvSnapshot {
             schema: self.schema.clone(),
-            headers: self.headers.clone(),            rows: self.rows.clone(),
+            has_header: self.has_header,
+            headers: self.headers.clone(),
+            rows: self.rows.clone(),
         }
     }
 
@@ -41,14 +46,18 @@ impl CsvArtifact {
     pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            headers: snapshot.headers,            rows: snapshot.rows,
+            has_header: snapshot.has_header,
+            headers: snapshot.headers,
+            rows: snapshot.rows,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
-        self.headers = snapshot.headers;        self.rows = snapshot.rows;
+        self.has_header = snapshot.has_header;
+        self.headers = snapshot.headers;
+        self.rows = snapshot.rows;
     }
 }
 //#endregion 🔖️Conversions

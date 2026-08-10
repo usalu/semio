@@ -101,5 +101,17 @@ mod tests {
         let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
+
+    #[test]
+    fn nontrivial_multiline_unicode_round_trip() {
+        let body = "Hello, \u{4e16}\u{754c}!\nLine two with an emoji \u{1f389}.\nTab\there.\n".to_string();
+        let snap = TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text: body.clone() };
+        let dsl_text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+        assert_eq!(parsed.text, body);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded.text, body);
+    }
 }
 //#endregion 🧪️Tests

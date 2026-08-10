@@ -1,3 +1,0 @@
-; abnf stdio.glb snapshot
-document = payload
-payload = *OCTET

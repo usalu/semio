@@ -1,6 +1,7 @@
 //! 🏗️ XlsxBuilder (ecma-376 standard) — delegates to its ✳️any subset.
 
 use semio_framework_plugin::ArtifactBuilder;
+use crate::artifacts::xlsx::schema::snapshot::XlsxCellValue;
 use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation, XlsxSnapshot};
 use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::builder::XlsxBuilder as XlsxRawAnyBuilder;
 
@@ -18,4 +19,9 @@ impl ArtifactBuilder for XlsxBuilder {
     fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
     fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
     fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
+}
+
+impl XlsxBuilder {
+    pub fn add_sheet(self, name: impl Into<String>) -> Self { Self(self.0.add_sheet(name)) }
+    pub fn add_row(self, index: u32, values: Vec<XlsxCellValue>) -> Self { Self(self.0.add_row(index, values)) }
 }

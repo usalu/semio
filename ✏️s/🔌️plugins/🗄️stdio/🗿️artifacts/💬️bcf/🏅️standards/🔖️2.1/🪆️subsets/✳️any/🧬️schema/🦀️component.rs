@@ -1,6 +1,6 @@
 //! 🧬️ BcfArtifact schema — full artifact state.
 
-use crate::artifacts::bcf::schema::snapshot::BcfEntry;
+use crate::artifacts::bcf::schema::snapshot::{BcfEntry, BcfTopic};
 use crate::artifacts::bcf::BcfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,9 @@ pub struct BcfArtifact {
     #[state(persistent)]
     #[serde(default)]
     pub entries: Vec<BcfEntry>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub topics: Vec<BcfTopic>,
 }
 //#endregion Artifact
 
@@ -32,6 +35,7 @@ impl BcfArtifact {
         BcfSnapshot {
             schema: self.schema.clone(),
             entries: self.entries.clone(),
+            topics: self.topics.clone(),
         }
     }
 
@@ -40,6 +44,7 @@ impl BcfArtifact {
         Self {
             schema: snapshot.schema,
             entries: snapshot.entries,
+            topics: snapshot.topics,
         }
     }
 
@@ -47,6 +52,7 @@ impl BcfArtifact {
     pub fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
+        self.topics = snapshot.topics;
     }
 }
 //#endregion Conversions

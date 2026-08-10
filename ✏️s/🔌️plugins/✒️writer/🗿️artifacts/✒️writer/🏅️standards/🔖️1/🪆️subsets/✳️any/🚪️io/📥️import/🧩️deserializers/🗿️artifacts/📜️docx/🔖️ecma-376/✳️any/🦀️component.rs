@@ -6,8 +6,15 @@ pub fn register() {}
 
 pub fn deserialize(from: &DocxSnapshot) -> Result<WriterSnapshot, store::TextError> {
     let _ = STDIO_DOCX_DOCUMENT_SCHEMA;
-    let body = from.entries.iter().filter(|e| e.name.ends_with(".xml") || e.name.contains("document"))
-        .filter_map(|e| std::str::from_utf8(&e.data).ok()).collect::<Vec<_>>().join("\n");
+    // 📰 Real paragraph/run model, not a raw-XML grep: each paragraph's runs are concatenated,
+    // paragraphs joined by newlines — the honest text projection of the typed docx document.
+    let body = from
+        .document
+        .paragraphs
+        .iter()
+        .map(|p| p.runs.iter().map(|r| r.text.as_str()).collect::<String>())
+        .collect::<Vec<_>>()
+        .join("\n");
     Ok(WriterSnapshot {
         schema: WRITER_DOCUMENT_SCHEMA.into(),
         id: "docx-import".into(),

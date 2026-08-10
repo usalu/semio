@@ -2,6 +2,15 @@
 
 use crate::artifacts::step::{StepArtifact, StepDiff, StepMutation, StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
 
+//#region 🔖️Submodules
+/// 📐 Shared ISO 10303-21 tokenizer + generic graph — public, importable cross-artifact (ifc reuses it).
+#[path = "📐️part21/🦀️component.rs"]
+pub mod part21;
+/// 🧱 BrepMesh analyzer view, derived from the generic graph — never persisted itself.
+#[path = "🧱️brep/🦀️component.rs"]
+pub mod brep;
+//#endregion 🔖️Submodules
+
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
 pub fn empty_step_snapshot() -> StepSnapshot {

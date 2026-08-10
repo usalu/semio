@@ -42,7 +42,7 @@ pub enum PluginHostError {
 
 fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
-    os_dsl::encode_fault_bytes(&os_dsl::Fault::new(os_dsl::FaultOrigin::Os, os_dsl::FaultCode::new(code), message))
+    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
 }
 
 //#region 🔖️ArtifactSession
@@ -138,6 +138,122 @@ impl ArtifactSession {
 const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 //#endregion 🔖️ArtifactSession
 
+//#region 🔖️IoRouter
+/// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): the host
+/// half of cross-plugin artifact reuse. Each `WasmPluginRuntime`'s own in-guest `IO_REGISTRY` only
+/// ever sees composers registered inside ITS OWN wasm linear memory; this router is what makes a
+/// key owned by plugin B actually reachable from plugin A's `host.io-compose` import — a single
+/// shared table (keyed exactly like `semio_framework::IoKey`) built by calling `list-artifact-
+/// dialects` on every plugin as it loads, mapping each key to the plugin id that owns it, plus a
+/// handle to that plugin's own `WasmPluginRuntime` to actually forward the call.
+pub struct IoRouter {
+    routes: Mutex<HashMap<semio_framework::IoKey, String>>,
+    runtimes: Mutex<HashMap<String, Arc<WasmPluginRuntime>>>,
+}
+
+impl IoRouter {
+    pub fn new() -> Self {
+        Self { routes: Mutex::new(HashMap::new()), runtimes: Mutex::new(HashMap::new()) }
+    }
+
+    /// 📌️ Registers one already-loaded plugin's runtime + merges its composer roster into the
+    /// shared route table. Call once per plugin, after `WasmPluginRuntime::load` succeeds.
+    pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
+        let wire_bytes = runtime.list_artifact_dialects()?;
+        let entries: Vec<(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)> =
+            serde_json::from_slice(&wire_bytes).map_err(PluginHostError::Json)?;
+        let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("io router routes"))?;
+        for (writes, reads) in entries {
+            for read in &reads {
+                routes.insert(
+                    semio_framework::IoKey {
+                        artifact_kind: writes.artifact_kind.clone(),
+                        standard: writes.standard.clone(),
+                        subset: writes.subset.clone(),
+                        direction: semio_framework::IoDirection::Import,
+                        format_kind: read.artifact_kind.clone(),
+                        format_standard: read.standard.clone(),
+                        format_subset: read.subset.clone(),
+                    },
+                    plugin_id.to_string(),
+                );
+                routes.insert(
+                    semio_framework::IoKey {
+                        artifact_kind: read.artifact_kind.clone(),
+                        standard: read.standard.clone(),
+                        subset: read.subset.clone(),
+                        direction: semio_framework::IoDirection::Export,
+                        format_kind: writes.artifact_kind.clone(),
+                        format_standard: writes.standard.clone(),
+                        format_subset: writes.subset.clone(),
+                    },
+                    plugin_id.to_string(),
+                );
+            }
+        }
+        drop(routes);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("io router runtimes"))?.insert(plugin_id.to_string(), runtime);
+        Ok(())
+    }
+
+    /// 📊️ `N plugins / M keys` — logged at boot so a dev-boot smoke test can confirm the router
+    /// actually picked up more than zero cross-plugin routes.
+    pub fn stats(&self) -> (usize, usize) {
+        let plugins = self.runtimes.lock().map(|r| r.len()).unwrap_or(0);
+        let keys = self.routes.lock().map(|r| r.len()).unwrap_or(0);
+        (plugins, keys)
+    }
+
+    /// 🌉️ Routes `key`/`sources` (JSON wire bytes) to whichever OTHER plugin owns `key`. Refuses to
+    /// route back into `calling_plugin_id` itself: the target plugin's `artifact-compose` guest
+    /// handler is local-only by construction (see `io::wire_artifact_compose`'s own doc comment) and
+    /// never calls `io-compose` again, so every route is exactly one hop — the self-route guard is
+    /// what keeps a plugin from ever needing to reason about calling back into its own in-flight
+    /// `Store` mutex (which would deadlock, since that mutex is already held by the caller of this
+    /// very host call).
+    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, String> {
+        let key: semio_framework::IoKey = serde_json::from_slice(key_bytes).map_err(|e| format!("bad io key wire bytes: {e}"))?;
+        let owner = {
+            let routes = self.routes.lock().map_err(|_| "io router routes lock poisoned".to_string())?;
+            routes.get(&key).cloned()
+        }
+        .ok_or_else(|| format!("no plugin registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset))?;
+        if owner == calling_plugin_id {
+            return Err(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)"));
+        }
+        let runtime = {
+            let runtimes = self.runtimes.lock().map_err(|_| "io router runtimes lock poisoned".to_string())?;
+            runtimes.get(&owner).cloned()
+        }
+        .ok_or_else(|| format!("plugin `{owner}` owns this key but its runtime is not registered with the router"))?;
+        runtime.artifact_compose(key_bytes, sources_bytes).map_err(|error| error.to_string())
+    }
+
+    /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
+    /// ("import"|"export"), JSON `Vec<ArtifactDialect>` bytes.
+    pub fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, String> {
+        let direction = match direction {
+            "import" => semio_framework::IoDirection::Import,
+            "export" => semio_framework::IoDirection::Export,
+            other => return Err(format!("unknown io direction `{other}` (expected \"import\" or \"export\")")),
+        };
+        let routes = self.routes.lock().map_err(|_| "io router routes lock poisoned".to_string())?;
+        let dialects: Vec<semio_framework::ArtifactDialect> = routes
+            .keys()
+            .filter(|key| key.artifact_kind == artifact_kind && key.direction == direction)
+            .map(|key| semio_framework::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
+            .collect();
+        serde_json::to_vec(&dialects).map_err(|error| error.to_string())
+    }
+}
+
+impl Default for IoRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+//#endregion 🔖️IoRouter
+
 //#region 🔖️HostState
 struct HostState {
     wasi: WasiCtx,
@@ -149,6 +265,10 @@ struct HostState {
     /// {@link WasmPluginRuntime::register_host_blob_store} — `None` until a caller registers one
     /// (mirrors `backbones`' explicit-registration convention, not a stub-forever like `read-asset`).
     blob_store: Option<Arc<dyn store::BlobStore>>,
+    /// 🌉️ Backing cross-plugin `IoRouter`, injected via {@link WasmPluginRuntime::register_host_io_router}
+    /// — `None` (WIT `io-dialects`/`io-compose` calls fault) until a caller registers one, same
+    /// explicit-registration convention as `blob_store`/`backbones`.
+    io_router: Option<Arc<IoRouter>>,
     /// @emoji ⚙️ Plugin-wide host engine cache (content-addressed; not per document instance).
     engines: store::EngineCache,
     /// @emoji 🧾 Per-instance opaque pack authority (`create_app` inserts; `destroy_app` removes).
@@ -280,6 +400,16 @@ impl semio::framework::host::Host for HostState {
         Ok(handle.key.0.to_vec())
     }
 
+    fn io_dialects(&mut self, artifact_kind: String, direction: String) -> Result<Vec<u8>, Vec<u8>> {
+        let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-dialects", "no host io router registered; call register_host_io_router"))?;
+        router.dialects(&artifact_kind, &direction).map_err(|error| host_fault_bytes("os.host.io-dialects", error))
+    }
+
+    fn io_compose(&mut self, key: Vec<u8>, sources: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-compose", "no host io router registered; call register_host_io_router"))?;
+        router.compose(&self.plugin_id, &key, &sources).map_err(|error| host_fault_bytes("os.host.io-compose", error))
+    }
+
     fn engine_read(&mut self, engine_id: String, key: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         if !self.has_engine_access(Rights::Read) {
             return Err(host_fault_bytes("os.host.engine-read", "engine read capability missing"));
@@ -335,7 +465,7 @@ impl WasmPluginRuntime {
     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
         result.map_err(|error| match error {
             semio::framework::types::PluginError::Fault(bytes) => {
-                let fault = os_dsl::decode_fault_bytes(&bytes);
+                let fault = dsl::decode_fault_bytes(&bytes);
                 PluginHostError::Plugin(fault.message)
             }
         })
@@ -364,6 +494,7 @@ impl WasmPluginRuntime {
             plugin_id: plugin_id.to_string(),
             backbones: HashMap::new(),
             blob_store: None,
+            io_router: None,
             engines: store::EngineCache::new(DEFAULT_ENGINE_CACHE_BUDGET_BYTES),
             sessions: HashMap::new(),
         }
@@ -496,6 +627,16 @@ impl WasmPluginRuntime {
         Ok(())
     }
 
+    /// 🌉️ Registers the shared `IoRouter` this plugin's `host.io-dialects`/`host.io-compose` calls
+    /// route through. Callers that load multiple plugins into one process (e.g. `WasmtimeNodeHost`)
+    /// should build ONE `IoRouter`, call `IoRouter::register_plugin` for each loaded runtime, and
+    /// register that same shared router on every one of them.
+    pub fn register_host_io_router(&self, router: Arc<IoRouter>) -> Result<(), PluginHostError> {
+        let mut plugin_store = self.store_guard()?;
+        plugin_store.data_mut().io_router = Some(router);
+        Ok(())
+    }
+
     /// @emoji ⚙️ Registers a compute kernel on the host `EngineCache` under its `ENGINE_ID`.
     pub fn register_engine<E: store::Engine>(&self, engine: E) -> Result<(), PluginHostError> {
         let mut plugin_store = self.store_guard()?;
@@ -606,7 +747,7 @@ impl WasmPluginRuntime {
                     return dsl::from_dsl_value(value).map_err(|error| PluginHostError::Plugin(error));
                 }
                 AppFrame::Error { in_reply_to, fault } if in_reply_to == Some(seq) => {
-                    let decoded = os_dsl::decode_fault_bytes(&fault);
+                    let decoded = dsl::decode_fault_bytes(&fault);
                     return Err(PluginHostError::Plugin(decoded.message));
                 }
                 _ => {}
@@ -644,7 +785,7 @@ impl WasmPluginRuntime {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let input = semio::framework::types::MigrateDocumentInput { from_version: from_version.to_string(), to_version: to_version.to_string(), data };
+        let input = semio::framework::types::MigrateArtifactInput { from_version: from_version.to_string(), to_version: to_version.to_string(), data };
         let result = bindings.semio_framework_plugin().call_migrate_artifact(&mut *store, &input).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result).map(|output| output.data)
     }

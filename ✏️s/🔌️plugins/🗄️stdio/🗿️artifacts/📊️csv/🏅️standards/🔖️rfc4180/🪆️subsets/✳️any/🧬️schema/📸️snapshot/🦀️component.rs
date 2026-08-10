@@ -1,17 +1,23 @@
-//! 🧬️ CsvSnapshot schema — persistent fields + real codecs.
+//! 🧬️ CsvSnapshot schema — persistent fields; real RFC4180 codec lives in `⚙️engine`.
 
 use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+fn default_true() -> bool { true }
+
 //#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.csv` snapshot (RFC4180-ish table).
+/// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvSnapshot {
     #[state(persistent)]
     pub schema: String,
+    /// 📑 Whether the first record is a header row (RFC 4180's own optional convention).
+    #[state(persistent)]
+    #[serde(default = "default_true")]
+    pub has_header: bool,
     #[state(persistent)]
     #[serde(default)]
     pub headers: Vec<String>,
@@ -24,6 +30,7 @@ impl Default for CsvSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
+            has_header: true,
             headers: Vec::new(),
             rows: Vec::new(),
         }
@@ -31,76 +38,9 @@ impl Default for CsvSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️CsvTextCodec
-fn csv_escape_row(cells: &[String]) -> String {
-    cells
-        .iter()
-        .map(|c| {
-            if c.contains(',') || c.contains('"') || c.contains('\n') || c.contains('\r') {
-                format!("\"{}\"", c.replace('"', "\"\""))
-            } else {
-                c.clone()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(",")
-}
-
-fn csv_parse_row(line: &str) -> Vec<String> {
-    let mut cells = Vec::new();
-    let mut cur = String::new();
-    let mut in_q = false;
-    let mut chars = line.chars().peekable();
-    while let Some(ch) = chars.next() {
-        if in_q {
-            if ch == '"' {
-                if chars.peek() == Some(&'"') {
-                    chars.next();
-                    cur.push('"');
-                } else {
-                    in_q = false;
-                }
-            } else {
-                cur.push(ch);
-            }
-        } else if ch == '"' {
-            in_q = true;
-        } else if ch == ',' {
-            cells.push(cur.clone());
-            cur.clear();
-        } else {
-            cur.push(ch);
-        }
-    }
-    cells.push(cur);
-    cells
-}
-
-pub fn csv_table_to_text(headers: &[String], rows: &[Vec<String>]) -> String {
-    if headers.is_empty() && rows.is_empty() {
-        return String::new();
-    }
-    let mut out = csv_escape_row(headers);
-    out.push('\n');
-    for row in rows {
-        out.push_str(&csv_escape_row(row));
-        out.push('\n');
-    }
-    out
-}
-
-pub fn csv_table_from_text(text: &str) -> (Vec<String>, Vec<Vec<String>>) {
-    if text.trim().is_empty() {
-        return (Vec::new(), Vec::new());
-    }
-    let mut lines = text.lines();
-    let headers = csv_parse_row(lines.next().unwrap_or(""));
-    let rows = lines.filter(|l| !l.is_empty()).map(|l| csv_parse_row(l)).collect();
-    (headers, rows)
-}
-//#endregion 🔖️CsvTextCodec
-
 //#region 🔖️HandcraftedArtifactCodecs
+// 🔗 Real tokenizer lives in `⚙️engine::decode_csv_with`/`encode_csv_with`
+// (https://www.rfc-editor.org/rfc/rfc4180).
 impl store::ArtifactDsl for CsvSnapshot {
     const EXTENSION: &'static str = "csv";
     fn envelope_id() -> &'static str { "stdio.csv" }
@@ -110,11 +50,10 @@ impl store::ArtifactDsl for CsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let (headers, rows) = csv_table_from_text(body);
-        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
+        Ok(crate::artifacts::csv::engine::decode_csv_with(body, true))
     }
     fn print_dsl(&self) -> String {
-        let body = csv_table_to_text(&self.headers, &self.rows);
+        let body = crate::artifacts::csv::engine::encode_csv(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -127,7 +66,7 @@ impl store::ArtifactDsl for CsvSnapshot {
 impl store::ArtifactPack for CsvSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = csv_table_to_text(&self.headers, &self.rows).into_bytes();
+        let raw = crate::artifacts::csv::engine::encode_csv(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -147,8 +86,7 @@ impl store::ArtifactPack for CsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let (headers, rows) = csv_table_from_text(&text);
-        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
+        Ok(crate::artifacts::csv::engine::decode_csv_with(&text, true))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
