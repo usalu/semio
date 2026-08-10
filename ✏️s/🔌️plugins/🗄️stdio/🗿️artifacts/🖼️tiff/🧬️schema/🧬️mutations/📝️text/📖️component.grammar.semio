@@ -1,0 +1,6 @@
+dialect grammar stdio.tiff.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.tiff' NL
+body = payload NL?
+payload = *OCTET

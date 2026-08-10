@@ -1,0 +1,5 @@
+# 🧬️ DeflateArtifact
+type DeflateArtifact {
+  schema: String! @state(class: PERSISTENT)
+  bytes: String! @state(class: PERSISTENT)
+}

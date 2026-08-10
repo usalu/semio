@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.pptx/mutations/text.json",
+  "title": "PptxMutationsText",
+  "type": "object"
+}

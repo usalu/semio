@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_gif.artifact;
+message GifArtifact {
+  string schema = 1;
+  string bytes_wire = 2;
+}

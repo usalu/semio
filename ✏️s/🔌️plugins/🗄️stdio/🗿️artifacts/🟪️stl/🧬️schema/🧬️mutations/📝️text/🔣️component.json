@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.stl/mutations/text.json",
+  "title": "StlMutationsText",
+  "type": "object"
+}

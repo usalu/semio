@@ -1,31 +1,7 @@
 //! 📑️ BinaryDecomposer — local ArtifactDecomposer until SDK Wave 3.
 
+use semio_framework_plugin::{ArtifactDecomposer, Confidence, Decomposition, DecomposeSource};
 use crate::artifacts::binary::{BinarySnapshot};
-
-//#region 🔖️LocalContracts
-/// 🎚 Soft confidence for partial decomposition success.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Confidence { High, Medium, Low }
-
-/// 📥 One decomposition source blob.
-#[derive(Clone, Debug)]
-pub enum DecomposeSource<'a> { Text(&'a str), Binary(&'a [u8]) }
-
-/// 📦 Decomposition result carrying soft diagnostics.
-#[derive(Clone, Debug)]
-pub struct Decomposition<T> {
-    pub parts: T,
-    pub confidence: Confidence,
-    pub diagnostics: Vec<dsl::Diagnostic>,
-}
-
-/// 📑️ Local decomposer contract (W3 swaps to SDK `ArtifactDecomposer`).
-pub trait ArtifactDecomposer: Sized {
-    type Snapshot;
-    type Parts;
-    fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
-}
-//#endregion 🔖️LocalContracts
 
 //#region 🔖️Parts
 /// 🧩 Decomposed `stdio.binary` parts.

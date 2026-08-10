@@ -1,0 +1,6 @@
+dialect grammar stdio.gltf.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.gltf' NL
+body = payload NL?
+payload = *OCTET

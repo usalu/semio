@@ -1,0 +1,5 @@
+# 🧬️ StepDiff
+type StepDiff {
+  schema: String
+  PLACEHOLDER_TEXT_COLON String
+}

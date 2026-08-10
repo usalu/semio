@@ -1,0 +1,3 @@
+(* ebnf stdio.bcf snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.bcf', newline ;

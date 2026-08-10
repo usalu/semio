@@ -1118,14 +1118,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1184,14 +1184,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -2527,7 +2527,7 @@ pub mod media_export_raster {
     #[cfg(not(feature = "os-host-full"))]
     use std::sync::LazyLock;
 
-    //#region 🔖️MediaExportRegistryStubs
+    //#region 🔖️MediaRegistryRegistryStubs
     // 🧬️ Default-feature builds have no `workflow` module, so keep a local registry. With
     // `os-host-full`, re-export the workflow registry so `register_*` and `export_os_app_instance_media`
     // share one OnceLock (stubs previously shadowed the real handlers at crate root).
@@ -2602,7 +2602,7 @@ pub mod media_export_raster {
             .expect("media import registry")
             .insert((artifact_kind.to_string(), format), Box::new(handler));
     }
-    //#endregion 🔖️MediaExportRegistryStubs
+    //#endregion 🔖️MediaRegistryRegistryStubs
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
     use semio_framework::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
@@ -3412,13 +3412,32 @@ pub use crate::workflow_kernel::{
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
+    /// 🗂️ Registry key `(artifact_kind, format_artifact_kind)` — stdio kind ids or `MediaFormat::as_str()`.
+    fn os_media_handler_key(artifact_kind: &str, format_artifact_kind: &str) -> String {
+        format!("{artifact_kind}:{format_artifact_kind}")
+    }
+
+    /// 🧷 Thin MediaFormat adapter — prefer kind-string APIs for stdio.
     fn os_media_export_key(artifact_kind: &str, format: &MediaFormat) -> String {
-        format!("{}:{}", artifact_kind, format.as_str())
+        os_media_handler_key(artifact_kind, format.as_str())
     }
 
     /// @emoji 💾️ Registers an export handler for a media resource kind and format.
     pub fn register_os_media_export_handler(artifact_kind: &str, format: MediaFormat, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
         export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
+    }
+
+
+    /// 🗄️ Registers an export handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
+    pub fn register_os_media_export_handler_kind(
+        artifact_kind: &str,
+        format_artifact_kind: &str,
+        handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
+    ) {
+        export_handlers()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
     /// 📐️ Import vs export direction for `required_media_formats`.
@@ -3506,6 +3525,19 @@ pub use crate::workflow_kernel::{
     /// @emoji 📥️ Registers an import handler for a media resource kind and format; the handler turns raw bytes into a complete source document.
     pub fn register_os_media_import_handler(artifact_kind: &str, format: MediaFormat, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
         import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
+    }
+
+
+    /// 🗄️ Registers an import handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
+    pub fn register_os_media_import_handler_kind(
+        artifact_kind: &str,
+        format_artifact_kind: &str,
+        handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
+    ) {
+        import_handlers()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
     /// @emoji ✅️ Ensures every known resource kind has required import handlers.
@@ -4075,6 +4107,9 @@ pub mod registry {
     /// catalog — call at plugin registration time (`PluginHost::load_plugin`/`hot_swap_plugin`).
     pub fn register_artifact_descriptors(manifest: &PluginManifest) {
         let mut registry = RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for spec in &manifest.artifact_kinds {
+            registry.insert(spec.id.clone(), artifact_kind_entry_from_spec(spec));
+        }
         for app in &manifest.apps {
             for spec in &app.artifact_kinds {
                 registry.insert(spec.id.clone(), artifact_kind_entry_from_spec(spec));

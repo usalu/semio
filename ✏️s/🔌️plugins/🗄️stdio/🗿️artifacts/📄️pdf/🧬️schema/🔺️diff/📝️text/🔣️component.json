@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.pdf/diff/text.json",
+  "title": "PdfDiffText",
+  "type": "object"
+}

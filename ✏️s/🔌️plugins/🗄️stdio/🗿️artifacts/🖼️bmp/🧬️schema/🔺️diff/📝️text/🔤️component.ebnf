@@ -1,0 +1,3 @@
+(* ebnf stdio.bmp diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.bmp', newline ;

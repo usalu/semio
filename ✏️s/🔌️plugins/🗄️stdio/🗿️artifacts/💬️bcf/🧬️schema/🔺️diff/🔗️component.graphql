@@ -1,0 +1,5 @@
+# 🧬️ BcfDiff
+type BcfDiff {
+  schema: String
+  bytes: String
+}

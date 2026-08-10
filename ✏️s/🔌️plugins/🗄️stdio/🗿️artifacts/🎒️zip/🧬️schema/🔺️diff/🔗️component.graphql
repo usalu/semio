@@ -1,0 +1,5 @@
+# 🧬️ ZipDiff
+type ZipDiff {
+  schema: String
+  bytes: String
+}

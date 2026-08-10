@@ -1,0 +1,3 @@
+; abnf stdio.ifc diff
+document = payload
+payload = *OCTET

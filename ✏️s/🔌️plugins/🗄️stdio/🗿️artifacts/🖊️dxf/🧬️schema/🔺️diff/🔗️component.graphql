@@ -1,0 +1,2 @@
+# diff facet
+ type Placeholder { lines: String! }

@@ -1,0 +1,3 @@
+dialect protocol stdio.xlsx.diff
+magic = %x00
+payload = *OCTET

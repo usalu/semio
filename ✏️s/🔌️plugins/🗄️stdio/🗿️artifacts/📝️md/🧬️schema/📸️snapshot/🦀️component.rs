@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.md` snapshot.
+/// 📸️ Persisted `stdio.md` snapshot (lossless markdown text).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md")]
@@ -14,14 +14,14 @@ pub struct MdSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    PLACEHOLDER_PUB_VALUE PLACEHOLDER_VALUE_TYPE,
+    pub body: String,
 }
 
 impl Default for MdSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-            PLACEHOLDER_VALUE_COLON PLACEHOLDER_VALUE_TYPE::Null,
+            body: String::new(),
         }
     }
 }
@@ -34,39 +34,33 @@ impl store::DocumentDsl for MdSnapshot {
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
+            Ok((_, rest)) => rest.to_string(),
+            Err(_) => text.to_string(),
         };
-        let value = serde_md::from_str(body.trim()).map_err(|e| {
-            store::TextError::new(format!("md parse: {e}"), dsl::TextSpan::at(1, 1))
-        })?;
-        Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), value })
+        Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), body })
     }
     fn print_dsl(&self) -> String {
-        let body = serde_md::to_string_pretty(&PLACEHOLDER_SELF_VALUE).unwrap_or_else(|_| "null".into());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
+        store::semio_format::wrap_text(&envelope, &self.body)
     }
 }
 
 impl store::DocumentPack for MdSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-
-        let raw = serde_md::to_vec(&PLACEHOLDER_SELF_VALUE).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = self.body.as_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
@@ -77,8 +71,8 @@ impl store::DocumentPack for MdSnapshot {
             )));
         }
         let _ = options;
-        let value = serde_md::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), value })
+        let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), body })
     }
 }
 //#endregion 🔖️HandcraftedDocumentCodecs

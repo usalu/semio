@@ -1,0 +1,6 @@
+dialect grammar stdio.deflate.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.deflate' NL
+body = payload NL?
+payload = *OCTET

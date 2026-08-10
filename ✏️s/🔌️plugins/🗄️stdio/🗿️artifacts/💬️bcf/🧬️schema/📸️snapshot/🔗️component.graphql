@@ -1,0 +1,8 @@
+type BcfEntry {
+  name: String!
+  data: [Int!]!
+}
+type BcfSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  entries: [BcfEntry!]! @state(class: PERSISTENT)
+}

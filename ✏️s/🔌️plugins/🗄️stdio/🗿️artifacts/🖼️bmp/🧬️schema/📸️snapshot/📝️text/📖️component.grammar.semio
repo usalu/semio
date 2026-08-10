@@ -1,0 +1,6 @@
+dialect grammar stdio.bmp.snapshot
+root = document
+document = header body
+header = 'schema' SP 'stdio.bmp' NL
+body = payload NL?
+payload = *OCTET

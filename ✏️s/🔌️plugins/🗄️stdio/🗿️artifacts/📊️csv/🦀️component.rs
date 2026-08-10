@@ -23,7 +23,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         component_kind: "stdio".into(),
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Document },
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],

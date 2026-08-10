@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.xlsx/diff/text.json",
+  "title": "XlsxDiffText",
+  "type": "object"
+}

@@ -1,0 +1,3 @@
+; abnf stdio.ifc mutations
+document = payload
+payload = *OCTET

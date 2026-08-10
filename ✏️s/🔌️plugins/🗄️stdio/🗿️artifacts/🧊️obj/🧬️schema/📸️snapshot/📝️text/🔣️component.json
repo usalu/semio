@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.obj/snapshot/text.json",
+  "title": "ObjSnapshotText",
+  "type": "object"
+}

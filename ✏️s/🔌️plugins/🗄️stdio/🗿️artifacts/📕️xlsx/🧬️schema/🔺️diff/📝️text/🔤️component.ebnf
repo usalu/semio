@@ -1,0 +1,3 @@
+(* ebnf stdio.xlsx diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.xlsx', newline ;

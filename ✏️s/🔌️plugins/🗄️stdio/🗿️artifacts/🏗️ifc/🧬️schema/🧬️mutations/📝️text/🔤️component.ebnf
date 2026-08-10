@@ -1,0 +1,3 @@
+(* ebnf stdio.ifc mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.ifc', newline ;

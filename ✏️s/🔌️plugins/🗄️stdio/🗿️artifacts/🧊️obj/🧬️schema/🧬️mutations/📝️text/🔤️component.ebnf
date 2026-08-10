@@ -1,0 +1,3 @@
+(* ebnf stdio.obj mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.obj', newline ;

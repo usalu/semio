@@ -1,0 +1,6 @@
+dialect grammar stdio.dxf.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.dxf' NL
+body = payload NL?
+payload = *OCTET

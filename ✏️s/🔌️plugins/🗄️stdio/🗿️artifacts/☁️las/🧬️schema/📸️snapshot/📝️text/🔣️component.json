@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.las/snapshot/text.json",
+  "title": "LasSnapshotText",
+  "type": "object"
+}

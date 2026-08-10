@@ -1,0 +1,5 @@
+# 🧬️ DeflateDiff
+type DeflateDiff {
+  schema: String
+  bytes: String
+}

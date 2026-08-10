@@ -1,0 +1,3 @@
+dialect protocol stdio.step.snapshot
+magic = %x00
+payload = *OCTET

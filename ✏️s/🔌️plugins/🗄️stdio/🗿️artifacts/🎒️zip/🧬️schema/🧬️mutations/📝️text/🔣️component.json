@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.zip/mutations/text.json",
+  "title": "ZipMutationsText",
+  "type": "object"
+}

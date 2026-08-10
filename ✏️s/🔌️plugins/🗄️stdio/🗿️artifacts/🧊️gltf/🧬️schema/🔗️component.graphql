@@ -1,0 +1,5 @@
+# 🧬️ GltfArtifact
+type GltfArtifact {
+  schema: String! @state(class: PERSISTENT)
+  PLACEHOLDER_VALUE_COLON String! @state(class: PERSISTENT)
+}

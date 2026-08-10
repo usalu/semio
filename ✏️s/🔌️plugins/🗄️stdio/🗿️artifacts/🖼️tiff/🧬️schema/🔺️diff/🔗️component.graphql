@@ -1,0 +1,5 @@
+# 🧬️ TiffDiff
+type TiffDiff {
+  schema: String
+  bytes: String
+}

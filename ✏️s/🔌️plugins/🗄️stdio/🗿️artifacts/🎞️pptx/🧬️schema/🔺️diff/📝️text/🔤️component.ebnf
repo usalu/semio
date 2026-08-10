@@ -1,0 +1,3 @@
+(* ebnf stdio.pptx diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.pptx', newline ;

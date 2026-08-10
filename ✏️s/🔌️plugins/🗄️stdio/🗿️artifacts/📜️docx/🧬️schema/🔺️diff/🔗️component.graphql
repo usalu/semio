@@ -1,0 +1,5 @@
+# 🧬️ DocxDiff
+type DocxDiff {
+  schema: String
+  bytes: String
+}

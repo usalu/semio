@@ -7,8 +7,61 @@ pub fn plugin() -> Plugin {
     crate::artifacts::binary::engine::register();
     crate::artifacts::txt::engine::register();
     crate::artifacts::json::engine::register();
+    crate::artifacts::xml::engine::register();
+    crate::artifacts::csv::engine::register();
+    crate::artifacts::md::engine::register();
+    crate::artifacts::zip::engine::register();
+    crate::artifacts::gltf::engine::register();
+    crate::artifacts::las::engine::register();
+    crate::artifacts::ifc::engine::register();
+    crate::artifacts::step::engine::register();
+    crate::artifacts::deflate::engine::register();
+    crate::artifacts::glb::engine::register();
+    crate::artifacts::bcf::engine::register();
+    crate::artifacts::xlsx::engine::register();
+    crate::artifacts::pptx::engine::register();
+    crate::artifacts::docx::engine::register();
+    crate::artifacts::pdf::engine::register();
+    crate::artifacts::tiff::engine::register();
+    crate::artifacts::gif::engine::register();
+    crate::artifacts::jpg::engine::register();
+    crate::artifacts::png::engine::register();
+    crate::artifacts::bmp::engine::register();
+    crate::artifacts::svg::engine::register();
+    crate::artifacts::dxf::engine::register();
+    crate::artifacts::ply::engine::register();
+    crate::artifacts::stl::engine::register();
+    crate::artifacts::obj::engine::register();
     Plugin::builder("stdio")
         .label("Stdio")
         .version("0.1.0")
+        .artifact_kind(crate::artifacts::binary::artifact_kind())
+        .artifact_kind(crate::artifacts::txt::artifact_kind())
+        .artifact_kind(crate::artifacts::json::artifact_kind())
+        .artifact_kind(crate::artifacts::xml::artifact_kind())
+        .artifact_kind(crate::artifacts::csv::artifact_kind())
+        .artifact_kind(crate::artifacts::md::artifact_kind())
+        .artifact_kind(crate::artifacts::zip::artifact_kind())
+        .artifact_kind(crate::artifacts::gltf::artifact_kind())
+        .artifact_kind(crate::artifacts::las::artifact_kind())
+        .artifact_kind(crate::artifacts::ifc::artifact_kind())
+        .artifact_kind(crate::artifacts::step::artifact_kind())
+        .artifact_kind(crate::artifacts::deflate::artifact_kind())
+        .artifact_kind(crate::artifacts::glb::artifact_kind())
+        .artifact_kind(crate::artifacts::bcf::artifact_kind())
+        .artifact_kind(crate::artifacts::xlsx::artifact_kind())
+        .artifact_kind(crate::artifacts::pptx::artifact_kind())
+        .artifact_kind(crate::artifacts::docx::artifact_kind())
+        .artifact_kind(crate::artifacts::pdf::artifact_kind())
+        .artifact_kind(crate::artifacts::tiff::artifact_kind())
+        .artifact_kind(crate::artifacts::gif::artifact_kind())
+        .artifact_kind(crate::artifacts::jpg::artifact_kind())
+        .artifact_kind(crate::artifacts::png::artifact_kind())
+        .artifact_kind(crate::artifacts::bmp::artifact_kind())
+        .artifact_kind(crate::artifacts::svg::artifact_kind())
+        .artifact_kind(crate::artifacts::dxf::artifact_kind())
+        .artifact_kind(crate::artifacts::ply::artifact_kind())
+        .artifact_kind(crate::artifacts::stl::artifact_kind())
+        .artifact_kind(crate::artifacts::obj::artifact_kind())
         .library()
 }

@@ -1,0 +1,5 @@
+# 🧬️ GltfDiff
+type GltfDiff {
+  schema: String
+  PLACEHOLDER_VALUE_COLON String
+}

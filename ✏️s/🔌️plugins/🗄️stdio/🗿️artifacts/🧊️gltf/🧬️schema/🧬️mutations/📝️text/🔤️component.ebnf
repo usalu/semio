@@ -1,0 +1,3 @@
+(* ebnf stdio.gltf mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.gltf', newline ;

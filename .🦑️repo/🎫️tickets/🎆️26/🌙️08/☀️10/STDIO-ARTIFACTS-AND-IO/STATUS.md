@@ -1,7 +1,6 @@
 # Status
 
-- W0: done
-- W1: done
-- W2: done (`cargo check -p semio-s-plugin-stdio` green)
-- W3: in progress (SDK traits + registry)
-- W4–W8: pending
+- W0–W3: done (SDK + string-keyed media registry; MediaFormat enum deletion deferred)
+- W4a: done (8/8 dependency formats)
+- W4b: in progress (mesh/cad/office leaf formats)
+- W5–W8: pending

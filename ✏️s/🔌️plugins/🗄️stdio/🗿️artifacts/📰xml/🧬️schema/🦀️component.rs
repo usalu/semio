@@ -1,6 +1,6 @@
 //! 🧬️ XmlArtifact schema — full artifact state.
 
-use crate::artifacts::xml::{XmlSnapshot};
+use crate::artifacts::xml::XmlSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ pub struct XmlArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    PLACEHOLDER_PUB_VALUE PLACEHOLDER_VALUE_TYPE,
+    pub doc: crate::artifacts::xml::schema::snapshot::XmlDocument,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +30,7 @@ impl XmlArtifact {
     pub fn to_snapshot(&self) -> XmlSnapshot {
         XmlSnapshot {
             schema: self.schema.clone(),
-            PLACEHOLDER_VALUE_COLON PLACEHOLDER_SELF_VALUE.clone(),
+            doc: self.doc.clone(),
         }
     }
 
@@ -38,14 +38,14 @@ impl XmlArtifact {
     pub fn from_snapshot(snapshot: XmlSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            PLACEHOLDER_VALUE_COLON snapshot.value,
+            doc: snapshot.doc,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
         self.schema = snapshot.schema;
-        PLACEHOLDER_SELF_VALUE = snapshot.value;
+        self.doc = snapshot.doc;
     }
 }
 //#endregion 🔖️Conversions
@@ -59,21 +59,21 @@ pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             rust: include_str!("🦀️component.rs"),
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
-            xml_schema: include_str!("🔣️component.xml"),
+            json_schema: include_str!("🔣️component.json"),
             proto: include_str!("🛰️component.proto"),
         },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️component.rs"),
             typescript: include_str!("📸️snapshot/🟦️component.ts"),
             graphql: include_str!("📸️snapshot/🔗️component.graphql"),
-            xml_schema: include_str!("📸️snapshot/🔣️component.xml"),
+            json_schema: include_str!("📸️snapshot/🔣️component.json"),
             proto: include_str!("📸️snapshot/🛰️component.proto"),
         },
         diff: schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️component.rs"),
             typescript: include_str!("🔺️diff/🟦️component.ts"),
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
-            xml_schema: include_str!("🔺️diff/🔣️component.xml"),
+            json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
     }

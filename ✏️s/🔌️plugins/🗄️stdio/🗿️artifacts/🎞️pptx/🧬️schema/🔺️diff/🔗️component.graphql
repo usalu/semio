@@ -1,0 +1,5 @@
+# 🧬️ PptxDiff
+type PptxDiff {
+  schema: String
+  bytes: String
+}

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.deflate/diff/text.json",
+  "title": "DeflateDiffText",
+  "type": "object"
+}

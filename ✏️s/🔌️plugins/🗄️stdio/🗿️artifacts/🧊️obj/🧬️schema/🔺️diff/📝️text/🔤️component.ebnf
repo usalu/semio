@@ -1,0 +1,3 @@
+(* ebnf stdio.obj diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.obj', newline ;

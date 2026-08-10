@@ -1,0 +1,3 @@
+; abnf stdio.xlsx diff
+document = payload
+payload = *OCTET

@@ -1,0 +1,8 @@
+type JpgEntry {
+  name: String!
+  data: [Int!]!
+}
+type JpgArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [JpgEntry!]! @state(class: PERSISTENT)
+}

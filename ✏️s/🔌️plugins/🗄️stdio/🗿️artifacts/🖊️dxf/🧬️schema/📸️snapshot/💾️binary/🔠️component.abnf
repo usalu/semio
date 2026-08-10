@@ -1,0 +1,3 @@
+; abnf stdio.dxf snapshot
+document = payload
+payload = *OCTET

@@ -1,0 +1,8 @@
+type PdfEntry {
+  name: String!
+  data: [Int!]!
+}
+type PdfArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [PdfEntry!]! @state(class: PERSISTENT)
+}

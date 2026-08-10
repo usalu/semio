@@ -1,0 +1,3 @@
+; abnf stdio.ply snapshot
+document = payload
+payload = *OCTET

@@ -1,0 +1,8 @@
+type XlsxEntry {
+  name: String!
+  data: [Int!]!
+}
+type XlsxArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [XlsxEntry!]! @state(class: PERSISTENT)
+}

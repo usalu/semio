@@ -1,0 +1,3 @@
+(* ebnf stdio.stl snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.stl', newline ;

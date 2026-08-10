@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.stdio_step.mutations_text;
+message Document { string schema = 1; bytes payload = 2; }

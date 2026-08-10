@@ -1,0 +1,8 @@
+type DocxEntry {
+  name: String!
+  data: [Int!]!
+}
+type DocxArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [DocxEntry!]! @state(class: PERSISTENT)
+}

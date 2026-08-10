@@ -1,0 +1,5 @@
+# 🧬️ JpgDiff
+type JpgDiff {
+  schema: String
+  bytes: String
+}

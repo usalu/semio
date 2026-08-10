@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.bmp/snapshot.json",
+  "title": "BmpSnapshot",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "bytes": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

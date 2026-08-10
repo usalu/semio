@@ -1,0 +1,8 @@
+type PptxEntry {
+  name: String!
+  data: [Int!]!
+}
+type PptxSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  entries: [PptxEntry!]! @state(class: PERSISTENT)
+}

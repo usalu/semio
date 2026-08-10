@@ -1,0 +1,5 @@
+# 🧬️ XlsxDiff
+type XlsxDiff {
+  schema: String
+  bytes: String
+}

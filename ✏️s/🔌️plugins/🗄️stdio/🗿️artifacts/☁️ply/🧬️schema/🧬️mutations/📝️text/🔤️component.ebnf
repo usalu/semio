@@ -1,0 +1,3 @@
+(* ebnf stdio.ply mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.ply', newline ;

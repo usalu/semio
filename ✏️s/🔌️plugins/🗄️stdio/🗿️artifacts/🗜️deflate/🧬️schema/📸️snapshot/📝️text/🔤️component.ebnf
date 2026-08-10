@@ -1,0 +1,3 @@
+(* ebnf stdio.deflate snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.deflate', newline ;

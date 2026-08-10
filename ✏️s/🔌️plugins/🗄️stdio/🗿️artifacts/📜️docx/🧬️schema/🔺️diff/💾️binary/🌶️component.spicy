@@ -1,0 +1,4 @@
+module Stdio_docx_diff;
+type Document = unit {
+    payload: bytes &eod;
+};

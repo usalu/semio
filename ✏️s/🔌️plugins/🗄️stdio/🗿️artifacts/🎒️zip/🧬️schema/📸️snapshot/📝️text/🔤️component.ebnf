@@ -1,0 +1,3 @@
+(* ebnf stdio.zip snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.zip', newline ;

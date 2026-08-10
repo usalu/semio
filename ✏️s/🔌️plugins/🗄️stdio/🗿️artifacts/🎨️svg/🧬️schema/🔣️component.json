@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.svg/artifact.svg",
+  "title": "SvgArtifact",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

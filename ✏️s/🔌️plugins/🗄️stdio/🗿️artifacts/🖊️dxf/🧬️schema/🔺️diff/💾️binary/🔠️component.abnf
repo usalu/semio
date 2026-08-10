@@ -1,0 +1,3 @@
+; abnf stdio.dxf diff
+document = payload
+payload = *OCTET

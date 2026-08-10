@@ -1,5 +1,2 @@
-# 🧬️ MdDiff
-type MdDiff {
-  schema: String
-  PLACEHOLDER_VALUE_COLON String
-}
+# diff facet
+ type Placeholder { body: String! }

@@ -1,0 +1,6 @@
+dialect grammar stdio.ply.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.ply' NL
+body = payload NL?
+payload = *OCTET

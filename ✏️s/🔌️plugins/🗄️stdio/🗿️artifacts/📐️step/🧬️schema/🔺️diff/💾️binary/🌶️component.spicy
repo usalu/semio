@@ -1,0 +1,4 @@
+module Stdio_step_diff;
+type Document = unit {
+    payload: bytes &eod;
+};

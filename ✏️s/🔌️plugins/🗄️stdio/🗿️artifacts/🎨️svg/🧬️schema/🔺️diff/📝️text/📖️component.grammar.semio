@@ -1,0 +1,6 @@
+dialect grammar stdio.svg.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.svg' NL
+body = payload NL?
+payload = *OCTET

@@ -1,0 +1,3 @@
+(* ebnf stdio.las snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.las', newline ;

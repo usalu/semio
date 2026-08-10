@@ -1,0 +1,3 @@
+; abnf stdio.glb diff
+document = payload
+payload = *OCTET

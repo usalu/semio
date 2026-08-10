@@ -1,0 +1,3 @@
+(* ebnf stdio.svg snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.svg', newline ;

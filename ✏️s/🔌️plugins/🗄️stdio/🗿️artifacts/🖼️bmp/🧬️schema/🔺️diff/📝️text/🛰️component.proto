@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.stdio_bmp.diff_text;
+message Document { string schema = 1; bytes payload = 2; }

@@ -1,22 +1,7 @@
 //! 🏗️ CsvBuilder — local ArtifactBuilder until SDK Wave 3.
 
+use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::csv::{CsvDiff, CsvMutation, CsvSnapshot};
-
-//#region 🔖️LocalContracts
-/// 🏗️ Local builder contract (W3 swaps to SDK `ArtifactBuilder`).
-pub trait ArtifactBuilder: Sized {
-    type Snapshot;
-    type Mutation;
-    type Diff;
-    fn empty() -> Self;
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self;
-    fn from_text(text: &str) -> Result<Self, store::TextError>;
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError>;
-    fn mutate(self, mutation: Self::Mutation) -> Self;
-    fn absorb(self, diff: Self::Diff) -> Self;
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>>;
-}
-//#endregion 🔖️LocalContracts
 
 //#region 🔖️Builder
 /// 🏗️ Builds a `stdio.csv` snapshot.

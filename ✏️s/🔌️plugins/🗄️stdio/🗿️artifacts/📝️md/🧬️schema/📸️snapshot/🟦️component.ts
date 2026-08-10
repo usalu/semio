@@ -1,5 +1,2 @@
-/** 🧬️ MdSnapshot schema. */
-export interface MdSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ PLACEHOLDER_VALUE_COLON unknown;
-}
+/** schema facet */
+export interface Placeholder { body: string; }

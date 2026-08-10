@@ -1,0 +1,6 @@
+dialect grammar stdio.zip.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.zip' NL
+body = payload NL?
+payload = *OCTET

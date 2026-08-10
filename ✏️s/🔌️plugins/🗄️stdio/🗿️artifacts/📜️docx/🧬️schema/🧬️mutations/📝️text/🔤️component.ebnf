@@ -1,0 +1,3 @@
+(* ebnf stdio.docx mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.docx', newline ;

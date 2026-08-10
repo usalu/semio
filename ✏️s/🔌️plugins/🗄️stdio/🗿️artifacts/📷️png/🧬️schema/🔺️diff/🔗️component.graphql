@@ -1,0 +1,5 @@
+# 🧬️ PngDiff
+type PngDiff {
+  schema: String
+  bytes: String
+}

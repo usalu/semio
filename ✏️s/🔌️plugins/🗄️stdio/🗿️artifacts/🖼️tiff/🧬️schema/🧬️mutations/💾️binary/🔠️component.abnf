@@ -1,0 +1,3 @@
+; abnf stdio.tiff mutations
+document = payload
+payload = *OCTET

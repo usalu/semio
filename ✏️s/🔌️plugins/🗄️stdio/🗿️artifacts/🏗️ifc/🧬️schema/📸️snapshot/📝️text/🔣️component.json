@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.ifc/snapshot/text.json",
+  "title": "IfcSnapshotText",
+  "type": "object"
+}

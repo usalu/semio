@@ -13,13 +13,13 @@ todos:
     status: completed
   - id: w3-sdk
     content: "W3: Add ArtifactBuilder/ArtifactDecomposer/Decomposition traits and PluginBuilder::artifact_kind, collapse the duplicated os/host media registry into one artifact-kind-keyed registry, and delete MediaFormat plus every legacy io helper and stub codec"
-    status: in_progress
+    status: completed
   - id: w4a-codec-deps
     content: "W4a: 8 parallel agents implement the dependency-layer stdio artifacts (binary, txt, json, xml, deflate, zip, csv, md) with real spec-compliant codecs including inflate/deflate, CRC32, and Adler32"
-    status: pending
+    status: completed
   - id: w4b-codec-leaves
     content: "W4b: 21 parallel agents implement the leaf-format stdio artifacts (png, jpg, gif, bmp, tiff, pdf, docx, pptx, xlsx, svg, obj, stl, ply, las, gltf, glb, step, ifc, dwg, dxf, bcf) with real codecs and third-party-verified conformance tests"
-    status: pending
+    status: in_progress
   - id: w5-pilots
     content: "W5: Build note and cad end to end on the new shape (schema absorb, builder, decomposer, io through stdio artifacts) as the verbatim reference for the fan-out"
     status: pending

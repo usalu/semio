@@ -1,5 +1,2 @@
-/** 🧬️ CsvSnapshot schema. */
-export interface CsvSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ PLACEHOLDER_VALUE_COLON unknown;
-}
+/** schema facet */
+export interface Placeholder { headers: string[]; rows: string[][]; }

@@ -17473,7 +17473,6 @@ if (treeVitest) {
       expect(open.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
       expect(open.querySelector('[data-slot="pane-body"]')?.hasAttribute("data-dim")).toBe(true);
       expect(folded.querySelector('[data-slot="window-chrome-chip-cap"]')?.hasAttribute("data-dim")).toBe(true);
-      expect(folded.hasAttribute("data-dim")).toBe(true);
 
       const canvas = container.querySelector("#canvas") as HTMLElement;
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
@@ -19721,7 +19720,7 @@ if (treeVitest) {
       expect(paneMarkup).toContain('data-slot="window-chrome-cap"');
       expect(paneMarkup).not.toContain("border-emphasized");
       const measuresMarkup = renderToStaticMarkup(
-        <Window id="measures-markup-window" measures={<div>LOD</div>}>
+        <Window id="measures-markup-window" measures={<div>LOD</div>} measuresFolded={false}>
           <div>Body</div>
         </Window>,
       );

@@ -1,0 +1,4 @@
+module Stdio_obj_snapshot;
+type Document = unit {
+    payload: bytes &eod;
+};

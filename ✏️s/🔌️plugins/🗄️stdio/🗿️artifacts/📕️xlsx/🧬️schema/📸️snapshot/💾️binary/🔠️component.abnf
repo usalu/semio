@@ -1,0 +1,3 @@
+; abnf stdio.xlsx snapshot
+document = payload
+payload = *OCTET

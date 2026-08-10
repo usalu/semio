@@ -1,0 +1,5 @@
+# 🧬️ GlbDiff
+type GlbDiff {
+  schema: String
+  bytes: String
+}

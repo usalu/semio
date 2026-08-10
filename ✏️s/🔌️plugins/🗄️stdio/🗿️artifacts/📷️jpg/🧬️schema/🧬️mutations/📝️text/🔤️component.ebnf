@@ -1,0 +1,3 @@
+(* ebnf stdio.jpg mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.jpg', newline ;

@@ -1,0 +1,4 @@
+module Stdio_pptx_mutations;
+type Document = unit {
+    payload: bytes &eod;
+};

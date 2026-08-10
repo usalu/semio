@@ -1,5 +1,2 @@
-# 🧬️ MdSnapshot
-type MdSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_VALUE_COLON String! @state(class: PERSISTENT)
-}
+# schema facet
+ type Placeholder { body: String! }

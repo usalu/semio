@@ -1,0 +1,3 @@
+(* ebnf stdio.las mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.las', newline ;

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.deflate/snapshot/text.json",
+  "title": "DeflateSnapshotText",
+  "type": "object"
+}

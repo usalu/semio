@@ -1,0 +1,5 @@
+# 🧬️ IfcDiff
+type IfcDiff {
+  schema: String
+  PLACEHOLDER_TEXT_COLON String
+}

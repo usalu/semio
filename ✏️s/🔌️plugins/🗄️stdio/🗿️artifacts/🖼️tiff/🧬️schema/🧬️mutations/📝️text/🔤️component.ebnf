@@ -1,0 +1,3 @@
+(* ebnf stdio.tiff mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.tiff', newline ;

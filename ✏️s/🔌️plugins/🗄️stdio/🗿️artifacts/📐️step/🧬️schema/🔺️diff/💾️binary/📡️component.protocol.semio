@@ -1,0 +1,3 @@
+dialect protocol stdio.step.diff
+magic = %x00
+payload = *OCTET

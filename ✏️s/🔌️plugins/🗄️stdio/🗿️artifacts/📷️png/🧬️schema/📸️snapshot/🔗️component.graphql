@@ -1,0 +1,8 @@
+type PngEntry {
+  name: String!
+  data: [Int!]!
+}
+type PngSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  entries: [PngEntry!]! @state(class: PERSISTENT)
+}

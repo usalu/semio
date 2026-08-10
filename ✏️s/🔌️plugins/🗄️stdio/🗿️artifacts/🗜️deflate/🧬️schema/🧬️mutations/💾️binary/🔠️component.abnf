@@ -1,0 +1,3 @@
+; abnf stdio.deflate mutations
+document = payload
+payload = *OCTET

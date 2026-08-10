@@ -1,0 +1,3 @@
+(* ebnf stdio.deflate mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.deflate', newline ;

@@ -1,0 +1,3 @@
+(* ebnf stdio.gltf snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.gltf', newline ;

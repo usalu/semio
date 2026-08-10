@@ -1,0 +1,3 @@
+(* ebnf stdio.dxf snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.dxf', newline ;

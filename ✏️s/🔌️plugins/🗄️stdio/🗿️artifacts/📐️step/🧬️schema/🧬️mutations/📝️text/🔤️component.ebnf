@@ -1,0 +1,3 @@
+(* ebnf stdio.step mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.step', newline ;

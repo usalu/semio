@@ -1,0 +1,3 @@
+dialect protocol stdio.deflate.snapshot
+magic = %x00
+payload = *OCTET

@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.csv` snapshot.
+/// 📸️ Persisted `stdio.csv` snapshot (RFC4180-ish table).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
@@ -14,18 +14,85 @@ pub struct CsvSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    PLACEHOLDER_PUB_VALUE PLACEHOLDER_VALUE_TYPE,
+    pub headers: Vec<String>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub rows: Vec<Vec<String>>,
 }
 
 impl Default for CsvSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
-            PLACEHOLDER_VALUE_COLON PLACEHOLDER_VALUE_TYPE::Null,
+            headers: Vec::new(),
+            rows: Vec::new(),
         }
     }
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️CsvTextCodec
+fn csv_escape_row(cells: &[String]) -> String {
+    cells
+        .iter()
+        .map(|c| {
+            if c.contains(',') || c.contains('"') || c.contains('\n') || c.contains('\r') {
+                format!("\"{}\"", c.replace('"', "\"\""))
+            } else {
+                c.clone()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn csv_parse_row(line: &str) -> Vec<String> {
+    let mut cells = Vec::new();
+    let mut cur = String::new();
+    let mut in_q = false;
+    let mut chars = line.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if in_q {
+            if ch == '"' {
+                if chars.peek() == Some(&'"') {
+                    chars.next();
+                    cur.push('"');
+                } else {
+                    in_q = false;
+                }
+            } else {
+                cur.push(ch);
+            }
+        } else if ch == '"' {
+            in_q = true;
+        } else if ch == ',' {
+            cells.push(cur.clone());
+            cur.clear();
+        } else {
+            cur.push(ch);
+        }
+    }
+    cells.push(cur);
+    cells
+}
+
+pub fn csv_table_to_text(headers: &[String], rows: &[Vec<String>]) -> String {
+    let mut out = csv_escape_row(headers);
+    out.push('\n');
+    for row in rows {
+        out.push_str(&csv_escape_row(row));
+        out.push('\n');
+    }
+    out
+}
+
+pub fn csv_table_from_text(text: &str) -> (Vec<String>, Vec<Vec<String>>) {
+    let mut lines = text.lines();
+    let headers = csv_parse_row(lines.next().unwrap_or(""));
+    let rows = lines.filter(|l| !l.is_empty()).map(|l| csv_parse_row(l)).collect();
+    (headers, rows)
+}
+//#endregion 🔖️CsvTextCodec
 
 //#region 🔖️HandcraftedDocumentCodecs
 impl store::DocumentDsl for CsvSnapshot {
@@ -37,13 +104,11 @@ impl store::DocumentDsl for CsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let value = serde_csv::from_str(body.trim()).map_err(|e| {
-            store::TextError::new(format!("csv parse: {e}"), dsl::TextSpan::at(1, 1))
-        })?;
-        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), value })
+        let (headers, rows) = csv_table_from_text(body);
+        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
     }
     fn print_dsl(&self) -> String {
-        let body = serde_csv::to_string_pretty(&PLACEHOLDER_SELF_VALUE).unwrap_or_else(|_| "null".into());
+        let body = csv_table_to_text(&self.headers, &self.rows);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -56,8 +121,7 @@ impl store::DocumentDsl for CsvSnapshot {
 impl store::DocumentPack for CsvSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-
-        let raw = serde_csv::to_vec(&PLACEHOLDER_SELF_VALUE).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = csv_table_to_text(&self.headers, &self.rows).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -66,7 +130,6 @@ impl store::DocumentPack for CsvSnapshot {
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
@@ -77,8 +140,9 @@ impl store::DocumentPack for CsvSnapshot {
             )));
         }
         let _ = options;
-        let value = serde_csv::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), value })
+        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (headers, rows) = csv_table_from_text(&text);
+        Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
     }
 }
 //#endregion 🔖️HandcraftedDocumentCodecs

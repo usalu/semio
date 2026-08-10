@@ -1,0 +1,5 @@
+# 🧬️ DeflateSnapshot
+type DeflateSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  bytes: String! @state(class: PERSISTENT)
+}

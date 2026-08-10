@@ -1,0 +1,4 @@
+module Stdio_glb_mutations;
+type Document = unit {
+    payload: bytes &eod;
+};

@@ -1,0 +1,3 @@
+(* ebnf stdio.tiff diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.tiff', newline ;

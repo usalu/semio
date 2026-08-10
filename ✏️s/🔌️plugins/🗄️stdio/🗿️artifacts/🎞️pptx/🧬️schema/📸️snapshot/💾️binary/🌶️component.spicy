@@ -1,0 +1,4 @@
+module Stdio_pptx_snapshot;
+type Document = unit {
+    payload: bytes &eod;
+};

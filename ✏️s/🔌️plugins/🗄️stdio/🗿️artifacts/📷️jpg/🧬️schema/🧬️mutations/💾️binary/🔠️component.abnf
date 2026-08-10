@@ -1,0 +1,3 @@
+; abnf stdio.jpg mutations
+document = payload
+payload = *OCTET

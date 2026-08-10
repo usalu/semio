@@ -1,6 +1,6 @@
 //! 🧬️ CsvArtifact schema — full artifact state.
 
-use crate::artifacts::csv::{CsvSnapshot};
+use crate::artifacts::csv::CsvSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,10 @@ pub struct CsvArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    PLACEHOLDER_PUB_VALUE PLACEHOLDER_VALUE_TYPE,
+    pub headers: Vec<String>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub rows: Vec<Vec<String>>,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +33,7 @@ impl CsvArtifact {
     pub fn to_snapshot(&self) -> CsvSnapshot {
         CsvSnapshot {
             schema: self.schema.clone(),
-            PLACEHOLDER_VALUE_COLON PLACEHOLDER_SELF_VALUE.clone(),
+            headers: self.headers.clone(),            rows: self.rows.clone(),
         }
     }
 
@@ -38,14 +41,14 @@ impl CsvArtifact {
     pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            PLACEHOLDER_VALUE_COLON snapshot.value,
+            headers: snapshot.headers,            rows: snapshot.rows,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
-        PLACEHOLDER_SELF_VALUE = snapshot.value;
+        self.headers = snapshot.headers;        self.rows = snapshot.rows;
     }
 }
 //#endregion 🔖️Conversions
@@ -59,21 +62,21 @@ pub fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             rust: include_str!("🦀️component.rs"),
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
-            csv_schema: include_str!("🔣️component.csv"),
+            json_schema: include_str!("🔣️component.json"),
             proto: include_str!("🛰️component.proto"),
         },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️component.rs"),
             typescript: include_str!("📸️snapshot/🟦️component.ts"),
             graphql: include_str!("📸️snapshot/🔗️component.graphql"),
-            csv_schema: include_str!("📸️snapshot/🔣️component.csv"),
+            json_schema: include_str!("📸️snapshot/🔣️component.json"),
             proto: include_str!("📸️snapshot/🛰️component.proto"),
         },
         diff: schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️component.rs"),
             typescript: include_str!("🔺️diff/🟦️component.ts"),
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
-            csv_schema: include_str!("🔺️diff/🔣️component.csv"),
+            json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
     }

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.gltf/diff/text.gltf",
+  "title": "GltfDiffText",
+  "type": "object"
+}

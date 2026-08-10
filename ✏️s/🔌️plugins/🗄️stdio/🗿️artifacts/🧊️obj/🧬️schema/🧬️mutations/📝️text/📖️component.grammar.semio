@@ -1,0 +1,6 @@
+dialect grammar stdio.obj.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.obj' NL
+body = payload NL?
+payload = *OCTET

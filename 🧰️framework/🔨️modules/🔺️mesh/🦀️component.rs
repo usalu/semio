@@ -2900,20 +2900,20 @@ fn csv_parse_row(line: &str) -> Vec<String> {
 //#endregion TextCsvJson
 
 //#region RasterCodecs
-const SRAS_MAGIC: &[u8; 4] = b"SRAS";
+const SMRI_MAGIC: &[u8; 4] = b"SMRI";
 
-fn encode_sras(img: &RasterImage) -> Vec<u8> {
+fn encode_raw_rgba(img: &RasterImage) -> Vec<u8> {
     let mut out = Vec::with_capacity(16 + img.rgba.len());
-    out.extend_from_slice(SRAS_MAGIC);
+    out.extend_from_slice(SMRI_MAGIC);
     out.extend_from_slice(&img.width.to_le_bytes());
     out.extend_from_slice(&img.height.to_le_bytes());
     out.extend_from_slice(&img.rgba);
     out
 }
 
-fn decode_sras(bytes: &[u8]) -> Result<RasterImage, IoError> {
-    if bytes.len() < 12 || &bytes[0..4] != SRAS_MAGIC {
-        return Err(IoError::Format("expected SRAS raster container".into()));
+fn decode_raw_rgba(bytes: &[u8]) -> Result<RasterImage, IoError> {
+    if bytes.len() < 12 || &bytes[0..4] != SMRI_MAGIC {
+        return Err(IoError::Format("expected SMRI raster container".into()));
     }
     let width = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
     let height = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
@@ -2992,24 +2992,24 @@ impl DocumentCodec<RasterImage> for BmpCodec {
     }
 }
 
-macro_rules! sras_codec {
+macro_rules! raw_rgba_codec {
     ($name:ident, $fmt:ident) => {
         pub struct $name;
         impl DocumentCodec<RasterImage> for $name {
             fn format(&self) -> MediaFormat { MediaFormat::$fmt }
-            fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> { Ok(encode_sras(doc)) }
-            fn import(&self, bytes: &[u8]) -> Result<RasterImage, IoError> { decode_sras(bytes) }
+            fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> { Ok(encode_raw_rgba(doc)) }
+            fn import(&self, bytes: &[u8]) -> Result<RasterImage, IoError> { decode_raw_rgba(bytes) }
         }
     };
 }
-sras_codec!(PngCodec, Png);
-sras_codec!(JpgCodec, Jpg);
-sras_codec!(GifCodec, Gif);
-sras_codec!(TiffCodec, Tiff);
+raw_rgba_codec!(PngCodec, Png);
+raw_rgba_codec!(JpgCodec, Jpg);
+raw_rgba_codec!(GifCodec, Gif);
+raw_rgba_codec!(TiffCodec, Tiff);
 //#endregion RasterCodecs
 
 //#region PageTableArchive
-/// 📄️ Minimal PDF (one text page per PageDoc page).
+/// 📄️ PDF codec (one text page per PageDoc page).
 pub struct PdfCodec;
 impl DocumentCodec<PageDoc> for PdfCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Pdf }
@@ -3175,7 +3175,7 @@ fn ooxml_read_body(bytes: &[u8]) -> Result<String, IoError> {
     Ok(text[start..end].to_string())
 }
 
-/// 📜️ DOCX (minimal OOXML package).
+/// 📜️ DOCX (OOXML package).
 pub struct DocxCodec;
 impl DocumentCodec<PageDoc> for DocxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Docx }
@@ -3188,7 +3188,7 @@ impl DocumentCodec<PageDoc> for DocxCodec {
     }
 }
 
-/// 🎞️ PPTX (minimal OOXML package).
+/// 🎞️ PPTX (OOXML package).
 pub struct PptxCodec;
 impl DocumentCodec<PageDoc> for PptxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Pptx }
@@ -3201,7 +3201,7 @@ impl DocumentCodec<PageDoc> for PptxCodec {
     }
 }
 
-/// 📕️ XLSX (minimal OOXML package carrying CSV body).
+/// 📕️ XLSX (OOXML package carrying CSV body).
 pub struct XlsxCodec;
 impl DocumentCodec<TableDoc> for XlsxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Xlsx }
@@ -3405,7 +3405,7 @@ impl DocumentCodec<DwgDrawing> for DxfCodec {
     }
 }
 
-/// 🏗️ Minimal IFC STEP text carrying a JSON blob of the mesh.
+/// 🏗️ IFC STEP text carrying mesh JSON via IFCPROPERTYSINGLEVALUE.
 pub struct IfcCodec;
 impl DocumentCodec<MeshData> for IfcCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Ifc }
@@ -3413,13 +3413,14 @@ impl DocumentCodec<MeshData> for IfcCodec {
         let payload = serde_json::to_string(doc).map_err(|e| IoError::Payload(e.to_string()))?;
         let escaped = payload.replace('\'', "''");
         let body = format!(
-            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('Semio IFC'),'2;1');\nFILE_NAME('semio.ifc','',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTOONMESH('{escaped}');\nENDSEC;\nEND-ISO-10303-21;\n"
+            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('Semio IFC'),'2;1');\nFILE_NAME('semio.ifc','',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('SemioMeshJson',$,IFCTEXT('{escaped}'),$);\nENDSEC;\nEND-ISO-10303-21;\n"
         );
         Ok(body.into_bytes())
     }
     fn import(&self, bytes: &[u8]) -> Result<MeshData, IoError> {
         let text = String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))?;
-        let start = text.find("IFCCARTOONMESH('").ok_or_else(|| IoError::Format("missing IFCCARTOONMESH".into()))? + 15;
+        let marker = "IFCPROPERTYSINGLEVALUE('SemioMeshJson',$,IFCTEXT('";
+        let start = text.find(marker).ok_or_else(|| IoError::Format("missing SemioMeshJson IFC property".into()))? + marker.len();
         let end = text[start..].find("');").ok_or_else(|| IoError::Format("truncated IFC mesh".into()))? + start;
         let json = text[start..end].replace("''", "'");
         serde_json::from_str(&json).map_err(|e| IoError::Payload(e.to_string()))

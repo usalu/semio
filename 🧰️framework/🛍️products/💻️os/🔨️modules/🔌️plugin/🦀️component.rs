@@ -5720,7 +5720,7 @@ pub mod app {
     impl Plugin {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
-                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new()  artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
                 apps: HashMap::new(),
             }
         }
@@ -5742,6 +5742,12 @@ pub mod app {
 
         pub fn contributes(mut self, contribution: Contribution) -> Self {
             self.manifest.contributions.push(contribution);
+            self
+        }
+
+        /// 🗂️ Declares one plugin-level artifact kind (library plugins use this; repeatable).
+        pub fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
+            self.manifest.artifact_kinds.push(spec);
             self
         }
 

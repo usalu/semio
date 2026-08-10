@@ -1,0 +1,6 @@
+dialect grammar stdio.jpg.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.jpg' NL
+body = payload NL?
+payload = *OCTET
