@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ Din4108Builder (final) meta. */
+export const meta = {
+  artifactKind: "s.din4108",
+  standard: "1",
+  subset: "*",
+} as const;

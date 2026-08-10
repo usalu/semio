@@ -1,34 +1,21 @@
-//! Block5dBuilder
+//! 🏗️ Block5dBuilder (final, artifact-level) — delegates to the 1 standard.
+
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::block5d::{Block5dDiff, Block5dMutation, Block5dSnapshot};
+use crate::artifacts::block5d::standards::v1::builder::Block5dBuilder as Block5dRawBuilder;
 
-#[derive(Clone, Debug, Default)]
-pub struct Block5dBuilder {
-    snapshot: Block5dSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+#[derive(Clone, Debug)]
+pub struct Block5dBuilder(Block5dRawBuilder);
 
 impl ArtifactBuilder for Block5dBuilder {
     type Snapshot = Block5dSnapshot;
     type Mutation = Block5dMutation;
     type Diff = Block5dDiff;
-    fn empty() -> Self { Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<Block5dSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<Block5dSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::block5d::schema::mutations::apply_block5d_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(Block5dRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(Block5dRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(Block5dRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(Block5dRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

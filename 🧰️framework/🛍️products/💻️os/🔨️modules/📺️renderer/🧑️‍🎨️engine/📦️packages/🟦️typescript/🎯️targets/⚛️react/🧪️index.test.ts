@@ -2560,6 +2560,7 @@ describe("framework renderer hosts", () => {
     });
     expect(resolveWorldContextMenuTarget({}, { hoveredComponent: { objectId: "obj-1" }, hoveredId: "reference:ref-1" })).toEqual({ kind: "object", id: "obj-1" });
     expect(resolveWorldContextMenuTarget({}, { hoveredId: "reference:ref-1" })).toEqual({ kind: "reference", id: "ref-1" });
+    expect(resolveWorldContextMenuTarget({}, { hoveredId: "obj-1" })).toEqual({ kind: "object", id: "obj-1" });
     expect(resolveWorldContextMenuTarget({}, {})).toBeNull();
   });
 

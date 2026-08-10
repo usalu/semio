@@ -1,35 +1,21 @@
-//! En1994Builder
+//! 🏗️ En1994Builder (final, artifact-level) — delegates to the 1 standard.
+
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::en1994::{En1994Diff, En1994Mutation, En1994Snapshot};
+use crate::artifacts::en1994::standards::v1::builder::En1994Builder as En1994RawBuilder;
 
-#[derive(Clone, Debug, Default)]
-pub struct En1994Builder {
-    snapshot: En1994Snapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+#[derive(Clone, Debug)]
+pub struct En1994Builder(En1994RawBuilder);
 
 impl ArtifactBuilder for En1994Builder {
     type Snapshot = En1994Snapshot;
     type Mutation = En1994Mutation;
     type Diff = En1994Diff;
-    fn empty() -> Self { Self { snapshot: En1994Snapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<En1994Snapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<En1994Snapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        let d = <En1994Mutation as protocol::Mutation<En1994Snapshot>>::diff(&mutation, &self.snapshot);
-        self.snapshot = <En1994Diff as protocol::MutationDiff<En1994Snapshot>>::apply(&d, &self.snapshot);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <En1994Diff as protocol::MutationDiff<En1994Snapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(En1994RawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(En1994RawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(En1994RawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(En1994RawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

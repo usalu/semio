@@ -1088,12 +1088,13 @@ function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPrev
 
 type WorldContextMenuTarget = { readonly kind: "vortex" | "object" | "reference"; readonly id: string };
 
-/** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, then hovered object component, then hovered reference. */
+/** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, object component, reference, then object. */
 export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecord, selection: WorldSelectionRecord): WorldContextMenuTarget | null {
   if (interaction.hoveredVortexFullId) return { kind: "vortex", id: interaction.hoveredVortexFullId };
   if (selection.hoveredComponent?.objectId) return { kind: "object", id: selection.hoveredComponent.objectId };
   const hoveredId = selection.hoveredId;
   if (hoveredId?.startsWith("reference:")) return { kind: "reference", id: hoveredId.slice("reference:".length) };
+  if (hoveredId) return { kind: "object", id: hoveredId };
   return null;
 }
 

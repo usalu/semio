@@ -1,34 +1,21 @@
-//! Fem3dBuilder
+//! 🏗️ Fem3dBuilder (final, artifact-level) — delegates to the 1 standard.
+
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::fem3d::{Fem3dDiff, Fem3dMutation, Fem3dSnapshot};
+use crate::artifacts::fem3d::standards::v1::builder::Fem3dBuilder as Fem3dRawBuilder;
 
-#[derive(Clone, Debug, Default)]
-pub struct Fem3dBuilder {
-    snapshot: Fem3dSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+#[derive(Clone, Debug)]
+pub struct Fem3dBuilder(Fem3dRawBuilder);
 
 impl ArtifactBuilder for Fem3dBuilder {
     type Snapshot = Fem3dSnapshot;
     type Mutation = Fem3dMutation;
     type Diff = Fem3dDiff;
-    fn empty() -> Self { Self { snapshot: Fem3dSnapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<Fem3dSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<Fem3dSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::fem3d::schema::mutations::apply_fem3d_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(Fem3dRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(Fem3dRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(Fem3dRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(Fem3dRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

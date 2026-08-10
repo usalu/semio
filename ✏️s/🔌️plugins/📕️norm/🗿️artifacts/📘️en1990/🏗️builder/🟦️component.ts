@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ En1990Builder (final) meta. */
+export const meta = {
+  artifactKind: "s.en1990",
+  standard: "1",
+  subset: "*",
+} as const;

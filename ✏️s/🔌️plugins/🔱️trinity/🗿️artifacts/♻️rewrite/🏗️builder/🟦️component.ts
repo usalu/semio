@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ RewriteBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.rewrite",
+  standard: "1",
+  subset: "*",
+} as const;

@@ -1,0 +1,11 @@
+//! 🎹️ En1999Composer (1 standard) — aggregates its subsets' composer entries value-level.
+
+use std::sync::OnceLock;
+use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+use crate::artifacts::en1999::standards::v1::subsets::any::composer::En1999Composer as En1999AnyComposer;
+
+static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+pub fn entries() -> &'static [ComposerEntry] {
+    ENTRIES.get_or_init(|| vec![composer_entry_of::<En1999AnyComposer>()]).as_slice()
+}

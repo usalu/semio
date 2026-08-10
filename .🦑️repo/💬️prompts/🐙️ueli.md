@@ -369,7 +369,12 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 The current artifact mechanisms are extremely adhoc. Most implementations are just stubbed, the latest standards of the major common artifacts are not implemented, the builder/analyzer/composer are not composable, properly abstracted, clean mechanisms are missing and are not enforced.
 Overhaul and complete everything.
 The goal is to have a an artifact system where artifacts can evolve, adhere to existing specifications and are fully integrated into the os system (apps can reuse the builder/analyzer/composer of other plugins).
-Everything must be thought together (schema, version control, multi-user, etc)
+Everything must be thought together (schema, standards, subsets, version control, multi-user, etc)
+You must use existing files for testing (recreate them by using the anaylzer and then the builder).
+Some violations:
+e.g. gltf and glb are not different artifact, just different serialization of the same artifact.
+e.g. most test are not real tests for testing artifacts internals but just stubs such as ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🧪️tests/🦀️test.rs
+e.g. the builders must be specific to where they are such as ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs which should be usable to build a full 1.1. svg artifact.
 
 ---
 

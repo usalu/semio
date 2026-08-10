@@ -188,14 +188,50 @@ def build_io_tree(art_root, art_rel, indent):
     return "".join(out)
 
 
+def emit_engine_subtree(abs_dir, leaf_rel, indent):
+    """Mount one ⚙️engine subdir, recursing into ITS OWN subdirectories that carry a
+    🦀️component.rs (e.g. puzzle's engine/geometry/flatten/ -- a facet nested two levels deep, not
+    just the one level lowpoly's paint/media already covered). A leaf-flat directory (no further
+    nested facets) still gets the simple single #[path] form; only directories that actually need
+    a body get the brace-nested `mod component; pub use component::*;` + child mounts form."""
+    I = "    " * indent
+    children = sorted(
+        d for d in os.listdir(abs_dir)
+        if os.path.isdir(os.path.join(abs_dir, d)) and os.path.isfile(os.path.join(abs_dir, d, "🦀️component.rs"))
+    )
+    if not children:
+        return None  # caller emits the simple flat form
+    out = [f'{I}#[path = "."]\n{I}pub mod {{ident}} {{\n']
+    out.append(f'{I}    #[path = "{leaf(leaf_rel)}"]\n{I}    mod component;\n{I}    pub use component::*;\n')
+    for c in children:
+        c_ident = rust_ident_from_slug_dir(c)
+        c_abs = os.path.join(abs_dir, c)
+        c_leaf_rel = f"{leaf_rel}/{c}"
+        nested = emit_engine_subtree(c_abs, c_leaf_rel, indent + 1)
+        if nested:
+            out.append(nested.replace("{ident}", c_ident, 1))
+        else:
+            out.append(f'{I}    #[path = "{leaf(c_leaf_rel)}"]\n{I}    pub mod {c_ident};\n')
+    out.append(f'{I}}}\n')
+    return "".join(out)
+
+
 def build_engine_mount(art_root, art_dir, indent, plugin_dir, kind_mod):
     """⚙️engine is usually a single file, but some domain artifacts' engines are a directory with
-    their own sub-facets (e.g. lowpoly's 🎨️paint/, 🧵️media/) -- mount those too when present."""
+    their own sub-facets (e.g. lowpoly's 🎨️paint/, 🧵️media/), occasionally nested two levels deep
+    (puzzle's engine/geometry/flatten/) -- mount those too when present."""
     I = "    " * indent
     engine_abs = os.path.join(art_root, "🏅️standards", STD_DIR, "⚙️engine")
     subdirs = sorted(
         d for d in os.listdir(engine_abs)
-        if os.path.isdir(os.path.join(engine_abs, d))
+        # Skip genuinely empty subdirs (no component.rs anywhere in the subtree) -- confirmed one
+        # such stray empty dir (process3d's engine/catalogs/) that isn't even in the pre-session
+        # commit's tracked tree (git doesn't track empty dirs), so it was always dead cruft, not
+        # something the move step should have populated. Blindly mounting it as `pub mod X;`
+        # produces a "couldn't read <path>: No such file" hard error.
+        if os.path.isdir(os.path.join(engine_abs, d)) and any(
+            fn == "🦀️component.rs" for _r, _dirs, files in os.walk(os.path.join(engine_abs, d)) for fn in files
+        )
     ) if os.path.isdir(engine_abs) else []
     engine_idents = {rust_ident_from_slug_dir(sd) for sd in subdirs}
     engine_shims = extract_engine_legacy_shims(plugin_dir, kind_mod, engine_idents)
@@ -205,7 +241,13 @@ def build_engine_mount(art_root, art_dir, indent, plugin_dir, kind_mod):
     out.append(f'{I}    #[path = "{leaf(f"{art_dir}/🏅️standards/{STD_DIR}/⚙️engine")}"]\n{I}    mod component;\n{I}    pub use component::*;\n')
     for sd in subdirs:
         ident = rust_ident_from_slug_dir(sd)
-        out.append(f'{I}    #[path = "{leaf(f"{art_dir}/🏅️standards/{STD_DIR}/⚙️engine/{sd}")}"]\n{I}    pub mod {ident};\n')
+        sd_abs = os.path.join(engine_abs, sd)
+        sd_leaf_rel = f"{art_dir}/🏅️standards/{STD_DIR}/⚙️engine/{sd}"
+        nested = emit_engine_subtree(sd_abs, sd_leaf_rel, indent + 1)
+        if nested:
+            out.append(nested.replace("{ident}", ident, 1))
+        else:
+            out.append(f'{I}    #[path = "{leaf(sd_leaf_rel)}"]\n{I}    pub mod {ident};\n')
     for shim_text in engine_shims:
         out.append(f'{I}    {shim_text}\n')
     out.append(f'{I}}}\n')
