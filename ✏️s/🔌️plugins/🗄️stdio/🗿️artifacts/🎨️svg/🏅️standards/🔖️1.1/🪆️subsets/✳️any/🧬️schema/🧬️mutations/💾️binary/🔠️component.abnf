@@ -1,0 +1,3 @@
+; abnf stdio.svg mutations
+document = payload
+payload = *OCTET

@@ -7,7 +7,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &BinarySnapshot) -> Result<JpgSnapshot, store::PackError> {
     let mut snap = crate::artifacts::jpg::engine::decode_jpg(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_JPG_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

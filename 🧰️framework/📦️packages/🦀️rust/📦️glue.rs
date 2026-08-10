@@ -48,11 +48,13 @@ pub use mesh::{
     CommandFieldSpec, CommandVariantSpec, CommandGrammar,
 };
 pub use io::{
-    StandardId, SubsetId, Dialect,
+    StandardId, SubsetId, Dialect, ArtifactDialect,
     AnalyzeSource, Confidence as IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
     IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
     IoDirection, IoKey, IoResolveError,
     register_composer_entries, resolve as io_resolve, dialects_for as io_dialects_for,
+    io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
+    WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use manifest::*;

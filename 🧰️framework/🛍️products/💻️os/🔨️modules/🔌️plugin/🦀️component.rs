@@ -14,7 +14,7 @@ pub mod component {
     });
 
     use exports::semio::framework::plugin::Guest;
-    use semio::framework::types::{MigrateDocumentInput, MigrateDocumentOutput, PluginError};
+    use semio::framework::types::{MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
 
     pub struct ComponentGuest;
@@ -42,6 +42,17 @@ pub mod component {
         fn clear_instance_guard() {
             plugin_clear_instance_guard();
         }
+
+        fn list_artifact_dialects() -> Vec<u8> {
+            ensure_plugin_initialized();
+            crate::wire_list_composer_entries()
+        }
+
+        fn artifact_compose(key: Vec<u8>, sources: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+            ensure_plugin_initialized();
+            crate::wire_artifact_compose(&key, &sources)
+                .map_err(|message| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-compose"), message))))
+        }
     }
 
     export!(ComponentGuest);
@@ -66,6 +77,38 @@ pub mod component {
 
     pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
         semio::framework::host::read_asset(handle).map_err(|fault| dsl::decode_fault_bytes(&fault).message)
+    }
+
+    /// 📦️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): `kind`/
+    /// `direction` ("import"|"export") in, JSON `Vec<io::ArtifactDialect>` bytes out.
+    pub fn host_io_dialects(kind: &str, direction: &str) -> Result<Vec<u8>, String> {
+        semio::framework::host::io_dialects(kind, direction).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
+    }
+
+    /// 📦️ Routes a compose request to whichever OTHER plugin the host's `IoRouter` says owns `key`
+    /// — the guest-side half of cross-plugin reuse. `key`/`sources`/result are the same JSON shapes
+    /// `wire_artifact_compose`/`wire_list_composer_entries` use.
+    pub fn host_io_compose(key: &[u8], sources: &[u8]) -> Result<Vec<u8>, String> {
+        semio::framework::host::io_compose(key, sources).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
+    }
+
+    /// 🌉️ Installs the guest-side `io_dispatch` fallback hook: a local registry miss is retried via
+    /// the host's `io-compose` import, which routes to whichever OTHER loaded plugin owns the key.
+    /// Called once from `ensure_plugin_initialized` — see that function's own doc comment for why
+    /// this can't live in the (non-wasm-gated) `plugin_runtime` module directly.
+    pub fn install_io_fallback_dispatcher() {
+        crate::set_io_fallback_dispatcher(|key, sources| {
+            let key_bytes = serde_json::to_vec(key).ok()?;
+            let wire_sources: Vec<crate::WireComposeSource> = sources
+                .iter()
+                .map(|source| crate::WireComposeSource { dialect: crate::ArtifactDialect::from(source.dialect), payload: source.payload.clone() })
+                .collect();
+            let sources_bytes = serde_json::to_vec(&wire_sources).ok()?;
+            match host_io_compose(&key_bytes, &sources_bytes) {
+                Ok(result_bytes) => Some(crate::wire_decode_composed_artifact(&result_bytes).map_err(|message| crate::ComposeError { message, diagnostics: Vec::new() })),
+                Err(message) => Some(Err(crate::ComposeError { message, diagnostics: Vec::new() })),
+            }
+        });
     }
 }
 
@@ -308,11 +351,13 @@ pub mod app {
     /// 2). Defined in `semio_framework` (alongside `MediaFormat`) so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
     pub use semio_framework::{
-        StandardId, SubsetId, Dialect,
+        StandardId, SubsetId, Dialect, ArtifactDialect,
         AnalyzeSource, IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
         IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
         IoDirection, IoKey, IoResolveError,
         register_composer_entries, io_resolve, io_dialects_for,
+        io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
+        WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
     };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
@@ -1097,7 +1142,7 @@ pub mod app {
             AppDefinition {
                 id: self.id,
                 label: self.label,
-                document: self.document,
+                breadcrumb: self.document,
                 icon_id: self.icon_id,
                 controller_id: self.controller_id,
                 modes: Modes::try_from(self.modes.into_iter().map(|mode| ModeDefinition { id: mode.id, label: mode.label, icon_id: mode.icon_id, tools: mode.tools, layout_id: mode.layout_id, commands: mode.commands }).collect::<Vec<_>>())
@@ -3014,7 +3059,7 @@ pub mod app {
 
         /// 🧬️ Converts into a manifest [`ExampleDefinition`] (`app_id` filled at plugin registration).
         pub fn into_example_definition(self) -> ExampleDefinition {
-            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, document_json: self.document_json, app_id: String::new() }
+            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json: self.document_json, app_id: String::new() }
         }
     }
 
@@ -3030,7 +3075,7 @@ pub mod app {
                 id: source.id.clone(),
                 label: source.label.clone(),
                 icon_id: source.icon_id,
-                document_json: source.document_json.clone(),
+                artifact_json: source.document_json.clone(),
                 app_id: String::new(),
             }
         }

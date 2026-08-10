@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.png/diff/text.json",
+  "title": "PngDiffText",
+  "type": "object"
+}

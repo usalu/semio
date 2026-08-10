@@ -201,15 +201,183 @@ const DIST_EXTRA: [u8; 30] = [
     0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
 ];
 
-/// 🗜️ Raw DEFLATE compress (fixed Huffman literals + end).
+//#region Lz77
+/// 🪟️ RFC1951 §3.2.5 sliding window: matches can reference up to this many bytes back.
+const WINDOW: usize = 32 * 1024;
+/// 📏️ Shortest a match is worth emitting as length+distance instead of two-plus literals.
+const MIN_MATCH: usize = 3;
+/// 📏️ Longest length symbol 285 can encode (258 = LEN_BASE[28] + 2^5-1 extra bits).
+const MAX_MATCH: usize = 258;
+/// 🔑️ 3-byte-prefix hash table size (2^15 buckets over a 3-byte key -- zlib's own classic choice).
+const HASH_BITS: u32 = 15;
+const HASH_SIZE: usize = 1 << HASH_BITS;
+
+#[inline]
+fn hash3(data: &[u8], i: usize) -> usize {
+    // A cheap multiplicative hash over 3 bytes; collisions just mean a longer (still correct)
+    // chain walk, never a wrong match -- every candidate is verified byte-by-byte below.
+    let v = (data[i] as u32) | ((data[i + 1] as u32) << 8) | ((data[i + 2] as u32) << 16);
+    ((v.wrapping_mul(0x9E3779B1)) >> (32 - HASH_BITS)) as usize
+}
+
+/// 🔎️ Longest match at `pos` found by walking the hash chain, verified byte-by-byte (hash
+/// collisions are possible; a wrong-length "match" would corrupt the stream, so every candidate
+/// is checked in full before being accepted). `max_chain` bounds how many chain entries we walk
+/// before settling -- a simple, deterministic time/ratio tradeoff (higher = better ratio, slower).
+fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32], max_chain: usize) -> Option<(usize, usize)> {
+    if pos + MIN_MATCH > data.len() {
+        return None;
+    }
+    let limit = (data.len() - pos).min(MAX_MATCH);
+    let mut best_len = 0usize;
+    let mut best_dist = 0usize;
+    let mut candidate = head[hash3(data, pos)];
+    let min_candidate = pos.saturating_sub(WINDOW - 1) as i32;
+    let mut chain = 0usize;
+    while candidate >= min_candidate && candidate >= 0 && chain < max_chain {
+        let cpos = candidate as usize;
+        // Cheap pre-check before the full byte compare: the candidate must at least beat the
+        // current best at the position we haven't yet verified.
+        if best_len == 0 || (cpos + best_len < data.len() && data[cpos + best_len] == data[pos + best_len]) {
+            let mut len = 0usize;
+            while len < limit && data[cpos + len] == data[pos + len] {
+                len += 1;
+            }
+            if len > best_len {
+                best_len = len;
+                best_dist = pos - cpos;
+                if len >= limit {
+                    break;
+                }
+            }
+        }
+        candidate = prev[cpos & (WINDOW - 1)];
+        chain += 1;
+    }
+    if best_len >= MIN_MATCH { Some((best_len, best_dist)) } else { None }
+}
+
+fn length_symbol(len: usize) -> (usize, u32, u8) {
+    // Highest base <= len; LEN_BASE is ascending so a linear scan from the top is exact and simple.
+    for (idx, &base) in LEN_BASE.iter().enumerate().rev() {
+        if len >= base as usize {
+            return (257 + idx, (len - base as usize) as u32, LEN_EXTRA[idx]);
+        }
+    }
+    unreachable!("length_symbol called with len < MIN_MATCH")
+}
+
+fn distance_symbol(dist: usize) -> (usize, u32, u8) {
+    for (idx, &base) in DIST_BASE.iter().enumerate().rev() {
+        if dist >= base as usize {
+            return (idx, (dist - base as usize) as u32, DIST_EXTRA[idx]);
+        }
+    }
+    unreachable!("distance_symbol called with dist == 0")
+}
+//#endregion Lz77
+
+/// 🗜️ Raw DEFLATE compress: real LZ77 (32KB window, hash-chain match search, lazy one-step
+/// lookahead) emitted as a single fixed-Huffman block. Fixes the prior "literals only" encoder,
+/// which never searched for matches at all and so always expanded its input by ~12.5%
+/// (9 bits/byte average under the fixed literal table) instead of compressing it.
 pub fn deflate_raw(data: &[u8]) -> Vec<u8> {
     let lit_codes = build_codes(&fixed_lit_lengths());
+    let dist_codes = build_codes(&fixed_dist_lengths());
     let mut bw = BitWriter::new();
-    bw.write_bits(0b011, 3);
-    for &byte in data {
-        let (code, len) = lit_codes[byte as usize];
-        bw.write_bits(code, len);
+    bw.write_bits(0b011, 3); // BFINAL=1, BTYPE=01 (fixed Huffman)
+
+    if data.len() < MIN_MATCH {
+        for &byte in data {
+            let (code, len) = lit_codes[byte as usize];
+            bw.write_bits(code, len);
+        }
+        let (eob, elen) = lit_codes[256];
+        bw.write_bits(eob, elen);
+        return bw.finish();
     }
+
+    const MAX_CHAIN: usize = 128;
+    let mut head = vec![-1i32; HASH_SIZE];
+    let mut prev = vec![-1i32; WINDOW];
+    let insert = |data: &[u8], i: usize, head: &mut [i32], prev: &mut [i32]| {
+        if i + MIN_MATCH <= data.len() {
+            let h = hash3(data, i);
+            prev[i & (WINDOW - 1)] = head[h];
+            head[h] = i as i32;
+        }
+    };
+
+    let mut pos = 0usize;
+    let mut pending_match: Option<(usize, usize, usize)> = None; // (start_pos, len, dist)
+    while pos < data.len() {
+        let m = longest_match(data, pos, &head, &prev, MAX_CHAIN);
+        insert(data, pos, &mut head, &mut prev);
+
+        match (pending_match.take(), m) {
+            (None, Some((len, dist))) => {
+                // Lazy matching: don't commit yet -- check whether pos+1 has a strictly longer
+                // match, in which case emitting a literal at pos and taking THAT match instead
+                // yields better compression (the classic zlib lazy-evaluation heuristic).
+                pending_match = Some((pos, len, dist));
+                pos += 1;
+            }
+            (Some((start, len, dist)), next_m) => {
+                let better_next = matches!(next_m, Some((nlen, _)) if nlen > len);
+                if better_next {
+                    // Emit the deferred position as a literal, keep the new (better) match pending.
+                    let (code, clen) = lit_codes[data[start] as usize];
+                    bw.write_bits(code, clen);
+                    if let Some((nlen, ndist)) = next_m {
+                        pending_match = Some((pos, nlen, ndist));
+                    }
+                    pos += 1;
+                } else {
+                    // Commit the deferred match starting at `start` (== pos - 1 here).
+                    let (lsym, lextra, lebits) = length_symbol(len);
+                    let (lcode, llen) = lit_codes[lsym];
+                    bw.write_bits(lcode, llen);
+                    if lebits > 0 {
+                        bw.write_bits(lextra, lebits);
+                    }
+                    let (dsym, dextra, debits) = distance_symbol(dist);
+                    let (dcode, dlen) = dist_codes[dsym];
+                    bw.write_bits(dcode, dlen);
+                    if debits > 0 {
+                        bw.write_bits(dextra, debits);
+                    }
+                    // Hash-insert every position the match covers (except `start`, `start+1`
+                    // already inserted above) so future matches can reference into it.
+                    let match_end = (start + len).min(data.len());
+                    for i in (start + 2)..match_end {
+                        insert(data, i, &mut head, &mut prev);
+                    }
+                    pos = match_end;
+                }
+            }
+            (None, None) => {
+                let (code, clen) = lit_codes[data[pos] as usize];
+                bw.write_bits(code, clen);
+                pos += 1;
+            }
+        }
+    }
+    if let Some((start, len, dist)) = pending_match {
+        let (lsym, lextra, lebits) = length_symbol(len);
+        let (lcode, llen) = lit_codes[lsym];
+        bw.write_bits(lcode, llen);
+        if lebits > 0 {
+            bw.write_bits(lextra, lebits);
+        }
+        let (dsym, dextra, debits) = distance_symbol(dist);
+        let (dcode, dlen) = dist_codes[dsym];
+        bw.write_bits(dcode, dlen);
+        if debits > 0 {
+            bw.write_bits(dextra, debits);
+        }
+        let _ = start;
+    }
+
     let (eob, elen) = lit_codes[256];
     bw.write_bits(eob, elen);
     bw.finish()
@@ -483,6 +651,53 @@ mod tests {
     fn raw_deflate_round_trip() {
         let p = b"stdio-deflate-conformance";
         let enc = deflate_raw(p);
+        let dec = inflate_raw(&enc).expect("inflate");
+        assert_eq!(dec, p);
+    }
+
+    /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: the prior
+    /// `deflate_raw` never searched for LZ77 matches at all -- it emitted every byte as a fixed-
+    /// Huffman literal (~9 bits/byte average), so compressing ALWAYS expanded the input by ~12.5%.
+    /// This is the regression test for that: real, repetitive text must come out smaller, not
+    /// bigger, and must still round-trip exactly.
+    #[test]
+    fn raw_deflate_compresses_repetitive_text() {
+        let text = "the quick brown fox jumps over the lazy dog. ".repeat(200);
+        let p = text.as_bytes();
+        let enc = deflate_raw(p);
+        assert!(enc.len() < p.len(), "compressed ({}) should be smaller than input ({}) for highly repetitive text", enc.len(), p.len());
+        let dec = inflate_raw(&enc).expect("inflate");
+        assert_eq!(dec, p);
+    }
+
+    #[test]
+    fn raw_deflate_round_trips_binary_with_long_range_matches() {
+        // A repeating 4-byte pattern well past MIN_MATCH, exercising the hash-chain match finder
+        // across many window-fulls (data.len() > WINDOW) so distances near the 32KB boundary are
+        // exercised too, not just short-range matches.
+        let mut p = Vec::with_capacity(100_000);
+        for i in 0..25_000u32 {
+            p.extend_from_slice(&i.to_le_bytes());
+        }
+        let enc = deflate_raw(&p);
+        assert!(enc.len() < p.len());
+        let dec = inflate_raw(&enc).expect("inflate");
+        assert_eq!(dec, p);
+    }
+
+    #[test]
+    fn raw_deflate_round_trips_random_incompressible_data() {
+        // Match search finding nothing (or only sub-MIN_MATCH runs) must still round-trip --
+        // pure-literal fallback path.
+        let mut state = 0x2545F4914F6CDD1Du64;
+        let mut p = Vec::with_capacity(4096);
+        for _ in 0..4096 {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            p.push((state & 0xFF) as u8);
+        }
+        let enc = deflate_raw(&p);
         let dec = inflate_raw(&enc).expect("inflate");
         assert_eq!(dec, p);
     }

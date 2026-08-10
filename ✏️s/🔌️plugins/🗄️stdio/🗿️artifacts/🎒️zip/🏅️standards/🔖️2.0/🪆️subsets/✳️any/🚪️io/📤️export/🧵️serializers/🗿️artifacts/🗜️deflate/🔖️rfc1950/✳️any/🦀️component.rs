@@ -9,8 +9,8 @@ pub fn register() {}
 
 /// Encode ZIP bytes then zlib-compress via deflate artifact.
 pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError> {
-    let zip_bytes = crate::artifacts::zip::engine::encode_zip(from, true)
-        .map_err(|e| store::PackError::Schema(e))?;
+    let zip_bytes = crate::artifacts::zip::engine::encode_zip(from)
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     let bytes = crate::artifacts::deflate::engine::zlib_compress(&zip_bytes)
         .map_err(|e| store::PackError::Schema(e))?;
     Ok(DeflateSnapshot {

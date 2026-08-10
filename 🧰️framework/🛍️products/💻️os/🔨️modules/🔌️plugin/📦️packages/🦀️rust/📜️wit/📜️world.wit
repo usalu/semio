@@ -45,6 +45,18 @@ interface plugin {
   /// 🩹️ Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
   /// must only call this between serialized top-level calls — never while another call is in flight.
   clear-instance-guard: func();
+  /// 📦️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): this
+  /// plugin's own composer roster, JSON-encoded `Vec<(ArtifactDialect, Vec<ArtifactDialect>)>`
+  /// (`io::wire_list_composer_entries`) — one `(writes, reads)` row per registered `ComposerEntry`.
+  /// The host calls this once per plugin at load time to build its cross-plugin `IoRouter`.
+  list-artifact-dialects: func() -> list<u8>;
+  /// 📦️ Composes `sources` into this plugin's own registry entry matching `key`. `key` is a
+  /// JSON-encoded `io::IoKey`; `sources` is a JSON-encoded `Vec<io::WireComposeSource>`; the ok
+  /// result is a JSON-encoded `io::WireComposedArtifact` (`io::wire_artifact_compose`). Only ever
+  /// called for a key THIS plugin owns (the host router already resolved ownership before
+  /// forwarding) — never falls through to `host.io-compose` itself, to keep cross-plugin routing
+  /// one hop.
+  artifact-compose: func(key: list<u8>, sources: list<u8>) -> result<list<u8>, plugin-error>;
 }
 
 interface extension {
@@ -80,6 +92,17 @@ interface host {
   engine-derive: func(engine-id: string, input: list<u8>) -> result<list<u8>, list<u8>>;
   /// Read engine cache output by engine-id + key bytes from engine-derive.
   engine-read: func(engine-id: string, key: list<u8>) -> result<list<u8>, list<u8>>;
+  /// 📦️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): every
+  /// dialect coordinate ANY loaded plugin (not just this one) can move `artifact-kind` through in
+  /// `direction` ("import"|"export"), JSON-encoded `Vec<io::ArtifactDialect>` — backs a guest-side
+  /// `io_dispatch` fallback hook that needs to enumerate before it can pick a key to compose.
+  io-dialects: func(artifact-kind: string, direction: string) -> result<list<u8>, list<u8>>;
+  /// 📦️ Routes `key`/`sources` (same JSON shapes as `plugin.artifact-compose`) to whichever OTHER
+  /// loaded plugin actually owns `key`, per the host's `IoRouter`. Refuses to route a call back
+  /// into the CALLING plugin (reentrancy guard — see the host router implementation) and is only
+  /// ever one hop: the plugin that receives the resulting `plugin.artifact-compose` call must not
+  /// itself call `io-compose` again for the same request.
+  io-compose: func(key: list<u8>, sources: list<u8>) -> result<list<u8>, list<u8>>;
 }
 
 world plugin-world {

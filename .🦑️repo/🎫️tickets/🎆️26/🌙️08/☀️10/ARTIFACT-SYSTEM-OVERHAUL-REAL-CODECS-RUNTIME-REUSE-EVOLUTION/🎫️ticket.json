@@ -1,0 +1,13 @@
+{
+  "title": "Artifact System Overhaul: Real Codecs, Runtime Reuse, Evolution",
+  "emoji": "🧬️",
+  "status": "open",
+  "description": "Phase 2 of the stdio/domain artifact restructure. Phase 1 (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO) migrated all 83 artifacts to the standards/subsets tree shape but left codec implementations almost entirely stubbed, cross-plugin reuse non-functional at runtime (typed registry never crosses the wasm boundary), no schema/standard evolution or migration mechanism, degenerate subsets (83 artifacts x 1 standard x 5698 identical any subsets), and enforcement that is pure substring matching.\n\nThis ticket implements the full plan at /Users/ueli/.claude/plans/the-current-import-export-snappy-thompson.md:\n- D1: shared ArtifactDialect contract + io_dispatch seam + catalog SSOT relocation\n- D2: real spec-conformant codecs for all 29 stdio artifacts (deflate LZ77, real PNG filters, full JPEG baseline, real GIF LZW + 89a, real SVG 1.1 semantic model + builder, gltf/glb merge into one artifact, real PDF 1.7 object/xref parser, full DWG AC1024 R2004+ decode, STEP/IFC Part-21 tokenizer, OOXML OPC layer), each proven via real-file analyzer-\u003ebuilder round-trip tests using 4 user-provided fixtures (thesis PDF, architectural DWG, animated GIF, glTF glb)\n- D3: WIT ABI extension (list-artifact-dialects/artifact-compose/artifact-analyze) + host-side dialect router so plugins can call each other's builder/analyzer/composer at runtime for real (currently impossible - the registry only exists in-guest)\n- D4: dialect-aware document evolution - ArtifactEnvelope gains an optional dialect field, a two-tier migration model (in-place for subset changes, new-lineage event for snapshot-type changes), hub multi-user dialect pinning, with a gif 87a-\u003e89a migration as the end-to-end pilot\n- D5: PDF/A-2b as the first real (non-any) subset with a generic validate-on-build enforcement hook\n- D6: nine structural policy rules in script.ts replacing today's substring/grep-based \"enforcement\"\n\n9 waves (V0-V8), see plan for full breakdown, gates, and risks. Very large scope - this ticket will stay open across many sessions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2541"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪26bf67b35aa148fa9d5302f184f02d4e"
+  ]
+}

@@ -8,7 +8,9 @@ fn to_zip(snap: &DocxSnapshot) -> crate::artifacts::zip::ZipSnapshot {
         entries: snap.entries.iter().map(|e| crate::artifacts::zip::schema::snapshot::ZipEntry {
             name: e.name.clone(),
             data: e.data.clone(),
+            ..Default::default()
         }).collect(),
+        comment: String::new(),
     }
 }
 
@@ -20,11 +22,11 @@ fn from_zip(z: crate::artifacts::zip::ZipSnapshot) -> DocxSnapshot {
 }
 
 pub fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, String> {
-    crate::artifacts::zip::engine::encode_zip(&to_zip(snap), true)
+    crate::artifacts::zip::engine::encode_zip(&to_zip(snap)).map_err(|e| e.to_string())
 }
 
 pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, String> {
-  Ok(from_zip(crate::artifacts::zip::engine::decode_zip(data)?))
+  Ok(from_zip(crate::artifacts::zip::engine::decode_zip(data).map_err(|e| e.to_string())?))
 }
 
 pub fn empty_docx_snapshot() -> DocxSnapshot { DocxSnapshot::default() }

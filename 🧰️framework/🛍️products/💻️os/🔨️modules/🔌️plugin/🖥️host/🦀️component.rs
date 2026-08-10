@@ -615,6 +615,29 @@ impl WasmPluginRuntime {
         Ok(Vec::new())
     }
 
+    /// 📦️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): this
+    /// plugin's own composer roster — JSON `Vec<(ArtifactDialect, Vec<ArtifactDialect>)>` bytes,
+    /// straight off the WIT `list-artifact-dialects` export. Called once per plugin at load time
+    /// by whichever `IoRouter` owns this runtime.
+    pub fn list_artifact_dialects(&self) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        bindings.semio_framework_plugin().call_list_artifact_dialects(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
+    }
+
+    /// 📦️ Composes `sources` against THIS plugin's registry entry for `key` (JSON wire bytes, same
+    /// shapes `io::wire_artifact_compose` uses) — the WIT `artifact-compose` export. Callers
+    /// (an `IoRouter`) are expected to have already confirmed this plugin owns `key`; a genuine
+    /// miss surfaces as the same "no composer registered" message `io::resolve` would produce.
+    pub fn artifact_compose(&self, key: &[u8], sources: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_artifact_compose(&mut *store, key, sources).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
     /// @emoji 🩹️ Mirrors the WIT `migrate-document` call unchanged — `input`/output `data` is
     /// pack-container bytes (see `document-pack-files`).
     pub fn migrate_artifact(&self, from_version: &str, to_version: &str, data: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {

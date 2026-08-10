@@ -10,7 +10,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a ZipSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<ZipSnapshot, store::PackError> {
     let mut snap = crate::artifacts::zip::engine::decode_zip(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_ZIP_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

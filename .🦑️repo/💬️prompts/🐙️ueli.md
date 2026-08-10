@@ -366,6 +366,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The current codebase doesnt follow clean architecture.
+e.g. the open closed principle is violated a lot such as:
+- s is an os. os shouldnt depend on anything from s.
+  - 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs implements plenty of stdio functionality which is part of s studio plugin.
+
+---
+
 The current artifact mechanisms are extremely adhoc. Most implementations are just stubbed, the latest standards of the major common artifacts are not implemented, the builder/analyzer/composer are not composable, properly abstracted, clean mechanisms are missing and are not enforced.
 Overhaul and complete everything.
 The goal is to have a an artifact system where artifacts can evolve, adhere to existing specifications and are fully integrated into the os system (apps can reuse the builder/analyzer/composer of other plugins).

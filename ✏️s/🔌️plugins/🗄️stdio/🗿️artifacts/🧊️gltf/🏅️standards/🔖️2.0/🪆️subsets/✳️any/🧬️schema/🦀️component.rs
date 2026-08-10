@@ -1,5 +1,6 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
+use crate::artifacts::gltf::schema::snapshot::GltfSourceForm;
 use crate::artifacts::gltf::GltfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -13,10 +14,13 @@ pub struct GltfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<crate::artifacts::gltf::schema::snapshot::MeshVertex>,
+    pub document: serde_json::Value,
     #[state(persistent)]
     #[serde(default)]
-    pub document: serde_json::Value,
+    pub buffers: Vec<Vec<u8>>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub source_form: GltfSourceForm,
 }
 //#endregion 🔖️Artifact
 
@@ -31,20 +35,26 @@ impl GltfArtifact {
     pub fn to_snapshot(&self) -> GltfSnapshot {
         GltfSnapshot {
             schema: self.schema.clone(),
-            vertices: self.vertices.clone(),            document: self.document.clone(),
+            document: self.document.clone(),
+            buffers: self.buffers.clone(),
+            source_form: self.source_form,
         }
     }
 
     pub fn from_snapshot(snapshot: GltfSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            vertices: snapshot.vertices,            document: snapshot.document,
+            document: snapshot.document,
+            buffers: snapshot.buffers,
+            source_form: snapshot.source_form,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: GltfSnapshot) {
         self.schema = snapshot.schema;
-        self.vertices = snapshot.vertices;        self.document = snapshot.document;
+        self.document = snapshot.document;
+        self.buffers = snapshot.buffers;
+        self.source_form = snapshot.source_form;
     }
 }
 //#endregion 🔖️Conversions

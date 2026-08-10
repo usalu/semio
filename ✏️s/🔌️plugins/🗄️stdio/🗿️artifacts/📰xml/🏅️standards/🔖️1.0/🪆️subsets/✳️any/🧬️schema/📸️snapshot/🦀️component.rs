@@ -13,7 +13,11 @@ pub struct XmlAttr {
     pub value: String,
 }
 
-/// 🌳 XML node (element or text).
+/// 🌳 XML node: element, text, CDATA, comment, or processing instruction. `CData`/`Comment`/
+/// `ProcessingInstruction` are distinct from `Text` (rather than folding them into escaped text)
+/// so decode->encode preserves the ORIGINAL form -- a `<![CDATA[...]]>` section (common inside
+/// real SVG `<style>`/`<script>` elements) re-emits as CDATA, not as entity-escaped text, and a
+/// `<!--comment-->` between siblings survives instead of being silently dropped.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum XmlNode {
@@ -24,8 +28,26 @@ pub enum XmlNode {
         #[serde(default)]
         children: Vec<XmlNode>,
     },
+    /// 🔤️ Character data. Entities (`&amp;` `&lt;` `&gt;` `&quot;` `&apos;` `&#NNN;` `&#xHHHH;`)
+    /// are decoded to their literal characters on read and re-escaped on write -- `text` here is
+    /// always the LITERAL (unescaped) content, never the wire form.
     Text {
         text: String,
+    },
+    /// 📦️ `<![CDATA[...]]>` section -- `text` is the literal content, verbatim, never escaped.
+    CData {
+        text: String,
+    },
+    /// 💬️ `<!--...-->` comment, preserved verbatim (not interpreted, not escaped).
+    Comment {
+        text: String,
+    },
+    /// ❓️ `<?target data?>` processing instruction (anywhere a PI can appear inside content --
+    /// the XML *declaration* itself, `<?xml version="1.0"?>`, is handled separately and not
+    /// represented as a node).
+    ProcessingInstruction {
+        target: String,
+        data: String,
     },
 }
 
@@ -35,6 +57,12 @@ pub enum XmlNode {
 pub struct XmlDocument {
     #[serde(default)]
     pub root: Option<XmlNode>,
+    /// 📜️ The raw `<!DOCTYPE ...>` declaration text (if present), kept verbatim -- NOT deeply
+    /// parsed (no DTD validation), just preserved so real files that carry one (most SVG 1.1
+    /// files exported by Illustrator/Inkscape do) parse at all instead of hard-failing, and
+    /// round-trip losslessly.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub doctype: Option<String>,
 }
 //#endregion 🔖️XmlModel
 
@@ -69,8 +97,6 @@ fn xml_escape_text(s: &str) -> String {
             '&' => out.push_str("&amp;"),
             '<' => out.push_str("&lt;"),
             '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&apos;"),
             _ => out.push(ch),
         }
     }
@@ -78,19 +104,88 @@ fn xml_escape_text(s: &str) -> String {
 }
 
 fn xml_escape_attr(s: &str) -> String {
-    xml_escape_text(s)
+    let mut out = String::new();
+    for ch in s.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '"' => out.push_str("&quot;"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+/// 🔓️ Decode the five predefined XML entities plus numeric character references (`&#NNN;`,
+/// `&#xHHHH;`/`&#XHHHH;`) into their literal characters. This is the read-side half that was
+/// entirely missing before: without it, `&amp;` in a source document is kept as the 5 literal
+/// characters `&`,`a`,`m`,`p`,`;` in the `Text` node, and the NEXT write-side escape turns that
+/// lone `&` into `&amp;` again -- so every decode->encode cycle grows `&amp;` into `&amp;amp;`
+/// into `&amp;amp;amp;`, permanently corrupting the document. An unrecognized/malformed entity is
+/// a hard parse error (never silently dropped or passed through raw).
+fn xml_unescape_text(s: &str) -> Result<String, String> {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.char_indices().peekable();
+    while let Some((i, ch)) = chars.next() {
+        if ch != '&' {
+            out.push(ch);
+            continue;
+        }
+        let rest = &s[i..];
+        let end = rest.find(';').ok_or_else(|| format!("unterminated entity reference at byte {i}"))?;
+        let entity = &rest[1..end];
+        let decoded = if let Some(numeric) = entity.strip_prefix('#') {
+            let code = if let Some(hex) = numeric.strip_prefix('x').or_else(|| numeric.strip_prefix('X')) {
+                u32::from_str_radix(hex, 16).map_err(|_| format!("invalid hex character reference &{entity};"))?
+            } else {
+                numeric.parse::<u32>().map_err(|_| format!("invalid decimal character reference &{entity};"))?
+            };
+            char::from_u32(code).ok_or_else(|| format!("invalid unicode scalar &{entity};"))?
+        } else {
+            match entity {
+                "amp" => '&',
+                "lt" => '<',
+                "gt" => '>',
+                "quot" => '"',
+                "apos" => '\'',
+                other => return Err(format!("unknown entity &{other};")),
+            }
+        };
+        out.push(decoded);
+        // Advance the char iterator past the consumed entity (end index is relative to `rest`,
+        // i.e. `i`-relative; convert to an absolute byte offset and skip to just past the `;`).
+        let consume_to = i + end + 1;
+        while let Some(&(j, _)) = chars.peek() {
+            if j < consume_to {
+                chars.next();
+            } else {
+                break;
+            }
+        }
+    }
+    Ok(out)
 }
 
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
-    match &doc.root {
-        None => String::new(),
-        Some(node) => xml_node_to_text(node, 0),
+    let mut out = String::new();
+    if let Some(doctype) = &doc.doctype {
+        out.push_str(doctype);
+        out.push('\n');
     }
+    if let Some(node) = &doc.root {
+        out.push_str(&xml_node_to_text(node, 0));
+    }
+    out
 }
 
 fn xml_node_to_text(node: &XmlNode, _depth: usize) -> String {
     match node {
         XmlNode::Text { text } => xml_escape_text(text),
+        XmlNode::CData { text } => format!("<![CDATA[{text}]]>"),
+        XmlNode::Comment { text } => format!("<!--{text}-->"),
+        XmlNode::ProcessingInstruction { target, data } => {
+            if data.is_empty() { format!("<?{target}?>") } else { format!("<?{target} {data}?>") }
+        }
         XmlNode::Element { name, attrs, children } => {
             let mut out = format!("<{}", name);
             for attr in attrs {
@@ -116,16 +211,25 @@ pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
         return Ok(XmlDocument::default());
     }
     let mut pos = 0;
-    skip_misc(trimmed, &mut pos)?;
+    let doctype = skip_misc(trimmed, &mut pos)?;
     let root = parse_node(trimmed, &mut pos)?;
     skip_misc(trimmed, &mut pos)?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
-    Ok(XmlDocument { root: Some(root) })
+    Ok(XmlDocument { root: Some(root), doctype })
 }
 
-fn skip_misc(s: &str, pos: &mut usize) -> Result<(), String> {
+/// 🚧️ Skips XML-declaration (`<?xml ...?>`), processing instructions, comments, and a `<!DOCTYPE
+/// ...>` declaration (incl. an internal subset in `[...]`, which itself may contain nested `[`/`]`
+/// in entity declarations -- bracket-depth-tracked, not a naive `find("]>")`). Returns the raw
+/// DOCTYPE text if one was seen (prolog PIs/comments before the root element are still discarded
+/// -- only the root subtree and the doctype are represented in the model). Before this fix, ANY
+/// `<!DOCTYPE ...>` caused a hard parse failure one level up (`parse_name` rejects the leading
+/// `!`), which is why most real-world SVG 1.1 files (virtually all of which declare one) could
+/// not be parsed at all.
+fn skip_misc(s: &str, pos: &mut usize) -> Result<Option<String>, String> {
+    let mut doctype = None;
     loop {
         skip_ws(s, pos);
         if s[*pos..].starts_with("<?") {
@@ -138,9 +242,32 @@ fn skip_misc(s: &str, pos: &mut usize) -> Result<(), String> {
             *pos += end + 3;
             continue;
         }
+        if s[*pos..].starts_with("<!DOCTYPE") || s[*pos..].starts_with("<!doctype") {
+            let start = *pos;
+            *pos += "<!DOCTYPE".len();
+            let mut depth = 0i32;
+            loop {
+                if *pos >= s.len() {
+                    return Err("unclosed DOCTYPE declaration".into());
+                }
+                let byte = s.as_bytes()[*pos];
+                match byte {
+                    b'[' => depth += 1,
+                    b']' => depth -= 1,
+                    b'>' if depth <= 0 => {
+                        *pos += 1;
+                        break;
+                    }
+                    _ => {}
+                }
+                *pos += 1;
+            }
+            doctype = Some(s[start..*pos].to_string());
+            continue;
+        }
         break;
     }
-    Ok(())
+    Ok(doctype)
 }
 
 fn skip_ws(s: &str, pos: &mut usize) {
@@ -214,11 +341,10 @@ fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
 }
 
 fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
-    skip_misc(s, pos)?;
     if *pos >= s.len() || !s[*pos..].starts_with('<') {
         return Err("expected element start".into());
     }
-  if s[*pos..].starts_with("</") {
+    if s[*pos..].starts_with("</") {
         return Err("unexpected closing tag".into());
     }
     *pos += 1;
@@ -235,7 +361,9 @@ fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
     *pos += 1;
     let mut children = Vec::new();
     loop {
-        skip_misc(s, pos)?;
+        if *pos >= s.len() {
+            return Err(format!("unclosed element <{name}>: unexpected end of input"));
+        }
         if s[*pos..].starts_with("</") {
             *pos += 2;
             let close = parse_name(s, pos)?;
@@ -249,7 +377,33 @@ fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
             }
             break;
         }
-        if *pos < s.len() && s[*pos..].starts_with('<') {
+        if s[*pos..].starts_with("<![CDATA[") {
+            *pos += "<![CDATA[".len();
+            let end = s[*pos..].find("]]>").ok_or("unclosed CDATA section")?;
+            let text = s[*pos..*pos + end].to_string();
+            *pos += end + 3;
+            children.push(XmlNode::CData { text });
+            continue;
+        }
+        if s[*pos..].starts_with("<!--") {
+            *pos += 4;
+            let end = s[*pos..].find("-->").ok_or("unclosed comment")?;
+            let text = s[*pos..*pos + end].to_string();
+            *pos += end + 3;
+            children.push(XmlNode::Comment { text });
+            continue;
+        }
+        if s[*pos..].starts_with("<?") {
+            *pos += 2;
+            let target = parse_name(s, pos)?;
+            skip_ws(s, pos);
+            let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
+            let data = s[*pos..*pos + end].to_string();
+            *pos += end + 2;
+            children.push(XmlNode::ProcessingInstruction { target, data });
+            continue;
+        }
+        if s[*pos..].starts_with('<') {
             children.push(parse_node(s, pos)?);
             continue;
         }
@@ -257,8 +411,9 @@ fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         while *pos < s.len() && !s[*pos..].starts_with('<') {
             *pos += 1;
         }
-        let text = s[start..*pos].to_string();
-        if !text.is_empty() {
+        let raw = &s[start..*pos];
+        if !raw.is_empty() {
+            let text = xml_unescape_text(raw)?;
             children.push(XmlNode::Text { text });
         }
     }

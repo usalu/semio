@@ -1,0 +1,3 @@
+(* ebnf stdio.png snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.png', newline ;

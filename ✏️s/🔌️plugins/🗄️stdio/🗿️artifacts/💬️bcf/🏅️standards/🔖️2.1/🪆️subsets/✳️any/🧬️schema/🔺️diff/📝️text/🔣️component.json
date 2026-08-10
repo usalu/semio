@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.bcf/diff/text.json",
+  "title": "BcfDiffText",
+  "type": "object"
+}

@@ -16,6 +16,9 @@ pub struct ZipArtifact {
     #[state(persistent)]
     #[serde(default)]
     pub entries: Vec<ZipEntry>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub comment: String,
 }
 //#endregion Artifact
 
@@ -32,6 +35,7 @@ impl ZipArtifact {
         ZipSnapshot {
             schema: self.schema.clone(),
             entries: self.entries.clone(),
+            comment: self.comment.clone(),
         }
     }
 
@@ -40,6 +44,7 @@ impl ZipArtifact {
         Self {
             schema: snapshot.schema,
             entries: snapshot.entries,
+            comment: snapshot.comment,
         }
     }
 
@@ -47,6 +52,7 @@ impl ZipArtifact {
     pub fn set_snapshot(&mut self, snapshot: ZipSnapshot) {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
+        self.comment = snapshot.comment;
     }
 }
 //#endregion Conversions

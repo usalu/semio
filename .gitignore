@@ -167,6 +167,16 @@ acs-*.bib
 *.[1-9]R
 *.[1-9][0-9]R
 *.[1-9][0-9][0-9]R
+# 🐛 The LaTeX numeric-extension rules above (*.[1-9] etc., a generic gitignore.io template block)
+# collide with this repo's own `🏅️standards/🔖️<version>/` taxonomy dirs whenever a version looks
+# like a bare digit-dot-digit ("1.2", "2.0", ...) — `🔖️1.2` ends in ".2", matching `*.[1-9]`
+# exactly like a LaTeX aux file would. Found 26/08/10 (ARTIFACT-SYSTEM-OVERHAUL...) after the png
+# codec's own `🔖️1.2` standard dir turned out to be silently untracked; svg's `🔖️1.1`, pdf's
+# `🔖️1.4`/`🔖️1.7`, and bcf's `🔖️2.1` are the same shape. Un-ignore every `🔖️...` taxonomy dir
+# explicitly rather than trying to rescope the LaTeX patterns themselves (that section may still be
+# load-bearing for an actual LaTeX/print product elsewhere in the repo).
+!**/🔖️*/
+!**/🔖️*/**
 *.eledsec[1-9]
 *.eledsec[1-9]R
 *.eledsec[1-9][0-9]

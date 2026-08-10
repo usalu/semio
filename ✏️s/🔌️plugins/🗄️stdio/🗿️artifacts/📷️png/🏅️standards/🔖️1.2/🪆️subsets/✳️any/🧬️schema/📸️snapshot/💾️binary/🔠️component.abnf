@@ -1,0 +1,3 @@
+; abnf stdio.png snapshot
+document = payload
+payload = *OCTET

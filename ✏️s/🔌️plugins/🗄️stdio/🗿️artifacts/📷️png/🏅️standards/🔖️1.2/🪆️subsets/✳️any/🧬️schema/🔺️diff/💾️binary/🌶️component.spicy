@@ -1,0 +1,4 @@
+module Stdio_png_diff;
+type Document = unit {
+    payload: bytes &eod;
+};

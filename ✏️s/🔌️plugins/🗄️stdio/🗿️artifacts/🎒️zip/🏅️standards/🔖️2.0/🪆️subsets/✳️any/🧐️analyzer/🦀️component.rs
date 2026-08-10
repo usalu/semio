@@ -20,8 +20,20 @@ impl ArtifactAnalyzer for ZipAnalyzer {
     type Parts = ZipParts;
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Medium
+    fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        // 🕵️ Real sniff: inspects the argument's bytes (magic + a well-formed EOCD), never a
+        // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
+        // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
+        // envelope preamble, not this sniff, is what actually recognizes it).
+        use crate::artifacts::zip::engine::{sniff_zip_bytes, SniffConfidence};
+        match source {
+            AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
+                SniffConfidence::High => IoConfidence::High,
+                SniffConfidence::Medium => IoConfidence::Medium,
+                SniffConfidence::Low => IoConfidence::Low,
+            },
+            AnalyzeSource::Text(_) => IoConfidence::Low,
+        }
     }
 
     fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

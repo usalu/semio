@@ -4196,6 +4196,22 @@ function policyValidateExampleUnit(
       reason: "Every example unit carries its assets under 🖼️assets/.",
       solution: `Add ${assetsRel}/ with kind-prefixed asset files.`,
     });
+  } else {
+    for (const entry of policyReaddirSafe(repoRoot, assetsRel)) {
+      if (entry.isDirectory) continue;
+      const assetAbs = join(repoRoot, assetsRel, entry.name);
+      if (statSync(assetAbs).size === 0) {
+        breaches.push({
+          id: `semio-examples-zero-byte-asset-${exampleRel}-${entry.name}`,
+          summary: `"${assetsRel}/${entry.name}" is a 0-byte placeholder asset`,
+          kind: "taxonomy/semio-examples",
+          scope,
+          priority,
+          reason: "Example assets must be real, builder-emitted (or genuinely sourced) content — a 0-byte file proves nothing and can't be decoded by any analyzer test.",
+          solution: `Replace ${assetsRel}/${entry.name} with a small file the artifact's own builder/analyzer can actually round-trip, or a real fixture.`,
+        });
+      }
+    }
   }
   const testsRel = `${exampleRel}/${taxonomy.exampleTestsDirName}`;
   if (!existsSync(join(repoRoot, testsRel))) {
@@ -6766,8 +6782,9 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleAppSchemas
 
 //#region 🔧️PolicyRuleArtifactIo
-/** 🎫 Normative owner table for stdio roster, DAG, and curated IO matrix (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO). */
-const POLICY_STDIO_OWNER_TABLE_REL =
+/** 🎫 Normative owner table for stdio roster, DAG, and curated IO matrix — SSOT moved out of the closed ticket folder into the io module's own registry (V0/D1); the ticket-folder path is kept as a one-wave read fallback until every writer/reader of the old path is repointed. */
+const POLICY_STDIO_OWNER_TABLE_REL = "🧰️framework/🔨️modules/🚪️io/📇️registry/📇️catalog.json";
+const POLICY_STDIO_OWNER_TABLE_LEGACY_REL =
   ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/STDIO-ARTIFACTS-AND-IO/🧪owner-table.json";
 const POLICY_STDIO_PLUGIN_REL = "✏️s/🔌️plugins/🗄️stdio";
 const POLICY_STDIO_ARTIFACTS_REL = `${POLICY_STDIO_PLUGIN_REL}/🗿️artifacts`;
@@ -6817,8 +6834,10 @@ type PolicyStdioOwnerTable = {
 
 function policyLoadStdioOwnerTable(repoRoot: string): PolicyStdioOwnerTable | null {
   const abs = join(repoRoot, POLICY_STDIO_OWNER_TABLE_REL);
-  if (!existsSync(abs)) return null;
-  return JSON.parse(readFileSync(abs, "utf8")) as PolicyStdioOwnerTable;
+  if (existsSync(abs)) return JSON.parse(readFileSync(abs, "utf8")) as PolicyStdioOwnerTable;
+  const legacyAbs = join(repoRoot, POLICY_STDIO_OWNER_TABLE_LEGACY_REL);
+  if (existsSync(legacyAbs)) return JSON.parse(readFileSync(legacyAbs, "utf8")) as PolicyStdioOwnerTable;
+  return null;
 }
 
 function policyStdioArtifactFacets(taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
@@ -7579,6 +7598,134 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
 
 //#endregion 🔧️PolicyRuleArtifactIo
 
+//#region 🔧️PolicyRuleSniffReality
+/**
+ * 🎫️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 4: a
+ * `fn sniff(...)` whose parameter is underscore-prefixed (Rust's own "deliberately unused"
+ * convention) cannot possibly inspect the bytes/text it was handed — it can only ever return a
+ * constant confidence, which defeats the entire point of format sniffing. Seeded at V0 with every
+ * file that fails this today (shrink-only allowlist, same pattern as
+ * `POLICY_PACK_COMPLETENESS_ALLOWLIST`): as each artifact's sniff is made real (see the codec
+ * uplift waves), remove its entry here — an allowlisted entry whose sniff has ALREADY been fixed
+ * is flagged separately below as a stale-acceptance breach, so cleanup isn't silently forgotten.
+ */
+const POLICY_SNIFF_REALITY_ALLOWLIST = new Set<string>([
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs",
+]);
+
+function policySniffRealityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    if (!content.includes("fn sniff(")) continue;
+    const hasUnusedParam = /fn\s+sniff\(\s*_[A-Za-z0-9_]*\s*:/.test(content);
+    const normalized = policyNormalizeRelPath(relPath);
+    const allowlisted = POLICY_SNIFF_REALITY_ALLOWLIST.has(normalized);
+    if (hasUnusedParam) {
+      if (allowlisted) continue;
+      breaches.push({
+        id: `sniff-reality-${relPath}`,
+        summary: `"${relPath}" declares fn sniff(...) with an underscore-prefixed (unused) parameter`,
+        kind: "artifact-io/sniff-reality",
+        scope: relPath,
+        priority: "high",
+        reason: "sniff() must inspect the bytes/text it's handed to produce a real confidence signal — an unused parameter means it can only ever return a hardcoded constant, defeating format detection.",
+        solution: `Make ${relPath}'s sniff() branch on its argument (magic bytes / structural check), or if this artifact hasn't been reached by the codec uplift yet, add "${normalized}" to POLICY_SNIFF_REALITY_ALLOWLIST citing this ticket.`,
+      });
+    } else if (allowlisted) {
+      breaches.push({
+        id: `sniff-reality-stale-${relPath}`,
+        summary: `"${relPath}" is allowlisted in POLICY_SNIFF_REALITY_ALLOWLIST but its sniff() already uses its argument`,
+        kind: "artifact-io/sniff-reality",
+        scope: relPath,
+        priority: "low",
+        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is fixed, or the allowlist silently drifts into meaninglessness.",
+        solution: `Remove "${normalized}" from POLICY_SNIFF_REALITY_ALLOWLIST.`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧️PolicyRuleSniffReality
+
 
 //#region 🔖️PolicyExport
 /**
@@ -7647,6 +7794,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyRawSpawnBreaches(repoRoot));
   breaches.push(...policyBudgetNullBreaches(repoRoot));
   breaches.push(...policyMcpConfigBreaches(repoRoot));
+  breaches.push(...policySniffRealityBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖️PolicyExport

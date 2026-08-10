@@ -12,7 +12,7 @@ pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackErr
     let payload = crate::artifacts::deflate::engine::zlib_decompress(&from.bytes)
         .map_err(|e| store::PackError::Schema(e))?;
     let mut snap = crate::artifacts::zip::engine::decode_zip(&payload)
-        .map_err(|e| store::PackError::Schema(e))?;
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_ZIP_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

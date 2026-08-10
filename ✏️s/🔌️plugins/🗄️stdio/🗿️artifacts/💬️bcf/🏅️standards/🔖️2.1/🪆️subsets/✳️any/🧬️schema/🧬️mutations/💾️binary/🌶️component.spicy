@@ -1,0 +1,4 @@
+module Stdio_bcf_mutations;
+type Document = unit {
+    payload: bytes &eod;
+};
