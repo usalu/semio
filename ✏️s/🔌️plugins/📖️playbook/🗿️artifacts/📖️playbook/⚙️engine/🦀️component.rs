@@ -19,6 +19,8 @@ pub use crate::artifacts::playbook::{empty_playbook_snapshot, flatten_playbook_b
 /// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::playbook::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::playbook::PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);

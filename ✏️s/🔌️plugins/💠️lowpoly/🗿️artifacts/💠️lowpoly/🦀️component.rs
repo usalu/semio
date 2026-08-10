@@ -246,8 +246,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         schema: "lowpoly.fixture".into(),
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
     }
 }
 
@@ -264,8 +264,8 @@ pub fn mesh_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         schema: "mesh.reference".into(),
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
     }
 }
 //#endregion 🔖️ArtifactKind

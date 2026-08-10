@@ -19,7 +19,7 @@ use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+    MediaPayload, MediaType, OsMediaCapability, MediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
 use std::collections::HashMap;
@@ -267,8 +267,8 @@ pub fn create_shooting_app() -> App {
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
                 schema: "2d.image".into(),
-                export_formats: vec![OsMediaFormat::Png],
-                import_formats: vec![OsMediaFormat::Png],
+                export_formats: vec![MediaFormat::Png],
+                import_formats: vec![MediaFormat::Png],
             })
             .media_output(crate::artifacts::shooting::engine::shooting_photos_out_port())
             .icon_id("camera")

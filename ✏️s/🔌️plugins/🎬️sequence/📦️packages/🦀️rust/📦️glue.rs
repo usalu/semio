@@ -143,6 +143,57 @@ pub mod artifacts {
         pub mod dsl;
         #[path = "../../🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs"]
         pub mod spr;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod csv {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/📊️csv/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/📊️csv/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod md {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/📝️md/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🎬️sequence/🚪️io/📝️md/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
         #[path = "../../🗿️artifacts/🎬️sequence/⚙️engine/🦀️component.rs"]
         pub mod engine;
     }

@@ -1,0 +1,14 @@
+{
+  "id": "26/08/10/ARTIFACT-IO-FACETS",
+  "title": "Artifact Io Facets",
+  "status": "closed",
+  "goal": "AI-OPTIMIZED-REPO",
+  "due": "2026-08-10",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Give every artifact a required 🚪️io facet so it is importable and exportable to the closed file-type catalog. Shape: 🚪️io/<format>/📥️import|📤️export with framework-owned codecs behind seven neutral models and a MediaClass×MediaForm coverage lattice. Trim 📋️mimes.csv to open formats, rename OsMediaFormat→MediaFormat, replace scattered engine register_* handlers with ArtifactIo::register, and enforce via taxonomy twins plus policyArtifactIoBreaches.",
+  "summary": "Added required 🚪️io facet to all 54 artifacts with closed 26-format MediaFormat catalog, framework codecs, SDK ArtifactIo traits, note/cad pilots, unified OS handlers, TS bridges, and policyArtifactIoBreaches gate at 0.",
+  "files": [],
+  "note": "Opened without repo MCP (server not loaded in session); folder created to match ticket_open layout.",
+  "closedAt": "2026-08-10"
+}

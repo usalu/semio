@@ -24,7 +24,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, OsMediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    OsMediaCapability, MediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -240,8 +240,8 @@ pub fn create_layout_app() -> App {
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                 schema: "layout.layout".into(),
-                export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
-                import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
+                import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
             })
             .document(["semio", "layout"])
             .icon_id("layout")

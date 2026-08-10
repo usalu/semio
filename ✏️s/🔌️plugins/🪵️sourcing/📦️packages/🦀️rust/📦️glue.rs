@@ -81,6 +81,102 @@ pub mod artifacts {
         pub mod dsl;
         #[path = "../../🗿️artifacts/🗂️curate/📡️spr/🦀️component.rs"]
         pub mod spr;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod glb {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🧊️glb/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🧊️glb/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod obj {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🧊️obj/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🧊️obj/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/📷️png/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/📷️png/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod stl {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🟪️stl/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🟪️stl/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod zip {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🎒️zip/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🗂️curate/🚪️io/🎒️zip/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
         #[path = "../../🗿️artifacts/🗂️curate/⚙️engine/🦀️component.rs"]
         pub mod engine;
     }

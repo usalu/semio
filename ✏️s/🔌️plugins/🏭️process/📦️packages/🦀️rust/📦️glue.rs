@@ -119,6 +119,147 @@ pub mod artifacts {
         pub mod spr;
 
         #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod glb {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️glb/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️glb/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod gltf {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️gltf/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️gltf/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod ifc {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🏗️ifc/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🏗️ifc/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod obj {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️obj/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🧊️obj/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/📷️png/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/📷️png/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod step {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/📐️step/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/📐️step/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod stl {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🟪️stl/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🧊️process3d/🚪️io/🟪️stl/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
+        #[path = "."]
         pub mod engine {
             #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs"]
             mod component;

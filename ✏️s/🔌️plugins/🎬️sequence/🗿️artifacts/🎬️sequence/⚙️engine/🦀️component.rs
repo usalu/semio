@@ -172,6 +172,8 @@ fn ensure_imperative_modules_for_tests() {
 /// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
 /// sequence documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::sequence::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::sequence::SequencePlayApp>(SEQUENCE_DOCUMENT_SCHEMA);

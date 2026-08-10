@@ -238,10 +238,10 @@ pub fn register_artifact_schema() {
 }
 
 pub fn register() {
+    crate::artifacts::procedural2d::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
-    semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);
     // 📦️ Registers `Procedural2dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
     // can print/parse `.procedural2d` packs without depending on this crate's concrete types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA);

@@ -34,6 +34,8 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 /// endpoints and any other schema-string-keyed caller can print/parse flow documents. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::flow::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA);

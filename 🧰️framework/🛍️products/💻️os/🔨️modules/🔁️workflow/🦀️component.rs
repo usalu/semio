@@ -7,7 +7,7 @@
 //! its own in-file `OsWorkflow`/`OsAppInstance` pair (future work, not this ticket).
 // #endregion 🔖️InstanceIdentity
 
-use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, OsMediaFormat, PortMultiplicity};
+use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, MediaFormat, PortMultiplicity};
 use semio_framework::{Locale, Terminology};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -60,7 +60,7 @@ pub fn placeholder_media_contract(kind_id: &str) -> MediaContract {
 /// `media_type`/`wire` point at plain-data types from `semio_framework` that this crate can't
 /// implement `dsl::DslField` for under the orphan rule (neither the trait nor the type is local
 /// here). Since `MediaContract` itself IS local, hand-writing its own impl sidesteps both problems
-/// at once: every foreign sub-value (`MediaClass`/`MediaForm`/`OsMediaFormat`) is bridged directly
+/// at once: every foreign sub-value (`MediaClass`/`MediaForm`/`MediaFormat`) is bridged directly
 /// to/from a scalar `dsl::FieldValue::Enum`/`Ident` right here, so none of them ever need their own
 /// `DslField` impl or a local-twin type. `media_contract_spec()`'s `keyword: None` makes
 /// `Shape::Record` splice these eight fields inline wherever `MediaContract` is used as a
@@ -231,7 +231,7 @@ fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract
                 Some(dsl::FieldValue::Text(s)) => s.clone(),
                 other => return Err(dsl::__rt::field_error(format!("expected wire_format, found {other:?}"))),
             };
-            let format = OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+            let format = MediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
             MediaWireFormat::Binary { format }
         }
         "document" => {
@@ -2224,7 +2224,7 @@ mod tests {
         let contract = MediaContract {
             kind_id: "puzzle.2d.fixture".into(),
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-            wire: MediaWireFormat::Binary { format: OsMediaFormat::Svg },
+            wire: MediaWireFormat::Binary { format: MediaFormat::Svg },
             conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
         };
         let record = media_contract_to_record(&contract);

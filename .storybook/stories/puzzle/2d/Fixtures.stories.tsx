@@ -11,8 +11,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { Board2dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/2d/example/concrete-forest.puzzle2d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/2d/example/nakagin-capsule-tower.puzzle2d?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
+import capsuleDreamFixtureDsl from "../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/PUZZLE-DESIGN-PARITY/🌙️capsule-dream-out/🗣️dream.2d.dsl.semio?raw";
 
 //#region WasmFixtureLoader
 /** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
@@ -58,6 +59,32 @@ type StoryPuzzle2dRuntime = {
 };
 
 type StoryPuzzle2dState = { readonly fixture: StoryPuzzle2dFixture; readonly runtime: StoryPuzzle2dRuntime };
+
+const STORY_CONNECTION_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"] as const;
+
+function storyPickConnectionParams(entity: StoryPuzzle2dEntity): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of STORY_CONNECTION_PARAM_KEYS) {
+    const value = entity[key];
+    if (typeof value === "number") out[key] = value;
+  }
+  return out;
+}
+
+function storySummarizePuzzle2dConnectionParams(fixture: StoryPuzzle2dFixture) {
+  const edges = fixture.edges;
+  const withNonzero = edges.filter((edge) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof edge[key] === "number" && edge[key] !== 0));
+  const sample = edges.find((edge) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof edge[key] === "number"));
+  const anchorCounts: Record<string, number> = {};
+  for (const node of fixture.nodes) {
+    const anchor = typeof node.anchor === "string" ? node.anchor : "unset";
+    anchorCounts[anchor] = (anchorCounts[anchor] ?? 0) + 1;
+  }
+  return {
+    edges: { total: edges.length, withNonzeroParams: withNonzero.length, sample: sample ? { id: sample.id, ...storyPickConnectionParams(sample) } : null },
+    nodeAnchors: anchorCounts,
+  };
+}
 //#endregion StoryTypes
 
 //#region PluginEmulator
@@ -208,7 +235,16 @@ function Board2dFixtureStoryHost({ fixtureDsl, interactive }: { readonly fixture
 
   const node = useMemo(() => (state ? buildStorySceneNode(state, interactive) : null), [state, interactive]);
   const debug = useMemo(
-    () => (state ? JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }) : "loading"),
+    () =>
+      state
+        ? JSON.stringify({
+            selection: state.runtime.selectedIds,
+            camera: state.fixture.camera,
+            nodeCount: state.fixture.nodes.length,
+            edgeCount: state.fixture.edges.length,
+            connectionParams: storySummarizePuzzle2dConnectionParams(state.fixture),
+          })
+        : "loading",
     [state],
   );
 
@@ -254,6 +290,14 @@ export const NakaginCapsuleTower: Story = {
 export const ConcreteForest: Story = {
   args: {
     fixtureDsl: concreteForestFixtureDsl,
+    interactive: true,
+  },
+};
+
+/** 🌙️ Capsule Dream 2D projection (2880 nodes / 2864 edges) — ticket `PUZZLE-DESIGN-PARITY` `🌙️capsule-dream-out/🗣️dream.2d.dsl.semio` until the `◻2d/📚️examples/🌙️capsule-dream` unit lands. */
+export const CapsuleDream: Story = {
+  args: {
+    fixtureDsl: capsuleDreamFixtureDsl,
     interactive: true,
   },
 };

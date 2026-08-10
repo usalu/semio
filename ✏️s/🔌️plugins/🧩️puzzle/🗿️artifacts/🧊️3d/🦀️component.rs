@@ -389,7 +389,7 @@ pub struct Puzzle3dCatalogObjectKind {
     #[serde(default)]
     pub unit: String,
     #[serde(default, rename = "abstract")]
-    pub abstract_: bool,
+    pub is_abstract: bool,
     #[serde(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
@@ -503,8 +503,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Design },
         schema: "puzzle.3d".into(),
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
     }
 }
 
@@ -586,7 +586,7 @@ mod design_parity_schema_tests {
             icon: "".into(),
             image: "".into(),
             unit: "m".into(),
-            abstract_: false,
+            is_abstract: false,
             base_kinds: vec!["Part".into()],
             representations: vec![Puzzle3dRepresentation {
                 id: "mesh".into(),

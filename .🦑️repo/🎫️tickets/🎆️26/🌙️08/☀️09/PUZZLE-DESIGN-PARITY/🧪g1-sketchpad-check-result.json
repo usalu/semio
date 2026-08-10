@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "failures": [],
+  "checked": [
+    "sketchpadConnectionTransformParamsFromDto u/v->x/y",
+    "sketchpadPiecePuzzleAnchor Fixed/Connected",
+    "sketchpadPieceAuthoredPose ignores flatPosition",
+    "fixture builders Fixed-seed + anchor source contracts"
+  ]
+}

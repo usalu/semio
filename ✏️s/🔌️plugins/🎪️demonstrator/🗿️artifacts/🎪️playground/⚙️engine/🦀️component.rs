@@ -12,6 +12,8 @@ pub fn empty_playground_snapshot() -> PlaygroundSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers playground codecs and the fifteen handcrafted schema leaves.
 pub fn register() {
+    crate::artifacts::playground::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
 }

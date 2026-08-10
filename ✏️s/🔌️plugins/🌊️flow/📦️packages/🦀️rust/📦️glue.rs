@@ -96,6 +96,57 @@ pub mod artifacts {
         }
         #[path = "../../🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs"]
         pub mod spr;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🌊️flow/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod csv {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/📊️csv/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/📊️csv/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod md {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/📝️md/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🌊️flow/🚪️io/📝️md/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
         #[path = "../../🗿️artifacts/🌊️flow/⚙️engine/🦀️component.rs"]
         pub mod engine;
     }

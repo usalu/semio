@@ -309,7 +309,7 @@ pub struct Puzzle2dCatalogNodeKind {
     pub image: String,
     pub unit: String,
     #[serde(default, rename = "abstract")]
-    pub abstract_: bool,
+    pub is_abstract: bool,
     #[serde(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
@@ -419,8 +419,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Design },
         schema: "puzzle.2d".into(),
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -500,7 +500,7 @@ mod tests {
                 icon: "i".into(),
                 image: "img".into(),
                 unit: "m".into(),
-                abstract_: false,
+                is_abstract: false,
                 base_kinds: vec!["base".into()],
                 representations: vec![Puzzle2dRepresentation {
                     id: "r1".into(),

@@ -486,6 +486,8 @@ pub fn register_artifact_schema() {
 
 /// 🗂️ Registers codecs and schema descriptor.
 pub fn register() {
+    crate::artifacts::rewrite::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
 }

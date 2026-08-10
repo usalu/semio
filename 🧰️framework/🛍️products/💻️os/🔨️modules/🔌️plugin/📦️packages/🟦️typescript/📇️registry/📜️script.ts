@@ -922,7 +922,9 @@ const DIFF_FACET_DIR = "🔺️diff";
 const SCHEMA_FACET_DIR = "🧬️schema";
 const CONFIG_FACET_DIR = "🎚️config";
 const PRESENCE_FACET_DIR = "👥️presence";
+const IO_FACET_DIR = "🚪️io";
 const LEGACY_CONFIG_FACET_DIR = "🧮️config";
+const TAXONOMY_IO_FORMAT_CHILD_DIRS = TAXONOMY.ioFormatChildDirs ?? [];
 const LEGACY_WASM_DIR = "🕸️wasm";
 const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
 const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
@@ -964,6 +966,15 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       if (component === SNAPSHOT_FACET_DIR) {
         if (!existsSync(facetDir)) {
           findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/`);
+        }
+        continue;
+      }
+      // 🚪️io (ticket 26/08/10/ARTIFACT-IO-FACETS): W3 requires dir + rust root leaf only; format leaves land in W5/W6.
+      if (component === IO_FACET_DIR) {
+        if (!existsSync(facetDir)) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/`);
+        } else if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
         }
         continue;
       }
@@ -1140,7 +1151,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS, ...TAXONOMY_SNAPSHOT_CHILD_DIRS, ...TAXONOMY_DIFF_CHILD_DIRS]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS, ...TAXONOMY_SNAPSHOT_CHILD_DIRS, ...TAXONOMY_DIFF_CHILD_DIRS, ...TAXONOMY_IO_FORMAT_CHILD_DIRS]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;

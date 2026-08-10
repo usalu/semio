@@ -32,7 +32,7 @@ const RESOLVE_ALIASES = [
   ["@semio-tech/gis-2d-react", resolvePath(repoRoot, "gis/2d/react/index.tsx")],
   ["@semio-tech/puzzle-2d-react", resolvePath(repoRoot, "puzzle/2d/react/index.tsx")],
   ["@semio-tech/puzzle-3d-react", resolvePath(repoRoot, "puzzle/3d/react/index.tsx")],
-  ["@semio-tech/puzzle-5d-react", resolvePath(repoRoot, "puzzle/5d/react/index.tsx")],
+  ["@semio-tech/puzzle-5d-react", resolvePath(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️puzzle-5d-react/📦️index.tsx")],
 ];
 
 function resolveAlias(specifier) {

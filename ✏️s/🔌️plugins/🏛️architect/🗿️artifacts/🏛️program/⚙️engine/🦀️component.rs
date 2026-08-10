@@ -21,6 +21,8 @@ pub use crate::artifacts::program::engine::validate::*;
 /// 🗂️ Registers `ProgramSnapshot`'s pack↔dsl codec under `ARCHITECT_PROGRAM_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::program::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::architect::ArchitectPlayApp>(crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA);

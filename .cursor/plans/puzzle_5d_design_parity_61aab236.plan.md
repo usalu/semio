@@ -19,13 +19,13 @@ todos:
     status: completed
   - id: wave5-parity
     content: "Wave 5: permanent golden parity tests in the example units plus the gated compose cross-check against flatten.cases.compose.json"
-    status: in_progress
+    status: completed
   - id: wave6-wiring
     content: "Wave 6: update the sketchpad consumer, storybook stories and the puzzle-5d-react target, then register launch.json and project.json entries"
-    status: pending
+    status: completed
   - id: wave7-gate
     content: "Wave 7: run verify gate, puzzle and sketchpad suites, examples verify, long compose cross-check, runtime check via dev 5d, then ticket_close"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -14,6 +14,8 @@ use serde_json::Value;
 /// (and any other schema-string-keyed caller) can print/parse it without depending on this crate's
 /// concrete `Projection`/`Mutation` types. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::wires::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA);

@@ -1259,3 +1259,9 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::iso16757::io::register();
+}
+//#endregion 🔖️IoFacet

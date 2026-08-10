@@ -10,7 +10,7 @@ use crate::apps::cad::{cad_solid_export_effect, cad_spatial_export_effect, expor
 use crate::artifacts::cad::engine::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload};
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{OsMediaFormat, SelectionSet};
+use semio_framework_plugin::{MediaFormat, SelectionSet};
 use serde_json::Value;
 
 
@@ -74,7 +74,7 @@ pub mod save_in_play {
 
     pub fn handle(_payload: &SaveInPlay, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
-        let effect = match export_solid_modelspace(&view, OsMediaFormat::Step) {
+        let effect = match export_solid_modelspace(&view, MediaFormat::Step) {
             Some(export) => cad_solid_export_effect(export),
             None => cad_spatial_export_effect(&export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.dsl"),
         };
@@ -96,9 +96,9 @@ pub mod save_current {
     pub fn handle(payload: &SaveCurrent, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let format = match payload.format.as_deref() {
-            Some("obj") => OsMediaFormat::Obj,
-            Some("stl") => OsMediaFormat::Stl,
-            _ => OsMediaFormat::Step,
+            Some("obj") => MediaFormat::Obj,
+            Some("stl") => MediaFormat::Stl,
+            _ => MediaFormat::Step,
         };
         let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
         let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg) };

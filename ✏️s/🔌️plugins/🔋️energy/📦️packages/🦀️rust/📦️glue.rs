@@ -252,6 +252,72 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🔋️model/📡️spr/🦀️component.rs"]
         pub mod spr;
 
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🔋️model/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod csv {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/📊️csv/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/📊️csv/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod xlsx {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/📕️xlsx/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/📕️xlsx/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod zip {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/🎒️zip/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/🔋️model/🚪️io/🎒️zip/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
         #[path = "../../🗿️artifacts/🔋️model/⚙️engine/🦀️component.rs"]
         pub mod engine;
     }

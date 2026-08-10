@@ -157,6 +157,147 @@ pub mod artifacts {
         pub mod spr;
 
         #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod glb {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️glb/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️glb/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod gltf {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️gltf/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️gltf/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod las {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/☁️las/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/☁️las/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod obj {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️obj/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🧊️obj/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod ply {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/☁️ply/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/☁️ply/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/📷️png/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/📷️png/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod stl {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🟪️stl/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🚪️io/🟪️stl/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
+        #[path = "."]
         pub mod engine {
             #[path = "../../🗿️artifacts/💠️lowpoly/⚙️engine/🦀️component.rs"]
             mod component;

@@ -38,11 +38,11 @@ pub enum LayoutError {
 /// the 2D export handler and the DWG import handler. Called from the plugin root's `semio_plugin!{
 /// setup: … }`.
 pub fn register() {
+    crate::artifacts::layout::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::layout::LayoutPlayApp>(LAYOUT_DOCUMENT_SCHEMA);
-    semio_framework_os::register_2d_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.layout", layout_document_json_from_dwg);
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -131,8 +131,8 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },
     }
 }

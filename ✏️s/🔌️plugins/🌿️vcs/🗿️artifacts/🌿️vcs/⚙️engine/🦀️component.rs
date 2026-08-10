@@ -14,6 +14,8 @@ pub fn empty_vcs_snapshot() -> VcsSnapshot {
 /// documents without depending on this crate's concrete snapshot/mutation types. Called by
 /// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`.
 pub fn register() {
+    crate::artifacts::vcs::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DOCUMENT_SCHEMA);

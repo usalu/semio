@@ -6,12 +6,6 @@
 use crate::artifacts::puzzle3d::engine::{Quat, Vec3, WorldVolumeProps};
 
 
-//#region 🔖️Flatten
-#[path = "🎛flatten/🦀️component.rs"]
-pub mod flatten;
-pub use flatten::{flatten_objects, flatten_snapshot, plane_to_orientation, FlattenPlane, FlattenPose, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA, TOLERANCE};
-//#endregion 🔖️Flatten
-
 //#region 🔒️GeometryAdapter
 /// 🔒️ Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this artifact depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]

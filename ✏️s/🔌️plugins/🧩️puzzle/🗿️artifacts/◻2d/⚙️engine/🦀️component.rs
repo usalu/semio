@@ -49,6 +49,8 @@ pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
 ///
 /// 🚧️ The 🖐️5d port adds its own `crate::apps::puzzle5d::register_puzzle5d_exports()` line right here.
 pub fn register() {
+    crate::artifacts::puzzle2d::io::register();
+
     register_pilot_languages();
     register_artifact_schemas();
     crate::apps::puzzle2d::register_puzzle2d_exports();

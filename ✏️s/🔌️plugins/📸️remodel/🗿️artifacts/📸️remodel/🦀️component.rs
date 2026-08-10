@@ -9,7 +9,7 @@
 
 use base64::Engine as _;
 use semio_framework::MeshData;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -26,8 +26,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         schema: "remodel.scene".into(),
-        export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Ply, OsMediaFormat::Las, OsMediaFormat::Png],
-        import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
+        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png],
+        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
     }
 }
 //#endregion 🔖️ArtifactKind

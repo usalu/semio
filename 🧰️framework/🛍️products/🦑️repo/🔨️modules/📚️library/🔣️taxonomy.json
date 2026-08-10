@@ -1,6 +1,6 @@
 {
-  "_comment": "🔣️ Single source of truth for taxonomy vocabulary + the repo-wide package discovery contract, consumed by 🟦️discovery.ts (TS side: registry script, root policy script) and — plain JSON, no TS-only constructs — by the plugin SDK Rust twin (`assert_taxonomy_components`) and a future Rust build.rs codegen step. Two independently hand-maintained copies of this vocabulary used to live in framework/os/plugin/registry script.ts (TAXONOMY_ARTIFACT_COMPONENTS/TAXONOMY_WINDOW_CHILDREN) and root script.ts (POLICY_ARTIFACT_COMPONENT_DIRS/POLICY_WINDOW_CHILD_DIRS/POLICY_TAXONOMY_LEAF_PARENT_DIRS); this file replaces them (M3/M4 of the mechanism wave switch those consumers over). Schema facets (ticket 26/08/08/ARTIFACT-SCHEMA-FACETS): every artifact carries three `🧬️schema` facet dirs — artifact-level `🧬️schema`, `📸️snapshot/🧬️schema` (persistent fields only), and `🔺️diff/🧬️schema` — each holding the five `schemaFormats` leaves. `🎒️pack` is nested under `📸️snapshot` (a pack encodes exactly the snapshot); no bare `🎒️pack` may sit on an artifact root. See master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and mechanism tickets 26/08/05/TAXONOMY-VOCABULARY-AND-PACKAGE-DISCOVERY-CONTRACT, 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE, 26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY, 26/08/08/ARTIFACT-SCHEMA-FACETS.",
-  "_engineListComment": "⚙️ Completeness vs structural: artifactComponentDirs is the COMPLETENESS set (every 🗿️artifacts/<a>/ must carry all of them as a leaf — what registry's validateTaxonomyTree checks); artifactChildDirs is the STRUCTURAL set (every dir that may appear as a child of an artifact — what root script's POLICY_ARTIFACT_COMPONENT_DIRS checks). 🧬️mutations and ⚙️engine are REQUIRED completeness members (Mutation facet + ArtifactEngine). 🧬️schema and 📸️snapshot are REQUIRED completeness members (three schema facets live at `🧬️schema`, `📸️snapshot/🧬️schema`, `🔺️diff/🧬️schema`; `🎒️pack` lives under `📸️snapshot`, never on the artifact root). snapshotChildDirs / diffChildDirs mirror mutationChildDirs for the one-level-deeper walk. 📚️examples remains structural-but-not-in-completeness (validated separately by the examples audit). artifactChildDirs is a superset of artifactComponentDirs; validateTaxonomy() in 🟦️discovery.ts enforces that invariant.",
+  "_comment": "🔣️ Single source of truth for taxonomy vocabulary + the repo-wide package discovery contract, consumed by 🟦️discovery.ts (TS side: registry script, root policy script) and — plain JSON, no TS-only constructs — by the plugin SDK Rust twin (`assert_taxonomy_components`) and a future Rust build.rs codegen step. Two independently hand-maintained copies of this vocabulary used to live in framework/os/plugin/registry script.ts (TAXONOMY_ARTIFACT_COMPONENTS/TAXONOMY_WINDOW_CHILDREN) and root script.ts (POLICY_ARTIFACT_COMPONENT_DIRS/POLICY_WINDOW_CHILD_DIRS/POLICY_TAXONOMY_LEAF_PARENT_DIRS); this file replaces them (M3/M4 of the mechanism wave switch those consumers over). Schema facets (ticket 26/08/08/ARTIFACT-SCHEMA-FACETS): every artifact carries three `🧬️schema` facet dirs — artifact-level `🧬️schema`, `📸️snapshot/🧬️schema` (persistent fields only), and `🔺️diff/🧬️schema` — each holding the five `schemaFormats` leaves. `🎒️pack` is nested under `📸️snapshot` (a pack encodes exactly the snapshot); no bare `🎒️pack` may sit on an artifact root. IO facet (ticket 26/08/10/ARTIFACT-IO-FACETS): every artifact carries `🚪️io` with per-format dirs from `mediaFormatDirs`, each holding `ioFormatChildDirs` (`📥️import`/`📤️export`) leaves. See master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and mechanism tickets 26/08/05/TAXONOMY-VOCABULARY-AND-PACKAGE-DISCOVERY-CONTRACT, 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE, 26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY, 26/08/08/ARTIFACT-SCHEMA-FACETS, 26/08/10/ARTIFACT-IO-FACETS.",
+  "_engineListComment": "⚙️ Completeness vs structural: artifactComponentDirs is the COMPLETENESS set (every 🗿️artifacts/<a>/ must carry all of them as a leaf — what registry's validateTaxonomyTree checks); artifactChildDirs is the STRUCTURAL set (every dir that may appear as a child of an artifact — what root script's POLICY_ARTIFACT_COMPONENT_DIRS checks). 🧬️mutations and ⚙️engine are REQUIRED completeness members (Mutation facet + ArtifactEngine). 🧬️schema and 📸️snapshot are REQUIRED completeness members (three schema facets live at `🧬️schema`, `📸️snapshot/🧬️schema`, `🔺️diff/🧬️schema`; `🎒️pack` lives under `📸️snapshot`, never on the artifact root). 🚪️io is a REQUIRED completeness member (ticket 26/08/10/ARTIFACT-IO-FACETS): root leaf required now; per-format import/export leaves land in W5/W6 — mediaFormatDirs + ioFormatChildDirs declare the nested shape for policyTaxonomyDirsBreaches). snapshotChildDirs / diffChildDirs mirror mutationChildDirs for the one-level-deeper walk. 📚️examples remains structural-but-not-in-completeness (validated separately by the examples audit). artifactChildDirs is a superset of artifactComponentDirs; validateTaxonomy() in 🟦️discovery.ts enforces that invariant.",
   "_treePurityComment": "🌳️ SHAPE V2 (26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST, user directive): inside an owner's domain tree only three things may exist — a per-language leaf file (taxonomyLeafFilenames / ecosystems.<lang>.leafFilename, always `<prefix>component.<ext>`), the packagesDirName folder, and plain <component> folders. entryLocation=\"packages\" means the entry file lives at <owner>/📦️packages/<lang>/<entry> (three-level shape: <owner>/📦️packages/<lang>/🎯️targets/<target>/<entry>) — 📦️packages holds ONLY packaging code (packagingFileNames/packagingFileSuffixes + the entry file), never data. rootDataDirNames/rootDataFileNames/rootDocFileNames are valid ONLY at the owner root. A sibling variant source file (old 🦀️config.rs / 🦀️terminology.rs / 🦀️wasm.rs / any 🦀️<topic>.rs beside a component.rs) is non-compliant under V2 and folds into its own <folder>/component.<ext> — same module content, only the #[path]/import wiring changes.",
   "_areaStateComment": "🗺️ areas maps an area root to one of areaStates, replacing the registry script's LEGACY_LAYOUT_TOLERANT boolean with per-area granularity. It is a DECLARED value (an area graduates deliberately); per-owner/per-package maturity is DERIVED from disk instead — see migratedMarker and packageMaturityStates, never a hand-maintained package list. NOTE for 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE: root script.ts's policyTaxonomyBarrelShapeBreaches compares against the area value \"taxonomy\", which predates this enum — the equivalent state here is \"clean\"; validateTaxonomy() rejects any area value outside areaStates so the mismatch surfaces instead of silently making that rule vacuous.",
   "schemaVersion": 2,
@@ -207,7 +207,8 @@
     "📸️snapshot",
     "🔧️op",
     "📡️spr",
-    "⚙️engine"
+    "⚙️engine",
+    "🚪️io"
   ],
   "artifactChildDirs": [
     "🧬️mutations",
@@ -218,7 +219,8 @@
     "🔧️op",
     "📡️spr",
     "⚙️engine",
-    "📚️examples"
+    "📚️examples",
+    "🚪️io"
   ],
   "exampleAssetsDirName": "🖼️assets",
   "exampleTestsDirName": "🧪️tests",
@@ -318,7 +320,10 @@
     "🛠️tools",
     "📌️panels",
     "🎚️config",
-    "👥️presence"
+    "👥️presence",
+    "📥️import",
+    "📤️export",
+    "🚪️io"
   ],
   "taxonomyLeafFilenames": {
     "🦀️rust": "🦀️component.rs",
@@ -413,5 +418,38 @@
   ],
   "presenceChildDirs": [
     "🧬️schema"
-  ]
+  ],
+  "ioFormatChildDirs": [
+    "📥️import",
+    "📤️export"
+  ],
+  "mediaFormatDirs": {
+    "glb": "🧊️glb",
+    "gltf": "🧊️gltf",
+    "obj": "🧊️obj",
+    "stl": "🟪️stl",
+    "ply": "☁️ply",
+    "las": "☁️las",
+    "step": "📐️step",
+    "ifc": "🏗️ifc",
+    "dwg": "🖊️dwg",
+    "dxf": "🖊️dxf",
+    "svg": "🎨️svg",
+    "png": "📷️png",
+    "jpg": "📷️jpg",
+    "gif": "🎞️gif",
+    "bmp": "🖼️bmp",
+    "tiff": "🖼️tiff",
+    "pdf": "📄️pdf",
+    "docx": "📜️docx",
+    "pptx": "🎞️pptx",
+    "csv": "📊️csv",
+    "xlsx": "📕️xlsx",
+    "md": "📝️md",
+    "txt": "📄txt",
+    "zip": "🎒️zip",
+    "bcf": "💬️bcf",
+    "json": "🔣️json"
+  },
+  "_ioFacetComment": "🚪️ Artifact IO facet (ticket 26/08/10/ARTIFACT-IO-FACETS): every artifact carries 🚪️io/ with per-format dirs from mediaFormatDirs, each holding 📥️import + 📤️export leaves. ioFormatChildDirs lists those leaf parents. Codecs live in the framework; artifact leaves map Snapshot↔Neutral."
 }

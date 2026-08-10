@@ -12,8 +12,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { World3dHost } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 
-import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️concrete-forest.puzzle3d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️nakagin-capsule-tower.puzzle3d?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
+import capsuleDreamFixtureDsl from "../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/PUZZLE-DESIGN-PARITY/🌙️capsule-dream-out/🗣️dream.3d.dsl.semio?raw";
 
 import abbauAufbauReferenceUrl from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
 import rathausAhlenReferenceUrl from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png";
@@ -57,6 +58,7 @@ type StoryWorld3dFixture = {
   readonly camera: StoryWorld3dCamera;
   readonly objects: readonly StoryWorld3dObject[];
   readonly references?: readonly StoryWorld3dReference[];
+  readonly attractions?: readonly Record<string, unknown>[];
 };
 
 type StoryWorld3dRuntime = {
@@ -66,6 +68,30 @@ type StoryWorld3dRuntime = {
 };
 
 type StoryWorld3dState = { readonly fixture: StoryWorld3dFixture; readonly runtime: StoryWorld3dRuntime };
+
+const STORY_CONNECTION_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"] as const;
+
+function storyPickConnectionParams(entity: Record<string, unknown>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of STORY_CONNECTION_PARAM_KEYS) {
+    const value = entity[key];
+    if (typeof value === "number") out[key] = value;
+  }
+  return out;
+}
+
+function storySummarizePuzzle3dConnectionParams(fixture: StoryWorld3dFixture) {
+  const attractions = fixture.attractions ?? [];
+  const withNonzero = attractions.filter((row) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof row[key] === "number" && row[key] !== 0));
+  const sample = attractions.find((row) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof row[key] === "number"));
+  return {
+    attractions: {
+      total: attractions.length,
+      withNonzeroParams: withNonzero.length,
+      sample: sample ? { id: sample.id, ...storyPickConnectionParams(sample) } : null,
+    },
+  };
+}
 //#endregion StoryTypes
 
 //#region ReferenceAssetOverrides
@@ -266,7 +292,15 @@ function World3dStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): Reac
 
   const node = useMemo(() => (state ? buildStoryWorld3dSceneNode(state) : null), [state]);
   const debug = useMemo(
-    () => (state ? JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, objectCount: state.fixture.objects.length }) : "loading"),
+    () =>
+      state
+        ? JSON.stringify({
+            selection: state.runtime.selectedIds,
+            camera: state.fixture.camera,
+            objectCount: state.fixture.objects.length,
+            connectionParams: storySummarizePuzzle3dConnectionParams(state.fixture),
+          })
+        : "loading",
     [state],
   );
 
@@ -311,5 +345,12 @@ export const ConcreteForest: Story = {
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,
+  },
+};
+
+/** 🌙️ Capsule Dream 3D projection (2880 objects) — ticket `PUZZLE-DESIGN-PARITY` `🌙️capsule-dream-out/🗣️dream.3d.dsl.semio` until the `🧊️3d/📚️examples/🌙️capsule-dream` unit lands. */
+export const CapsuleDream: Story = {
+  args: {
+    fixtureDsl: capsuleDreamFixtureDsl,
   },
 };

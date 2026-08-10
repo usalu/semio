@@ -14,6 +14,8 @@ use std::collections::HashMap;
 /// depending on its concrete `Projection`/`Mutation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
+    crate::artifacts::fem2d::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     

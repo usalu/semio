@@ -341,10 +341,10 @@ use crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA;
 //#region 🔖️Register
 /// 🔌️ Called by the plugin-root `📦️glue.rs`'s `semio_plugin!{}` `setup:` field.
 pub fn register() {
+    crate::artifacts::present::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
-    semio_framework_os::register_2d_export_handlers(PRESENT_DOCUMENT_SCHEMA, "animate", animate_present_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler(PRESENT_DOCUMENT_SCHEMA, animate_present_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DOCUMENT_SCHEMA);
 }
 

@@ -16,7 +16,7 @@ use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework::{parse_contributions, Contribution, MeshImporter};
 use std::sync::{Mutex, OnceLock};
-use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
+use semio_framework_plugin::{mesh_from_kind, MeshData, MediaFormat, WorldProjectionConfig};
 use serde_json::Value;
 use std::collections::HashSet;
 use crate::artifacts::cad::engine::transformation::solid_for_object;
@@ -366,20 +366,20 @@ pub struct CadSolidExport {
 
 /// @emoji 📤️ Encodes `solids` through the kernel's native OBJ/STL/STEP codec for `format`; STL is
 /// base64-wrapped since it is a binary format, OBJ/STEP stay UTF-8 text.
-pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: OsMediaFormat, stem: &str) -> Option<CadSolidExport> {
+pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: MediaFormat, stem: &str) -> Option<CadSolidExport> {
     let filename = format!("{stem}.{}", format.as_str());
     let mime_type = format.mime_type().to_string();
     match format {
-        OsMediaFormat::Obj => {
+        MediaFormat::Obj => {
             let text = block_on(kernel.export_obj(solids, 0.1)).ok()?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
-        OsMediaFormat::Stl => {
+        MediaFormat::Stl => {
             let bytes = block_on(kernel.export_stl(solids, 0.1)).ok()?;
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
-        OsMediaFormat::Step => {
+        MediaFormat::Step => {
             let text = block_on(kernel.export_step(solids)).ok()?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
@@ -717,20 +717,12 @@ pub fn sync_cad_computer_contributions(contributions_json: &str) {
 /// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind
 /// advertises. Was the bundle crate's `register_cad_exports`.
 pub fn register() {
+    crate::artifacts::cad::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     // 📦️ pack binary codec for `CadSnapshot` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidExporter));
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StepSolidExporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidImporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidImporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::StepSolidImporter));
-    semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_importer("3d.cad", cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-    semio_framework_os::register_mesh_dwg_export_handler("3d.cad", "cad", cad_mesh_from_document);
-    semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
 //#endregion 🔖️Register
 

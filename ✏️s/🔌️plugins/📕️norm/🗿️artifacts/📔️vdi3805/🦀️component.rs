@@ -1,5 +1,7 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
 use crate::document::{NormError, QuantityKind};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -1246,4 +1248,3 @@ mod tests {
         assert!(doc.catalog.product_for_sheet(SheetId(3)).is_none());
     }
 }
-

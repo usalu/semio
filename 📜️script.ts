@@ -4009,6 +4009,37 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
                 solution: `Move "${nested.name}" into a recognized diffChildDirs member, or add it to 🔣️taxonomy.json's diffChildDirs with a ticket citation.`,
               });
             }
+          } else if (child.name === "🚪️io") {
+            const formatDirs = new Set(Object.values((taxonomy as { mediaFormatDirs?: Record<string, string> }).mediaFormatDirs ?? {}));
+            const ioFormatChildDirs = ((taxonomy as { ioFormatChildDirs?: string[] }).ioFormatChildDirs ?? []) as string[];
+            const nestedRoot = `${artifactDir}/${child.name}`;
+            for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
+              if (!formatDirs.has(nested.name)) {
+                breaches.push({
+                  id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
+                  summary: `"${nestedRoot}/${nested.name}" is not a recognized media format dir`,
+                  kind: "taxonomy/dirs",
+                  scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+                  priority: policyNewSurfacePriority(crate, "medium"),
+                  reason: `Discovery contract: 🚪️io may only contain dirs from taxonomy.mediaFormatDirs.`,
+                  solution: `Rename "${nested.name}" to a mediaFormatDirs value, or add it to 🔣️taxonomy.json's mediaFormatDirs with a ticket citation.`,
+                });
+                continue;
+              }
+              const formatRoot = `${nestedRoot}/${nested.name}`;
+              for (const leaf of policyReaddirSafe(repoRoot, formatRoot).filter((e) => e.isDirectory)) {
+                if (ioFormatChildDirs.includes(leaf.name)) continue;
+                breaches.push({
+                  id: `taxonomy-dirs-artifact-${formatRoot}-${leaf.name}`,
+                  summary: `"${formatRoot}/${leaf.name}" is not a recognized io format child`,
+                  kind: "taxonomy/dirs",
+                  scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+                  priority: policyNewSurfacePriority(crate, "medium"),
+                  reason: `Discovery contract: each 🚪️io/<format>/ may only contain ${ioFormatChildDirs.join(", ")}.`,
+                  solution: `Move "${leaf.name}" into 📥️import or 📤️export, or update ioFormatChildDirs.`,
+                });
+              }
+            }
           }
           //#endregion NestedFacetWalk
           continue;
@@ -6735,6 +6766,255 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧️PolicyRuleAppSchemas
 
+//#region 🔧️PolicyRuleArtifactIo
+/** ⚖️Closed MediaFormat catalog must match 📋️mimes.csv (ticket 26/08/10/ARTIFACT-IO-FACETS). */
+const MEDIA_FORMAT_CATALOG_VARIANTS = [
+  "glb", "gltf", "stl", "obj", "ply", "las", "step", "ifc", "dwg", "dxf", "svg", "png", "jpg", "gif",
+  "bmp", "tiff", "pdf", "docx", "pptx", "csv", "xlsx", "md", "txt", "zip", "bcf", "json",
+] as const;
+
+function policyMediaFormatCatalogBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const mimesPath = join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/📃️list/📋️mimes.csv");
+  // tolerate either list emoji spelling used historically
+  const alt = join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/📄️list/📋️mimes.csv");
+  let csvPath = mimesPath;
+  if (!existsSync(csvPath)) {
+    const candidates = [
+      join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/📄️list/📋️mimes.csv"),
+      join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/📄️list/📋️mimes.csv"),
+    ];
+    // resolve via walk of assets list dir
+    const assets = join(repoRoot, "🧰️framework/🔨️modules/🖼️assets");
+    const found: string[] = [];
+    const walk = (dir: string) => {
+      if (!existsSync(dir)) return;
+      for (const name of readdirSync(dir)) {
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) walk(p);
+        else if (name === "📋️mimes.csv") found.push(p);
+      }
+    };
+    walk(assets);
+    if (found.length === 0) {
+      breaches.push({
+        kind: "artifact-io/catalog-parity",
+        scope: "🧰️framework/🔨️modules/🖼️assets",
+        summary: "📋️mimes.csv missing",
+        reason: "MediaFormat catalog CSV is the single source of truth.",
+        solution: "Restore 📋️mimes.csv under 🖼️assets.",
+        autofixable: false,
+      } as BreachRecord);
+      return breaches;
+    }
+    csvPath = found[0]!;
+  }
+  const lines = readFileSync(csvPath, "utf8").split(/\r?\n/).filter((l) => l.trim() && !l.startsWith("MIME"));
+  const csvExts = new Set(
+    lines
+      .map((l) => l.split(",")[1]?.trim().replace(/^\./, "").toLowerCase())
+      .filter((x): x is string => !!x),
+  );
+  // .stp is an alias for step — not a catalog row
+  for (const v of MEDIA_FORMAT_CATALOG_VARIANTS) {
+    if (!csvExts.has(v)) {
+      breaches.push({
+        kind: "artifact-io/catalog-parity",
+        scope: csvPath,
+        summary: `MediaFormat.${v} missing from 📋️mimes.csv`,
+        reason: "Every MediaFormat variant must appear as an Extension in the CSV.",
+        solution: `Add a .${v} row to �♣️mimes.csv or remove the enum variant.`,
+        autofixable: false,
+      } as BreachRecord);
+    }
+  }
+  for (const ext of csvExts) {
+    if (!(MEDIA_FORMAT_CATALOG_VARIANTS as readonly string[]).includes(ext) && ext !== "stp") {
+      breaches.push({
+        kind: "artifact-io/catalog-parity",
+        scope: csvPath,
+        summary: `CSV extension .${ext} has no MediaFormat variant`,
+        reason: "CSV and MediaFormat must stay closed and equal.",
+        solution: `Add MediaFormat::${ext[0]!.toUpperCase()}${ext.slice(1)} or remove the CSV row.`,
+        autofixable: false,
+      } as BreachRecord);
+    }
+  }
+  return breaches;
+}
+
+/** ⚖️Artifact 🚪️io facet scanners (catalog parity + facet completeness + leaf coverage). */
+export function policyArtifactIoBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyMediaFormatCatalogBreaches(repoRoot),
+    ...policyArtifactIoFacetCompletenessBreaches(repoRoot),
+    ...policyArtifactIoLeafParityBreaches(repoRoot),
+    ...policyArtifactIoNoEngineIoBreaches(repoRoot),
+  ];
+}
+
+function policyArtifactIoFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  for (const plugin of readdirSync(pluginsRoot)) {
+    const artifactsRoot = join(pluginsRoot, plugin, "🗿️artifacts");
+    if (!existsSync(artifactsRoot) || !statSync(artifactsRoot).isDirectory()) continue;
+    for (const artifact of readdirSync(artifactsRoot)) {
+      const artifactDir = join(artifactsRoot, artifact);
+      if (!statSync(artifactDir).isDirectory()) continue;
+      const ioDir = join(artifactDir, "🚪️io");
+      const scope = `${plugin}/${artifact}`;
+      if (!existsSync(ioDir) || !statSync(ioDir).isDirectory()) {
+        breaches.push({
+          kind: "artifact-io/facet-completeness",
+          scope,
+          summary: `missing 🚪️io facet under ${scope}`,
+          reason: "Every artifact must carry the 🚪️io facet (ticket 26/08/10/ARTIFACT-IO-FACETS).",
+          solution: `Create ${ioDir} with 🦀️component.rs implementing ArtifactIo and per-format import/export leaves.`,
+          autofixable: false,
+        } as BreachRecord);
+        continue;
+      }
+      const rs = join(ioDir, "🦀️component.rs");
+      if (!existsSync(rs)) {
+        breaches.push({
+          kind: "artifact-io/facet-completeness",
+          scope,
+          summary: `missing 🚪️io/🦀️component.rs under ${scope}`,
+          reason: "The io facet root must declare ArtifactIo.",
+          solution: `Add ${rs}.`,
+          autofixable: false,
+        } as BreachRecord);
+      } else {
+        const body = readFileSync(rs, "utf8");
+        if (!body.includes("ArtifactIo")) {
+          breaches.push({
+            kind: "artifact-io/facet-completeness",
+            scope,
+            summary: `🚪️io root does not mention ArtifactIo under ${scope}`,
+            reason: "The io facet root must declare ArtifactIo.",
+            solution: `Implement ArtifactIo in ${rs}.`,
+            autofixable: false,
+          } as BreachRecord);
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+function policyArtifactIoLeafParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const taxonomyPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+  if (!existsSync(taxonomyPath)) return breaches;
+  const taxonomy = JSON.parse(readFileSync(taxonomyPath, "utf8")) as {
+    mediaFormatDirs?: Record<string, string>;
+    ioFormatChildDirs?: string[];
+  };
+  const mediaFormatDirs = taxonomy.mediaFormatDirs ?? {};
+  const leafParents = taxonomy.ioFormatChildDirs ?? ["📥️import", "📤️export"];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  for (const plugin of readdirSync(pluginsRoot)) {
+    const artifactsRoot = join(pluginsRoot, plugin, "🗿️artifacts");
+    if (!existsSync(artifactsRoot) || !statSync(artifactsRoot).isDirectory()) continue;
+    for (const artifact of readdirSync(artifactsRoot)) {
+      const ioDir = join(artifactsRoot, artifact, "🚪️io");
+      if (!existsSync(ioDir) || !statSync(ioDir).isDirectory()) continue;
+      const scope = `${plugin}/${artifact}`;
+      for (const name of readdirSync(ioDir)) {
+        const child = join(ioDir, name);
+        if (!statSync(child).isDirectory()) continue;
+        if (name.endsWith("component.rs") || name.endsWith("component.ts")) continue;
+        const known = Object.values(mediaFormatDirs).includes(name);
+        if (!known) {
+          breaches.push({
+            kind: "artifact-io/leaf-parity",
+            scope,
+            summary: `unknown format dir ${name} under ${scope}/🚪️io`,
+            reason: "Format dirs must come from taxonomy.mediaFormatDirs.",
+            solution: `Rename ${name} to a catalog dir or update mediaFormatDirs.`,
+            autofixable: false,
+          } as BreachRecord);
+          continue;
+        }
+        for (const leaf of leafParents) {
+          const leafDir = join(child, leaf);
+          const rs = join(leafDir, "🦀️component.rs");
+          if (!existsSync(rs)) {
+            breaches.push({
+              kind: "artifact-io/leaf-parity",
+              scope,
+              summary: `missing ${leaf}/🦀️component.rs for ${name} under ${scope}`,
+              reason: "Each format must provide both import and export leaves.",
+              solution: `Add ${rs}.`,
+              autofixable: false,
+            } as BreachRecord);
+          }
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+function policyArtifactIoNoEngineIoBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const banned = [
+    "register_2d_export_handlers",
+    "register_mesh_exporter",
+    "register_mesh_importer",
+    "register_solid_exporter",
+    "register_solid_importer",
+    "register_mesh_dwg_export_handler",
+    "register_dwg_import_handler",
+  ];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  for (const plugin of readdirSync(pluginsRoot)) {
+    const artifactsRoot = join(pluginsRoot, plugin, "🗿️artifacts");
+    if (!existsSync(artifactsRoot) || !statSync(artifactsRoot).isDirectory()) continue;
+    for (const artifact of readdirSync(artifactsRoot)) {
+      const eng = join(artifactsRoot, artifact, "⚙️engine", "🦀️component.rs");
+      if (!existsSync(eng)) continue;
+      const body = readFileSync(eng, "utf8")
+        .split(/\r?\n/)
+        .filter((line) => {
+          const trimmed = line.trim();
+          return trimmed.length > 0 && !trimmed.startsWith("//") && !trimmed.startsWith("///") && !trimmed.startsWith("*");
+        })
+        .join("\n");
+      const scope = `${plugin}/${artifact}`;
+      for (const fn of banned) {
+        if (body.includes(fn)) {
+          breaches.push({
+            kind: "artifact-io/no-engine-io",
+            scope,
+            summary: `⚙️engine still calls ${fn} under ${scope}`,
+            reason: "Media registration must live in 🚪️io and be invoked via io::register().",
+            solution: `Delete ${fn} from engine and call crate::artifacts::<ascii>::io::register().`,
+            autofixable: false,
+          } as BreachRecord);
+        }
+      }
+      if (!body.includes("io::register()")) {
+        breaches.push({
+          kind: "artifact-io/registration",
+          scope,
+          summary: `⚙️engine does not call io::register() under ${scope}`,
+          reason: "Engine register must delegate media handlers to the io facet.",
+          solution: `Add crate::artifacts::<ascii>::io::register() inside engine::register().`,
+          autofixable: false,
+        } as BreachRecord);
+      }
+    }
+  }
+  return breaches;
+}
+
+//#endregion 🔧️PolicyRuleArtifactIo
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -6793,6 +7073,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyArtifactSchemaBreaches(repoRoot));
   breaches.push(...policyAppSchemaBreaches(repoRoot));
+  breaches.push(...policyArtifactIoBreaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyOsStateAuthorityBreaches(repoRoot));

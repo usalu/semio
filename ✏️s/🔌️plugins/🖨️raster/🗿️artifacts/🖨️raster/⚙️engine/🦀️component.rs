@@ -16,10 +16,10 @@ const SEMIO_RASTER_EXAMPLE_TEXT: &str = crate::artifacts::raster::dsl::SEMIO_RAS
 /// 🗂️ Registers `RasterSnapshot`'s pack↔dsl codec, the raster 2D media export handler and the DWG
 /// import handler. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::raster::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
-    semio_framework_os::register_2d_export_handlers("2d.raster", "raster", raster_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.raster", raster_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::raster::RasterPlayApp>(RASTER_DOCUMENT_SCHEMA);
 }
 
@@ -371,8 +371,8 @@ pub fn raster_io() -> semio_framework::AppIo {
         document_schema: RASTER_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
         ports: vec![raster_image_in_port(), raster_image_out_port()],
-        export_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
-        import_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
+        export_formats: vec![semio_framework::MediaFormat::Svg, semio_framework::MediaFormat::Png],
+        import_formats: vec![semio_framework::MediaFormat::Svg, semio_framework::MediaFormat::Png],
         artifact: semio_framework::ArtifactPresentation { id: "2d.raster".into(), name: "2D Raster".into(), dimension: "2d".into(), component_kind: "raster".into() },
     }
 }

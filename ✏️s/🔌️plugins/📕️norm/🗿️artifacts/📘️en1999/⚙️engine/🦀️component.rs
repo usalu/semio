@@ -671,3 +671,9 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::en1999::schema::en1999_artifact_schema_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::en1999::io::register();
+}
+//#endregion 🔖️IoFacet

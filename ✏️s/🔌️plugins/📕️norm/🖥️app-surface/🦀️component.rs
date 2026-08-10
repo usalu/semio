@@ -102,16 +102,16 @@ pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body
     PanelTabDefinition { kind: PanelTabKind::App(id.into()), label, group, body_key: Some(body_key.into()), children: Vec::new() }
 }
 
-/// 🗿️ A norm artifact kind — the computed-compliance artifact each family publishes on `report:out`.
+/// 🗿️ A norm artifact kind — Data × Value document per owner-table (IO coverage lattice).
 pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
         name: label.into(),
         source_format: format!("norm.{variant}.document"),
         component_kind: "norm".into(),
-        dimension: "compliance".into(),
+        dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         schema: format!("norm.{variant}.document"),
         export_formats: vec![],
         import_formats: vec![],
@@ -157,7 +157,7 @@ pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
         ],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: ArtifactPresentation { id: artifact_kind_id, name: variant.into(), dimension: "compliance".into(), component_kind: "norm".into() },
+        artifact: ArtifactPresentation { id: artifact_kind_id, name: variant.into(), dimension: "data".into(), component_kind: "norm".into() },
     }
 }
 //#endregion 🔖️Manifest
@@ -294,12 +294,14 @@ mod tests {
     }
 
     #[test]
-    fn the_artifact_kind_spec_is_a_compliance_computation() {
+    fn the_artifact_kind_spec_is_a_data_value_document() {
         let spec = artifact_kind_spec("en1990", "EN 1990");
         assert_eq!(spec.id, "computation.norm.en1990");
         assert_eq!(spec.source_format, "norm.en1990.document");
-        assert_eq!(spec.dimension, "compliance");
+        assert_eq!(spec.dimension, "data");
         assert_eq!(spec.component_kind, "norm");
+        assert_eq!(spec.media_type.class, MediaClass::Data);
+        assert_eq!(spec.media_type.form, MediaForm::Value);
     }
 
     #[test]

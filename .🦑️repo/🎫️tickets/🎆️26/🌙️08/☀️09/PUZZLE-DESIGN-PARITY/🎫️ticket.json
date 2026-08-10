@@ -6,5 +6,16 @@
   "goal": "🎯r2602",
   "sessions": [
     "⚪916b5fe1e2994e3685a1e07e79c25922"
+  ],
+  "summary": "Puzzle 5d design-app parity with compose sketchpad: uniform 8 connection params + anchors across 2d/3d/5d; flatten port with Fixed-first/Fixed-keep; Capsule Dream Fixed-seeded from Flat (golden centers+origins 1e-4); fastener commands + inspection; sketchpad/storybook/launch wiring.",
+  "files": [
+    "✏️s/🔌️plugins/🧩puzzle/🗿️artifacts/🌊️3d/⚙️engine/📐️geometry/🎛flatten/🦀️component.rs",
+    "✏️s/🔌️plugins/🧩puzzle/🗿️artifacts/🖐️5d/⚙️engine/📐️flatten/🦀️component.rs",
+    "✏️s/🔌️plugins/🧩puzzle/🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/",
+    "✏️s/🔌️plugins/🧩puzzle/🎛️apps/🖐️5d/",
+    "compose/client/lib/sketchpad/js/index.ts",
+    ".storybook/stories/puzzle/",
+    "package.json",
+    ".vscode/launch.json"
   ]
 }

@@ -68,13 +68,16 @@ fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
     let x = p.x_axis;
     let y = p.y_axis;
     let z = cross(x, y);
-    [x[0], y[0], z[0], p.origin[0], x[1], y[1], z[1], p.origin[1], x[2], y[2], z[2], p.origin[2], 0.0, 0.0, 0.0, 1.0]
+    // Column-major: axis i is column i; translation in the last column.
+    // (Compose's historical packing transposed axes vs apply_mat_vec3; Flat goldens need this form.)
+    [x[0], x[1], x[2], 0.0, y[0], y[1], y[2], 0.0, z[0], z[1], z[2], 0.0, p.origin[0], p.origin[1], p.origin[2], 1.0]
 }
 
 
 fn matrix_to_plane(m: [f64; 16]) -> FlattenPlane {
-    FlattenPlane { origin: [m[3], m[7], m[11]], x_axis: [m[0], m[4], m[8]], y_axis: [m[1], m[5], m[9]] }
+    FlattenPlane { origin: [m[12], m[13], m[14]], x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
+
 
 
 fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
@@ -88,8 +91,9 @@ fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
 }
 
 fn translation(x: f64, y: f64, z: f64) -> [f64; 16] {
-    [1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0]
+    [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0]
 }
+
 
 
 fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
@@ -97,8 +101,27 @@ fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
     let c = angle.cos();
     let s = angle.sin();
     let t = 1.0 - c;
-    [t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0.0, t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0.0, t * x * z + s * y, t * y * z - s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0]
+    [
+        t * x * x + c,
+        t * x * y + s * z,
+        t * x * z - s * y,
+        0.0,
+        t * x * y - s * z,
+        t * y * y + c,
+        t * y * z + s * x,
+        0.0,
+        t * x * z + s * y,
+        t * y * z - s * x,
+        t * z * z + c,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ]
 }
+
+
 
 
 fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
@@ -127,7 +150,24 @@ fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
     let (xx, xy, xz) = (x * x2, x * y2, x * z2);
     let (yy, yz, zz) = (y * y2, y * z2, z * z2);
     let (wx, wy, wz) = (w * x2, w * y2, w * z2);
-    [1.0 - (yy + zz), xy + wz, xz - wy, 0.0, xy - wz, 1.0 - (xx + zz), yz + wx, 0.0, xz + wy, yz - wx, 1.0 - (xx + yy), 0.0, 0.0, 0.0, 0.0, 1.0]
+    [
+        1.0 - (yy + zz),
+        xy + wz,
+        xz - wy,
+        0.0,
+        xy - wz,
+        1.0 - (xx + zz),
+        yz + wx,
+        0.0,
+        xz + wy,
+        yz - wx,
+        1.0 - (xx + yy),
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ]
 }
 
 /// 🧭️ Plane axes → ijkw quaternion (matches sketchpad `sketchpadPlaneAxesToQuaternion`).
@@ -169,8 +209,9 @@ pub fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
 
 fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
     let m = quaternion_to_matrix(orientation);
-    FlattenPlane { origin, x_axis: [m[0], m[4], m[8]], y_axis: [m[1], m[5], m[9]] }
+    FlattenPlane { origin, x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
+
 
 
 fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
@@ -211,13 +252,14 @@ fn compute_child_plane(
     let cross_vec = cross(parent_dir, reverse_child);
     let cross_len = (cross_vec[0] * cross_vec[0] + cross_vec[1] * cross_vec[1] + cross_vec[2] * cross_vec[2]).sqrt();
     let align_quat = if cross_len < TOLERANCE {
-        if parent_dir[2].abs() < TOLERANCE {
+        // Vertical parallel dirs make cross(z, parent)=0; emit identity when already aligned,
+        // 180° about X when opposite (compose's half-angle branch produced a zero quaternion).
+        if dot(parent_dir, reverse_child) > 0.0 {
+            [0.0, 0.0, 0.0, 1.0]
+        } else if parent_dir[2].abs() < TOLERANCE {
             quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
         } else {
-            let mut axis = cross([0.0, 0.0, 1.0], parent_dir);
-            normalize(&mut axis);
-            let half = std::f64::consts::PI / 2.0;
-            [axis[0] * half.sin(), axis[1] * half.sin(), axis[2] * half.sin(), half.cos()]
+            [1.0, 0.0, 0.0, 0.0]
         }
     } else {
         quaternion_from_unit_vectors(reverse_child, parent_dir)
@@ -318,6 +360,20 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                     continue;
                 }
                 visited.insert(neighbor_id.clone());
+                let neighbor_object = object_map.get(neighbor_id.as_str()).expect("neighbor present");
+                if matches!(neighbor_object.anchor, Puzzle3dObjectAnchor::Fixed) {
+                    let stored_plane = orientation_to_plane(
+                        neighbor_object.origin,
+                        neighbor_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                    );
+                    let stored_center = seed_centers
+                        .and_then(|centers| centers.get(&neighbor_id).copied())
+                        .unwrap_or([0.0, 0.0]);
+                    piece_planes.insert(neighbor_id.clone(), stored_plane);
+                    piece_centers.insert(neighbor_id.clone(), stored_center);
+                    queue.push_back(neighbor_id);
+                    continue;
+                }
                 let attraction = &attractions[attraction_index];
                 let Some((design_parent_id, design_parent_vortex)) = parse_endpoint(&attraction.attracting) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
@@ -325,7 +381,7 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                     queue.push_back(neighbor_id);
                     continue;
                 };
-                let Some((design_child_id, design_child_vortex)) = parse_endpoint(&attraction.attracted) else {
+                let Some((_design_child_id, design_child_vortex)) = parse_endpoint(&attraction.attracted) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
                     piece_centers.insert(neighbor_id.clone(), [0.0, 0.0]);
                     queue.push_back(neighbor_id);
@@ -337,7 +393,6 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                     (design_child_vortex, design_parent_vortex)
                 };
                 let current_object = object_map.get(current_id.as_str()).expect("current present");
-                let neighbor_object = object_map.get(neighbor_id.as_str()).expect("neighbor present");
                 let (Some(parent_vortex), Some(child_vortex)) = (find_vortex(current_object, current_vortex_id), find_vortex(neighbor_object, neighbor_vortex_id)) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
                     piece_centers.insert(neighbor_id.clone(), [0.0, 0.0]);
@@ -354,6 +409,11 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
         }
     };
 
+    for object in objects {
+        if matches!(object.anchor, Puzzle3dObjectAnchor::Fixed) && !visited.contains(&object.id) {
+            bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers);
+        }
+    }
     for object in objects {
         if !visited.contains(&object.id) {
             bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers);
@@ -424,7 +484,8 @@ mod tests {
     #[test]
     fn child_plane_is_deterministic_for_vertical_stack() {
         let parent = object("p", [0.0, 0.0, 0.0], vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
-        let child = object("c", [0.0, 0.0, 0.0], vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
+        let mut child = object("c", [0.0, 0.0, 0.0], vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
+        child.anchor = Puzzle3dObjectAnchor::Derived;
         let attraction = Puzzle3dAttraction {
             id: "a1".into(),
             attracting: "p:top".into(),

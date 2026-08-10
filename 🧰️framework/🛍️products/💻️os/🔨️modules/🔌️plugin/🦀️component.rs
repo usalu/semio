@@ -279,7 +279,7 @@ pub mod app {
 
     //#region 🔖️ArtifactKind
     /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
-    /// `semio-framework-os` already depend on it) the same way `OsMediaFormat` already does — re-exported
+    /// `semio-framework-os` already depend on it) the same way `MediaFormat` already does — re-exported
     /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
     /// `semio_framework_os`'s artifact catalog registry share one definition.
     pub use semio_framework::{ArtifactKindSpec, OsMediaCapability};
@@ -294,11 +294,44 @@ pub mod app {
     /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
     /// without a direct `semio-framework-core` dependency.
     pub use semio_framework::{MediaClass, MediaType};
-    /// 🎞️ `MediaWireFormat`/`OsMediaFormat` back `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
+    /// 🎞️ `MediaWireFormat`/`MediaFormat` back `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
     /// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
     /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
-    pub use semio_framework::{MediaWireFormat, OsMediaFormat};
+    pub use semio_framework::{MediaWireFormat, MediaFormat};
     //#endregion 🔖️MediaPort
+
+    //#region 🔖️ArtifactIo
+    /// ⚠️ IO error alias from the framework media stack.
+    pub use semio_framework::IoError;
+
+    /// 🗂️ One declared import/export format on an artifact's `🚪️io` facet.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct IoFormatSpec {
+        pub format: MediaFormat,
+        pub import: bool,
+        pub export: bool,
+    }
+
+    /// 📥️ Bytes → snapshot for one MediaFormat.
+    pub trait ArtifactImport {
+        type Snapshot;
+        const FORMAT: MediaFormat;
+        fn import(bytes: &[u8]) -> Result<Self::Snapshot, IoError>;
+    }
+
+    /// 📤️ Snapshot → bytes for one MediaFormat.
+    pub trait ArtifactExport {
+        type Snapshot;
+        const FORMAT: MediaFormat;
+        fn export(snapshot: &Self::Snapshot) -> Result<Vec<u8>, IoError>;
+    }
+
+    /// 🚪️ Per-artifact IO facet: declares formats and registers OS handlers.
+    pub trait ArtifactIo {
+        fn formats() -> &'static [IoFormatSpec];
+        fn register();
+    }
+    //#endregion 🔖️ArtifactIo
 
     pub struct AppBuilder {
         id: String,
@@ -1620,6 +1653,7 @@ pub mod app {
             let schema_dir = "🧬️schema";
             let config_dir = "🎚️config";
             let presence_dir = "👥️presence";
+            let io_dir = "🚪️io";
             let legacy_config_dir = "🧮️config";
             assert!(
                 !example_asset_kind_prefixes.is_empty(),
@@ -1639,12 +1673,18 @@ pub mod app {
             let artifacts = subdirectories(&artifacts_root);
             assert!(!artifacts.is_empty(), "taxonomy gate: {} declares no artifacts", artifacts_root.display());
             for artifact in &artifacts {
+                //#region IoFacetCompleteness
+                // 🚪️io (ticket 26/08/10/ARTIFACT-IO-FACETS): require facet dir + rust root leaf only; do not walk format import/export leaves until W6.
+                //#endregion IoFacetCompleteness
                 let missing: Vec<&str> = artifact_components
                     .iter()
                     .map(String::as_str)
                     .filter(|component| {
                         if *component == snapshot_dir {
                             !artifact.join(component).is_dir()
+                        } else if *component == io_dir {
+                            let root = artifact.join(component);
+                            !root.is_dir() || !root.join(leaf).is_file()
                         } else {
                             !artifact.join(component).join(leaf).is_file()
                         }
@@ -4214,7 +4254,7 @@ pub mod app {
         #[error("document schema mismatch: expected {expected}, found {found}")]
         SchemaMismatch { expected: String, found: String },
         #[error("no binary importer registered for format {0:?}")]
-        NoImporter(OsMediaFormat),
+        NoImporter(MediaFormat),
     }
 
     /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
@@ -9069,8 +9109,9 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView, KeybindingSpec,
-    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactExport, ArtifactImport, ArtifactIo, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView,
+    IoFormatSpec, KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp,
+    WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

@@ -30,6 +30,8 @@ pub fn snapshot_from_model(model: &Model) -> Result<EnergyModelSnapshot, String>
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
+    crate::artifacts::model::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::DocumentCodec::of::<

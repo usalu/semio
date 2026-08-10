@@ -663,3 +663,9 @@ impl protocol::ArtifactEngine for Puzzle3dEngine {
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::puzzle3d::io::register();
+}
+//#endregion 🔖️IoFacet

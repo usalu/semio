@@ -1,0 +1,1491 @@
+{
+  "catalog_formats": {
+    "glb": {
+      "dir": "🧊️glb",
+      "neutral": "MeshData"
+    },
+    "gltf": {
+      "dir": "🧊️gltf",
+      "neutral": "MeshData"
+    },
+    "obj": {
+      "dir": "🧊️obj",
+      "neutral": "MeshData"
+    },
+    "stl": {
+      "dir": "🟪️stl",
+      "neutral": "MeshData"
+    },
+    "ply": {
+      "dir": "☁️ply",
+      "neutral": "MeshData"
+    },
+    "las": {
+      "dir": "☁️las",
+      "neutral": "MeshData"
+    },
+    "step": {
+      "dir": "📐️step",
+      "neutral": "Brep"
+    },
+    "ifc": {
+      "dir": "🏗️ifc",
+      "neutral": "Brep"
+    },
+    "dwg": {
+      "dir": "🖊️dwg",
+      "neutral": "DwgDrawing"
+    },
+    "dxf": {
+      "dir": "🖊️dxf",
+      "neutral": "DwgDrawing"
+    },
+    "svg": {
+      "dir": "🎨️svg",
+      "neutral": "DwgDrawing"
+    },
+    "png": {
+      "dir": "📷️png",
+      "neutral": "RasterImage"
+    },
+    "jpg": {
+      "dir": "📷️jpg",
+      "neutral": "RasterImage"
+    },
+    "gif": {
+      "dir": "🎞️gif",
+      "neutral": "RasterImage"
+    },
+    "bmp": {
+      "dir": "🖼️bmp",
+      "neutral": "RasterImage"
+    },
+    "tiff": {
+      "dir": "🖼️tiff",
+      "neutral": "RasterImage"
+    },
+    "pdf": {
+      "dir": "📄️pdf",
+      "neutral": "PageDoc"
+    },
+    "docx": {
+      "dir": "📜️docx",
+      "neutral": "PageDoc"
+    },
+    "pptx": {
+      "dir": "🎞️pptx",
+      "neutral": "PageDoc"
+    },
+    "csv": {
+      "dir": "📊️csv",
+      "neutral": "TableDoc"
+    },
+    "xlsx": {
+      "dir": "📕️xlsx",
+      "neutral": "TableDoc"
+    },
+    "md": {
+      "dir": "📝️md",
+      "neutral": "TextDoc"
+    },
+    "txt": {
+      "dir": "📄txt",
+      "neutral": "TextDoc"
+    },
+    "zip": {
+      "dir": "🎒️zip",
+      "neutral": "Archive"
+    },
+    "bcf": {
+      "dir": "💬️bcf",
+      "neutral": "Archive"
+    },
+    "json": {
+      "dir": "🔣️json",
+      "neutral": "Value"
+    }
+  },
+  "owners": [
+    {
+      "plugin": "✒️writer",
+      "artifact": "✒️writer",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer",
+      "kind_id": "text.document",
+      "dimension": "text",
+      "media_class": "Text",
+      "media_form": "Document",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "format_dirs": [
+        "📜️docx",
+        "🔣️json",
+        "📝️md",
+        "📄️pdf",
+        "📄txt"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "➗️mathematical",
+      "artifact": "➗️mathematical",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+      "kind_id": "a",
+      "dimension": "graph",
+      "media_class": "Computation",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌀️procedural",
+      "artifact": "🌀️procedural2d",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+      "kind_id": "2d.procedural",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Flow",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌀️procedural",
+      "artifact": "🧊️procedural3d",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+      "kind_id": "3d.procedural",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Flow",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🔣️json",
+        "☁️las",
+        "🧊️obj",
+        "☁️ply",
+        "📷️png",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌊️flow",
+      "artifact": "🌊️flow",
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+      "kind_id": "computation.flow",
+      "dimension": "graph",
+      "media_class": "Computation",
+      "media_form": "Flow",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌍️gis",
+      "artifact": "🏔️gisterrain",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+      "kind_id": "3d.mesh",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Mesh",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🔣️json",
+        "☁️las",
+        "🧊️obj",
+        "☁️ply",
+        "📷️png",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌍️gis",
+      "artifact": "🗺️gismap",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+      "kind_id": "2d.map",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Vector",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🌿️vcs",
+      "artifact": "🌿️vcs",
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+      "kind_id": "vcs.document",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🎞️animate",
+      "artifact": "🎬️present",
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+      "kind_id": "2d.🎬️present",
+      "dimension": "2d",
+      "media_class": "Presentation",
+      "media_form": "Deck",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "json",
+        "md",
+        "pdf",
+        "png",
+        "pptx",
+        "svg"
+      ],
+      "format_dirs": [
+        "🔣️json",
+        "📝️md",
+        "📄️pdf",
+        "📷️png",
+        "🎞️pptx",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🎥️shooting",
+      "artifact": "🎥️shooting",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+      "kind_id": "2d.shooting",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Raster",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "format_dirs": [
+        "🖼️bmp",
+        "🖊️dwg",
+        "🎞️gif",
+        "📷️jpg",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg",
+        "🖼️tiff"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🎪️demonstrator",
+      "artifact": "🎪️playground",
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
+      "kind_id": "playground.document",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🎬️sequence",
+      "artifact": "🎬️sequence",
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+      "kind_id": "computation.sequence",
+      "dimension": "graph",
+      "media_class": "Computation",
+      "media_form": "Sequence",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🏗️fem",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
+      "kind_id": "computation.fem2d",
+      "dimension": "computation",
+      "media_class": "Computation",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🏗️fem",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+      "kind_id": "computation.fem3d",
+      "dimension": "computation",
+      "media_class": "Computation",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🏛️architect",
+      "artifact": "🏛️program",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+      "kind_id": "data.🏛️program",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🏭️process",
+      "artifact": "🧊️process3d",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+      "kind_id": "saw",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Brep",
+      "media_capability": "Brep",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🏗️ifc",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "📐️step",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "💠️lowpoly",
+      "artifact": "💠️lowpoly",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly",
+      "kind_id": "3d.lowpoly",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Mesh",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🔣️json",
+        "☁️las",
+        "🧊️obj",
+        "☁️ply",
+        "📷️png",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "💡️reasoning",
+      "artifact": "🔌️wires",
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+      "kind_id": "graph.wires",
+      "dimension": "graph",
+      "media_class": "Graph",
+      "media_form": "Dag",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📋️forms",
+      "artifact": "📋️forms",
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+      "kind_id": "form.dictionary",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📏️layout",
+      "artifact": "📏️layout",
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+      "kind_id": "2d.layout",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Vector",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📐️cad",
+      "artifact": "📐️cad",
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
+      "kind_id": "cad",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Brep",
+      "media_capability": "Brep",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🏗️ifc",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "📐️step",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📓️iso16757",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+      "kind_id": "box",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📔️vdi3805",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+      "kind_id": "part-02-corr-2022-12",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📕️din4108",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+      "kind_id": "data.📕️din4108",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📗️din16798",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+      "kind_id": "data.📗️din16798",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1990",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+      "kind_id": "data.📘️en1990",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1991",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+      "kind_id": "data.📘️en1991",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1992",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992",
+      "kind_id": "data.📘️en1992",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1993",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+      "kind_id": "data.📘️en1993",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1994",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+      "kind_id": "data.📘️en1994",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1995",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+      "kind_id": "data.📘️en1995",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1996",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+      "kind_id": "data.📘️en1996",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1997",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+      "kind_id": "data.📘️en1997",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1998",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+      "kind_id": "data.📘️en1998",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1999",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+      "kind_id": "data.📘️en1999",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📙️din18599",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+      "kind_id": "data.📙️din18599",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📖️playbook",
+      "artifact": "📖️playbook",
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+      "kind_id": "text.playbook",
+      "dimension": "text",
+      "media_class": "Text",
+      "media_form": "Document",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "format_dirs": [
+        "📜️docx",
+        "🔣️json",
+        "📝️md",
+        "📄️pdf",
+        "📄txt"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📜️imperative",
+      "artifact": "📜️imperative",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+      "kind_id": "computation.imperative",
+      "dimension": "graph",
+      "media_class": "Computation",
+      "media_form": "Imperative",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "📸️remodel",
+      "artifact": "📸️remodel",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+      "kind_id": "3d.remodel",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Mesh",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🔣️json",
+        "☁️las",
+        "🧊️obj",
+        "☁️ply",
+        "📷️png",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🔋️energy",
+      "artifact": "🔋️model",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+      "kind_id": "data.🔋️model",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🔱️trinity",
+      "artifact": "♻️rewrite",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+      "kind_id": "text.♻️rewrite",
+      "dimension": "text",
+      "media_class": "Text",
+      "media_form": "Document",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "format_dirs": [
+        "📜️docx",
+        "🔣️json",
+        "📝️md",
+        "📄️pdf",
+        "📄txt"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🔱️trinity",
+      "artifact": "🔌️jack",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+      "kind_id": "graph.trinity",
+      "dimension": "graph",
+      "media_class": "Graph",
+      "media_form": "Trinity",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🕸️dag",
+      "artifact": "🕸️dag",
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
+      "kind_id": "graph.dag",
+      "dimension": "graph",
+      "media_class": "Graph",
+      "media_form": "Dag",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📝️md",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🖍️draw",
+      "artifact": "🖍️draw",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+      "kind_id": "2d.drawing",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Vector",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🖨️raster",
+      "artifact": "🖨️raster",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+      "kind_id": "2d.raster",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Raster",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "format_dirs": [
+        "🖼️bmp",
+        "🖊️dwg",
+        "🎞️gif",
+        "📷️jpg",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg",
+        "🖼️tiff"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🗒️note",
+      "artifact": "🗒️note",
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
+      "kind_id": "2d.note",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Document",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+      "kind_id": "2d.puzzle",
+      "dimension": "2d",
+      "media_class": "TwoD",
+      "media_form": "Design",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🖊️dxf",
+        "🔣️json",
+        "📄️pdf",
+        "📷️png",
+        "🎨️svg"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "🖐️5d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+      "kind_id": "5d.puzzle",
+      "dimension": "5d",
+      "media_class": "Kit",
+      "media_form": "Design",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "format_dirs": [
+        "🧊️glb",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "🟪️stl",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+      "kind_id": "3d.puzzle",
+      "dimension": "3d",
+      "media_class": "ThreeD",
+      "media_form": "Design",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "format_dirs": [
+        "🖊️dwg",
+        "🧊️glb",
+        "🧊️gltf",
+        "🔣️json",
+        "☁️las",
+        "🧊️obj",
+        "☁️ply",
+        "📷️png",
+        "🟪️stl"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+      "kind_id": "2d.block",
+      "dimension": "2d",
+      "media_class": "Kit",
+      "media_form": "Type",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "format_dirs": [
+        "🧊️glb",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "🟪️stl",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "🖐️5d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+      "kind_id": "5d.block",
+      "dimension": "5d",
+      "media_class": "Kit",
+      "media_form": "Type",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "format_dirs": [
+        "🧊️glb",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "🟪️stl",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+      "kind_id": "3d.block",
+      "dimension": "3d",
+      "media_class": "Kit",
+      "media_form": "Type",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "format_dirs": [
+        "🧊️glb",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "🟪️stl",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🪐️space",
+      "artifact": "🏠️home",
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+      "kind_id": "space.shome",
+      "dimension": "data",
+      "media_class": "Data",
+      "media_form": "Value",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "format_dirs": [
+        "📊️csv",
+        "🔣️json",
+        "📕️xlsx",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    },
+    {
+      "plugin": "🪵️sourcing",
+      "artifact": "🗂️curate",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+      "kind_id": "catalogue.sourcing",
+      "dimension": "data",
+      "media_class": "Kit",
+      "media_form": "Kit",
+      "media_capability": "MeshOnly",
+      "formats": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "format_dirs": [
+        "🧊️glb",
+        "🔣️json",
+        "🧊️obj",
+        "📷️png",
+        "🟪️stl",
+        "🎒️zip"
+      ],
+      "crate_hint": null
+    }
+  ],
+  "owner_count": 54
+}

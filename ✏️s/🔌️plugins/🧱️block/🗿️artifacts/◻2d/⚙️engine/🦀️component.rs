@@ -12,6 +12,8 @@ use serde_json::{json, Value};
 /// 🗂️ Registers `Block2dSnapshot`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::block2d::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block2d::Block2dPlayApp>(BLOCK_2D_SCHEMA);

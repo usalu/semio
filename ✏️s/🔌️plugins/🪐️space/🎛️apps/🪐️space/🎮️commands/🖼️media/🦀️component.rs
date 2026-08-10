@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::apps::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
-use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, OsMediaFormat, WorkflowSnapshot, WorkflowMutation};
+use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, MediaFormat, WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde_json::{json, Value};
 
@@ -26,7 +26,7 @@ pub mod export_media {
                 let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
                 let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &workflow_parameter_bindings_to_os(&projection.parameter_bindings), &workflow_parameters_to_os(&projection.parameters));
                 let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
-                let export_format = OsMediaFormat::parse(&payload.format).unwrap_or(OsMediaFormat::Svg);
+                let export_format = MediaFormat::parse(&payload.format).unwrap_or(MediaFormat::Svg);
                 match semio_framework_os::export_os_app_instance_media(node, &document_value, export_format) {
                     Ok(result) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding })),
                     Err(_) => Ok(Emit::default()),
@@ -51,9 +51,12 @@ pub mod import_media {
     }
 
     pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let accept = MediaFormat::parse(&payload.format)
+            .map(|format| semio_framework_os::media_accept_filter(&[format]))
+            .unwrap_or_else(|| format!(".{}", payload.format));
         Ok(Emit {
             config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(payload.format.clone()) }],
-            effects: vec![HostEffect::RequestFileOpen { accept: format!(".{}", payload.format), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
+            effects: vec![HostEffect::RequestFileOpen { accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
             ..Default::default()
         })
     }
@@ -78,7 +81,7 @@ pub mod import_media_payload {
             let node_id = node_id.clone();
             let format_name = format_name.clone();
             config_mutations.push(SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
-            if let Some(format) = OsMediaFormat::parse(&format_name) {
+            if let Some(format) = MediaFormat::parse(&format_name) {
                 use base64::Engine;
                 let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
                 if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
@@ -116,10 +119,10 @@ mod tests {
     fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         crate::apps::space::testkit::seed_draw_plugin();
-        semio_framework_os::register_os_media_export_handler("2d.drawing", OsMediaFormat::Dwg, |_doc| {
+        semio_framework_os::register_os_media_export_handler("2d.drawing", MediaFormat::Dwg, |_doc| {
             let drawing = semio_framework_os::DwgDrawing::default();
             let bytes = semio_framework_os::dwg_to_bytes(&drawing)?;
-            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: OsMediaFormat::Dwg.mime_type().into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
+            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: MediaFormat::Dwg.mime_type().into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 

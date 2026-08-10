@@ -128,6 +128,72 @@ pub mod artifacts {
         pub mod dsl;
         #[path = "../../🗿️artifacts/📋️forms/📡️spr/🦀️component.rs"]
         pub mod spr;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/📋️forms/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod csv {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/📊️csv/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/📊️csv/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/🔣️json/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/🔣️json/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod xlsx {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/📕️xlsx/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/📕️xlsx/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+            #[path = "."]
+            pub mod zip {
+                #[path = "."]
+                pub mod export {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/🎒️zip/📤️export/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    #[path = "../../🗿️artifacts/📋️forms/🚪️io/🎒️zip/📥️import/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
         #[path = "../../🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs"]
         pub mod engine;
     }

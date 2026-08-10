@@ -301,3 +301,9 @@ impl protocol::ArtifactEngine for Puzzle5dEngine {
     }
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::puzzle5d::io::register();
+}
+//#endregion 🔖️IoFacet

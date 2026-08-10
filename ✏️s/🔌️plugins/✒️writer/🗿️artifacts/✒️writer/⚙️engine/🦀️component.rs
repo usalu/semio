@@ -30,6 +30,8 @@ pub struct GrammarToken {
 /// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::writer::io::register();
+
     register_writer_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::writer::WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);

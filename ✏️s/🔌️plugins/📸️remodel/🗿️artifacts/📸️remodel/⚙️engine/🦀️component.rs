@@ -11,7 +11,7 @@ use crate::artifacts::remodel::{
     CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelSnapshot, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
 };
 use base64::Engine as _;
-use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
+use semio_framework_plugin::{MeshData, MeshExporter, MediaFormat};
 use serde_json::Value;
 
 //#region 🔖️Register
@@ -21,16 +21,11 @@ use serde_json::Value;
 /// DWG mesh handler and the PNG raster export. Moved verbatim out of the old bundle crate's
 /// `register_remodel_exports`; `semio_plugin!`'s `setup:` now points here.
 pub fn register() {
+    crate::artifacts::remodel::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::remodel::RemodelPlayApp>(REMODEL_DOCUMENT_SCHEMA);
-    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
-    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(PlyExporter));
-    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(LasExporter));
-    semio_framework_os::register_mesh_dwg_export_handler("3d.remodel", "remodel", remodel_mesh_from_document);
-    semio_framework_os::register_os_media_export_handler("3d.remodel", OsMediaFormat::Png, remodel_png_export);
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -111,8 +106,8 @@ pub fn remodel_io() -> semio_framework_plugin::AppIo {
         document_schema: "remodel.scene".into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         ports: vec![remodel_photos_in_port(), remodel_mesh_out_port()],
-        export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Ply, OsMediaFormat::Las, OsMediaFormat::Png],
-        import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
+        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png],
+        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.remodel".into(), name: "3D Remodel".into(), dimension: "3d".into(), component_kind: "remodel".into() },
     }
 }
@@ -377,8 +372,8 @@ pub fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel_video
 /// house convention that a library-side writer is only mandatory once one already exists.
 pub struct PlyExporter;
 impl MeshExporter for PlyExporter {
-    fn format(&self) -> OsMediaFormat {
-        OsMediaFormat::Ply
+    fn format(&self) -> MediaFormat {
+        MediaFormat::Ply
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
         Ok(mesh_to_ply(mesh).into_bytes())
@@ -420,8 +415,8 @@ fn mesh_to_ply(mesh: &MeshData) -> String {
 /// it always receives a `MeshData`, never a raw point cloud).
 pub struct LasExporter;
 impl MeshExporter for LasExporter {
-    fn format(&self) -> OsMediaFormat {
-        OsMediaFormat::Las
+    fn format(&self) -> MediaFormat {
+        MediaFormat::Las
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
         Ok(mesh_to_las(mesh))

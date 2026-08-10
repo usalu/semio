@@ -41,6 +41,8 @@ fn bootstrap_imperative_runtime() {
 /// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
 /// imperative documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::imperative::io::register();
+
     bootstrap_imperative_runtime();
     register_artifact_schema();
     register_pilot_languages();

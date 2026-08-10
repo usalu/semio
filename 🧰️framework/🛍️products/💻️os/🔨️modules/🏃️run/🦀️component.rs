@@ -1616,7 +1616,7 @@ mod tests {
 
     #[test]
     fn vector_to_raster_rejects_non_structured_payload() {
-        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format: semio_framework::OsMediaFormat::Png, blob_hash: "hash".into() } };
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format: semio_framework::MediaFormat::Png, blob_hash: "hash".into() } };
         assert!(vector_to_raster(&media).is_err());
     }
 

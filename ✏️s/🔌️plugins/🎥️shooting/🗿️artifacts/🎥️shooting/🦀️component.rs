@@ -6,7 +6,7 @@
 
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 use serde::{Deserialize, Serialize};
 
 pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
@@ -25,8 +25,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         schema: "shooting.scene".into(),
-        export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
-        import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+        export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
+        import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
     }
 }
 //#endregion 🔖️ArtifactKind

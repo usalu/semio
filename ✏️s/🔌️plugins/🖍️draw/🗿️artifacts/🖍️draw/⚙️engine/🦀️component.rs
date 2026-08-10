@@ -13,23 +13,21 @@ use serde::{Deserialize, Serialize};
 /// draw documents without depending on this crate's concrete `Projection`/`Mutation` types, plus
 /// the 2D export/import media handlers (SVG raster export, DWG export/import).
 pub fn register() {
+    crate::artifacts::draw::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::draw::DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
-    semio_framework_os::register_2d_export_handlers("2d.drawing", "draw", draw_document_json_to_svg);
-    semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |doc| {
-        let bytes = draw_document_json_to_dwg_bytes(doc)?;
         Ok(semio_framework_os::OsMediaExportResult {
             data: {
                 use base64::Engine;
                 base64::engine::general_purpose::STANDARD.encode(bytes)
             },
-            mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
+            mime_type: semio_framework_os::MediaFormat::Dwg.mime_type().into(),
             file_name: "draw.dwg".into(),
             encoding: Some("base64".into()),
         })
     });
-    semio_framework_os::register_dwg_import_handler("2d.drawing", draw_document_json_from_dwg);
 }
 
 /// 📎 Registers the draw artifact schema descriptor into the process-local registry.
@@ -1346,8 +1344,8 @@ pub fn draw_io() -> semio_framework::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
         ports: vec![draw_vector_out_port()],
-        export_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
-        import_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
+        export_formats: vec![semio_framework::MediaFormat::Svg, semio_framework::MediaFormat::Png],
+        import_formats: vec![semio_framework::MediaFormat::Svg, semio_framework::MediaFormat::Png],
         artifact: semio_framework::ArtifactPresentation { id: "2d.drawing".into(), name: "2D Drawing".into(), dimension: "2d".into(), component_kind: "draw".into() },
     }
 }

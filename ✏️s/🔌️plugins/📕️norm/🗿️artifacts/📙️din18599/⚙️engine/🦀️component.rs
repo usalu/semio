@@ -773,3 +773,9 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::din18599::io::register();
+}
+//#endregion 🔖️IoFacet

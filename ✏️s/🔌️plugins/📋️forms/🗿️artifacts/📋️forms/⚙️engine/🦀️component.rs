@@ -32,6 +32,8 @@ pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<Stri
 /// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::forms::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::forms::FormsPlayApp>(FORMS_DOCUMENT_SCHEMA);

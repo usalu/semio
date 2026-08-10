@@ -1,6 +1,6 @@
 //! GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 
 //#region 🔹Constants
 /// VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the only
@@ -27,8 +27,8 @@ pub fn mesh_artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         schema: "mesh.reference".into(),
-        export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl],
-        import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
+        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl],
+        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
     }
 }
 //#endregion 🔹ArtifactKind

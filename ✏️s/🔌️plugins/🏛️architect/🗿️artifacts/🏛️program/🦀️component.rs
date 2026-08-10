@@ -4,6 +4,8 @@
 //! Domain row types live under `🧬️schema/🗄️registers`; shared entity primitives under
 //! `🧬️schema/🧱️kernel`. The persisted snapshot type is `ProgramSnapshot`.
 
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
 pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;
 pub use crate::artifacts::program::snapshot::schema::ProgramSnapshot;
@@ -14,6 +16,26 @@ use store::DocumentDsl;
 /// @emoji 📜️ Persisted architect program document schema identifier.
 pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🏛️program`).
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "data.🏛️program".into(),
+        name: "Architect Program".into(),
+        source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
+        component_kind: "architect".into(),
+        dimension: "data".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::Data,
+            form: semio_framework_plugin::MediaForm::Value,
+        },
+        schema: ARCHITECT_PROGRAM_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
 
 pub fn empty_plugin() -> ProgramSnapshot {
     let project_id = EntityId::new_serial("project", "project");

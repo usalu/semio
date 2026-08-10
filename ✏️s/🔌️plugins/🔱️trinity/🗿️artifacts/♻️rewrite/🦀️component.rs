@@ -1,5 +1,7 @@
 //! ♻️ `trinity.rewrite.rule` artifact — document entities (constitutional: general).
 
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
 use crate::artifacts::jack::PropertyValue;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -64,12 +66,25 @@ pub use super::snapshot::schema::RewriteSnapshot;
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 //#endregion 🔖️Types
 
-// 📌️ Unlike `jack`, `rewrite`'s own `create_rewrite_app()` never calls `.artifact_kind(...)` in the
-// old code (verified by reading the old `trinity_rewrite_ui` bundle chain) — rewrite has no
-// `ArtifactKindSpec` of its own; it only declares `.io(rewrite_io())`, whose `graph:in`/`graph:out`
-// ports reuse jack's `"graph.trinity"` kind id. Not a gap — preserved verbatim.
-
 // 📜️ `RewriteSnapshot`/`RewriteRuleMutation` derive their `store::DocumentDsl`/`protocol::OpText`
 // impls directly (see `#[derive(dsl::DslRecord)]` above and `#[derive(dsl::DslEnum)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `JackSnapshot`).
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — Text × Document per owner-table (`text.♻️rewrite`).
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "text.♻️rewrite".into(),
+        name: "Trinity Rewrite Rule".into(),
+        source_format: REWRITE_RULE_SCHEMA.into(),
+        component_kind: "trinity".into(),
+        dimension: "text".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+        schema: REWRITE_RULE_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind

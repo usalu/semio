@@ -1,0 +1,884 @@
+[
+  {
+    "plugin": "✒️writer",
+    "artifact": "✒️writer",
+    "ascii": "writer",
+    "snapshot": "WriterSnapshot",
+    "kind_id": "text.document",
+    "formats": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "glue": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"
+  },
+  {
+    "plugin": "➗️mathematical",
+    "artifact": "➗️mathematical",
+    "ascii": "mathematical",
+    "snapshot": "MathematicalSnapshot",
+    "kind_id": "a",
+    "formats": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "glue": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical"
+  },
+  {
+    "plugin": "🌀️procedural",
+    "artifact": "🌀️procedural2d",
+    "ascii": "procedural2d",
+    "snapshot": "Procedural2dSnapshot",
+    "kind_id": "2d.procedural",
+    "formats": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d"
+  },
+  {
+    "plugin": "🌀️procedural",
+    "artifact": "🧊️procedural3d",
+    "ascii": "procedural3d",
+    "snapshot": "Procedural3dSnapshot",
+    "kind_id": "3d.procedural",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d"
+  },
+  {
+    "plugin": "🌊️flow",
+    "artifact": "🌊️flow",
+    "ascii": "flow",
+    "snapshot": "FlowSnapshot",
+    "kind_id": "computation.flow",
+    "formats": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "glue": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow"
+  },
+  {
+    "plugin": "🌍️gis",
+    "artifact": "🏔️gisterrain",
+    "ascii": "gisterrain",
+    "snapshot": "GisTerrainSnapshot",
+    "kind_id": "3d.mesh",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain"
+  },
+  {
+    "plugin": "🌍️gis",
+    "artifact": "🗺️gismap",
+    "ascii": "gismap",
+    "snapshot": "GisMapSnapshot",
+    "kind_id": "2d.map",
+    "formats": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap"
+  },
+  {
+    "plugin": "🌿️vcs",
+    "artifact": "🌿️vcs",
+    "ascii": "vcs",
+    "snapshot": "VcsSnapshot",
+    "kind_id": "vcs.document",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs"
+  },
+  {
+    "plugin": "🎞️animate",
+    "artifact": "🎬️present",
+    "ascii": "present",
+    "snapshot": "PresentSnapshot",
+    "kind_id": "2d.present",
+    "formats": [
+      "json",
+      "md",
+      "pdf",
+      "png",
+      "pptx",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present"
+  },
+  {
+    "plugin": "🎥️shooting",
+    "artifact": "🎥️shooting",
+    "ascii": "shooting",
+    "snapshot": "ShootingSnapshot",
+    "kind_id": "2d.shooting",
+    "formats": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ],
+    "glue": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting"
+  },
+  {
+    "plugin": "🎪️demonstrator",
+    "artifact": "🎪️playground",
+    "ascii": "playground",
+    "snapshot": "PlaygroundSnapshot",
+    "kind_id": "playground.document",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground"
+  },
+  {
+    "plugin": "🎬️sequence",
+    "artifact": "🎬️sequence",
+    "ascii": "sequence",
+    "snapshot": "SequenceSnapshot",
+    "kind_id": "computation.sequence",
+    "formats": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "glue": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence"
+  },
+  {
+    "plugin": "🏗️fem",
+    "artifact": "◻2d",
+    "ascii": "fem2d",
+    "snapshot": "Fem2dSnapshot",
+    "kind_id": "2d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d"
+  },
+  {
+    "plugin": "🏗️fem",
+    "artifact": "🧊️3d",
+    "ascii": "fem3d",
+    "snapshot": "Fem3dSnapshot",
+    "kind_id": "3d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d"
+  },
+  {
+    "plugin": "🏛️architect",
+    "artifact": "🏛️program",
+    "ascii": "program",
+    "snapshot": "ProgramSnapshot",
+    "kind_id": "data.🏛️program",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program"
+  },
+  {
+    "plugin": "🏭️process",
+    "artifact": "🧊️process3d",
+    "ascii": "process3d",
+    "snapshot": "Process3dSnapshot",
+    "kind_id": "saw",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d"
+  },
+  {
+    "plugin": "💠️lowpoly",
+    "artifact": "💠️lowpoly",
+    "ascii": "lowpoly",
+    "snapshot": "LowpolySnapshot",
+    "kind_id": "3d.lowpoly",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly"
+  },
+  {
+    "plugin": "💡️reasoning",
+    "artifact": "🔌️wires",
+    "ascii": "wires",
+    "snapshot": "WiresSnapshot",
+    "kind_id": "graph.wires",
+    "formats": [
+      "csv",
+      "json",
+      "md",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"
+  },
+  {
+    "plugin": "📋️forms",
+    "artifact": "📋️forms",
+    "ascii": "forms",
+    "snapshot": "FormsSnapshot",
+    "kind_id": "form.dictionary",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms"
+  },
+  {
+    "plugin": "📏️layout",
+    "artifact": "📏️layout",
+    "ascii": "layout",
+    "snapshot": "LayoutSnapshot",
+    "kind_id": "2d.layout",
+    "formats": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout"
+  },
+  {
+    "plugin": "📐️cad",
+    "artifact": "📐️cad",
+    "ascii": "cad",
+    "snapshot": "CadSnapshot",
+    "kind_id": "3d.cad",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📓️iso16757",
+    "ascii": "iso16757",
+    "snapshot": "Iso16757Snapshot",
+    "kind_id": "box",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📔️vdi3805",
+    "ascii": "vdi3805",
+    "snapshot": "Vdi3805Snapshot",
+    "kind_id": "part-02-corr-2022-12",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📕️din4108",
+    "ascii": "din4108",
+    "snapshot": "Din4108Snapshot",
+    "kind_id": "data.📕️din4108",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📗️din16798",
+    "ascii": "din16798",
+    "snapshot": "Din16798Snapshot",
+    "kind_id": "data.📗️din16798",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1990",
+    "ascii": "en1990",
+    "snapshot": "En1990Snapshot",
+    "kind_id": "data.📘️en1990",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1991",
+    "ascii": "en1991",
+    "snapshot": "En1991Snapshot",
+    "kind_id": "data.📘️en1991",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1992",
+    "ascii": "en1992",
+    "snapshot": "En1992Snapshot",
+    "kind_id": "data.📘️en1992",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1993",
+    "ascii": "en1993",
+    "snapshot": "En1993Snapshot",
+    "kind_id": "data.📘️en1993",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1994",
+    "ascii": "en1994",
+    "snapshot": "En1994Snapshot",
+    "kind_id": "data.📘️en1994",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1995",
+    "ascii": "en1995",
+    "snapshot": "En1995Snapshot",
+    "kind_id": "data.📘️en1995",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1996",
+    "ascii": "en1996",
+    "snapshot": "En1996Snapshot",
+    "kind_id": "data.📘️en1996",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1997",
+    "ascii": "en1997",
+    "snapshot": "En1997Snapshot",
+    "kind_id": "data.📘️en1997",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1998",
+    "ascii": "en1998",
+    "snapshot": "En1998Snapshot",
+    "kind_id": "data.📘️en1998",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1999",
+    "ascii": "en1999",
+    "snapshot": "En1999Snapshot",
+    "kind_id": "data.📘️en1999",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999"
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📙️din18599",
+    "ascii": "din18599",
+    "snapshot": "Din18599Snapshot",
+    "kind_id": "data.📙️din18599",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599"
+  },
+  {
+    "plugin": "📖️playbook",
+    "artifact": "📖️playbook",
+    "ascii": "playbook",
+    "snapshot": "PlaybookSnapshot",
+    "kind_id": "text.playbook",
+    "formats": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "glue": "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook"
+  },
+  {
+    "plugin": "📜️imperative",
+    "artifact": "📜️imperative",
+    "ascii": "imperative",
+    "snapshot": "ImperativeSnapshot",
+    "kind_id": "computation.imperative",
+    "formats": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "glue": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative"
+  },
+  {
+    "plugin": "📸️remodel",
+    "artifact": "📸️remodel",
+    "ascii": "remodel",
+    "snapshot": "RemodelSnapshot",
+    "kind_id": "3d.remodel",
+    "formats": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "glue": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel"
+  },
+  {
+    "plugin": "🔋️energy",
+    "artifact": "🔋️model",
+    "ascii": "model",
+    "snapshot": "EnergyModelSnapshot",
+    "kind_id": "data.🔋️model",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model"
+  },
+  {
+    "plugin": "🔱️trinity",
+    "artifact": "♻️rewrite",
+    "ascii": "rewrite",
+    "snapshot": "RewriteSnapshot",
+    "kind_id": "text.♻️rewrite",
+    "formats": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "glue": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite"
+  },
+  {
+    "plugin": "🔱️trinity",
+    "artifact": "🔌️jack",
+    "ascii": "jack",
+    "snapshot": "JackSnapshot",
+    "kind_id": "graph.trinity",
+    "formats": [
+      "csv",
+      "json",
+      "md",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"
+  },
+  {
+    "plugin": "🕸️dag",
+    "artifact": "🕸️dag",
+    "ascii": "dag",
+    "snapshot": "DagSnapshot",
+    "kind_id": "graph.dag",
+    "formats": [
+      "csv",
+      "json",
+      "md",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag"
+  },
+  {
+    "plugin": "🖍️draw",
+    "artifact": "🖍️draw",
+    "ascii": "draw",
+    "snapshot": "DrawSnapshot",
+    "kind_id": "2d.drawing",
+    "formats": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw"
+  },
+  {
+    "plugin": "🖨️raster",
+    "artifact": "🖨️raster",
+    "ascii": "raster",
+    "snapshot": "RasterSnapshot",
+    "kind_id": "2d.raster",
+    "formats": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ],
+    "glue": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster"
+  },
+  {
+    "plugin": "🗒️note",
+    "artifact": "🗒️note",
+    "ascii": "note",
+    "snapshot": "NoteSnapshot",
+    "kind_id": "2d.note",
+    "formats": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "glue": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note"
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "◻2d",
+    "ascii": "puzzle2d",
+    "snapshot": "Puzzle2dSnapshot",
+    "kind_id": "2d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d"
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "🖐️5d",
+    "ascii": "puzzle5d",
+    "snapshot": "Puzzle5dSnapshot",
+    "kind_id": "5d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "🧊️3d",
+    "ascii": "puzzle3d",
+    "snapshot": "Puzzle3dSnapshot",
+    "kind_id": "3d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d"
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "◻2d",
+    "ascii": "block2d",
+    "snapshot": "Block2dSnapshot",
+    "kind_id": "2d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d"
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "🖐️5d",
+    "ascii": "block5d",
+    "snapshot": "Block5dSnapshot",
+    "kind_id": "5d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d"
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "🧊️3d",
+    "ascii": "block3d",
+    "snapshot": "Block3dSnapshot",
+    "kind_id": "3d.block",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d"
+  },
+  {
+    "plugin": "🪐️space",
+    "artifact": "🏠️home",
+    "ascii": "home",
+    "snapshot": "SHomeSnapshot",
+    "kind_id": "space.shome",
+    "formats": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home"
+  },
+  {
+    "plugin": "🪵️sourcing",
+    "artifact": "🗂️curate",
+    "ascii": "curate",
+    "snapshot": "CurateSnapshot",
+    "kind_id": "catalogue.sourcing",
+    "formats": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "glue": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📦️glue.rs",
+    "art_dir": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate"
+  }
+]

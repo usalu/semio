@@ -115,8 +115,8 @@ pub fn gis2d_io() -> semio_framework_plugin::AppIo {
         document_schema: GIS_MAP_SCHEMA.into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.map".into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
     }
 }
@@ -203,11 +203,11 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 /// pack↔dsl document codec `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin
 /// root's `📦️glue.rs` setup fn.
 pub fn register() {
+    crate::artifacts::gismap::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
 
-    semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.map", gis2d_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::gis2d::Gis2dPlayApp>(GIS_MAP_SCHEMA);
 }
 //#endregion 🔖️Registration

@@ -17,6 +17,8 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
 /// folder endpoints and any other schema-string-keyed caller can print/parse mathematical documents.
 /// Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::mathematical::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::mathematical::MathematicalPlayApp>(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA);

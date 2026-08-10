@@ -1,0 +1,6 @@
+9: * 🚪️ Module only — `📜️script.ts` owns the CLI: `generate` writes this output alongside the registry
+10: * catalog and `check` verifies its freshness (CLAUDE.md: one `script.ts` per bundle). The playground
+11: * catalog is passed IN rather than imported, so this module never depends on `📜️script.ts` at runtime.
+18:import type { PlaygroundEntry } from "./📜️script.ts";
+21:/** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
+105:export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[]): string {

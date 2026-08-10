@@ -11,7 +11,7 @@ fn dsl_asset_parses_and_round_trips() {
 }
 
 #[test]
-fn flatten_matches_golden_diagram_centers_to_1e4() {
+fn flatten_matches_golden_poses_to_1e4() {
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");
     let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     crate::artifacts::puzzle5d::engine::flatten::flatten_snapshot_inplace(&mut projection);
@@ -21,11 +21,9 @@ fn flatten_matches_golden_diagram_centers_to_1e4() {
     let mut center_mismatches = 0usize;
     let mut origin_mismatches = 0usize;
     for part in &projection.parts {
-        let Some(expected) = golden.get(&part.id) else {
-            panic!("missing golden for {}", part.id);
-        };
-        let origin = expected.get("origin").and_then(|v| v.as_array()).expect("origin");
-        let center = expected.get("center").expect("center");
+        let expected = golden.get(&part.id).expect("golden");
+        let origin = expected.get("origin").and_then(|v| v.as_array()).unwrap();
+        let center = expected.get("center").unwrap();
         let ex = [
             origin[0].as_f64().unwrap(),
             origin[1].as_f64().unwrap(),
@@ -35,25 +33,16 @@ fn flatten_matches_golden_diagram_centers_to_1e4() {
         let cy = center.get("y").and_then(|v| v.as_f64()).unwrap();
         if (part.part_2d.x - cx).abs() > 1e-4 || (part.part_2d.y - cy).abs() > 1e-4 {
             center_mismatches += 1;
-            if center_mismatches <= 5 {
-                eprintln!(
-                    "[DEBUG] center mismatch {} got=({},{}) expected=({},{})",
-                    part.id, part.part_2d.x, part.part_2d.y, cx, cy
-                );
-            }
         }
-        if (part.part_3d.origin[0] - ex[0]).abs() > 1e-4
-            || (part.part_3d.origin[1] - ex[1]).abs() > 1e-4
-            || (part.part_3d.origin[2] - ex[2]).abs() > 1e-4
-        {
+        let err = (part.part_3d.origin[0] - ex[0]).abs()
+            .max((part.part_3d.origin[1] - ex[1]).abs())
+            .max((part.part_3d.origin[2] - ex[2]).abs());
+        if err > 1e-4 {
             origin_mismatches += 1;
         }
     }
-    assert_eq!(center_mismatches, 0, "{center_mismatches} diagram-center mismatches against compose Flat golden (tol 1e-4; Flat stores f32-ish centers)");
-    // Origins currently diverge from Flat under the compose-identical matrix packing (Flat's 3d
-    // poses appear to come from a different solver path). Diagram centers are the design-app
-    // contract asserted here; keep the origin count visible for the follow-up plane fix.
-    eprintln!("[DEBUG] origin_mismatches_vs_flat={origin_mismatches}");
+    assert_eq!(center_mismatches, 0, "{center_mismatches} center mismatches");
+    assert_eq!(origin_mismatches, 0, "{origin_mismatches} origin mismatches");
 }
 
 #[test]

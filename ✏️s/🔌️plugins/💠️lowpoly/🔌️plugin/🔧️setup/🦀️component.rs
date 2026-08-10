@@ -1,7 +1,7 @@
 //! 🔧️ Setup facet for `💠️lowpoly` — codec/language/importer registration hooked via `.setup(...)`.
 
 /// 🔌️ One call per `MeshExporter`/`MeshImporter` format so the OS workflow VFS auto-populates from
-/// `required_os_media_export_formats`/`required_os_media_import_formats`; also registers the
+/// `required_media_formats`; also registers the
 /// `DocumentPack` codec so `.pack`/`.ops` sync/storage paths can encode/decode `LowpolySnapshot`.
 pub fn register_lowpoly_exports() {
     crate::artifacts::lowpoly::engine::register();

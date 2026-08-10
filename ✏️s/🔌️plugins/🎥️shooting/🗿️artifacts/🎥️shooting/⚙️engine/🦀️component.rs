@@ -14,10 +14,10 @@ use serde_json::{json, Value};
 /// `SHOOTING_DOCUMENT_SCHEMA` so `framework/sync`'s folder endpoints and any other schema-keyed caller
 /// can print/parse/export shooting documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::shooting::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
-    semio_framework_os::register_2d_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.shooting", shooting_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::shooting::ShootingPlayApp>(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA);
 }
 
@@ -87,8 +87,8 @@ pub fn shooting_io() -> semio_framework_plugin::AppIo {
         document_schema: "shooting.scene".into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         ports: vec![shooting_photos_out_port()],
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.shooting".into(), name: "2D Shooting".into(), dimension: "2d".into(), component_kind: "shooting".into() },
     }
 }

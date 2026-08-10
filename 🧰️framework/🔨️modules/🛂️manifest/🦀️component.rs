@@ -4079,18 +4079,18 @@ mod app_document_tests {
 
     #[test]
     fn os_media_format_ply_and_las_round_trip() {
-        use crate::mesh::OsMediaFormat;
+        use crate::mesh::MediaFormat;
         for (format, ext, mime, binary) in [
-            (OsMediaFormat::Ply, "ply", "model/ply", false),
-            (OsMediaFormat::Las, "las", "application/vnd.las", true),
+            (MediaFormat::Ply, "ply", "model/ply", false),
+            (MediaFormat::Las, "las", "application/vnd.las", true),
         ] {
             assert_eq!(format.as_str(), ext);
             assert_eq!(format.mime_type(), mime);
             assert_eq!(format.is_binary(), binary);
-            assert_eq!(OsMediaFormat::parse(ext), Some(format));
+            assert_eq!(MediaFormat::parse(ext), Some(format));
             let json = serde_json::to_string(&format).unwrap();
             assert_eq!(json, format!("\"{ext}\""));
-            let round: OsMediaFormat = serde_json::from_str(&json).unwrap();
+            let round: MediaFormat = serde_json::from_str(&json).unwrap();
             assert_eq!(round, format);
         }
     }
@@ -4222,7 +4222,7 @@ mod app_document_tests {
         crate::ui::kernel::Rights::export().unwrap();
         crate::ui::kernel::ArtifactKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
-        crate::mesh::OsMediaFormat::export().unwrap();
+        crate::mesh::MediaFormat::export().unwrap();
         crate::mesh::OsMediaCapability::export().unwrap();
         crate::mesh::ArtifactKindSpec::export().unwrap();
         crate::mesh::MediaClass::export().unwrap();

@@ -13,8 +13,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { GraphTimelineHost, World3dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/5d/example/concrete-forest.puzzle5d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/5d/example/nakagin-capsule-tower.puzzle5d?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
+import capsuleDreamFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/🖼️assets/🗣️dream.dsl.semio?raw";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -29,7 +30,9 @@ type StoryPuzzle5dGrip = {
 type StoryPuzzle5dPart = {
   readonly id: string;
   readonly partKind?: string;
+  readonly anchor?: string;
   readonly grips?: readonly StoryPuzzle5dGrip[];
+  readonly "2d"?: { readonly x?: number; readonly y?: number };
   readonly "3d": { readonly origin: Vec3; readonly orientation?: Quat; readonly meshUrl?: string; readonly label?: string };
 };
 
@@ -40,6 +43,7 @@ type StoryPuzzle5dFixture = {
   readonly label?: string;
   readonly camera3d: StoryPuzzle5dCamera3d;
   readonly parts: readonly StoryPuzzle5dPart[];
+  readonly fasteners?: readonly Record<string, unknown>[];
 };
 
 type StoryPuzzle5dRuntime = {
@@ -49,6 +53,41 @@ type StoryPuzzle5dRuntime = {
 };
 
 type StoryPuzzle5dState = { readonly fixture: StoryPuzzle5dFixture; readonly runtime: StoryPuzzle5dRuntime };
+
+const STORY_CONNECTION_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"] as const;
+
+function storyPickConnectionParams(entity: Record<string, unknown>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of STORY_CONNECTION_PARAM_KEYS) {
+    const value = entity[key];
+    if (typeof value === "number") out[key] = value;
+  }
+  return out;
+}
+
+function storySummarizePuzzle5dConnectionParams(fixture: StoryPuzzle5dFixture) {
+  const fasteners = fixture.fasteners ?? [];
+  const withNonzero = fasteners.filter((row) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof row[key] === "number" && row[key] !== 0));
+  const fastenerSample = fasteners.find((row) => STORY_CONNECTION_PARAM_KEYS.some((key) => typeof row[key] === "number"));
+  const anchorCounts: Record<string, number> = {};
+  let partDiagramSample: { readonly id: string; readonly x?: number; readonly y?: number } | null = null;
+  for (const part of fixture.parts) {
+    const anchor = typeof part.anchor === "string" ? part.anchor : "unset";
+    anchorCounts[anchor] = (anchorCounts[anchor] ?? 0) + 1;
+    if (!partDiagramSample && (typeof part["2d"]?.x === "number" || typeof part["2d"]?.y === "number")) {
+      partDiagramSample = { id: part.id, x: part["2d"]?.x, y: part["2d"]?.y };
+    }
+  }
+  return {
+    fasteners: {
+      total: fasteners.length,
+      withNonzeroParams: withNonzero.length,
+      sample: fastenerSample ? { id: fastenerSample.id, ...storyPickConnectionParams(fastenerSample) } : null,
+    },
+    partAnchors: anchorCounts,
+    partDiagramSample,
+  };
+}
 //#endregion StoryTypes
 
 //#region WasmFixtureLoader
@@ -214,7 +253,15 @@ function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string
   const worldNode = useMemo(() => (state ? buildStoryWorld3dNode(state.fixture, state.runtime) : null), [state]);
   const timelineNode = useMemo(() => (state ? buildStoryGraphTimelineNode(state.fixture) : null), [state]);
   const debug = useMemo(
-    () => (state ? JSON.stringify({ revealCount: state.runtime.revealCount, partCount: state.fixture.parts.length, selection: state.runtime.selectedIds }) : "loading"),
+    () =>
+      state
+        ? JSON.stringify({
+            revealCount: state.runtime.revealCount,
+            partCount: state.fixture.parts.length,
+            selection: state.runtime.selectedIds,
+            connectionParams: storySummarizePuzzle5dConnectionParams(state.fixture),
+          })
+        : "loading",
     [state],
   );
 
@@ -264,5 +311,12 @@ export const ConcreteForest: Story = {
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,
+  },
+};
+
+/** 🌙️ The shipped Capsule Dream 5D fixture (`🖐️5d/📚️examples/🌙️capsule-dream`) — 2880 parts / 2864 fasteners; debug panel lists anchor + eight fastener params + diagram `x`/`y`. */
+export const CapsuleDream: Story = {
+  args: {
+    fixtureDsl: capsuleDreamFixtureDsl,
   },
 };

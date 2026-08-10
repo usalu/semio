@@ -386,8 +386,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         schema: "draw.document".into(),
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
     }
 }
 //#endregion 🔖️ArtifactKind

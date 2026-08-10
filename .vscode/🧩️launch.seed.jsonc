@@ -821,6 +821,50 @@
         "order": 260.2
       }
     },
+    {
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️capsule🌙️dream⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d:capsule-dream",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6015",
+        "SEMIO_RENDERER": "react",
+        "PLAYGROUND_LOCKED_EXAMPLE_ID": "capsule-dream",
+        "SEMIO_DEFAULT_EXAMPLE": "capsule-dream"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 261
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6015)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️capsule🌙️dream🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d:capsule-dream",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6115",
+        "SEMIO_RENDERER": "wgpu",
+        "PLAYGROUND_LOCKED_EXAMPLE_ID": "capsule-dream",
+        "SEMIO_DEFAULT_EXAMPLE": "capsule-dream"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 261.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6115)",
+        "uriFormat": "%s"
+      }
+    },
     "@generated:block2d:react",
     "@generated:block2d:wgpu",
     {
@@ -1519,6 +1563,17 @@
       }
     },
     {
+      "name": "⚖️gate🚪️artifact-io",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactIoBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410
+      }
+    },
+    {
       "name": "🎥️render🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",
@@ -1817,6 +1872,17 @@
       "presentation": {
         "group": "4_build",
         "order": 150
+      }
+    },
+    {
+      "name": "📦️build🧩️puzzle👯️5d🎛️capsule",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:puzzle:5d:capsule-dream",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 151
       }
     },
     {

@@ -58,8 +58,8 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
     }
 }
@@ -69,6 +69,8 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 /// 🗂️ Registers lowpoly document codecs and handcrafted language specs. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::lowpoly::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
 }

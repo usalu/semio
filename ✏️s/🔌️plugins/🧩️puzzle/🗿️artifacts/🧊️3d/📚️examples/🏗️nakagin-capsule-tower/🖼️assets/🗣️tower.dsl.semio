@@ -2,7 +2,7 @@ semio puzzle.puzzle3d.dsl v1
 schema=puzzle.3d.fixture domain=architecture
 meta {
   kind-catalogs=
-  objects [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT abstract:BOOL base-kinds:LIST representations:LIST vortices:LIST attributes:LIST authors:LIST] {
+  objects [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST vortices:LIST attributes:LIST authors:LIST] {
     Balcony Balcony Balcony "" "" "" "" false [] [] [ ] [] []
     Base Base Base "" "" "" "" false [] [ id="Base:rep0" name=default url="/mesh/🧊️base.glb" mime="" description="" ] [ vortex-kind="core rectangular bottom" point=@-7.5,-7.7,7.5 direction=^0,0,1 radius=0.36 vortex-kind="core rectangular bottom" point=@-18.6,-7.7,7.5 direction=^0,0,1 radius=0.36 ] [] []
     "Base Blob" "Base Blob" "Base Blob" "" "" "" "" false [] [ id="Base Blob:rep0" name=default url="/mesh/🧊️base_blob.glb" mime="" description="" ] [ vortex-kind="core circular bottom" point=@-6.75,-7.75,7.5 direction=^0,0,1 radius=0.36 vortex-kind="core circular bottom" point=@-18.85,-7.75,7.5 direction=^0,0,1 radius=0.36 ] [] []

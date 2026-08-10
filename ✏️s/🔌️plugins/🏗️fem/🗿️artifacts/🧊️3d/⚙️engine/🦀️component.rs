@@ -25,6 +25,8 @@ use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 /// depending on its concrete `Projection`/`Mutation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
+    crate::artifacts::fem3d::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     

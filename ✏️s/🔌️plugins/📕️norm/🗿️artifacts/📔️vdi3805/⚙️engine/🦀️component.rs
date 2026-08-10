@@ -901,3 +901,9 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::vdi3805::io::register();
+}
+//#endregion 🔖️IoFacet

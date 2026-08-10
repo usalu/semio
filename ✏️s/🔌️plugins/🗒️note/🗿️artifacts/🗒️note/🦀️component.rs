@@ -18,8 +18,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Document },
         schema: "note.document".into(),
-        export_formats: vec![],
-        import_formats: vec![],
+        export_formats: crate::artifacts::note::io::format_specs().iter().filter(|s| s.export).map(|s| s.format).collect(),
+        import_formats: crate::artifacts::note::io::format_specs().iter().filter(|s| s.import).map(|s| s.format).collect(),
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -7,10 +7,10 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Register
 pub fn register() {
+    crate::artifacts::note::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
-    semio_framework_os::register_2d_export_handlers("2d.note", "note", note_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.note", note_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::note::NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
 }
 

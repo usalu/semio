@@ -104,6 +104,10 @@ export interface Taxonomy {
   readonly snapshotChildDirs: readonly string[];
   /** 🔺️ Required children of each `🔺️diff/` facet, alongside the grammar and codec kept at its root. */
   readonly diffChildDirs: readonly string[];
+  /** 🚪️ Required children of each format dir under `🚪️io/<format>/`. */
+  readonly ioFormatChildDirs: readonly string[];
+  /** 🗂️ Map from MediaFormat as_str → emoji format folder under `🚪️io/`. */
+  readonly mediaFormatDirs: Readonly<Record<string, string>>;
   /**
    * 🧬️ Schema serialisation formats a `🧬️schema` facet must carry, one handcrafted leaf each. `fieldCasing`
    * is the canonical casing a field name takes in that format, which the parity scanners normalise through.
@@ -176,6 +180,8 @@ function artifactFacetChildDirs(facet: string, taxonomy: Taxonomy): readonly str
   if (facet === "📸️snapshot") return taxonomy.snapshotChildDirs ?? [];
   if (facet === "🔺️diff") return taxonomy.diffChildDirs ?? [];
   if (facet === "🧬️mutations") return taxonomy.mutationChildDirs ?? [];
+  if (facet === "🚪️io") return Object.values(taxonomy.mediaFormatDirs ?? {});
+  if (Object.values(taxonomy.mediaFormatDirs ?? {}).includes(facet)) return taxonomy.ioFormatChildDirs ?? [];
   return [];
 }
 
@@ -298,6 +304,32 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     }
   }
   //#endregion MutationFacetContract
+  //#region IoFacetContract
+  if (!taxonomy.artifactComponentDirs.includes("🚪️io") || !taxonomy.artifactChildDirs.includes("🚪️io")) {
+    problems.push(`artifactComponentDirs and artifactChildDirs must include "🚪️io".`);
+  }
+  if (!Array.isArray(taxonomy.ioFormatChildDirs) || taxonomy.ioFormatChildDirs.length === 0) {
+    problems.push(`ioFormatChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.ioFormatChildDirs) {
+      if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+        problems.push(`ioFormatChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+      }
+    }
+  }
+  for (const required of ["📥️import", "📤️export", "🚪️io"] as const) {
+    if (!taxonomy.taxonomyLeafParentDirs.includes(required)) {
+      problems.push(`taxonomyLeafParentDirs must include "${required}".`);
+    }
+  }
+  const mediaFormatDirs = taxonomy.mediaFormatDirs ?? {};
+  if (Object.keys(mediaFormatDirs).length === 0) {
+    problems.push(`mediaFormatDirs must declare at least one format.`);
+  }
+  for (const [key, dir] of Object.entries(mediaFormatDirs)) {
+    if (!key || !dir) problems.push(`mediaFormatDirs has an empty key or value.`);
+  }
+  //#endregion IoFacetContract
   //#region SchemaFacetContract
   for (const [key, dirs] of [
     ["snapshotChildDirs", taxonomy.snapshotChildDirs],

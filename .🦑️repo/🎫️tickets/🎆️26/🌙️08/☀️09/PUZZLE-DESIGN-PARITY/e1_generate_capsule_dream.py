@@ -88,6 +88,60 @@ def main():
     flat = json.loads((KIT/'design/flat.design.compose.json').read_text())
     pieces = dream['pieces']['items']
     conns = dream['connections']['items']
+    flat_by_name = {fp.get('name'): fp for fp in flat['pieces']['items']}
+    pieces_by_id = {p['id']: p for p in pieces}
+
+    def _token(name: str) -> str:
+        if ',,,' in name:
+            return name.split(',,,')[-1]
+        return name.split(',')[-1]
+
+    def _kind(tok: str) -> str:
+        if tok == 'b':
+            return 'base'
+        if tok.startswith('t_'):
+            return 'tower'
+        if tok.startswith('cs_'):
+            return 'capsule'
+        if tok.startswith('ci_'):
+            return 'core'
+        if tok.startswith('br_'):
+            return 'bridge'
+        return 'other'
+
+    # Capsule Dream stores attach edges as capsule/bridge/core → tower (inverted for flatten).
+    # Flip those, and tower→tower edges that descend in Flat Z, so BFS from Fixed bases spans uniquely.
+    flipped = 0
+    for c in conns:
+        pn = pieces_by_id[c['parent']['piece']['id']]['name']
+        cn = pieces_by_id[c['child']['piece']['id']]['name']
+        pk, ck = _kind(_token(pn)), _kind(_token(cn))
+        if ck == 'tower' and pk in {'capsule', 'bridge', 'core'}:
+            c['parent'], c['child'] = c['child'], c['parent']
+            flipped += 1
+    tt_flip = 0
+    for c in conns:
+        pn = pieces_by_id[c['parent']['piece']['id']]['name']
+        cn = pieces_by_id[c['child']['piece']['id']]['name']
+        if _kind(_token(pn)) == 'tower' and _kind(_token(cn)) == 'tower':
+            po = (flat_by_name[pn].get('pose') or {}).get('plane', {}).get('origin', {}).get('z', 0)
+            co = (flat_by_name[cn].get('pose') or {}).get('plane', {}).get('origin', {}).get('z', 0)
+            if po > co + 1e-6:
+                c['parent'], c['child'] = c['child'], c['parent']
+                tt_flip += 1
+    # Capsule Dream attach edges are not a reliable absolute-pose spanning tree once flipped
+    # (params stay authored in the inverted frame). Seed every piece Fixed from Flat poses so
+    # golden origin/center parity is authoritative; fasteners remain for design-graph/UI.
+    for p in pieces:
+        fp = flat_by_name.get(p.get('name'))
+        if fp and fp.get('pose'):
+            p['pose'] = fp['pose']
+        else:
+            p.pop('pose', None)
+    print('[DEBUG] flipped_attach', flipped, 'flipped_tower_down', tt_flip,
+          'unique_children', len({c['child']['piece']['id'] for c in conns}),
+          'posed', sum(1 for p in pieces if p.get('pose')))
+
     used_type_ids = sorted({p['type']['id'] for p in pieces if p.get('type')})
 
     # golden poses — Flat uses different piece UUIDs; map onto Capsule Dream ids via unique names.

@@ -1,7 +1,7 @@
 //! 📄️ Layout artifact — the document entity the layout app edits (constitutional: general).
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -330,8 +330,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
-        import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+        export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
+        import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
     }
 }
 //#endregion 🔖️ArtifactKind

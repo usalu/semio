@@ -36,7 +36,7 @@ use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView,
-    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -407,7 +407,7 @@ pub fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlay
     CadPaneId::all().into_iter().flat_map(|pane| collect_pane_solids(kernel, envelope, pane)).collect()
 }
 
-pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: OsMediaFormat) -> Option<CadSolidExport> {
+pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: MediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
@@ -419,7 +419,7 @@ pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: Os
     export_solids_as(&mut *kernel, &solids, format, &stem)
 }
 
-pub fn export_solid_modelspace(envelope: &CadPlayView, format: OsMediaFormat) -> Option<CadSolidExport> {
+pub fn export_solid_modelspace(envelope: &CadPlayView, format: MediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
@@ -826,8 +826,8 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Glb],
-        import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
+        export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
+        import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.cad".into(), name: "3D CAD".into(), dimension: "3d".into(), component_kind: "cad".into() },
     }
 }
@@ -1013,7 +1013,7 @@ impl DocumentApp for CadPlayApp {
         if solids.is_empty() {
             return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
         }
-        let Some(export) = export_solids_as(&mut *kernel, &solids, OsMediaFormat::Step, "cad.modelspace") else {
+        let Some(export) = export_solids_as(&mut *kernel, &solids, MediaFormat::Step, "cad.modelspace") else {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {

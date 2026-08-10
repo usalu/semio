@@ -2,7 +2,7 @@
 //! plus this artifact's `ArtifactKindSpec`.
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 use serde::{Deserialize, Serialize};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
@@ -512,8 +512,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::Brep,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         schema: PROCESS_3D_SCHEMA.into(),
-        export_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Glb],
-        import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
+        export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
+        import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
     }
 }
 //#endregion 🔖️ArtifactKind

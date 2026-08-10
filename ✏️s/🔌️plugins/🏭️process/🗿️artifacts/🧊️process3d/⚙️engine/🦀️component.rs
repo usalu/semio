@@ -26,6 +26,8 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 /// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
 /// `setup` hook `📦️glue.rs`'s `semio_plugin!{}` invocation calls.
 pub fn register() {
+    crate::artifacts::process3d::io::register();
+
     register_artifact_schema();
     register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
@@ -37,10 +39,6 @@ pub fn register() {
         Err("process3d: mesh import not supported".into())
     }
 
-    semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
-    semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-    semio_framework_os::register_mesh_dwg_export_handler("3d.process", "process", process3d_mesh_from_document);
     semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::process3d::Process3dPlayApp>(crate::artifacts::process3d::PROCESS_3D_SCHEMA);
 }
@@ -95,8 +93,8 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![semio_framework_plugin::OsMediaFormat::Step, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl, semio_framework_plugin::OsMediaFormat::Glb],
-        import_formats: vec![semio_framework_plugin::OsMediaFormat::Step, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
+        export_formats: vec![semio_framework_plugin::MediaFormat::Step, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl, semio_framework_plugin::MediaFormat::Glb],
+        import_formats: vec![semio_framework_plugin::MediaFormat::Step, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
     }
 }
@@ -551,7 +549,7 @@ pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Opti
     if format == "glb" {
         let mesh = processed_mesh(fixture)?;
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
-        let media_format = semio_framework_plugin::OsMediaFormat::Glb;
+        let media_format = semio_framework_plugin::MediaFormat::Glb;
         return Some(Process3dModelExport {
             filename: format!("process3d.{}", media_format.as_str()),
             data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),

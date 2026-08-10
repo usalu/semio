@@ -11098,6 +11098,7 @@ hasDesigns {
           node {
             id name
             blueprint { id }
+            connectionKind
             position { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } }
             flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } }
           }
@@ -11870,13 +11871,37 @@ function sketchpadFlatHandleCompoundId(left: string, right: string): string {
 
 function sketchpadConnectionTransformParamsFromDto(connection: Record<string, unknown>): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const key of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
+  for (const key of ["gap", "shift", "rise", "rotation", "turn", "tilt"] as const) {
     const value = connection[key];
     if (typeof value === "number" && Number.isFinite(value)) {
       out[key] = value;
     }
   }
+  const x = connection["x"] ?? connection["u"];
+  const y = connection["y"] ?? connection["v"];
+  if (typeof x === "number" && Number.isFinite(x)) out.x = x;
+  if (typeof y === "number" && Number.isFinite(y)) out.y = y;
   return out;
+}
+
+/** @emoji ⚓️ Maps compose `PieceConnectionKind` Fixed/Connected onto puzzle node/object `anchor`. */
+function sketchpadPiecePuzzleAnchor(piece: Record<string, unknown>): "fixed" | "derived" {
+  const raw = piece["connectionKind"] ?? piece["connection_kind"];
+  if (typeof raw === "string") {
+    const kind = raw.trim().toLowerCase();
+    if (kind === "fixed") return "fixed";
+    if (kind === "connected" || kind === "derived") return "derived";
+  }
+  const authored = piece["position"] as SketchpadPiecePose | undefined;
+  const hasAuthoredPose = Boolean(authored?.center || authored?.plane);
+  return hasAuthoredPose ? "fixed" : "derived";
+}
+
+/** @emoji 📍 Authored compose piece pose only — never `flatPosition` (puzzle owns flatten). */
+function sketchpadPieceAuthoredPose(piece: Record<string, unknown>): SketchpadPiecePose | undefined {
+  const position = piece["position"] as SketchpadPiecePose | undefined;
+  if (position?.center || position?.plane) return position;
+  return undefined;
 }
 
 type SketchpadConnectorGeometry = {
@@ -13055,8 +13080,10 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
     schema: "puzzle.2d.fixture",
     camera: sketchpadFlatCameraFromPartCenters([{ x: 0, y: 0 }]),
     nodes: pieces.map((piece) => {
+      const row = piece as Record<string, unknown>;
       const connectors = sketchpadPieceConnectorGeometry(piece, kit);
-      const storedCenter = (piece as { position?: { center?: { u?: number; v?: number } } }).position?.center;
+      const anchor = sketchpadPiecePuzzleAnchor(row);
+      const storedCenter = anchor === "fixed" ? sketchpadPieceAuthoredPose(row)?.center : undefined;
       return {
         id: piece.id,
         shape: "circle",
@@ -13065,6 +13092,7 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
         y: typeof storedCenter?.v === "number" ? storedCenter.v : 0,
         text: sketchpadPieceLabel(piece, kit),
         nodeKind: "compose.design.piece",
+        anchor,
         handles: connectors.map((connector) => ({
           id: sketchpadTopologyAnchorFullId(piece.id, connector.id),
           handleKind: "compose.connector",
@@ -13083,11 +13111,13 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
   const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
   const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
   const objects = pieces.map((piece) => {
+    const row = piece as Record<string, unknown>;
     const connectors = sketchpadPieceConnectorGeometry(piece, kit);
-    const storedPlane = (piece as { position?: SketchpadPiecePose["plane"] }).position?.plane;
+    const anchor = sketchpadPiecePuzzleAnchor(row);
+    const storedPlane = anchor === "fixed" ? sketchpadPieceAuthoredPose(row)?.plane : undefined;
     const origin = storedPlane?.origin;
     const storedOrigin: [number, number, number] = [typeof origin?.x === "number" ? origin.x : 0, typeof origin?.y === "number" ? origin.y : 0, typeof origin?.z === "number" ? origin.z : 0];
-    const orientation = storedPlane ? sketchpadPieceSceneOrientation(piece) : ([0, 0, 0, 1] as [number, number, number, number]);
+    const orientation = storedPlane ? sketchpadPlaneAxesToQuaternion(storedPlane) : ([0, 0, 0, 1] as [number, number, number, number]);
     return {
       id: piece.id,
       objectKind: "compose.design.piece",
@@ -13096,6 +13126,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
       orientation,
       scale: sketchpadPieceSceneScale(piece),
       label: sketchpadPieceLabel(piece, kit),
+      anchor,
       vortices: connectors.map((connector) => ({
         id: sketchpadTopologyAnchorFullId(piece.id, connector.id),
         position: connector.point,
@@ -16928,7 +16959,62 @@ if (import.meta.vitest) {
       const volume = sketchpadDesignVolumeFixtureFromDesign(design, kit);
       expect(volume.objects).toHaveLength(1);
       expect(volume.objects[0]?.origin).toEqual([0, 0, 0]);
+      expect(volume.objects[0]?.anchor).toBe("derived");
       expect(volume.objects[0]?.vortices[0]?.position).toEqual([1, 2, 3]);
+    });
+
+    it("maps connection u/v to attraction x/y and seeds Fixed poses only", () => {
+      const design = {
+        id: "d",
+        pieces: [
+          {
+            id: "root",
+            connectionKind: "FIXED",
+            blueprint: { id: "type-a" },
+            position: { center: { u: 1, v: 2 }, plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } },
+            flatPosition: { center: { u: 99, v: 99 }, plane: { origin: { x: 99, y: 99, z: 99 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } },
+          },
+          {
+            id: "child",
+            connectionKind: "CONNECTED",
+            blueprint: { id: "type-a" },
+            flatPosition: { center: { u: 7, v: 8 }, plane: { origin: { x: 7, y: 8, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } },
+          },
+        ],
+        connections: [
+          {
+            id: "link-1",
+            u: 0.5,
+            v: 0.25,
+            gap: 1,
+            parent: { piece: { id: "root" }, connector: { id: "conn-a" } },
+            child: { piece: { id: "child" }, connector: { id: "conn-a" } },
+          },
+        ],
+      } as Design;
+      const kit = {
+        id: "k",
+        types: [{ id: "type-a", connectors: [{ id: "conn-a", point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, t: 0 }] }],
+      } as Kit;
+      const flat = sketchpadDesignPuzzle2dFixtureFromDesign(design, kit);
+      const volume = sketchpadDesignVolumeFixtureFromDesign(design, kit);
+      expect(flat.edges[0]?.x).toBe(0.5);
+      expect(flat.edges[0]?.y).toBe(0.25);
+      expect(flat.edges[0]?.gap).toBe(1);
+      expect(flat.edges[0]?.u).toBeUndefined();
+      expect(flat.edges[0]?.v).toBeUndefined();
+      expect(volume.attractions[0]?.x).toBe(0.5);
+      expect(volume.attractions[0]?.y).toBe(0.25);
+      expect(flat.nodes.find((n) => n.id === "root")?.anchor).toBe("fixed");
+      expect(flat.nodes.find((n) => n.id === "root")?.x).toBe(1);
+      expect(flat.nodes.find((n) => n.id === "root")?.y).toBe(2);
+      expect(flat.nodes.find((n) => n.id === "child")?.anchor).toBe("derived");
+      expect(flat.nodes.find((n) => n.id === "child")?.x).toBe(0);
+      expect(flat.nodes.find((n) => n.id === "child")?.y).toBe(0);
+      expect(volume.objects.find((o) => o.id === "root")?.anchor).toBe("fixed");
+      expect(volume.objects.find((o) => o.id === "root")?.origin).toEqual([1, 2, 3]);
+      expect(volume.objects.find((o) => o.id === "child")?.anchor).toBe("derived");
+      expect(volume.objects.find((o) => o.id === "child")?.origin).toEqual([0, 0, 0]);
     });
 
     it("emits relative fixtures flattened through puzzle 5d", async () => {
@@ -16965,6 +17051,8 @@ if (import.meta.vitest) {
       } as Kit;
       const flat = sketchpadDesignPuzzle2dFixtureFromDesign(design, kit);
       const volume = sketchpadDesignVolumeFixtureFromDesign(design, kit);
+      expect(flat.edges[0]?.x).toBe(0.5);
+      expect(flat.edges[0]?.y).toBe(0.25);
       const prepared = prepareTopologyModel(compose5d(flat, volume));
       const child = prepared.parts.find((part) => part.id === "child");
       expect(child?.["3d"]?.origin?.[0]).toBeCloseTo(1, 2);

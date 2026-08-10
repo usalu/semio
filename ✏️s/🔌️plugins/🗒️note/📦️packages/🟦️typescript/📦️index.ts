@@ -8,3 +8,4 @@ export * as note_snapshot_schema from "../../🗿️artifacts/🗒️note/📸�
 export * as note_mutations from "../../🗿️artifacts/🗒️note/🧬️mutations/🟦️component.ts";
 export * as note_op from "../../🗿️artifacts/🗒️note/🔧️op/🟦️component.ts";
 export * as note_spr from "../../🗿️artifacts/🗒️note/📡️spr/🟦️component.ts";
+export * as note_io from "../../🗿️artifacts/🗒️note/🚪️io/🟦️component.ts";

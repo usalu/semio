@@ -84,3 +84,9 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️IoFacet
+pub fn register_io() {
+    crate::artifacts::home::io::register();
+}
+//#endregion 🔖️IoFacet

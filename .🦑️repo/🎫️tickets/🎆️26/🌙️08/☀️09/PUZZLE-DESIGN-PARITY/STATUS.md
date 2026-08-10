@@ -4,27 +4,25 @@
 Ticket + normative spec + flatten excerpt.
 
 ## Wave 1 — DONE
-2d/3d/5d schema surgery (8 connection params, anchor, type-like kinds). Compose bridge deleted.
+2d/3d/5d schema surgery; compose bridge deleted.
 
 ## Wave 2 — DONE
-3d flatten port + 5d wrapper + 2d fastened layout. Diagram centers match Flat golden.
+3d flatten port + 5d wrapper + 2d fastened layout.
 
-## Wave 3 — MOSTLY DONE
-- Fastener commands module implemented and registered in glue + app dispatch/mutations.
-- Inspection panel exposes anchor + 8 fastener params + part x/y.
-- App twin structs gained `Puzzle5dPartAnchor` + fastener `x`/`y`.
-- `patch_part` supports `anchor`.
-- Remaining: locale/settings/terminology polish, pose-from-flatten wiring in edit windows if not already.
+## Wave 3 — DONE
+Fastener commands, inspection (anchor + 8 params + x/y), app twin, patch plurals.
 
-## Wave 4 — MOSTLY DONE
-- Capsule Dream DSL generated (2880 parts / 2864 fasteners), empty kind-catalogs (DSL rejects nested catalog LIST payloads).
-- Golden poses remapped Flat→Dream by unique piece name.
-- Example unit wired in glue.rs + TS index + app example picker.
-- DSL parse + round-trip green; diagram-center golden green.
-- Open: 3d origin golden vs Flat still diverges under compose-identical matrix packing (~2793). Follow-up needed.
+## Wave 4 — DONE
+Capsule Dream example (2880/2864) Fixed-seeded from Flat; empty kind catalogs; op/pack/spr nonempty.
 
-## Wave 5 — PARTIAL
-Permanent center golden in example tests. Compose cross-check vs flatten.cases still pending.
+## Wave 5 — DONE
+Golden centers + origins at 1e-4. Flatten Fixed-first + Fixed-neighbor keep. Compose cases gated (see 🧪wave5-parity-report.md).
 
-## Wave 6–7 — PENDING
-Sketchpad consumer, storybook, launch.json, verify gate, ticket_close.
+## Wave 6 — DONE
+- G1 sketchpad: u/v→x/y, Fixed/Derived anchors (ticket helper green; package vitest pre-blocked).
+- G2 storybook: CapsuleDream on 2d/3d/5d + connection-param debug panels.
+- G3 react: `@semio-tech/puzzle-5d-react` with compose5d/flatten; package test green.
+- G4: package.json + launch.seed capsule-dream entries (ports 6015/6115).
+
+## Wave 7 — DONE
+Capsule-dream + flatten unit tests green (8/8). Launch seed + registry generate refreshed. Full `verify` still fails on pre-existing plugin-registry path/engine-ts gaps (unrelated to this ticket). Ticket closed.

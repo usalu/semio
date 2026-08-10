@@ -51,7 +51,7 @@ mod tests {
     use crate::apps::space::testkit::{apply_mutations, studio_emit};
     use crate::apps::space::SpaceCommand;
     use crate::demo_space_projection;
-    use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, OsMediaFormat};
+    use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, MediaFormat};
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
@@ -70,8 +70,8 @@ mod tests {
             media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             schema: "test.contract.2d.schema".into(),
-            export_formats: vec![OsMediaFormat::Svg],
-            import_formats: vec![OsMediaFormat::Svg],
+            export_formats: vec![MediaFormat::Svg],
+            import_formats: vec![MediaFormat::Svg],
         });
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.3d".into(),
@@ -82,8 +82,8 @@ mod tests {
             media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             schema: "test.contract.3d.schema".into(),
-            export_formats: vec![OsMediaFormat::Glb],
-            import_formats: vec![OsMediaFormat::Glb],
+            export_formats: vec![MediaFormat::Glb],
+            import_formats: vec![MediaFormat::Glb],
         });
         let mut projection = demo_space_projection();
         let src_out = crate::apps::space::testkit::test_port("contract-src", "out", MediaPortDirection::Out, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "test.contract.2d");

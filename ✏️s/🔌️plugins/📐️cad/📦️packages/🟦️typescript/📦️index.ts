@@ -8,3 +8,4 @@ export * as cad_pack from "../../🗿️artifacts/📐️cad/📸️snapshot/�
 export * as cad_op from "../../🗿️artifacts/📐️cad/🔧️op/🟦️component.ts";
 export * as cad_mutations from "../../🗿️artifacts/📐️cad/🧬️mutations/🟦️component.ts";
 export * as cad_spr from "../../🗿️artifacts/📐️cad/📡️spr/🟦️component.ts";
+export * as cad_io from "../../🗿️artifacts/📐️cad/🚪️io/🟦️component.ts";

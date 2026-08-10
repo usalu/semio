@@ -19,6 +19,8 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecor
 /// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    crate::artifacts::dag::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::dag::DagPlayApp>(DAG_DOCUMENT_SCHEMA);

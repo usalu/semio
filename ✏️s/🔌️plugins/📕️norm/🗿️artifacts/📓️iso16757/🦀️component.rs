@@ -1,5 +1,7 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -981,4 +983,3 @@ mod tests {
         assert_eq!(limits.timeout_ms, 50);
     }
 }
-

@@ -230,6 +230,8 @@ pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> semio_framework_plugi
 /// 🗂️ Native setup hook for the `gis.terrain` artifact — registers the pack↔dsl document codec
 /// `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin root's `📦️glue.rs` setup fn.
 pub fn register() {
+    crate::artifacts::gisterrain::io::register();
+
     register_pilot_languages();
     register_artifact_schema();
 

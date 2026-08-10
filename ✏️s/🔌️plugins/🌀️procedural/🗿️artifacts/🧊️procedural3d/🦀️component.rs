@@ -1,7 +1,7 @@
 //! 📐️ Procedural3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
 use flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
@@ -36,8 +36,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
         schema: "procedural.3d".into(),
-        export_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl],
-        import_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl]}
+        export_formats: vec![MediaFormat::Obj, MediaFormat::Glb, MediaFormat::Stl],
+        import_formats: vec![MediaFormat::Obj, MediaFormat::Glb, MediaFormat::Stl]}
 }
 //#endregion 🔖️ArtifactKind
 
