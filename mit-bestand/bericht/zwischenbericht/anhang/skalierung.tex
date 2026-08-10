@@ -104,54 +104,54 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
   \draw[span] (\xa,\yy-0.85) rectangle (\xb,\yy+0.85);
 }
 \foreach \x/\h in {0/H-01, 3/H-13, 6/H-03, 8/H-12}{
-  \pgfmathsetmacro\xx{\PX+\x*\PW+\PW/2}\node[hchip] at (\xx,97.5) {\h};}
+  \pgfmathsetmacro\xx{\PX+\x*\PW+\PW/2}\node[hchip] at (\xx,94) {\h};}
 
 %% ===== E RAHMENBEDINGUNGEN =====
-\node[T] at (0,95.5) {E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen};
+\node[T] at (0,91.5) {E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen};
 \foreach \i/\n in {0/Öffentliche Beschaffung, 1/Normen, 2/Finan\-zierung, 3/Geneh\-migung, 4/Fläche und Raum,
                    5/Risiko und Haftung, 6/Kompe\-tenzen, 7/Governance, 8/Ressourcen\-kataster, 9/Wertmodell}{
   \pgfmathtruncatemacro\col{mod(\i,5)}
   \pgfmathtruncatemacro\rw{int(\i/5)}
-  \pgfmathsetmacro\xx{\col*29.4}\pgfmathsetmacro\yy{89.5-\rw*8}
+  \pgfmathsetmacro\xx{\col*29.4}\pgfmathsetmacro\yy{85.5-\rw*8}
   \node[proc, text width=26mm, minimum height=7mm] at (\xx,\yy) {\n};
 }
 
 %% ===== INSETS =====
 %% H1 (left) + H2 (right)
-\node[T] at (0,72) {H1 \ UNTERSTÜTZUNG (EU26)};
-\node[Lm, text width=72mm] at (0,67.5) {19 Antworten, 10 Länder; n\,=\,18 abgeleitet};
+\node[T] at (0,68) {H1 \ UNTERSTÜTZUNG (EU26)};
+\node[Lm, text width=72mm] at (0,63.5) {19 Antworten, 10 Länder; n\,=\,18 abgeleitet};
 \foreach \r/\v/\n in {0/83/Öffentliche Beschaffung, 1/72/Finanzielle Anreize, 2/56/Technische Normen,
                       3/44/Vereinfachte Genehmigung, 4/44/EU-Finanzierung, 5/28/Qualifizierung,
                       6/11/Matching-Plattformen}{
-  \pgfmathsetmacro\yy{62-\r*2.7}
+  \pgfmathsetmacro\yy{58-\r*2.7}
   \node[Lm] at (0,\yy) {\n};
   \draw[span] (37,\yy-0.85) rectangle (37+\v*0.19,\yy+0.85);
   \node[val] at (71,\yy) {\v\,\%};
 }
 
-\node[T] at (77,72) {H2 \ HEMMNIS-KOPPLUNG};
-\node[Lm, text width=66mm] at (77,67.5) {C-Index (Jaccard), sign. Paare, Rakhshan 2020};
-\foreach \c/\n in {0/Kos, 1/Mkt, 2/Reg, 3/Wah}{\node[val, anchor=south] at (99+\c*8,61) {\n};}
+\node[T] at (77,68) {H2 \ HEMMNIS-KOPPLUNG};
+\node[Lm, text width=66mm] at (77,63.5) {C-Index (Jaccard), sign. Paare, Rakhshan 2020};
+\foreach \c/\n in {0/Kos, 1/Mkt, 2/Reg, 3/Wah}{\node[val, anchor=base] at (99+\c*8,56.4) {\n};}
 \foreach \r/\n in {0/Markt, 1/Regulierung, 2/Wahrnehmung, 3/Risiko, 4/Gesundheit}{
-  \pgfmathsetmacro\yy{58-\r*2.9}\node[Lm] at (77,\yy) {\n};}
+  \pgfmathsetmacro\yy{54-\r*2.9}\node[Lm] at (77,\yy) {\n};}
 \foreach \r/\c/\v in {0/0/.44, 1/0/.49, 1/1/.45, 2/0/.36, 2/1/.35, 2/2/.40,
                       3/0/.34, 3/1/.38, 3/2/.38, 3/3/.63, 4/0/.35}{
-  \pgfmathsetmacro\yy{58-\r*2.9}\pgfmathsetmacro\xx{99+\c*8}
+  \pgfmathsetmacro\yy{54-\r*2.9}\pgfmathsetmacro\xx{99+\c*8}
   \draw[span] (\xx-3.6,\yy-1.15) rectangle (\xx+3.6,\yy+1.15);
   \node[val, anchor=center] at (\xx,\yy) {\v};}
-\node[Lm, text width=66mm] at (77,42) {Zusammenhang, keine Kausalität (eigene Einordnung).};
+\node[Lm, text width=66mm] at (77,38) {Zusammenhang, keine Kausalität (eigene Einordnung).};
 
 %% H3 full width
-\node[T] at (0,38) {H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa};
+\node[T] at (0,34) {H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa};
 \foreach \r/\v/\n in {0/46.4/RBC-Händler, 1/17.2/BC-Händler, 2/15.6/Abbruchunternehmen,
                       3/5.9/Marktplatz, 4/5.6/Lokales Handwerk, 5/4.6/Netzwerkplattform,
                       6/1.9/RBC-Dienstleistung, 7/1.6/RBC-Wissen, 8/1.3/Datenplattform}{
-  \pgfmathsetmacro\yy{32-\r*2.7}
+  \pgfmathsetmacro\yy{28-\r*2.7}
   \node[Lm] at (0,\yy) {\n};
   \draw[span] (40,\yy-0.85) rectangle (40+\v*0.55,\yy+0.85);
   \node[val] at (73,\yy) {\v};
 }
-\node[Lm, text width=64mm, anchor=north west] at (79,33) {Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.};
+\node[Lm, text width=64mm, anchor=north west] at (79,29) {Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.};
 
 \end{tikzpicture}
 \end{Figure}

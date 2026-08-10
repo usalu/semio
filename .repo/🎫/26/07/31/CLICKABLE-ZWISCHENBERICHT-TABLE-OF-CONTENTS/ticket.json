@@ -1,8 +1,9 @@
 {
   "title": "Clickable Zwischenbericht Table of Contents",
   "emoji": "🔗",
-  "status": "open",
+  "status": "closed",
   "description": "Make each Inhaltsverzeichnis (TOC) entry in the Zwischenbericht a hyperlink that jumps exactly to the named section. The section-anchor label is already threaded into \\SemioTableTocRow (print/tex/semio-table.sty) as its 3rd argument. Wrap all three cells (number, title, page) in \\hyperref[label]{...}: number and title keep their current color (inner \\textcolor overrides colorlinks), page number takes the semio-primary link color like the glossary. Guard on the label resolving so undefined refs degrade to plain text / \"--\". Whole-row clickable. Rebuild with --skip-nx-cache and verify links land on exact sections.",
+  "summary": "QA-Durchgang Portrait-Systemkarte: zwei visuelle Defekte gefunden und behoben.\n\n1) Überlappung: Die Reibungspunkt-Chips an der Schnittstelle D→E (H-01, H-13, H-03, H-12) lagen auf derselben Zeile wie die unterste D-Spanne (Logistik). Chips in eine eigene Lücke unter das D-Band verschoben (y 97,5 → 94), E-Titel und E-Boxen sowie die Insets H1/H2/H3 um 4 mm nach unten gerückt; Karte bleibt eine Hochformat-Seite.\n2) Fehlausrichtung: Die H2-Kopfzeile „Reg\" stand höher als Kos/Mkt/Wah, weil anchor=south die g-Unterlänge einbezog. Auf anchor=base (Grundlinie) umgestellt; alle vier Spaltenköpfe nun bündig, Matrixspalten sauber ausgerichtet.\n\nHinweis zum Prozess: Ein erster Ersetzungslauf (replace_map.py) fand seinen Anker \\begin{landscape} nicht mehr (bereits entfernt) und ließ skalierung.tex unverändert; korrigiert durch direkten Austausch des \\begin{Figure}…\\end{Figure}-Blocks.\n\nVerifiziert am gerenderten Bericht (Seite 88, Abbildung SK.SM.a): voller Build exit 0, 129 Seiten, 0 undefinierte Referenzen/Zitate; Systemkarte overfull-frei, beide Korrekturen sichtbar. Die zwei verbleibenden Overfull-Boxen stammen weiterhin aus anhang/eingangsmodell.tex (untracked, paralleler Dev), nicht aus dieser Arbeit.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪a6a8bf5c5a1a4549a5243b8d5d9158e2"
