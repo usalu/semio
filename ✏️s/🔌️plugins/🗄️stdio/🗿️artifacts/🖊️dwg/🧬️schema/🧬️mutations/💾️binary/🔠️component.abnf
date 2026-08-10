@@ -1,0 +1,3 @@
+; abnf stdio.dwg mutations
+document = payload
+payload = *OCTET

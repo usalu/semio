@@ -1,0 +1,3 @@
+(* ebnf note.diff *)
+document = header, body ;
+header = 'schema', space, 'note.diff', newline ;

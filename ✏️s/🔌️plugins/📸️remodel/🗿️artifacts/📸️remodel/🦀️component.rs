@@ -9,7 +9,7 @@
 
 use base64::Engine as _;
 use semio_framework::MeshData;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -26,13 +26,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         schema: "remodel.scene".into(),
-        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png],
-        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
 //#endregion 🔖️ArtifactKind
+
+pub use crate::artifacts::remodel::schema::mutations::RemodelMutation;
+
+pub use crate::artifacts::remodel::schema::diff::RemodelDiff;
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 
@@ -920,7 +924,7 @@ pub struct ReconstructionResults {
 }
 
 /// 📸️ Persisted remodel snapshot — re-exported from `📸️snapshot/🧬️schema`.
-pub use crate::artifacts::remodel::snapshot::schema::RemodelSnapshot;
+pub use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
 
 /// 🌱️ An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
 /// something to render before any media has been imported/reconstructed.

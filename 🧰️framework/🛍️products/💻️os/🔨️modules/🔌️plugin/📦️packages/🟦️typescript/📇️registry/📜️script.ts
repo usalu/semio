@@ -810,8 +810,8 @@ export function writePlaygroundSession(variant: string, outPath: string, repoRoo
 }
 //#endregion 🎮️PlaygroundSession
 
-/** @emoji 🚦️ Cross-checks the flattened playground catalog for global uniqueness and multi-app crate discipline; returns human-readable violations. */
-function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
+/** @emoji 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations. */
+function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: string): string[] {
   const errors: string[] = [];
   const variantOwners = new Map<string, string>();
   const aliasOwners = new Map<string, string>();
@@ -835,6 +835,21 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
       errors.push(`duplicate playground ports react=${entry.ports.react}/wgpu=${entry.ports.wgpu} (variants "${portOwners.get(portKey)}" and "${entry.variant}")`);
     } else {
       portOwners.set(portKey, entry.variant);
+    }
+    for (const asset of entry.assets) {
+      if (asset.kind === "static-dir") {
+        const root = asset.root ? join(repoRoot, asset.root) : undefined;
+        if (!root || !existsSync(root) || !statSync(root).isDirectory()) errors.push(`playground variant "${entry.variant}" declares missing static-dir root "${asset.root ?? ""}"`);
+      }
+      if (asset.kind === "mesh-collection") {
+        if (!asset.roots?.length) errors.push(`playground variant "${entry.variant}" declares mesh-collection route "${asset.route}" without roots`);
+        for (const root of asset.roots ?? []) {
+          const path = join(repoRoot, root);
+          if (!existsSync(path) || !statSync(path).isDirectory()) errors.push(`playground variant "${entry.variant}" declares missing mesh-collection root "${root}"`);
+        }
+        const placeholder = asset.placeholder ? join(repoRoot, asset.placeholder) : undefined;
+        if (!placeholder || !existsSync(placeholder) || !statSync(placeholder).isFile()) errors.push(`playground variant "${entry.variant}" declares missing mesh-collection placeholder "${asset.placeholder ?? ""}"`);
+      }
     }
     entriesByCrate.set(entry.cratePath, [...(entriesByCrate.get(entry.cratePath) ?? []), entry]);
   }
@@ -1474,7 +1489,7 @@ class CheckScript extends BundleScript {
     }
     const newContractPluginRoots = findNewContractPluginRoots(repoRoot);
     const migratedPluginIds = new Set(newContractPluginRoots.map(({ pluginId }) => pluginId));
-    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
+    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds, repoRoot), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);

@@ -1,12 +1,10 @@
 //! 🧬️ GifArtifact schema — full artifact state.
 
-use crate::artifacts::gif::schema::snapshot::GifEntry;
+use crate::artifacts::gif::schema::snapshot::RasterImage;
 use crate::artifacts::gif::GifSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region Artifact
-/// 🧬️ Full `stdio.gif` artifact state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
@@ -15,44 +13,26 @@ pub struct GifArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<GifEntry>,
+    pub image: RasterImage,
 }
-//#endregion Artifact
 
-//#region Conversions
 impl Default for GifArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(GifSnapshot::default())
-    }
+    fn default() -> Self { Self::from_snapshot(GifSnapshot::default()) }
 }
 
 impl GifArtifact {
-    /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> GifSnapshot {
-        GifSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        GifSnapshot { schema: self.schema.clone(), image: self.image.clone() }
     }
-
-    /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, image: snapshot.image }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.image = snapshot.image;
     }
 }
-//#endregion Conversions
 
-//#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.gif`.
 pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gif",
@@ -79,4 +59,3 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
-//#endregion Descriptor

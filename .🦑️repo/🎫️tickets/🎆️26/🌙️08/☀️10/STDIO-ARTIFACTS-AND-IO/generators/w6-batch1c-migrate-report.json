@@ -1,0 +1,169 @@
+[
+  {
+    "plugin": "\ud83d\udcdc\ufe0fimperative",
+    "artifact": "\ud83d\udcdc\ufe0fimperative",
+    "crate": "semio-s-plugin-imperative",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "md"
+    ]
+  },
+  {
+    "plugin": "\ud83d\udcf8\ufe0fremodel",
+    "artifact": "\ud83d\udcf8\ufe0fremodel",
+    "crate": "semio-s-plugin-remodel",
+    "errors": [],
+    "slugs": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udfaa\ufe0fdemonstrator",
+    "artifact": "\ud83c\udfaa\ufe0fplayground",
+    "crate": "semio-s-plugin-demonstrator",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udf9e\ufe0fanimate",
+    "artifact": "\ud83c\udfac\ufe0fpresent",
+    "crate": "semio-s-plugin-animate",
+    "errors": [],
+    "slugs": [
+      "json",
+      "md",
+      "pdf",
+      "png",
+      "pptx",
+      "svg"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udfa5\ufe0fshooting",
+    "artifact": "\ud83c\udfa5\ufe0fshooting",
+    "crate": "semio-s-plugin-shooting",
+    "errors": [],
+    "slugs": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udfac\ufe0fsequence",
+    "artifact": "\ud83c\udfac\ufe0fsequence",
+    "crate": "semio-s-plugin-sequence",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "md"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udfdb\ufe0farchitect",
+    "artifact": "\ud83c\udfdb\ufe0fprogram",
+    "crate": "semio-s-plugin-architect",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "\ud83c\udfed\ufe0fprocess",
+    "artifact": "\ud83e\uddca\ufe0fprocess3d",
+    "crate": "semio-s-plugin-process",
+    "errors": [],
+    "slugs": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ]
+  },
+  {
+    "plugin": "\ud83d\udca0\ufe0flowpoly",
+    "artifact": "\ud83d\udca0\ufe0flowpoly",
+    "crate": "semio-s-plugin-lowpoly",
+    "errors": [],
+    "slugs": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ]
+  },
+  {
+    "plugin": "\ud83d\udca1\ufe0freasoning",
+    "artifact": "\ud83d\udd0c\ufe0fwires",
+    "crate": "semio-s-plugin-reasoning",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "md",
+      "png",
+      "svg"
+    ]
+  },
+  {
+    "plugin": "\ud83e\ude90\ufe0fspace",
+    "artifact": "\ud83c\udfe0\ufe0fhome",
+    "crate": "semio-s-plugin-space",
+    "errors": [],
+    "slugs": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "\ud83e\udeb5\ufe0fsourcing",
+    "artifact": "\ud83d\uddc2\ufe0fcurate",
+    "crate": "semio-s-plugin-sourcing",
+    "errors": [],
+    "slugs": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ]
+  }
+]

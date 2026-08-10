@@ -41,111 +41,174 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🏠️home/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
-            #[path = "../../🗿️artifacts/🏠️home/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-        }
-        #[path = "../../🗿️artifacts/🏠️home/🔧️op/🦀️component.rs"]
-        pub mod op;
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🏠️home/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
             #[path = "."]
-            pub mod set_catalog_generation {
-                #[path = "../../🗿️artifacts/🏠️home/🧬️mutations/🎛set-catalog-generation/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏠️home/🧬️mutations/🎛set-catalog-generation/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏠️home/🧬️mutations/🎛set-catalog-generation/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_catalog_generation {
+                    #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/🎛set-catalog-generation/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/🎛set-catalog-generation/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏠️home/🧬️schema/🧬️mutations/🎛set-catalog-generation/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "../../🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🏠️home/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🏠️home/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-        #[path = "../../🗿️artifacts/🏠️home/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        pub mod op { pub use crate::artifacts::home::schema::mutations::text::*; pub use crate::artifacts::home::schema::mutations::HomeMutation; }
+        pub mod dsl { pub use crate::artifacts::home::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::home::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::home::schema::diff::*; pub use crate::artifacts::home::schema::diff::text::*; pub mod schema { pub use crate::artifacts::home::schema::diff::*; } pub mod text { pub use crate::artifacts::home::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::home::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::home::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::home::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🏠️home/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🏠️home/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🏠️home/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod xlsx {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📕️xlsx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod zip {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod xlsx {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod zip {
+                            #[path = "../../🗿️artifacts/🏠️home/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod csv {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/📊️csv/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::export::serializers::artifacts::csv::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/📊️csv/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::import::deserializers::artifacts::csv::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod xlsx {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/📕️xlsx/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::export::serializers::artifacts::xlsx::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/📕️xlsx/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::import::deserializers::artifacts::xlsx::*;
                 }
             }
             #[path = "."]
             pub mod zip {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/🎒️zip/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::export::serializers::artifacts::zip::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏠️home/🚪️io/🎒️zip/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::home::io::import::deserializers::artifacts::zip::*;
                 }
             }
         }

@@ -1,52 +1,40 @@
-//! 🚪️ 📐️cad IO facet — declared MediaFormat table + OS handler registration.
+//! CAD IO facet — stdio deserializers/serializers.
 
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Dwg, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Glb, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Gltf, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Ifc, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Obj, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Png, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Step, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Stl, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ cad artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::dwg::export::register();
-        super::dwg::import::register();
-        super::glb::export::register();
-        super::glb::import::register();
-        super::gltf::export::register();
-        super::gltf::import::register();
-        super::ifc::export::register();
-        super::ifc::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::obj::export::register();
-        super::obj::import::register();
-        super::png::export::register();
-        super::png::import::register();
-        super::step::export::register();
-        super::step::import::register();
-        super::stl::export::register();
-        super::stl::import::register();
-    }
-}
-
+//#region Register
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::dwg::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::dwg::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::glb::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::glb::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::gltf::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::gltf::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::ifc::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::ifc::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::json::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::obj::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::obj::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::png::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::png::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::step::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::step::register();
+    crate::artifacts::cad::io::import::deserializers::artifacts::stl::register();
+    crate::artifacts::cad::io::export::serializers::artifacts::stl::register();
 }
-//#endregion 🔖️ArtifactIo
+//#endregion Register
+
+//#region Wire
+/// Pack a cad snapshot to wire bytes.
+pub fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
+    store::DocumentPack::encode_pack(from)
+}
+
+/// Unpack a cad snapshot from wire bytes.
+pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
+    <crate::artifacts::cad::CadSnapshot as store::DocumentPack>::decode_pack(bytes)
+}
+
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
+    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
+}
+//#endregion Wire

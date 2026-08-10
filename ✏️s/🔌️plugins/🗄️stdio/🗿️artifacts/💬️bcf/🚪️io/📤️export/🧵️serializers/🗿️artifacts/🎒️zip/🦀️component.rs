@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 🎒️ Encode BcfSnapshot as ZIP container bytes.
 pub fn serialize(from: &BcfSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::bcf::engine::encode_bcf(from, true)
+    let bytes = crate::artifacts::bcf::engine::encode_bcf(from)
         .map_err(|e| store::PackError::Schema(e))?;
     Ok(BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),

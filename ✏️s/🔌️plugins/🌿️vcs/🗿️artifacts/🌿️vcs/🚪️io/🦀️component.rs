@@ -1,37 +1,22 @@
-//! 🚪️ 🌿️vcs IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Csv, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Xlsx, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Zip, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ vcs artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::csv::export::register();
-        super::csv::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::xlsx::export::register();
-        super::xlsx::import::register();
-        super::zip::export::register();
-        super::zip::import::register();
-    }
-}
-
+//! vcs IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::vcs::io::import::deserializers::artifacts::csv::register();
+    crate::artifacts::vcs::io::export::serializers::artifacts::csv::register();
+    crate::artifacts::vcs::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::vcs::io::export::serializers::artifacts::json::register();
+    crate::artifacts::vcs::io::import::deserializers::artifacts::xlsx::register();
+    crate::artifacts::vcs::io::export::serializers::artifacts::xlsx::register();
+    crate::artifacts::vcs::io::import::deserializers::artifacts::zip::register();
+    crate::artifacts::vcs::io::export::serializers::artifacts::zip::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"] }
+pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"] }
+pub fn vcs_to_wire(from: &crate::artifacts::vcs::VcsSnapshot) -> Vec<u8> {
+    store::DocumentPack::encode_pack(from)
+}
+pub fn vcs_from_wire(bytes: &[u8]) -> Result<crate::artifacts::vcs::VcsSnapshot, store::PackError> {
+    <crate::artifacts::vcs::VcsSnapshot as store::DocumentPack>::decode_pack(bytes)
+}
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
+    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
+}

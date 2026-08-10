@@ -1891,6 +1891,108 @@ pub mod artifacts {
         }
     }
     #[path = "."]
+    pub mod dwg {
+        #[path = "../../🗿️artifacts/🖊️dwg/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+            }
+        }
+        #[path = "../../🗿️artifacts/🖊️dwg/⚙️engine/🦀️component.rs"]
+        pub mod engine;
+        #[path = "../../🗿️artifacts/🖊️dwg/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🖊️dwg/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+        }
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo {
+                #[path = "../../🗿️artifacts/🖊️dwg/📚️examples/🎬️demo/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+            }
+        }
+    }
+    #[path = "."]
     pub mod png {
         #[path = "../../🗿️artifacts/📷️png/🦀️component.rs"]
         mod component;
@@ -2463,8 +2565,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod diff {
@@ -2473,8 +2575,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod mutations {
@@ -2483,8 +2585,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
                 #[path = "."]
                 pub mod set_snapshot {
                     #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
@@ -2585,8 +2687,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod diff {
@@ -2595,8 +2697,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod mutations {
@@ -2605,8 +2707,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
                 #[path = "."]
                 pub mod set_snapshot {
                     #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
@@ -2707,8 +2809,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod diff {
@@ -2717,8 +2819,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod mutations {
@@ -2727,8 +2829,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
                 #[path = "."]
                 pub mod set_snapshot {
                     #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
@@ -2829,8 +2931,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod diff {
@@ -2839,8 +2941,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
             pub mod mutations {
@@ -2849,8 +2951,8 @@ pub mod artifacts {
                 pub use component::*;
                 #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                 pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/🎒️zip/🦀️component.rs"]
-                pub mod zip;
+                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
                 #[path = "."]
                 pub mod set_snapshot {
                     #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]

@@ -1,10 +1,5 @@
 /** remodel facet WASM facades */
 export * as remodel_schema from "../../🗿️artifacts/📸️remodel/🧬️schema/🟦️component.ts";
-export * as remodel_snapshot_schema from "../../🗿️artifacts/📸️remodel/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as remodel_diff from "../../🗿️artifacts/📸️remodel/🔺️diff/🟦️component.ts";
-export * as remodel_diff_schema from "../../🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🟦️component.ts";
-export * as remodel_dsl from "../../🗿️artifacts/📸️remodel/🗣️dsl/🟦️component.ts";
-export * as remodel_pack from "../../🗿️artifacts/📸️remodel/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as remodel_op from "../../🗿️artifacts/📸️remodel/🔧️op/🟦️component.ts";
-export * as remodel_mutations from "../../🗿️artifacts/📸️remodel/🧬️mutations/🟦️component.ts";
-export * as remodel_spr from "../../🗿️artifacts/📸️remodel/📡️spr/🟦️component.ts";
+export * as remodel_builder from "../../🗿️artifacts/📸️remodel/🏗️builder/🟦️component.ts";
+export * as remodel_decomposer from "../../🗿️artifacts/📸️remodel/🪓️decomposer/🟦️component.ts";
+export * as remodel_io from "../../🗿️artifacts/📸️remodel/🚪️io/🟦️component.ts";

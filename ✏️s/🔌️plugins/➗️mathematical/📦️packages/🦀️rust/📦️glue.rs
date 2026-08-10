@@ -28,112 +28,174 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/➗️mathematical/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
-        #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "../../🗿️artifacts/➗️mathematical/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs"]
-        pub mod op;
+        pub use crate::artifacts::mathematical::schema::snapshot::MathematicalSnapshot;
+        pub use crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
+        pub use crate::artifacts::mathematical::schema::diff::MathematicalDiff;
 
         #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
-            pub mod set_graph {
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📊set-graph/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📊set-graph/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_geometry {
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📐set-geometry/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📐set-geometry/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod diff {
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                pub use text::*;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/➗️mathematical/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_graph {
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📊set-graph/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📊set-graph/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_geometry {
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📐set-geometry/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📐set-geometry/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
 
+        pub mod op { pub use crate::artifacts::mathematical::schema::mutations::text::*; pub use crate::artifacts::mathematical::schema::mutations::MathematicalMutation; }
+        pub mod dsl { pub use crate::artifacts::mathematical::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::mathematical::schema::mutations::binary::*; }
+        pub mod pack { pub use crate::artifacts::mathematical::schema::snapshot::binary::*; }
+        pub mod diff { pub use crate::artifacts::mathematical::schema::diff::*; pub mod schema { pub use crate::artifacts::mathematical::schema::diff::*; } pub mod text { pub use crate::artifacts::mathematical::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::mathematical::schema::mutations::*; }
         #[path = "."]
         pub mod snapshot {
-            #[path = "../../🗿️artifacts/➗️mathematical/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-
-            #[path = "../../🗿️artifacts/➗️mathematical/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
+            pub mod schema { pub use crate::artifacts::mathematical::schema::snapshot::*; }
+            pub mod pack { pub use crate::artifacts::mathematical::schema::snapshot::binary::*; }
         }
-
-        #[path = "../../🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "../../🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        #[path = "../../🗿️artifacts/➗️mathematical/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/➗️mathematical/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod csv {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📊️csv/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::export::serializers::artifacts::csv::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📊️csv/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::import::deserializers::artifacts::csv::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod md {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📝️md/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::export::serializers::artifacts::md::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🚪️io/📝️md/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::mathematical::io::import::deserializers::artifacts::md::*;
                 }
             }
         }
@@ -141,6 +203,7 @@ pub mod artifacts {
         pub mod engine;
     }
 }
+
 //#endregion 🗿️Artifacts
 
 //#region 🎛️Apps

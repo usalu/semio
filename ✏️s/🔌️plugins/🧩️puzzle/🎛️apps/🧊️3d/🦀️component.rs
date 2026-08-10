@@ -1668,10 +1668,8 @@ macro_rules! puzzle3d_command_variants {
                 }
             }
 
-            /// 🧪️ Test-only reverse of `action_id()` — builds the variant for a given action id, for
-            /// the testkit's `dispatch(...)` helper. Panics on an unknown action id (a test bug, not
-            /// a runtime path).
-            #[cfg(test)]
+            /// 🎯️ Reverse of `action_id()` — builds the typed command used by both the host's
+            /// transitional `{action,args}` bridge and the testkit dispatch helper.
             fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle3dCommand::$Variant { window_id, args })),*,
@@ -2235,6 +2233,16 @@ impl DocumentApp for Puzzle3dPlayApp {
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle3dCommand) -> &'static str {
         command.action_id()
+    }
+
+    /// 🎯️ Maps the host's transitional `{action,args}` wire onto Puzzle 3D's closed command
+    /// enum until React and wgpu send `OpBinary` command bytes directly.
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let window_id = args
+            .and_then(|value| value.get("windowId").or_else(|| value.get("window_id")))
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        Puzzle3dCommand::from_action(action, args.cloned(), window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
@@ -3102,13 +3110,11 @@ mod tests {
         }
     }
 
-    /// 🌉️ Every declared non-framework action id must reach a real `Puzzle3dCommand` variant. The
-    /// framework's own `assert_declared_actions_bridge_to_commands` cannot be used here: it probes
-    /// `command_from_action`, the string-dispatch path this app deliberately does not implement (its
-    /// commands carry an opaque `args: Value`, see the `🔖️Puzzle3dCommand` macro), so the check is
-    /// done directly against the macro's `from_action` reverse map instead.
+    /// 🌉️ Every declared non-framework action id must reach a real `Puzzle3dCommand` variant
+    /// through the same transitional host bridge used at runtime.
     #[test]
     fn every_declared_action_bridges_to_a_command() {
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Puzzle3dPlayApp>(create_puzzle3d_app);
         let definition = create_puzzle3d_app().definition;
         let framework_injected = [
             SET_ACTIVE_UTILITY_ACTION_ID,
@@ -3141,6 +3147,7 @@ mod tests {
             };
             assert_eq!(command.action_id(), action.id.as_str(), "declared action {} must round-trip through Puzzle3dCommand", action.id);
         }
+        assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
 
     /// 🗣️ B1: manifest text is baked into `AppDefinition`/`App` as `LocalizedLabel` and resolved

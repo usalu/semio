@@ -1,0 +1,32 @@
+[
+  {
+    "plugin": "\u2712\ufe0fwriter",
+    "crate": "semio-s-plugin-writer",
+    "art": "/Users/ueli/Documents/semio/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2712\ufe0fwriter/\ud83d\uddff\ufe0fartifacts/\u2712\ufe0fwriter",
+    "verify": []
+  },
+  {
+    "plugin": "\u2797\ufe0fmathematical",
+    "crate": "semio-s-plugin-mathematical",
+    "art": "/Users/ueli/Documents/semio/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fmathematical",
+    "verify": []
+  },
+  {
+    "plugin": "\ud83c\udf0a\ufe0fflow",
+    "crate": "semio-s-plugin-flow",
+    "art": "/Users/ueli/Documents/semio/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0a\ufe0fflow/\ud83d\uddff\ufe0fartifacts/\ud83c\udf0a\ufe0fflow",
+    "verify": []
+  },
+  {
+    "plugin": "\ud83c\udf3f\ufe0fvcs",
+    "crate": "semio-s-plugin-vcs",
+    "art": "/Users/ueli/Documents/semio/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs",
+    "verify": []
+  },
+  {
+    "plugin": "\ud83d\udd78\ufe0fdag",
+    "crate": "semio-s-plugin-dag",
+    "art": "/Users/ueli/Documents/semio/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\udd78\ufe0fdag/\ud83d\uddff\ufe0fartifacts/\ud83d\udd78\ufe0fdag",
+    "verify": []
+  }
+]

@@ -1,0 +1,3 @@
+(* ebnf note.document *)
+document = header, body ;
+header = 'schema', space, 'note.document', newline ;

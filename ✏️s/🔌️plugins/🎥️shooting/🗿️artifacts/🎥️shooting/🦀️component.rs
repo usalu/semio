@@ -6,11 +6,15 @@
 
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
 use serde::{Deserialize, Serialize};
 
+pub use crate::artifacts::shooting::schema::mutations::ShootingMutation;
+
+pub use crate::artifacts::shooting::schema::diff::ShootingDiff;
+
 pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
-pub use crate::artifacts::shooting::snapshot::schema::ShootingSnapshot;
+pub use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -25,10 +29,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         schema: "shooting.scene".into(),
-        export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
-        import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
+        import_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
     }
 }
 //#endregion 🔖️ArtifactKind

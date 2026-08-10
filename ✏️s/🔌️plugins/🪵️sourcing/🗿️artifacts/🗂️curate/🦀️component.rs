@@ -4,8 +4,12 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
+pub use crate::artifacts::curate::schema::mutations::CurateMutation;
+
+pub use crate::artifacts::curate::schema::diff::CurateDiff;
+
 pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
-pub use crate::artifacts::curate::snapshot::schema::CurateSnapshot;
+pub use crate::artifacts::curate::schema::snapshot::CurateSnapshot;
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
@@ -124,8 +128,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "sourcing.curate".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

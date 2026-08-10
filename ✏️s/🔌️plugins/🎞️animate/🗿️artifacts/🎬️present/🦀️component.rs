@@ -4,6 +4,10 @@ use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
+pub use crate::artifacts::present::schema::mutations::PresentMutation;
+
+pub use crate::artifacts::present::schema::diff::PresentDiff;
+
 pub const PRESENT_DOCUMENT_SCHEMA: &str = "animate.present";
 pub use crate::artifacts::present::snapshot::schema::{default_snapshot, PresentSnapshot};
 
@@ -71,8 +75,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PRESENT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
     }
 }
 //#endregion 🔖️ArtifactKind

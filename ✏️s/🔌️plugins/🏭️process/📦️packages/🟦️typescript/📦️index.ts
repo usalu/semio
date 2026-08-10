@@ -1,10 +1,5 @@
 /** process facet WASM facades */
 export * as process3d_schema from "../../🗿️artifacts/🧊️process3d/🧬️schema/🟦️component.ts";
-export * as process3d_snapshot_schema from "../../🗿️artifacts/🧊️process3d/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as process3d_diff from "../../🗿️artifacts/🧊️process3d/🔺️diff/🟦️component.ts";
-export * as process3d_diff_schema from "../../🗿️artifacts/🧊️process3d/🔺️diff/🧬️schema/🟦️component.ts";
-export * as process3d_dsl from "../../🗿️artifacts/🧊️process3d/🗣️dsl/🟦️component.ts";
-export * as process3d_pack from "../../🗿️artifacts/🧊️process3d/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as process3d_op from "../../🗿️artifacts/🧊️process3d/🔧️op/🟦️component.ts";
-export * as process3d_mutations from "../../🗿️artifacts/🧊️process3d/🧬️mutations/🟦️component.ts";
-export * as process3d_spr from "../../🗿️artifacts/🧊️process3d/📡️spr/🟦️component.ts";
+export * as process3d_builder from "../../🗿️artifacts/🧊️process3d/🏗️builder/🟦️component.ts";
+export * as process3d_decomposer from "../../🗿️artifacts/🧊️process3d/🪓️decomposer/🟦️component.ts";
+export * as process3d_io from "../../🗿️artifacts/🧊️process3d/🚪️io/🟦️component.ts";

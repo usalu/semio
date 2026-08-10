@@ -225,7 +225,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   if (runNodeBinStatus(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨️host-shim.js"], ctx.repoRoot) !== 0) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
-  optimizePluginCoreModules(outDir, componentBase);
+  optimizePluginCoreModules(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 

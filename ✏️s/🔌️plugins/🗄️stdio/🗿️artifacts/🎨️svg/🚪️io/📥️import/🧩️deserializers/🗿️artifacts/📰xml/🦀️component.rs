@@ -1,6 +1,6 @@
 //! 📥️ Deserialize `stdio.svg` from stdio.xml.
 
-use crate::artifacts::xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+use crate::artifacts::xml::XmlSnapshot;
 use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

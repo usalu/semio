@@ -1,0 +1,3 @@
+# cad mutations text
+scalar Bytes
+type Document { schema: String! payload: String! }

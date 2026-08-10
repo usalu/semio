@@ -1,0 +1,3 @@
+# cad diff text
+scalar Bytes
+type Document { schema: String! payload: String! }

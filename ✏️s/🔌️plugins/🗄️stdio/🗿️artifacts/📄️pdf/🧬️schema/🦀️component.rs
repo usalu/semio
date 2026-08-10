@@ -1,12 +1,10 @@
 //! 🧬️ PdfArtifact schema — full artifact state.
 
-use crate::artifacts::pdf::schema::snapshot::PdfEntry;
+use crate::artifacts::pdf::schema::snapshot::PageDoc;
 use crate::artifacts::pdf::PdfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region Artifact
-/// 🧬️ Full `stdio.pdf` artifact state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]
@@ -15,44 +13,26 @@ pub struct PdfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<PdfEntry>,
+    pub page: PageDoc,
 }
-//#endregion Artifact
 
-//#region Conversions
 impl Default for PdfArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(PdfSnapshot::default())
-    }
+    fn default() -> Self { Self::from_snapshot(PdfSnapshot::default()) }
 }
 
 impl PdfArtifact {
-    /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PdfSnapshot {
-        PdfSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        PdfSnapshot { schema: self.schema.clone(), page: self.page.clone() }
     }
-
-    /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, page: snapshot.page }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.page = snapshot.page;
     }
 }
-//#endregion Conversions
 
-//#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.pdf`.
 pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pdf",
@@ -79,4 +59,3 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
-//#endregion Descriptor

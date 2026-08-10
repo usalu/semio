@@ -40,200 +40,269 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📖️playbook/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/📖️playbook/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/📖️playbook/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-
-        #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "../../🗿️artifacts/📖️playbook/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs"]
-        pub mod op;
-
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
-            pub mod add_step {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod remove_step {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod diff {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod move_step {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod add_block {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod remove_block {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod move_block {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod update_block {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod update_step {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod update_playbook {
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod move_block {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-block/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-block/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-block/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod move_step {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-step/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-step/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/↔️move-step/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod add_block {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-block/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-block/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-block/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod add_step {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-step/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-step/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➕add-step/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod remove_block {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-block/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-block/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-block/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod remove_step {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-step/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-step/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/➖remove-step/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_playbook {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/📖update-playbook/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/📖update-playbook/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/📖update-playbook/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_block {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-block/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-block/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-block/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_step {
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-step/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-step/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/🩹update-step/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "../../🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "../../🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        pub mod op { pub use crate::artifacts::playbook::schema::mutations::{apply_playbook_mutation, PlaybookMutation}; }
+        pub mod dsl { pub use crate::artifacts::playbook::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::playbook::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::playbook::schema::diff::*; pub mod schema { pub use crate::artifacts::playbook::schema::diff::*; } pub mod text { pub use crate::artifacts::playbook::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::playbook::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::playbook::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::playbook::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/📖️playbook/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/📖️playbook/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/📖️playbook/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod docx {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod txt {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod docx {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod txt {
+                            #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod docx {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📜️docx/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::export::serializers::artifacts::docx::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📜️docx/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::import::deserializers::artifacts::docx::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod md {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📝️md/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::export::serializers::artifacts::md::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📝️md/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::import::deserializers::artifacts::md::*;
                 }
             }
             #[path = "."]
             pub mod pdf {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::export::serializers::artifacts::pdf::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::import::deserializers::artifacts::pdf::*;
                 }
             }
             #[path = "."]
             pub mod txt {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📄txt/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::export::serializers::artifacts::txt::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/📖️playbook/🚪️io/📄txt/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::playbook::io::import::deserializers::artifacts::txt::*;
                 }
             }
         }
@@ -241,6 +310,7 @@ pub mod artifacts {
         pub mod engine;
     }
 }
+
 //#endregion 🗿️Artifacts
 
 //#region 🎛️Apps

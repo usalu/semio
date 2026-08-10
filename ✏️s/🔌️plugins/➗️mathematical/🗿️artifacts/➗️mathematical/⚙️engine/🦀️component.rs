@@ -55,8 +55,8 @@ pub fn register_pilot_languages() {
         id: "mathematical.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::mathematical::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::mathematical::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("mathematical.diff"),
@@ -319,8 +319,8 @@ impl MathematicalEngine {
 impl protocol::ArtifactEngine for MathematicalEngine {
     type Artifact = crate::artifacts::mathematical::schema::MathematicalArtifact;
     type Snapshot = MathematicalSnapshot;
-    type Mutation = crate::artifacts::mathematical::mutations::MathematicalMutation;
-    type Diff = crate::artifacts::mathematical::diff::MathematicalDiff;
+    type Mutation = crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
+    type Diff = crate::artifacts::mathematical::schema::diff::text::MathematicalDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

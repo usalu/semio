@@ -1,6 +1,5 @@
 # Status
 
-- W0–W3: done (SDK + string-keyed media registry; MediaFormat enum deletion deferred)
-- W4a: done (8/8 dependency formats)
-- W4b: in progress (mesh/cad/office leaf formats)
-- W5–W8: pending
+- W0–W5: done
+- W6: starting (52 remaining domain artifacts across 32 plugins)
+- W7–W8: pending

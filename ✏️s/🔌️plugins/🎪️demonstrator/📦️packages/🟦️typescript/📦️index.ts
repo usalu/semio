@@ -1,10 +1,5 @@
 /** demonstrator facet WASM facades */
 export * as playground_schema from "../../🗿️artifacts/🎪️playground/🧬️schema/🟦️component.ts";
-export * as playground_snapshot_schema from "../../🗿️artifacts/🎪️playground/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as playground_diff_schema from "../../🗿️artifacts/🎪️playground/🔺️diff/🧬️schema/🟦️component.ts";
-export * as playground_diff from "../../🗿️artifacts/🎪️playground/🔺️diff/🟦️component.ts";
-export * as playground_dsl from "../../🗿️artifacts/🎪️playground/🗣️dsl/🟦️component.ts";
-export * as playground_pack from "../../🗿️artifacts/🎪️playground/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as playground_op from "../../🗿️artifacts/🎪️playground/🔧️op/🟦️component.ts";
-export * as playground_spr from "../../🗿️artifacts/🎪️playground/📡️spr/🟦️component.ts";
-export * as playground_engine from "../../🗿️artifacts/🎪️playground/⚙️engine/🟦️component.ts";
+export * as playground_builder from "../../🗿️artifacts/🎪️playground/🏗️builder/🟦️component.ts";
+export * as playground_decomposer from "../../🗿️artifacts/🎪️playground/🪓️decomposer/🟦️component.ts";
+export * as playground_io from "../../🗿️artifacts/🎪️playground/🚪️io/🟦️component.ts";

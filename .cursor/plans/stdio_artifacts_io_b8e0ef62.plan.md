@@ -19,13 +19,13 @@ todos:
     status: completed
   - id: w4b-codec-leaves
     content: "W4b: 21 parallel agents implement the leaf-format stdio artifacts (png, jpg, gif, bmp, tiff, pdf, docx, pptx, xlsx, svg, obj, stl, ply, las, gltf, glb, step, ifc, dwg, dxf, bcf) with real codecs and third-party-verified conformance tests"
-    status: in_progress
+    status: completed
   - id: w5-pilots
     content: "W5: Build note and cad end to end on the new shape (schema absorb, builder, decomposer, io through stdio artifacts) as the verbatim reference for the fan-out"
-    status: pending
+    status: completed
   - id: w6-fanout
     content: "W6: 32 parallel per-plugin agents migrate the remaining 52 artifacts: move facets into the schema tree, handcraft all text and binary spec leaves, write builder and decomposer, rewrite io, patch glue and TS barrels, delete old facets"
-    status: pending
+    status: in_progress
   - id: w7-integration
     content: "W7: Rewire Space Studio media commands, host effects, file-picker accept filters, the WASM bridge, and TS barrel exports; derive mimes.csv from stdio artifacts and delete the stale UI duplicate"
     status: pending

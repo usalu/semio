@@ -1,0 +1,3 @@
+(* ebnf cad mutations *)
+document = header, body ;
+header = 'schema', space, 'cad', newline ;

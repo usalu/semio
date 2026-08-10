@@ -1,0 +1,3 @@
+; abnf note.spr
+document = payload
+payload = *OCTET

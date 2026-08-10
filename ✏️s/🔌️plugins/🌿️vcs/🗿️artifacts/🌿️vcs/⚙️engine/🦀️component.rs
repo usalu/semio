@@ -47,8 +47,8 @@ pub fn register_pilot_languages() {
         id: "vcs.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::vcs::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vcs::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("vcs.diff"),
@@ -114,8 +114,8 @@ impl VcsDemoEngine {
 impl protocol::ArtifactEngine for VcsDemoEngine {
     type Artifact = crate::artifacts::vcs::schema::VcsArtifact;
     type Snapshot = VcsSnapshot;
-    type Mutation = crate::artifacts::vcs::mutations::VcsDemoMutation;
-    type Diff = crate::artifacts::vcs::diff::VcsDiff;
+    type Mutation = crate::artifacts::vcs::schema::mutations::VcsDemoMutation;
+    type Diff = crate::artifacts::vcs::schema::diff::text::VcsDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

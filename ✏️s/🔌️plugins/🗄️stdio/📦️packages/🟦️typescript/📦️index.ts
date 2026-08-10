@@ -15,6 +15,7 @@ export * as gltf from "../../🗿️artifacts/🧊️gltf/🟦️component.ts";
 export * as obj from "../../🗿️artifacts/🧊️obj/🟦️component.ts";
 export * as stl from "../../🗿️artifacts/🟪️stl/🟦️component.ts";
 export * as ply from "../../🗿️artifacts/☁️ply/🟦️component.ts";
+export * as dwg from "../../🗿️artifacts/🖊️dwg/🟦️component.ts";
 export * as dxf from "../../🗿️artifacts/🖊️dxf/🟦️component.ts";
 export * as svg from "../../🗿️artifacts/🎨️svg/🟦️component.ts";
 export * as bmp from "../../🗿️artifacts/🖼️bmp/🟦️component.ts";

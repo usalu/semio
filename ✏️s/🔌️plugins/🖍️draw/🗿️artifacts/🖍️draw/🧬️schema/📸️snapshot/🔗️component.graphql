@@ -1,0 +1,5 @@
+# 🧬️ JsonSnapshot
+type JsonSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  value: String! @state(class: PERSISTENT)
+}

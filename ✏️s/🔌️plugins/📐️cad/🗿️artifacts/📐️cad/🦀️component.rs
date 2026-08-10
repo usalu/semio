@@ -382,10 +382,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::Brep,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Brep },
         schema: "cad.scene".into(),
-        export_formats: crate::artifacts::cad::io::format_specs().iter().filter(|s| s.export).map(|s| s.format).collect(),
-        import_formats: crate::artifacts::cad::io::format_specs().iter().filter(|s| s.import).map(|s| s.format).collect(),
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"],
+        import_stdio_kinds: vec!["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"],
     }
 }
 //#endregion 🔖️ArtifactKind

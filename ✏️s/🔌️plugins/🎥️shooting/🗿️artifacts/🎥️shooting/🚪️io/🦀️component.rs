@@ -1,52 +1,27 @@
-//! 🚪️ 🎥️shooting IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Bmp, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Dwg, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Gif, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Jpg, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Pdf, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Png, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Svg, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Tiff, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ shooting artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::bmp::export::register();
-        super::bmp::import::register();
-        super::dwg::export::register();
-        super::dwg::import::register();
-        super::gif::export::register();
-        super::gif::import::register();
-        super::jpg::export::register();
-        super::jpg::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::pdf::export::register();
-        super::pdf::import::register();
-        super::png::export::register();
-        super::png::import::register();
-        super::svg::export::register();
-        super::svg::import::register();
-        super::tiff::export::register();
-        super::tiff::import::register();
-    }
-}
-
+//! shooting IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::bmp::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::dwg::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::gif::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::jpg::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::pdf::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::png::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::svg::register();
+    crate::artifacts::shooting::io::import::deserializers::artifacts::tiff::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::bmp::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::dwg::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::gif::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::jpg::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::json::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::pdf::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::png::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::svg::register();
+    crate::artifacts::shooting::io::export::serializers::artifacts::tiff::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+}

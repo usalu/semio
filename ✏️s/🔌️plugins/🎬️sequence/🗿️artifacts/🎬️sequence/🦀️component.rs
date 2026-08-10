@@ -4,6 +4,10 @@ use neural_engine::{Atom, Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
+pub use crate::artifacts::sequence::schema::mutations::SequenceMutation;
+
+pub use crate::artifacts::sequence::schema::diff::SequenceDiff;
+
 pub const SEQUENCE_DOCUMENT_SCHEMA: &str = "sequence.sequence";
 pub use crate::artifacts::sequence::snapshot::schema::{default_snapshot, SequenceSnapshot};
 
@@ -220,8 +224,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "sequence.sequence".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
 //#endregion 🔖️ArtifactKind

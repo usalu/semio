@@ -1,0 +1,3 @@
+(* ebnf stdio.dwg mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.dwg', newline ;

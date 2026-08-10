@@ -1,0 +1,3 @@
+dialect protocol note.diff.pack
+magic = %x00
+payload = *OCTET

@@ -1,0 +1,4 @@
+module Note_diff_binary;
+type Document = unit {
+    payload: bytes &eod;
+};

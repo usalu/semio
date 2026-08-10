@@ -1,12 +1,10 @@
 //! 🧬️ TiffArtifact schema — full artifact state.
 
-use crate::artifacts::tiff::schema::snapshot::TiffEntry;
+use crate::artifacts::tiff::schema::snapshot::RasterImage;
 use crate::artifacts::tiff::TiffSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region Artifact
-/// 🧬️ Full `stdio.tiff` artifact state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff")]
@@ -15,44 +13,26 @@ pub struct TiffArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<TiffEntry>,
+    pub image: RasterImage,
 }
-//#endregion Artifact
 
-//#region Conversions
 impl Default for TiffArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(TiffSnapshot::default())
-    }
+    fn default() -> Self { Self::from_snapshot(TiffSnapshot::default()) }
 }
 
 impl TiffArtifact {
-    /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> TiffSnapshot {
-        TiffSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        TiffSnapshot { schema: self.schema.clone(), image: self.image.clone() }
     }
-
-    /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, image: snapshot.image }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.image = snapshot.image;
     }
 }
-//#endregion Conversions
 
-//#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.tiff`.
 pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tiff",
@@ -79,4 +59,3 @@ pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
-//#endregion Descriptor

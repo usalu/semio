@@ -1,0 +1,3 @@
+; abnf note.diff.pack
+document = payload
+payload = *OCTET

@@ -38,7 +38,7 @@ impl ArtifactDecomposer for LasDecomposer {
                     Err(err) => {
                         confidence = Confidence::Low;
                         diagnostics.push(dsl::Diagnostic::error(
-                            "stdio.decompose.las",
+                            "stdio.decompose.binary",
                             dsl::TextSpan::at(1, 1),
                             err.to_string(),
                         ));

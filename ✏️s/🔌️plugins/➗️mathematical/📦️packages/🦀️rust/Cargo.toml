@@ -25,6 +25,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 # 🧭️ `workspace = true` only works when this crate's local dependency KEY matches the key in root
 # `[workspace.dependencies]` verbatim — Cargo resolves workspace inheritance by that key, and a `package =`

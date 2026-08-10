@@ -8,12 +8,16 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 
 pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;
-pub use crate::artifacts::program::snapshot::schema::ProgramSnapshot;
+pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 
 #[cfg(test)]
 use store::DocumentDsl;
 
 /// @emoji 📜️ Persisted architect program document schema identifier.
+pub use crate::artifacts::program::schema::mutations::ProgramMutation;
+
+pub use crate::artifacts::program::schema::diff::ProgramDiff;
+
 pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
 //#region 🔖️ArtifactKind
@@ -33,8 +37,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

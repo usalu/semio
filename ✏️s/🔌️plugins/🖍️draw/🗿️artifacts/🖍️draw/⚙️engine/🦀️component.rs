@@ -18,16 +18,6 @@ pub fn register() {
     register_pilot_languages();
     register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::draw::DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
-        Ok(semio_framework_os::OsMediaExportResult {
-            data: {
-                use base64::Engine;
-                base64::engine::general_purpose::STANDARD.encode(bytes)
-            },
-            mime_type: semio_framework_os::MediaFormat::Dwg.mime_type().into(),
-            file_name: "draw.dwg".into(),
-            encoding: Some("base64".into()),
-        })
-    });
 }
 
 /// 📎 Registers the draw artifact schema descriptor into the process-local registry.

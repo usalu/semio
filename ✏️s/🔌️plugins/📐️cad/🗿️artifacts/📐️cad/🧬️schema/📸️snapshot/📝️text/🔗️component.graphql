@@ -1,0 +1,3 @@
+# cad snapshot text
+scalar Bytes
+type Document { schema: String! payload: String! }

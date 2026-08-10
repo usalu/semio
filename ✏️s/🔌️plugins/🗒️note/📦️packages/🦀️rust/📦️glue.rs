@@ -28,226 +28,261 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🗒️note/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🗒️note/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "../../🗿️artifacts/🗒️note/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/🗒️note/🔧️op/🦀️component.rs"]
-        pub mod op;
-
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
-            pub mod set_grid_visible {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/👁️set-grid-visible/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/👁️set-grid-visible/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_grid_spacing {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📏set-grid-spacing/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📏set-grid-spacing/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                pub use text::*;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_grid_subdivisions {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🔢set-grid-subdivisions/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🔢set-grid-subdivisions/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_grid_opacity {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🌫️set-grid-opacity/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🌫️set-grid-opacity/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_snap_enabled {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧲set-snap-enabled/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧲set-snap-enabled/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_snap_grid_spacing {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📐set-snap-grid-spacing/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📐set-snap-grid-spacing/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_pencil_width {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/✏️set-pencil-width/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/✏️set-pencil-width/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_eraser_radius {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧽set-eraser-radius/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧽set-eraser-radius/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_blocks {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧱set-blocks/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🧱set-blocks/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod put_asset {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📥put-asset/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📥put-asset/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod remove_asset {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🗑️remove-asset/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/🗑️remove-asset/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗒️note/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_pencil_width {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/✏️set-pencil-width/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/✏️set-pencil-width/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/✏️set-pencil-width/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_grid_opacity {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🌫️set-grid-opacity/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🌫️set-grid-opacity/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🌫️set-grid-opacity/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_grid_visible {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/👁️set-grid-visible/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/👁️set-grid-visible/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/👁️set-grid-visible/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_grid_spacing {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📏set-grid-spacing/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📏set-grid-spacing/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📏set-grid-spacing/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snap_grid_spacing {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📐set-snap-grid-spacing/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📐set-snap-grid-spacing/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📐set-snap-grid-spacing/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod put_asset {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📥put-asset/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📥put-asset/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📥put-asset/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_grid_subdivisions {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🔢set-grid-subdivisions/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🔢set-grid-subdivisions/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🔢set-grid-subdivisions/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod remove_asset {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🗑️remove-asset/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🗑️remove-asset/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🗑️remove-asset/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_blocks {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧱set-blocks/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧱set-blocks/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧱set-blocks/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snap_enabled {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧲set-snap-enabled/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧲set-snap-enabled/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧲set-snap-enabled/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_eraser_radius {
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧽set-eraser-radius/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧽set-eraser-radius/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/🧽set-eraser-radius/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🗒️note/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-
-            #[path = "../../🗿️artifacts/🗒️note/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-
-        #[path = "../../🗿️artifacts/🗒️note/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "../../🗿️artifacts/🗒️note/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        pub mod op { pub use crate::artifacts::note::schema::mutations::text::*; pub use crate::artifacts::note::schema::mutations::NoteMutation; }
+        pub mod dsl { pub use crate::artifacts::note::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::note::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::note::schema::diff::*; pub mod schema { pub use crate::artifacts::note::schema::diff::*; } pub mod text { pub use crate::artifacts::note::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::note::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::note::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::note::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs"]
+        pub mod engine;
+        #[path = "../../🗿️artifacts/🗒️note/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🗒️note/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🗒️note/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
-            pub mod dwg {
+            pub mod import {
                 #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod dxf {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🖊️dxf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🖊️dxf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod json {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod pdf {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dxf {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dxf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
                 }
             }
             #[path = "."]
-            pub mod png {
+            pub mod export {
                 #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/📷️png/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/📷️png/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod svg {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🎨️svg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗒️note/🚪️io/🎨️svg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dxf {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🗒️note/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs"]
-        pub mod engine;
     }
+
 }
 //#endregion 🗿️Artifacts
 

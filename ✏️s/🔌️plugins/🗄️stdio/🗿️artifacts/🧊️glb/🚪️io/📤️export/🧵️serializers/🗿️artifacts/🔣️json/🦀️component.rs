@@ -1,24 +1,8 @@
-//! Serialize stdio.glb to stdio.binary (encode ZIP bytes).
-
-use crate::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+//! glb to json
 use crate::artifacts::glb::GlbSnapshot;
-
-//#region Codec
-/// Register serializer hooks.
+use crate::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 pub fn register() {}
-
-/// 🎒️ Encode GlbSnapshot as ZIP container bytes.
 pub fn serialize(from: &GlbSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let bytes = crate::artifacts::glb::engine::encode_glb(from, true)
-        .map_err(|e| store::PackError::Schema(e))?;
-    Ok(JsonSnapshot {
-        schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-        bytes,
-    })
+    let value = serde_json::from_str(from.payload.gltf_json.trim()).unwrap_or(serde_json::Value::Null);
+    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
 }
-
-/// Encode ZIP then wrap as binary pack bytes.
-pub fn serialize_bytes(from: &GlbSnapshot) -> Result<Vec<u8>, store::PackError> {
-    store::DocumentPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
-}
-//#endregion Codec

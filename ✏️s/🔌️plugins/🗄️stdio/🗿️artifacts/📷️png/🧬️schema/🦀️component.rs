@@ -1,12 +1,10 @@
 //! 🧬️ PngArtifact schema — full artifact state.
 
-use crate::artifacts::png::schema::snapshot::PngEntry;
+use crate::artifacts::png::schema::snapshot::RasterImage;
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region Artifact
-/// 🧬️ Full `stdio.png` artifact state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png")]
@@ -15,44 +13,26 @@ pub struct PngArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<PngEntry>,
+    pub image: RasterImage,
 }
-//#endregion Artifact
 
-//#region Conversions
 impl Default for PngArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(PngSnapshot::default())
-    }
+    fn default() -> Self { Self::from_snapshot(PngSnapshot::default()) }
 }
 
 impl PngArtifact {
-    /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PngSnapshot {
-        PngSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        PngSnapshot { schema: self.schema.clone(), image: self.image.clone() }
     }
-
-    /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PngSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, image: snapshot.image }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: PngSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.image = snapshot.image;
     }
 }
-//#endregion Conversions
 
-//#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.png`.
 pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.png",
@@ -79,4 +59,3 @@ pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
-//#endregion Descriptor

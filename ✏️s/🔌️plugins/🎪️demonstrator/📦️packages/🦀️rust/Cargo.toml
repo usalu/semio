@@ -78,7 +78,7 @@ root = "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
 kind = "mesh-collection"
 route = "/mesh"
 app = "puzzle3d-play"
-roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
+roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
 placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true
 
@@ -107,6 +107,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
@@ -121,4 +122,3 @@ puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust", package 
 sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 process = { path = "../../../🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
 gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }
-

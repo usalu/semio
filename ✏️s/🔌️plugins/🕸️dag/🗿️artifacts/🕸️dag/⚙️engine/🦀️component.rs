@@ -53,8 +53,8 @@ pub fn register_pilot_languages() {
         id: "dag.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("dag.diff"),
@@ -106,7 +106,7 @@ impl protocol::ArtifactEngine for DagEngine {
     type Artifact = crate::artifacts::dag::schema::DagArtifact;
     type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
-    type Diff = crate::artifacts::dag::diff::DagDiff;
+    type Diff = crate::artifacts::dag::schema::diff::text::DagDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

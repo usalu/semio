@@ -1,0 +1,5 @@
+# 🧬️ JsonDiff
+type JsonDiff {
+  schema: String
+  value: String
+}

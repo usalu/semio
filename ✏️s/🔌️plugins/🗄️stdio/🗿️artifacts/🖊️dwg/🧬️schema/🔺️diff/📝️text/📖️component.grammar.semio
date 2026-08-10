@@ -1,0 +1,6 @@
+dialect grammar stdio.dwg.diff
+root = document
+document = header body
+header = 'schema' SP 'stdio.dwg' NL
+body = payload NL?
+payload = *OCTET

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/cad/mutations/text.json",
+  "title": "CadMutationsText",
+  "type": "object"
+}

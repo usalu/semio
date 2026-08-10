@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 🎒️ Encode PptxSnapshot as ZIP container bytes.
 pub fn serialize(from: &PptxSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::pptx::engine::encode_pptx(from, true)
+    let bytes = crate::artifacts::pptx::engine::encode_pptx(from)
         .map_err(|e| store::PackError::Schema(e))?;
     Ok(BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),

@@ -1,0 +1,33 @@
+# W6 fanout plan
+plugins=30 artifacts=52
+
+- `✒️writer`: ✒️writer
+- `➗️mathematical`: ➗️mathematical
+- `🌀️procedural`: 🌀️procedural2d, 🧊️procedural3d
+- `🌊️flow`: 🌊️flow
+- `🌍️gis`: 🏔️gisterrain, 🗺️gismap
+- `🌿️vcs`: 🌿️vcs
+- `🎞️animate`: 🎬️present
+- `🎥️shooting`: 🎥️shooting
+- `🎪️demonstrator`: 🎪️playground
+- `🎬️sequence`: 🎬️sequence
+- `🏗️fem`: ◻2d, 🧊️3d
+- `🏛️architect`: 🏛️program
+- `🏭️process`: 🧊️process3d
+- `💠️lowpoly`: 💠️lowpoly
+- `💡️reasoning`: 🔌️wires
+- `📋️forms`: 📋️forms
+- `📏️layout`: 📏️layout
+- `📕️norm`: 📓️iso16757, 📔️vdi3805, 📕️din4108, 📗️din16798, 📘️en1990, 📘️en1991, 📘️en1992, 📘️en1993, 📘️en1994, 📘️en1995, 📘️en1996, 📘️en1997, 📘️en1998, 📘️en1999, 📙️din18599
+- `📖️playbook`: 📖️playbook
+- `📜️imperative`: 📜️imperative
+- `📸️remodel`: 📸️remodel
+- `🔋️energy`: 🔋️model
+- `🔱️trinity`: ♻️rewrite, 🔌️jack
+- `🕸️dag`: 🕸️dag
+- `🖍️draw`: 🖍️draw
+- `🖨️raster`: 🖨️raster
+- `🧩️puzzle`: ◻2d, 🖐️5d, 🧊️3d
+- `🧱️block`: ◻2d, 🖐️5d, 🧊️3d
+- `🪐️space`: 🏠️home
+- `🪵️sourcing`: 🗂️curate

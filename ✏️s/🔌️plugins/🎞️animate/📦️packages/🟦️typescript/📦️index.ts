@@ -1,10 +1,5 @@
 /** animate facet WASM facades */
-export * as present_artifact_schema from "../../🗿️artifacts/🎬️present/🧬️schema/🟦️component.ts";
-export * as present_snapshot_schema from "../../🗿️artifacts/🎬️present/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as present_diff_schema from "../../🗿️artifacts/🎬️present/🔺️diff/🧬️schema/🟦️component.ts";
-export * as present_diff from "../../🗿️artifacts/🎬️present/🔺️diff/🟦️component.ts";
-export * as present_dsl from "../../🗿️artifacts/🎬️present/🗣️dsl/🟦️component.ts";
-export * as present_pack from "../../🗿️artifacts/🎬️present/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as present_mutations from "../../🗿️artifacts/🎬️present/🧬️mutations/🟦️component.ts";
-export * as present_op from "../../🗿️artifacts/🎬️present/🔧️op/🟦️component.ts";
-export * as present_spr from "../../🗿️artifacts/🎬️present/📡️spr/🟦️component.ts";
+export * as present_schema from "../../🗿️artifacts/🎬️present/🧬️schema/🟦️component.ts";
+export * as present_builder from "../../🗿️artifacts/🎬️present/🏗️builder/🟦️component.ts";
+export * as present_decomposer from "../../🗿️artifacts/🎬️present/🪓️decomposer/🟦️component.ts";
+export * as present_io from "../../🗿️artifacts/🎬️present/🚪️io/🟦️component.ts";

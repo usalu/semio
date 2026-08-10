@@ -72,8 +72,8 @@ pub fn register_pilot_languages() {
         id: "flow.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::flow::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::flow::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("flow.diff"),
@@ -140,7 +140,7 @@ pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: 
 pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
     flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture())
         .into_iter()
-        .map(crate::artifacts::flow::mutations::from_framework_mutation)
+        .map(crate::artifacts::flow::schema::mutations::from_framework_mutation)
         .collect()
 }
 
@@ -151,7 +151,7 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &F
     }
     flow::flow_fixture_operations(&snapshot.to_fixture(), &host.fixture)
         .into_iter()
-        .map(crate::artifacts::flow::mutations::from_framework_mutation)
+        .map(crate::artifacts::flow::schema::mutations::from_framework_mutation)
         .collect()
 }
 
@@ -345,8 +345,8 @@ impl FlowEngine {
 impl protocol::ArtifactEngine for FlowEngine {
     type Artifact = crate::artifacts::flow::schema::FlowArtifact;
     type Snapshot = crate::artifacts::flow::FlowSnapshot;
-    type Mutation = crate::artifacts::flow::mutations::FlowMutation;
-    type Diff = crate::artifacts::flow::diff::FlowDiff;
+    type Mutation = crate::artifacts::flow::schema::mutations::FlowMutation;
+    type Diff = crate::artifacts::flow::schema::diff::text::FlowDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

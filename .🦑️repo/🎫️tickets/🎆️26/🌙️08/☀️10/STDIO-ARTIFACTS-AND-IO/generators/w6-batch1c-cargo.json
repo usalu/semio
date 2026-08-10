@@ -1,0 +1,50 @@
+{
+  "semio-s-plugin-imperative": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-remodel": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-demonstrator": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-animate": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-shooting": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-sequence": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-architect": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-process": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-lowpoly": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-reasoning": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-space": {
+    "ok": false,
+    "tail": []
+  },
+  "semio-s-plugin-sourcing": {
+    "ok": false,
+    "tail": []
+  }
+}

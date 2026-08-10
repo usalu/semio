@@ -30,137 +30,217 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/✒️writer/🦀️component.rs"]
         mod component;
         pub use component::*;
+        pub use crate::artifacts::writer::schema::snapshot::WriterSnapshot;
+        pub use crate::artifacts::writer::schema::mutations::WriterMutation;
+        pub use crate::artifacts::writer::schema::diff::WriterDiff;
 
-        #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🦀️component.rs"]
-        pub mod schema;
+        #[path = "."]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                pub use text::*;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_text {
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/✍️set-text/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/✍️set-text/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/✍️set-text/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+            }
+        }
 
+        pub mod op { pub use crate::artifacts::writer::schema::mutations::text::*; pub use crate::artifacts::writer::schema::mutations::WriterMutation; }
+        pub mod dsl { pub use crate::artifacts::writer::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::writer::schema::mutations::binary::*; }
+        pub mod pack { pub use crate::artifacts::writer::schema::snapshot::binary::*; }
+        pub mod diff { pub use crate::artifacts::writer::schema::diff::*; pub mod schema { pub use crate::artifacts::writer::schema::diff::*; } pub mod text { pub use crate::artifacts::writer::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::writer::schema::mutations::*; }
         #[path = "."]
         pub mod snapshot {
-            #[path = "../../🗿️artifacts/✒️writer/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-
-            #[path = "../../🗿️artifacts/✒️writer/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
+            pub mod schema { pub use crate::artifacts::writer::schema::snapshot::*; }
+            pub mod pack { pub use crate::artifacts::writer::schema::snapshot::binary::*; }
         }
-
-        #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/✒️writer/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "../../🗿️artifacts/✒️writer/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/✒️writer/🔧️op/🦀️component.rs"]
-        pub mod op;
-
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "."]
-            pub mod set_text {
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/✍️set-text/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/✍️set-text/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/✒️writer/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-        }
-
-        #[path = "../../🗿️artifacts/✒️writer/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "../../🗿️artifacts/✒️writer/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        #[path = "../../🗿️artifacts/✒️writer/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/✒️writer/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/✒️writer/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod docx {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod txt {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod docx {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod txt {
+                            #[path = "../../🗿️artifacts/✒️writer/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod docx {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📜️docx/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::export::serializers::artifacts::docx::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📜️docx/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::import::deserializers::artifacts::docx::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod md {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📝️md/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::export::serializers::artifacts::md::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📝️md/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::import::deserializers::artifacts::md::*;
                 }
             }
             #[path = "."]
             pub mod pdf {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::export::serializers::artifacts::pdf::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::import::deserializers::artifacts::pdf::*;
                 }
             }
             #[path = "."]
             pub mod txt {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📄txt/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::export::serializers::artifacts::txt::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/✒️writer/🚪️io/📄txt/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::writer::io::import::deserializers::artifacts::txt::*;
                 }
             }
         }
@@ -168,6 +248,7 @@ pub mod artifacts {
         pub mod engine;
     }
 }
+
 //#endregion 🗿️Artifacts
 
 //#region 🎛️Apps

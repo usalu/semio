@@ -361,9 +361,6 @@ pub struct DrawArtboard {
     pub height: f64,
 }
 
-/// 📸️ Persisted draw snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::draw::snapshot::schema::DrawSnapshot;
-
 pub fn default_draw_transform() -> DrawTransform {
     DrawTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
 }
@@ -371,6 +368,10 @@ pub fn default_draw_transform() -> DrawTransform {
 pub fn default_draw_trace_params() -> DrawTraceParams {
     DrawTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
 }
+pub use crate::artifacts::draw::schema::snapshot::DrawSnapshot;
+pub use crate::artifacts::draw::schema::diff::DrawDiff;
+pub use crate::artifacts::draw::schema::mutations::DrawMutation;
+
 //#endregion 🔖️Domain
 
 //#region 🔖️ArtifactKind

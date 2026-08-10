@@ -1,7 +1,7 @@
 //! ⚙️ Note artifact — headless compute (constitutional: engine).
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{DwgDrawing, DwgGeometry};
+use semio_framework::{DwgDrawing, DwgGeometry};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -21,28 +21,28 @@ pub fn register_pilot_languages() {
         id: "note.document",
         extension: Some("note"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::note::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::note::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "note.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::note::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::note::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "note.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::note::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::note::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::note::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("note.diff"),
@@ -53,8 +53,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -63,8 +63,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.spr"),
     });
 }
@@ -80,7 +80,7 @@ pub fn register_artifact_schema() {
 //#region 🔖️Constants
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::dsl::SEMIO_NOTE_EXAMPLE_TEXT;
+const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::schema::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
 //#endregion 🔖️Constants
 
@@ -704,7 +704,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{DwgColor, DwgEntity, DwgLayer};
+    use semio_framework::{DwgColor, DwgEntity, DwgLayer};
 
     #[test]
     fn clone_block_reids_group_children() {

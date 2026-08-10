@@ -1,0 +1,56 @@
+{
+  "checked": 58,
+  "missing": [],
+  "old_present": [],
+  "before": 114,
+  "after": 169,
+  "proof": [
+    "    Checking semio-s-plugin-note v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust)",
+    "    Finished `dev` profile [unoptimized] target(s) in 1m 03s"
+  ],
+  "B": "🏗️builder",
+  "D": "🪓️decomposer",
+  "TEXT": "📝️text",
+  "BIN": "💾️binary",
+  "DESER": "🧩️deserializers",
+  "SER": "🧵️serializers",
+  "row": {
+    "plugin": "🗒️note",
+    "artifact": "🗒️note",
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
+    "kind_id": "2d.note",
+    "stdio_artifacts": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "import": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "export": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ]
+  },
+  "top": [
+    "⚙️engine",
+    "🏗️builder",
+    "📚️examples",
+    "🚪️io",
+    "🦀️component.rs",
+    "🧬️schema",
+    "🪓️decomposer"
+  ]
+}

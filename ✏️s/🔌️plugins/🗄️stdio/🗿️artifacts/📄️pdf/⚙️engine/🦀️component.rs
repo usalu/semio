@@ -1,34 +1,34 @@
 //! ⚙️ PdfEngine — minimal PDF 1.4 with FlateDecode stream.
 
-use crate::artifacts::pdf::{{schema::snapshot::PageDoc, PdfArtifact, PdfDiff, PdfMutation, PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA}};
+use crate::artifacts::pdf::{schema::snapshot::PageDoc, PdfArtifact, PdfDiff, PdfMutation, PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
 
 pub fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     let page = &snap.page;
     let w = page.width.max(1.0);
     let h = page.height.max(1.0);
-    let stream = format!("BT /F1 12 Tf 72 {h2} Td ({}) Tj ET", escape_pdf(&page.text), h2 = h - 72.0);
+    let stream = format!("BT /F1 12 Tf 72 {} Td ({}) Tj ET", h - 72.0, escape_pdf(&page.text));
     let compressed = crate::artifacts::deflate::engine::zlib_compress(stream.as_bytes())?;
-    let mut body = String::new();
-    body.push_str("%PDF-1.4\n");
+    let mut body: Vec<u8> = Vec::new();
+    body.extend_from_slice(b"%PDF-1.4\n");
     let o1 = body.len();
-    body.push_str("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+    body.extend_from_slice(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
     let o2 = body.len();
-    body.push_str("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+    body.extend_from_slice(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
     let o3 = body.len();
-    body.push_str(&format!("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {w} {h}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"));
+    body.extend_from_slice(format!("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {w} {h}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n").as_bytes());
     let o4 = body.len();
-    body.push_str(&format!("4 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()));
+    body.extend_from_slice(format!("4 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
     body.extend_from_slice(&compressed);
-    body.push_str("\nendstream\nendobj\n");
+    body.extend_from_slice(b"\nendstream\nendobj\n");
     let o5 = body.len();
-    body.push_str("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
+    body.extend_from_slice(b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
     let xref = body.len();
-    body.push_str("xref\n0 6\n0000000000 65535 f \n");
+    body.extend_from_slice(b"xref\n0 6\n0000000000 65535 f \n");
     for off in [o1, o2, o3, o4, o5] {
-        body.push_str(&format!("{:010} 00000 n \n", off));
+        body.extend_from_slice(format!("{:010} 00000 n \n", off).as_bytes());
     }
-    body.push_str(&format!("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"));
-    Ok(body.into_bytes())
+    body.extend_from_slice(format!("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
+    Ok(body)
 }
 
 fn escape_pdf(s: &str) -> String {

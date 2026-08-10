@@ -9,7 +9,7 @@
 //! more than one consumer across the taxonomy tree lives here; one with exactly one consumer lives in
 //! that consumer's own component file.
 
-use super::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use trinity::core::{example_graph, lint};
@@ -174,8 +174,8 @@ fn register_writer_languages() {
         id: "writer.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::writer::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("writer.diff"),
@@ -983,8 +983,8 @@ impl WriterEngine {
 impl protocol::ArtifactEngine for WriterEngine {
     type Artifact = crate::artifacts::writer::schema::WriterArtifact;
     type Snapshot = WriterSnapshot;
-    type Mutation = crate::artifacts::writer::mutations::WriterMutation;
-    type Diff = crate::artifacts::writer::diff::WriterDiff;
+    type Mutation = crate::artifacts::writer::schema::mutations::WriterMutation;
+    type Diff = crate::artifacts::writer::schema::diff::text::WriterDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact
@@ -996,7 +996,7 @@ impl protocol::ArtifactEngine for WriterEngine {
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
         let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::writer::mutations::apply_writer_mutation(&mut self.snapshot, mutation);
+        crate::artifacts::writer::schema::mutations::apply_writer_mutation(&mut self.snapshot, mutation);
         self.artifact = crate::artifacts::writer::schema::WriterArtifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }

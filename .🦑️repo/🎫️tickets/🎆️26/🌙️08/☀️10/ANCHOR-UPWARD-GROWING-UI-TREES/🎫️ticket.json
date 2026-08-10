@@ -1,0 +1,13 @@
+{
+  "title": "Anchor Upward Growing UI Trees",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "When UI trees in bottom-anchored panels grow from bottom to top, expanding a tree item must push content upward while leaving the panel bottom fixed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2538"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9e532ebf329045cdb928898c7c45f550"
+  ]
+}

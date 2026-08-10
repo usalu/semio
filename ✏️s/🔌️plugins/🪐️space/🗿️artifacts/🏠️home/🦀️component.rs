@@ -2,6 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
+pub use crate::artifacts::home::schema::mutations::HomeMutation;
+
+pub use crate::artifacts::home::schema::diff::HomeDiff;
+
 pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
 pub use crate::artifacts::home::schema::SHomeArtifact;
 pub use crate::artifacts::home::snapshot::schema::SHomeSnapshot;
@@ -77,8 +81,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: S_HOME_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -2,8 +2,12 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
+pub use crate::artifacts::playground::schema::mutations::PlaygroundMutation;
+
+pub use crate::artifacts::playground::schema::diff::PlaygroundDiff;
+
 pub const PLAYGROUND_DOCUMENT_SCHEMA: &str = "playground.playground";
-pub use crate::artifacts::playground::snapshot::schema::PlaygroundSnapshot;
+pub use crate::artifacts::playground::schema::snapshot::PlaygroundSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -19,8 +23,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PLAYGROUND_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

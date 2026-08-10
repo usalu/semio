@@ -81,18 +81,18 @@ pub fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
             proto: include_str!("🛰️component.proto"),
         },
         snapshot: schema::FacetLeaves {
-            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
-            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
-            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
-            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
-            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+            rust: include_str!("📸️snapshot/🦀️component.rs"),
+            typescript: include_str!("📸️snapshot/🟦️component.ts"),
+            graphql: include_str!("📸️snapshot/🔗️component.graphql"),
+            json_schema: include_str!("📸️snapshot/🔣️component.json"),
+            proto: include_str!("📸️snapshot/🛰️component.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
-            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
-            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
-            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
-            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+            rust: include_str!("🔺️diff/🦀️component.rs"),
+            typescript: include_str!("🔺️diff/🟦️component.ts"),
+            graphql: include_str!("🔺️diff/🔗️component.graphql"),
+            json_schema: include_str!("🔺️diff/🔣️component.json"),
+            proto: include_str!("🔺️diff/🛰️component.proto"),
         },
     }
 }

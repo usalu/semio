@@ -1,10 +1,5 @@
 /** lowpoly facet WASM facades */
 export * as lowpoly_schema from "../../🗿️artifacts/💠️lowpoly/🧬️schema/🟦️component.ts";
-export * as lowpoly_snapshot_schema from "../../🗿️artifacts/💠️lowpoly/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as lowpoly_diff from "../../🗿️artifacts/💠️lowpoly/🔺️diff/🟦️component.ts";
-export * as lowpoly_diff_schema from "../../🗿️artifacts/💠️lowpoly/🔺️diff/🧬️schema/🟦️component.ts";
-export * as lowpoly_dsl from "../../🗿️artifacts/💠️lowpoly/🗣️dsl/🟦️component.ts";
-export * as lowpoly_pack from "../../🗿️artifacts/💠️lowpoly/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as lowpoly_op from "../../🗿️artifacts/💠️lowpoly/🔧️op/🟦️component.ts";
-export * as lowpoly_mutations from "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🟦️component.ts";
-export * as lowpoly_spr from "../../🗿️artifacts/💠️lowpoly/📡️spr/🟦️component.ts";
+export * as lowpoly_builder from "../../🗿️artifacts/💠️lowpoly/🏗️builder/🟦️component.ts";
+export * as lowpoly_decomposer from "../../🗿️artifacts/💠️lowpoly/🪓️decomposer/🟦️component.ts";
+export * as lowpoly_io from "../../🗿️artifacts/💠️lowpoly/🚪️io/🟦️component.ts";

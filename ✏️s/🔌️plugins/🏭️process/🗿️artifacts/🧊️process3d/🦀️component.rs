@@ -2,8 +2,12 @@
 //! plus this artifact's `ArtifactKindSpec`.
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
 use serde::{Deserialize, Serialize};
+
+pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
+
+pub use crate::artifacts::process3d::schema::diff::Process3dDiff;
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -491,7 +495,7 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
 
 /// 🪚️ Process 3d projection: workshop + stock + ordered steps + timeline cursor.
 /// 📸️ Persisted process3d snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::process3d::snapshot::schema::Process3dSnapshot;
+pub use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
 
 /// 🗄️ Empty process3d snapshot (default workshop + stock, no steps).
 pub fn empty_process3d_snapshot() -> Process3dSnapshot {
@@ -512,10 +516,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::Brep,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         schema: PROCESS_3D_SCHEMA.into(),
-        export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
-        import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
     }
 }
 //#endregion 🔖️ArtifactKind

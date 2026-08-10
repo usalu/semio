@@ -1,0 +1,282 @@
+[
+  {
+    "plugin": "✒️writer",
+    "artifacts": [
+      "✒️writer"
+    ],
+    "crate": "semio-s-plugin-writer",
+    "stdio": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "import": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "export": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ]
+  },
+  {
+    "plugin": "➗️mathematical",
+    "artifacts": [
+      "➗️mathematical"
+    ],
+    "crate": "semio-s-plugin-mathematical",
+    "stdio": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "md"
+    ]
+  },
+  {
+    "plugin": "🌊️flow",
+    "artifacts": [
+      "🌊️flow"
+    ],
+    "crate": "semio-s-plugin-flow",
+    "stdio": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "md"
+    ]
+  },
+  {
+    "plugin": "🌿️vcs",
+    "artifacts": [
+      "🌿️vcs"
+    ],
+    "crate": "semio-s-plugin-vcs",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "🎞️animate",
+    "artifacts": [
+      "🎬️present"
+    ],
+    "crate": "semio-s-plugin-animate",
+    "stdio": [
+      "json",
+      "md",
+      "pdf",
+      "png",
+      "pptx",
+      "svg"
+    ],
+    "import": [
+      "json",
+      "md",
+      "pdf",
+      "png",
+      "pptx",
+      "svg"
+    ],
+    "export": [
+      "json",
+      "md",
+      "pdf",
+      "png",
+      "pptx",
+      "svg"
+    ]
+  },
+  {
+    "plugin": "🎥️shooting",
+    "artifacts": [
+      "🎥️shooting"
+    ],
+    "crate": "semio-s-plugin-shooting",
+    "stdio": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ],
+    "import": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ],
+    "export": [
+      "bmp",
+      "dwg",
+      "gif",
+      "jpg",
+      "json",
+      "pdf",
+      "png",
+      "svg",
+      "tiff"
+    ]
+  },
+  {
+    "plugin": "🎪️demonstrator",
+    "artifacts": [
+      "🎪️playground"
+    ],
+    "crate": "semio-s-plugin-demonstrator",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "🎬️sequence",
+    "artifacts": [
+      "🎬️sequence"
+    ],
+    "crate": "semio-s-plugin-sequence",
+    "stdio": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "md"
+    ]
+  },
+  {
+    "plugin": "🏛️architect",
+    "artifacts": [
+      "🏛️program"
+    ],
+    "crate": "semio-s-plugin-architect",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "import": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "export": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ]
+  },
+  {
+    "plugin": "🏭️process",
+    "artifacts": [
+      "🧊️process3d"
+    ],
+    "crate": "semio-s-plugin-process",
+    "stdio": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ],
+    "import": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ],
+    "export": [
+      "dwg",
+      "glb",
+      "gltf",
+      "ifc",
+      "json",
+      "obj",
+      "png",
+      "step",
+      "stl"
+    ]
+  }
+]

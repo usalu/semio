@@ -29,172 +29,247 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎬️present/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "../../🗿️artifacts/🎬️present/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🎬️present/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🎬️present/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-
-        #[path = "../../🗿️artifacts/🎬️present/🔧️op/🦀️component.rs"]
-        pub mod op;
-
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
-            pub mod tiles {
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_source {
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
             #[path = "."]
-            pub mod set_tiles {
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-            }
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod tiles {
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/🎞tiles/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/🎞tiles/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/🎞tiles/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_tiles {
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📋set-tiles/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📋set-tiles/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📋set-tiles/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_source {
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📎set-source/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📎set-source/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📎set-source/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📸set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎬️present/🧬️schema/🧬️mutations/📸set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "../../🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "../../🗿️artifacts/🎬️present/📡️spr/🦀️component.rs"]
-        pub mod spr;
-
+        pub mod op { pub use crate::artifacts::present::schema::mutations::text::*; pub use crate::artifacts::present::schema::mutations::PresentMutation; }
+        pub mod dsl { pub use crate::artifacts::present::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::present::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::present::schema::diff::*; pub use crate::artifacts::present::schema::diff::text::*; pub mod schema { pub use crate::artifacts::present::schema::diff::*; } pub mod text { pub use crate::artifacts::present::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::present::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::present::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::present::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🎬️present/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🎬️present/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🎬️present/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pptx {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️pptx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod md {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pptx {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️pptx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🎬️present/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod md {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📝️md/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::md::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📝️md/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::md::*;
                 }
             }
             #[path = "."]
             pub mod pdf {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::pdf::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::pdf::*;
                 }
             }
             #[path = "."]
             pub mod png {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📷️png/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::png::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/📷️png/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::png::*;
                 }
             }
             #[path = "."]
             pub mod pptx {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🎞️pptx/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::pptx::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🎞️pptx/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::pptx::*;
                 }
             }
             #[path = "."]
             pub mod svg {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🎨️svg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::export::serializers::artifacts::svg::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎬️present/🚪️io/🎨️svg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::present::io::import::deserializers::artifacts::svg::*;
                 }
             }
         }
@@ -203,85 +278,22 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🦀️component.rs"]
             mod component;
             pub use component::*;
-
-                        #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎞️animation/🦀️component.rs"]
-            pub mod animation;
-            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎬️scene/🦀️component.rs"]
-            pub mod scene;
-            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/📐️geometry/🦀️component.rs"]
-            pub mod geometry;
-            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
-            pub mod camera;
-            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🔤️text/🦀️component.rs"]
-            pub mod text;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/⏱️rate/🦀️component.rs"]
             pub mod rate;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎛️config/🦀️component.rs"]
             pub mod config;
-            pub mod animate {
-                pub mod animation {
-                    pub use super::super::animation::animation::*;
-                }
-                pub mod animations_catalog {
-                    pub use super::super::animation::animations_catalog::*;
-                }
-                pub mod scene {
-                    pub use super::super::scene::scene::*;
-                }
-                pub mod section {
-                    pub use super::super::scene::section::*;
-                }
-                pub mod sobject {
-                    pub use super::super::scene::sobject::*;
-                }
-                pub mod geometry {
-                    pub use super::super::geometry::geometry::*;
-                }
-                pub mod three_d {
-                    pub use super::super::geometry::three_d::*;
-                }
-                pub mod axes {
-                    pub use super::super::geometry::axes::*;
-                }
-                pub mod camera {
-                    pub use super::super::camera::camera::*;
-                }
-                pub mod matrix {
-                    pub use super::super::camera::matrix::*;
-                }
-                pub mod text {
-                    pub use super::super::text::text::*;
-                }
-                pub mod color {
-                    pub use super::super::text::color::*;
-                }
-                pub mod rate {
-                    pub use super::super::rate::rate::*;
-                }
-                pub mod updater {
-                    pub use super::super::rate::updater::*;
-                }
-                pub mod config {
-                    pub use super::super::config::config::*;
-                }
-                pub mod hash {
-                    pub use super::super::config::hash::*;
-                }
-                pub mod graph {
-                    pub use super::super::config::graph::*;
-                }
-                pub use super::config::config::{AnimateConfig, QualityPreset};
-                pub use super::scene::section::Section;
-                pub use super::scene::scene::{Scene, SceneFrame, preview_scene_loop};
-                pub use super::scene::section::SectionList;
-                pub use super::animation::animation::{compile_animations, interpolate_at, Animation, Wait};
-                pub use super::scene::sobject::{Sobject, VSobject};
-                pub use super::camera::camera::Camera;
-                pub use super::text::color::Color;
-                pub use super::scene::scene::BasicStage;
-            }
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎞️animation/🦀️component.rs"]
+            pub mod animation;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
+            pub mod camera;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
-            pub mod animate_video;
+            pub mod video;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎬️scene/🦀️component.rs"]
+            pub mod scene;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/📐️geometry/🦀️component.rs"]
+            pub mod geometry;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🔤️text/🦀️component.rs"]
+            pub mod text;
         }
     }
 }

@@ -1,12 +1,10 @@
 //! 🧬️ GlbArtifact schema — full artifact state.
 
-use crate::artifacts::glb::schema::snapshot::GlbEntry;
+use crate::artifacts::glb::schema::snapshot::GlbPayload;
 use crate::artifacts::glb::GlbSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-//#region Artifact
-/// 🧬️ Full `stdio.glb` artifact state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.glb")]
@@ -15,44 +13,26 @@ pub struct GlbArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<GlbEntry>,
+    pub payload: GlbPayload,
 }
-//#endregion Artifact
 
-//#region Conversions
 impl Default for GlbArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(GlbSnapshot::default())
-    }
+    fn default() -> Self { Self::from_snapshot(GlbSnapshot::default()) }
 }
 
 impl GlbArtifact {
-    /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> GlbSnapshot {
-        GlbSnapshot {
-            schema: self.schema.clone(),
-            entries: self.entries.clone(),
-        }
+        GlbSnapshot { schema: self.schema.clone(), payload: self.payload.clone() }
     }
-
-    /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: GlbSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            entries: snapshot.entries,
-        }
+        Self { schema: snapshot.schema, payload: snapshot.payload }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: GlbSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.payload = snapshot.payload;
     }
 }
-//#endregion Conversions
 
-//#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.glb`.
 pub fn glb_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.glb",
@@ -79,4 +59,3 @@ pub fn glb_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
-//#endregion Descriptor

@@ -24,9 +24,13 @@ pub fn seed_dictionary(seed: &std::collections::BTreeMap<String, Value>) -> Dict
 
 /// 🗂️ The `store::DocumentStore` schema key — deliberately distinct from the snapshot's `schema`
 /// field (`"imperative.document"`, the field inside the document itself): this one keys the store envelope.
+pub use crate::artifacts::imperative::schema::mutations::ImperativeMutation;
+
+pub use crate::artifacts::imperative::schema::diff::ImperativeDiff;
+
 pub const IMPERATIVE_DOCUMENT_SCHEMA: &str = "imperative.document/v1";
 
-pub use crate::artifacts::imperative::snapshot::schema::ImperativeSnapshot;
+pub use crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot;
 
 /// 📍️ Address of a nested step list inside a control step body.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -54,8 +58,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "imperative.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -1,0 +1,3 @@
+; abnf cad diff
+document = payload
+payload = *OCTET

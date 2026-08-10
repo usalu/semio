@@ -1,10 +1,5 @@
 /** shooting facet WASM facades */
 export * as shooting_schema from "../../🗿️artifacts/🎥️shooting/🧬️schema/🟦️component.ts";
-export * as shooting_snapshot_schema from "../../🗿️artifacts/🎥️shooting/📸️snapshot/🧬️schema/🟦️component.ts";
-export * as shooting_diff_schema from "../../🗿️artifacts/🎥️shooting/🔺️diff/🧬️schema/🟦️component.ts";
-export * as shooting_diff from "../../🗿️artifacts/🎥️shooting/🔺️diff/🟦️component.ts";
-export * as shooting_dsl from "../../🗿️artifacts/🎥️shooting/🗣️dsl/🟦️component.ts";
-export * as shooting_pack from "../../🗿️artifacts/🎥️shooting/📸️snapshot/🎒️pack/🟦️component.ts";
-export * as shooting_op from "../../🗿️artifacts/🎥️shooting/🔧️op/🟦️component.ts";
-export * as shooting_mutations from "../../🗿️artifacts/🎥️shooting/🧬️mutations/🟦️component.ts";
-export * as shooting_spr from "../../🗿️artifacts/🎥️shooting/📡️spr/🟦️component.ts";
+export * as shooting_builder from "../../🗿️artifacts/🎥️shooting/🏗️builder/🟦️component.ts";
+export * as shooting_decomposer from "../../🗿️artifacts/🎥️shooting/🪓️decomposer/🟦️component.ts";
+export * as shooting_io from "../../🗿️artifacts/🎥️shooting/🚪️io/🟦️component.ts";

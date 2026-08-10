@@ -1,0 +1,32 @@
+{
+  "rs": "🦀️component.rs",
+  "ts": "🟦️component.ts",
+  "grammar": "📖️component.grammar.semio",
+  "protocol": "📡️component.protocol.semio",
+  "ebnf": "🔤️component.ebnf",
+  "g4": "🅰️component.g4",
+  "graphql": "🔗️component.graphql",
+  "json": "🔣️component.json",
+  "proto": "🛰️component.proto",
+  "abnf": "🔠️component.abnf",
+  "ksy": "🥋️component.ksy",
+  "spicy": "🌶️component.spicy",
+  "text_leaves": [
+    "🅰️component.g4",
+    "📖️component.grammar.semio",
+    "🔗️component.graphql",
+    "🔣️component.json",
+    "🔤️component.ebnf",
+    "🛰️component.proto",
+    "🟦️component.ts",
+    "🦀️component.rs"
+  ],
+  "bin_leaves": [
+    "🌶️component.spicy",
+    "📡️component.protocol.semio",
+    "🔠️component.abnf",
+    "🟦️component.ts",
+    "🥋️component.ksy",
+    "🦀️component.rs"
+  ]
+}

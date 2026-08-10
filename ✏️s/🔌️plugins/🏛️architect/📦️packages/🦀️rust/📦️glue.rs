@@ -29,829 +29,817 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🏛️program/🦀️component.rs"]
         mod component;
         pub use component::*;
-
         #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧱️kernel/🦀️component.rs"]
         pub mod kernel;
         #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🗄️registers/🦀️component.rs"]
         pub mod registers;
-
-        #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🏛️program/🔺️diff/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
-
-            #[path = "../../🗿️artifacts/🏛️program/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-        }
-        #[path = "../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs"]
-        pub mod op;
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
             #[path = "."]
-            pub mod stakeholders {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👥stakeholders/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👥stakeholders/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👥stakeholders/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod users {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧑users/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧑users/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧑users/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod activities {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏃activities/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏃activities/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏃activities/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod functions {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚙️functions/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚙️functions/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚙️functions/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod elements {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧱elements/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧱elements/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧱elements/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod quantities {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔢quantities/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔢quantities/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔢quantities/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod relationships {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔗relationships/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔗relationships/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔗relationships/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod adjacencies {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔀adjacencies/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔀adjacencies/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔀adjacencies/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod processes {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔄processes/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔄processes/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔄processes/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod flows {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌊flows/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌊flows/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌊flows/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod access_rules {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔑access-rules/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔑access-rules/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔑access-rules/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod operations {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📋operations/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📋operations/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📋operations/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod equipment {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛠️equipment/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛠️equipment/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛠️equipment/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod resources {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📦resources/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📦resources/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📦resources/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod storage {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗄️storage/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗄️storage/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗄️storage/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod environmental {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌿environmental/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌿environmental/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🌿environmental/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod human_factors {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧠human-factors/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧠human-factors/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧠human-factors/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod accessibility {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♿accessibility/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♿accessibility/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♿accessibility/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod privacy {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔒privacy/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔒privacy/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔒privacy/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod safety {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🦺safety/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🦺safety/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🦺safety/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod security {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛡️security/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛡️security/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛡️security/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod regulatory {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📜regulatory/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📜regulatory/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📜regulatory/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod site_context {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📍site-context/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📍site-context/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📍site-context/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod organizational {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏢organizational/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏢organizational/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏢organizational/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod services {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛎️services/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛎️services/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛎️services/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod infrastructure {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏗️infrastructure/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏗️infrastructure/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏗️infrastructure/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod information {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/ℹ️information/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/ℹ️information/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/ℹ️information/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod communication {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📡communication/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📡communication/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📡communication/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod wayfinding {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧭wayfinding/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧭wayfinding/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧭wayfinding/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod schedules {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📅schedules/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📅schedules/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📅schedules/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod flexibility {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧩flexibility/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧩flexibility/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧩flexibility/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod growth {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📈growth/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📈growth/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📈growth/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod sustainability {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♻️sustainability/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♻️sustainability/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/♻️sustainability/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod resilience {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💪resilience/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💪resilience/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💪resilience/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod costs {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💰costs/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💰costs/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💰costs/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod delivery {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚚delivery/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚚delivery/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚚delivery/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod risks {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚠️risks/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚠️risks/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚠️risks/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod conflicts {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚔️conflicts/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚔️conflicts/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚔️conflicts/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod requirements {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📌requirements/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📌requirements/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📌requirements/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod priorities {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⭐priorities/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⭐priorities/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⭐priorities/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod scenarios {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎬scenarios/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎬scenarios/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎬scenarios/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod options {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚖️options/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚖️options/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/⚖️options/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod decisions {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✅decisions/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✅decisions/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✅decisions/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod validations {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✔️validations/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✔️validations/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/✔️validations/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod performance {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📊performance/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📊performance/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📊performance/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod quality {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💎quality/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💎quality/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💎quality/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod documents {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📄documents/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📄documents/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📄documents/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod changes {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📝changes/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📝changes/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📝changes/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod collaboration {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🤝collaboration/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🤝collaboration/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🤝collaboration/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod analyses {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔬analyses/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔬analyses/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔬analyses/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod reports {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📑reports/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📑reports/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📑reports/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod search_filters {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔍search-filters/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔍search-filters/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🔍search-filters/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod status_records {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📶status-records/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📶status-records/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📶status-records/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod workshops {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎓workshops/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎓workshops/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🎓workshops/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod surveys {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗳️surveys/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗳️surveys/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗳️surveys/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod issues {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🐛issues/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🐛issues/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🐛issues/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod audit_events {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📒audit-events/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📒audit-events/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📒audit-events/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod templates {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📐templates/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📐templates/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📐templates/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod knowledge {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📚knowledge/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📚knowledge/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📚knowledge/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod benchmarks {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏁benchmarks/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏁benchmarks/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏁benchmarks/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod assumptions {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💭assumptions/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💭assumptions/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/💭assumptions/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod constraints {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚧constraints/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚧constraints/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🚧constraints/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod compliance_records {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛂compliance-records/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛂compliance-records/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🛂compliance-records/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod approvals {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👍approvals/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👍approvals/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/👍approvals/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod meetings {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗓️meetings/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗓️meetings/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗓️meetings/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod traces {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧵traces/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧵traces/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧵traces/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod update_meta {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏷️update-meta/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏷️update-meta/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏷️update-meta/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod update_project {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📁update-project/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📁update-project/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/📁update-project/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod update_governance {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏛️update-governance/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏛️update-governance/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🏛️update-governance/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_adjacency {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗺️set-adjacency/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗺️set-adjacency/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🗺️set-adjacency/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod clear_adjacency {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧹clear-adjacency/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧹clear-adjacency/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🧹clear-adjacency/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏛️program/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod information {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/ℹ️information/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/ℹ️information/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/ℹ️information/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod sustainability {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♻️sustainability/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♻️sustainability/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♻️sustainability/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod accessibility {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♿accessibility/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♿accessibility/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/♿accessibility/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod conflicts {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚔️conflicts/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚔️conflicts/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚔️conflicts/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod options {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚖️options/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚖️options/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚖️options/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod functions {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚙️functions/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚙️functions/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚙️functions/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod risks {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚠️risks/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚠️risks/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⚠️risks/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod decisions {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✅decisions/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✅decisions/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✅decisions/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod validations {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✔️validations/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✔️validations/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/✔️validations/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod priorities {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⭐priorities/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⭐priorities/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/⭐priorities/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod flows {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌊flows/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌊flows/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌊flows/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod environmental {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌿environmental/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌿environmental/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🌿environmental/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod workshops {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎓workshops/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎓workshops/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎓workshops/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod scenarios {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎬scenarios/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎬scenarios/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🎬scenarios/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod benchmarks {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏁benchmarks/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏁benchmarks/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏁benchmarks/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod activities {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏃activities/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏃activities/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏃activities/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod infrastructure {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏗️infrastructure/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏗️infrastructure/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏗️infrastructure/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_governance {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏛️update-governance/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏛️update-governance/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏛️update-governance/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod organizational {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏢organizational/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏢organizational/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏢organizational/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_meta {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏷️update-meta/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏷️update-meta/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🏷️update-meta/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod issues {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🐛issues/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🐛issues/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🐛issues/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod approvals {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👍approvals/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👍approvals/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👍approvals/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod stakeholders {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👥stakeholders/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👥stakeholders/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/👥stakeholders/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod quality {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💎quality/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💎quality/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💎quality/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod resilience {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💪resilience/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💪resilience/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💪resilience/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod assumptions {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💭assumptions/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💭assumptions/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💭assumptions/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod costs {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💰costs/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💰costs/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/💰costs/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod update_project {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📁update-project/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📁update-project/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📁update-project/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod documents {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📄documents/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📄documents/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📄documents/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod schedules {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📅schedules/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📅schedules/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📅schedules/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod growth {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📈growth/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📈growth/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📈growth/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod performance {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📊performance/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📊performance/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📊performance/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod operations {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📋operations/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📋operations/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📋operations/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod requirements {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📌requirements/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📌requirements/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📌requirements/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod site_context {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📍site-context/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📍site-context/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📍site-context/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod templates {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📐templates/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📐templates/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📐templates/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod reports {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📑reports/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📑reports/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📑reports/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod audit_events {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📒audit-events/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📒audit-events/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📒audit-events/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod knowledge {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📚knowledge/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📚knowledge/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📚knowledge/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod regulatory {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📜regulatory/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📜regulatory/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📜regulatory/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod changes {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📝changes/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📝changes/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📝changes/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod communication {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📡communication/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📡communication/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📡communication/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod resources {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📦resources/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📦resources/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📦resources/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod status_records {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📶status-records/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📶status-records/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/📶status-records/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod adjacencies {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔀adjacencies/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔀adjacencies/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔀adjacencies/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod processes {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔄processes/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔄processes/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔄processes/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod search_filters {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔍search-filters/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔍search-filters/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔍search-filters/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod access_rules {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔑access-rules/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔑access-rules/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔑access-rules/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod privacy {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔒privacy/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔒privacy/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔒privacy/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod relationships {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔗relationships/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔗relationships/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔗relationships/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod quantities {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔢quantities/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔢quantities/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔢quantities/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod analyses {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔬analyses/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔬analyses/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🔬analyses/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod storage {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗄️storage/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗄️storage/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗄️storage/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod meetings {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗓️meetings/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗓️meetings/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗓️meetings/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod surveys {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗳️surveys/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗳️surveys/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗳️surveys/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_adjacency {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗺️set-adjacency/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗺️set-adjacency/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🗺️set-adjacency/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod delivery {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚚delivery/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚚delivery/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚚delivery/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod constraints {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚧constraints/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚧constraints/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🚧constraints/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod compliance_records {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛂compliance-records/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛂compliance-records/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛂compliance-records/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod services {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛎️services/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛎️services/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛎️services/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod equipment {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛠️equipment/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛠️equipment/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛠️equipment/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod security {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛡️security/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛡️security/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🛡️security/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod collaboration {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🤝collaboration/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🤝collaboration/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🤝collaboration/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod safety {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🦺safety/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🦺safety/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🦺safety/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod users {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧑users/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧑users/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧑users/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod human_factors {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧠human-factors/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧠human-factors/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧠human-factors/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod flexibility {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧩flexibility/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧩flexibility/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧩flexibility/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod wayfinding {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧭wayfinding/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧭wayfinding/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧭wayfinding/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod elements {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧱elements/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧱elements/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧱elements/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod traces {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧵traces/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧵traces/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧵traces/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod clear_adjacency {
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧹clear-adjacency/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧹clear-adjacency/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏛️program/🧬️schema/🧬️mutations/🧹clear-adjacency/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "../../🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🏛️program/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🏛️program/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-        #[path = "../../🗿️artifacts/🏛️program/📡️spr/🦀️component.rs"]
-        pub mod spr;
-
+        pub mod op { pub use crate::artifacts::program::schema::mutations::text::*; pub use crate::artifacts::program::schema::mutations::ProgramMutation; }
+        pub mod dsl { pub use crate::artifacts::program::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::program::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::program::schema::diff::*; pub use crate::artifacts::program::schema::diff::text::*; pub mod schema { pub use crate::artifacts::program::schema::diff::*; } pub mod text { pub use crate::artifacts::program::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::program::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::program::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::program::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🏛️program/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🏛️program/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🏛️program/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod xlsx {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📕️xlsx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod zip {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod csv {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod xlsx {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod zip {
+                            #[path = "../../🗿️artifacts/🏛️program/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod csv {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/📊️csv/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::export::serializers::artifacts::csv::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/📊️csv/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::import::deserializers::artifacts::csv::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod xlsx {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/📕️xlsx/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::export::serializers::artifacts::xlsx::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/📕️xlsx/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::import::deserializers::artifacts::xlsx::*;
                 }
             }
             #[path = "."]
             pub mod zip {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/🎒️zip/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::export::serializers::artifacts::zip::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏛️program/🚪️io/🎒️zip/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::program::io::import::deserializers::artifacts::zip::*;
                 }
             }
         }
@@ -860,27 +848,26 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🦀️component.rs"]
             mod component;
             pub use component::*;
-
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/↔️adjacency/🦀️component.rs"]
             pub mod adjacency;
-            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🔬️analyze/🦀️component.rs"]
-            pub mod analyze;
-            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/📤️exchange/🦀️component.rs"]
-            pub mod exchange;
+            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/✅️validate/🦀️component.rs"]
+            pub mod validate;
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🎁️outputs/🦀️component.rs"]
             pub mod outputs;
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/📄️report/🦀️component.rs"]
             pub mod report;
-            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🔍️search/🦀️component.rs"]
-            pub mod search;
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/📊️status-summary/🦀️component.rs"]
             pub mod status_summary;
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs"]
             pub mod template;
+            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/📤️exchange/🦀️component.rs"]
+            pub mod exchange;
+            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🔍️search/🦀️component.rs"]
+            pub mod search;
+            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🔬️analyze/🦀️component.rs"]
+            pub mod analyze;
             #[path = "../../🗿️artifacts/🏛️program/⚙️engine/🧭️trace/🦀️component.rs"]
             pub mod trace;
-            #[path = "../../🗿️artifacts/🏛️program/⚙️engine/✅️validate/🦀️component.rs"]
-            pub mod validate;
         }
     }
 }

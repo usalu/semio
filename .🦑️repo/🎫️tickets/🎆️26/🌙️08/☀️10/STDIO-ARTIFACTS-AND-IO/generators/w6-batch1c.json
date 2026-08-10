@@ -1,0 +1,14 @@
+[
+  {"plugin": "📜️imperative", "artifact": "📜️imperative", "rust_mod": "imperative", "crate": "semio-s-plugin-imperative", "extras": []},
+  {"plugin": "📸️remodel", "artifact": "📸️remodel", "rust_mod": "remodel", "crate": "semio-s-plugin-remodel", "extras": []},
+  {"plugin": "🎪️demonstrator", "artifact": "🎪️playground", "rust_mod": "playground", "crate": "semio-s-plugin-demonstrator", "extras": []},
+  {"plugin": "🎞️animate", "artifact": "🎬️present", "rust_mod": "present", "crate": "semio-s-plugin-animate", "extras": []},
+  {"plugin": "🎥️shooting", "artifact": "🎥️shooting", "rust_mod": "shooting", "crate": "semio-s-plugin-shooting", "extras": []},
+  {"plugin": "🎬️sequence", "artifact": "🎬️sequence", "rust_mod": "sequence", "crate": "semio-s-plugin-sequence", "extras": []},
+  {"plugin": "🏛️architect", "artifact": "🏛️program", "rust_mod": "program", "crate": "semio-s-plugin-architect", "extras": ["kernel", "registers"]},
+  {"plugin": "🏭️process", "artifact": "🧊️process3d", "rust_mod": "process3d", "crate": "semio-s-plugin-process", "extras": []},
+  {"plugin": "💠️lowpoly", "artifact": "💠️lowpoly", "rust_mod": "lowpoly", "crate": "semio-s-plugin-lowpoly", "extras": []},
+  {"plugin": "💡️reasoning", "artifact": "🔌️wires", "rust_mod": "wires", "crate": "semio-s-plugin-reasoning", "extras": []},
+  {"plugin": "🪐️space", "artifact": "🏠️home", "rust_mod": "home", "crate": "semio-s-plugin-space", "extras": []},
+  {"plugin": "🪵️sourcing", "artifact": "🗂️curate", "rust_mod": "curate", "crate": "semio-s-plugin-sourcing", "extras": []}
+]

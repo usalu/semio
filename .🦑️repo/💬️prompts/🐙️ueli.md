@@ -375,6 +375,83 @@ Artifacts must be versionable independantely.
 
 ---
 
+The current import export architecture is extremely adhoc.
+Make sure that every single artifact can be
+
+```
+s
+  plugins
+    stdio
+      artifacts
+        <artifact> # e.g. gltf, pdf, png, etc
+          schema
+            <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc,
+              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                component.rs
+                component.ts
+                …
+          io
+            import
+              deserializers
+                artifacts
+                  <artifact> # e.g. json for gltf, binary for glb, etc
+                    <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                      <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                        component.rs
+                        component.ts
+                        …
+                      component.rs
+                      component.ts
+                      …
+                    component.rs
+                    component.ts
+                    …
+                  component.rs
+                  component.ts
+                  …
+                component.rs
+                component.ts
+                …
+              component.rs
+              component.ts
+              …
+            export
+              serializers
+                artifacts
+                  <artifact> # e.g. json for gltf, binary for glb, etc
+                    <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                      <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                        component.rs
+                        component.ts
+                        …
+                      component.rs
+                      component.ts
+                      …
+                    component.rs
+                    component.ts
+                    …
+                  component.rs
+                  component.ts
+                  …
+                component.rs
+                component.ts
+                …
+              component.rs
+              component.ts
+              …
+          component.rs
+          component.ts
+          …
+        component.rs
+        component.ts
+        …
+      component.rs
+      component.ts
+      …
+```
+
+---
+
 The exporter and importers are still extremely adhoc.
 Every artifact must be importable and exportable to existing file types.
 Existing file types are now also just artifacts. A existing wkt such as gltf uses other artifacts (json for .gltf, binary for .glb) for io.

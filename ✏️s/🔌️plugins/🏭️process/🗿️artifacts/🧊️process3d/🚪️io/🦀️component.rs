@@ -1,52 +1,27 @@
-//! 🚪️ 🧊️process3d IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Dwg, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Glb, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Gltf, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Ifc, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Obj, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Png, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Step, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Stl, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ process3d artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::dwg::export::register();
-        super::dwg::import::register();
-        super::glb::export::register();
-        super::glb::import::register();
-        super::gltf::export::register();
-        super::gltf::import::register();
-        super::ifc::export::register();
-        super::ifc::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::obj::export::register();
-        super::obj::import::register();
-        super::png::export::register();
-        super::png::import::register();
-        super::step::export::register();
-        super::step::import::register();
-        super::stl::export::register();
-        super::stl::import::register();
-    }
-}
-
+//! process3d IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::dwg::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::glb::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::gltf::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::ifc::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::obj::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::png::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::step::register();
+    crate::artifacts::process3d::io::import::deserializers::artifacts::stl::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::dwg::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::glb::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::gltf::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::ifc::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::json::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::obj::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::png::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::step::register();
+    crate::artifacts::process3d::io::export::serializers::artifacts::stl::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
+}

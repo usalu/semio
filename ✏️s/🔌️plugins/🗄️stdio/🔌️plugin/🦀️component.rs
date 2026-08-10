@@ -29,6 +29,7 @@ pub fn plugin() -> Plugin {
     crate::artifacts::bmp::engine::register();
     crate::artifacts::svg::engine::register();
     crate::artifacts::dxf::engine::register();
+    crate::artifacts::dwg::engine::register();
     crate::artifacts::ply::engine::register();
     crate::artifacts::stl::engine::register();
     crate::artifacts::obj::engine::register();
@@ -60,6 +61,7 @@ pub fn plugin() -> Plugin {
         .artifact_kind(crate::artifacts::bmp::artifact_kind())
         .artifact_kind(crate::artifacts::svg::artifact_kind())
         .artifact_kind(crate::artifacts::dxf::artifact_kind())
+        .artifact_kind(crate::artifacts::dwg::artifact_kind())
         .artifact_kind(crate::artifacts::ply::artifact_kind())
         .artifact_kind(crate::artifacts::stl::artifact_kind())
         .artifact_kind(crate::artifacts::obj::artifact_kind())

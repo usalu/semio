@@ -1,0 +1,4 @@
+module Cad_diff;
+type Document = unit {
+    payload: bytes &eod;
+};

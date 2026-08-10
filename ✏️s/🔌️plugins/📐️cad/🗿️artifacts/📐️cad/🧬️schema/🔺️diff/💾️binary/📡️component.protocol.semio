@@ -1,0 +1,3 @@
+dialect protocol cad.diff
+magic = %x00
+payload = *OCTET

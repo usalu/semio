@@ -1,34 +1,20 @@
-//! 🚪️ ➗️mathematical IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Csv, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Md, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ mathematical artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::csv::export::register();
-        super::csv::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::md::export::register();
-        super::md::import::register();
-    }
-}
-
+//! mathematical IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::mathematical::io::import::deserializers::artifacts::csv::register();
+    crate::artifacts::mathematical::io::export::serializers::artifacts::csv::register();
+    crate::artifacts::mathematical::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::mathematical::io::export::serializers::artifacts::json::register();
+    crate::artifacts::mathematical::io::import::deserializers::artifacts::md::register();
+    crate::artifacts::mathematical::io::export::serializers::artifacts::md::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md"] }
+pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md"] }
+pub fn mathematical_to_wire(from: &crate::artifacts::mathematical::MathematicalSnapshot) -> Vec<u8> {
+    store::DocumentPack::encode_pack(from)
+}
+pub fn mathematical_from_wire(bytes: &[u8]) -> Result<crate::artifacts::mathematical::MathematicalSnapshot, store::PackError> {
+    <crate::artifacts::mathematical::MathematicalSnapshot as store::DocumentPack>::decode_pack(bytes)
+}
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
+    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
+}

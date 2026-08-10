@@ -1,7 +1,4 @@
-/**
- * 🚪️ CAD IO facet — format table + WASM/host bridge facades.
- */
-
+/** CAD IO facet — curated stdio matrix. */
 export const CAD_IO_FORMATS = ["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"] as const;
 export type CadIoFormat = (typeof CAD_IO_FORMATS)[number];
 

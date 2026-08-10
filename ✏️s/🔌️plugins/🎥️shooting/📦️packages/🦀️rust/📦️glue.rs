@@ -29,295 +29,388 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎥️shooting/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
-            #[path = "../../🗿️artifacts/🎥️shooting/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
+            #[path = "."]
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod translate_assets {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↔️translate-assets/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↔️translate-assets/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↔️translate-assets/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod scale_assets {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↕️scale-assets/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↕️scale-assets/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/↕️scale-assets/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod patch_scene {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/☀️patch-scene/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/☀️patch-scene/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/☀️patch-scene/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod saved_cameras {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎥saved-cameras/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎥saved-cameras/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎥saved-cameras/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_active_shot {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎯set-active-shot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎯set-active-shot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🎯set-active-shot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_active_asset {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📌set-active-asset/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📌set-active-asset/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📌set-active-asset/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod assets {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📦assets/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📦assets/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📦assets/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_shot_camera {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📷set-shot-camera/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📷set-shot-camera/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📷set-shot-camera/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod shots {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📸shots/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📸shots/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/📸shots/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod rotate_assets {
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🔄rotate-assets/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🔄rotate-assets/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🧬️mutations/🔄rotate-assets/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+            }
         }
-
-        #[path = "../../🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs"]
-        pub mod op;
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "."]
-            pub mod assets {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod shots {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod saved_cameras {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_active_shot {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_active_asset {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_shot_camera {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod patch_scene {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod translate_assets {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod rotate_assets {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod scale_assets {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-        }
-
-        #[path = "../../🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🎥️shooting/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🎥️shooting/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-        pub use snapshot::pack;
-        #[path = "../../🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        pub mod op { pub use crate::artifacts::shooting::schema::mutations::text::*; pub use crate::artifacts::shooting::schema::mutations::ShootingMutation; }
+        pub mod dsl { pub use crate::artifacts::shooting::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::shooting::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::shooting::schema::diff::*; pub use crate::artifacts::shooting::schema::diff::text::*; pub mod schema { pub use crate::artifacts::shooting::schema::diff::*; } pub mod text { pub use crate::artifacts::shooting::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::shooting::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::shooting::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::shooting::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🎥️shooting/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🎥️shooting/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod bmp {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️bmp/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod gif {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod jpg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️jpg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod tiff {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️tiff/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod bmp {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod gif {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod jpg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod tiff {
+                            #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod bmp {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖼️bmp/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::bmp::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖼️bmp/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::bmp::*;
                 }
             }
             #[path = "."]
             pub mod dwg {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::dwg::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::dwg::*;
                 }
             }
             #[path = "."]
             pub mod gif {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🎞️gif/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::gif::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🎞️gif/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::gif::*;
                 }
             }
             #[path = "."]
             pub mod jpg {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📷️jpg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::jpg::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📷️jpg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::jpg::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod pdf {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::pdf::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::pdf::*;
                 }
             }
             #[path = "."]
             pub mod png {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📷️png/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::png::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/📷️png/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::png::*;
                 }
             }
             #[path = "."]
             pub mod svg {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🎨️svg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::svg::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🎨️svg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::svg::*;
                 }
             }
             #[path = "."]
             pub mod tiff {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖼️tiff/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::export::serializers::artifacts::tiff::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🎥️shooting/🚪️io/🖼️tiff/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::shooting::io::import::deserializers::artifacts::tiff::*;
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+        }
     }
 }
 //#endregion 🗿️Artifacts

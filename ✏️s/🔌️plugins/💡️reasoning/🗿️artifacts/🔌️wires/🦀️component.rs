@@ -13,6 +13,10 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
+pub use crate::artifacts::wires::schema::mutations::WiresMutation;
+
+pub use crate::artifacts::wires::schema::diff::WiresDiff;
+
 pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
 /// 🕸️ Mindmap's own board fixture schema — recognized by the neutral force-graph-layout crate
 /// (`infinite_board_normal_undirected`) as an undirected graph, distinct from puzzle's directed
@@ -22,7 +26,7 @@ pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
 
 //#region 🔖️Types
 /// 📸️ Persisted wires snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::wires::snapshot::schema::WiresSnapshot;
+pub use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
 pub use crate::artifacts::wires::schema::WiresArtifact;
 //#endregion 🔖️Types
 
@@ -64,8 +68,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: MINDMAP_WIRES_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
     }
 }
 //#endregion 🔖️ArtifactKind

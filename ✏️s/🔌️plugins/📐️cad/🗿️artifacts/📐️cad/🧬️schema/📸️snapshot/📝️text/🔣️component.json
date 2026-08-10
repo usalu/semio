@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/cad/snapshot/text.json",
+  "title": "CadSnapshotText",
+  "type": "object"
+}

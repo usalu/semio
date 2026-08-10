@@ -30,7 +30,6 @@ import {
   frameworkOsPlaygroundDefaultPort,
   frameworkOsLockedPrefsEnv,
   resolveTestLevel,
-  withViteConfigLoader,
   cargoProfileDir,
   semioBuildMode,
   semioShipEnv,
@@ -1357,9 +1356,10 @@ class BuildScript extends BundleScript {
     }
     await buildEngineWasm(plugin, renderer);
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments]), {
-      cwd: this.root,
-      env: {
+    const viteStatus = runBunxStatus(
+      ["vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments],
+      this.root,
+      {
         ...semioShipEnv(),
         SEMIO_PLUGIN: plugin,
         SEMIO_RENDERER: renderer,
@@ -1369,7 +1369,8 @@ class BuildScript extends BundleScript {
         ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
         ...frameworkOsLockedPrefsEnv(),
       },
-    });
+    );
+    if (viteStatus !== 0) throw new Error("framework OS Vite build failed");
   }
 }
 
