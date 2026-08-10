@@ -20,9 +20,10 @@ impl ArtifactBuilder for JackBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<JackSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
         crate::artifacts::jack::schema::mutations::apply_trinity_graph_mutation(&mut self.snapshot, &mutation);
-        self
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <JackDiff as protocol::MutationDiff<JackSnapshot>>::apply(&diff, &self.snapshot);

@@ -20,11 +20,14 @@ pub enum MdMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) {
+pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> MdDiff {
+    let __diff = <MdMutation as protocol::Mutation<MdSnapshot>>::diff(mutation, snapshot);
     match mutation {
         MdMutation::NoMutation => {}
         MdMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

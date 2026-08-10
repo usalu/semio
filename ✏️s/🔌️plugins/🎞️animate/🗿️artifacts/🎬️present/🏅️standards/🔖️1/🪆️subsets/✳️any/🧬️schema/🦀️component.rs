@@ -69,7 +69,7 @@ impl PresentArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.animate.present` — fifteen handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.animate.present` — twenty handcrafted schema leaves.
 pub fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.animate.present",
@@ -93,6 +93,13 @@ pub fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
         },
     }
 }

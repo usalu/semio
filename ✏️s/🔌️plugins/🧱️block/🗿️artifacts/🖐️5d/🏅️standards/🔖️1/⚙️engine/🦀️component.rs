@@ -208,25 +208,4 @@ impl Block5dEngine {
         Self { artifact, snapshot }
     }
 }
-
-impl protocol::ArtifactEngine for Block5dEngine {
-    type Artifact = crate::artifacts::block5d::schema::Block5dArtifact;
-    type Snapshot = Block5dSnapshot;
-    type Mutation = crate::artifacts::block5d::mutations::Block5dMutation;
-    type Diff = crate::artifacts::block5d::diff::Block5dDiff;
-
-    fn artifact(&self) -> &Self::Artifact { &self.artifact }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::block5d::mutations::apply_block5d_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

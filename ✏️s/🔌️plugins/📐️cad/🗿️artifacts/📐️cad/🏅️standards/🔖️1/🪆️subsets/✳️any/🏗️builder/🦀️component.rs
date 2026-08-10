@@ -53,10 +53,10 @@ impl ArtifactBuilder for CadBuilder {
         Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
 
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
         let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
         self.snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot);
-        self
+        (self, diff)
     }
 
     fn absorb(mut self, diff: Self::Diff) -> Self {

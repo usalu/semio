@@ -20,11 +20,14 @@ pub enum DxfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) {
+pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> DxfDiff {
+    let __diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
     match mutation {
         DxfMutation::NoMutation => {}
         DxfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

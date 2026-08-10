@@ -20,9 +20,10 @@ impl ArtifactBuilder for Procedural2dBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
         crate::artifacts::procedural2d::schema::mutations::apply_procedural2d_mutation(&mut self.snapshot, &mutation);
-        self
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <Procedural2dDiff as protocol::MutationDiff<Procedural2dSnapshot>>::apply(&diff, &self.snapshot);

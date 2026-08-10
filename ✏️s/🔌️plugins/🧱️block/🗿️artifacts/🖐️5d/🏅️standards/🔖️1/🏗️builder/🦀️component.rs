@@ -15,7 +15,7 @@ impl ArtifactBuilder for Block5dBuilder {
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(Block5dAnyBuilder::from_snapshot(snapshot)) }
     fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(Block5dAnyBuilder::from_text(text)?)) }
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(Block5dAnyBuilder::from_binary(bytes)?)) }
-    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) { let (inner, diff) = self.0.mutate(mutation); (Self(inner), diff) }
     fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
     fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

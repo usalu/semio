@@ -27,9 +27,9 @@ impl ArtifactBuilder for JsonBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot);

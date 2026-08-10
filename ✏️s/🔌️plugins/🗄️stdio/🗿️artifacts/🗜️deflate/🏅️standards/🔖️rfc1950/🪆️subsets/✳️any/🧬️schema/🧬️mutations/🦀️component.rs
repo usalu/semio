@@ -20,11 +20,14 @@ pub enum DeflateMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) {
+pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> DeflateDiff {
+    let __diff = <DeflateMutation as protocol::Mutation<DeflateSnapshot>>::diff(mutation, snapshot);
     match mutation {
         DeflateMutation::NoMutation => {}
         DeflateMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

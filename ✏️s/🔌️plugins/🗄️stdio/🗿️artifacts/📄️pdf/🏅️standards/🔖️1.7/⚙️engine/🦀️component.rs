@@ -1468,6 +1468,10 @@ pub fn register() {
         crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor(),
     );
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️a-2b subset's SubsetValidator so
+    // `io_dispatch`/`wire_artifact_compose` re-check it for free. The a-2b ComposerEntry itself
+    // is registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::pdf::standards::v1_7::subsets::a2b::composer::register();
 }
 //#endregion 🔖️Register
 
@@ -1476,20 +1480,6 @@ pub struct PdfEngine { artifact_state: PdfArtifact, snapshot_state: PdfSnapshot 
 impl PdfEngine {
     pub fn new(snapshot: PdfSnapshot) -> Self {
         Self { artifact_state: PdfArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
-    }
-}
-impl protocol::ArtifactEngine for PdfEngine {
-    type Artifact = PdfArtifact; type Snapshot = PdfSnapshot; type Mutation = PdfMutation; type Diff = PdfDiff;
-    fn artifact(&self) -> &Self::Artifact { &self.artifact_state }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot_state }
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot_state);
-        self.snapshot_state = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot_state);
-        self.artifact_state.set_snapshot(self.snapshot_state.clone());
-        Ok(diff)
-    }
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot_state)
     }
 }
 //#endregion 🔖️Engine

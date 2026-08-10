@@ -1,7 +1,8 @@
 //! 🧬️ GifArtifact schema — full artifact state.
 
-use crate::artifacts::gif::schema::snapshot::RasterImage;
-use crate::artifacts::gif::GifSnapshot;
+// 🔀️ S-6: `crate::artifacts::gif::schema` now shims to 89a (canonical) -- 87a's own schema uses
+// its own standard-local snapshot type directly rather than the shared root re-export.
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifSnapshot, RasterImage};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -56,6 +57,13 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
         },
     }
 }

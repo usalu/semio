@@ -16,14 +16,14 @@ pub struct PdfBuilder {
 impl PdfBuilder {
     /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
     /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
-    pub fn add_page(mut self, page: PdfPage) -> Self {
+    pub fn add_page(self, page: PdfPage) -> Self {
         let index = self.snapshot.pages.len();
-        self = self.mutate(PdfMutation::InsertPage { index, page });
-        self
+        let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
+        next
     }
-    pub fn set_info(mut self, info: PdfInfo) -> Self {
-        self = self.mutate(PdfMutation::SetInfo { info });
-        self
+    pub fn set_info(self, info: PdfInfo) -> Self {
+        let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
+        next
     }
 }
 
@@ -43,9 +43,9 @@ impl ArtifactBuilder for PdfBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_pdf_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot);

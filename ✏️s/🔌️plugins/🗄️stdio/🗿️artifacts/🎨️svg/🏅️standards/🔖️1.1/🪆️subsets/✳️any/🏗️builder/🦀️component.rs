@@ -306,9 +306,9 @@ impl ArtifactBuilder for SvgBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot);

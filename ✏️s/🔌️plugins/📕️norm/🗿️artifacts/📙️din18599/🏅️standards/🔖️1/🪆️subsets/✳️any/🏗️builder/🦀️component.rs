@@ -20,10 +20,10 @@ impl ArtifactBuilder for Din18599Builder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<Din18599Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
         let d = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation, &self.snapshot);
         self.snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(&d, &self.snapshot);
-        self
+        (self, d)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(&diff, &self.snapshot);

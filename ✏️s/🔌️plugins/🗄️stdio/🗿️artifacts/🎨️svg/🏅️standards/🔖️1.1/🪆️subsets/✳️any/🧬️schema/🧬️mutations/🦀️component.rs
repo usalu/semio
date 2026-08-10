@@ -62,7 +62,11 @@ pub enum SvgMutation {
 /// signature (matches `ArtifactBuilder::mutate`'s infallible contract), so a bad path can't be
 /// surfaced as a typed error here; callers that need failure feedback should validate the path via
 /// `node_at`/`node_at_mut` first.
-pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) {
+pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> SvgDiff {
+    // 🚧️ Not `<SvgMutation as protocol::Mutation<SvgSnapshot>>::diff(mutation, snapshot)` here --
+    // `Mutation::diff`'s apply-and-capture fallback arm (below) itself calls `apply_svg_mutation`
+    // on a clone, so computing the diff via `.diff()` up front would recurse infinitely. Instead
+    // the diff is derived the same way `.diff()` does: mutate in place, then read the result back.
     match mutation {
         SvgMutation::NoMutation => {}
         SvgMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
@@ -101,6 +105,12 @@ pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) {
                 set_element_attr(node, "transform", transform.as_ref().map(|ops| transform_list_to_string(ops)));
             }
         }
+    }
+
+    match mutation {
+        SvgMutation::NoMutation => SvgDiff::default(),
+        SvgMutation::SetSnapshot { snapshot: next } => diff_set_snapshot(next),
+        _ => diff_set_snapshot(snapshot),
     }
 }
 //#endregion 🔖️Apply

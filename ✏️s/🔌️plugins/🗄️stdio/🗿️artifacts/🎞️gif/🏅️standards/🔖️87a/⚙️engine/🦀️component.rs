@@ -4,7 +4,10 @@
 //! instead of duplicating the codec (same "engine functions reused across dialects" shape zip
 //! uses for deflate) — see `standards::v89a::engine`.
 
-use crate::artifacts::gif::{schema::snapshot::RasterImage, GifArtifact, GifDiff, GifMutation, GifSnapshot, STDIO_GIF_DOCUMENT_SCHEMA};
+// 🔀️ S-6: `crate::artifacts::gif::schema` now shims to 89a (canonical) -- 87a's own engine uses
+// its own standard-local schema path directly rather than the shared root re-export.
+use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::{GifSnapshot, RasterImage}, GifArtifact};
 use std::collections::HashMap;
 
 //#region BitIO
@@ -438,7 +441,7 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
 
 pub fn register() {
     crate::artifacts::gif::composer::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::schema::gif_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
 }
 
@@ -446,20 +449,6 @@ pub struct GifEngine { artifact_state: GifArtifact, snapshot_state: GifSnapshot 
 impl GifEngine {
     pub fn new(snapshot: GifSnapshot) -> Self {
         Self { artifact_state: GifArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
-    }
-}
-impl protocol::ArtifactEngine for GifEngine {
-    type Artifact = GifArtifact; type Snapshot = GifSnapshot; type Mutation = GifMutation; type Diff = GifDiff;
-    fn artifact(&self) -> &Self::Artifact { &self.artifact_state }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot_state }
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot_state);
-        self.snapshot_state = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot_state);
-        self.artifact_state.set_snapshot(self.snapshot_state.clone());
-        Ok(diff)
-    }
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot_state)
     }
 }
 

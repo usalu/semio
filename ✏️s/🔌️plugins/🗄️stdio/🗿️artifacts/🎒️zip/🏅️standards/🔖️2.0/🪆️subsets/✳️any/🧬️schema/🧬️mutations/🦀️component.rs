@@ -20,11 +20,14 @@ pub enum ZipMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) {
+pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> ZipDiff {
+    let __diff = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(mutation, snapshot);
     match mutation {
         ZipMutation::NoMutation => {}
         ZipMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

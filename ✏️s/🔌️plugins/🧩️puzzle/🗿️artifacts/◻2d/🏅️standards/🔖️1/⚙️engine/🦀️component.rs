@@ -256,30 +256,4 @@ impl Puzzle2dEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for Puzzle2dEngine {
-    type Artifact = crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
-    type Snapshot = crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-    type Mutation = crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-    type Diff = crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::puzzle2d::mutations::apply_puzzle2d_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

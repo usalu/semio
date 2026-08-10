@@ -611,32 +611,6 @@ impl Vdi3805Engine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for Vdi3805Engine {
-    type Artifact = crate::artifacts::vdi3805::schema::Vdi3805Artifact;
-    type Snapshot = crate::artifacts::vdi3805::Vdi3805Snapshot;
-    type Mutation = crate::artifacts::vdi3805::mutations::Vdi3805Mutation;
-    type Diff = crate::artifacts::vdi3805::diff::Vdi3805Diff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 
@@ -896,7 +870,7 @@ pub fn register_pilot_languages() {
 //#region 🔖️SchemaRegistry
 use std::sync::{Mutex, OnceLock};
 
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.vdi3805`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.vdi3805`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor());
 }

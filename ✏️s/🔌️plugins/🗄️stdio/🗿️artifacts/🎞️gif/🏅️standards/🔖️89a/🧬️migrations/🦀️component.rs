@@ -8,7 +8,9 @@
 //! scope note); `register()` below wires it into `store`'s new dialect-migration registry purely
 //! to prove that registry works end-to-end on a real case.
 
-use crate::artifacts::gif::GifSnapshot as Gif87aSnapshot;
+// 🔀️ S-6: `crate::artifacts::gif::schema`/`GifSnapshot` now shim to 89a (canonical) -- this
+// migration explicitly names both standards' own local snapshot types instead.
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot as Gif87aSnapshot;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifDisposal, GifFrame, GifSnapshot as Gif89aSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
 //#region Migrate
@@ -71,7 +73,7 @@ pub fn register() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::schema::snapshot::RasterImage;
+    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::RasterImage;
 
     /// 🎨️ A real 2x2, 4-distinct-opaque-color RGBA image — small enough to hand-inspect,
     /// varied enough (four different colors, one per pixel) to catch a migration that scrambles

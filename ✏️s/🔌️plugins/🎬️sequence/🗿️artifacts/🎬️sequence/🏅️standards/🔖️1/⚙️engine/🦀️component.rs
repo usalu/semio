@@ -1193,36 +1193,10 @@ impl SequenceEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for SequenceEngine {
-    type Artifact = crate::artifacts::sequence::schema::SequenceArtifact;
-    type Snapshot = crate::artifacts::sequence::SequenceSnapshot;
-    type Mutation = crate::artifacts::sequence::mutations::SequenceMutation;
-    type Diff = crate::artifacts::sequence::diff::SequenceDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.sequence.sequence`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.sequence.sequence`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::sequence::schema::sequence_artifact_schema_descriptor());
 }

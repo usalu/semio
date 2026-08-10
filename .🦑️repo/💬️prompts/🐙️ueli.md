@@ -366,71 +366,61 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Complete all artifact implementations for all artifacts and standards and subsets.
+Make sure that all artifacts implement all serializers and deserializers and all importers and exporters to all possible other artifacts.
+
+---
+
 ```
 s
   plugins
     stdio
       artifacts
-        <artifact> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
-          standards
-            <standard> # e.g. 1.6 for pdf, 2x3 for ifc, AP225 for STEP, etc,
-              builder # only for creating new artifacts
-                component.rs
-                component.ts
-                …
-              analyzer # read-only for existing artifacts - former decomposer
-                component.rs
-                component.ts
-                …
-              composer # combining builder and analyzer
-                component.rs
-                component.ts
-                …
-              subsets
-                <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-                  snapshot
-                    …
-                  diff
-                    …
-                  mutations
-                    …
-                  builder # only for creating new artifacts
-                    component.rs
-                    component.ts
-                    …
-                  analyzer # read-only for existing artifacts - former decomposer
-                    component.rs
-                    component.ts
-                    …
-                  composer # combining builder and analyzer
-                    component.rs
-                    component.ts
-                    …
-                  io
-                    import
-                      deserializers
-                        artifacts
-                          <artifact> # e.g. json for gltf, binary for glb, etc
-                            <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
-                              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-                                component.rs
-                                component.ts
-                                …
-                              component.rs
-                              component.ts
-                              …
+        <artifact> # e.g. brep, mesh, document, cad, drawing, raster, video, audio, animation, etc.
+          schema
+            snapshot
+              …
+            diff
+              …
+            mutations
+              …
+          io
+            importers
+              formats
+                <format> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+                  standards
+                    <standard> # e.g. 2.0 for pdf, 4x3 for ifc, AP225 for STEP, etc,
+                      subsets
+                        <subset> # e.g. x, vt, h for pdf, cv20, sav, cobie for ifc 2x3, cc0, cc1, cc2, cc3, cc4, cc5, cc6 for STEP, etc
+                        deserializers
+                          <deserializer> # e.g. json, binary, etc
                             component.rs
                             component.ts
                             …
                           component.rs
                           component.ts
                           …
-                        component.rs
-                        component.ts
-                        …
-                      component.rs
-                      component.ts
-                      …
+            exporters
+              formats
+                <format> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+                  standards
+                    <standard> # e.g. 2.0 for pdf, 4x3 for ifc, AP225 for STEP, etc,
+                      subsets
+                        <subset> # e.g. x, vt, h for pdf, cv20, sav, cobie for ifc 2x3, cc0, cc1, cc2, cc3, cc4, cc5, cc6 for STEP, etc
+                        serializers
+                          <serializer> # e.g. json, binary, etc
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
+      formats
+        <format> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+          standards
+            <standard> # e.g. 2.0 for pdf, 4x3 for ifc, AP225 for STEP, etc,
+              subsets
+                <subset> # e.g. x, vt, h for pdf, cv20, sav, cobie for ifc 2x3, cc0, cc1, cc2, cc3, cc4, cc5, cc6 for STEP, etc
 ```
 
 ---

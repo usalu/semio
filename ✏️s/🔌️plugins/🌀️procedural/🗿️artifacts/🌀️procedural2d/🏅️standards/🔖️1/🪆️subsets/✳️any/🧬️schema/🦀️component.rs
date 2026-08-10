@@ -63,7 +63,7 @@ impl Procedural2dArtifact {
 }
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.procedural.procedural2d` — fifteen handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.procedural.procedural2d` — twenty handcrafted schema leaves.
 pub fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.procedural.procedural2d",
@@ -72,18 +72,29 @@ pub fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
             json_schema: include_str!("🔣️component.json"),
-            proto: include_str!("🛰️component.proto")},
+            proto: include_str!("🛰️component.proto"),
+        },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️component.rs"),
             typescript: include_str!("📸️snapshot/🟦️component.ts"),
             graphql: include_str!("📸️snapshot/🔗️component.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️component.json"),
-            proto: include_str!("📸️snapshot/🛰️component.proto")},
+            proto: include_str!("📸️snapshot/🛰️component.proto"),
+        },
         diff: schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️component.rs"),
             typescript: include_str!("🔺️diff/🟦️component.ts"),
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
-            proto: include_str!("🔺️diff/🛰️component.proto")}}
+            proto: include_str!("🔺️diff/🛰️component.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
+        },
+    }
 }
 //#endregion 🔖️Descriptor

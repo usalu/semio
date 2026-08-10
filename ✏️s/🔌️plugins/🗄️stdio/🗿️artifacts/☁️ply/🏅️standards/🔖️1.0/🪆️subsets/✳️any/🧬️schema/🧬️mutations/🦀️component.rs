@@ -20,11 +20,14 @@ pub enum PlyMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) {
+pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> PlyDiff {
+    let __diff = <PlyMutation as protocol::Mutation<PlySnapshot>>::diff(mutation, snapshot);
     match mutation {
         PlyMutation::NoMutation => {}
         PlyMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

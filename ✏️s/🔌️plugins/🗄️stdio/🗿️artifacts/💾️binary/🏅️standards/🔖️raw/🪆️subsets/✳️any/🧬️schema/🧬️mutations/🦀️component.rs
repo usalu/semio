@@ -20,11 +20,14 @@ pub enum BinaryMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) {
+pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> BinaryDiff {
+    let __diff = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(mutation, snapshot);
     match mutation {
         BinaryMutation::NoMutation => {}
         BinaryMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

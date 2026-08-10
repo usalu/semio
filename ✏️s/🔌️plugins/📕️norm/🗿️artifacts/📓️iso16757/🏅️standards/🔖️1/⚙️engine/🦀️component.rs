@@ -656,32 +656,6 @@ impl Iso16757Engine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for Iso16757Engine {
-    type Artifact = crate::artifacts::iso16757::schema::Iso16757Artifact;
-    type Snapshot = crate::artifacts::iso16757::Iso16757Snapshot;
-    type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
-    type Diff = crate::artifacts::iso16757::diff::Iso16757Diff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 
@@ -1254,7 +1228,7 @@ pub fn register_pilot_languages() {
 //#region 🔖️SchemaRegistry
 use std::sync::{Mutex, OnceLock};
 
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.iso16757`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.iso16757`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor());
 }

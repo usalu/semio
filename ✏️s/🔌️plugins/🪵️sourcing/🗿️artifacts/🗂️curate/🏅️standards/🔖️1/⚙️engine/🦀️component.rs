@@ -863,30 +863,4 @@ impl SourcingEngine {
         }
     }
 }
-
-impl protocol::ArtifactEngine for SourcingEngine {
-    type Artifact = CurateArtifact;
-    type Snapshot = CurateSnapshot;
-    type Mutation = crate::artifacts::curate::mutations::SourcingMutation;
-    type Diff = crate::artifacts::curate::diff::CurateDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.cached_snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.cached_snapshot);
-        self.artifact = diff.apply_to_artifact(&self.artifact);
-        self.cached_snapshot = self.artifact.to_snapshot();
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.artifact.to_snapshot())
-    }
-}
 //#endregion 🔖️ArtifactEngine

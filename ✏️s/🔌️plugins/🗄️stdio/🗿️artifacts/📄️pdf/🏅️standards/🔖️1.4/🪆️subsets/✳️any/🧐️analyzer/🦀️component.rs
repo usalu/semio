@@ -2,7 +2,7 @@
 //! PdfDecomposer. Real logic; artifact/standard levels delegate here.
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 
 //#region 🔖️Parts
 /// 🧩 Analyzed `stdio.pdf` parts.

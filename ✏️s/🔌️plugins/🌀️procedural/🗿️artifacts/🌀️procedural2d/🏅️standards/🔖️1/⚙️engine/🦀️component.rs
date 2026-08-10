@@ -340,30 +340,4 @@ impl Procedural2dEngine {
         Self { artifact, snapshot }
     }
 }
-
-impl protocol::ArtifactEngine for Procedural2dEngine {
-    type Artifact = crate::artifacts::procedural2d::schema::Procedural2dArtifact;
-    type Snapshot = crate::artifacts::procedural2d::Procedural2dSnapshot;
-    type Mutation = crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-    type Diff = crate::artifacts::procedural2d::diff::Procedural2dDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

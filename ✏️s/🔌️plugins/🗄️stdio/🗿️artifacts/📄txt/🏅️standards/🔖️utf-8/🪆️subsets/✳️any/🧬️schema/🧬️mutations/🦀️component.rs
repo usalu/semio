@@ -20,11 +20,14 @@ pub enum TxtMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) {
+pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> TxtDiff {
+    let __diff = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, snapshot);
     match mutation {
         TxtMutation::NoMutation => {}
         TxtMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

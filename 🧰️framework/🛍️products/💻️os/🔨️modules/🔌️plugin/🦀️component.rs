@@ -358,6 +358,7 @@ pub mod app {
         register_composer_entries, io_resolve, io_dialects_for,
         io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
         WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
+        SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator,
     };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
@@ -427,15 +428,19 @@ pub mod app {
 
     //#region 🔖️ArtifactBuilder
     /// 🏗️ Incremental artifact materializer — snapshot/text/binary in, soft `Diagnostic`s out.
+    /// `mutate` returns the handcrafted diff alongside the mutated builder (spine change S-1,
+    /// `.claude/plans/the-current-schemas-are-scalable-journal.md`) — the diff is the single
+    /// semantics source (`let d = mutation.diff(&snapshot); *snapshot = d.apply(snapshot); d`),
+    /// not a separate recomputation.
     pub trait ArtifactBuilder: Sized {
         type Snapshot;
-        type Mutation;
+        type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
         type Diff;
         fn empty() -> Self;
         fn from_snapshot(snapshot: Self::Snapshot) -> Self;
         fn from_text(text: &str) -> Result<Self, store::TextError>;
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError>;
-        fn mutate(self, mutation: Self::Mutation) -> Self;
+        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff);
         fn absorb(self, diff: Self::Diff) -> Self;
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>>;
     }

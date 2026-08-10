@@ -55,7 +55,7 @@ impl EnergyModelArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.energy.model` — fifteen handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
 pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
@@ -79,6 +79,13 @@ pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
         },
     }
 }

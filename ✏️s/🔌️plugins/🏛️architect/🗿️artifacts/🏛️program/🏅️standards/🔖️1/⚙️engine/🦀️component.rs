@@ -136,26 +136,5 @@ impl ProgramEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for ProgramEngine {
-    type Artifact = crate::artifacts::program::schema::ProgramArtifact;
-    type Snapshot = crate::artifacts::program::ProgramSnapshot;
-    type Mutation = crate::artifacts::program::mutations::ProgramMutation;
-    type Diff = crate::artifacts::program::diff::ProgramDiff;
-
-    fn artifact(&self) -> &Self::Artifact { &self.artifact }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::program::mutations::apply_program_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 

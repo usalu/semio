@@ -507,30 +507,4 @@ impl RewriteRuleEngine {
         }
     }
 }
-
-impl protocol::ArtifactEngine for RewriteRuleEngine {
-    type Artifact = crate::artifacts::rewrite::schema::RewriteArtifact;
-    type Snapshot = crate::artifacts::rewrite::RewriteSnapshot;
-    type Mutation = crate::artifacts::rewrite::mutations::RewriteRuleMutation;
-    type Diff = crate::artifacts::rewrite::diff::RewriteDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::rewrite::mutations::apply_rewrite_rule_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

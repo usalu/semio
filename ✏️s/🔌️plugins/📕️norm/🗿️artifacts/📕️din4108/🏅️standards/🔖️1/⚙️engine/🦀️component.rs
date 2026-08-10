@@ -766,32 +766,6 @@ impl Din4108Engine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for Din4108Engine {
-    type Artifact = crate::artifacts::din4108::schema::Din4108Artifact;
-    type Snapshot = crate::artifacts::din4108::Din4108Snapshot;
-    type Mutation = crate::artifacts::din4108::mutations::Din4108Mutation;
-    type Diff = crate::artifacts::din4108::diff::Din4108Diff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 
@@ -1035,7 +1009,7 @@ pub fn register_pilot_languages() {
 //#region 🔖️SchemaRegistry
 use std::sync::{Mutex, OnceLock};
 
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.din4108`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.din4108`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::din4108::schema::din4108_artifact_schema_descriptor());
 }

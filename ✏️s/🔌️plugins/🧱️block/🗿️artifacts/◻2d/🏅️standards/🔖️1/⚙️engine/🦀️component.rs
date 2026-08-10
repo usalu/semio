@@ -213,25 +213,4 @@ impl Block2dEngine {
         Self { artifact, snapshot }
     }
 }
-
-impl protocol::ArtifactEngine for Block2dEngine {
-    type Artifact = crate::artifacts::block2d::schema::Block2dArtifact;
-    type Snapshot = Block2dSnapshot;
-    type Mutation = crate::artifacts::block2d::mutations::Block2dMutation;
-    type Diff = crate::artifacts::block2d::diff::Block2dDiff;
-
-    fn artifact(&self) -> &Self::Artifact { &self.artifact }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::block2d::mutations::apply_block2d_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

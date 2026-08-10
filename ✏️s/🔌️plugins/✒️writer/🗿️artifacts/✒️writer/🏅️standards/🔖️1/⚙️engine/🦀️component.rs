@@ -979,30 +979,4 @@ impl WriterEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for WriterEngine {
-    type Artifact = crate::artifacts::writer::schema::WriterArtifact;
-    type Snapshot = WriterSnapshot;
-    type Mutation = crate::artifacts::writer::schema::mutations::WriterMutation;
-    type Diff = crate::artifacts::writer::WriterDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::writer::schema::mutations::apply_writer_mutation(&mut self.snapshot, mutation);
-        self.artifact = crate::artifacts::writer::schema::WriterArtifact::from_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

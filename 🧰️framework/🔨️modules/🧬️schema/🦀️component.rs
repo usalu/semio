@@ -103,13 +103,14 @@ pub struct FacetLeaves {
     pub proto: &'static str,
 }
 
-/// 🧬️ Registered descriptor for one artifact's three schema facets.
+/// 🧬️ Registered descriptor for one artifact's four schema facets.
 #[derive(Clone, Debug)]
 pub struct ArtifactSchemaDescriptor {
     pub id: &'static str,
     pub artifact: FacetLeaves,
     pub snapshot: FacetLeaves,
     pub diff: FacetLeaves,
+    pub mutations: FacetLeaves,
 }
 //#endregion 🔖️ArtifactSchemaDescriptor
 
@@ -185,6 +186,7 @@ fn descriptor_to_kernel(descriptor: ArtifactSchemaDescriptor) -> KernelArtifactS
         artifact: facet_leaves_to_kernel(descriptor.artifact),
         snapshot: facet_leaves_to_kernel(descriptor.snapshot),
         diff: facet_leaves_to_kernel(descriptor.diff),
+        mutations: facet_leaves_to_kernel(descriptor.mutations),
     }
 }
 
@@ -194,6 +196,7 @@ fn descriptor_from_kernel(kernel: &KernelArtifactSchemaDescriptor) -> ArtifactSc
         artifact: facet_leaves_from_kernel(&kernel.artifact),
         snapshot: facet_leaves_from_kernel(&kernel.snapshot),
         diff: facet_leaves_from_kernel(&kernel.diff),
+        mutations: facet_leaves_from_kernel(&kernel.mutations),
     }
 }
 
@@ -1146,7 +1149,8 @@ mod tests {
                 json_schema: SYNTHETIC_SNAPSHOT_JSON_SCHEMA,
                 proto: "",
             },
-            diff: empty,
+            diff: empty.clone(),
+            mutations: empty,
         }
     }
 

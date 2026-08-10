@@ -20,11 +20,14 @@ pub enum ObjMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) {
+pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> ObjDiff {
+    let __diff = <ObjMutation as protocol::Mutation<ObjSnapshot>>::diff(mutation, snapshot);
     match mutation {
         ObjMutation::NoMutation => {}
         ObjMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

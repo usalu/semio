@@ -20,10 +20,10 @@ impl ArtifactBuilder for En1999Builder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<En1999Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
         let d = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(&mutation, &self.snapshot);
         self.snapshot = <En1999Diff as protocol::MutationDiff<En1999Snapshot>>::apply(&d, &self.snapshot);
-        self
+        (self, d)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <En1999Diff as protocol::MutationDiff<En1999Snapshot>>::apply(&diff, &self.snapshot);

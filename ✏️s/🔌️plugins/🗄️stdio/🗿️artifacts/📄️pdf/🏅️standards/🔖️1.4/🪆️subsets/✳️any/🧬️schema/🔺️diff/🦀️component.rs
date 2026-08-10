@@ -1,6 +1,6 @@
 //! 🔺️ PdfDiff — sparse replace-snapshot diff.
 
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;

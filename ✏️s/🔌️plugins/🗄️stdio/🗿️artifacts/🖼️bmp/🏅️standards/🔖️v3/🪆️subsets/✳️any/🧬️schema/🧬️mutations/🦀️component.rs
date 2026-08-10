@@ -20,11 +20,14 @@ pub enum BmpMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) {
+pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> BmpDiff {
+    let __diff = <BmpMutation as protocol::Mutation<BmpSnapshot>>::diff(mutation, snapshot);
     match mutation {
         BmpMutation::NoMutation => {}
         BmpMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

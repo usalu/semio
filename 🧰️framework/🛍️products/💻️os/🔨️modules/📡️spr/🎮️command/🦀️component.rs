@@ -14,7 +14,35 @@
 /// `crate::os_store::MutationDiff` verbatim (only the parameter name `snapshot` → `base`).
 pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
     fn apply(&self, base: &P) -> P;
+    /// @emoji ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
+    /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
+    /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
+    /// applied snapshot values), **total** (defined for every pair of diffs over the same
+    /// artifact, including out-of-range/no-op cases — never panics), **base-free** (no snapshot
+    /// parameter; the two diffs alone determine the result), and **sequential-coalesce only**
+    /// (this composes two diffs known to have been applied in sequence by the same actor;
+    /// concurrent-edit merging is `protocol_crdt::merge_concurrent_diffs`'s job, never this
+    /// method's). LAW: `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))`, associative
+    /// over further absorbs of the same artifact's diff vocabulary.
     fn absorb(&mut self, other: Self);
+}
+
+/// @emoji 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
+/// construction, and emptiness. Deliberately a SEPARATE trait from `MutationDiff` (not new
+/// methods added to it) — `MutationDiff` already has 51+ repo-wide implementors, so a breaking
+/// method addition there would break all of them at once. Follows this crate's own `DiffCodec`
+/// precedent below: land the trait standalone in a spine wave, adopt it per-type in later waves
+/// via a seeded shrink-only policy allowlist (`POLICY_DIFF_ALGEBRA`), never as a hard bound on
+/// `MutationDiff` itself until every implementor is covered.
+/// LAWS: `d.inverse(base).apply(&d.apply(base)) == *base`; `Self::between(a, b).apply(a) == *b`;
+/// `Self::between(a, a).is_empty()`.
+pub trait DiffAlgebra<P>: Sized {
+    /// 🔁️ Diff-level undo: the diff that, applied after `self`, restores `base`.
+    fn inverse(&self, base: &P) -> Self;
+    /// 🧭️ State delta: the diff that, applied to `base`, yields `other`.
+    fn between(base: &P, other: &P) -> Self;
+    /// 🕳️ Whether this diff changes nothing relative to whatever base it was built against.
+    fn is_empty(&self) -> bool;
 }
 
 /// @emoji 🔁️ Stored operation: emits a diff and computes inverse from pre-state. Moved from

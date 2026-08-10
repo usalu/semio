@@ -1,6 +1,9 @@
 //! ⚙️ PdfEngine — minimal PDF 1.4 with FlateDecode stream.
 
-use crate::artifacts::pdf::{schema::snapshot::PageDoc, PdfArtifact, PdfDiff, PdfMutation, PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
+// 🔀️ S-6 twin: `crate::artifacts::pdf::schema` now shims to 1.7 (canonical) -- 1.4's own engine
+// uses its own standard-local schema path directly rather than the shared root re-export.
+use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::{PageDoc, PdfSnapshot}, PdfArtifact};
 
 pub fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     let page = &snap.page;
@@ -61,7 +64,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
 
 pub fn register() {
     crate::artifacts::pdf::composer::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::pdf::schema::pdf_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA));
 }
 
@@ -69,19 +72,5 @@ pub struct PdfEngine { artifact_state: PdfArtifact, snapshot_state: PdfSnapshot 
 impl PdfEngine {
     pub fn new(snapshot: PdfSnapshot) -> Self {
         Self { artifact_state: PdfArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
-    }
-}
-impl protocol::ArtifactEngine for PdfEngine {
-    type Artifact = PdfArtifact; type Snapshot = PdfSnapshot; type Mutation = PdfMutation; type Diff = PdfDiff;
-    fn artifact(&self) -> &Self::Artifact { &self.artifact_state }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot_state }
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot_state);
-        self.snapshot_state = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot_state);
-        self.artifact_state.set_snapshot(self.snapshot_state.clone());
-        Ok(diff)
-    }
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot_state)
     }
 }

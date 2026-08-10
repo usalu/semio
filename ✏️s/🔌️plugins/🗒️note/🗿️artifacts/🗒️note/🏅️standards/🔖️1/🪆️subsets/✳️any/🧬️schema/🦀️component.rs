@@ -128,7 +128,7 @@ impl NoteArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.note.note` — fifteen handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.note.note` — twenty handcrafted schema leaves.
 pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.note.note",
@@ -152,6 +152,13 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
         },
     }
 }

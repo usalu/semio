@@ -20,11 +20,14 @@ pub enum PptxMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) {
+pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> PptxDiff {
+    let __diff = <PptxMutation as protocol::Mutation<PptxSnapshot>>::diff(mutation, snapshot);
     match mutation {
         PptxMutation::NoMutation => {}
         PptxMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

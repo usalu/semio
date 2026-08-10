@@ -20,11 +20,14 @@ pub enum JsonMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) {
+pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> JsonDiff {
+    let __diff = <JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(mutation, snapshot);
     match mutation {
         JsonMutation::NoMutation => {}
         JsonMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

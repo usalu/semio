@@ -869,7 +869,7 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("process3d.spr"),
     });
 }
-/// 🧬️ Registers the fifteen handcrafted schema leaves for `s.process.process3d`.
+/// 🧬️ Registers the twenty handcrafted schema leaves for `s.process.process3d`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
 }
@@ -891,32 +891,6 @@ impl Process3dEngine {
     /// 📸️ Consumes the engine and returns its persisted snapshot.
     pub fn into_snapshot(self) -> crate::artifacts::process3d::Process3dSnapshot {
         self.snapshot
-    }
-}
-
-impl protocol::ArtifactEngine for Process3dEngine {
-    type Artifact = crate::artifacts::process3d::schema::Process3dArtifact;
-    type Snapshot = crate::artifacts::process3d::Process3dSnapshot;
-    type Mutation = crate::artifacts::process3d::mutations::Process3dMutation;
-    type Diff = crate::artifacts::process3d::diff::Process3dDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

@@ -20,11 +20,14 @@ pub enum StepMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) {
+pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> StepDiff {
+    let __diff = <StepMutation as protocol::Mutation<StepSnapshot>>::diff(mutation, snapshot);
     match mutation {
         StepMutation::NoMutation => {}
         StepMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

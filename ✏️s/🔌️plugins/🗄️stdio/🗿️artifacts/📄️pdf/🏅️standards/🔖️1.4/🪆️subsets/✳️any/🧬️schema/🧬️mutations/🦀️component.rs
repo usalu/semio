@@ -1,7 +1,7 @@
 //! 🧬️ PdfMutation — document mutation dispatch.
 
-use crate::artifacts::pdf::schema::diff::{diff_set_snapshot, PdfDiff};
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::{diff_set_snapshot, PdfDiff};
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
@@ -20,11 +20,14 @@ pub enum PdfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) {
+pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> PdfDiff {
+    let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
     match mutation {
         PdfMutation::NoMutation => {}
         PdfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

@@ -78,7 +78,7 @@ pub fn register_pilot_languages() {
 //#endregion 🔖️Register
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.vcs.vcs`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.vcs.vcs`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
 }
@@ -108,32 +108,6 @@ impl VcsDemoEngine {
     pub fn new(snapshot: VcsSnapshot) -> Self {
         let artifact = crate::artifacts::vcs::schema::VcsArtifact::from_snapshot(snapshot.clone());
         Self { artifact, snapshot }
-    }
-}
-
-impl protocol::ArtifactEngine for VcsDemoEngine {
-    type Artifact = crate::artifacts::vcs::schema::VcsArtifact;
-    type Snapshot = VcsSnapshot;
-    type Mutation = crate::artifacts::vcs::schema::mutations::VcsDemoMutation;
-    type Diff = crate::artifacts::vcs::VcsDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

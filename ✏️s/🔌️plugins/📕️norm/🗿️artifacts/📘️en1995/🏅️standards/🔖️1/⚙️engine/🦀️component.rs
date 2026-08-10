@@ -400,32 +400,6 @@ impl En1995Engine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for En1995Engine {
-    type Artifact = crate::artifacts::en1995::schema::En1995Artifact;
-    type Snapshot = crate::artifacts::en1995::En1995Snapshot;
-    type Mutation = crate::artifacts::en1995::mutations::En1995Mutation;
-    type Diff = crate::artifacts::en1995::diff::En1995Diff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<En1995Family>;
@@ -606,7 +580,7 @@ pub fn register_pilot_languages() {
 //#region 🔖️SchemaRegistry
 use std::sync::{Mutex, OnceLock};
 
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.norm.en1995`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.en1995`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::en1995::schema::en1995_artifact_schema_descriptor());
 }

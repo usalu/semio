@@ -55,6 +55,7 @@ pub use io::{
     register_composer_entries, resolve as io_resolve, dialects_for as io_dialects_for,
     io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
     WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
+    SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use manifest::*;

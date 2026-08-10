@@ -20,11 +20,14 @@ pub enum StlMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) {
+pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> StlDiff {
+    let __diff = <StlMutation as protocol::Mutation<StlSnapshot>>::diff(mutation, snapshot);
     match mutation {
         StlMutation::NoMutation => {}
         StlMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

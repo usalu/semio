@@ -20,10 +20,10 @@ impl ArtifactBuilder for Iso16757Builder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<Iso16757Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
         let d = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation, &self.snapshot);
         self.snapshot = <Iso16757Diff as protocol::MutationDiff<Iso16757Snapshot>>::apply(&d, &self.snapshot);
-        self
+        (self, d)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <Iso16757Diff as protocol::MutationDiff<Iso16757Snapshot>>::apply(&diff, &self.snapshot);

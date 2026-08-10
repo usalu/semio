@@ -537,36 +537,10 @@ impl LayoutArtifactEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for LayoutArtifactEngine {
-    type Artifact = crate::artifacts::layout::schema::LayoutArtifact;
-    type Snapshot = crate::artifacts::layout::LayoutSnapshot;
-    type Mutation = crate::artifacts::layout::mutations::LayoutMutation;
-    type Diff = crate::artifacts::layout::schema::diff::LayoutDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.layout.layout`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.layout.layout`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::layout::schema::layout_artifact_schema_descriptor());
 }

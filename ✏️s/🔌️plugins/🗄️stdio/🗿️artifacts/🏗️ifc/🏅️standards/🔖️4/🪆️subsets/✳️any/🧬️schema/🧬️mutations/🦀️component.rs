@@ -20,11 +20,14 @@ pub enum IfcMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) {
+pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> IfcDiff {
+    let __diff = <IfcMutation as protocol::Mutation<IfcSnapshot>>::diff(mutation, snapshot);
     match mutation {
         IfcMutation::NoMutation => {}
         IfcMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

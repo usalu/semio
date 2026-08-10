@@ -14,6 +14,23 @@ pub use plugin::plugin;
 //#endregion Plugin
 
 //#region Artifacts
+// 🎫️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, S2 mutation-triad
+// mounting policy (load-bearing for F1-F6): `POLICY_MUTATION_TRIAD_DIRS`
+// (📜️script.ts's `policyMutationTriadCompletenessBreaches`) does NOT require a `🧬️mutations/📄<variant>/
+// {🦠️mutation,🔺️diff,↩️inverse}` triad directory per mutation variant — it only checks triad-kind
+// completeness for mutation dirs that ALREADY EXIST as subdirectories, and `policyMutationDispatchCoverageBreaches`
+// (variant-vs-triad-dir coverage) is a deliberate no-op placeholder. Verified empirically at S2: every
+// one of the 31 stdio standards' non-SetSnapshot mutation variants (gif 89a's InsertFrame/RemoveFrame/…,
+// svg's InsertElement/…) live entirely inline in the top-level `🧬️mutations/🦀️component.rs` — only
+// `📄set-snapshot` has its own triad dir, anywhere in this crate. Every top-level facet file
+// (`🧬️mutations/🦀️component.rs`, `🔺️diff/🦀️component.rs`, `📸️snapshot/🦀️component.rs`) is already
+// mounted below for all 31 standards. CONSEQUENCE for F1-F6 fan-out agents: you can do ALL of your real
+// work — new mutation variants, new diff fields, new snapshot fields — by editing your artifact's
+// already-mounted top-level facet files, with ZERO edits to this file and ZERO new directories. A
+// per-variant triad dir is optional scaffolding (for consistency with set-snapshot), never required for
+// correctness; if you want one anyway, it needs a NEW directory, which structurally requires a glue.rs
+// mount — queue it in your report's `glue_followup` field for this wave's closer instead of touching
+// this file yourself. See `s2-spine-report.md` in this ticket folder for the full writeup.
 #[path = "."]
 pub mod artifacts {
     #[path = "."]
@@ -3673,19 +3690,47 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod a2b {
+                        // 🏅️ PDF/A-2b (ISO 19005-2, D5 pilot) — the FIRST real, non-✳️any subset
+                        // in the repo. `schema` re-exports the ✳️any subset's `PdfSnapshot`
+                        // verbatim (same Rust type, same `s.stdio.pdf.1.7` schema id); `io` reuses
+                        // the ✳️any subset's binary/deflate DAG leaves rather than duplicating them.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        // 🔀️ S-6 twin (`.claude/plans/the-current-schemas-are-scalable-journal.md`; W0 recon's
+        // "pdf has gif's exact S-6 problem" finding): 1.7 is the real object-graph engine (was
+        // dodging this collision under its own `stdio.pdf.1.7` schema id) and is now canonical
+        // here; 1.4 (the 87-line `PageDoc` stub) stays reachable at `standards::v1_4::`.
         pub mod schema {
-            pub use super::standards::v1_4::subsets::any::schema::*;
+            pub use super::standards::v1_7::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v1_4::engine::*;
+            pub use super::standards::v1_7::engine::*;
+            /// 📎 Registers BOTH standards' engines (1.7 canonical + 1.4 legacy) — a flat glob
+            /// re-export can't do this (two `register` fns of the same name would collide), so this
+            /// local definition shadows the glob-imported 1.7 one and calls both explicitly.
+            pub fn register() {
+                super::standards::v1_4::engine::register();
+                super::standards::v1_7::engine::register();
+            }
         }
         pub mod io {
-            pub use super::standards::v1_4::subsets::any::io::*;
+            pub use super::standards::v1_7::subsets::any::io::*;
         }
 
         #[path = "../../🗿️artifacts/📄️pdf/🏗️builder/🦀️component.rs"]
@@ -4124,14 +4169,24 @@ pub mod artifacts {
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        // 🔀️ S-6 (`.claude/plans/the-current-schemas-are-scalable-journal.md`): 89a is the richer
+        // standard (frames/GCE/loop vs. 87a's single-image model) and is now canonical here; 87a
+        // stays reachable under its own explicit `standards::v87a::` path for callers that need it.
         pub mod schema {
-            pub use super::standards::v87a::subsets::any::schema::*;
+            pub use super::standards::v89a::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v87a::engine::*;
+            pub use super::standards::v89a::engine::*;
+            /// 📎 Registers BOTH standards' engines (89a canonical + 87a legacy) — a flat glob
+            /// re-export can't do this (two `register` fns of the same name would collide), so this
+            /// local definition shadows the glob-imported 89a one and calls both explicitly.
+            pub fn register() {
+                super::standards::v87a::engine::register();
+                super::standards::v89a::engine::register();
+            }
         }
         pub mod io {
-            pub use super::standards::v87a::subsets::any::io::*;
+            pub use super::standards::v89a::subsets::any::io::*;
         }
 
         #[path = "../../🗿️artifacts/🎞️gif/🏗️builder/🦀️component.rs"]

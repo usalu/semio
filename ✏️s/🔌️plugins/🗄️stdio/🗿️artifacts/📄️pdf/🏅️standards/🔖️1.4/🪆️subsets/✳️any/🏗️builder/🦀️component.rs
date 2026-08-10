@@ -1,7 +1,7 @@
 //! 🏗️ PdfBuilder — local ArtifactBuilder until SDK Wave 3.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::pdf::{PdfDiff, PdfMutation, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
 
 //#region 🔖️Builder
 /// 🏗️ Builds a `stdio.pdf` snapshot.
@@ -27,9 +27,9 @@ impl ArtifactBuilder for PdfBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::pdf::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot);

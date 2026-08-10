@@ -20,11 +20,14 @@ pub enum DwgMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) {
+pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> DwgDiff {
+    let __diff = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(mutation, snapshot);
     match mutation {
         DwgMutation::NoMutation => {}
         DwgMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

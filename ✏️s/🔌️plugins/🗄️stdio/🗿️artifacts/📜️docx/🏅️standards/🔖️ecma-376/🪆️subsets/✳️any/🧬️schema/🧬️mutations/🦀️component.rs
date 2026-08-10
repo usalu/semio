@@ -20,11 +20,14 @@ pub enum DocxMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) {
+pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> DocxDiff {
+    let __diff = <DocxMutation as protocol::Mutation<DocxSnapshot>>::diff(mutation, snapshot);
     match mutation {
         DocxMutation::NoMutation => {}
         DocxMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

@@ -20,11 +20,14 @@ pub enum BcfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) {
+pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> BcfDiff {
+    let __diff = <BcfMutation as protocol::Mutation<BcfSnapshot>>::diff(mutation, snapshot);
     match mutation {
         BcfMutation::NoMutation => {}
         BcfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

@@ -112,30 +112,4 @@ impl TrinityGraphEngine {
         }
     }
 }
-
-impl protocol::ArtifactEngine for TrinityGraphEngine {
-    type Artifact = crate::artifacts::jack::schema::JackArtifact;
-    type Snapshot = crate::artifacts::jack::JackSnapshot;
-    type Mutation = crate::artifacts::jack::mutations::TrinityGraphMutation;
-    type Diff = crate::artifacts::jack::diff::JackDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::jack::mutations::apply_trinity_graph_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

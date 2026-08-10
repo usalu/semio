@@ -302,7 +302,7 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 
-/// Registers the fifteen handcrafted schema leaves for `s.gis.gisterrain`.
+/// Registers the twenty handcrafted schema leaves for `s.gis.gisterrain`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor());
 }
@@ -379,32 +379,6 @@ impl GisTerrainEngine {
     /// Consumes the engine and returns its persisted snapshot.
     pub fn into_snapshot(self) -> GisTerrainSnapshot {
         self.snapshot
-    }
-}
-
-impl protocol::ArtifactEngine for GisTerrainEngine {
-    type Artifact = crate::artifacts::gisterrain::schema::GisTerrainArtifact;
-    type Snapshot = GisTerrainSnapshot;
-    type Mutation = crate::artifacts::gisterrain::mutations::GisTerrainMutation;
-    type Diff = crate::artifacts::gisterrain::diff::GisTerrainDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔹ArtifactEngine

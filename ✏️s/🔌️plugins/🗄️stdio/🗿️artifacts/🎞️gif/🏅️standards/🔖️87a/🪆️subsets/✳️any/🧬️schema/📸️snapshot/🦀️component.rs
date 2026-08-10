@@ -58,11 +58,11 @@ impl store::ArtifactDsl for GifSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::gif::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::gif::standards::v87a::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::gif::engine::encode_gif(self).unwrap_or_default();
+        let bytes = crate::artifacts::gif::standards::v87a::engine::encode_gif(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -76,7 +76,7 @@ impl store::ArtifactDsl for GifSnapshot {
 impl store::ArtifactPack for GifSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gif::engine::encode_gif(self).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::gif::standards::v87a::engine::encode_gif(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -96,7 +96,7 @@ impl store::ArtifactPack for GifSnapshot {
             )));
         }
         let _ = options;
-        crate::artifacts::gif::engine::decode_gif(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::gif::standards::v87a::engine::decode_gif(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
 //#endregion HandcraftedArtifactCodecs

@@ -20,11 +20,14 @@ pub enum XmlMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) {
+pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> XmlDiff {
+    let __diff = <XmlMutation as protocol::Mutation<XmlSnapshot>>::diff(mutation, snapshot);
     match mutation {
         XmlMutation::NoMutation => {}
         XmlMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

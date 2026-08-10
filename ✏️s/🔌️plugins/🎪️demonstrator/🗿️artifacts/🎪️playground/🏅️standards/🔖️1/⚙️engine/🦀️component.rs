@@ -10,7 +10,7 @@ pub fn empty_playground_snapshot() -> PlaygroundSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
-/// 🗂️ Registers playground codecs and the fifteen handcrafted schema leaves.
+/// 🗂️ Registers playground codecs and the twenty handcrafted schema leaves.
 pub fn register() {
     crate::artifacts::playground::composer::register();
 
@@ -74,7 +74,7 @@ pub fn register_pilot_languages() {
 //#endregion 🔖️Register
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.demonstrator.playground`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.demonstrator.playground`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::playground::schema::playground_artifact_schema_descriptor());
 }
@@ -97,32 +97,6 @@ impl PlaygroundArtifactEngine {
     /// 📸️ Consumes the engine and returns its persisted snapshot.
     pub fn into_snapshot(self) -> PlaygroundSnapshot {
         self.snapshot
-    }
-}
-
-impl protocol::ArtifactEngine for PlaygroundArtifactEngine {
-    type Artifact = crate::artifacts::playground::schema::PlaygroundArtifact;
-    type Snapshot = PlaygroundSnapshot;
-    type Mutation = crate::artifacts::playground::mutations::PlaygroundMutation;
-    type Diff = crate::artifacts::playground::diff::PlaygroundDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

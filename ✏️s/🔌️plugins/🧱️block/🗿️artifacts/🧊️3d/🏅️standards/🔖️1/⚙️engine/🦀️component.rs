@@ -223,25 +223,4 @@ impl Block3dEngine {
         Self { artifact, snapshot }
     }
 }
-
-impl protocol::ArtifactEngine for Block3dEngine {
-    type Artifact = crate::artifacts::block3d::schema::Block3dArtifact;
-    type Snapshot = Block3dSnapshot;
-    type Mutation = crate::artifacts::block3d::mutations::Block3dMutation;
-    type Diff = crate::artifacts::block3d::diff::Block3dDiff;
-
-    fn artifact(&self) -> &Self::Artifact { &self.artifact }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::block3d::mutations::apply_block3d_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

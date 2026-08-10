@@ -1,7 +1,7 @@
 //! 🧬️ GifMutation — document mutation dispatch.
 
-use crate::artifacts::gif::schema::diff::{diff_set_snapshot, GifDiff};
-use crate::artifacts::gif::GifSnapshot;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{diff_set_snapshot, GifDiff};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
@@ -20,11 +20,14 @@ pub enum GifMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) {
+pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> GifDiff {
+    let __diff = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(mutation, snapshot);
     match mutation {
         GifMutation::NoMutation => {}
         GifMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

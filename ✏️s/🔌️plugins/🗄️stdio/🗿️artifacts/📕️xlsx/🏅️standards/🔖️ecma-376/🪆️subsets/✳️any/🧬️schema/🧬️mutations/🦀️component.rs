@@ -20,11 +20,14 @@ pub enum XlsxMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) {
+pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> XlsxDiff {
+    let __diff = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(mutation, snapshot);
     match mutation {
         XlsxMutation::NoMutation => {}
         XlsxMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

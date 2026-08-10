@@ -25,8 +25,9 @@ impl ArtifactBuilder for BinaryBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self(BinaryRawAnyBuilder::from_binary(bytes)?))
     }
-    fn mutate(self, mutation: Self::Mutation) -> Self {
-        Self(self.0.mutate(mutation))
+    fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let (inner, diff) = self.0.mutate(mutation);
+        (Self(inner), diff)
     }
     fn absorb(self, diff: Self::Diff) -> Self {
         Self(self.0.absorb(diff))

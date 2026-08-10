@@ -1,6 +1,6 @@
 //! 🔺️ GifDiff — sparse replace-snapshot diff.
 
-use crate::artifacts::gif::GifSnapshot;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;

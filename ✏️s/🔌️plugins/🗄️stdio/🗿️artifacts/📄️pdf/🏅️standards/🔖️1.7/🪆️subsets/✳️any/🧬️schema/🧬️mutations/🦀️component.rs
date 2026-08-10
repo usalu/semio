@@ -46,7 +46,8 @@ pub enum PdfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range page indices are no-ops rather than panics
 /// -- a stale index (e.g. from a concurrent edit) should degrade gracefully, not crash the engine.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) {
+pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> PdfDiff {
+    let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
     match mutation {
         PdfMutation::NoMutation => {}
         PdfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
@@ -72,6 +73,8 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) {
         }
         PdfMutation::SetInfo { info } => snapshot.info = info.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

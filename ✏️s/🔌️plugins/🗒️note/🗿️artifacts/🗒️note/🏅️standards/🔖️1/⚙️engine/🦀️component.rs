@@ -773,30 +773,4 @@ impl NoteEngine {
         Self { artifact, snapshot }
     }
 }
-
-impl protocol::ArtifactEngine for NoteEngine {
-    type Artifact = crate::artifacts::note::schema::NoteArtifact;
-    type Snapshot = NoteSnapshot;
-    type Mutation = crate::artifacts::note::mutations::NoteMutation;
-    type Diff = crate::artifacts::note::diff::NoteDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine

@@ -96,7 +96,7 @@ pub fn register_pilot_languages() {
 //#endregion 🔖️Register
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.energy.model`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.energy.model`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::model::schema::energy_model_artifact_schema_descriptor());
 }
@@ -129,32 +129,6 @@ impl EnergyModelEngine {
         self.artifact_state.results_json =
             serde_json::to_string(&results).map_err(|e| crate::error::Error::severe(e.to_string()))?;
         Ok(results)
-    }
-}
-
-impl protocol::ArtifactEngine for EnergyModelEngine {
-    type Artifact = EnergyModelArtifact;
-    type Snapshot = EnergyModelSnapshot;
-    type Mutation = EnergyModelMutation;
-    type Diff = EnergyModelDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact_state
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot_state
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot_state);
-        self.snapshot_state = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot_state);
-        self.artifact_state.set_snapshot(self.snapshot_state.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot_state)
     }
 }
 //#endregion 🔖️ArtifactEngine

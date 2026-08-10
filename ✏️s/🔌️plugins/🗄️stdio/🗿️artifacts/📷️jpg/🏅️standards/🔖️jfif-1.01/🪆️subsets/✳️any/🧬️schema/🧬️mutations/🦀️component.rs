@@ -20,11 +20,14 @@ pub enum JpgMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) {
+pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> JpgDiff {
+    let __diff = <JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(mutation, snapshot);
     match mutation {
         JpgMutation::NoMutation => {}
         JpgMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

@@ -196,32 +196,6 @@ impl LowpolyEngine {
         self.snapshot = self.artifact.to_snapshot();
     }
 }
-
-impl protocol::ArtifactEngine for LowpolyEngine {
-    type Artifact = crate::artifacts::lowpoly::schema::LowpolyArtifact;
-    type Snapshot = LowpolySnapshot;
-    type Mutation = crate::artifacts::lowpoly::mutations::LowpolyMutation;
-    type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.snapshot, mutation);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️ComputeSession

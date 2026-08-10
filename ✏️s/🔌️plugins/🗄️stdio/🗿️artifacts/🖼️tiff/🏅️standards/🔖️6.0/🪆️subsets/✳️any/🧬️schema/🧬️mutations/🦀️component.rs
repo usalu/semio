@@ -20,11 +20,14 @@ pub enum TiffMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) {
+pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> TiffDiff {
+    let __diff = <TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(mutation, snapshot);
     match mutation {
         TiffMutation::NoMutation => {}
         TiffMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

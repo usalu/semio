@@ -442,36 +442,10 @@ impl ImperativeEngine {
         self.snapshot
     }
 }
-
-impl protocol::ArtifactEngine for ImperativeEngine {
-    type Artifact = crate::artifacts::imperative::schema::ImperativeArtifact;
-    type Snapshot = crate::artifacts::imperative::ImperativeSnapshot;
-    type Mutation = crate::artifacts::imperative::mutations::ImperativeMutation;
-    type Diff = crate::artifacts::imperative::diff::ImperativeDiff;
-
-    fn artifact(&self) -> &Self::Artifact {
-        &self.artifact
-    }
-
-    fn snapshot(&self) -> &Self::Snapshot {
-        &self.snapshot
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
-        self.snapshot = protocol::MutationDiff::apply(&diff, &self.snapshot);
-        self.artifact.set_snapshot(self.snapshot.clone());
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️SchemaRegistry
-/// 📌️ Registers the fifteen handcrafted schema leaves for `s.imperative.imperative`.
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.imperative.imperative`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor());
 }

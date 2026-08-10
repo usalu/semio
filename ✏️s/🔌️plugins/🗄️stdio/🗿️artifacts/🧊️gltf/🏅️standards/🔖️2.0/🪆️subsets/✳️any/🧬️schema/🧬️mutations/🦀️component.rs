@@ -20,11 +20,14 @@ pub enum GltfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation) {
+pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation) -> GltfDiff {
+    let __diff = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, snapshot);
     match mutation {
         GltfMutation::NoMutation => {}
         GltfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

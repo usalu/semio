@@ -2,7 +2,7 @@
 //! `stdio.pdf` sources (plus its DAG dependencies: binary, deflate), writes one `stdio.pdf` (1.4/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 use crate::artifacts::pdf::standards::v1_4::subsets::any::analyzer::PdfAnalyzer;
 use semio_framework_plugin::ArtifactAnalyzer as _;
 

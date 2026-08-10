@@ -1,5 +1,5 @@
-use crate::artifacts::pdf::{PdfSnapshot};
-use crate::artifacts::pdf::schema::mutations::PdfMutation;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

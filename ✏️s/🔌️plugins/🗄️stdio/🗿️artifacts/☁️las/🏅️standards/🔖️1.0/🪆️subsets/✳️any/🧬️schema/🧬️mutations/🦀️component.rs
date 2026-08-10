@@ -20,11 +20,14 @@ pub enum LasMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) {
+pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> LasDiff {
+    let __diff = <LasMutation as protocol::Mutation<LasSnapshot>>::diff(mutation, snapshot);
     match mutation {
         LasMutation::NoMutation => {}
         LasMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

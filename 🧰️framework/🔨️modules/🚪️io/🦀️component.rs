@@ -292,7 +292,13 @@ where
 /// fallback) has the key, so existing error-message-matching callers don't need to change.
 pub fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     match resolve(key) {
-        Ok(entry) => (entry.compose)(sources),
+        Ok(entry) => match (entry.compose)(sources) {
+            Ok(mut composed) => {
+                run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics);
+                Ok(composed)
+            }
+            Err(e) => Err(e),
+        },
         Err(local_err) => match IO_FALLBACK.get().and_then(|hook| hook(key, sources)) {
             Some(result) => result,
             None => Err(ComposeError { message: local_err.message, diagnostics: Vec::new() }),
@@ -300,6 +306,72 @@ pub fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<Compo
     }
 }
 //#endregion 🔖️Dispatch
+
+//#region 🔖️SubsetValidator
+/// 🛡️ SDK trait (D5, ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION):
+/// one subset's own conformance checker (e.g. PDF/A-2b's "no `/Encrypt`, no JS/Launch actions,
+/// `OutputIntent` present, fonts embedded"). Unlike `ArtifactComposer`/`ArtifactAnalyzer` (which
+/// live in the plugin crate because they need typed `Snapshot` visibility this generic/erased io
+/// module doesn't have), `SubsetValidator` can live directly HERE: its signature is already
+/// erased over `IoPayload` (mirroring `ComposerEntry.compose`'s own `fn(&[ErasedComposeSource])`
+/// erasure) -- a concrete artifact implements it by decoding its own typed `Snapshot` out of the
+/// payload internally (via `store::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
+/// erasure already does one layer up), so this module never needs to know the concrete type.
+pub trait SubsetValidator {
+    const DIALECT: Dialect;
+    fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+}
+
+/// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how
+/// `ComposerEntry` stores a plain `fn` pointer rather than a trait object.
+pub struct SubsetValidatorEntry {
+    pub dialect: Dialect,
+    pub validate: fn(&IoPayload) -> Vec<Diagnostic>,
+}
+
+/// 🎹️ Erases a typed `SubsetValidator` impl into a `SubsetValidatorEntry` row -- the
+/// `ComposerEntry::of::<C>()`-style helper for this trait.
+pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
+    SubsetValidatorEntry { dialect: V::DIALECT, validate: V::validate }
+}
+
+static SUBSET_VALIDATOR_REGISTRY: std::sync::OnceLock<RwLock<HashMap<Dialect, &'static SubsetValidatorEntry>>> = std::sync::OnceLock::new();
+
+fn subset_validator_registry() -> &'static RwLock<HashMap<Dialect, &'static SubsetValidatorEntry>> {
+    SUBSET_VALIDATOR_REGISTRY.get_or_init(|| RwLock::new(HashMap::new()))
+}
+
+/// 📌️ Register one subset's validator. Called once from the owning artifact's subset-level facet
+/// init (mirrors `register_composer_entries`'s own call convention). A second registration for
+/// the same `dialect` overwrites the first (last-registered-wins, logged) rather than panicking --
+/// boot ordering across concurrent plugin loads shouldn't be able to crash the process.
+pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) {
+    let mut reg = subset_validator_registry().write().expect("subset validator registry poisoned");
+    if reg.insert(entry.dialect, entry).is_some() {
+        eprintln!("[DEBUG] io::register_subset_validator called twice for {:?}; keeping the latest registration", entry.dialect);
+    }
+}
+
+/// 🛡️ The generic validate-on-build hook (D5): if `dialect.subset` is anything other than
+/// `SubsetId::ANY` and a validator is registered for that EXACT dialect, run it and fold its
+/// `Diagnostic`s onto `diagnostics`. Advisory only -- a missing validator (not every subset needs
+/// one immediately), or a validator that itself returns diagnostics, never fails composition;
+/// diagnostics are soft signals here exactly like `Composition<T>`/`Analysis<T>` already carry
+/// elsewhere in this file (a subset composer wanting a HARD gate enforces that itself, inside its
+/// own `compose`, before ever returning `Ok` -- see the PDF/A-2b pilot). Called from every generic
+/// compose-dispatch path in this module (`io_dispatch`, `wire_artifact_compose`) so every future
+/// subset gets this for free the moment it registers a validator -- no dispatch call site needs to
+/// change again. Never panics: a poisoned registry lock or absent entry both degrade to a no-op.
+fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostics: &mut Vec<Diagnostic>) {
+    if dialect.subset == SubsetId::ANY {
+        return;
+    }
+    let Ok(reg) = subset_validator_registry().read() else { return };
+    if let Some(entry) = reg.get(&dialect) {
+        diagnostics.extend((entry.validate)(payload));
+    }
+}
+//#endregion 🔖️SubsetValidator
 
 //#region 🔖️Wire
 /// 🎹️ Wire twin of `ErasedComposeSource` for crossing a wasm component boundary: `Dialect` is
@@ -398,7 +470,10 @@ pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<V
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
     match (entry.compose)(&sources) {
-        Ok(composed) => serde_json::to_vec(&WireComposedArtifact::from(composed)).map_err(|e| format!("compose result encode: {e}")),
+        Ok(mut composed) => {
+            run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics);
+            serde_json::to_vec(&WireComposedArtifact::from(composed)).map_err(|e| format!("compose result encode: {e}"))
+        }
         Err(error) => Err(error.message),
     }
 }

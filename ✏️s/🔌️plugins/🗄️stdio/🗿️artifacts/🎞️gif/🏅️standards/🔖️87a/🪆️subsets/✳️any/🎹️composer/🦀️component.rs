@@ -2,7 +2,7 @@
 //! `stdio.gif` sources (plus its DAG dependencies: binary), writes one `stdio.gif` (87a/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-use crate::artifacts::gif::GifSnapshot;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::artifacts::gif::standards::v87a::subsets::any::analyzer::GifAnalyzer;
 use semio_framework_plugin::ArtifactAnalyzer as _;
 

@@ -2,7 +2,7 @@
 //! GifDecomposer. Real logic; artifact/standard levels delegate here.
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-use crate::artifacts::gif::GifSnapshot;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 
 //#region 🔖️Parts
 /// 🧩 Analyzed `stdio.gif` parts.

@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::pdf::schema::diff::{PdfDiff, diff_set_snapshot};
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::{PdfDiff, diff_set_snapshot};
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 pub fn diff(snapshot: &PdfSnapshot) -> PdfDiff {

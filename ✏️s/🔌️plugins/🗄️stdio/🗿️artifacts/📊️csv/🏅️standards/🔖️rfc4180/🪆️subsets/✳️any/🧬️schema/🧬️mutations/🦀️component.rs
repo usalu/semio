@@ -20,11 +20,14 @@ pub enum CsvMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) {
+pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> CsvDiff {
+    let __diff = <CsvMutation as protocol::Mutation<CsvSnapshot>>::diff(mutation, snapshot);
     match mutation {
         CsvMutation::NoMutation => {}
         CsvMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
     }
+
+    __diff
 }
 //#endregion 🔖️Apply
 

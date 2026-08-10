@@ -425,20 +425,6 @@ impl PptxEngine {
         Self { artifact_state: PptxArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
     }
 }
-impl protocol::ArtifactEngine for PptxEngine {
-    type Artifact = PptxArtifact; type Snapshot = PptxSnapshot; type Mutation = PptxMutation; type Diff = PptxDiff;
-    fn artifact(&self) -> &Self::Artifact { &self.artifact_state }
-    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot_state }
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot_state);
-        self.snapshot_state = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot_state);
-        self.artifact_state.set_snapshot(self.snapshot_state.clone());
-        Ok(diff)
-    }
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot_state)
-    }
-}
 //#endregion 🔖️ArtifactEngine
 
 //#region 🧪️Tests

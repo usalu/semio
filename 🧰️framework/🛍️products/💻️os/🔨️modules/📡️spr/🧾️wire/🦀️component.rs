@@ -212,13 +212,14 @@ pub struct KernelFacetLeaves {
     pub proto: &'static str,
 }
 
-/// 🧬️ Registered descriptor for one artifact's three schema facets.
+/// 🧬️ Registered descriptor for one artifact's four schema facets.
 #[derive(Clone, Debug)]
 pub struct KernelArtifactSchemaDescriptor {
     pub id: &'static str,
     pub artifact: KernelFacetLeaves,
     pub snapshot: KernelFacetLeaves,
     pub diff: KernelFacetLeaves,
+    pub mutations: KernelFacetLeaves,
 }
 
 struct KernelArtifactSchemaCatalog {

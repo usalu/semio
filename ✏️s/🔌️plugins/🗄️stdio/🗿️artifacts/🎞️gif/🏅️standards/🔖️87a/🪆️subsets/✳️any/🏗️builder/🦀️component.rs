@@ -1,7 +1,7 @@
 //! 🏗️ GifBuilder — local ArtifactBuilder until SDK Wave 3.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::gif::{GifDiff, GifMutation, GifSnapshot};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};
 
 //#region 🔖️Builder
 /// 🏗️ Builds a `stdio.gif` snapshot.
@@ -27,9 +27,9 @@ impl ArtifactBuilder for GifBuilder {
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::gif::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        let diff = crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+        (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {
         self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot);
