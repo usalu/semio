@@ -1,15 +1,15 @@
 //! 🏗️ FormsBuilder (final, artifact-level) — delegates to the 1 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::forms::{FormsDiff, FormsMutation, FormsSnapshot};
+use crate::artifacts::forms::{FormsDiff, FormMutation, FormsSnapshot};
 use crate::artifacts::forms::standards::v1::builder::FormsBuilder as FormsRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct FormsBuilder(FormsRawBuilder);
 
 impl ArtifactBuilder for FormsBuilder {
     type Snapshot = FormsSnapshot;
-    type Mutation = FormsMutation;
+    type Mutation = FormMutation;
     type Diff = FormsDiff;
     fn empty() -> Self { Self(FormsRawBuilder::empty()) }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(FormsRawBuilder::from_snapshot(snapshot)) }

@@ -610,11 +610,11 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🔧️setup/🦀️component.rs"]
+#[path = "../../🔧️setup/🦀️component.rs"]
 mod setup;
 pub use setup::register_lowpoly_exports;
 
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

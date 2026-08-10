@@ -75,6 +75,10 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️kernel/🦀️component.rs"]
+                            pub mod kernel;
+                            #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🦀️component.rs"]
+                            pub mod registers;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -926,6 +930,8 @@ pub mod artifacts {
         pub mod diff { pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::*; pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::text::*; pub mod schema { pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::program::standards::v1::subsets::any::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::program::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::program::standards::v1::subsets::any::schema::snapshot::binary::*; } }
+        pub mod kernel { pub use crate::artifacts::program::standards::v1::subsets::any::schema::kernel::*; }
+        pub mod registers { pub use crate::artifacts::program::standards::v1::subsets::any::schema::registers::*; }
 
         #[path = "../../🗿️artifacts/🏛️program/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -1047,7 +1053,7 @@ pub mod apps {
 //#region 🔖️Plugin
 pub use artifacts::program::engine::register_architect_exports;
 
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

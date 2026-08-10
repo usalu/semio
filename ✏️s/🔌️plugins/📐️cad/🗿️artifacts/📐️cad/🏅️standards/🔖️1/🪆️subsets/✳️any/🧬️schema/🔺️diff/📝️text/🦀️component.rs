@@ -15,8 +15,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use super::schema::*;
-
 //#region 🔖️Apply
 impl CadDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.

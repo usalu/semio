@@ -4,6 +4,6 @@
   "label": "flow-extension-text",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js",
-  "packageHash": "dev:1786197681720",
-  "installedAt": 1786197681720
+  "packageHash": "dev:1786381108387",
+  "installedAt": 1786381108387
 }

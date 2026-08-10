@@ -1366,7 +1366,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 /// 🔌️ Registers block artifact codecs and pilot languages.
 pub fn register_block_exports() {

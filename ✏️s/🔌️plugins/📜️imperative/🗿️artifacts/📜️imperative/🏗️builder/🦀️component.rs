@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::imperative::{ImperativeDiff, ImperativeMutation, ImperativeSnapshot};
 use crate::artifacts::imperative::standards::v1::builder::ImperativeBuilder as ImperativeRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct ImperativeBuilder(ImperativeRawBuilder);
 
 impl ArtifactBuilder for ImperativeBuilder {

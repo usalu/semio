@@ -4,6 +4,6 @@
   "label": "sourcing-module-windows",
   "extends": "sourcing",
   "moduleUrl": "/extensions/sourcing-module-windows/semio_s_plugin_sourcing_windows.js",
-  "packageHash": "dev:1786197681747",
-  "installedAt": 1786197681747
+  "packageHash": "dev:1786381108423",
+  "installedAt": 1786381108423
 }

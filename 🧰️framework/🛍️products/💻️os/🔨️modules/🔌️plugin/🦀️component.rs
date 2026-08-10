@@ -1849,18 +1849,15 @@ pub mod app {
 
             assert!(!plugin_root.join(examples).is_dir(), "taxonomy gate: plugin-root {examples} is forbidden at {}", plugin_root.display());
 
-            let plugin_dir_name = taxonomy.get("pluginDirName").and_then(|v| v.as_str()).unwrap_or("🔌️plugin");
             let plugin_child_dirs = string_array(&taxonomy, "pluginChildDirs");
-            let plugin_contract = plugin_root.join(plugin_dir_name);
-            if plugin_contract.is_dir() {
-                assert!(plugin_contract.join(leaf).is_file(), "taxonomy gate: {plugin_dir_name} missing {leaf} at {}", plugin_contract.display());
-                for child in &plugin_child_dirs {
-                    assert!(
-                        plugin_contract.join(child).join(leaf).is_file(),
-                        "taxonomy gate: {plugin_dir_name} missing {child}/{leaf} at {}",
-                        plugin_contract.display()
-                    );
-                }
+            assert!(!plugin_root.join("🔌️plugin").is_dir(), "taxonomy gate: redundant 🔌️plugin directory at {}; move its contract and facets directly into the plugin root", plugin_root.display());
+            assert!(plugin_root.join(leaf).is_file(), "taxonomy gate: plugin root missing {leaf} at {}", plugin_root.display());
+            for child in &plugin_child_dirs {
+                assert!(
+                    plugin_root.join(child).join(leaf).is_file(),
+                    "taxonomy gate: plugin root missing {child}/{leaf} at {}",
+                    plugin_root.display()
+                );
             }
 
             let apps = subdirectories(app_root);
@@ -6996,7 +6993,7 @@ pub mod plugin_runtime {
     //#endregion 🧩️Extension
 
 
-    /// 🏗️ Plugin registration lives under each owner's `🔌️plugin/🦀️component.rs` via
+    /// 🏗️ Plugin registration lives in each owner's root `🦀️component.rs` via
     /// [`Plugin::builder`](crate::Plugin::builder) + [`plugin_exports!`](crate::plugin_exports).
     /// The retired `semio_plugin!` macro is gone — typestate on the builder makes missing identity fields a compile error.
 

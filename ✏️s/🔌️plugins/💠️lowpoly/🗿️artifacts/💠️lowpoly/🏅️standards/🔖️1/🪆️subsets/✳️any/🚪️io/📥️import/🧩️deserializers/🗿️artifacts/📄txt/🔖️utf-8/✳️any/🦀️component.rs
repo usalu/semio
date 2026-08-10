@@ -6,7 +6,7 @@
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::lowpoly::LowpolySnapshot;
 pub fn register() {}
-pub fn deserialize(_from: &crate::artifacts::txt::TxtSnapshot) -> Result<LowpolySnapshot, String> {
+pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<LowpolySnapshot, String> {
     Err("txt import not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<LowpolySnapshot, String> {

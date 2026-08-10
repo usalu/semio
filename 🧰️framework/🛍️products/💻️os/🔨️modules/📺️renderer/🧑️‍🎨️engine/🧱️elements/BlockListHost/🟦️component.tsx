@@ -27,7 +27,7 @@ import {
   type DragEndEvent,
   type IconName,
 } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -169,8 +169,8 @@ function PalettePanel({ palette, controllerId, onAction }: { readonly palette: r
 export function BlockListHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.blockList;
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.step");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.step");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -209,7 +209,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "blockList" },
@@ -220,7 +220,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],

@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::raster::{RasterDiff, RasterMutation, RasterSnapshot};
 use crate::artifacts::raster::standards::v1::subsets::any::builder::RasterBuilder as RasterAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct RasterBuilder(RasterAnyBuilder);
 
 impl ArtifactBuilder for RasterBuilder {

@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::cad::{CadDiff, CadMutation, CadSnapshot};
 use crate::artifacts::cad::standards::v1::builder::CadBuilder as CadRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct CadBuilder(CadRawBuilder);
 
 impl ArtifactBuilder for CadBuilder {

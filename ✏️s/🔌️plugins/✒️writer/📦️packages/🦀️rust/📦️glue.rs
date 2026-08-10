@@ -277,6 +277,9 @@ pub mod artifacts {
             pub mod schema { pub use crate::artifacts::writer::standards::v1::subsets::any::schema::snapshot::*; }
             pub mod pack { pub use crate::artifacts::writer::standards::v1::subsets::any::schema::snapshot::binary::*; }
         }
+        pub use crate::artifacts::writer::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;
+        pub use crate::artifacts::writer::standards::v1::subsets::any::schema::mutations::WriterMutation;
+        pub use crate::artifacts::writer::standards::v1::subsets::any::schema::diff::WriterDiff;
 
         #[path = "../../🗿️artifacts/✒️writer/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -403,7 +406,7 @@ pub use apps::writer::wasm::*;
 //#endregion 🌉️WasmBridge
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

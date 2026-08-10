@@ -60,7 +60,7 @@ import {
   type UiComponentSceneNode,
 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
@@ -529,11 +529,11 @@ function WasmGraphSurface({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.node");
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.node");
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
@@ -762,7 +762,7 @@ function WasmGraphSurface({
               domains = { nodes: [], edges: [], handles: [] };
             }
           }
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "nodeGraph" },
@@ -773,7 +773,7 @@ function WasmGraphSurface({
             mapContextMenu,
             shellContextMenuFallback,
           );
-          setContextMenu({ x: event.clientX, y: event.clientY, items });
+          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
       onPointerUp={emitInteractionState}
@@ -884,7 +884,6 @@ function DiagramGraphFallback({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.node");
   const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes), [parsedNodes]);
   const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
   const [nodes, setNodes] = useState(initialNodes);
@@ -905,7 +904,8 @@ function DiagramGraphFallback({
   const shellContextMenuFallback = useShellContextMenuFallback();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.node");
 
   return (
     <div
@@ -938,7 +938,7 @@ function DiagramGraphFallback({
         event.preventDefault();
         event.stopPropagation();
         void (async () => {
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "nodeGraph" },
@@ -948,7 +948,7 @@ function DiagramGraphFallback({
             mapContextMenu,
             shellContextMenuFallback,
           );
-          setContextMenu({ x: event.clientX, y: event.clientY, items });
+          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
     >
@@ -1736,18 +1736,17 @@ export function FlowGraphCanvasHost({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.flow");
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const schedulerRef = useRef<ReturnType<typeof createDemandFrameScheduler> | null>(null);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{
+  const [contextMenu, setContextMenu] = useState<SurfaceContextMenuResult & {
     readonly x: number;
     readonly y: number;
     readonly widgetId?: string;
-    readonly items: readonly ContextMenuItem[];
   } | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.flow");
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
@@ -2286,7 +2285,7 @@ export function FlowGraphCanvasHost({
           } else if (widgetId) {
             dispatch("contextMenuAt", { id: widgetId });
           }
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "nodeGraph" },
@@ -2302,7 +2301,7 @@ export function FlowGraphCanvasHost({
             (specs) => mapContextMenuSpecs(specs, buildFlowMenuDispatch(widgetId, event.clientX, event.clientY), flowMenuKeysByActionId),
             shellContextMenuFallback,
           );
-          setContextMenu({ x: event.clientX, y: event.clientY, widgetId, items });
+          setContextMenu({ x: event.clientX, y: event.clientY, widgetId, ...menu });
           paintOverlays();
         })();
       }}

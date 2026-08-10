@@ -33,7 +33,7 @@ import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`Interpreter` already landed in a prior batch.
 import { type CanvasCamera, worldToScreenLogical, wheelCameraAtScreen } from "../Canvas2dHost/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
-import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";
+import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Paint2dHost
@@ -156,7 +156,6 @@ function Paint2dCanvasSurface({
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.paint");
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<RasterWasmSession | null>(null);
@@ -175,7 +174,8 @@ function Paint2dCanvasSurface({
   const [attachError, setAttachError] = useState<string | null>(null);
   const [marqueeOverlay, setMarqueeOverlay] = useState<Paint2dMarqueeOverlay | null>(null);
   const [overlayRect, setOverlayRect] = useState<Paint2dScreenRect | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.paint");
   const canvasUnavailableLabel = useLabel("ui.host.canvasUnavailable");
 
   const dispatch = useCallback(
@@ -552,7 +552,7 @@ function Paint2dCanvasSurface({
       const hits = targets.map((target) => ({ domain: target.domain, id: target.id }));
       const selectionIds = parsePaint2dSelection(scene.selectionJson);
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "paint2d" },
@@ -568,7 +568,7 @@ function Paint2dCanvasSurface({
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [clientPoint, isNavigator, mapContextMenu, node.surfaceId, requestContextMenu, scene.selectionJson, shellContextMenuFallback, windowInstanceId],

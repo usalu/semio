@@ -9,7 +9,7 @@
 import { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { childElementId, ContextMenuController, HistoryTable, useLabel, type ContextMenuItem, type HistoryColumn } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -20,8 +20,8 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
   const scene = node.graphTimeline;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.history");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.history");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -47,7 +47,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "graphTimeline" },
@@ -58,7 +58,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],

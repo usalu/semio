@@ -359,7 +359,7 @@ pub use apps::imperative::wasm::ImperativeSession;
 //#endregion 🕸️Wasm
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

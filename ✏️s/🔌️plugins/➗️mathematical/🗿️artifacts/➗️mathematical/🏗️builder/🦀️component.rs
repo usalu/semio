@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalMutation, MathematicalSnapshot};
 use crate::artifacts::mathematical::standards::v1::builder::MathematicalBuilder as MathematicalRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct MathematicalBuilder(MathematicalRawBuilder);
 
 impl ArtifactBuilder for MathematicalBuilder {

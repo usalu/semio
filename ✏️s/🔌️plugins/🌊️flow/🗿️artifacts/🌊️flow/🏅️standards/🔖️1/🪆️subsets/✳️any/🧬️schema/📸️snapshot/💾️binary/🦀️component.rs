@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn pack_protocol_names_snapshot_segment() {
-        assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment Snapshot"));
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment payload"));
     }
 }
 //#endregion 🧪️Tests

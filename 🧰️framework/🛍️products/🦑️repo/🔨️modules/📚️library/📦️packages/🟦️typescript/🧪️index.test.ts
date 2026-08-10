@@ -1142,6 +1142,12 @@ describe("loadTaxonomy", () => {
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
   });
 
+  test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
+    const taxonomy = loadTaxonomy();
+    expect("pluginDirName" in taxonomy).toBe(false);
+    expect(taxonomy.pluginChildDirs).toEqual(["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"]);
+  });
+
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
     const taxonomy = loadTaxonomy();
     // ⚙️ Completeness includes 🧬️mutations + ⚙️engine; structural-only extra is 📚️examples.
@@ -1260,6 +1266,18 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, mutationChildDirs: [] };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("mutationChildDirs"))).toBe(true);
+  });
+
+  test("reports empty pluginChildDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, pluginChildDirs: [] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("pluginChildDirs"))).toBe(true);
+  });
+
+  test("rejects empty direct plugin-root facet declarations", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, pluginChildDirs: [...taxonomy.pluginChildDirs, ""] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("empty entry"))).toBe(true);
   });
 
   test("rejects plural example component dirs in taxonomyLeafParentDirs", () => {

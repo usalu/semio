@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::remodel::{RemodelDiff, RemodelMutation, RemodelSnapshot};
 use crate::artifacts::remodel::standards::v1::subsets::any::builder::RemodelBuilder as RemodelAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct RemodelBuilder(RemodelAnyBuilder);
 
 impl ArtifactBuilder for RemodelBuilder {

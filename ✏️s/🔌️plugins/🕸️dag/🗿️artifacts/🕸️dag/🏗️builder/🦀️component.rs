@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::dag::{DagDiff, DagMutation, DagSnapshot};
 use crate::artifacts::dag::standards::v1::builder::DagBuilder as DagRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct DagBuilder(DagRawBuilder);
 
 impl ArtifactBuilder for DagBuilder {

@@ -151,9 +151,7 @@ export interface Taxonomy {
   readonly storyLeafFilename: string;
   readonly libWiringLineBudget: number;
   readonly forbiddenPathSegments: readonly string[];
-  /** 🔌️ Required plugin-root folder name under each `✏️s/🔌️plugins/<plugin>/`. */
-  readonly pluginDirName: string;
-  /** 🔌️ Required child folders of `pluginDirName` (V2 component folders). */
+  /** 🔌️ Required facet folders directly under each `✏️s/🔌️plugins/<plugin>/` root. */
   readonly pluginChildDirs: readonly string[];
   /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
   readonly bannedNameStems: readonly string[];
@@ -522,9 +520,12 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       problems.push(`artifactSpecFilenames["${facet}"] must end with .${taxonomy.semioFileExtension}.`);
     }
   }
-  if (!taxonomy.pluginDirName) problems.push(`pluginDirName is required.`);
-  for (const dir of taxonomy.pluginChildDirs ?? []) {
-    if (!dir) problems.push(`pluginChildDirs contains an empty entry.`);
+  if (!Array.isArray(taxonomy.pluginChildDirs) || taxonomy.pluginChildDirs.length === 0) {
+    problems.push(`pluginChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.pluginChildDirs) {
+      if (!dir) problems.push(`pluginChildDirs contains an empty entry.`);
+    }
   }
   if (!Array.isArray(taxonomy.bannedNameStems) || taxonomy.bannedNameStems.length === 0) {
     problems.push(`bannedNameStems must be a non-empty array.`);

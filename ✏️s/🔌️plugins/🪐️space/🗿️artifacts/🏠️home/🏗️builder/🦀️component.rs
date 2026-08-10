@@ -1,37 +1,21 @@
-//! HomeBuilder
+//! 🏗️ SHomeBuilder (final, artifact-level) — delegates to the 1 standard.
+
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::home::schema::diff::SHomeDiff;
-use crate::artifacts::home::schema::mutations::SHomeMutation;
-use crate::artifacts::home::schema::snapshot::SHomeSnapshot;
+use crate::artifacts::home::{SHomeDiff, SHomeMutation, SHomeSnapshot};
+use crate::artifacts::home::standards::v1::builder::SHomeBuilder as SHomeRawBuilder;
 
-#[derive(Clone, Debug, Default)]
-pub struct HomeBuilder {
-    snapshot: SHomeSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+#[derive(Clone, Debug)]
+pub struct SHomeBuilder(SHomeRawBuilder);
 
-impl ArtifactBuilder for HomeBuilder {
+impl ArtifactBuilder for SHomeBuilder {
     type Snapshot = SHomeSnapshot;
     type Mutation = SHomeMutation;
     type Diff = SHomeDiff;
-    fn empty() -> Self { Self { snapshot: SHomeSnapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<SHomeSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<SHomeSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        let d = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &self.snapshot);
-        self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <SHomeDiff as protocol::MutationDiff<SHomeSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(SHomeRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(SHomeRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(SHomeRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(SHomeRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

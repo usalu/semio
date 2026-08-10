@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookMutation, PlaybookSnapshot};
 use crate::artifacts::playbook::standards::v1::builder::PlaybookBuilder as PlaybookRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct PlaybookBuilder(PlaybookRawBuilder);
 
 impl ArtifactBuilder for PlaybookBuilder {

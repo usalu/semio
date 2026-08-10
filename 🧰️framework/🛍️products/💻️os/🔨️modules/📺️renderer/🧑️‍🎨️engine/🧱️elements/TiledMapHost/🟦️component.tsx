@@ -32,7 +32,7 @@ import { type MapWasmSession, createMapSession, createDemandFrameScheduler } fro
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
-import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";
+import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TiledMapHost
@@ -555,7 +555,6 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.map");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<MapRenderer | null>(null);
@@ -565,15 +564,16 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   const [marqueeOverlay, setMarqueeOverlay] = useState<
     { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } } | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] } | null
   >(null);
-  const [contextMenu, setContextMenu] = useState<{
+  const [contextMenu, setContextMenu] = useState<SurfaceContextMenuResult & {
     open: boolean;
     position: { x: number; y: number } | null;
-    items: readonly ContextMenuItem[];
   }>({
     open: false,
     position: null,
     items: [],
+    titleKey: "ui.surfaceContextMenu.map",
   });
+  const contextMenuTitleLabel = useLabel(contextMenu.titleKey);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
 
@@ -1030,7 +1030,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const selectionGroups = [];
         if (selection.positions.length > 0) selectionGroups.push({ domain: "position", ids: selection.positions });
         if (selection.routes.length > 0) selectionGroups.push({ domain: "route", ids: selection.routes });
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "tiledMap" },
@@ -1040,7 +1040,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
           mapTiledContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
+        setContextMenu({ open: menu.items.length > 0, position: { x: event.clientX, y: event.clientY }, ...menu });
       })();
     };
     canvas.addEventListener("pointerdown", onPointerDown);

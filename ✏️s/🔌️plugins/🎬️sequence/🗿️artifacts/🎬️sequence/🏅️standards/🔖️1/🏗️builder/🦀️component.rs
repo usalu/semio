@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::sequence::{SequenceDiff, SequenceMutation, SequenceSnapshot};
 use crate::artifacts::sequence::standards::v1::subsets::any::builder::SequenceBuilder as SequenceAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct SequenceBuilder(SequenceAnyBuilder);
 
 impl ArtifactBuilder for SequenceBuilder {

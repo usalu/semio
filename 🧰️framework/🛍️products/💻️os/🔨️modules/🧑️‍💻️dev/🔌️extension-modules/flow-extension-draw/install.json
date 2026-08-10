@@ -4,6 +4,6 @@
   "label": "flow-extension-draw",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js",
-  "packageHash": "dev:1786197681664",
-  "installedAt": 1786197681664
+  "packageHash": "dev:1786381108285",
+  "installedAt": 1786381108285
 }

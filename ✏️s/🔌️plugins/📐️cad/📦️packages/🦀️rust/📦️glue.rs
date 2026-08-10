@@ -31,6 +31,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs"]
+        mod interaction_spec;
+        pub use interaction_spec::*;
+
+        // 🐛️ op/dsl/spr used to be their own #[path] mounts of the SAME files the schema tree
+        // below also mounts (mutations/text, snapshot/text, mutations/binary respectively) --
+        // mounting the same source twice creates two non-unified module instances with
+        // conflicting trait impls and mismatched types of the "same" struct. Re-export the
+        // ALREADY-mounted schema-tree module instead of re-compiling the file a second time.
+        pub use standards::v1::subsets::any::schema::mutations::text as op;
+        pub use standards::v1::subsets::any::schema::snapshot::text as dsl;
+        pub use standards::v1::subsets::any::schema::mutations::binary as spr;
+
         #[path = "."]
         pub mod standards {
             #[path = "."]
@@ -483,6 +496,9 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
+        pub mod mutations { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::mutations::*; }
+        pub mod diff { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::diff::text::*; } }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 
         #[path = "../../🗿️artifacts/📐️cad/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -615,7 +631,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

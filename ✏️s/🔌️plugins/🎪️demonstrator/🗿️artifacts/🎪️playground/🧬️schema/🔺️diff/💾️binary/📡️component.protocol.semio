@@ -1,3 +1,0 @@
-dialect protocol stdio.json.diff
-magic = %x00
-payload = *OCTET

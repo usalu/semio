@@ -54,6 +54,7 @@ import {
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
+  surfaceContextMenuTitleKey,
   suggestionMenuItems,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
@@ -2560,6 +2561,26 @@ describe("framework renderer hosts", () => {
     expect(resolveWorldContextMenuTarget({}, { hoveredComponent: { objectId: "obj-1" }, hoveredId: "reference:ref-1" })).toEqual({ kind: "object", id: "obj-1" });
     expect(resolveWorldContextMenuTarget({}, { hoveredId: "reference:ref-1" })).toEqual({ kind: "reference", id: "ref-1" });
     expect(resolveWorldContextMenuTarget({}, {})).toBeNull();
+  });
+
+  it("titles context menus from the specific hit before falling back to the surface", () => {
+    const request = (domain?: string, kind = "world3d") => ({
+      menu: { id: kind },
+      surface: { surfaceId: "surface", kind, hits: domain ? [{ domain, id: "target" }] : [] },
+    });
+
+    expect(surfaceContextMenuTitleKey(request("vortex"))).toBe("ui.surfaceContextMenu.vortex");
+    expect(surfaceContextMenuTitleKey(request("object"))).toBe("ui.surfaceContextMenu.object");
+    expect(surfaceContextMenuTitleKey(request("reference"))).toBe("ui.surfaceContextMenu.reference");
+    expect(surfaceContextMenuTitleKey(request())).toBe("ui.surfaceContextMenu.scene");
+    expect(surfaceContextMenuTitleKey(request(undefined, "board2d"))).toBe("ui.surfaceContextMenu.board");
+  });
+
+  it("covers every target domain emitted by current surface pickers", () => {
+    const domains = ["architecture", "attraction", "block", "edge", "entry", "feature", "group", "handle", "layer", "node", "object", "part", "path", "pixel", "position", "reference", "route", "row", "slider", "vortex"];
+    for (const domain of domains) {
+      expect(surfaceContextMenuTitleKey({ menu: { id: "surface" }, surface: { surfaceId: "surface", kind: "unknown", hits: [{ domain, id: "target" }] } })).toBe(`ui.surfaceContextMenu.${domain}`);
+    }
   });
 
   it("renders text editor host", () => {

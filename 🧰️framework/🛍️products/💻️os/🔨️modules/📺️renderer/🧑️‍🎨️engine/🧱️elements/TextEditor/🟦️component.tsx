@@ -12,7 +12,7 @@ import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { mapContextMenuSpecs } from "../World3dHost/🟦️component.tsx";
 import { useClient } from "../NodeGraph/🟦️component.tsx";
 import { createEditorSession, type EditorWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
@@ -130,7 +130,6 @@ function WasmEditorSurface({
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
   const scenePack = useMemo(() => new Uint8Array(encodePackValue(scene)), [scene]);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.editor");
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -184,7 +183,8 @@ function WasmEditorSurface({
   const [renamePosition, setRenamePosition] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const [completionsOpen, setCompletionsOpen] = useState(false);
   const [completionIndex, setCompletionIndex] = useState(0);
-  const [contextMenu, setContextMenu] = useState<{ readonly position: { readonly x: number; readonly y: number }; readonly items: ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly position: { readonly x: number; readonly y: number } }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.editor");
 
   const completions = useMemo(() => parseJsonOr<readonly CompletionItem[]>(scene.completionsJson, []), [scene.completionsJson]);
   const renameInfo = useMemo(() => parseJsonOr<RenameInfo | null>(scene.renameJson, null), [scene.renameJson]);
@@ -477,7 +477,7 @@ function WasmEditorSurface({
             }
             dispatch(action, args);
           };
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "textEditor" },
@@ -499,7 +499,7 @@ function WasmEditorSurface({
             (specs) => mapContextMenuSpecs(specs, dispatchTextEditorMenu, textEditorMenuKeysByActionId),
             shellContextMenuFallback,
           );
-          setContextMenu({ position: { x: event.clientX, y: event.clientY }, items });
+          setContextMenu({ position: { x: event.clientX, y: event.clientY }, ...menu });
           })();
         }}
       >

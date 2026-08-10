@@ -1,15 +1,15 @@
 //! 🏗️ FormsBuilder (1 standard) — delegates to its ✳️any subset.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::forms::{FormsDiff, FormsMutation, FormsSnapshot};
+use crate::artifacts::forms::{FormsDiff, FormMutation, FormsSnapshot};
 use crate::artifacts::forms::standards::v1::subsets::any::builder::FormsBuilder as FormsAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct FormsBuilder(FormsAnyBuilder);
 
 impl ArtifactBuilder for FormsBuilder {
     type Snapshot = FormsSnapshot;
-    type Mutation = FormsMutation;
+    type Mutation = FormMutation;
     type Diff = FormsDiff;
     fn empty() -> Self { Self(FormsAnyBuilder::empty()) }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(FormsAnyBuilder::from_snapshot(snapshot)) }

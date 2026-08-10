@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ EnergyModelBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.model",
+  standard: "1",
+  subset: "*",
+} as const;

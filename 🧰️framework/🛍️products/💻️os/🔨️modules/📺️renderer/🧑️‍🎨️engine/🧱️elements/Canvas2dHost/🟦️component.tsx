@@ -14,7 +14,7 @@ import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, 
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element import — `Interpreter` and `Canvas2dHost` landed in the same batch.
-import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";
+import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Canvas2dHost
@@ -620,7 +620,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const scene = node.canvas2d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.canvas");
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
   cameraRef.current = initialCamera;
@@ -628,7 +627,8 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const containerRef = useRef<HTMLDivElement>(null);
   const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.canvas");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({
@@ -784,7 +784,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "canvas2d" },
@@ -795,7 +795,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],

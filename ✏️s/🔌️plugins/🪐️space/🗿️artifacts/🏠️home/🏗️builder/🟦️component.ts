@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ SHomeBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.home",
+  standard: "1",
+  subset: "*",
+} as const;

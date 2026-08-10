@@ -1322,17 +1322,17 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   }
   if (containsProtocolSegment(pluginRoot)) findings.push(`${pluginId}: found a "📡️protocol" path segment under the plugin dir (renamed to 📡️spr)`);
 
-  const pluginDirName = (TAXONOMY as { pluginDirName?: string }).pluginDirName ?? "🔌️plugin";
-  const pluginChildDirs = (TAXONOMY as { pluginChildDirs?: string[] }).pluginChildDirs ?? ["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"];
-  const pluginContract = join(pluginRoot, pluginDirName);
-  if (existsSync(pluginContract)) {
-    if (!existsSync(join(pluginContract, TAXONOMY_LEAF_FILENAME))) {
-      findings.push(`${pluginId}: ${pluginDirName} is missing ${TAXONOMY_LEAF_FILENAME}`);
-    }
-    for (const child of pluginChildDirs) {
-      if (!existsSync(join(pluginContract, child, TAXONOMY_LEAF_FILENAME))) {
-        findings.push(`${pluginId}: ${pluginDirName} is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
-      }
+  const pluginChildDirs = TAXONOMY.pluginChildDirs;
+  const nestedPluginContract = join(pluginRoot, "🔌️plugin");
+  if (existsSync(nestedPluginContract)) {
+    findings.push(`${pluginId}: move the redundant 🔌️plugin contract and facets directly into the plugin root, then remove 🔌️plugin/`);
+  }
+  if (!existsSync(join(pluginRoot, TAXONOMY_LEAF_FILENAME))) {
+    findings.push(`${pluginId}: plugin root is missing ${TAXONOMY_LEAF_FILENAME}`);
+  }
+  for (const child of pluginChildDirs) {
+    if (!existsSync(join(pluginRoot, child, TAXONOMY_LEAF_FILENAME))) {
+      findings.push(`${pluginId}: plugin root is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
     }
   }
 

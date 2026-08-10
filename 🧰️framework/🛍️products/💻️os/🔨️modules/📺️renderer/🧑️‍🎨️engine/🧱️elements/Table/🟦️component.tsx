@@ -9,7 +9,7 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 import { Button, ContextMenuController, Icon, Input, Table, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -97,8 +97,8 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.row");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.row");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -229,7 +229,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
           event.stopPropagation();
           const rowId = String(row.id ?? row.pluginId ?? index);
           void (async () => {
-            const items = await openSurfaceContextMenu(
+            const menu = await openSurfaceContextMenu(
               requestContextMenu,
               {
                 menu: { id: "table" },
@@ -249,7 +249,8 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
             setContextMenu({
               x: event.clientX,
               y: event.clientY,
-              items: menuActions.length ? [...items, ...(items.length ? [{ id: "table-row-action-separator", separator: true } as ContextMenuItem] : []), ...menuActions] : items,
+              ...menu,
+              items: menuActions.length ? [...menu.items, ...(menu.items.length ? [{ id: "table-row-action-separator", separator: true } as ContextMenuItem] : []), ...menuActions] : menu.items,
             });
           })();
         }}

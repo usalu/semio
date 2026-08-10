@@ -1,6 +1,9 @@
-dialect grammar stdio.json.diff
-root = document
+dialect grammar
+grammar mathematical.diff
+extension mathematical
+start document
+
 document = header body
-header = 'schema' SP 'stdio.json' NL
+header = "schema" SP "stdio.json" NL
 body = payload NL?
-payload = *OCTET
+payload = OCTET+

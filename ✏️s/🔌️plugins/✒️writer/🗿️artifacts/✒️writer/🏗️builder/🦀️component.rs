@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::writer::{WriterDiff, WriterMutation, WriterSnapshot};
 use crate::artifacts::writer::standards::v1::builder::WriterBuilder as WriterRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct WriterBuilder(WriterRawBuilder);
 
 impl ArtifactBuilder for WriterBuilder {

@@ -8,7 +8,7 @@
 import { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { cn, ContextMenuController, useLabel, type ContextMenuItem } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -135,8 +135,8 @@ function SplitDiffPane({ rows, side }: { readonly rows: readonly SplitRow[]; rea
 export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.diffView;
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.diff");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.diff");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -160,7 +160,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "diffView" },
@@ -171,7 +171,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],

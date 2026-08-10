@@ -3,6 +3,7 @@
 //! so it lives in this plugin-root `🫀️core` kernel instead of duplicated into both apps.
 
 use semio_framework_os::{create_backbone_document, register_os_fixture_json, OsWorkflowArtifactDocument, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
+use semio_framework_plugin::Plugin;
 use std::sync::LazyLock;
 
 //#region 🔖️Constants
@@ -51,3 +52,17 @@ pub fn demo_space_projection() -> WorkflowSnapshot {
     demo_os_document().vcs.initial_snapshot
 }
 //#endregion 🔖️DocumentHelpers
+
+//#region 🔌️Registration
+/// 🔌️ Builds the S Studio plugin surface for host registration.
+pub fn plugin() -> Plugin {
+    crate::register_s_exports();
+    Plugin::builder("s")
+        .label("S Studio")
+        .version("0.1.0")
+        .local_backbone_storage()
+        .register_document_app::<crate::apps::home::HomeApp>(crate::apps::home::create_home_app())
+        .register_document_app::<crate::apps::space::SpaceApp>(crate::apps::space::create_space_app())
+        .build()
+}
+//#endregion 🔌️Registration

@@ -6,7 +6,7 @@
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::en1992::En1992Snapshot;
 pub fn register() {}
-pub fn deserialize(_from: &crate::artifacts::txt::TxtSnapshot) -> Result<En1992Snapshot, String> {
+pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<En1992Snapshot, String> {
     Err("txt import not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<En1992Snapshot, String> {

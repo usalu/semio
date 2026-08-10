@@ -1,0 +1,10 @@
+{
+  "title": "Fix Domain Artifact Grammar and Protocol Content Bugs",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix pre-existing grammar and protocol content bugs across ~30 domain artifacts where placeholder single-quote syntax breaks grammar parser and causes cargo test failures.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪ccc39daf38bb4405ad85194b2db58c78"
+  ]
+}

@@ -1,3 +1,0 @@
-dialect protocol stdio.json.mutations
-magic = %x00
-payload = *OCTET

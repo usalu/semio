@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
 
 //#region Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 pub mod plugin;
 pub use plugin::plugin;
 //#endregion Plugin

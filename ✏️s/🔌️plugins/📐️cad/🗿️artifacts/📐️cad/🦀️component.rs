@@ -363,7 +363,9 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
 
 //#region 🔖️Snapshot
 /// 📸️ Re-export persisted snapshot type (defined in snapshot schema facet).
-pub use crate::artifacts::cad::snapshot::schema::CadSnapshot;
+pub use crate::artifacts::cad::schema::snapshot::CadSnapshot;
+pub use crate::artifacts::cad::schema::diff::CadDiff;
+pub use crate::artifacts::cad::schema::mutations::CadMutation;
 //#endregion 🔖️Snapshot
 
 //#endregion 🔖️Domain

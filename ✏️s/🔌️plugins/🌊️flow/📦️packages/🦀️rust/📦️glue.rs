@@ -272,6 +272,9 @@ pub mod artifacts {
             pub mod schema { pub use crate::artifacts::flow::standards::v1::subsets::any::schema::snapshot::*; }
             pub mod pack { pub use crate::artifacts::flow::standards::v1::subsets::any::schema::snapshot::binary::*; }
         }
+        pub use crate::artifacts::flow::standards::v1::subsets::any::schema::snapshot::FlowSnapshot;
+        pub use crate::artifacts::flow::standards::v1::subsets::any::schema::mutations::FlowMutation;
+        pub use crate::artifacts::flow::standards::v1::subsets::any::schema::diff::FlowDiff;
 
         #[path = "../../🗿️artifacts/🌊️flow/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -423,7 +426,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

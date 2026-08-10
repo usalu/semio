@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::layout::{LayoutDiff, LayoutMutation, LayoutSnapshot};
 use crate::artifacts::layout::standards::v1::builder::LayoutBuilder as LayoutRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct LayoutBuilder(LayoutRawBuilder);
 
 impl ArtifactBuilder for LayoutBuilder {

@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::shooting::{ShootingDiff, ShootingMutation, ShootingSnapshot};
 use crate::artifacts::shooting::standards::v1::subsets::any::builder::ShootingBuilder as ShootingAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct ShootingBuilder(ShootingAnyBuilder);
 
 impl ArtifactBuilder for ShootingBuilder {

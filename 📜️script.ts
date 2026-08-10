@@ -4424,7 +4424,7 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
  * `📦️glue.rs` must stay wiring-only (`#[path]` mod declarations + `plugin_exports!(plugin::plugin)`) — no
  * non-trivial `fn`/`impl` body content beyond `taxonomy.libWiringLineBudget`. Catches the exact
  * regression this repo has hit twice before: an agent following the (now-scoped) "single file repo" goal
- * inlining split `#[path]` modules back into `glue.rs`. Plugin identity lives in `🔌️plugin/` via
+ * inlining split `#[path]` modules back into `glue.rs`. Plugin identity lives at the plugin root via
  * `Plugin::builder`, never `semio_plugin!{}`.
  */
 const POLICY_FN_OR_IMPL_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:fn\s+\w+\s*(?:<[^>]*>)?\s*\([^;{]*\)[^;{]*|impl(?:<[^>]*>)?\s+[^;{]+)\{\s*$/;
@@ -4461,8 +4461,8 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
       kind: "taxonomy/lib-shape",
       scope: crate.pluginId || crate.ownerRel,
       priority: policyNewSurfacePriority(crate, "medium"),
-      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + plugin_exports!(plugin::plugin) only — real logic lives in taxonomy component files / 🔌️plugin/, never inlined back.",
-      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s) or 🔌️plugin/; glue.rs should only declare "#[path = \\"...\\"] mod ...;" and call plugin_exports!(plugin::plugin).`,
+      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + plugin_exports!(plugin::plugin) only — real logic lives in taxonomy component files at the plugin root, never inlined back.",
+      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s) at the plugin root; glue.rs should only declare "#[path = \"...\"] mod ...;" and call plugin_exports!(plugin::plugin).`,
     });
   }
   return breaches;
@@ -4597,53 +4597,50 @@ function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must eventually carry `🔌️plugin/` with required children.
- * Medium while Wave 3 migrates; Wave 4 flips to high.
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and facets directly at its root.
  */
 function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const pluginDir = taxonomy.pluginDirName ?? "🔌️plugin";
-  const children = taxonomy.pluginChildDirs ?? [];
+  const children = taxonomy.pluginChildDirs;
   const pluginsRoot = "✏️s/🔌️plugins";
   const breaches: BreachRecord[] = [];
   for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
     if (!entry.isDirectory) continue;
     const ownerRel = `${pluginsRoot}/${entry.name}`;
-    const contractRel = `${ownerRel}/${pluginDir}`;
-    if (!existsSync(join(repoRoot, contractRel))) {
+    const nestedContractRel = `${ownerRel}/🔌️plugin`;
+    if (existsSync(join(repoRoot, nestedContractRel))) {
       breaches.push({
-        id: `plugin-root-missing-${ownerRel}`,
-        summary: `"${ownerRel}" is missing required ${pluginDir}/ root contract folder`,
+        id: `plugin-root-nested-${ownerRel}`,
+        summary: `"${ownerRel}" contains a redundant 🔌️plugin/ directory`,
         kind: "taxonomy/plugin-root-shape",
         scope: ownerRel,
         priority: "high",
-        reason: "Every plugin must expose general plugin code under 🔌️plugin/ via Plugin::builder.",
-        solution: `Create ${contractRel}/🦀️component.rs plus ${children.map((c) => c + "/🦀️component.rs").join(", ")}.`,
+        reason: "Plugin contracts and facets are direct children of the plugin root.",
+        solution: `Move ${nestedContractRel}/🦀️component.rs and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
       });
-      continue;
     }
-    if (!existsSync(join(repoRoot, contractRel, "🦀️component.rs"))) {
+    if (!existsSync(join(repoRoot, ownerRel, "🦀️component.rs"))) {
       breaches.push({
-        id: `plugin-root-leaf-${contractRel}`,
-        summary: `"${contractRel}" is missing 🦀️component.rs`,
+        id: `plugin-root-leaf-${ownerRel}`,
+        summary: `"${ownerRel}" is missing root 🦀️component.rs`,
         kind: "taxonomy/plugin-root-shape",
         scope: ownerRel,
         priority: "high",
-        reason: "🔌️plugin/ must have a leaf component that returns Plugin via Plugin::builder.",
-        solution: `Add ${contractRel}/🦀️component.rs exporting pub fn plugin() -> Plugin.`,
+        reason: "The plugin root must have a leaf component that returns Plugin via Plugin::builder.",
+        solution: `Add ${ownerRel}/🦀️component.rs exporting pub fn plugin() -> Plugin.`,
       });
     }
     for (const child of children) {
-      const childLeaf = join(repoRoot, contractRel, child, "🦀️component.rs");
+      const childLeaf = join(repoRoot, ownerRel, child, "🦀️component.rs");
       if (!existsSync(childLeaf)) {
         breaches.push({
-          id: `plugin-root-child-${contractRel}/${child}`,
-          summary: `"${contractRel}" is missing ${child}/🦀️component.rs`,
+          id: `plugin-root-child-${ownerRel}/${child}`,
+          summary: `"${ownerRel}" is missing direct facet ${child}/🦀️component.rs`,
           kind: "taxonomy/plugin-root-shape",
           scope: ownerRel,
           priority: "high",
-          reason: "🔌️plugin/ required children: manifest, capabilities, setup, apps.",
-          solution: `Add ${contractRel}/${child}/🦀️component.rs.`,
+          reason: "Manifest, capabilities, setup, and apps are required direct plugin-root facets.",
+          solution: `Add ${ownerRel}/${child}/🦀️component.rs.`,
         });
       }
     }
@@ -4667,12 +4664,12 @@ function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCr
     if (content.includes("semio_plugin!")) {
       breaches.push({
         id: `plugin-builder-macro-${crate.libRelPath}`,
-        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder in 🔌️plugin/`,
+        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder at the plugin root`,
         kind: "taxonomy/plugin-builder",
         scope: crate.pluginId || crate.ownerRel,
         priority: "high",
-        reason: "semio_plugin! is retired; plugin identity lives under 🔌️plugin/ via typestate PluginBuilder.",
-        solution: "Move registration into 🔌️plugin/🦀️component.rs using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin).",
+        reason: "semio_plugin! is retired; plugin identity lives in the root 🦀️component.rs via typestate PluginBuilder.",
+        solution: "Move registration into the plugin-root 🦀️component.rs using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin).",
       });
     }
     if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {

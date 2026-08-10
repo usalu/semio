@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::flow::{FlowDiff, FlowMutation, FlowSnapshot};
 use crate::artifacts::flow::standards::v1::subsets::any::builder::FlowBuilder as FlowAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct FlowBuilder(FlowAnyBuilder);
 
 impl ArtifactBuilder for FlowBuilder {

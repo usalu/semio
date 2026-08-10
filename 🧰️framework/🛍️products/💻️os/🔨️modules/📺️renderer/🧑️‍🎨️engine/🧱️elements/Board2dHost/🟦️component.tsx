@@ -29,7 +29,7 @@ import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { parseSelectionIds } from "../InkCanvasHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
-import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";
+import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Board2dHost
@@ -361,7 +361,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.board");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<Board2dWasmSession | null>(null);
@@ -376,7 +375,8 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<() => void>(() => {});
   const [sessionEpoch, setSessionEpoch] = useState(0);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.board");
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -919,7 +919,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
           dispatch("setSelection", { ids: selectionIds });
         }
         const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "board2d" },
@@ -934,7 +934,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [dispatch, mapContextMenu, node.surfaceId, requestContextMenu, scene?.interactive, scene?.selectionJson, shellContextMenuFallback],

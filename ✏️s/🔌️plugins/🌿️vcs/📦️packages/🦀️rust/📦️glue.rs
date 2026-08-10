@@ -92,8 +92,6 @@ pub mod artifacts {
                                 pub mod set_title {
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛set-title/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛set-title/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛set-title/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
@@ -101,8 +99,6 @@ pub mod artifacts {
                                 pub mod set_notes {
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝set-notes/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝set-notes/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝set-notes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
@@ -126,8 +122,6 @@ pub mod artifacts {
                                 pub mod set_status {
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦set-status/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦set-status/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦set-status/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
@@ -308,6 +302,9 @@ pub mod artifacts {
             pub mod schema { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::*; }
             pub mod pack { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::binary::*; }
         }
+        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::VcsSnapshot;
+        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::VcsDemoMutation;
+        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::VcsDiff;
 
         #[path = "../../🗿️artifacts/🌿️vcs/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -405,7 +402,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

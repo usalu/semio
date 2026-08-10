@@ -1,3 +1,18 @@
-dialect protocol stdio.json.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol lowpoly.spr.mutations
+version 1
+schema lowpoly.op
+start record
+framing record
+header fixed 16
+field format u8
+field ordinal varint
+record ObjectsAdd tag 1
+record ObjectsRemove tag 2
+record ObjectsMove tag 3
+record ObjectsPatch tag 4
+record AddPaintLayer tag 5
+record RemovePaintLayer tag 6
+record PatchPaintLayer tag 7
+record PaintStroke tag 8
+record SetSnapshot tag 9

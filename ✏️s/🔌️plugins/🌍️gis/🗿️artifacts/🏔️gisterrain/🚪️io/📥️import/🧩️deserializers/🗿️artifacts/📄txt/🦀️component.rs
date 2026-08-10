@@ -6,7 +6,7 @@
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::gisTerrain::GisTerrainSnapshot;
 pub fn register() {}
-pub fn deserialize(_from: &crate::artifacts::txt::TxtSnapshot) -> Result<GisTerrainSnapshot, String> {
+pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<GisTerrainSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<GisTerrainSnapshot, String> {

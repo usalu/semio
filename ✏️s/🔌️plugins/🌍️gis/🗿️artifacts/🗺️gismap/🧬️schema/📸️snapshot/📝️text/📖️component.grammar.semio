@@ -1,6 +1,9 @@
-dialect grammar stdio.json.snapshot
-root = document
+dialect grammar
+grammar gismap.snapshot
+extension gismap
+start document
+
 document = header body
-header = 'schema' SP 'stdio.json' NL
+header = "schema" SP "stdio.json" NL
 body = payload NL?
-payload = *OCTET
+payload = OCTET+

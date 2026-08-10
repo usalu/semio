@@ -1,0 +1,9 @@
+dialect grammar
+grammar model.snapshot
+extension model
+start document
+
+document = header body
+header = "schema" SP "stdio.json" NL
+body = payload NL?
+payload = OCTET+

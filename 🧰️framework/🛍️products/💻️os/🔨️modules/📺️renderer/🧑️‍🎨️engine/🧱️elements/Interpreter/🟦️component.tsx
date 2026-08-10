@@ -202,6 +202,61 @@ export function useShellContextMenuFallback(): (() => ContextMenuItem[]) | undef
   return useContext(ShellContextMenuFallbackContext);
 }
 
+export type SurfaceContextMenuResult = {
+  readonly items: ContextMenuItem[];
+  readonly titleKey: UiTranslationKey;
+};
+
+const contextMenuTargetTitleKeys = {
+  architecture: "ui.surfaceContextMenu.architecture",
+  attraction: "ui.surfaceContextMenu.attraction",
+  block: "ui.surfaceContextMenu.block",
+  edge: "ui.surfaceContextMenu.edge",
+  entry: "ui.surfaceContextMenu.entry",
+  feature: "ui.surfaceContextMenu.feature",
+  group: "ui.surfaceContextMenu.group",
+  handle: "ui.surfaceContextMenu.handle",
+  layer: "ui.surfaceContextMenu.layer",
+  node: "ui.surfaceContextMenu.node",
+  object: "ui.surfaceContextMenu.object",
+  part: "ui.surfaceContextMenu.part",
+  path: "ui.surfaceContextMenu.path",
+  pixel: "ui.surfaceContextMenu.pixel",
+  position: "ui.surfaceContextMenu.position",
+  reference: "ui.surfaceContextMenu.reference",
+  route: "ui.surfaceContextMenu.route",
+  row: "ui.surfaceContextMenu.row",
+  slider: "ui.surfaceContextMenu.slider",
+  vortex: "ui.surfaceContextMenu.vortex",
+} as const satisfies Record<string, UiTranslationKey>;
+
+const contextMenuSurfaceTitleKeys = {
+  blockList: "ui.surfaceContextMenu.step",
+  board2d: "ui.surfaceContextMenu.board",
+  canvas2d: "ui.surfaceContextMenu.canvas",
+  diffView: "ui.surfaceContextMenu.diff",
+  eventFeed: "ui.surfaceContextMenu.event",
+  graphTimeline: "ui.surfaceContextMenu.history",
+  inkCanvas: "ui.surfaceContextMenu.ink",
+  nodeGraph: "ui.surfaceContextMenu.flow",
+  paint2d: "ui.surfaceContextMenu.paint",
+  table: "ui.surfaceContextMenu.row",
+  textEditor: "ui.surfaceContextMenu.editor",
+  tiledMap: "ui.surfaceContextMenu.map",
+  virtualFileSystem: "ui.surfaceContextMenu.file",
+  world3d: "ui.surfaceContextMenu.scene",
+} as const satisfies Record<string, UiTranslationKey>;
+
+/** @emoji 🏷️ Picks the most-specific translated menu title: the first freshly hit-tested domain,
+ * then the clicked surface, then the workspace fallback. */
+export function surfaceContextMenuTitleKey(request: PluginContextMenuRequest): UiTranslationKey {
+  const hitDomain = request.surface?.hits?.[0]?.domain;
+  if (hitDomain && hitDomain in contextMenuTargetTitleKeys) return contextMenuTargetTitleKeys[hitDomain as keyof typeof contextMenuTargetTitleKeys];
+  const surfaceKind = request.surface?.kind;
+  if (surfaceKind && surfaceKind in contextMenuSurfaceTitleKeys) return contextMenuSurfaceTitleKeys[surfaceKind as keyof typeof contextMenuSurfaceTitleKeys];
+  return "ui.surfaceContextMenu.workspace";
+}
+
 /** @emoji 🖱️ Shared per-surface context-menu open flow — requests specs from the plugin at `request`,
  * maps them to UI items with the surface's own `mapSpecs` (its `useMapContextMenuSpecs`-bound mapper),
  * and falls back to the shell menu ({@link useShellContextMenuFallback}) when the plugin answers empty
@@ -212,9 +267,12 @@ export async function openSurfaceContextMenu(
   request: PluginContextMenuRequest,
   mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
   shellFallback: (() => ContextMenuItem[]) | undefined,
-): Promise<ContextMenuItem[]> {
+): Promise<SurfaceContextMenuResult> {
   const specs = requestContextMenu ? await requestContextMenu(request) : [];
-  return specs.length > 0 ? mapSpecs(specs) : (shellFallback?.() ?? []);
+  return {
+    items: specs.length > 0 ? mapSpecs(specs) : (shellFallback?.() ?? []),
+    titleKey: surfaceContextMenuTitleKey(request),
+  };
 }
 
 //#region ActionDispatch
@@ -553,8 +611,8 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
   const scene = node.virtualFileSystem;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.file");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.file");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -589,7 +647,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
         event.stopPropagation();
         const rowId = String(row.id ?? index);
         void (async () => {
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "virtualFileSystem" },
@@ -605,7 +663,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
             mapContextMenu,
             shellContextMenuFallback,
           );
-          setContextMenu({ x: event.clientX, y: event.clientY, items });
+          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
       onRowDoubleClick={(row) => {

@@ -9,7 +9,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { type ComponentSceneHostProps, type EventFeedEntry } from "@semio-tech/framework";
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -38,8 +38,8 @@ function formatFeedTimestamp(timestampMs: number): string {
 export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.eventFeed;
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.event");
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.event");
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
@@ -75,7 +75,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "eventFeed" },
@@ -86,7 +86,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],

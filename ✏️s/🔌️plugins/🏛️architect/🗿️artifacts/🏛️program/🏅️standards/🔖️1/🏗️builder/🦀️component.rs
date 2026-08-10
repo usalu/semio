@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use crate::artifacts::program::standards::v1::subsets::any::builder::ProgramBuilder as ProgramAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct ProgramBuilder(ProgramAnyBuilder);
 
 impl ArtifactBuilder for ProgramBuilder {

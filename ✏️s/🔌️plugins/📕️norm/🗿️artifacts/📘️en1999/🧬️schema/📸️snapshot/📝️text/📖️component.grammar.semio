@@ -1,6 +1,9 @@
-dialect grammar stdio.json.snapshot
-root = document
+dialect grammar
+grammar en1999.snapshot
+extension en1999
+start document
+
 document = header body
-header = 'schema' SP 'stdio.json' NL
+header = "schema" SP "stdio.json" NL
 body = payload NL?
-payload = *OCTET
+payload = OCTET+

@@ -254,6 +254,9 @@ pub mod artifacts {
             pub mod schema { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::*; }
             pub mod pack { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::binary::*; }
         }
+        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::MathematicalSnapshot;
+        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::MathematicalMutation;
+        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::MathematicalDiff;
 
         #[path = "../../🗿️artifacts/➗️mathematical/🏗️builder/🦀️component.rs"]
         pub mod builder;
@@ -339,7 +342,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔌️plugin/🦀️component.rs"]
+#[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

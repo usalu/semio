@@ -1,11 +1,13 @@
 {
-  "id": "26/08/07/DISSOLVE-CORE-FOLDERS-AND-PLUGIN-ROOT-BUILDER-CONTRACT",
   "title": "Dissolve Core Folders And Plugin Root Builder Contract",
-  "status": "done",
-  "goal": "AI-OPTIMIZED-REPO",
-  "due": "2026-08-07",
-  "client": "cursor-chat",
-  "llm": "cursor-grok-4.5-high",
+  "status": "closed",
   "description": "Dissolve all core folders into named concept folders, give every plugin a plugin root folder with typestate PluginBuilder replacing semio_plugin!, and extend taxonomy/policy/dependency-cruiser/registry validators.",
-  "summary": "Dissolved all product core folders; migrated 32 plugins to 🔌️plugin/ + Plugin::builder; flipped banned-stem/emoji/plugin-root/builder policies to high and no-core-path cruiser to error."
+  "summary": "Flattened all 33 plugin contracts and four required facets directly into plugin roots, removed every redundant 🔌️plugin directory, completed all 40 Rust glue path replacements while preserving concurrent edits, removed pluginDirName from the taxonomy/public interface, and updated active policies, validators, SDK assertions/docs, and existing tests. Structural assertions pass completely. Focused plugin-root tests and the block wasm build pass; the requested full quick/gate/plugin commands remain blocked by documented unrelated dirty-baseline failures in existing taxonomy/discovery, animate wiring, generated TypeScript, and wasm Tokio features. Exact commands and results are recorded in the ticket completion report.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2540"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪ac3b5e40223c43cebcf47a7e869d74d8"
+  ]
 }

@@ -41,84 +41,102 @@ impl ArtifactComposer for CadComposer {
                 }
             }
             if source.dialect == DEP_DWG {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_GLB {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::glb::v2_0::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::glb::v2_0::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_GLTF {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_IFC {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::ifc::v4::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::ifc::v4::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_JSON {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_OBJ {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_PNG {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::png::v1_2::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_STEP {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::step::v_ap214::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::step::v_ap214::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
             if source.dialect == DEP_STL {
-                let bytes: Vec<u8> = match &source.payload {
-                    AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                    AnalyzeSource::Binary(b) => b.to_vec(),
+                let text: Option<String> = match &source.payload {
+                    AnalyzeSource::Text(t) => Some(t.to_string()),
+                    AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                 };
-                if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                if let Some(text) = text {
+                    if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_text(&text) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
                 }
             }
 

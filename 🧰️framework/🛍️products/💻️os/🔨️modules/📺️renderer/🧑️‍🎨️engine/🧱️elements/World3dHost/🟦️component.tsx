@@ -86,7 +86,7 @@ import {
   type WorldVolumeRelocatePayload,
 } from "@semio-tech/infinite-world-r3f";
 import { CAMERA_SYNC_DEBOUNCE_MS } from "../Canvas2dHost/🟦️component.tsx";
-import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WorldTerrainLayer } from "../WorldTerrainLayer/🟦️component.tsx";
 import { base64ToBytes } from "../Paint2dHost/🟦️component.tsx";
 import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../ShellHelpers/🟦️component.tsx";
@@ -3622,7 +3622,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const setWindowTitle = useContext(SetWindowTitleContext);
   const setWindowIcon = useContext(SetWindowIconContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.scene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const sceneCameraJson = scene?.cameraJson ?? "{}";
@@ -3764,7 +3763,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => getWorldSelectionPreview(node.controllerId),
     () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
   );
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.scene");
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
   const catalogueDragEncodedRef = useRef<string | null>(null);
@@ -4776,7 +4776,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           if ((selection.ids?.length ?? 0) > 0) selectionGroups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
           if ((selection.componentIds?.length ?? 0) > 0) selectionGroups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
           const hits = target ? [{ domain: target.kind, id: target.id }] : [];
-          const items = await openSurfaceContextMenu(
+          const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "world3d" },
@@ -4787,7 +4787,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             mapWorldContextMenuSpecs,
             shellContextMenuFallback,
           );
-          setContextMenu({ x: event.clientX, y: event.clientY, items });
+          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
       onPointerDown={handlePointerDown}

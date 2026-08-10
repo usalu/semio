@@ -1,37 +1,21 @@
-//! PresentBuilder
-use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::present::schema::diff::PresentDiff;
-use crate::artifacts::present::schema::mutations::PresentMutation;
-use crate::artifacts::present::schema::snapshot::PresentSnapshot;
+//! 🏗️ PresentBuilder (final, artifact-level) — delegates to the 1 standard.
 
-#[derive(Clone, Debug, Default)]
-pub struct PresentBuilder {
-    snapshot: PresentSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+use semio_framework_plugin::ArtifactBuilder;
+use crate::artifacts::present::{PresentDiff, PresentMutation, PresentSnapshot};
+use crate::artifacts::present::standards::v1::builder::PresentBuilder as PresentRawBuilder;
+
+#[derive(Clone, Debug)]
+pub struct PresentBuilder(PresentRawBuilder);
 
 impl ArtifactBuilder for PresentBuilder {
     type Snapshot = PresentSnapshot;
     type Mutation = PresentMutation;
     type Diff = PresentDiff;
-    fn empty() -> Self { Self { snapshot: PresentSnapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<PresentSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<PresentSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        let d = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation, &self.snapshot);
-        self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(PresentRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(PresentRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(PresentRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(PresentRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

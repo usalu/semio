@@ -23,7 +23,7 @@ import {
   type SelectionMarqueePoint,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import { openSurfaceContextMenu, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { hostLabel } from "../TextEditor/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
@@ -956,7 +956,6 @@ const INK_MARQUEE_THRESHOLD_PX = 4;
 export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
   const windowInstanceId = useContext(WindowInstanceIdContext);
-  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.ink");
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -966,7 +965,8 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   const [marqueePoints, setMarqueePoints] = useState<readonly SelectionMarqueePoint[]>([]);
   const [textEdit, setTextEdit] = useState<InkTextEditState | null>(null);
   const [tableEdit, setTableEdit] = useState<InkTableEditState | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.ink");
   const emptySceneLabel = useLabel("ui.host.emptyScene");
 
   const sceneDoc = useMemo(() => parseInkScene(scene?.documentJson), [scene?.documentJson]);
@@ -1365,7 +1365,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       if (top && !selectedSet.has(top.id)) dispatch(inkCanvasActions.setSelection, { ids: selectionIds });
       const hits = hitItems.map((item) => ({ domain: "block", id: item.id }));
       void (async () => {
-        const items = await openSurfaceContextMenu(
+        const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
             menu: { id: "inkCanvas" },
@@ -1381,7 +1381,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
           mapContextMenu,
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, items });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
     [dispatch, doc, mapContextMenu, node.surfaceId, requestContextMenu, selectedIds, selectedSet, shellContextMenuFallback, windowInstanceId],

@@ -6,7 +6,7 @@
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 pub fn register() {}
-pub fn serialize(_from: &Procedural2dSnapshot) -> Result<crate::artifacts::txt::TxtSnapshot, String> {
+pub fn serialize(_from: &Procedural2dSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
     Err("txt export not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<Procedural2dSnapshot, String> {

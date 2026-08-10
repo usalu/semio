@@ -1,3 +1,16 @@
-dialect protocol stdio.json.diff
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol writer.diff
+version 1
+schema stdio.json
+start record
+framing magic 0x8953f83f7d340d0a
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

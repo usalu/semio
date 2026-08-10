@@ -4,7 +4,7 @@ use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyMutation, LowpolySnapshot};
 use crate::artifacts::lowpoly::standards::v1::subsets::any::builder::LowpolyBuilder as LowpolyAnyBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct LowpolyBuilder(LowpolyAnyBuilder);
 
 impl ArtifactBuilder for LowpolyBuilder {

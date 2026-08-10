@@ -1,6 +1,9 @@
-dialect grammar stdio.json.mutations
-root = document
+dialect grammar
+grammar 5d.mutations
+extension 5d
+start document
+
 document = header body
-header = 'schema' SP 'stdio.json' NL
+header = "schema" SP "stdio.json" NL
 body = payload NL?
-payload = *OCTET
+payload = OCTET+

@@ -1,15 +1,15 @@
 //! 🏗️ VcsBuilder (final, artifact-level) — delegates to the 1 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::vcs::{VcsDiff, VcsMutation, VcsSnapshot};
+use crate::artifacts::vcs::{VcsDiff, VcsDemoMutation, VcsSnapshot};
 use crate::artifacts::vcs::standards::v1::builder::VcsBuilder as VcsRawBuilder;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct VcsBuilder(VcsRawBuilder);
 
 impl ArtifactBuilder for VcsBuilder {
     type Snapshot = VcsSnapshot;
-    type Mutation = VcsMutation;
+    type Mutation = VcsDemoMutation;
     type Diff = VcsDiff;
     fn empty() -> Self { Self(VcsRawBuilder::empty()) }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(VcsRawBuilder::from_snapshot(snapshot)) }

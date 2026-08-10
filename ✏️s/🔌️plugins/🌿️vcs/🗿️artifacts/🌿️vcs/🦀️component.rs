@@ -4,6 +4,8 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 
 pub const VCS_DOCUMENT_SCHEMA: &str = "vcs.vcs";
 pub use crate::artifacts::vcs::snapshot::schema::VcsSnapshot;
+pub use crate::artifacts::vcs::diff::schema::VcsDiff;
+pub use crate::artifacts::vcs::mutations::VcsDemoMutation;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
