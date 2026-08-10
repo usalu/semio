@@ -9,5 +9,5 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<StepSnapshot, store::TextError>
     Ok(StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), brep })
 }
 pub fn deserialize_text(text: &str) -> Result<StepSnapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::DocumentDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }

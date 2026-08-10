@@ -7,5 +7,5 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<JsonSnapshot, store::TextError>
     Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
 }
 pub fn deserialize_text(text: &str) -> Result<JsonSnapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::DocumentDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }

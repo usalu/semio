@@ -1,8 +1,8 @@
 //! 📜️ Mathematical artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! The DSL-mirror types and the `store::DocumentDsl` impl for `MathematicalSnapshot` live here rather than
+//! The DSL-mirror types and the `store::ArtifactDsl` impl for `MathematicalSnapshot` live here rather than
 //! next to `MathematicalSnapshot` itself in `crate::artifacts::mathematical`: Rust's orphan rule only requires
-//! the foreign trait (`store::DocumentDsl`) or the type (`MathematicalSnapshot`) to live in this crate — since
+//! the foreign trait (`store::ArtifactDsl`) or the type (`MathematicalSnapshot`) to live in this crate — since
 //! both now do (the old 7-crate split's per-crate orphan-rule boundary no longer exists), the impl is free
 //! to live wherever is clearest, which is next to its own DSL-mirror machinery.
 //!
@@ -19,12 +19,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGeometry, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 //#region 🔖️Dsl
 /// 🔌️ DSL-only mirror of `MathematicalEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
-/// edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary only
+/// edges/connections. Converts at the `store::ArtifactDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathematicalEdge` itself (JSON shape, `algorithm_overlay`,
 /// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
 ///
@@ -100,9 +100,9 @@ pub struct MathematicalSnapshotDsl {
     #[dsl(block)]
     geometry: MathematicalGeometry,
 }
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for MathematicalSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
+impl store::ArtifactDsl for MathematicalSnapshotDsl {
     const EXTENSION: &'static str = "mathematical";
     fn envelope_id() -> &'static str {
         "mathematical.mathematical"
@@ -122,7 +122,7 @@ impl store::DocumentDsl for MathematicalSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -130,11 +130,11 @@ impl store::DocumentDsl for MathematicalSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for MathematicalSnapshotDsl {
+impl store::ArtifactPack for MathematicalSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -143,10 +143,10 @@ impl store::DocumentPack for MathematicalSnapshotDsl {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -155,7 +155,7 @@ impl store::DocumentPack for MathematicalSnapshotDsl {
     }
     fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 
 
@@ -172,12 +172,12 @@ pub fn mathematical_snapshot_from_dsl(projection: MathematicalSnapshotDsl) -> Re
 //#region 🔖️DslText
 /// 📖️ Parses `.mathematical` DSL text into a `MathematicalSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
-    <MathematicalSnapshot as DocumentDsl>::parse_dsl(text)
+    <MathematicalSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `MathematicalSnapshot` back to `.mathematical` DSL text.
 pub fn print_dsl(projection: &MathematicalSnapshot) -> String {
-    DocumentDsl::print_dsl(projection)
+    ArtifactDsl::print_dsl(projection)
 }
 //#endregion 🔖️DslText
 

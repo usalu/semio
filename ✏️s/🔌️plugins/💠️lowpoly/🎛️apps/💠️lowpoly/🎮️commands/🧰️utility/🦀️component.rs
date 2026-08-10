@@ -7,7 +7,7 @@ use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{is_paint_utility, utility_params_value};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -22,7 +22,7 @@ pub mod set_utility_param {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &SetUtilityParam, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetUtilityParam, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mut params = utility_params_value(cfg.snapshot);
         let value: Value = serde_json::from_str(&payload.value_json).unwrap_or(Value::Null);
         if let Some(map) = params.as_object_mut() {
@@ -47,7 +47,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.reset_gestures();
         let mut config_mutations = vec![
             LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },

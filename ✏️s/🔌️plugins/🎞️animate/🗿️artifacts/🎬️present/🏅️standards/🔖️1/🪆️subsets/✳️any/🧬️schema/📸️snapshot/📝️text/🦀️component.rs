@@ -17,12 +17,12 @@ pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚�
 
 /// 📖️ Parses `.present` DSL text into a `PresentSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PresentSnapshot, store::TextError> {
-    <PresentSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <PresentSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PresentSnapshot` back to `.present` DSL text.
 pub fn print_dsl(deck: &PresentSnapshot) -> String {
-    store::DocumentDsl::print_dsl(deck)
+    store::ArtifactDsl::print_dsl(deck)
 }
 
 //#region 🧪️Tests

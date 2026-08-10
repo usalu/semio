@@ -14,12 +14,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Puzzle3dSnapshot` to its binary pack form.
 pub fn encode(document: &Puzzle3dSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Puzzle3dSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
-    <Puzzle3dSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -46,14 +46,14 @@ mod tests {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
         let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

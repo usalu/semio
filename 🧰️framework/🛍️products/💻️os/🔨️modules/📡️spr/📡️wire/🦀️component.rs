@@ -7,7 +7,7 @@
 //! `frame tag: u8` (the frame enum's variant declaration order) and its fields in declaration
 //! order, with no body-length prefix (one frame per WS message) and no per-field tags. This
 //! matches `crate::os_spr::wire::🔖️WireCodec`'s convention (also used by `crate::os_spr::causal::🔖️EnvelopeCodec`
-//! and `crate::os_dsl::op_rt`). `DocumentDiff`/`InverseMutation` payloads are opaque `Vec<u8>` (never
+//! and `crate::os_dsl::op_rt`). `ArtifactDiff`/`InverseMutation` payloads are opaque `Vec<u8>` (never
 //! `serde_json::Value`). `ClientFrame::Presence`/`ServerFrame::Presence` carry opaque presence
 //! payload bytes (`peer: Vec<u8>` / `peers: Vec<Vec<u8>>`) — this crate has no dependency on
 //! `framework_core` (where the concrete `PresencePeer` type and its binary codec live), so the
@@ -438,17 +438,17 @@ mod tests {
     fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
         crate::os_spr::causal::MutationEnvelope {
             mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
-            document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
+            document_id: crate::os_spr::ids::ArtifactId("document-1".to_string()),
             actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+            diff: crate::os_spr::causal::ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
             inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
 
     fn sample_frontier() -> crate::os_spr::causal::FrontierSummary {
-        crate::os_spr::causal::FrontierSummary { document_id: crate::os_spr::ids::DocumentId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
+        crate::os_spr::causal::FrontierSummary { document_id: crate::os_spr::ids::ArtifactId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
     }
     //#endregion 🧸️Fixtures
 
@@ -704,9 +704,9 @@ mod presence_pack_serde {
 
 /// @emoji 📡️ Presence roster entry broadcast to every peer connected to a document.
 ///
-/// `presence_pack` carries the app's typed `DocumentApp::Presence` encoded through `DocumentPack`.
+/// `presence_pack` carries the app's typed `ArtifactApp::Presence` encoded through `ArtifactPack`.
 /// When serialised for `ViewModel.presence_peers_json`, that pack is base64-encoded under the
-/// camelCase key `presencePack` (this layer has no app-specific `DocumentPack` decoder, so the
+/// camelCase key `presencePack` (this layer has no app-specific `ArtifactPack` decoder, so the
 /// renderer JSON contract keeps the opaque pack rather than a decoded `presence` object).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -714,7 +714,7 @@ pub struct PresencePeer {
     pub actor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    /// @emoji 👥️ App-typed presence encoded as `DocumentPack` bytes (flag bit 1 on the wire).
+    /// @emoji 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire).
     #[serde(default, skip_serializing_if = "Option::is_none", with = "presence_pack_serde")]
     pub presence_pack: Option<Vec<u8>>,
     pub connected_at_ms: i64,
@@ -741,7 +741,7 @@ pub struct PresencePeer {
 /// this is the encode/decode pair store_sync calls on either side of the wire.
 /// `presence_pack` is length-prefixed bytes in flag bit 1 (formerly `selection_json`);
 /// `drag_ghost_json` stays opaque app-owned text (never re-parsed as JSON here,
-/// same as `DocumentDiff.payload` staying opaque bytes).
+/// same as `ArtifactDiff.payload` staying opaque bytes).
 pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
     crate::os_spr::write_str(&mut out, &peer.actor);

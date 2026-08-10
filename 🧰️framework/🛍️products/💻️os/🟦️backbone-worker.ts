@@ -6,7 +6,7 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
 import { decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
 
 type RustWorkerHost = {
@@ -75,15 +75,15 @@ const HUB_RECONNECT_MAX_MS = 30_000;
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentState
-type DocumentState = {
-  config: DocumentActorConfig;
+type ArtifactState = {
+  config: ArtifactActorConfig;
   channel: BroadcastChannel;
   socket: WebSocket | null;
   pollTimer: ReturnType<typeof setInterval> | null;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
   reconnectDelayMs: number;
   pendingMutations: MutationEnvelope[];
-  status: DocumentSyncStatus;
+  status: ArtifactSyncStatus;
   /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
    * `Ack.frontier`) — the wire-v2 replacement for the old `sinceVersion: number` counter. */
   frontier: WireFrontierSummary | null;
@@ -97,31 +97,31 @@ type DocumentState = {
   closed: boolean;
 };
 
-const documents = new Map<string, DocumentState>();
+const artifacts = new Map<string, ArtifactState>();
 
 function post(message: BackboneWorkerResponse): void {
   workerScope?.postMessage({ wire: encodeBackboneWorkerResponse(message) });
 }
 
-function emitEvent(documentId: string, event: DocumentEvent): void {
+function emitEvent(documentId: string, event: ArtifactEvent): void {
   post({ kind: "event", documentId, event });
 }
 
-function setStatus(state: DocumentState, patch: Partial<DocumentSyncStatus>): void {
+function setStatus(state: ArtifactState, patch: Partial<ArtifactSyncStatus>): void {
   state.status = { ...state.status, ...patch };
   emitEvent(state.config.documentId, { kind: "status", ...state.status });
 }
 
-function setRemote(state: DocumentState, remote: RemoteState): void {
+function setRemote(state: ArtifactState, remote: RemoteState): void {
   setStatus(state, { remote });
 }
 
-function folderBinding(config: DocumentActorConfig): Extract<PersistenceBinding, { kind: "folder" }> | null {
+function folderBinding(config: ArtifactActorConfig): Extract<PersistenceBinding, { kind: "folder" }> | null {
   const binding = config.bindings.find((entry): entry is Extract<PersistenceBinding, { kind: "folder" }> => entry.kind === "folder");
   return binding ?? null;
 }
 
-function hubBinding(config: DocumentActorConfig): Extract<PersistenceBinding, { kind: "hub" }> | null {
+function hubBinding(config: ArtifactActorConfig): Extract<PersistenceBinding, { kind: "hub" }> | null {
   const binding = config.bindings.find((entry): entry is Extract<PersistenceBinding, { kind: "hub" }> => entry.kind === "hub");
   return binding ?? null;
 }
@@ -143,7 +143,7 @@ function actorSeed(actor: string): number {
 
 /** ⏰️ Advances `state.hlcCounter` and stamps a fresh wire timestamp for an outbound envelope —
  * the TS twin of the Rust actor's `next_timestamp`. */
-function nextWireTimestamp(state: DocumentState): WireMutationEnvelope["timestamp"] {
+function nextWireTimestamp(state: ArtifactState): WireMutationEnvelope["timestamp"] {
   state.hlcCounter += 1;
   return { actor: actorSeed(state.config.actor), physical_ms: Date.now(), logical: state.hlcCounter };
 }
@@ -200,7 +200,7 @@ function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
   return {
     id: envelope.mutation_id,
     actor: envelope.actor,
-    document: envelope.document_id,
+    artifact: envelope.artifact_id,
     schemaVersion: envelope.diff.schema,
     deps: [...envelope.dependencies],
     payloadHash: placeholderPayloadHash(payload),
@@ -224,7 +224,7 @@ function rollbackEnvelope(envelope: MutationEnvelope): MutationEnvelope {
   return {
     id: undoId,
     actor: envelope.actor,
-    document: envelope.document,
+    artifact: envelope.artifact,
     schemaVersion: envelope.schemaVersion,
     deps: [envelope.id],
     payloadHash: placeholderPayloadHash(envelope.inverse.inverseDiff.payload),
@@ -239,7 +239,7 @@ function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder"
   return `${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${binding.path}`)}&documentId=${encodeURIComponent(documentId)}`;
 }
 
-async function pollFolderOnce(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>): Promise<void> {
+async function pollFolderOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): Promise<void> {
   try {
     const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId));
     if (response.status === 404) return;
@@ -256,7 +256,7 @@ async function pollFolderOnce(state: DocumentState, binding: Extract<Persistence
 /** 👁️ Best-effort external-change watch: tries the dev middleware's SSE endpoint first (see header
  * doc), and only falls back to interval polling if that connection never opens — so once the
  * middleware side (`framework/os/dev/script.ts`) lands, this upgrades itself automatically. */
-function watchFolder(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
+function watchFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
   let sseOpened = false;
   try {
     const source = new EventSource(`${FOLDER_ENDPOINT_PATH}/watch?uri=${encodeURIComponent(`folder://${binding.path}`)}`);
@@ -279,13 +279,13 @@ function watchFolder(state: DocumentState, binding: Extract<PersistenceBinding, 
   startFolderPolling(state, binding);
 }
 
-function startFolderPolling(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
+function startFolderPolling(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
   if (state.pollTimer != null) return;
   state.pollTimer = setInterval(() => void pollFolderOnce(state, binding), FOLDER_POLL_INTERVAL_MS);
   void pollFolderOnce(state, binding);
 }
 
-async function writeFolder(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>, pack: readonly number[], spr: readonly number[]): Promise<void> {
+async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>, pack: readonly number[], spr: readonly number[]): Promise<void> {
   const bundle = encodeDocumentPackBytes(new Uint8Array(pack), new Uint8Array(spr));
   const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId), {
     method: "PUT",
@@ -298,7 +298,7 @@ async function writeFolder(state: DocumentState, binding: Extract<PersistenceBin
 //#endregion 🔖️Folder
 
 //#region 🔖️Hub
-function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "hub" }>): void {
+function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): void {
   if (state.closed) return;
   setRemote(state, { kind: "connecting" });
   const wsBase = binding.baseUrl.replace(/^http/, "ws");
@@ -313,7 +313,7 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
         wire_version: 1,
         protocol_version: 1,
         schema: state.config.schema,
-        // 🧬️ W5.7: real hash when the shell supplied one via `DocumentActorConfig.packSchemaHash`
+        // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
         // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
         // hub treats as "schema-agnostic client" and never validates.
         pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
@@ -342,13 +342,13 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
   socket.onerror = () => socket.close();
 }
 
-function sendWireFrame(state: DocumentState, frame: ClientFrame, lane: WireLane): void {
+function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane): void {
   if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientFrame(frame, lane));
 }
 
 /** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for
  * {@link handleAck}. Mirrors the Rust actor's `relay_operations_to_hub`. */
-function relayMutationsToHub(state: DocumentState, envelopes: readonly MutationEnvelope[]): void {
+function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (state.socket?.readyState !== WebSocket.OPEN || envelopes.length === 0) return;
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
@@ -360,7 +360,7 @@ function relayMutationsToHub(state: DocumentState, envelopes: readonly MutationE
 /** 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
  * `handle_ack`. `pendingMutations` (the UI-facing "unconfirmed" count) is trimmed by id, the same
  * way the old per-operation `ack` frame used to. */
-function handleAck(state: DocumentState, batchId: number, stages: readonly WireAckStage[]): void {
+function handleAck(state: ArtifactState, batchId: number, stages: readonly WireAckStage[]): void {
   for (const stage of stages) {
     if (typeof stage !== "object" || !("Applied" in stage)) continue;
     const sent = state.pendingBatches.get(batchId);
@@ -389,7 +389,7 @@ function handleAck(state: DocumentState, batchId: number, stages: readonly WireA
   }
 }
 
-function handleHubFrame(state: DocumentState, frame: ServerFrame): void {
+function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
   if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
   if ("Welcome" in frame) {
     state.resumeToken = frame.Welcome.resume_token;
@@ -586,10 +586,10 @@ void putCachedBlob;
 //#endregion 🔖️BlobCache
 
 //#region 🔖️Lifecycle
-function openDocument(config: DocumentActorConfig): void {
-  closeDocument(config.documentId);
+function openArtifact(config: ArtifactActorConfig): void {
+  closeArtifact(config.documentId);
   const channel = new BroadcastChannel(`semio-doc-${config.documentId}`);
-  const state: DocumentState = {
+  const state: ArtifactState = {
     config,
     channel,
     socket: null,
@@ -605,7 +605,7 @@ function openDocument(config: DocumentActorConfig): void {
     hlcCounter: 0,
     closed: false,
   };
-  documents.set(config.documentId, state);
+  artifacts.set(config.documentId, state);
   channel.onmessage = (messageEvent) => {
     const envelopes = messageEvent.data as MutationEnvelope[];
     if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteMutations", envelopes });
@@ -620,18 +620,18 @@ function openDocument(config: DocumentActorConfig): void {
   emitEvent(config.documentId, { kind: "status", ...state.status });
 }
 
-function closeDocument(documentId: string): void {
-  const state = documents.get(documentId);
+function closeArtifact(documentId: string): void {
+  const state = artifacts.get(documentId);
   if (!state) return;
   state.closed = true;
   state.socket?.close();
   if (state.pollTimer != null) clearInterval(state.pollTimer);
   if (state.reconnectTimer != null) clearTimeout(state.reconnectTimer);
   state.channel.close();
-  documents.delete(documentId);
+  artifacts.delete(documentId);
 }
 
-async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): Promise<void> {
+async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
   switch (message.kind) {
     case "localMutations": {
       if (message.envelopes.length === 0) break; // pure wake
@@ -675,7 +675,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       break;
     }
     case "detach":
-      closeDocument(state.config.documentId);
+      closeArtifact(state.config.documentId);
       break;
   }
 }
@@ -685,13 +685,13 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
 function handleTsRequest(request: BackboneWorkerRequest): void {
   switch (request.kind) {
     case "open":
-      openDocument(request);
+      openArtifact(request);
       break;
     case "close":
-      closeDocument(request.documentId);
+      closeArtifact(request.documentId);
       break;
     case "send": {
-      const state = documents.get(request.documentId);
+      const state = artifacts.get(request.documentId);
       if (state) void handleLocalMsg(state, request.message);
       break;
     }
@@ -710,7 +710,7 @@ if (import.meta.vitest) {
     return {
       id: "edit-1",
       actor: "actor-1",
-      document: "doc-1",
+      artifact: "doc-1",
       schemaVersion: "demo/v1",
       deps: [],
       payloadHash: "unused-in-this-fallback",

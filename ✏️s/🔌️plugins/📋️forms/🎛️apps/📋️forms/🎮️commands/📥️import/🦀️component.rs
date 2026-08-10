@@ -9,7 +9,7 @@ use crate::artifacts::forms::engine::{default_example_spec, empty_forms_snapshot
 // artifact's own `dsl` submodule under the bare name would shadow it.
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
@@ -38,13 +38,13 @@ pub mod set_spec_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetSpecJson, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let Ok(next) = serde_json::from_str::<FormsSnapshot>(&payload.json) else {
             return Ok(Emit::default());
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetSpecJson
@@ -59,7 +59,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let next = match payload.example_id.as_str() {
             "" => Some(empty_forms_snapshot()),
             "building-component" => forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
@@ -72,7 +72,7 @@ pub mod set_active_example {
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

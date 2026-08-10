@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::jack::{Camera, JackSnapshot, Node, Port, PortDirection, PropertyBag, TrinityRamError};
-use store::{DocumentDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use store::{ArtifactDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖️DslMirrors
 /// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `math::graph::manifest` and
@@ -102,9 +102,9 @@ struct JackSnapshotDsl {
     edges: Vec<crate::artifacts::jack::Edge>,
     root_node_id: Option<String>,
 }
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for JackSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
+impl store::ArtifactDsl for JackSnapshotDsl {
     const EXTENSION: &'static str = "trinity";
     fn envelope_id() -> &'static str { "trinity.jack" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -122,7 +122,7 @@ impl store::DocumentDsl for JackSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -130,11 +130,11 @@ impl store::DocumentDsl for JackSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for JackSnapshotDsl {
+impl store::ArtifactPack for JackSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -143,10 +143,10 @@ impl store::DocumentPack for JackSnapshotDsl {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -155,7 +155,7 @@ impl store::DocumentPack for JackSnapshotDsl {
     }
     fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 
 
@@ -189,22 +189,22 @@ fn jack_snapshot_dsl_to_jack_snapshot(parsed: JackSnapshotDsl) -> Result<JackSna
 }
 //#endregion 🔖️DslMirrors
 
-//#region 🔖️DslDocument
-/// 📜️ `.trinity` textual notation for a whole [`JackSnapshot`] (`store::DocumentDsl`), delegating to
+//#region 🔖️DslArtifact
+/// 📜️ `.trinity` textual notation for a whole [`JackSnapshot`] (`store::ArtifactDsl`), delegating to
 /// the derive-generated `JackSnapshotDsl` mirror. Also hand-implements `dsl::DslField` (normally
 /// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `JackSnapshot` can be nested as an
 /// ordinary field too — `TrinityGraphMutation::SetFixture` embeds a whole fixture snapshot.
-impl DocumentDsl for JackSnapshot {
+impl ArtifactDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
     fn envelope_id() -> &'static str { "trinity.jack" }
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let parsed = <JackSnapshotDsl as DocumentDsl>::parse_dsl(text)?;
+        let parsed = <JackSnapshotDsl as ArtifactDsl>::parse_dsl(text)?;
         jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <JackSnapshotDsl as DocumentDsl>::print_dsl(&jack_snapshot_to_dsl(self))
+        <JackSnapshotDsl as ArtifactDsl>::print_dsl(&jack_snapshot_to_dsl(self))
     }
 }
 
@@ -222,20 +222,20 @@ impl dsl::DslField for JackSnapshot {
         jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| error.to_string())
     }
 }
-//#endregion 🔖️DslDocument
+//#endregion 🔖️DslArtifact
 
 //#region 🔖️Pack
-/// 📦️ Binary pack notation for a whole [`JackSnapshot`] (`store::DocumentPack`), delegating through
+/// 📦️ Binary pack notation for a whole [`JackSnapshot`] (`store::ArtifactPack`), delegating through
 /// the same mirror + `jack_snapshot_to_dsl`/`jack_snapshot_dsl_to_jack_snapshot` pair as the DSL impl
 /// above (kept here, next to the mirror types it depends on, rather than in `🎒️pack` — the mirror is
 /// private to this file).
-impl store::DocumentPack for JackSnapshot {
+impl store::ArtifactPack for JackSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        <JackSnapshotDsl as store::DocumentPack>::encode_pack_with(&jack_snapshot_to_dsl(self), options)
+        <JackSnapshotDsl as store::ArtifactPack>::encode_pack_with(&jack_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let parsed = <JackSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <JackSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
     }
 }
@@ -246,12 +246,12 @@ pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚�
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
-    <JackSnapshot as DocumentDsl>::parse_dsl(text)
+    <JackSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `JackSnapshot` back to `.trinity` DSL text.
 pub fn print_dsl(document: &JackSnapshot) -> String {
-    DocumentDsl::print_dsl(document)
+    ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

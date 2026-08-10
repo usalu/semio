@@ -4,7 +4,7 @@
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::{WriterCamera, WriterSnapshot};
 use crate::artifacts::writer::op::WriterMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetCamera
@@ -18,7 +18,7 @@ pub mod set_camera {
         pub camera: WriterCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::config(vec![WriterConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }

@@ -4,7 +4,7 @@ pub mod patch_part_kind {
     use crate::apps::block5d::config::{Block5dConfig, Block5dConfigMutation};
     use crate::artifacts::block5d::op::Block5dMutation;
     use crate::artifacts::block5d::Block5dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -14,7 +14,7 @@ pub mod patch_part_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchPartKind, doc: &DocumentView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchPartKind, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
         let mut part_kind = doc.snapshot.part_kind.clone();
         match payload.field.as_str() {
             "name" => part_kind.name = payload.value.clone(),

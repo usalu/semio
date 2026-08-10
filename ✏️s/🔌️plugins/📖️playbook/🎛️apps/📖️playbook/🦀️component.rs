@@ -1,11 +1,11 @@
-//! 📖️ Playbook play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 📖️ Playbook play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
 //! in `🎭️modes/🏗️builder/🪟️windows/🏗️builder`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`,
 //! shared compute in the artifact's `⚙️engine`. This file is a routing table: `handle` →
 //! `PlaybookCommand::dispatch`, `render` → body-key → node, plus `import_media`'s `"chapters:in"`
-//! importer (an app-level `DocumentApp` trait override, not a command).
+//! importer (an app-level `ArtifactApp` trait override, not a command).
 
 use crate::apps::playbook::commands::{block, contribution, selection, step, locale};
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
@@ -14,7 +14,7 @@ use crate::apps::playbook::modes::builder::windows::builder as builder_window;
 use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
 use crate::artifacts::playbook::op::PlaybookMutation;
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -59,11 +59,11 @@ use contribution::set_contributions;
 
 //#region 🔖️PlaybookPlayApp
 /// 🧪️ B1: unit struct — the former app-struct `RefCell<Vec<String>>` selection now lives in
-/// `PlaybookConfig` (see `DocumentApp::Config`), written through `PlaybookConfigMutation`s.
+/// `PlaybookConfig` (see `ArtifactApp::Config`), written through `PlaybookConfigMutation`s.
 #[derive(Default)]
 pub struct PlaybookPlayApp;
 
-impl DocumentApp for PlaybookPlayApp {
+impl ArtifactApp for PlaybookPlayApp {
     type Snapshot = PlaybookSnapshot;
     type Mutation = PlaybookMutation;
     type Config = PlaybookConfig;
@@ -92,7 +92,7 @@ impl DocumentApp for PlaybookPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -100,7 +100,7 @@ impl DocumentApp for PlaybookPlayApp {
     /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
     /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
     /// import and reused on every later one (idempotent step creation).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -121,7 +121,7 @@ impl DocumentApp for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => builder_window::render(doc.snapshot, cfg.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -182,9 +182,9 @@ pub use crate::artifacts::playbook::engine::register as setup;
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type PlaybookApp = VcsDocumentApp<PlaybookPlayApp>;
+    pub type PlaybookApp = VcsArtifactApp<PlaybookPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn playbook_app() -> PlaybookApp {
@@ -213,7 +213,7 @@ mod tests {
     use super::*;
     use crate::apps::playbook::testkit::playbook_app;
     use semio_framework_plugin::testkit;
-    use semio_framework_plugin::{DocumentApp, MediaClass, MediaForm};
+    use semio_framework_plugin::{ArtifactApp, MediaClass, MediaForm};
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -342,12 +342,12 @@ mod tests {
         let app = PlaybookPlayApp;
         let spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView { snapshot: &spec, history: &history };
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-        assert_eq!(emit.document_mutations.len(), 2, "creates the imported step, then the note block");
-        assert!(matches!(&emit.document_mutations[0], PlaybookMutation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
-        match &emit.document_mutations[1] {
+        assert_eq!(emit.artifact_mutations.len(), 2, "creates the imported step, then the note block");
+        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
+        match &emit.artifact_mutations[1] {
             PlaybookMutation::AddBlock { step_id, block, .. } => {
                 assert_eq!(step_id, PLAYBOOK_IMPORTED_STEP_ID);
                 assert_eq!(block.kind, "note");
@@ -364,11 +364,11 @@ mod tests {
         let mut spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
         spec.steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView { snapshot: &spec, history: &history };
         let media = chapter_media("second chapter", "Second");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-        assert_eq!(emit.document_mutations.len(), 1, "the imported step already exists, only the block is added");
-        assert!(matches!(&emit.document_mutations[0], PlaybookMutation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
+        assert_eq!(emit.artifact_mutations.len(), 1, "the imported step already exists, only the block is added");
+        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
     }
 
     #[test]
@@ -376,7 +376,7 @@ mod tests {
         let app = PlaybookPlayApp;
         let spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView { snapshot: &spec, history: &history };
         assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));
         let bad_media = Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
         assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));

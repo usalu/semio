@@ -7812,8 +7812,8 @@ pub mod vcs {
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
         #[cfg(test)]
-        use vcs::DocumentVcsCommand;
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore, Operation as VcsOperation, OperationDiff};
+        use vcs::ArtifactVcsCommand;
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsEnvelope, ArtifactVcsStore, Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7909,11 +7909,11 @@ pub mod vcs {
             Some(diff)
         }
 
-        pub type KitSnapshotStore = DocumentVcsStore<KitSnapshot, ComposeWireOperation>;
-        pub type KitSnapshotEnvelope = DocumentVcsEnvelope<KitSnapshot, ComposeWireOperation>;
+        pub type KitSnapshotStore = ArtifactVcsStore<KitSnapshot, ComposeWireOperation>;
+        pub type KitSnapshotEnvelope = ArtifactVcsEnvelope<KitSnapshot, ComposeWireOperation>;
 
         pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
-            DocumentVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
+            ArtifactVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
         pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
@@ -7930,7 +7930,7 @@ pub mod vcs {
                 let baseline = Value::Object(Default::default());
                 let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
                 let operation = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
-                store.dispatch(DocumentVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
+                store.dispatch(ArtifactVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
                 let snap = store.projection().expect("projection");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
             }
@@ -8225,7 +8225,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![wire], description: None })
+                    .dispatch(vcs::ArtifactVcsCommand::Apply { operations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
@@ -19205,7 +19205,7 @@ mod tests {
     #[test]
     fn vcs_typed_ops_materialize_projection() {
         use serde::{Deserialize, Serialize};
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore, Operation, OperationDiff};
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsCommand, ArtifactVcsStore, Operation, OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         struct KitProjection {
@@ -19250,8 +19250,8 @@ mod tests {
         }
 
         let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
+        let mut store = ArtifactVcsStore::new(envelope);
+        store.dispatch(ArtifactVcsCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").id, "patched");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");

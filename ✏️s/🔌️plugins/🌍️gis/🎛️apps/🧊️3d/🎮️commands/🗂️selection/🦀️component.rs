@@ -8,7 +8,7 @@
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SelectionHelpers
@@ -28,7 +28,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -44,7 +44,7 @@ pub mod world_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -74,7 +74,7 @@ mod tests {
     fn both_rows_write_the_same_selection() {
         let document = crate::artifacts::gisterrain::engine::default_terrain_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let config = Gis3dConfig::default();
         let cfg = ConfigView { snapshot: &config };
 

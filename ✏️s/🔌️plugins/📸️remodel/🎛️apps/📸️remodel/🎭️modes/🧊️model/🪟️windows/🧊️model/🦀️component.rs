@@ -25,12 +25,12 @@ pub fn definition() -> WindowKindDefinition {
         body_key: REMODEL_PLAY_BODY_MAIN.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "remodel-model".into(),
-        // 🎚️ `measures` stays empty: they are config-derived per frame by `DocumentApp::window_measures`.
+        // 🎚️ `measures` stays empty: they are config-derived per frame by `ArtifactApp::window_measures`.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["select", "measure", "sculpt"].iter().map(|id| UtilityRef::from(*id)).collect(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

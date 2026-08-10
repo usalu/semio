@@ -39,8 +39,8 @@ import {
   evictPluginModule,
   expandPluginRegistry,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   type HostEffect,
   type IntroductionInteraction,
@@ -103,7 +103,7 @@ import {
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
   decodePackValue,
-  type DocumentActorMsg,
+  type ArtifactActorMsg,
   encodeActionWire,
   encodeBackboneMessage,
   encodeBackboneWorkerRequest,
@@ -299,8 +299,8 @@ import {
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   actionCategoryId,
   actionRequiresStagedForm,
-  appDocumentLabel,
-  appWindowDocumentLabel,
+  appBreadcrumb,
+  appWindowLabel,
   applyFrameworkLayoutSeed,
   applyTutorialUiChangeToShell,
   applyTutorialUiSnapshotToShell,
@@ -338,12 +338,12 @@ import {
   preserveJsonIdentity,
   renderStagedArgControl,
   requestFileOpen,
-  resolveAppDocument,
   resolveAppLabel,
+  resolveAppBreadcrumb,
   resolveCanvasBodyKey,
   resolveCommands,
   resolveDialogDefinition,
-  resolveDocumentByAppId,
+  resolveArtifactByAppId,
   resolveFrameworkLayoutSeed,
   resolveIntroductionDefinition,
   resolveKeybindingIntent,
@@ -1356,7 +1356,7 @@ function FrameworkOsShellInner({
   const spawnedAppsRef = useRef<readonly SpawnedAppEntry[]>([]);
   spawnedAppsRef.current = panel?.spawnedApps ?? [];
   const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-  const activeAppTitle = appDocumentLabel(activeSpawnedEntry ? resolveDocumentByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.document, uiTerminology) : session ? resolveAppDocument(session.app, uiTerminology) : []);
+  const activeAppTitle = appBreadcrumb(activeSpawnedEntry ? resolveArtifactByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.breadcrumb, uiTerminology) : session ? resolveAppBreadcrumb(session.app, uiTerminology) : []);
 
   useEffect(() => {
     sessionRef.current = session;
@@ -1564,7 +1564,7 @@ function FrameworkOsShellInner({
     if (!documentId) return;
     const worker = backboneWorkerRef.current;
     if (!worker) return;
-    let actorMessage: DocumentActorMsg;
+    let actorMessage: ArtifactActorMsg;
     try {
       const parsed = decodeBackboneMessage(messageBytes);
       if (parsed.kind === "mutations") {
@@ -2054,7 +2054,7 @@ function FrameworkOsShellInner({
         instanceId,
         appId: program.appId,
         label: label ?? program.label,
-        document: program.document,
+        breadcrumb: program.breadcrumb,
       });
     },
     [loadedPlugins, session, syncSpawnedPluginDocument],
@@ -2104,7 +2104,7 @@ function FrameworkOsShellInner({
           const { selectionJson, vorticesJson, documentSelectedIds, documentHighlightedIds } = effect.patchWorld3dChrome;
           const patch = { selectionJson, vorticesJson };
           const windowInstances = sessionWindowInstances(baseSession.app, extraWindowInstancesRef.current);
-          const documentPanelKey = panelTabKindId(FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+          const documentPanelKey = panelTabKindId(FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
           dispatch({
             type: "SET_WINDOW_UI_BY_WINDOW_ID",
             value: (current) =>
@@ -2484,7 +2484,7 @@ function FrameworkOsShellInner({
           : uri.startsWith("file://")
             ? [{ kind: "folder", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
             : [];
-      await openDocument({ documentId, schema: targetSession.app.document.join(".") }, bindings);
+      await openDocument({ documentId, schema: targetSession.app.breadcrumb.join(".") }, bindings);
     },
     [openDocument, panel, resolveSyncTargetSession, studioMode],
   );
@@ -2509,7 +2509,7 @@ function FrameworkOsShellInner({
           instanceId,
           appId: program.appId,
           label: program.label,
-          document: program.document,
+          breadcrumb: program.breadcrumb,
         }),
       );
     },
@@ -3596,7 +3596,7 @@ function FrameworkOsShellInner({
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
       appId: session?.app.id,
-      appLabel: session ? appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) : undefined,
+      appLabel: session ? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) : undefined,
       controllerId: session?.app.controllerId,
       pluginId: session?.pluginId,
       driverId: uiDriverId,
@@ -3872,24 +3872,24 @@ function FrameworkOsShellInner({
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
     if (studioMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
-    const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
-    if (hasPluginDocumentTab) return pluginLeftTabs;
-    const documentTab = singleTreeLeaf({
-      id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-      icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
-      name: shellLabel("ui.panel.document"),
+    const hasPluginArtifactTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+    if (hasPluginArtifactTab) return pluginLeftTabs;
+    const artifactTab = singleTreeLeaf({
+      id: FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+      icon: shellTabIcon(FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID),
+      name: shellLabel("ui.panel.artifact"),
       order: 0,
       tree: staticTreePanelDefinition({
         sections: [
           {
-            id: "document.root",
-            label: shellLabel("ui.panel.document"),
-            items: [{ id: "document.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.documentEmpty") }],
+            id: "artifact.root",
+            label: shellLabel("ui.panel.artifact"),
+            items: [{ id: "artifact.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.artifactEmpty") }],
           },
         ],
       }),
     });
-    return [documentTab, ...pluginLeftTabs];
+    return [artifactTab, ...pluginLeftTabs];
   }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, uiTerminology, hostAppId]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
@@ -4572,7 +4572,7 @@ function FrameworkOsShellInner({
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
+          {appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
         </span>
       </div>
     );
@@ -4716,7 +4716,7 @@ function FrameworkOsShellInner({
       for (const program of panel.programs) {
         items.push({
           id: `spawn.${program.pluginId}`,
-          label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(resolveDocumentByAppId(loadedPlugins, program.appId, program.document, uiTerminology))}`,
+          label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology))}`,
           category: shellLabel("ui.search.category.catalogue"),
           onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { pluginId: program.pluginId } }),
         });
@@ -4776,7 +4776,7 @@ function FrameworkOsShellInner({
         return [
           {
             id: spawned.id,
-            title: wireLabel(appDocumentLabel(spawnedApp ? resolveAppDocument(spawnedApp, uiTerminology) : spawned.document)),
+            title: wireLabel(appBreadcrumb(spawnedApp ? resolveAppBreadcrumb(spawnedApp, uiTerminology) : spawned.breadcrumb)),
             fill: true,
             showControls: true,
             measures: chrome?.measures,
@@ -4807,7 +4807,7 @@ function FrameworkOsShellInner({
       return {
         id: kind.id,
         iconId: windowIconsById[kind.id] ?? kind.iconId,
-        title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)), uiLocale),
+        title: windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)), uiLocale),
         fill: true,
         showControls: true,
         measures: chrome.measures,
@@ -4984,7 +4984,7 @@ function FrameworkOsShellInner({
         </p>
       );
     if (!session) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
-    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
+    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) }];
     const studioHomeBar =
       studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
         <button
@@ -5002,7 +5002,7 @@ function FrameworkOsShellInner({
           ← {shellLabel("ui.common.backToWorkflow")}
         </button>
         <span>·</span>
-        <span>{appDocumentLabel(resolveDocumentByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.document, uiTerminology))}</span>
+        <span>{appBreadcrumb(resolveArtifactByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.breadcrumb, uiTerminology))}</span>
       </div>
     ) : null;
     return (

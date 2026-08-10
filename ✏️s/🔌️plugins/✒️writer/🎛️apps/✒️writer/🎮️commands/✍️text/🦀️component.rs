@@ -5,7 +5,7 @@ use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEdit
 use crate::artifacts::writer::engine::{apply_jack_rename, dag_jack_example_document, format_writer_text, jack_example_document, jack_symbol_at_offset, JackSymbolKind};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️TextEdit
@@ -21,7 +21,7 @@ pub mod text_edit {
     /// ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into a few undo
     /// steps, not one-per-keystroke. Any interrupting command applies without this key and breaks the
     /// coalescing run.
-    pub fn handle(payload: &TextEdit, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::amend(vec![WriterMutation::SetText { text: payload.text.clone() }], "writer-text-edit"))
     }
 }
@@ -39,7 +39,7 @@ pub mod set_text {
 
     /// 🪙️ A discrete document replacement (unlike `TextEdit`'s keystroke bursts) — each call is its own
     /// undo step, so it must NOT share `TextEdit`'s coalescing key.
-    pub fn handle(payload: &SetText, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetText, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WriterMutation::SetText { text: payload.text.clone() }]))
     }
 }
@@ -56,7 +56,7 @@ pub mod set_snapshot {
         pub snapshot: WriterSnapshot,
     }
 
-    pub fn handle(payload: &SetSnapshot, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![WriterMutation::SetSnapshot { snapshot: payload.snapshot.clone() }]))
     }
 }
@@ -73,7 +73,7 @@ pub mod open_document {
         pub text: String,
     }
 
-    pub fn handle(payload: &OpenDocument, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
         let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
         let language_id = dsl::language_for_semio_content(payload.text.as_bytes())
@@ -111,7 +111,7 @@ pub mod set_snapshot_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetSnapshotJson, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSnapshotJson, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(parse_document_json(&payload.json))
     }
 }
@@ -125,7 +125,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(parse_document_json(&payload.json))
     }
 }
@@ -142,7 +142,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = match payload.example_id.as_str() {
             "jack" => jack_example_document(),
             "dag.jack" => dag_jack_example_document(),
@@ -161,13 +161,13 @@ pub mod format_document {
     #[dsl(keyword = "format-document")]
     pub struct FormatDocument {}
 
-    pub fn handle(_payload: &FormatDocument, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(_payload: &FormatDocument, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let formatted = format_writer_text(&document.text, &document.language_id);
         let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 }]);
         if formatted != document.text {
-            emit.document_mutations = vec![WriterMutation::SetText { text: formatted }];
+            emit.artifact_mutations = vec![WriterMutation::SetText { text: formatted }];
         }
         Ok(emit)
     }
@@ -184,7 +184,7 @@ pub mod commit_rename {
         pub text: String,
     }
 
-    pub fn handle(payload: &CommitRename, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &CommitRename, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn format_document_reformats_jack_query() {
+    fn format_artifact_reformats_jack_query() {
         let mut app = app_with_jack();
         dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }));
         let result = app.dispatch_typed(WriterCommand::FormatDocument(format_document::FormatDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("format");

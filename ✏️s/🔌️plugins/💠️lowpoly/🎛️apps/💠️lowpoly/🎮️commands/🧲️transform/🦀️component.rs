@@ -7,7 +7,7 @@ use crate::apps::lowpoly::session::{LowpolyScratch, Transform};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_s_3d::mesh::Vec3;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️TransformBegin
@@ -18,7 +18,7 @@ pub mod transform_begin {
     #[dsl(keyword = "transform-begin")]
     pub struct TransformBegin {}
 
-    pub fn handle(_payload: &TransformBegin, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.begin_transform_drag();
         Ok(Emit::default())
     }
@@ -33,7 +33,7 @@ pub mod transform_end {
     #[dsl(keyword = "transform-end")]
     pub struct TransformEnd {}
 
-    pub fn handle(_payload: &TransformEnd, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(ctx.end_transform_drag())
     }
 }
@@ -53,7 +53,7 @@ pub mod translate_selection {
         pub dz: f32,
     }
 
-    pub fn handle(payload: &TranslateSelection, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Translate(Vec3::new(payload.dx, payload.dy, payload.dz)), "Translate selection"))
@@ -76,7 +76,7 @@ pub mod rotate_selection {
         pub angle: f32,
     }
 
-    pub fn handle(payload: &RotateSelection, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Rotate { axis: Vec3::new(payload.ax, payload.ay, payload.az), angle: payload.angle }, "Rotate selection"))
@@ -98,7 +98,7 @@ pub mod scale_selection {
         pub sz: f32,
     }
 
-    pub fn handle(payload: &ScaleSelection, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Scale(Vec3::new(payload.sx, payload.sy, payload.sz)), "Scale selection"))

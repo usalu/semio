@@ -178,9 +178,9 @@ mod tests {
     #[test]
     fn sequence_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         doc_store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![SequenceMutation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })

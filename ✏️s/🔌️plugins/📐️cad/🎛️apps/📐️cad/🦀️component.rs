@@ -1,4 +1,4 @@
-//! 📐️ CAD play app — the plugin's play app: its `DocumentApp` impl (dispatch-only), the
+//! 📐️ CAD play app — the plugin's play app: its `ArtifactApp` impl (dispatch-only), the
 //! `CadPlayRuntime` scratch mirror of `CadConfig`, the shared view/export helpers its command,
 //! panel and window nodes build on, and the manifest that stitches those nodes together.
 //!
@@ -35,7 +35,7 @@ use base64::Engine as _;
 use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView,
+    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
@@ -288,8 +288,8 @@ pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId
 
 /// @emoji 🎛️ Ephemeral read/render view assembled per call from the store's materialized
 /// `CadSnapshot` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
-/// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsDocumentApp`'s
-/// `DocumentStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
+/// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsArtifactApp`'s
+/// `ArtifactStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
 pub struct CadPlayView {
     pub document: CadSnapshot,
     pub runtime: CadPlayRuntime,
@@ -905,7 +905,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️PlayApp
-/// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `DocumentApp` — every former
+/// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
 /// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
 /// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
 /// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
@@ -934,7 +934,7 @@ impl CadPlayApp {
     }
 }
 
-impl DocumentApp for CadPlayApp {
+impl ArtifactApp for CadPlayApp {
     type Snapshot = CadSnapshot;
     type Mutation = CadMutation;
     type Config = CadConfig;
@@ -964,7 +964,7 @@ impl DocumentApp for CadPlayApp {
     /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
     /// through the same brep kernel every other import path shares. Falls through to the default
     /// `document:in` importer for any other port.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "geometry:in" {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
@@ -973,7 +973,7 @@ impl DocumentApp for CadPlayApp {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let projection = <CadSnapshot as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let projection = <CadSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return match Self::whole_document_operation(projection) {
                 Some(operation) => Ok(Emit::mutations(vec![operation])),
                 None => Err(MediaError::NotImplemented),
@@ -996,13 +996,13 @@ impl DocumentApp for CadPlayApp {
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
     /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
     /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
-    fn export_media(port: &str, doc: &DocumentView<'_, CadSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
         if port != "brep:out" {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
-            let bytes = <CadSnapshot as store::DocumentPack>::encode_pack(doc.snapshot);
+            let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: CadPlayRuntime::default() };
@@ -1027,14 +1027,14 @@ impl DocumentApp for CadPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &CadCommand, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &CadCommand, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
         CAD_PREVIEW_SEQ.with(|preview_seq| {
             let mut ctx = CadDispatchCtx { preview_seq };
             command.dispatch(doc, cfg, &mut ctx)
         })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
         crate::artifacts::cad::engine::sync_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
@@ -1059,7 +1059,7 @@ impl DocumentApp for CadPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
         HashMap::from([
@@ -1072,7 +1072,7 @@ impl DocumentApp for CadPlayApp {
 
     /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
     /// mode's `🎚️options/*` components.
-    fn window_measures(_doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = cad_runtime_from_config(cfg.snapshot);
         let is_de = cad_is_de_locale(cfg.snapshot);
         HashMap::from([
@@ -1086,7 +1086,7 @@ impl DocumentApp for CadPlayApp {
     /// 🖱️ Selection-gated menu: transform/duplicate/delete only once something is selected — a bare
     /// right-click on empty World3d background (nothing selected) falls through to the shell's
     /// window-level menu (undo/redo/view actions) instead of showing an empty CAD-specific section.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         if cfg.snapshot.selected_object_ids.is_empty() {
             return Vec::new();
         }
@@ -1206,14 +1206,14 @@ pub(crate) mod testkit {
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
     use super::*;
     use protocol::{Mutation, MutationDiff};
-    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsDocumentApp, SET_ACTIVE_UTILITY_ACTION_ID};
+    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp, SET_ACTIVE_UTILITY_ACTION_ID};
 
 
     pub fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
     }
 
-    pub fn new_app() -> VcsDocumentApp<CadPlayApp> {
+    pub fn new_app() -> VcsArtifactApp<CadPlayApp> {
         semio_framework_plugin::testkit::new_app::<CadPlayApp>()
     }
 
@@ -1345,7 +1345,7 @@ pub(crate) mod testkit {
     pub fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
         let _ = app;
         let history = empty_history();
-        let doc = DocumentView { snapshot: scene, history: &history };
+        let doc = ArtifactView { snapshot: scene, history: &history };
         let cfg = ConfigView { snapshot: config };
         let draft_state = NoDraft::default();
         let draft = DraftView { snapshot: &draft_state };
@@ -1354,24 +1354,24 @@ pub(crate) mod testkit {
         CadPlayApp::handle(&command, &doc, &cfg, &draft, &engines).expect("cad command handled")
     }
 
-    pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &DocumentView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
+    pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
         let cfg = ConfigView { snapshot: config };
         CadPlayApp::render(body_key, doc, &cfg)
     }
 
-    pub fn window_measures_direct(_app: &CadPlayApp, doc: &DocumentView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
+    pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
         let cfg = ConfigView { snapshot: config };
         CadPlayApp::window_measures(doc, &cfg)
     }
 
-    pub fn context_menu_direct(_app: &CadPlayApp, doc: &DocumentView<'_, CadSnapshot>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let cfg = ConfigView { snapshot: config };
         let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
         CadPlayApp::context_menu(&request, doc, &cfg, registry)
     }
 
     /// 🧮️ Folds a list of `CadMutation`s onto a scene via the core `Mutation`/`MutationDiff` impls —
-    /// mirrors what the wrapping `VcsDocumentApp` store does when it dispatches the emitted operations.
+    /// mirrors what the wrapping `VcsArtifactApp` store does when it dispatches the emitted operations.
     pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
         let mut next = scene.clone();
         for operation in operations {
@@ -1381,7 +1381,7 @@ pub(crate) mod testkit {
     }
 
     /// 🧮️ `apply_mutations`'s config-targeted twin — folds an `Emit`'s `config_mutations` onto a base
-    /// `CadConfig` (mirrors what `VcsDocumentApp`'s config store does when it dispatches them).
+    /// `CadConfig` (mirrors what `VcsArtifactApp`'s config store does when it dispatches them).
     pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
         let mut next = base.clone();
         for operation in &emit.config_mutations {
@@ -1404,7 +1404,7 @@ pub(crate) mod testkit {
 
 #[cfg(test)]
 mod tests {
-    use semio_framework_plugin::DocumentApp;
+    use semio_framework_plugin::ArtifactApp;
     use super::testkit::*;
     use super::*;
     use crate::artifacts::cad::engine::{align_mesh_to_fixture_centroid, cad_document_from_dwg, default_document, object_mesh_data, primary_primitive_kind, scene_from_spatial_payload, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
@@ -1673,7 +1673,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = forest_play_scene();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
             let node = render_direct(&app, body_key, &doc, &CadConfig::default());
             let json = serde_json::to_string(&node).unwrap();
@@ -1706,7 +1706,7 @@ mod tests {
     /// 🧱️ The manifest stitch: every window kind / panel tab the taxonomy nodes export lands in the
     /// built `AppDefinition` with the same id, body key, surface kind and (empty) manifest measures the
     /// pre-consolidation scalar `.window_kind(..)`/`.panel_tab(..)` calls produced — measures stay
-    /// config-derived per frame via `DocumentApp::window_measures`, never frozen into the manifest.
+    /// config-derived per frame via `ArtifactApp::window_measures`, never frozen into the manifest.
     #[test]
     fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
         let definition = create_cad_app().definition;
@@ -1732,7 +1732,7 @@ mod tests {
         assert_eq!(
             panels,
             vec![
-                (semio_framework_plugin::FRAMEWORK_PANEL_TAB_DOCUMENT_ID, Some(document::CAD_PLAY_BODY_DOCUMENT)),
+                (semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID, Some(document::CAD_PLAY_BODY_DOCUMENT)),
                 (semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID, Some(catalogue::CAD_PLAY_BODY_CATALOGUE)),
                 (semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
             ]
@@ -1839,7 +1839,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "setCamera", Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })));
-        assert!(emit.document_mutations.is_empty(), "setCamera must not emit a VCS operation");
+        assert!(emit.artifact_mutations.is_empty(), "setCamera must not emit a VCS operation");
         assert!(!emit.config_mutations.is_empty(), "setCamera must write a config operation");
         let runtime = runtime_after(&emit, &CadConfig::default());
         assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Building).zoom, 2.0);
@@ -1858,7 +1858,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
         let node = render_direct(&app, shape::BODY_KEY, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();
@@ -1879,7 +1879,7 @@ mod tests {
         let emit = drive_with_config(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })), &base_config);
         let config = config_after(&emit, &base_config);
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let shape = render_direct(&app, shape::BODY_KEY, &doc, &config);
         let building = render_direct(&app, building::BODY_KEY, &doc, &config);
         let shape_json = serde_json::to_string(&shape).unwrap();
@@ -1895,7 +1895,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
         let empty_config = CadConfig::default();
 
@@ -1916,7 +1916,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
         let empty_config = CadConfig::default();
 
@@ -1939,7 +1939,7 @@ mod tests {
         let emit = drive(&app, &scene, "setDislocateOption", Some(json!({ "pane": "building", "option": "rotate", "pressed": false })));
         let config = config_after(&emit, &CadConfig::default());
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let measures = window_measures_direct(&app, &doc, &config);
         let rotate_pressed = |window_id: &str| {
             measures.get(window_id).and_then(|items| {
@@ -1990,7 +1990,7 @@ mod tests {
         assert!(!base_config.sun.enabled, "sun must be off by default");
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let measures = window_measures_direct(&app, &doc, &base_config);
         for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
             assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");
@@ -2119,8 +2119,8 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-        assert_eq!(emit.document_mutations.len(), 1);
-        let next = apply_mutations(&scene, &emit.document_mutations);
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        let next = apply_mutations(&scene, &emit.artifact_mutations);
         assert!(next.objects.iter().any(|object| object.typology == "building.building.column") || next.building_objects.iter().any(|object| object.typology == "building.building.column"));
         let runtime = runtime_after(&emit, &CadConfig::default());
         assert_eq!(runtime.selected_object_ids.len(), 1);
@@ -2147,8 +2147,8 @@ mod tests {
         let mut scene = default_document();
         scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
         let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        assert!(!emit.document_mutations.is_empty());
-        let next = apply_mutations(&scene, &emit.document_mutations);
+        assert!(!emit.artifact_mutations.is_empty());
+        let next = apply_mutations(&scene, &emit.artifact_mutations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().any(|object| object.typology.starts_with("energy.energy.")));
         assert_eq!(next.active_model_definition_id, "aec.building.energy");
@@ -2165,7 +2165,7 @@ mod tests {
         scene.objects[0].typology = "spatial.shape.primitive.box".into();
         scene.objects[0].label = "live-shape-only".into();
         let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        let next = apply_mutations(&scene, &emit.document_mutations);
+        let next = apply_mutations(&scene, &emit.artifact_mutations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)), "live single-box derive should not repopulate the static forest energy fixture's original objects");
     }
@@ -2176,7 +2176,7 @@ mod tests {
         let scene = default_document();
         let config = CadConfig { selected_object_ids: vec!["object-box-1".into()], ..CadConfig::default() };
         let emit = drive_with_config(&app, &scene, "saveSelected", None, &config);
-        assert!(emit.document_mutations.is_empty(), "export must not mutate the document");
+        assert!(emit.artifact_mutations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
@@ -2220,7 +2220,7 @@ mod tests {
         let config = config_after(&emit, &config);
 
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
-        assert!(emit.document_mutations.is_empty(), "a pointer move must not emit any document operation");
+        assert!(emit.artifact_mutations.is_empty(), "a pointer move must not emit any document operation");
         let runtime = runtime_after(&emit, &config);
         let session = runtime.engagement_session.as_ref().expect("session still active");
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
@@ -2298,7 +2298,7 @@ mod tests {
 
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
             let emit = drive_with_config(&app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": position })), &config);
-            scene = apply_mutations(&scene, &emit.document_mutations);
+            scene = apply_mutations(&scene, &emit.artifact_mutations);
             config = config_after(&emit, &config);
         }
 
@@ -2310,7 +2310,7 @@ mod tests {
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         config.engagement_input = "Confirm".into();
         let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
-        scene = apply_mutations(&scene, &emit.document_mutations);
+        scene = apply_mutations(&scene, &emit.artifact_mutations);
         config = config_after(&emit, &config);
         let runtime = cad_runtime_from_config(&config);
         assert!(runtime.engagement_session.is_none(), "box should have committed");
@@ -2371,8 +2371,8 @@ mod tests {
         })
         .to_string();
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": file_text, "name": "cad.spatial.json" })));
-        assert!(!emit.document_mutations.is_empty(), "importCadFile must emit a SetSnapshot operation for a spatial JSON string payload");
-        let next = apply_mutations(&scene, &emit.document_mutations);
+        assert!(!emit.artifact_mutations.is_empty(), "importCadFile must emit a SetSnapshot operation for a spatial JSON string payload");
+        let next = apply_mutations(&scene, &emit.artifact_mutations);
         assert_eq!(next.objects.len(), 1);
         assert_eq!(next.objects[0].id, "object-loaded");
     }
@@ -2384,8 +2384,8 @@ mod tests {
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!("data:model/obj;base64,{}", base64::engine::general_purpose::STANDARD.encode(obj_text));
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
-        assert!(!emit.document_mutations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
-        let next = apply_mutations(&scene, &emit.document_mutations);
+        assert!(!emit.artifact_mutations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
+        let next = apply_mutations(&scene, &emit.artifact_mutations);
         assert_eq!(next.objects.len(), scene.objects.len() + 1);
         assert!(next.objects.last().unwrap().solid_handle.is_some());
     }

@@ -43,37 +43,37 @@ fn wires_snapshot_from_dsl(parsed: &WiresSnapshotDsl) -> Result<WiresSnapshot, s
 }
 //#endregion 🔖️DslMirror
 
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for WiresSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
+impl store::ArtifactDsl for WiresSnapshot {
     const EXTENSION: &'static str = "wires";
     fn envelope_id() -> &'static str {
         "reasoning.wires"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <WiresSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <WiresSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         wires_snapshot_from_dsl(&parsed)
     }
     fn print_dsl(&self) -> String {
-        <WiresSnapshotDsl as store::DocumentDsl>::print_dsl(&wires_snapshot_to_dsl(self))
+        <WiresSnapshotDsl as store::ArtifactDsl>::print_dsl(&wires_snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for WiresSnapshot {
+impl store::ArtifactPack for WiresSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <WiresSnapshotDsl as store::DocumentPack>::encode_pack_with(&wires_snapshot_to_dsl(self), options)
+        <WiresSnapshotDsl as store::ArtifactPack>::encode_pack_with(&wires_snapshot_to_dsl(self), options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <WiresSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <WiresSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         wires_snapshot_from_dsl(&parsed).map_err(store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(WiresSnapshotDsl::__dsl_spec())
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
-impl store::DocumentDsl for WiresSnapshotDsl {
+impl store::ArtifactDsl for WiresSnapshotDsl {
     const EXTENSION: &'static str = "wires";
     fn envelope_id() -> &'static str {
         "reasoning.wires"
@@ -93,7 +93,7 @@ impl store::DocumentDsl for WiresSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -102,11 +102,11 @@ impl store::DocumentDsl for WiresSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for WiresSnapshotDsl {
+impl store::ArtifactPack for WiresSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -115,10 +115,10 @@ impl store::DocumentPack for WiresSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

@@ -8,11 +8,11 @@
 //! 🚨️ The one law every other law in this crate serves: **a preview never mutates authoritative
 //! state and never enters the WAL.** This crate has no dependency on `db_wal`/`db_storage`/
 //! `db_snapshot` and performs zero I/O — `PreviewStore` is a pure, in-memory, single-threaded
-//! bookkeeping structure a document actor (`db_document`) owns alongside (never inside) its
+//! bookkeeping structure a document actor (`db_artifact`) owns alongside (never inside) its
 //! durable pipeline. The `🧪️Tests` region's `preview_crate_never_references_wal_shaped_symbols`
 //! test statically enforces this by scanning this file's own production source and `Cargo.toml`.
 //!
-//! 🎯️ Design choice: `PreviewStore` is scoped to a single document (mirrors `db_document`'s
+//! 🎯️ Design choice: `PreviewStore` is scoped to a single document (mirrors `db_artifact`'s
 //! per-document actor model) and takes `now_ms`/produces ids deterministically from an internal
 //! monotonic sequence rather than touching a wall clock or a random source — keeps every law in
 //! this crate exactly reproducible in a unit test without a `db_testkit::SimClock` dependency.
@@ -22,12 +22,12 @@
 //! be swapped without touching `PreviewStore`'s API. `db_conflict` is now complete (this crate's
 //! declared conflict-detection dependency), so the default oracle (`DbConflictOracle`) is real:
 //! it delegates to `db_conflict::ConflictDetector`, the exact touched-region-intersection +
-//! bloom-filter machinery `db_document`'s command-admission path uses, so a preview is judged
+//! bloom-filter machinery `db_artifact`'s command-admission path uses, so a preview is judged
 //! stale by the same rule a landed command would have been. The lighter-weight
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use {check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
+use {check_len, ActorId, DbError, DbLimits, ArtifactId, Frontier};
 use db_state::TouchedSet;
 use protocol::MutationEnvelope;
 use std::collections::HashMap;
@@ -136,12 +136,12 @@ impl Default for PreviewBudgets {
 //#region 🔖️Preview
 /// @emoji 🌫️ One ephemeral overlay: identity, the frontier it was computed against, its opaque
 /// payload, what it touched, and its lifecycle state. `envelope` is carried verbatim — per the
-/// contract, no crate below `db_document` interprets operation semantics, so this crate never
+/// contract, no crate below `db_artifact` interprets operation semantics, so this crate never
 /// looks inside `diff`/`inverse`, only at the envelope's stable identity/actor/timestamp fields.
 #[derive(Clone, Debug)]
 pub struct Preview {
     pub id: PreviewId,
-    pub document: DocumentId,
+    pub document: ArtifactId,
     pub actor: ActorId,
     pub key: String,
     pub base: Frontier,
@@ -161,7 +161,7 @@ impl Preview {
 
 /// @emoji 📮️ `PreviewStore::publish`'s argument: everything needed to admit one new preview.
 pub struct PublishPreviewRequest {
-    pub document: DocumentId,
+    pub document: ArtifactId,
     pub actor: ActorId,
     pub key: String,
     pub base: Frontier,
@@ -173,7 +173,7 @@ pub struct PublishPreviewRequest {
     pub now_ms: u64,
 }
 
-/// @emoji 🛬️ One command that landed (was durably committed elsewhere, e.g. by `db_document`'s
+/// @emoji 🛬️ One command that landed (was durably committed elsewhere, e.g. by `db_artifact`'s
 /// pipeline) — `PreviewStore::reconcile`'s argument, the trigger for the rebase-or-stale law.
 pub struct LandedCommand {
     pub frontier: Frontier,
@@ -216,12 +216,12 @@ impl ConflictOracle for TouchedRegionOracle {
 
 /// @emoji 🔌️ The default `ConflictOracle`, backed by the real `db_conflict::ConflictDetector` now
 /// that `db_conflict` is complete. `db_preview` never sees a landed command's declared
-/// `CommandKind`/`ConflictRule` (per the contract, no crate below `db_document` interprets
+/// `CommandKind`/`ConflictRule` (per the contract, no crate below `db_artifact` interprets
 /// operation semantics, and a `Preview`/`LandedCommand` here carry only opaque envelopes + touched
 /// sets) — so this oracle builds two synthetic, uniformly-tagged `db_conflict::CommandTouch`es
 /// wrapping the two touched sets verbatim and asks the real detector whether they conflict. This
 /// still exercises `db_conflict`'s bloom-filter prefilter and touched-region intersection law
-/// exactly as `db_document`'s own command-admission path would; only the `CommandKindMatrix`
+/// exactly as `db_artifact`'s own command-admission path would; only the `CommandKindMatrix`
 /// override and `Constraint` claims are necessarily unused here (this crate has no kind/claims to
 /// hand it), which is why `TouchedRegionOracle` remains available as an equivalent-behavior
 /// bypass when a caller doesn't want to pay even the bloom-filter construction cost.
@@ -283,7 +283,7 @@ impl ConflictOracle for DbConflictOracle {
 /// actor alongside its durable state — never persisted, never itself a `db_wal`/`db_storage`
 /// participant.
 pub struct PreviewStore {
-    document: DocumentId,
+    document: ArtifactId,
     budgets: PreviewBudgets,
     previews: HashMap<PreviewId, Preview>,
     active_index: HashMap<PreviewKey, PreviewId>,
@@ -291,11 +291,11 @@ pub struct PreviewStore {
 }
 
 impl PreviewStore {
-    pub fn new(document: DocumentId, budgets: PreviewBudgets) -> PreviewStore {
+    pub fn new(document: ArtifactId, budgets: PreviewBudgets) -> PreviewStore {
         PreviewStore { document, budgets, previews: HashMap::new(), active_index: HashMap::new(), sequence: 0 }
     }
 
-    pub fn document(&self) -> &DocumentId {
+    pub fn document(&self) -> &ArtifactId {
         &self.document
     }
 
@@ -514,10 +514,10 @@ mod tests {
     fn sample_envelope(actor: &str) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(format!("op-{actor}")),
-            document_id: protocol::DocumentId("doc-1".to_string()),
+            document_id: protocol::ArtifactId("doc-1".to_string()),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
@@ -821,7 +821,7 @@ mod tests {
     #[test]
     fn preview_crate_never_references_wal_shaped_symbols() {
         let manifest = include_str!("../../../👁️preview/⚡️implementations/🦀️rust/Cargo.toml");
-        for forbidden_dependency in ["db_wal", "db_storage", "db_snapshot", "db_document", "db_engine"] {
+        for forbidden_dependency in ["db_wal", "db_storage", "db_snapshot", "db_artifact", "db_engine"] {
             assert!(!manifest.contains(forbidden_dependency), "db_preview's Cargo.toml must not depend on {forbidden_dependency:?} — previews are never durable");
         }
 

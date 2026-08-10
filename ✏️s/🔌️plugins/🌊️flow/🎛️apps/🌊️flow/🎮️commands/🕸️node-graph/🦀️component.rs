@@ -9,7 +9,7 @@ use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{host_operations, sync_host_selection};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️FlowNodeGraphEditOp
@@ -31,7 +31,7 @@ pub enum FlowNodeGraphEditOp {
 fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowMutation, FlowConfigMutation> {
     let selected = config.selected_node_ids.clone();
     let mut clear_selection = false;
-    let document_mutations = host_operations(fixture, config, session, |host| {
+    let artifact_mutations = host_operations(fixture, config, session, |host| {
         let mut changed = false;
         for sub_operation in operations {
             match sub_operation {
@@ -59,7 +59,7 @@ fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: 
         changed
     });
     let config_mutations = if clear_selection { vec![FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }] } else { Vec::new() };
-    Emit { document_mutations, config_mutations, ..Default::default() }
+    Emit { artifact_mutations, config_mutations, ..Default::default() }
 }
 //#endregion 🔖️SharedDispatch
 
@@ -73,7 +73,7 @@ pub mod node_graph_edit {
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(node_graph_edit_result(doc.snapshot, cfg.snapshot, session, &payload.operations))
     }
 }
@@ -89,7 +89,7 @@ pub mod spotlight_commit {
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &SpotlightCommit, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SpotlightCommit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(node_graph_edit_result(doc.snapshot, cfg.snapshot, session, &payload.operations))
     }
 }

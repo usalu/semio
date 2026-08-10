@@ -50,14 +50,14 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::NodeGraph,
         icon_id: "graph-media".into(),
         // 📇️ `options.measures` stays EMPTY here — measures are config-derived per frame by
-        // `DocumentApp::window_measures`, never frozen into the manifest (see the `🎚️options` node's
+        // `ArtifactApp::window_measures`, never frozen into the manifest (see the `🎚️options` node's
         // `measure(config, labels)` this window collects from). `options.engagement` DOES get a static
-        // initial value baked in (there is no per-frame `DocumentApp::engagement()` trait method).
+        // initial value baked in (there is no per-frame `ArtifactApp::engagement()` trait method).
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -131,16 +131,16 @@ mod tests {
 
     #[test]
     fn renders_workflow_scene() {
-        use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
+        use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
+        let mut app = VcsArtifactApp::new(crate::apps::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
     fn workflow_scene_uses_flow_engine_with_fixture() {
-        use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
-        let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp::default());
+        use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
+        let mut app = VcsArtifactApp::new(crate::apps::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#"\"engine\":\"flow\""#));

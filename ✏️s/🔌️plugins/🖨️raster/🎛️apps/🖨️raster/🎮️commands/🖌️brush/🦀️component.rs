@@ -3,7 +3,7 @@
 use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetBrushSize
@@ -16,7 +16,7 @@ pub mod set_brush_size {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetBrushSize, _doc: &DocumentView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetBrushSize, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         Ok(Emit::config(vec![RasterConfigMutation::SetBrushSize { value: payload.value }]))
     }
 }
@@ -32,7 +32,7 @@ pub mod set_brush_opacity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetBrushOpacity, _doc: &DocumentView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetBrushOpacity, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         Ok(Emit::config(vec![RasterConfigMutation::SetBrushOpacity { value: payload.value }]))
     }
 }

@@ -1,4 +1,4 @@
-//! 🖥️ Flow play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Flow play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -20,7 +20,7 @@ use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession, Widget};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
 };
 use store::EngineHandles;
@@ -148,7 +148,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     // 🗂️ Grouped disclosure: `add-node`/`selectAll`/`focusSelection`/`clearSelection` stay top-level
     // (the 3-5 most frequent verbs); `reorganize`/`replaceImage`/`toggle-preview` fold into taxonomy
     // groups; `delete-selection` stays a direct destructive item last — `organize_context_menu`
-    // (applied automatically at the `VcsDocumentApp::context_menu` funnel) sorts the groups into
+    // (applied automatically at the `VcsArtifactApp::context_menu` funnel) sorts the groups into
     // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
     let mut menu = Menu::of(registry);
     if hits.is_empty() {
@@ -207,7 +207,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
 #[derive(Default)]
 pub struct FlowPlayApp;
 
-impl DocumentApp for FlowPlayApp {
+impl ArtifactApp for FlowPlayApp {
     type Snapshot = FlowSnapshot;
     type Mutation = FlowMutation;
     type Config = FlowConfig;
@@ -233,18 +233,18 @@ impl DocumentApp for FlowPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &FlowCommand, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
         with_process_flow_eval_session(|session| eval::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let labels = flow_play_labels(config);
@@ -261,12 +261,12 @@ impl DocumentApp for FlowPlayApp {
         })
     }
 
-    fn window_measures(_doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(config)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = cfg.snapshot;
         let is_de = config.locale.starts_with("de");
         flow_context_menu_items(registry, doc.snapshot, config, flow_play_labels(config), is_de, request.surface.as_ref())
@@ -366,9 +366,9 @@ pub fn create_flow_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type FlowApp = VcsDocumentApp<FlowPlayApp>;
+    pub type FlowApp = VcsArtifactApp<FlowPlayApp>;
 
     fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;

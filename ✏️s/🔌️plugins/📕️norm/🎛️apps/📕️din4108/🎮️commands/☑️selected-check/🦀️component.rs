@@ -7,7 +7,7 @@
 use crate::artifacts::din4108::op::Din4108Mutation;
 use crate::artifacts::din4108::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -20,7 +20,7 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_selected_check_index::<Din4108Mutation>(payload.index)
 }
 //#endregion 🔖️Handler
@@ -37,11 +37,11 @@ mod tests {
         let config = NormConfig::default();
         let emit = handle(
             &SetSelectedCheckIndex { index: Some(4) },
-            &DocumentView { snapshot: &projection, history: &HistoryView::empty() },
+            &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
             &ConfigView { snapshot: &config },
         )
         .expect("handle");
-        assert!(emit.document_mutations.is_empty(), "a view action must never emit document operations");
+        assert!(emit.artifact_mutations.is_empty(), "a view action must never emit document operations");
         assert_eq!(emit.config_mutations, vec![NormConfigMutation::SetSelectedCheckIndex { index: Some(4) }]);
     }
 }

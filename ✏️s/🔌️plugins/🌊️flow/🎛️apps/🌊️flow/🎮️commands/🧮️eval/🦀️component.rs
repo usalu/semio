@@ -9,7 +9,7 @@ use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{eval_tick_effect, host_from_snapshot};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Arm
@@ -32,7 +32,7 @@ pub mod evaluate {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Evaluate {}
 
-    pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(evaluate_result(doc.snapshot, cfg.snapshot, session))
     }
 }
@@ -45,7 +45,7 @@ pub mod flow_eval_tick {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let mut host = host_from_snapshot(doc.snapshot, cfg.snapshot, session);
         let more = session.tick(&mut host);
         let mut effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
@@ -78,7 +78,7 @@ pub mod flow_eval_resolve {
         pub output_json: String,
     }
 
-    pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
         Ok(Emit { effects: vec![eval_tick_effect()], ..Default::default() })
     }

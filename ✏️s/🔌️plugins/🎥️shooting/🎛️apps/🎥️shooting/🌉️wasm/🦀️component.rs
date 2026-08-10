@@ -5,8 +5,8 @@ use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
 
 //#region 🔖️Store
-pub type ShootingEnvelope = store::DocumentEnvelope<ShootingSnapshot, ShootingMutation>;
-pub type ShootingStore = store::DocumentStore<ShootingSnapshot, ShootingMutation>;
+pub type ShootingEnvelope = store::ArtifactEnvelope<ShootingSnapshot, ShootingMutation>;
+pub type ShootingStore = store::ArtifactStore<ShootingSnapshot, ShootingMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️WasmBridge
@@ -18,14 +18,14 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct ShootingDocumentVcs {
+    pub struct ShootingArtifactVcs {
         store: RefCell<ShootingStore>,
     }
 
     #[wasm_bindgen]
-    impl ShootingDocumentVcs {
+    impl ShootingArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<ShootingDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<ShootingArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;

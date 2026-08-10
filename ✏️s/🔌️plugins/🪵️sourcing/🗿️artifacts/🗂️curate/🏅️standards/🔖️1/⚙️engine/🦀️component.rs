@@ -632,13 +632,13 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 /// 📄️ The demo-stock example, parsed once from `crate::artifacts::curate::dsl::DEMO_STOCK_TEXT` — the
 /// source of truth for every "demo stock" call site (`setActiveExample`, `initial_snapshot`, tests).
 pub fn default_document() -> CurateSnapshot {
-    <CurateSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
 }
 
 /// 📄️ The empty-curation example, parsed once from
 /// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT`.
 pub fn empty_document() -> CurateSnapshot {
-    <CurateSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
 }
 //#endregion 🔖️Fixtures
 

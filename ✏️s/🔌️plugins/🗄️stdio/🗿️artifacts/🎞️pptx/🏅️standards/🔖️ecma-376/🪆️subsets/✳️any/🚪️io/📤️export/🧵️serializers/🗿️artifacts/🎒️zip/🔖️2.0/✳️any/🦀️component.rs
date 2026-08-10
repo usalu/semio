@@ -19,6 +19,6 @@ pub fn serialize(from: &PptxSnapshot) -> Result<BinarySnapshot, store::PackError
 
 /// Encode ZIP then wrap as binary pack bytes.
 pub fn serialize_bytes(from: &PptxSnapshot) -> Result<Vec<u8>, store::PackError> {
-    store::DocumentPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
+    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

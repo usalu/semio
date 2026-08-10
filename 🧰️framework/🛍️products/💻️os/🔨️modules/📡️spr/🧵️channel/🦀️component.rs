@@ -66,7 +66,7 @@ pub enum AppCommand {
         seq: u64,
         request: Vec<u8>,
     },
-    DocumentCommand {
+    ArtifactCommand {
         seq: u64,
         command: Vec<u8>,
     },
@@ -294,7 +294,7 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *seq);
             crate::os_spr::write_bytes(&mut out, request);
         }
-        AppCommand::DocumentCommand { seq, command } => {
+        AppCommand::ArtifactCommand { seq, command } => {
             out.push(6);
             crate::os_spr::write_varint_u64(&mut out, *seq);
             crate::os_spr::write_bytes(&mut out, command);
@@ -383,7 +383,7 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
         3 => AppCommand::CommandText { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, line: crate::os_spr::read_str(bytes, &mut pos)? },
         4 => AppCommand::RefreshUi { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)?, view_state: crate::os_spr::read_bytes(bytes, &mut pos)? },
         5 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        6 => AppCommand::DocumentCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        6 => AppCommand::ArtifactCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
         7 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
         8 => AppCommand::LoadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
         9 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
@@ -573,10 +573,10 @@ mod tests {
     fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
         crate::os_spr::causal::MutationEnvelope {
             mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
-            document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
+            document_id: crate::os_spr::ids::ArtifactId("document-1".to_string()),
             actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+            diff: crate::os_spr::causal::ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
             inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
@@ -634,7 +634,7 @@ mod tests {
 
     #[test]
     fn app_command_document_command_round_trips() {
-        assert_command_round_trips(&AppCommand::DocumentCommand { seq: 6, command: vec![8, 8] });
+        assert_command_round_trips(&AppCommand::ArtifactCommand { seq: 6, command: vec![8, 8] });
     }
 
     #[test]
@@ -648,7 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn app_command_read_document_round_trips() {
+    fn app_command_read_artifact_round_trips() {
         assert_command_round_trips(&AppCommand::ReadDocument { seq: 9 });
     }
 
@@ -898,7 +898,7 @@ mod tests {
             ("CommandText", AppCommand::CommandText { seq: 1, line: "go".to_string() }),
             ("RefreshUi", AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }], view_state: vec![] }),
             ("ContextMenu", AppCommand::ContextMenu { seq: 1, request: vec![1] }),
-            ("DocumentCommand", AppCommand::DocumentCommand { seq: 1, command: vec![1] }),
+            ("ArtifactCommand", AppCommand::ArtifactCommand { seq: 1, command: vec![1] }),
             ("ApplyEnvelopes", AppCommand::ApplyEnvelopes { seq: 1, envelopes: Vec::new() }),
             ("LoadDocument", AppCommand::LoadDocument { seq: 1, pack: vec![1], spr: vec![2] }),
             ("ReadDocument", AppCommand::ReadDocument { seq: 1 }),
@@ -958,13 +958,13 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000403617070056163746f72020102",
+            "Hello" => "000503617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
             "RefreshUi" => "040101010161010100",
             "ContextMenu" => "05010101",
-            "DocumentCommand" => "06010101",
+            "ArtifactCommand" => "06010101",
             "ApplyEnvelopes" => "070100",
             "LoadDocument" => "080101010102",
             "ReadDocument" => "0901",
@@ -985,7 +985,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0004010101",
+            "Welcome" => "0005010101",
             "Done" => "0101",
             "Invocation" => "0201010100",
             "UiSection" => "03010101016b0100",

@@ -1,4 +1,4 @@
-//! 🧮️ Remodel play app — the `DocumentApp::Config` view state and its operation vocabulary.
+//! 🧮️ Remodel play app — the `ArtifactApp::Config` view state and its operation vocabulary.
 //!
 //! Every former `RemodelPlayRuntime` field (camera/selection/layers/frame cursor/report table) lives
 //! here, written through `RemodelConfigMutation`s with a real `backwards`, never ad hoc runtime
@@ -60,7 +60,7 @@ pub struct RemodelFrameCursor {
     pub frame_index: u32,
 }
 
-/// 🧮️ Remodel's `DocumentApp::Config` — absorbs every former `RemodelPlayRuntime` view/session field
+/// 🧮️ Remodel's `ArtifactApp::Config` — absorbs every former `RemodelPlayRuntime` view/session field
 /// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewModel`-sourced
 /// fields the UI actually reads (`active_utility_id`/`locale`).
 /// The live `engine::reconstruction::ReconstructionEngine` and the video-import blur-gate rolling
@@ -68,7 +68,7 @@ pub struct RemodelFrameCursor {
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
 /// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️reconstruction`
 /// and `🎮️commands/📥️ingest` for how.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "remodel.config", extension = "remodelcfg")]
 #[dsl(layout = "lines")]
@@ -89,9 +89,9 @@ pub struct RemodelConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for RemodelConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for RemodelConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -111,7 +111,7 @@ impl store::DocumentDsl for RemodelConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -120,12 +120,12 @@ impl store::DocumentDsl for RemodelConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for RemodelConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for RemodelConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -134,10 +134,10 @@ impl store::DocumentPack for RemodelConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -149,7 +149,7 @@ impl store::DocumentPack for RemodelConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for RemodelConfig {

@@ -11,5 +11,5 @@ pub fn serialize(snapshot: &SHomeSnapshot) -> Result<ZipSnapshot, store::TextErr
 }
 
 pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ZipSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

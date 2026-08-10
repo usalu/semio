@@ -5,7 +5,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresence {
     fn absorb(&mut self, _other: Self) {}
 }
 
-impl store::DocumentDsl for VcsDemoPresence {
+impl store::ArtifactDsl for VcsDemoPresence {
     const EXTENSION: &'static str = "vcs.presence";
     fn envelope_id() -> &'static str {
         "vcs.presence"
@@ -35,7 +35,7 @@ impl store::DocumentDsl for VcsDemoPresence {
     }
 }
 
-impl DocumentPack for VcsDemoPresence {
+impl ArtifactPack for VcsDemoPresence {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
@@ -44,10 +44,10 @@ impl DocumentPack for VcsDemoPresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

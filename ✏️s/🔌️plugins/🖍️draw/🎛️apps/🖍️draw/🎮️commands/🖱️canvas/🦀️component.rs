@@ -10,7 +10,7 @@ use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️GestureContext
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
@@ -664,7 +664,7 @@ pub mod canvas_pointer_down {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -689,7 +689,7 @@ pub mod canvas_pointer_move {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -727,7 +727,7 @@ pub mod canvas_pointer_up {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerUp, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerUp, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -747,7 +747,7 @@ pub mod canvas_double_click {
     #[dsl(keyword = "canvas-double-click")]
     pub struct CanvasDoubleClick {}
 
-    pub fn handle(_payload: &CanvasDoubleClick, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasDoubleClick, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
@@ -765,7 +765,7 @@ pub mod canvas_commit_draft {
     #[dsl(keyword = "canvas-commit-draft")]
     pub struct CanvasCommitDraft {}
 
-    pub fn handle(_payload: &CanvasCommitDraft, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasCommitDraft, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
@@ -783,7 +783,7 @@ pub mod canvas_escape {
     #[dsl(keyword = "canvas-escape")]
     pub struct CanvasEscape {}
 
-    pub fn handle(_payload: &CanvasEscape, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasEscape, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::Escape, document, &mut config);

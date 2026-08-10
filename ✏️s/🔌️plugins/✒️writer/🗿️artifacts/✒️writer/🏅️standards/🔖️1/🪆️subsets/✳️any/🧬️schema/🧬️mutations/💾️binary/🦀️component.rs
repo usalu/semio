@@ -47,8 +47,8 @@ mod tests {
 
     #[test]
     fn writer_document_text_round_trips_through_the_store() {
-        let mut store = store::DocumentStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -59,12 +59,12 @@ mod tests {
     /// existing pack round-trip law.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
-        let mut store = store::DocumentStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

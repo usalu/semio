@@ -1,5 +1,5 @@
 //! 🌐️ Puzzle 3d play app — the browser wasm-bindgen bridge (`wasm32`, non-WASI-P2 only): a
-//! `Puzzle3dDocumentVcs` handle over the typed `Puzzle3dStore`, plus a `.puzzle3d` DSL-text parser
+//! `Puzzle3dArtifactVcs` handle over the typed `Puzzle3dStore`, plus a `.puzzle3d` DSL-text parser
 //! that hands non-Rust consumers (e.g. Storybook stories) the same camelCase JSON shape the example
 //! fixtures used to ship as. Lives at the app level — the headless `⚙️engine` artifact node must not
 //! depend on `wasm-bindgen`, and this is where every other wasm-bindgen-exported puzzle-3d surface
@@ -15,14 +15,14 @@ use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct Puzzle3dDocumentVcs {
+pub struct Puzzle3dArtifactVcs {
     store: RefCell<Puzzle3dStore>,
 }
 
 #[wasm_bindgen]
-impl Puzzle3dDocumentVcs {
+impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(constructor)]
-    pub fn new(envelope_json: Option<String>) -> Result<Puzzle3dDocumentVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<Puzzle3dArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Puzzle3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -59,12 +59,12 @@ impl Puzzle3dDocumentVcs {
     }
 }
 
-/// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dSnapshot`'s `dsl::DslDocument` grammar) into the same
+/// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dSnapshot`'s `dsl::DslArtifact` grammar) into the same
 /// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
     let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
 }

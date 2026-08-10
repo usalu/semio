@@ -7,7 +7,7 @@ pub fn register() {}
 pub fn serialize(snapshot: &RewriteSnapshot) -> Result<TxtSnapshot, store::TextError> {
     Ok(TxtSnapshot {
         schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-        text: <RewriteSnapshot as store::DocumentDsl>::print_dsl(snapshot),
+        text: <RewriteSnapshot as store::ArtifactDsl>::print_dsl(snapshot),
     })
 }
 

@@ -46,14 +46,14 @@ mod tests {
     use crate::apps::cad::config::CadConfig;
     use crate::apps::cad::CadPlayApp;
     use crate::artifacts::cad::engine::default_document;
-    use semio_framework_plugin::DocumentView;
+    use semio_framework_plugin::ArtifactView;
 
     #[test]
     fn cad_labels_translate_catalogue_typologies_in_german() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &scene, history: &history };
+        let doc = ArtifactView { snapshot: &scene, history: &history };
         let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
         let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();

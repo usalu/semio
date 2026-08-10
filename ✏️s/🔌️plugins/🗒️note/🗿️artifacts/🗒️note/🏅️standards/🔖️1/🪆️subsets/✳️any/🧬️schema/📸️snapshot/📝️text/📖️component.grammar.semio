@@ -6,13 +6,17 @@ start document
 
 artifact-mark = "note.note"
 document = artifact-mark doc-body
-doc-body = schema-line layers-block
-schema-line = "schema" "=" TEXT
-layers-block = "layers" "{" layer* "}"
-layer = shape-layer | path-layer | text-layer
-shape-layer = "shape" "{" canvas-field* "}"
-path-layer = "path" "{" canvas-field* "}"
-text-layer = "text" "{" canvas-field* "}"
-canvas-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT | "fill" "=" TEXT | "stroke" "=" TEXT | "opacity" "=" FLOAT
-paint-block = "{" paint-field* "}"
-paint-field = "color" "=" TEXT | "width" "=" FLOAT | "blend" "=" IDENT
+doc-body = schema-line blocks-block? assets-block?
+schema-line = "schema" "=" {IDENT | TEXT} schema-field*
+schema-field = {"id" "=" IDENT} | {"title" "=" {TEXT | IDENT}} | {"grid-visible" "=" BOOL} | {"grid-spacing" "=" QUANTITY} | {"grid-subdivisions" "=" INT} | {"grid-opacity" "=" FLOAT} | {"snap-enabled" "=" BOOL} | {"snap-grid-spacing" "=" QUANTITY} | {"pencil-width" "=" QUANTITY} | {"eraser-radius" "=" QUANTITY}
+blocks-block = "blocks" "{" block* "}"
+block = text-block | image-block | shape-block
+text-block = "text" block-field*
+image-block = "image" block-field*
+shape-block = "shape" block-field*
+block-field = {"id" "=" IDENT} | {"name" "=" {TEXT | IDENT}} | {"x" "=" QUANTITY} | {"y" "=" QUANTITY} | {"width" "=" QUANTITY} | {"height" "=" QUANTITY} | {"rotation" "=" QUANTITY} | {"visible" "=" BOOL} | {"locked" "=" BOOL} | {"font-size" "=" QUANTITY} | {"font-weight" "=" IDENT} | {"align" "=" IDENT} | {"paragraphs" "=" "[" paragraph* "]"} | {"asset-id" "=" IDENT} | {"aspect-ratio" "=" FLOAT}
+paragraph = "p" "runs" "=" "[" run* "]"
+run = "r" {TEXT | IDENT}
+assets-block = "assets" "=" "{" asset-entry* "}"
+asset-entry = IDENT "=" asset-field*
+asset-field = {"mime" "=" {TEXT | IDENT}} | {"data" "=" {TEXT | IDENT}} | {"width" "=" QUANTITY} | {"height" "=" QUANTITY}

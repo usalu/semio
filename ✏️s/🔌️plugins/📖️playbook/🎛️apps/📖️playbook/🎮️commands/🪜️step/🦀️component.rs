@@ -3,7 +3,7 @@
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::artifacts::playbook::op::{add_step_operation, move_step_operation, remove_step_operation, update_playbook_title_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddStep
@@ -14,7 +14,7 @@ pub mod add_step {
     #[dsl(keyword = "add-step")]
     pub struct AddStep {}
 
-    pub fn handle(_payload: &AddStep, doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         let kernel = doc.snapshot.as_kernel();
         let step_id = format!("step-{}", kernel.steps.len() + 1);
         Ok(Emit::mutations(vec![add_step_operation(&kernel, step_id)]))
@@ -32,7 +32,7 @@ pub mod remove_step {
         pub step_id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, _doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
@@ -52,7 +52,7 @@ pub mod move_step {
         pub index: usize,
     }
 
-    pub fn handle(payload: &MoveStep, _doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveStep, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
@@ -71,7 +71,7 @@ pub mod update_playbook {
         pub value: String,
     }
 
-    pub fn handle(payload: &UpdatePlaybook, _doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdatePlaybook, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         Ok(Emit::amend(vec![update_playbook_title_operation(Some(payload.value.clone()).filter(|title| !title.is_empty()))], "playbook.title"))
     }
 }

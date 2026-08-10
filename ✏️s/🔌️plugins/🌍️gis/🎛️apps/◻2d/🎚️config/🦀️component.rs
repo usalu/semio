@@ -1,6 +1,6 @@
 //! 🧮️ GIS 2D play app — the view-state config artifact and its operation enum.
 //!
-//! Session-only but real, undoable config: it round-trips through the config `DocumentStore` exactly
+//! Session-only but real, undoable config: it round-trips through the config `ArtifactStore` exactly
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! map's positions/routes/regions live in `crate::artifacts::gismap`.
 
@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Config
-/// 🧮️ gis2d's `DocumentApp::Config` — selection, per-layer visibility/stroke-weight, camera,
+/// 🧮️ gis2d's `ArtifactApp::Config` — selection, per-layer visibility/stroke-weight, camera,
 /// render/vector/LOD mode, feature selection/hover, selection method/mode, plus `locale`.
 /// Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds string-keyed maps
 /// through `dsl_schema::Shape::Map`'s `BTreeMap<String, V>` case.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis2dcfg")]
 #[dsl(id = "gis.gis2dcfg")]
@@ -47,9 +47,9 @@ pub struct Gis2dConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for Gis2dConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for Gis2dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -69,7 +69,7 @@ impl store::DocumentDsl for Gis2dConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -78,12 +78,12 @@ impl store::DocumentDsl for Gis2dConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for Gis2dConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for Gis2dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -92,10 +92,10 @@ impl store::DocumentPack for Gis2dConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -107,7 +107,7 @@ impl store::DocumentPack for Gis2dConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 fn default_gis2d_hover_json() -> String {

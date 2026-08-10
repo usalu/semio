@@ -99,7 +99,7 @@ mod tests {
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
             label: LocalizedLabel::data("Draw"),
-            document: vec!["semio".into(), "draw".into()],
+            breadcrumb: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
             modes: crate::ui::Modes::one(ModeDefinition {
@@ -121,7 +121,7 @@ mod tests {
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,
-                document_snapshot_schema: None,
+                artifact_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -135,7 +135,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_breadcrumbs: std::collections::HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),
@@ -153,7 +153,7 @@ mod tests {
         AppDefinition {
             id: id.into(),
             label: LocalizedLabel::data(id),
-            document: vec!["semio".into(), id.into()],
+            breadcrumb: vec!["semio".into(), id.into()],
             icon_id: None,
             controller_id: id.into(),
             modes: crate::ui::Modes::one(ModeDefinition {
@@ -175,7 +175,7 @@ mod tests {
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,
-                document_snapshot_schema: None,
+                artifact_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -189,7 +189,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_breadcrumbs: std::collections::HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),

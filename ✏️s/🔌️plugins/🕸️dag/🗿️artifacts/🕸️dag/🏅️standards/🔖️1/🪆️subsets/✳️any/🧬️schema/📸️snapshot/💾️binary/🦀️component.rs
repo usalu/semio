@@ -1,6 +1,6 @@
 //! 📦️ DAG artifact — binary document surface + laws (constitutional: pack).
 //!
-//! `store::DocumentPack for DagSnapshot` is implemented directly in the DAG kernel crate
+//! `store::ArtifactPack for DagSnapshot` is implemented directly in the DAG kernel crate
 //! (`infinite_board_port_directed_dag`); see `crate::artifacts::dag::op`'s doc for why. This module only
 //! adds the thin artifact-facing `encode`/`decode` wrappers plus the pack↔dsl equivalence law.
 
@@ -16,12 +16,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 /// 📦️ Encodes a `DagSnapshot` to its binary pack form.
 pub fn encode(document: &DagSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `DagSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<DagSnapshot, PackError> {
-    <DagSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <DagSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -47,14 +47,14 @@ mod tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::dag::op::DagMutation;
         use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() };
-        let mut store: DocumentStore<DagSnapshot, DagMutation> = DocumentStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::SetNodes { nodes: Vec::new() }], description: None }).expect("apply");
+        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::SetNodes { nodes: Vec::new() }], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

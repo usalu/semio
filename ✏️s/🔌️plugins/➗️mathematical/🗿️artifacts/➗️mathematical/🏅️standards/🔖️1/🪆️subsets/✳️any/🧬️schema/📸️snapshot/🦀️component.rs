@@ -15,23 +15,23 @@ pub struct MathematicalSnapshot {
     #[state(persistent)]
     pub geometry: MathematicalGeometry,
 }
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack via the DSL mirror in `crate::artifacts::mathematical::dsl`.
-impl store::DocumentDsl for MathematicalSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack via the DSL mirror in `crate::artifacts::mathematical::dsl`.
+impl store::ArtifactDsl for MathematicalSnapshot {
     const EXTENSION: &'static str = "mathematical";
     fn envelope_id() -> &'static str {
         "mathematical.mathematical"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let dsl_snapshot = <crate::artifacts::mathematical::dsl::MathematicalSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let dsl_snapshot = <crate::artifacts::mathematical::dsl::MathematicalSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         crate::artifacts::mathematical::dsl::mathematical_snapshot_from_dsl(dsl_snapshot).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        <crate::artifacts::mathematical::dsl::MathematicalSnapshotDsl as store::DocumentDsl>::print_dsl(&crate::artifacts::mathematical::dsl::mathematical_snapshot_to_dsl(self))
+        <crate::artifacts::mathematical::dsl::MathematicalSnapshotDsl as store::ArtifactDsl>::print_dsl(&crate::artifacts::mathematical::dsl::mathematical_snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for MathematicalSnapshot {
+impl store::ArtifactPack for MathematicalSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         crate::artifacts::mathematical::dsl::mathematical_snapshot_to_dsl(self).encode_pack_with(options)
     }
@@ -40,7 +40,7 @@ impl store::DocumentPack for MathematicalSnapshot {
         crate::artifacts::mathematical::dsl::mathematical_snapshot_from_dsl(dsl_snapshot).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for MathematicalSnapshot {
     fn default() -> Self {

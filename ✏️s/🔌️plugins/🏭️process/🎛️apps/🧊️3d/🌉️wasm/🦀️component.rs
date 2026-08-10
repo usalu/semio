@@ -6,11 +6,11 @@
 
 use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
-pub type Process3dEnvelope = DocumentEnvelope<Process3dSnapshot, Process3dMutation>;
-pub type Process3dStore = DocumentStore<Process3dSnapshot, Process3dMutation>;
+pub type Process3dEnvelope = ArtifactEnvelope<Process3dSnapshot, Process3dMutation>;
+pub type Process3dStore = ArtifactStore<Process3dSnapshot, Process3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️WasmBridge
@@ -76,7 +76,7 @@ mod tests {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock, PROCESS_3D_SCHEMA};
     use protocol::CollectionMutation;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
     use vcs::Author;
 
     fn cut_step(id: &str) -> ProcessStep {
@@ -100,44 +100,44 @@ mod tests {
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
         assert!(store.snapshot().expect("snapshot").steps.is_empty());
     }
 
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         store
-            .dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
             .expect("patch step");
         assert!(!store.snapshot().expect("snapshot").steps[0].enabled);
 
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert!(store.snapshot().expect("snapshot").steps[0].enabled);
     }
 
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         assert!(store.snapshot().expect("snapshot").steps[0].origin.is_none());
 
         let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { origin: Some(Some(origin.clone())), ..Default::default() } } }],
                 description: None,
             })
             .expect("patch origin");
         assert_eq!(store.snapshot().expect("snapshot").steps[0].origin, Some(origin));
 
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert!(store.snapshot().expect("snapshot").steps[0].origin.is_none());
     }
 
@@ -145,7 +145,7 @@ mod tests {
     fn moves_and_clamps_cursor() {
         let mut store = new_store();
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![
                     Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("a") } },
                     Process3dMutation::Steps { collection: CollectionMutation::Add { index: 1, item: cut_step("b") } },
@@ -156,7 +156,7 @@ mod tests {
             .expect("build steps + cursor");
         assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, Some(2));
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.resolved_up_to, Some(1));
@@ -167,10 +167,10 @@ mod tests {
         let mut store = new_store();
         let original_stock = store.snapshot().expect("snapshot").stock;
         let new_stock = Stock { id: "beam".into(), label: "Beam".into(), solid: SolidSpec::Cylinder { radius: 0.2, height: 2.0 }, pose: Pose::default() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
         assert_eq!(store.snapshot().expect("snapshot").stock, new_stock);
 
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").stock, original_stock);
     }
 
@@ -179,10 +179,10 @@ mod tests {
         let mut store = new_store();
         let original_stock = store.snapshot().expect("snapshot").stock;
         let imported_stock = Stock { id: "stock".into(), label: "Imported STEP".into(), solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
         assert_eq!(store.snapshot().expect("snapshot").stock, imported_stock);
 
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").stock, original_stock);
     }
 
@@ -192,7 +192,7 @@ mod tests {
         let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
         let mut store = Process3dStore::new(envelope);
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![
                     Process3dMutation::SetStock { stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose::default() } },
                     Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } },
@@ -202,7 +202,7 @@ mod tests {
                 description: Some("build timeline".into()),
             })
             .expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

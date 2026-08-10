@@ -5,7 +5,7 @@ extern crate semio_framework_os_kernel as vcs;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 use trinity::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
 use trinity::executor::run; use trinity::ast::QueryResult;
 

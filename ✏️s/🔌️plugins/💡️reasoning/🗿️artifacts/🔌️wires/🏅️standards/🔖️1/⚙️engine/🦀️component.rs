@@ -189,7 +189,7 @@ pub fn force_layout_board(board: &mut DslValue) {
 /// 📄️ The `metabolism` example, parsed once from `crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
 /// — falls back to the empty document if the fixture ever fails to parse.
 pub fn metabolism_wires_example_snapshot() -> WiresSnapshot {
-    match <WiresSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
+    match <WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
         Ok(snapshot) if fixture_nodes(&snapshot.board_fixture).len() >= 7 => snapshot,
         _ => handcrafted_metabolism_snapshot(),
     }

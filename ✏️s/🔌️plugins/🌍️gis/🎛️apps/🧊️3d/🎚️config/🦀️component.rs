@@ -1,7 +1,7 @@
 //! 🧮️ GIS 3D play app — the view-state config artifact and its operation enum.
 //!
 //! Session-only but real, undoable config: panning and selecting never enter the document's undo
-//! history, but they still round-trip through the config `DocumentStore` with a true `backwards`.
+//! history, but they still round-trip through the config `ArtifactStore` with a true `backwards`.
 //! The terrain's one editable property (exaggeration) is document state and lives in
 //! `crate::artifacts::gisterrain`.
 
@@ -9,9 +9,9 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ gis3d's `DocumentApp::Config` — the free/live viewport camera and world selection, plus
+/// 🧮️ gis3d's `ArtifactApp::Config` — the free/live viewport camera and world selection, plus
 /// `locale`. Mirrors `crate::apps::gis2d::config::Gis2dConfig`'s identical shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis3dcfg")]
 #[dsl(id = "gis.gis3dcfg")]
@@ -25,9 +25,9 @@ pub struct Gis3dConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for Gis3dConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for Gis3dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -47,7 +47,7 @@ impl store::DocumentDsl for Gis3dConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -56,12 +56,12 @@ impl store::DocumentDsl for Gis3dConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for Gis3dConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for Gis3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -70,10 +70,10 @@ impl store::DocumentPack for Gis3dConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -85,7 +85,7 @@ impl store::DocumentPack for Gis3dConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 /// 🎥️ A default overview camera scaled for a real-world DEM tile patch (hundreds of meters to a

@@ -160,8 +160,8 @@ impl Mutation<Block3dSnapshot> for Block3dMutation {
     }
 }
 
-pub type Block3dEnvelope = store::DocumentEnvelope<Block3dSnapshot, Block3dMutation>;
-pub type Block3dStore = store::DocumentStore<Block3dSnapshot, Block3dMutation>;
+pub type Block3dEnvelope = store::ArtifactEnvelope<Block3dSnapshot, Block3dMutation>;
+pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 // #endregion 🔖️Operation
 
 //#region 🧪️Tests

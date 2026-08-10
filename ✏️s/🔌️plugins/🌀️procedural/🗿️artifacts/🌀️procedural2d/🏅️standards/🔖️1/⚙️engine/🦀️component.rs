@@ -9,7 +9,7 @@ use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession,
 use flow::render_scene_json;
 use flow::playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Io

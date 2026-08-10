@@ -62,7 +62,7 @@ pub struct ProgramDiff {
     #[state(persistent)] pub validations: Option<ProgramValidationsDelta>,
     #[state(persistent)] pub performance: Option<ProgramPerformanceDelta>,
     #[state(persistent)] pub quality: Option<ProgramQualityDelta>,
-    #[state(persistent)] pub documents: Option<ProgramDocumentsDelta>,
+    #[state(persistent)] pub documents: Option<ProgramArtifactsDelta>,
     #[state(persistent)] pub assumptions: Option<ProgramAssumptionsDelta>,
     #[state(persistent)] pub constraints: Option<ProgramConstraintsDelta>,
     #[state(persistent)] pub compliance_records: Option<ProgramComplianceRecordsDelta>,
@@ -934,19 +934,19 @@ pub struct ProgramQualityPatchEntry {
 /// 🧩 Identified-collection delta for `documents`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct ProgramDocumentsDelta {
-    pub added: Vec<DocumentRecord>,
+pub struct ProgramArtifactsDelta {
+    pub added: Vec<ArtifactRecord>,
     pub removed: Vec<String>,
-    pub patched: Vec<ProgramDocumentsPatchEntry>,
+    pub patched: Vec<ProgramArtifactsPatchEntry>,
     pub reordered: Option<Vec<String>>,
 }
 
-/// 🩹 One patched `DocumentRecord` entry.
+/// 🩹 One patched `ArtifactRecord` entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProgramDocumentsPatchEntry {
+pub struct ProgramArtifactsPatchEntry {
     pub id: String,
-    pub patch: DocumentRecordPatch,
+    pub patch: ArtifactRecordPatch,
 }
 
 /// 🧩 Identified-collection delta for `assumptions`.

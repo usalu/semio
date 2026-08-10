@@ -1,8 +1,8 @@
-//! 🎛️ S Studio app — `DocumentApp` impl, command dispatch, manifest (constitutional: ui + general,
+//! 🎛️ S Studio app — `ArtifactApp` impl, command dispatch, manifest (constitutional: ui + general,
 //! merged at app level).
 //!
 //! 🕳️ Deviation from the usual "general"/"ui" split: the Studio app has no document type of its own —
-//! its `DocumentApp::Snapshot`/`Mutation` are `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}`,
+//! its `ArtifactApp::Snapshot`/`Mutation` are `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}`,
 //! owned entirely by `framework/product/os/core/rs` (outside this plugin). There is therefore no
 //! `🗿️artifacts/🪐️space` node anywhere in this crate — this file carries what would otherwise be the
 //! artifact facade's constants (manifest/panel identifiers shared by `engine` config defaults and this
@@ -31,7 +31,7 @@ use crate::apps::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -84,8 +84,8 @@ pub(crate) fn apply_config_mutations(config: &SpaceConfig, operations: &[crate::
 }
 
 // 🫀️ The shared `presence:` backbone-URI hack was deleted from os-core — presence now flows through
-// the semio_hub's duplex `PresencePeer`/`Presence` frames via `framework/sync`'s `DocumentEvent::Presence`
-// for migrated apps. `s` isn't wired onto `DocumentHost` yet, so it keeps this tiny self-contained
+// the semio_hub's duplex `PresencePeer`/`Presence` frames via `framework/sync`'s `ArtifactEvent::Presence`
+// for migrated apps. `s` isn't wired onto `ArtifactHost` yet, so it keeps this tiny self-contained
 // in-memory heartbeat map until then — same upsert/prune/exclude-self semantics as before, just owned
 // locally instead of delegated to a shared cross-process mechanism.
 #[derive(Clone)]
@@ -179,7 +179,7 @@ fn space_workflow_context_menu_items(
         // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
         // "transfer" (clipboard), rename into "settings" (identity/label editing), remove stays a
         // trailing destructive leaf — `organize_context_menu` (run automatically at the
-        // `VcsDocumentApp::context_menu` funnel) inserts the pre-destructive separator itself.
+        // `VcsArtifactApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
             .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
             .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() })
@@ -262,11 +262,11 @@ app_commands! {
 
 //#region 🔖️SpaceApp
 /// 🧪️ App instance — config lives in `SpaceConfig` via `SpaceConfigMutation`s; ephemeral presence
-/// heartbeats stay on the app instance until DocumentHost presence wiring lands.
+/// heartbeats stay on the app instance until ArtifactHost presence wiring lands.
 #[derive(Default, Clone, Copy)]
 pub struct SpaceApp;
 
-impl DocumentApp for SpaceApp {
+impl ArtifactApp for SpaceApp {
     type Snapshot = WorkflowSnapshot;
     type Mutation = WorkflowMutation;
     type Config = SpaceConfig;
@@ -388,7 +388,7 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SpaceCommand, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
         let emit = command.dispatch(doc, cfg)?;
         if presence_refresh_needed(&emit.config_mutations) {
             let next_config = apply_config_mutations(cfg.snapshot, &emit.config_mutations);
@@ -397,11 +397,11 @@ impl DocumentApp for SpaceApp {
         Ok(emit)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
-        // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
+        // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Space body keys still match.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
@@ -415,11 +415,11 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn window_measures(doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         HashMap::from([(crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::apps::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes))])
     }
 
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.snapshot.locale);
         let is_de = cfg.snapshot.locale.starts_with("de");
         space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.snapshot.selected_node_ids)
@@ -573,7 +573,7 @@ pub(crate) mod testkit {
         STUDIO_TEST_APP.with(|app| {
             let _app = app.borrow();
             let history = empty_history();
-            let doc = DocumentView { snapshot: projection, history: &history };
+            let doc = ArtifactView { snapshot: projection, history: &history };
             let cfg = ConfigView { snapshot: config };
             let draft = DraftView { snapshot: &NoDraft::default() };
             let engines = EngineHandles::empty();
@@ -622,7 +622,7 @@ pub(crate) mod testkit {
     }
 
     pub(crate) fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
-        WorkflowNode { id: id.into(), plugin_id: "test".into(), app_id: "test".into(), label: id.into(), yields: String::new(), document_ref: format!("documents/{id}"), config_ref: format!("config/{id}"), x: 0.0, y: 0.0, width: 1.0, height: 1.0, inputs, outputs }
+        WorkflowNode { id: id.into(), plugin_id: "test".into(), app_id: "test".into(), label: id.into(), yields: String::new(), artifact_ref: format!("artifacts/{id}"), config_ref: format!("config/{id}"), x: 0.0, y: 0.0, width: 1.0, height: 1.0, inputs, outputs }
     }
 
     pub(crate) fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> WorkflowMediaPort {
@@ -642,7 +642,7 @@ mod tests {
     use crate::apps::space::testkit::{empty_history, studio_emit};
     use crate::demo_space_projection;
     use semio_framework_plugin::testkit as plugin_testkit;
-    use semio_framework_plugin::{PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{PluginApp, VcsArtifactApp};
 
     #[test]
     fn initial_snapshot_is_empty_not_demo() {
@@ -693,7 +693,7 @@ mod tests {
     #[test]
     fn commit_checkpoint_round_trips_projection() {
         use serde_json::json;
-        let mut app = VcsDocumentApp::new(SpaceApp::default());
+        let mut app = VcsArtifactApp::new(SpaceApp::default());
         let before = app.snapshot().expect("projection").graph.nodes.len();
         app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commit");
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
@@ -704,7 +704,7 @@ mod tests {
         use crate::apps::space::commands::nodes::spawn_app;
         use serde_json::json;
         testkit::seed_draw_plugin();
-        let mut app = VcsDocumentApp::new(SpaceApp::default());
+        let mut app = VcsArtifactApp::new(SpaceApp::default());
         let before = app.snapshot().expect("projection").graph.nodes.len();
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
         app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expect("commit");
@@ -755,7 +755,7 @@ mod tests {
     fn space_labels_resolve_native_english_by_default() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let app = SpaceApp::default();
@@ -773,7 +773,7 @@ mod tests {
     fn space_labels_resolve_native_german_locale() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let app = SpaceApp::default();

@@ -5,7 +5,7 @@ use crate::apps::present::{new_tile_id, tile_morph_prompt_effect};
 use crate::artifacts::present::engine::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️EngagementSubmit
@@ -18,14 +18,14 @@ pub mod engagement_submit {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         let trimmed = payload.value.trim();
         if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
             let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
             return Ok(Emit {
-                document_mutations: vec![PresentMutation::SetTiles { tiles }],
+                artifact_mutations: vec![PresentMutation::SetTiles { tiles }],
                 config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                 ..Default::default()
             });
@@ -35,13 +35,13 @@ pub mod engagement_submit {
                 let id = new_tile_id("tile");
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                 Ok(Emit {
-                    document_mutations: vec![PresentMutation::Tiles(protocol::CollectionMutation::Add { index: deck.tiles.len(), item: tile })],
+                    artifact_mutations: vec![PresentMutation::Tiles(protocol::CollectionMutation::Add { index: deck.tiles.len(), item: tile })],
                     config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                     ..Default::default()
                 })
             }
             "clear" => Ok(Emit {
-                document_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }],
+                artifact_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }],
                 config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                 ..Default::default()
             }),
@@ -62,7 +62,7 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::config(vec![PresentConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }

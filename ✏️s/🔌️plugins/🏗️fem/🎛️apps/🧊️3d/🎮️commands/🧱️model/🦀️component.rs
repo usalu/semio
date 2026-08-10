@@ -4,7 +4,7 @@
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddNode
@@ -19,7 +19,7 @@ pub mod add_node {
         pub z: f64,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
         let index = snapshot.nodes.len();
@@ -42,7 +42,7 @@ pub mod add_bar {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
         let index = snapshot.elements.len();
@@ -67,7 +67,7 @@ pub mod add_frame {
         pub roll: f64,
     }
 
-    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
         let index = snapshot.elements.len();
@@ -91,7 +91,7 @@ pub mod add_material {
 
     /// 🧱️ New materials default to `nu = 0.3`/`rho = 7850.0` (mild steel) — the manifest's `addMaterial`
     /// arg form only stages `name`/`e`/`g`, matching the pre-migration `handle_action` behavior verbatim.
-    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddMaterial, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
         let index = snapshot.materials.len();
@@ -114,7 +114,7 @@ pub mod add_section {
         pub j: f64,
     }
 
-    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
         let index = snapshot.sections.len();
@@ -135,7 +135,7 @@ pub mod add_support {
         pub fixed: Vec<crate::artifacts::fem3d::FemDof>,
     }
 
-    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
         let index = snapshot.supports.len();
@@ -165,7 +165,7 @@ pub mod add_solid {
 
     /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`
     /// defaulted to `0.0`/`1`/`0.5` when unspecified — mirrors the pre-migration `handle_action` defaults.
-    pub fn handle(payload: &AddSolid, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
         let index = snapshot.solids.len();

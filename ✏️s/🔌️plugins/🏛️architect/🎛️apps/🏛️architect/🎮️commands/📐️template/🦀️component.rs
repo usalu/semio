@@ -5,7 +5,7 @@ pub mod apply {
     use crate::artifacts::program::engine::template::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -14,7 +14,7 @@ pub mod apply {
         pub template_id: String,
     }
 
-    pub fn handle(payload: &ApplyTemplate, doc: &DocumentView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &ApplyTemplate, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let template_id = EntityId(payload.template_id.clone());
         let Some(template) = program.templates.iter().find(|row| row.header.id == template_id).cloned() else {

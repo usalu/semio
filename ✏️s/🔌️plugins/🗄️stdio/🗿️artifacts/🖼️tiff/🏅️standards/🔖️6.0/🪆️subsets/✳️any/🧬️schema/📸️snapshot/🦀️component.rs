@@ -35,8 +35,8 @@ impl Default for TiffSnapshot {
 }
 //#endregion Snapshot
 
-//#region HandcraftedDocumentCodecs
-impl store::DocumentDsl for TiffSnapshot {
+//#region HandcraftedArtifactCodecs
+impl store::ArtifactDsl for TiffSnapshot {
     const EXTENSION: &'static str = "tiff";
     fn envelope_id() -> &'static str { "stdio.tiff" }
 
@@ -65,7 +65,7 @@ impl store::DocumentDsl for TiffSnapshot {
         let bytes = crate::artifacts::tiff::engine::encode_tiff(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -73,12 +73,12 @@ impl store::DocumentDsl for TiffSnapshot {
     }
 }
 
-impl store::DocumentPack for TiffSnapshot {
+impl store::ArtifactPack for TiffSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::tiff::engine::encode_tiff(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -88,10 +88,10 @@ impl store::DocumentPack for TiffSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -99,4 +99,4 @@ impl store::DocumentPack for TiffSnapshot {
         crate::artifacts::tiff::engine::decode_tiff(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
-//#endregion HandcraftedDocumentCodecs
+//#endregion HandcraftedArtifactCodecs

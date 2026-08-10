@@ -1,12 +1,12 @@
 //! 📡️ CAD artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `CadMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `CadMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
 //! cad host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::OpBinary;
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -25,8 +25,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
 }
 
 //#region 🔖️Store
-pub type CadEnvelope = DocumentEnvelope<CadSnapshot, CadMutation>;
-pub type CadStore = DocumentStore<CadSnapshot, CadMutation>;
+pub type CadEnvelope = ArtifactEnvelope<CadSnapshot, CadMutation>;
+pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -34,7 +34,7 @@ pub type CadStore = DocumentStore<CadSnapshot, CadMutation>;
 mod tests {
     use super::*;
     use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CAD_DOCUMENT_SCHEMA};
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn encode_decode_op_round_trips_a_representative_operation() {
@@ -66,7 +66,7 @@ mod tests {
             solid_handle: None,
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
         };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
         let scene = store.snapshot().expect("projection");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].primitives[0].kind, "solid");
@@ -76,7 +76,7 @@ mod tests {
     fn translate_objects_updates_origin() {
         let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::AddObject {
+            .dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::AddObject {
                     pane: CadPaneId::Shape,
                     object: CadObject {
                         id: "object-1".into(),
@@ -96,7 +96,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
         let scene = store.snapshot().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
     }
@@ -107,9 +107,9 @@ mod tests {
         let mut replacement = empty_cad_snapshot();
         replacement.id = "replaced".into();
         replacement.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::SetSnapshot { snapshot: Box::new(replacement) }], description: None }).expect("set scene");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::SetSnapshot { snapshot: Box::new(replacement) }], description: None }).expect("set scene");
         assert_eq!(store.snapshot().expect("projection").id, "replaced");
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("projection").id, "cad");
         assert!(store.snapshot().expect("projection").nodes.is_empty());
     }

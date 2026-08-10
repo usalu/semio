@@ -22,12 +22,12 @@ curated [object-id:REF count:UINT] {
 
 /// 📖️ Parses `.curate` DSL text into a `CurateSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<CurateSnapshot, store::TextError> {
-    <CurateSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CurateSnapshot` back to `.curate` DSL text.
 pub fn print_dsl(document: &CurateSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -45,7 +45,7 @@ mod tests {
             .chain(SourcingModule::demo_kinds(&slabs::SlabsModule))
             .collect();
         let document = CurateSnapshot { stock, ..Default::default() };
-        println!("{}", store::DocumentDsl::print_dsl(&document));
+        println!("{}", store::ArtifactDsl::print_dsl(&document));
     }
 
     #[test]

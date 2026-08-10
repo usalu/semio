@@ -12,7 +12,7 @@ use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::{RewriteSnapshot, TrinityRewriteError, REWRITE_RULE_SCHEMA};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
+use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -38,8 +38,8 @@ impl Mutation<RewriteSnapshot> for RewriteRuleMutation {
     }
 }
 
-pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteSnapshot, RewriteRuleMutation>;
-pub type RewriteRuleStore = DocumentStore<RewriteSnapshot, RewriteRuleMutation>;
+pub type RewriteRuleEnvelope = ArtifactEnvelope<RewriteSnapshot, RewriteRuleMutation>;
+pub type RewriteRuleStore = ArtifactStore<RewriteSnapshot, RewriteRuleMutation>;
 
 pub fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
     create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
@@ -50,7 +50,7 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteS
     if current == state {
         return Ok(());
     }
-    store.dispatch(DocumentCommand::Apply { mutations: vec![RewriteRuleMutation::SetState { state }], description: None }).map_err(TrinityRewriteError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![RewriteRuleMutation::SetState { state }], description: None }).map_err(TrinityRewriteError::from).map(|_| ())
 }
 
 //#region 🧪️Tests
@@ -103,14 +103,14 @@ mod tests {
     /// `protocol::MutationEnvelope`s.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", sample_rule_state()));
         let mut next = sample_rule_state();
         next.lhs_json = "{}".into();
         dispatch_rewrite_rule_state(&mut store, next).unwrap();
         let edit: &Edit<RewriteRuleMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        ::store::os_store::test_support::assert_command_envelope_round_trip::<RewriteSnapshot, RewriteRuleMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        ::store::os_store::test_support::assert_command_envelope_round_trip::<RewriteSnapshot, RewriteRuleMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests

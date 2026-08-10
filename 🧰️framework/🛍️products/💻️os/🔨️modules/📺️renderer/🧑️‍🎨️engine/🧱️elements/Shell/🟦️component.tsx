@@ -55,7 +55,7 @@ import {
   type WindowEngagement,
   type WindowMeasure,
 } from "@semio-tech/framework";
-import { type DocumentSyncStatus } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
 // a non-circular import; routing through the barrel indirection (cleared) hit the same
@@ -122,7 +122,7 @@ export type SpaceProgramEntry = {
   readonly workflowStepId: string;
   readonly appId: string;
   readonly label: string;
-  readonly document: readonly string[];
+  readonly label: readonly string[];
   readonly yields: string;
 };
 
@@ -132,7 +132,7 @@ export type SpawnedAppEntry = {
   readonly instanceId: number;
   readonly appId: string;
   readonly label: string;
-  readonly document: readonly string[];
+  readonly label: readonly string[];
 };
 
 export type SpacePanelState = {
@@ -426,7 +426,7 @@ type SyncState = {
   readonly syncCardKind: SyncCardKind | null;
   readonly syncDraftPath: string;
   /** 🚦️ Per-document sync health fed by `🟦️backbone-🟦️worker.ts`'s `DocumentEvent::Status` events, keyed by `documentId`. */
-  readonly syncStatusByDocumentId: Readonly<Record<string, DocumentSyncStatus>>;
+  readonly syncStatusByDocumentId: Readonly<Record<string, ArtifactSyncStatus>>;
 };
 
 /**
@@ -528,7 +528,7 @@ export type ShellAction =
   | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
   | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> }
-  | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: DocumentSyncStatus };
+  | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: ArtifactSyncStatus };
 //#endregion actions
 
 //#region slice reducers

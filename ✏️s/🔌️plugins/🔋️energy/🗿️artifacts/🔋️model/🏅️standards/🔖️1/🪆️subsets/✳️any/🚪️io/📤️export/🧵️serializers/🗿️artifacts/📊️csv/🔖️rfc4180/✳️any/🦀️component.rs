@@ -8,10 +8,10 @@ pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<CsvSnapshot, store::T
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         headers: vec!["payload".into()],
-        rows: vec![vec![<EnergyModelSnapshot as store::DocumentDsl>::print_dsl(snapshot)]],
+        rows: vec![vec![<EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(snapshot)]],
     })
 }
 
 pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<CsvSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

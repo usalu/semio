@@ -4,7 +4,7 @@
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::{element_id, FemDof, FemElement, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
@@ -20,7 +20,7 @@ pub mod add_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
         let index = snapshot.nodes.len();
@@ -42,7 +42,7 @@ pub mod add_bar {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = snapshot.elements.len();
@@ -65,7 +65,7 @@ pub mod add_beam {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBeam, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddBeam, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = snapshot.elements.len();
@@ -86,7 +86,7 @@ pub mod add_material {
         pub e: f64,
     }
 
-    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddMaterial, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
         let index = snapshot.materials.len();
@@ -107,7 +107,7 @@ pub mod add_section {
         pub iy: f64,
     }
 
-    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
         let index = snapshot.sections.len();
@@ -127,7 +127,7 @@ pub mod add_support {
         pub fixed: Vec<FemDof>,
     }
 
-    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
         let index = snapshot.supports.len();
@@ -152,7 +152,7 @@ pub mod add_region {
         pub mesh_size: Option<f64>,
     }
 
-    pub fn handle(payload: &AddRegion, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.regions.iter().map(|r| r.id.clone()), "r");
         let index = snapshot.regions.len();

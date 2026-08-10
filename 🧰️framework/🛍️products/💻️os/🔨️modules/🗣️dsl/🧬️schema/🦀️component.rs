@@ -2048,7 +2048,7 @@ fn print_wire(wire: &WireValue, writer: &mut Writer) {
 }
 
 /// @emoji 🔁️ Prints `value` against `spec` in the given join mode — the top-level entry point
-/// `dsl_derive`-generated code calls from `DocumentDsl::print_dsl`/`OpText::print_op`.
+/// `dsl_derive`-generated code calls from `ArtifactDsl::print_dsl`/`OpText::print_op`.
 pub fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
     let mut writer = Writer::new();
     print_record(value, spec, &mut writer);

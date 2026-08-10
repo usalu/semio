@@ -1,4 +1,4 @@
-//! 🏙️ Block 3D play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🏙️ Block 3D play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the world window
@@ -24,7 +24,7 @@ use crate::artifacts::block3d::op::Block3dMutation;
 use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK_3D_SCHEMA};
 use crate::BlockCamera3d;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,
 };
 use store::EngineHandles;
@@ -117,7 +117,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct Block3dPlayApp;
 
-impl DocumentApp for Block3dPlayApp {
+impl ArtifactApp for Block3dPlayApp {
     type Snapshot = Block3dSnapshot;
     type Mutation = Block3dMutation;
     type Config = Block3dConfig;
@@ -226,18 +226,18 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block3dCommand, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         let labels = block3d_labels(cfg.snapshot);
         let mut measures = HashMap::new();
         measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.snapshot, cfg.snapshot, BLOCK3D_DEFAULT_WINDOW_ID, labels));
         measures
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
         let labels = block3d_labels(cfg.snapshot);
         let active_representation_id = cfg.snapshot.active_representation_id.as_deref();
         let (base_body, window_id) = block3d_resolve_world_body(body_key);
@@ -252,13 +252,13 @@ impl DocumentApp for Block3dPlayApp {
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
     /// document's puzzle3d-shaped catalog fragment as a `kit.catalog`-schema `Media` value for the
     /// `"catalog:out"` port declared in `crate::artifacts::block3d::engine::block3d_io`. `wanted_tags`
-    /// should come from `cfg.wanted_tags` but `DocumentApp::export_media`'s landed signature doesn't
+    /// should come from `cfg.wanted_tags` but `ArtifactApp::export_media`'s landed signature doesn't
     /// thread `ConfigView` through yet — see `Block3dConfig::wanted_tags`'s doc — so this always
     /// resolves the active representation with an empty (all-tags) filter until that lands. Falls
     /// through to the default whole-document pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this app.
@@ -266,7 +266,7 @@ impl DocumentApp for Block3dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+            let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::artifacts::block3d::engine::puzzle3d_catalog_fragment(doc.snapshot, &[]);
@@ -354,9 +354,9 @@ pub fn create_block3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Block3dApp = VcsDocumentApp<Block3dPlayApp>;
+    pub type Block3dApp = VcsArtifactApp<Block3dPlayApp>;
 
     pub fn new_app() -> Block3dApp {
         sdk_new_app::<Block3dPlayApp>()
@@ -569,7 +569,7 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }));
         assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");

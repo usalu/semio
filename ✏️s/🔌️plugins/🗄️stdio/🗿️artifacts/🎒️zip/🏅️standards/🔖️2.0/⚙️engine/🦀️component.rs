@@ -216,7 +216,7 @@ pub fn register() {
     crate::artifacts::zip::composer::register();
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<ZipSnapshot, ZipMutation>(
+    store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot, ZipMutation>(
         STDIO_ZIP_DOCUMENT_SCHEMA,
     ));
 }
@@ -328,8 +328,8 @@ mod tests {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec() }],
         };
-        let pack = store::DocumentPack::encode_pack(&snap);
-        let decoded = <ZipSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        let pack = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.entries, snap.entries);
     }
 }

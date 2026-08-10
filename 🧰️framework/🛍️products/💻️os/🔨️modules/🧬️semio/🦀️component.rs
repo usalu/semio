@@ -73,7 +73,7 @@ pub struct SemioEnvelope {
 }
 
 impl SemioEnvelope {
-    /// @emoji 🪪️ Dotted artifact id (`plugin.artifact`) used in `DocumentDsl::ENVELOPE_ID`.
+    /// @emoji 🪪️ Dotted artifact id (`plugin.artifact`) used in `ArtifactDsl::ENVELOPE_ID`.
     pub fn envelope_id(&self) -> String {
         format!("{}.{}", self.plugin, self.artifact)
     }

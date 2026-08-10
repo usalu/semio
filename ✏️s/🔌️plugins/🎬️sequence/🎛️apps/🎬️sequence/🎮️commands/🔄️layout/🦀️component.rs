@@ -5,7 +5,7 @@ use crate::artifacts::sequence::engine::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
 use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Orientation
@@ -29,7 +29,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let orientation = orientation_from_config(&cfg.snapshot.orientation);
         Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
             let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
@@ -49,7 +49,7 @@ pub mod set_orientation {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetOrientation, _doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetOrientation, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetOrientation { value: payload.value.clone() }]))
     }
 }
@@ -69,9 +69,9 @@ mod tests {
         use crate::apps::sequence::commands::step::move_step::MoveStep;
         use crate::apps::sequence::testkit::dispatch;
         use crate::apps::sequence::SequenceCommand;
-        use semio_framework_plugin::VcsDocumentApp;
+        use semio_framework_plugin::VcsArtifactApp;
 
-        pub fn move_all_steps_to_origin(app: &mut VcsDocumentApp<crate::apps::sequence::SequencePlayApp>) {
+        pub fn move_all_steps_to_origin(app: &mut VcsArtifactApp<crate::apps::sequence::SequencePlayApp>) {
             let ids: Vec<String> = app.snapshot().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
             for id in &ids {
                 dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }));

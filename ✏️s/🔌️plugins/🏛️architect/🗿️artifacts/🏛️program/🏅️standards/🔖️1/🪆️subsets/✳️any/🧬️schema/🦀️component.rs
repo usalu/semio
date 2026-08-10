@@ -61,7 +61,7 @@ pub struct ProgramArtifact {
     #[state(persistent)] pub validations: Vec<ValidationRecord>,
     #[state(persistent)] pub performance: Vec<PerformanceCriterion>,
     #[state(persistent)] pub quality: Vec<QualityRecord>,
-    #[state(persistent)] pub documents: Vec<DocumentRecord>,
+    #[state(persistent)] pub documents: Vec<ArtifactRecord>,
     #[state(persistent)] pub assumptions: Vec<Assumption>,
     #[state(persistent)] pub constraints: Vec<ConstraintRecord>,
     #[state(persistent)] pub compliance_records: Vec<ComplianceRecord>,

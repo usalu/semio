@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::rewrite::RewriteSnapshot;
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewrite` DSL — mirrors the
 /// `trinity-rewrite` app's own real default rule over a trimmed two-node/one-edge slice of the
@@ -18,12 +18,12 @@ pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../../../.
 
 /// 📖️ Parses `.rewrite` DSL text into a `RewriteSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
-    <RewriteSnapshot as DocumentDsl>::parse_dsl(text)
+    <RewriteSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RewriteSnapshot` back to `.rewrite` DSL text.
 pub fn print_dsl(document: &RewriteSnapshot) -> String {
-    DocumentDsl::print_dsl(document)
+    ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

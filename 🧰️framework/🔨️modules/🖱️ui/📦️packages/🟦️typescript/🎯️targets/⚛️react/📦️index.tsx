@@ -1996,11 +1996,11 @@ export const uiChromeTranslationBundles = {
           spawnPrefix: { label: { normal: "Erzeugen", beginner: "Erzeugen" } },
         },
         panel: {
-          document: { label: { normal: "Dokument", beginner: "Dokument" } },
+          artifact: { label: { normal: "Dokument", beginner: "Dokument" } },
           catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
           inspection: { label: { normal: "Inspektion", beginner: "Inspektion" } },
           parameters: { label: { normal: "Parameter", beginner: "Parameter" } },
-          documentEmpty: { label: { normal: "—", beginner: "—" } },
+          artifactEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "gestartete App(s)", beginner: "gestartete App(s)" } },
           sync: { label: { normal: "Synchronisierung", beginner: "Synchronisierung" } },
           actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
@@ -2724,11 +2724,11 @@ export const uiChromeTranslationBundles = {
           spawnPrefix: { label: { normal: "Spawn", beginner: "Spawn" } },
         },
         panel: {
-          document: { label: { normal: "Document", beginner: "Document" } },
+          artifact: { label: { normal: "Artifact", beginner: "Artifact" } },
           catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
           inspection: { label: { normal: "Inspection", beginner: "Inspection" } },
           parameters: { label: { normal: "Parameters", beginner: "Parameters" } },
-          documentEmpty: { label: { normal: "—", beginner: "—" } },
+          artifactEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "spawned app(s)", beginner: "spawned app(s)" } },
           sync: { label: { normal: "Sync", beginner: "Sync" } },
           actions: { label: { normal: "Actions", beginner: "Actions" } },
@@ -3105,7 +3105,7 @@ export const uiChromeTranslationBundles = {
           noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
           canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
           rendering: { label: { normal: "Rendering…", beginner: "Rendering…" } },
-          documentPlaceholder: { label: { normal: "Document", beginner: "Document" } },
+          documentPlaceholder: { label: { normal: "Artifact", beginner: "Artifact" } },
           languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
           iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },
           projection: { label: { normal: "Projection", beginner: "Projection" } },
@@ -13379,12 +13379,12 @@ if (import.meta.vitest) {
       const { container } = render(
         <PanelTabBar
           variant="panel"
-          tabs={[singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })]}
-          activePath={["framework.panel.document"]}
+          tabs={[singleTreeLeaf({ id: "framework.panel.artifact", icon: StubIcon, name: "Artifact", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })]}
+          activePath={["framework.panel.artifact"]}
           onActivePathChange={() => {}}
         />,
       );
-      expect(screen.getByText("Document")).toBeTruthy();
+      expect(screen.getByText("Artifact")).toBeTruthy();
       expect(screen.getByText("Catalogue")).toBeTruthy();
       const tabBar = container.querySelector('[data-slot="panel-tabs"]');
       expect(tabBar?.className).toContain("px-single");
@@ -13399,7 +13399,7 @@ if (import.meta.vitest) {
           id: "framework.category.workbench",
           icon: StubIcon,
           name: "Workbench",
-          children: [singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
+          children: [singleTreeLeaf({ id: "framework.panel.artifact", icon: StubIcon, name: "Artifact", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
         },
         {
           kind: "branch",
@@ -13414,7 +13414,7 @@ if (import.meta.vitest) {
       expect(container.querySelectorAll('[data-slot="ribbon-row"]').length).toBe(2);
       expect(screen.getByText("Workbench")).toBeTruthy();
       expect(screen.getByText("Display")).toBeTruthy();
-      expect(screen.getByText("Document")).toBeTruthy();
+      expect(screen.getByText("Artifact")).toBeTruthy();
       expect(screen.getByText("Catalogue")).toBeTruthy();
       expect(screen.queryByText("Windows")).toBeNull();
 
@@ -13422,7 +13422,7 @@ if (import.meta.vitest) {
       expect(path).toEqual(["framework.category.display"]);
       rerender(<PanelTabBar variant="panel" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
       expect(screen.getByText("Windows")).toBeTruthy();
-      expect(screen.queryByText("Document")).toBeNull();
+      expect(screen.queryByText("Artifact")).toBeNull();
       expect(screen.getByText("Windows").closest('[data-active="true"]')).toBeNull();
     });
 
@@ -13935,9 +13935,9 @@ if (import.meta.vitest) {
       };
       const tabs: PanelTabNode[] = [
         singleTreeLeaf({
-          id: "framework.panel.document",
+          id: "framework.panel.artifact",
           icon: StubIcon,
-          name: "Document",
+          name: "Artifact",
           tree: {
             sections: [
               { id: "objects", label: "Building Components", defaultOpen: false, items: [] },
@@ -13948,7 +13948,7 @@ if (import.meta.vitest) {
       ];
       const { container } = render(
         <PanelDockProvider dock={emptyDock} onTabDockDrop={() => undefined} onTreeUnitDockDrop={() => undefined}>
-          <Panel anchor="top-left" visible tabs={tabs} activeTabPath={["framework.panel.document"]} />
+          <Panel anchor="top-left" visible tabs={tabs} activeTabPath={["framework.panel.artifact"]} />
         </PanelDockProvider>,
       );
       expect(container.querySelector('[data-slot="panel-tree-unit-header"]')).toBeNull();
@@ -19438,18 +19438,18 @@ if (treeVitest) {
           id: "framework.category.workbench",
           icon: StubIcon,
           name: "Workbench",
-          children: [singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
+          children: [singleTreeLeaf({ id: "framework.panel.artifact", icon: StubIcon, name: "Artifact", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
         },
       ];
       let visible = false;
-      let path: readonly string[] = ["framework.category.workbench", "framework.panel.document"];
+      let path: readonly string[] = ["framework.category.workbench", "framework.panel.artifact"];
       const { container, rerender } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
       expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
       expect(screen.getByText("Workbench")).toBeTruthy();
-      expect(screen.queryByText("Document")).toBeNull();
+      expect(screen.queryByText("Artifact")).toBeNull();
       fireEvent.click(screen.getByText("Workbench"));
       expect(visible).toBe(true);
-      expect(path).toEqual(["framework.category.workbench", "framework.panel.document"]);
+      expect(path).toEqual(["framework.category.workbench", "framework.panel.artifact"]);
       rerender(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
       const placeholder = container.querySelector('[data-slot="panel-chrome-tab-bar"]');
       expect(placeholder?.getAttribute("data-panel-chrome-tab-bar-placeholder")).toBe("true");
@@ -20153,7 +20153,7 @@ if (treeVitest) {
               id: "workbench",
               icon: StubIcon,
               name: "Workbench",
-              children: [singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } })],
+              children: [singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } })],
             },
           ],
           "top-middle": [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })],
@@ -20186,7 +20186,7 @@ if (treeVitest) {
 
     it("applyDockSkeleton reuses default object identity, drops unknown ids, appends new defaults, and falls back on kind mismatch", () => {
       const StubIcon = (): null => null;
-      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } });
+      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } });
       const catalogueLeaf = singleTreeLeaf({ id: "catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } });
       const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf, catalogueLeaf] };
       const settingsLeaf = singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } });
@@ -20247,7 +20247,7 @@ if (treeVitest) {
 
     it("applyDockSkeleton keeps a deliberately-emptied branch empty instead of resurrecting its default children", () => {
       const StubIcon = (): null => null;
-      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } });
+      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } });
       const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf] };
       const defaultDock: PanelDock = {
         anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },

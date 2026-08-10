@@ -440,7 +440,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 mod tests {
     use super::*;
     use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation, TrinityGraphMutation};
-    use store::DocumentCommand;
+    use store::ArtifactCommand;
 
     fn mini_fixture() -> JackSnapshot {
         JackSnapshot {
@@ -643,7 +643,7 @@ mod tests {
         let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 3);
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 2);
     }
 

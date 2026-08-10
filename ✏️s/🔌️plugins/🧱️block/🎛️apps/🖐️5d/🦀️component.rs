@@ -1,4 +1,4 @@
-//! 👯️ Block 5D play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 👯️ Block 5D play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board/world
@@ -18,7 +18,7 @@ use crate::apps::block5d::terminology::block5d_labels;
 use crate::artifacts::block5d::op::Block5dMutation;
 use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -61,7 +61,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct Block5dPlayApp;
 
-impl DocumentApp for Block5dPlayApp {
+impl ArtifactApp for Block5dPlayApp {
     type Snapshot = Block5dSnapshot;
     type Mutation = Block5dMutation;
     type Config = Block5dConfig;
@@ -115,11 +115,11 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
         let labels = block5d_labels(&cfg.snapshot.locale);
         match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels),
@@ -135,9 +135,9 @@ impl DocumentApp for Block5dPlayApp {
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in
     /// `crate::artifacts::block5d::engine::block5d_io`. Falls through to the default whole-document
     /// pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this app.
@@ -145,7 +145,7 @@ impl DocumentApp for Block5dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+            let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::artifacts::block5d::engine::puzzle5d_catalog_fragment(doc.snapshot);
@@ -215,9 +215,9 @@ pub fn create_block5d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Block5dApp = VcsDocumentApp<Block5dPlayApp>;
+    pub type Block5dApp = VcsArtifactApp<Block5dPlayApp>;
 
     pub fn new_app() -> Block5dApp {
         sdk_new_app::<Block5dPlayApp>()
@@ -391,7 +391,7 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["g0".into()] }));
         assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");

@@ -1,31 +1,31 @@
 //! 🆔 Db identity types, DbError, and resource limits.
 
 //#region 🔖️Ids
-/// @emoji 🪪️ A document's identity, decoupled from `protocol::DocumentId` (see module doc) but
+/// @emoji 🪪️ A document's identity, decoupled from `protocol::ArtifactId` (see module doc) but
 /// sharing its single-`String` shape so conversions at the `db`/`protocol` boundary are lossless.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct DocumentId(pub String);
+pub struct ArtifactId(pub String);
 
-impl std::fmt::Display for DocumentId {
+impl std::fmt::Display for ArtifactId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl From<&str> for DocumentId {
+impl From<&str> for ArtifactId {
     fn from(value: &str) -> Self {
-        DocumentId(value.to_string())
+        ArtifactId(value.to_string())
     }
 }
 
-impl From<String> for DocumentId {
+impl From<String> for ArtifactId {
     fn from(value: String) -> Self {
-        DocumentId(value)
+        ArtifactId(value)
     }
 }
 
 /// @emoji 👤️ An actor's (author's) identity, decoupled from `protocol::ActorId` — see
-/// `DocumentId`'s doc for the shared-shape conversion rationale.
+/// `ArtifactId`'s doc for the shared-shape conversion rationale.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ActorId(pub String);
 
@@ -48,7 +48,7 @@ impl From<String> for ActorId {
 }
 
 /// @emoji 🔁️ A document actor's supervision generation (bumped on every restart by `db_actor`'s
-/// `OneForOne`/`OneForAll`/`Escalate` supervision). `DocumentHandle` (the `db` facade's stable
+/// `OneForOne`/`OneForAll`/`Escalate` supervision). `ArtifactHandle` (the `db` facade's stable
 /// API) carries one alongside its mailbox sender so a handle obtained before a restart fails
 /// loudly (`DbError::StaleGeneration`) instead of silently talking to a dead mailbox.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -67,7 +67,7 @@ impl GenerationId {
 
 //#region 🔖️Errors
 /// @emoji 🚨️ The one error type every `db_*` public fn returns; never leaks `std::io::Error` (or
-/// any other foreign error type) — every crate below `db_document` wraps its own errors into this.
+/// any other foreign error type) — every crate below `db_artifact` wraps its own errors into this.
 #[derive(thiserror::Error, Debug, Clone, PartialEq)]
 pub enum DbError {
     #[error("io error: {0}")]
@@ -129,13 +129,13 @@ pub struct DbLimits {
     pub max_payload_bytes: u64,
     pub max_query_bytes: u64,
     pub max_mailbox_depth: u32,
-    pub max_open_documents: u32,
+    pub max_open_artifacts: u32,
     pub max_preview_ttl_ms: u64,
 }
 
 impl Default for DbLimits {
     fn default() -> Self {
-        Self { max_command_bytes: 8 * 1024 * 1024, max_batch_commands: 4_096, max_payload_bytes: 256 * 1024 * 1024, max_query_bytes: 4 * 1024 * 1024, max_mailbox_depth: 65_536, max_open_documents: 100_000, max_preview_ttl_ms: 5 * 60 * 1_000 }
+        Self { max_command_bytes: 8 * 1024 * 1024, max_batch_commands: 4_096, max_payload_bytes: 256 * 1024 * 1024, max_query_bytes: 4 * 1024 * 1024, max_mailbox_depth: 65_536, max_open_artifacts: 100_000, max_preview_ttl_ms: 5 * 60 * 1_000 }
     }
 }
 
@@ -157,9 +157,9 @@ mod tests {
     //#region 🔖️Ids
     #[test]
     fn document_id_and_actor_id_convert_and_display() {
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         assert_eq!(document.to_string(), "doc-1");
-        assert_eq!(document, DocumentId::from("doc-1".to_string()));
+        assert_eq!(document, ArtifactId::from("doc-1".to_string()));
 
         let actor: ActorId = "actor-1".into();
         assert_eq!(actor.to_string(), "actor-1");

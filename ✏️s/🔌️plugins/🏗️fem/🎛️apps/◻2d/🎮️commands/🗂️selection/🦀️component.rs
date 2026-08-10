@@ -3,7 +3,7 @@
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::element_id;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
@@ -21,7 +21,7 @@ pub mod remove_selection {
     /// 🧩️ Resolves each id against every collection in turn (nodes, elements, materials, sections,
     /// supports, load cases, regions, combinations) and emits the matching typed `Remove*` operation —
     /// mirrors the pre-migration stringly-typed selection-delete dispatch, now over the typed document.
-    pub fn handle(payload: &RemoveSelection, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let mut operations = Vec::new();
         for id in &payload.ids {

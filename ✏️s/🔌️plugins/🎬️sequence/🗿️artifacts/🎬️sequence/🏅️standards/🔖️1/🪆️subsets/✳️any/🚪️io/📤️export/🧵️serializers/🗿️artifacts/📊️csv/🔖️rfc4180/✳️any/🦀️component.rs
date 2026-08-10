@@ -12,5 +12,5 @@ pub fn serialize(snapshot: &SequenceSnapshot) -> Result<CsvSnapshot, store::Text
 }
 
 pub fn serialize_bytes(snapshot: &SequenceSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<CsvSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

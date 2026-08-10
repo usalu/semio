@@ -2,7 +2,7 @@
 
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetSelection
@@ -15,7 +15,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::config(vec![VcsDemoConfigMutation::SetSelection { checkpoint_ids: payload.ids.clone() }]))
     }
 }

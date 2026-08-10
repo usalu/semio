@@ -16,7 +16,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<WriterMutation, WriterConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<WriterMutation, WriterConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -399,7 +399,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🌉️WasmBridge
-/// 🌉️ `WriterHost` (all targets) plus `WriterSession`/`WriterDocumentVcs` (wasm32 only) — see
+/// 🌉️ `WriterHost` (all targets) plus `WriterSession`/`WriterArtifactVcs` (wasm32 only) — see
 /// `apps::writer::wasm` for the individual `cfg` gates; this re-export just surfaces them at the crate
 /// root, matching the old bundle crate's `📦️glue.rs` surface.
 pub use apps::writer::wasm::*;

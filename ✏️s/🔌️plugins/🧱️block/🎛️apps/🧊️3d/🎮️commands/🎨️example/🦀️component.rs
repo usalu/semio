@@ -11,7 +11,7 @@ pub mod set_active_example {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -20,7 +20,7 @@ pub mod set_active_example {
         pub id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let example = match payload.id.as_str() {
             BLOCK3D_EXAMPLE_CAPSULE => crate::artifacts::block3d::dsl::parse_dsl(crate::artifacts::block3d::dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
             BLOCK3D_EXAMPLE_FOREST_LEFT => crate::artifacts::block3d::dsl::parse_dsl(crate::artifacts::block3d::dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
@@ -37,7 +37,7 @@ pub mod edit {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -46,7 +46,7 @@ pub mod edit {
         pub text: String,
     }
 
-    pub fn handle(payload: &Edit, doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &Edit, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         match serde_json::from_str::<Block3dSnapshot>(&payload.text) {
             Ok(document) if &document != doc.snapshot => Ok(Emit::mutations(vec![Block3dMutation::SetSnapshot { snapshot: document }])),
             _ => Ok(Emit::default()),

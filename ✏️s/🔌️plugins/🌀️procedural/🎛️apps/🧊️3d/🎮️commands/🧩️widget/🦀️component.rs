@@ -5,7 +5,7 @@ use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, Widget};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -17,7 +17,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let selected = cfg.snapshot.selected_node_ids.clone();
         let mut host = host_from_fixture(fixture);
@@ -29,7 +29,7 @@ pub mod delete_selection {
         }
         let operations = commit_fixture(fixture, &host.fixture);
         let config_mutations = if cleared { vec![Procedural3dConfigMutation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteSelection
@@ -43,7 +43,7 @@ pub mod remove_widget {
     pub struct RemoveWidget {
         pub widget_id: String}
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let target_id = &payload.widget_id;
         let mut host = host_from_fixture(fixture);
@@ -51,7 +51,7 @@ pub mod remove_widget {
             let operations = commit_fixture(fixture, &host.fixture);
             let mut remaining = cfg.snapshot.selected_node_ids.clone();
             remaining.retain(|id| id != target_id);
-            Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: remaining }], ..Default::default() })
+            Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: remaining }], ..Default::default() })
         } else {
             Ok(Emit::default())
         }
@@ -70,7 +70,7 @@ pub mod add_widget {
         pub x: Option<f64>,
         pub y: Option<f64>}
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let descriptor = if let Some((base, neuron)) = payload.kind.split_once('|') {
             if base == "neuron" {
@@ -86,7 +86,7 @@ pub mod add_widget {
         let mut host = host_from_fixture(fixture);
         if let Ok(id) = host.add_widget(&descriptor, x, y) {
             let operations = commit_fixture(fixture, &host.fixture);
-            Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: vec![id] }], ..Default::default() })
+            Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: vec![id] }], ..Default::default() })
         } else {
             Ok(Emit::default())
         }
@@ -105,7 +105,7 @@ pub mod patch_flow_widgets {
         pub field: String,
         pub value: Option<f64>}
 
-    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let mut host = host_from_fixture(fixture);
         let baseline = host.fixture.clone();

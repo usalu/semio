@@ -16,7 +16,7 @@ use imperative_engine::{
 use math::graph::manifest::PropertyBag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value};
 use std::collections::{BTreeMap, HashMap};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 const SEQUENCE_DAG_COMPONENT_WIDTH: f64 = 200.0;
 const SEQUENCE_DAG_CHANNEL_ROW_HEIGHT: f64 = 24.0;
@@ -739,7 +739,7 @@ pub fn sequence_io() -> semio_framework::AppIo {
 
 /// 🎯️ Pure next-available step id for `import_media("steps:in", ...)` — mirrors `SequenceHost::next_step_id`
 /// but never mutates a host's serial counter (there is no live `SequenceHost` in a pure
-/// `DocumentApp::import_media` call): derives the next id purely from the fixture's own existing
+/// `ArtifactApp::import_media` call): derives the next id purely from the fixture's own existing
 /// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
 pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
     format!("step-{}", max_serial_in_snapshot(fixture).max(100) + 1)
@@ -750,10 +750,10 @@ pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
 /// 📄️ JSON re-serialization of `default_snapshot()`, round-tripped through its own `.sequence` DSL
 /// first (see `crate::artifacts::sequence::dsl`), to prove the fixture is fully expressible in text —
 /// for the framework-generic call site that contractually requires JSON (`App::example`'s manifest
-/// `document_json` is loaded via `serde_json::from_str` by `DocumentApp::load_document`'s default impl)
+/// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
 /// — out of scope to change, since both are defined in `framework/plugin`.
 pub fn sequence_example_json() -> String {
-    let fixture = <SequenceSnapshot as DocumentDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
+    let fixture = <SequenceSnapshot as ArtifactDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
     serde_json::to_string(&fixture).expect("default_snapshot is a static, hand-built value with no non-finite floats or non-UTF8 keys")
 }
 //#endregion 🔖️Example

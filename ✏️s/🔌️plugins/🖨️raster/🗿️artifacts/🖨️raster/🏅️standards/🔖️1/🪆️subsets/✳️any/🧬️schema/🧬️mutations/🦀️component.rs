@@ -116,8 +116,8 @@ pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutat
     mutation.inverse(snapshot)
 }
 
-pub type RasterEnvelope = store::DocumentEnvelope<RasterSnapshot, RasterMutation>;
-pub type RasterStore = store::DocumentStore<RasterSnapshot, RasterMutation>;
+pub type RasterEnvelope = store::ArtifactEnvelope<RasterSnapshot, RasterMutation>;
+pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 
 pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
 //#endregion 🔖️Mutations
@@ -129,7 +129,7 @@ mod tests {
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerPatch, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use crate::artifacts::raster::engine::{empty_raster_snapshot, layer_name, layer_visible};
     use std::collections::BTreeMap;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
     use vcs::apply_mutation;
 
     fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn store_applies_layer_add() {
         let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![RasterMutation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     }
 

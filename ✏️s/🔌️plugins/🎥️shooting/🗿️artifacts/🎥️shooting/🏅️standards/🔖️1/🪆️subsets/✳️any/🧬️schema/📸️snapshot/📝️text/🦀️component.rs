@@ -1,6 +1,6 @@
 //! 📜️ Shooting artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for ShootingSnapshot` is implemented directly on the artifact type (see
+//! `store::ArtifactDsl for ShootingSnapshot` is implemented directly on the artifact type (see
 //! `🗿️artifacts/🎥️shooting/🦀️component.rs`'s doc comment for why). This component only adds the thin
 //! artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture constant and its
 //! round-trip law.
@@ -15,17 +15,17 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::shooting::ShootingSnapshot;
 
-/// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::DocumentDsl`).
+/// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::ArtifactDsl`).
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.shooting` DSL text into a `ShootingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
-    <ShootingSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `ShootingSnapshot` back to `.shooting` DSL text.
 pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
-    store::DocumentDsl::print_dsl(snapshot)
+    store::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests

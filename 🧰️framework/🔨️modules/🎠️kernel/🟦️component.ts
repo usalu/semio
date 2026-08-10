@@ -173,8 +173,8 @@ export type PluginRegistryEntry = {
 /** @emoji 🕰️ Hybrid logical clock stamp carried by every kernel operation. */
 export type HybridLogicalTimestamp = { readonly wall: number; readonly counter: number };
 
-/** @emoji 🩹️ A schema-tagged document mutation payload (forward diff or inverse diff). */
-export type DocumentDiff = { readonly schemaId: string; readonly payload: unknown };
+/** @emoji 🩹️ A schema-tagged artifact mutation payload (forward diff or inverse diff). */
+export type ArtifactDiff = { readonly schemaId: string; readonly payload: unknown };
 
 /** @emoji ↩️ Undo semantics for a single kernel operation. */
 export type UndoPolicy = "exactBaseOnly" | "transformAgainstConcurrent" | "semanticUndo" | "compensatingAction";
@@ -182,7 +182,7 @@ export type UndoPolicy = "exactBaseOnly" | "transformAgainstConcurrent" | "seman
 /** @emoji ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
 export type InverseMutation = {
   readonly targetOperation: string;
-  readonly inverseDiff: DocumentDiff;
+  readonly inverseDiff: ArtifactDiff;
   readonly baseVersion: number;
   readonly dependencies?: readonly string[];
   readonly undoPolicy: UndoPolicy;
@@ -191,10 +191,10 @@ export type InverseMutation = {
 /** @emoji 🔁️ One typed document operation with its true inverse — the CQRS wire unit. */
 export type KernelMutation = {
   readonly id: string;
-  readonly document: number;
+  readonly artifact: number;
   readonly baseVersion: number;
   readonly invocationId: string;
-  readonly diff: DocumentDiff;
+  readonly diff: ArtifactDiff;
   readonly inverse: InverseMutation;
   readonly dependencies?: readonly string[];
   readonly author: string;
@@ -272,8 +272,8 @@ export type HostEffect =
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
   /** @emoji 📂️ Replaces the active app instance's document with a VCS envelope JSON — host-owned
-   * counterpart of `loadAppDocument` for catalog/example studio opens. */
-  | { readonly loadDocument: { readonly pack?: readonly number[]; readonly spr?: readonly number[]; readonly documentJson?: string } }
+   * counterpart of `loadAppArtifact` for catalog/example studio opens. */
+  | { readonly loadArtifact: { readonly pack?: readonly number[]; readonly spr?: readonly number[]; readonly artifactJson?: string } }
   | { readonly openExternalUrl: { readonly url: string } }
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
@@ -300,7 +300,7 @@ export type HostEffect =
         readonly args?: unknown;
       };
     }
-  | { readonly spawnPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
+  | { readonly spawnPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly artifactJson?: string } }
   | { readonly openPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
   /** 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect form of
@@ -681,7 +681,7 @@ export function postPluginBackboneInbound(pluginId: string, uri: string, message
 
 //#region 🐚️PluginBackboneRouting
 /** @emoji 🐚️ Extracts the `<documentId>` a plugin's `actor://<documentId>` backbone uri names — the
- * `framework/sync` `ChannelBackbone::pair` convention (see the react renderer's `openDocument`). Falls
+ * `framework/sync` `ChannelBackbone::pair` convention (see the react renderer's `openArtifact`). Falls
  * back to the whole uri for any other scheme so an unrecognized realm still gets a routing key instead
  * of being silently dropped. */
 function pluginBackboneDocumentIdFromUri(uri: string): string {
@@ -696,7 +696,7 @@ const pluginBackboneRoutes = new Map<string, (uri: string, message: Uint8Array) 
  * mounted shell silently overwrote: misrouting the first shell's document sync into the second shell's
  * backbone worker, then severing it entirely the moment that second shell unmounted (it cleared the
  * slot to `null`). Register at the same point a shell learns it owns `documentId` (the react renderer's
- * `openDocument`) and call the returned unregister function at the matching `closeDocument`/unmount.
+ * `openArtifact`) and call the returned unregister function at the matching `closeArtifact`/unmount.
  */
 export function registerPluginBackboneRoute(documentId: string, relay: (uri: string, message: Uint8Array) => void): () => void {
   pluginBackboneRoutes.set(documentId, relay);

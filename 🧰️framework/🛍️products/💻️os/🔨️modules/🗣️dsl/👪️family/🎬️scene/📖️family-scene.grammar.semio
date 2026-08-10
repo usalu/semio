@@ -6,6 +6,6 @@ scene = layer*
 layer = layer-anchor transform-block? paint-block?
 layer-anchor = IDENT "@" FLOAT FLOAT FLOAT?
 transform-block = "{" transform-field* "}"
-transform-field = "x" "=" (FLOAT | INT) | "y" "=" (FLOAT | INT) | "z" "=" (FLOAT | INT) | "rotation" "=" (FLOAT | INT) | "scale" "=" (FLOAT | INT) | "skew" "=" (FLOAT | INT)
+transform-field = "x" "=" {FLOAT | INT} | "y" "=" {FLOAT | INT} | "z" "=" {FLOAT | INT} | "rotation" "=" {FLOAT | INT} | "scale" "=" {FLOAT | INT} | "skew" "=" {FLOAT | INT}
 paint-block = "{" paint-field* "}"
-paint-field = "fill" "=" (TEXT | IDENT) | "stroke" "=" (TEXT | IDENT) | "opacity" "=" (FLOAT | INT) | "color" "=" (TEXT | IDENT) | "width" "=" (FLOAT | INT) | "font" "=" (TEXT | IDENT) | "blend" "=" IDENT
+paint-field = "fill" "=" {TEXT | IDENT} | "stroke" "=" {TEXT | IDENT} | "opacity" "=" {FLOAT | INT} | "color" "=" {TEXT | IDENT} | "width" "=" {FLOAT | INT} | "font" "=" {TEXT | IDENT} | "blend" "=" IDENT

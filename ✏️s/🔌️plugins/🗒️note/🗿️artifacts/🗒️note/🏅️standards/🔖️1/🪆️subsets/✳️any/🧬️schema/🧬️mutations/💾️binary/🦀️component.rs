@@ -41,8 +41,8 @@ mod tests {
     #[test]
     fn note_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::artifacts::note::engine::empty_note_snapshot(), None);
-        let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
+        let mut doc_store = store::ArtifactStore::new(envelope);
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
@@ -54,13 +54,13 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::artifacts::note::engine::empty_note_snapshot(), None);
-        let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
+        let mut doc_store = store::ArtifactStore::new(envelope);
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
         let edit: &Edit<NoteMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &DocumentId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

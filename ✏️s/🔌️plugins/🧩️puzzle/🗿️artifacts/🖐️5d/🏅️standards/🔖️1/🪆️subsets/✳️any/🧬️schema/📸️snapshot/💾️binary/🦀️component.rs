@@ -14,12 +14,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Puzzle5dSnapshot` to its binary pack form.
 pub fn encode(document: &Puzzle5dSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Puzzle5dSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Puzzle5dSnapshot, PackError> {
-    <Puzzle5dSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -45,15 +45,15 @@ mod tests {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
         let part = Puzzle5dPart { id: "p1".into(),
             anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

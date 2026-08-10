@@ -4,7 +4,7 @@ use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::host_from_snapshot;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Run
@@ -19,7 +19,7 @@ pub mod run_command {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let result = host_from_snapshot(doc.snapshot).run();
         let json = serde_json::to_string(&result).unwrap_or_default();
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }]))
@@ -35,7 +35,7 @@ pub mod stop_command {
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 
-    pub fn handle(_payload: &Stop, _doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json: String::new() }]))
     }
 }

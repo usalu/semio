@@ -1,7 +1,7 @@
-//! 🎞️ Protocol causal layer: `MutationEnvelope`/`DocumentDiff`/`InverseMutation`, the `MutationDag`
+//! 🎞️ Protocol causal layer: `MutationEnvelope`/`ArtifactDiff`/`InverseMutation`, the `MutationDag`
 //! causal buffer, the runtime frontier-summary twin, the `MutationTransform` hook, and the
 //! `mutation_envelope_from_edit` bridge from `crate::os_spr::command::Edit`. Moved from
-//! `framework/core/rs/lib.rs`'s `🔖️Sync` region (`MutationEnvelope` L6246, `DocumentDiff` L6121,
+//! `framework/core/rs/lib.rs`'s `🔖️Sync` region (`MutationEnvelope` L6246, `ArtifactDiff` L6121,
 //! `InverseMutation` L6137, `MutationDag`/`InsertResult`/`MutationDagError` L6266-6380 including its existing
 //! unit tests at L6488-6572) and `vcs/rs/lib.rs`'s `mutation_envelope_from_edit`. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_causal`.
@@ -10,7 +10,7 @@
 //! `protocol_history`'s durable-log-derived pair — deliberately kept separate, see `🔖️Frontier`.
 
 //#region 🔖️Envelope
-// Moved from framework/core L6246 (MutationEnvelope), L6121 (DocumentDiff), L6137
+// Moved from framework/core L6246 (MutationEnvelope), L6121 (ArtifactDiff), L6137
 // (InverseMutation). The frozen contract's field shapes are simpler than the framework-core
 // originals (no `schema_version`/`payload_hash` on the envelope, no `target_mutation`/
 // `base_version`/`dependencies`/`undo_policy` on the inverse) — implemented exactly as specified
@@ -22,7 +22,7 @@
 // producer-defined encoding named by `schema` for a non-typed-op payload, e.g. `db`'s pathmap
 // convention); `schema` is a real `crate::os_spr::ids::SchemaId`, no longer a `std::any::type_name`
 // placeholder (see `🔖️Bridge` below). `InverseMutation.inverse_diff` is renamed to `payload` for
-// the same reason `DocumentDiff.payload` is named `payload`, not `diff` — both now hold the same
+// the same reason `ArtifactDiff.payload` is named `payload`, not `diff` — both now hold the same
 // kind of thing (an encoded op), not a structural diff. Both fields still carry
 // `serde::Serialize`/`Deserialize` for the WIT/backbone JSON seam (a `Vec<u8>` serializes as a
 // JSON number array there — acceptable by design, that seam stays JSON per M-C).
@@ -32,17 +32,17 @@
 #[derive(Clone, Debug, PartialEq)]
 pub struct MutationEnvelope {
     pub mutation_id: crate::os_spr::ids::MutationId,
-    pub document_id: crate::os_spr::ids::DocumentId,
+    pub document_id: crate::os_spr::ids::ArtifactId,
     pub actor: crate::os_spr::ids::ActorId,
     pub dependencies: Vec<crate::os_spr::ids::MutationId>,
-    pub diff: DocumentDiff,
+    pub diff: ArtifactDiff,
     pub inverse: InverseMutation,
     pub timestamp: crate::os_spr::ids::HybridLogicalTimestamp,
 }
 
 /// @emoji 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct DocumentDiff {
+pub struct ArtifactDiff {
     pub schema: crate::os_spr::ids::SchemaId,
     pub payload: Vec<u8>,
 }
@@ -185,7 +185,7 @@ impl MutationDag {
 /// durable-log-derived version: they serve different layers (live runtime state vs on-disk log).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FrontierSummary {
-    pub document_id: crate::os_spr::ids::DocumentId,
+    pub document_id: crate::os_spr::ids::ArtifactId,
     pub head_edit_ordinal: u64,
     pub head_edit_id: String,
     pub last_commit_seq: u64,
@@ -244,7 +244,7 @@ pub trait MutationTransform<P>: crate::os_spr::command::Mutation<P> {
 
 //#region 🔖️Bridge
 // Moved from vcs/rs (was mutation_envelope_from_edit). The original signature took a
-// `DocumentEnvelope<P, Mutation>` (for its `.id`/`.schema`) and a `deps: Vec<MutationId>` and
+// `ArtifactEnvelope<P, Mutation>` (for its `.id`/`.schema`) and a `deps: Vec<MutationId>` and
 // returned a single `Result<MutationEnvelope, VcsError>` whose diff/inverse payloads were the
 // *whole* `Edit` serialized once. The frozen contract's signature drops both the vcs envelope and
 // the `deps` parameter and returns `Vec<MutationEnvelope>` — one envelope per forward op — which
@@ -258,7 +258,7 @@ pub trait MutationTransform<P>: crate::os_spr::command::Mutation<P> {
 // caller-supplied real `crate::os_spr::ids::SchemaId` (new parameter) instead of
 // `std::any::type_name::<Op>()` — the type-name placeholder was never a stable/meaningful tag
 // across a process boundary; callers already know their document's schema string (it's what they
-// register a `DocumentCodec` under). `inverse.payload` is an empty `Vec<u8>` past the end of
+// register a `ArtifactCodec` under). `inverse.payload` is an empty `Vec<u8>` past the end of
 // `edit.inverse` (was `Value::Null`) — still the same "shorter inverse vec is not an error"
 // contract, just spelled in the new payload type.
 //
@@ -280,7 +280,7 @@ pub fn mutation_ids_for_edit<P, Op: crate::os_spr::command::Mutation<P>>(edit: &
 
 pub fn mutation_envelope_from_edit<P, Op: crate::os_spr::command::Mutation<P> + crate::os_spr::command::OpBinary>(
     edit: &crate::os_spr::command::Edit<Op>,
-    document_id: &crate::os_spr::ids::DocumentId,
+    document_id: &crate::os_spr::ids::ArtifactId,
     schema: &crate::os_spr::ids::SchemaId,
 ) -> Result<Vec<MutationEnvelope>, crate::os_spr::ProtocolError> {
     let operation_ids = mutation_ids_for_edit(edit);
@@ -300,7 +300,7 @@ pub fn mutation_envelope_from_edit<P, Op: crate::os_spr::command::Mutation<P> + 
                 document_id: document_id.clone(),
                 actor,
                 dependencies,
-                diff: DocumentDiff { schema: schema.clone(), payload },
+                diff: ArtifactDiff { schema: schema.clone(), payload },
                 inverse: InverseMutation { schema: schema.clone(), payload: inverse_payload },
                 timestamp,
             })
@@ -348,7 +348,7 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
 /// @emoji 🎯️ Inverse of [`encode_envelope`].
 pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, crate::os_spr::ProtocolError> {
     let mutation_id = crate::os_spr::ids::MutationId(crate::os_spr::read_str(bytes, pos)?);
-    let document_id = crate::os_spr::ids::DocumentId(crate::os_spr::read_str(bytes, pos)?);
+    let document_id = crate::os_spr::ids::ArtifactId(crate::os_spr::read_str(bytes, pos)?);
     let actor = crate::os_spr::ids::ActorId(crate::os_spr::read_str(bytes, pos)?);
     let dependency_count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let mut dependencies = Vec::with_capacity(dependency_count as usize);
@@ -360,7 +360,7 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     let inverse_schema = crate::os_spr::ids::SchemaId(crate::os_spr::read_str(bytes, pos)?);
     let inverse_payload = crate::os_spr::read_bytes(bytes, pos)?;
     let timestamp = decode_hlc(bytes, pos)?;
-    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: DocumentDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
+    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
 
 /// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
@@ -375,7 +375,7 @@ pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
 
 /// @emoji 🎯️ Inverse of [`encode_frontier`].
 pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::os_spr::ProtocolError> {
-    let document_id = crate::os_spr::ids::DocumentId(crate::os_spr::read_str(bytes, pos)?);
+    let document_id = crate::os_spr::ids::ArtifactId(crate::os_spr::read_str(bytes, pos)?);
     let head_edit_ordinal = crate::os_spr::read_varint_u64(bytes, pos)?;
     let head_edit_id = crate::os_spr::read_str(bytes, pos)?;
     let last_commit_seq = crate::os_spr::read_varint_u64(bytes, pos)?;
@@ -496,10 +496,10 @@ mod tests {
     fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: crate::os_spr::ids::MutationId(id.into()),
-            document_id: crate::os_spr::ids::DocumentId("document-1".into()),
+            document_id: crate::os_spr::ids::ArtifactId("document-1".into()),
             actor: crate::os_spr::ids::ActorId("actor-1".into()),
             dependencies: deps.into_iter().map(|dep| crate::os_spr::ids::MutationId(dep.into())).collect(),
-            diff: DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
+            diff: ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
             inverse: InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
@@ -635,7 +635,7 @@ mod tests {
 
     //#region 🔖️Frontier
     fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
-        FrontierSummary { document_id: crate::os_spr::ids::DocumentId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
+        FrontierSummary { document_id: crate::os_spr::ids::ArtifactId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
     }
 
     #[test]
@@ -735,7 +735,7 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::ids::DocumentId("doc-1".into());
+        let document_id = crate::os_spr::ids::ArtifactId("doc-1".into());
         let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
 
         let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
@@ -769,7 +769,7 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::ids::DocumentId("doc-2".into());
+        let document_id = crate::os_spr::ids::ArtifactId("doc-2".into());
         let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
 
         let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
@@ -798,7 +798,7 @@ mod tests {
         // CausalAddOp::encode_op is infallible by construction, so this test instead documents
         // the law via the Result signature: a real Op whose encode_op can fail (e.g. exceeding a
         // size limit) aborts the whole batch rather than returning a partial Vec.
-        let document_id = crate::os_spr::ids::DocumentId("doc-3".into());
+        let document_id = crate::os_spr::ids::ArtifactId("doc-3".into());
         let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
         assert!(mutation_envelope_from_edit(&edit, &document_id, &schema).is_ok());
     }
@@ -830,10 +830,10 @@ mod tests {
     fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         let envelope = MutationEnvelope {
             mutation_id: crate::os_spr::ids::MutationId("op-empty".into()),
-            document_id: crate::os_spr::ids::DocumentId("doc-empty".into()),
+            document_id: crate::os_spr::ids::ArtifactId("doc-empty".into()),
             actor: crate::os_spr::ids::ActorId("actor-empty".into()),
             dependencies: Vec::new(),
-            diff: DocumentDiff { schema: crate::os_spr::ids::SchemaId("s".into()), payload: Vec::new() },
+            diff: ArtifactDiff { schema: crate::os_spr::ids::SchemaId("s".into()), payload: Vec::new() },
             inverse: InverseMutation { schema: crate::os_spr::ids::SchemaId("s".into()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(0, 0),
         };

@@ -10,5 +10,5 @@ pub fn serialize(from: &VcsSnapshot) -> Result<JsonSnapshot, store::PackError> {
 }
 
 pub fn serialize_text(from: &VcsSnapshot) -> Result<String, store::PackError> {
-    Ok(<VcsSnapshot as store::DocumentDsl>::print_dsl(from))
+    Ok(<VcsSnapshot as store::ArtifactDsl>::print_dsl(from))
 }

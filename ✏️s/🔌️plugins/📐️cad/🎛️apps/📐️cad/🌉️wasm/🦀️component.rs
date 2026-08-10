@@ -1,4 +1,4 @@
-//! 🕸️ CAD play app — the `wasm32` VCS bridge: a `wasm-bindgen` handle over the cad `DocumentStore`
+//! 🕸️ CAD play app — the `wasm32` VCS bridge: a `wasm-bindgen` handle over the cad `ArtifactStore`
 //! so a browser host can dispatch `.cad` op text / op binary and read the materialized projection
 //! back without going through the component ABI. Compiled out on every other target.
 
@@ -11,14 +11,14 @@ mod bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct CadDocumentVcs {
+    pub struct CadArtifactVcs {
         store: RefCell<CadStore>,
     }
 
     #[wasm_bindgen]
-    impl CadDocumentVcs {
+    impl CadArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<CadDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<CadArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: CadEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;

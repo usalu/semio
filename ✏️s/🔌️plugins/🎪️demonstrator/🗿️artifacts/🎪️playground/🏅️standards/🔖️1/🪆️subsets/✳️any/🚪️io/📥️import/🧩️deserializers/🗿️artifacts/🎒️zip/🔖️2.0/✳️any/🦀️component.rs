@@ -11,7 +11,7 @@ pub fn deserialize(from: &ZipSnapshot) -> Result<PlaygroundSnapshot, store::Text
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaygroundSnapshot, store::TextError> {
-    let wire = <ZipSnapshot as store::DocumentPack>::decode_pack(bytes)
+    let wire = <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)
         .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     deserialize(&wire)
 }

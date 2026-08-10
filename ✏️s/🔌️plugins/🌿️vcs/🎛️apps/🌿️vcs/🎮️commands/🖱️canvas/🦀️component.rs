@@ -5,7 +5,7 @@
 
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️NoMutation
@@ -16,7 +16,7 @@ pub mod no_operation {
     #[dsl(keyword = "no-operation")]
     pub struct NoMutation {}
 
-    pub fn handle(_payload: &NoMutation, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -30,7 +30,7 @@ pub mod canvas_pointer_down {
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {}
 
-    pub fn handle(_payload: &CanvasPointerDown, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerDown, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -44,7 +44,7 @@ pub mod canvas_pointer_move {
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {}
 
-    pub fn handle(_payload: &CanvasPointerMove, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerMove, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -58,7 +58,7 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -72,7 +72,7 @@ pub mod canvas_wheel {
     #[dsl(keyword = "canvas-wheel")]
     pub struct CanvasWheel {}
 
-    pub fn handle(_payload: &CanvasWheel, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasWheel, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }

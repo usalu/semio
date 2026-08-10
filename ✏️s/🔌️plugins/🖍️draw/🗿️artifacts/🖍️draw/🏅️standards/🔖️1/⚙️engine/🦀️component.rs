@@ -2,7 +2,7 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use crate::artifacts::draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawSnapshot, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
+    default_draw_trace_params, default_draw_transform, ArtifactDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawSnapshot, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
     DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use serde::{Deserialize, Serialize};
@@ -168,7 +168,7 @@ pub fn semio_draw_example_document() -> DrawSnapshot {
     DrawSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_draw_snapshot())
 }
 
-/// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsDocumentApp::render` override,
+/// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsArtifactApp::render` override,
 /// which hardcode `serde_json::from_str` on their `document_json`/`projection_override_json`
 /// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
 /// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.

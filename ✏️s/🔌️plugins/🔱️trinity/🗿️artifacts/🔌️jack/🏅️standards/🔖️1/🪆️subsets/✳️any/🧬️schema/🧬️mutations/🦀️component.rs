@@ -12,7 +12,7 @@ use crate::artifacts::jack::diff::JackDiff;
 use crate::artifacts::jack::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
+use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -64,8 +64,8 @@ pub enum TrinityGraphMutation {
     },
 }
 
-pub type TrinityGraphEnvelope = DocumentEnvelope<JackSnapshot, TrinityGraphMutation>;
-pub type TrinityGraphStore = DocumentStore<JackSnapshot, TrinityGraphMutation>;
+pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
+pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 
 pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
     create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
@@ -148,7 +148,7 @@ pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operation
         apply_trinity_graph_mutation(&mut snapshot, operation);
     }
     store
-        .dispatch(DocumentCommand::Apply { mutations: operations, description: None })
+        .dispatch(ArtifactCommand::Apply { mutations: operations, description: None })
         .map_err(crate::artifacts::jack::TrinityRamError::from)
         .map(|_| ())
 }
@@ -506,11 +506,11 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Reposition { id: "root".into(), x: 50.0, y: 60.0 }]).expect("reposition");
         assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
-        store.dispatch(DocumentCommand::Undo).expect("undo reposition");
+        store.dispatch(ArtifactCommand::Undo).expect("undo reposition");
         assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
 
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "root".into(), name: "renamed".into() }]).expect("rename");
-        store.dispatch(DocumentCommand::Undo).expect("undo rename");
+        store.dispatch(ArtifactCommand::Undo).expect("undo rename");
         assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
     }
 
@@ -519,7 +519,7 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::DeleteEdge { id: "e1".into() }]).expect("delete edge");
         assert!(store.snapshot().unwrap().edges.is_empty());
-        store.dispatch(DocumentCommand::Undo).expect("undo delete edge");
+        store.dispatch(ArtifactCommand::Undo).expect("undo delete edge");
         assert_eq!(store.snapshot().unwrap().edges.len(), 1);
     }
 
@@ -530,7 +530,7 @@ mod tests {
         let projection = store.snapshot().unwrap();
         assert_eq!(projection.nodes.len(), 1);
         assert!(projection.edges.is_empty());
-        store.dispatch(DocumentCommand::Undo).expect("undo delete node");
+        store.dispatch(ArtifactCommand::Undo).expect("undo delete node");
         let projection = store.snapshot().unwrap();
         assert_eq!(projection.nodes.len(), 2);
         assert_eq!(projection.edges.len(), 1);
@@ -541,13 +541,13 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("first".into()) }]).expect("set");
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("second".into()) }]).expect("set again");
-        store.dispatch(DocumentCommand::Undo).expect("undo second set");
+        store.dispatch(ArtifactCommand::Undo).expect("undo second set");
         let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
 
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::ClearDataProperty { entity: EntityRef::Node("root".into()), key: "label".into() }]).expect("clear");
         assert!(!store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
-        store.dispatch(DocumentCommand::Undo).expect("undo clear");
+        store.dispatch(ArtifactCommand::Undo).expect("undo clear");
         let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
@@ -563,7 +563,7 @@ mod tests {
         let replacement = JackSnapshot { name: "replacement".into(), ..mini_fixture() };
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetFixture { fixture: replacement }]).expect("set fixture");
         assert_eq!(store.snapshot().unwrap().name, "replacement");
-        store.dispatch(DocumentCommand::Undo).expect("undo set fixture");
+        store.dispatch(ArtifactCommand::Undo).expect("undo set fixture");
         assert_eq!(store.snapshot().unwrap().name, "mini");
     }
 

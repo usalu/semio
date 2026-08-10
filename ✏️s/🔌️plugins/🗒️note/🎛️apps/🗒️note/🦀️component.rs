@@ -1,4 +1,4 @@
-//! 🖥️ Note play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Note play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -29,7 +29,7 @@ use crate::apps::note::terminology::note_play_labels;
 use crate::artifacts::note::engine::empty_note_snapshot;
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::EngineHandles;
 use std::collections::HashMap;
 
@@ -119,11 +119,11 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️NotePlayApp
 /// 🧪️ B1: unit struct — every former `NotePlayRuntime`/`ViewModel`-read field now lives in
-/// `NoteConfig` (see `DocumentApp::Config`), written through `NoteConfigMutation`s.
+/// `NoteConfig` (see `ArtifactApp::Config`), written through `NoteConfigMutation`s.
 #[derive(Default)]
 pub struct NotePlayApp;
 
-impl DocumentApp for NotePlayApp {
+impl ArtifactApp for NotePlayApp {
     type Snapshot = NoteSnapshot;
     type Mutation = NoteMutation;
     type Config = NoteConfig;
@@ -143,17 +143,17 @@ impl DocumentApp for NotePlayApp {
     }
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
-    /// `create_note_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// `create_note_app` — used by `VcsArtifactApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check.
     fn command_id(command: &NoteCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
@@ -167,7 +167,7 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.selected_block_ids, &config.engagement_input)),
@@ -175,7 +175,7 @@ impl DocumentApp for NotePlayApp {
         ])
     }
 
-    fn window_measures(doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
@@ -327,9 +327,9 @@ pub fn create_note_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type NoteApp = VcsDocumentApp<NotePlayApp>;
+    pub type NoteApp = VcsArtifactApp<NotePlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn note_app() -> NoteApp {

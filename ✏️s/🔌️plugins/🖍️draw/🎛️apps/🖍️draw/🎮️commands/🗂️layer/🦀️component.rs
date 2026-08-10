@@ -6,7 +6,7 @@ use crate::apps::draw::commands::canvas::DrawSession;
 use crate::artifacts::draw::engine::{create_draw_boolean_layer, create_layer_by_kind, find_draw_layer, find_draw_layer_location, layer_id};
 use crate::artifacts::draw::op::{draw_op_for_layer_field, DrawMutation};
 use crate::artifacts::draw::DrawSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -50,12 +50,12 @@ pub mod add_layer {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddLayer, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let layer = create_layer_by_kind(&payload.kind);
         let select_id = layer_id(&layer).to_string();
         Ok(Emit {
-            document_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+            artifact_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
             config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
@@ -75,12 +75,12 @@ pub mod drop_layer_kind {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &DropLayerKind, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let layer = create_layer_by_kind(&payload.kind);
         let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
         let select_id = layer_id(&layer).to_string();
-        Ok(Emit { document_mutations: vec![DrawMutation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![DrawMutation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️DropLayerKind
@@ -97,7 +97,7 @@ pub mod move_layer {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &MoveLayer, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
         Ok(Emit::mutations(vec![DrawMutation::ReorderLayer { layer_id: payload.layer_id.clone(), parent_id, index }]))
@@ -115,14 +115,14 @@ pub mod delete_layer {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &DeleteLayer, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         if payload.layer_id.is_empty() || find_draw_layer(document, &payload.layer_id).is_none() {
             return Ok(Emit::default());
         }
         let remaining: Vec<String> = config.selected_ids.iter().filter(|id| **id != payload.layer_id).cloned().collect();
-        Ok(Emit { document_mutations: vec![DrawMutation::RemoveLayer { layer_id: payload.layer_id.clone() }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![DrawMutation::RemoveLayer { layer_id: payload.layer_id.clone() }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteLayer
@@ -137,7 +137,7 @@ pub mod duplicate_layer {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &DuplicateLayer, _doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &DuplicateLayer, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         if payload.layer_id.is_empty() {
             return Ok(Emit::default());
         }
@@ -156,7 +156,7 @@ pub mod toggle_layer_visible {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &ToggleLayerVisible, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         match find_draw_layer(document, &payload.layer_id) {
             Some(layer) => {
@@ -180,7 +180,7 @@ pub mod combine_boolean {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &CombineBoolean, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &CombineBoolean, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let ids: Vec<String> = if payload.ids.is_empty() { config.selected_ids.clone() } else { payload.ids.clone() };
@@ -190,7 +190,7 @@ pub mod combine_boolean {
         let layer = create_draw_boolean_layer("Boolean", &payload.operation, ids);
         let select_id = layer_id(&layer).to_string();
         Ok(Emit {
-            document_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+            artifact_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
             config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
@@ -210,7 +210,7 @@ pub mod patch_layer {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchLayer, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let json_value = patch_value_json(&payload.value);
         match draw_op_for_layer_field(document, &payload.layer_id, &payload.field, &json_value) {
@@ -233,7 +233,7 @@ pub mod patch_layers {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchLayers, doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let json_value = patch_value_json(&payload.value);
         let operations: Vec<DrawMutation> = payload.layer_ids.iter().filter_map(|id| draw_op_for_layer_field(document, id, &payload.field, &json_value)).collect();
@@ -255,7 +255,7 @@ pub mod set_selected_opacity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSelectedOpacity, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let operations: Vec<DrawMutation> = config.selected_ids.iter().filter(|id| find_draw_layer(document, id).is_some()).map(|id| DrawMutation::SetLayerOpacity { layer_id: id.clone(), opacity: payload.value }).collect();

@@ -27,7 +27,7 @@ const nestedTabs: PanelTabNode[] = [
     name: "Workbench",
     order: 0,
     children: [
-      { kind: "leaf", id: "document", icon: Info, name: "Document", order: 0, trees: [] },
+      { kind: "leaf", id: "document", icon: Info, name: "Artifact", order: 0, trees: [] },
       { kind: "leaf", id: "catalogue", icon: Layers, name: "Catalogue", order: 1, trees: [] },
     ],
   },

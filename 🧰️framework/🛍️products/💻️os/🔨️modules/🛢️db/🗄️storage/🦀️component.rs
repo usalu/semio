@@ -20,7 +20,7 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 
-use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
 use pack::{ByteRange, ContentHash};
 
 //#region 🔖️Limits
@@ -58,42 +58,42 @@ pub struct StorageCapabilities {
 pub trait WalStorage: Send + Sync {
     /// @emoji 🆕️ Creates a new, empty, unsealed segment `index` for `document`. Errors
     /// `AlreadyExists` if `index` already exists for `document`.
-    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError>;
+    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 
     /// @emoji ➕️ Appends `bytes` to the active segment `index`, returning the segment's new total
     /// length. Errors `NotFound` if the segment doesn't exist, `InvalidArgument` if it is sealed.
-    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError>;
+    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError>;
 
     /// @emoji 🔒️ Forces everything appended to segment `index` so far to the durability level
     /// implied by `class` — a no-op for `Memory`/`Os` (per `DurabilityClass`'s own
     /// doc: `Os` only promises "handed to the OS", not `fsync`ed), a real flush-to-disk for
     /// `Fsync`/`Quorum` (replication itself is `db_cluster`'s concern, not this trait's).
-    fn sync(&self, document: &DocumentId, index: u64, class: DurabilityClass) -> Result<(), DbError>;
+    fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError>;
 
     /// @emoji 🏁️ Marks segment `index` sealed: no further `append`/`truncate_tail` may target it.
     /// Errors `NotFound` if the segment doesn't exist. Idempotent if already sealed.
-    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError>;
+    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads `range` of segment `index`'s bytes. Errors `NotFound` if the segment
     /// doesn't exist, `InvalidArgument` if `range` extends past the segment's current length.
-    fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError>;
+    fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 📏️ The current length in bytes of segment `index`.
-    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError>;
+    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError>;
 
     /// @emoji 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
     /// if `document` has no WAL yet.
-    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError>;
+    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji ✂️ Truncates the ACTIVE (unsealed) segment `index` down to `new_len` bytes — the
     /// crash-recovery primitive for discarding a torn/uncommitted tail write. Errors
     /// `InvalidArgument` if the segment is sealed or if `new_len` exceeds its current length
     /// (this trait never extends a segment via truncation).
-    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError>;
+    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError>;
 
     /// @emoji 🗑️ Deletes segment `index` entirely (both its bytes and seal marker), e.g. after
     /// `db_compact` has folded it into a later generation. Idempotent if already absent.
-    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError>;
+    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️WalStorage
 
@@ -106,21 +106,21 @@ pub trait SnapshotStorage: Send + Sync {
     /// history. Overwrites if the same `(document, generation)` is written twice (the caller's
     /// responsibility to pick a fresh generation number per the contract's
     /// `Footer.prev_footer_offset` incremental-generation chain).
-    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError>;
+    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads generation `generation`'s complete bytes. Errors `NotFound` if absent.
-    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError>;
+    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 🥇️ The highest generation number stored for `document`, or `None` if it has no
     /// snapshot yet.
-    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError>;
+    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError>;
 
     /// @emoji 📋️ Every generation number stored for `document`, ascending.
-    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError>;
+    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji 🗑️ Deletes generation `generation`, e.g. once `db_compact`'s retention policy
     /// supersedes it. Idempotent if already absent.
-    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError>;
+    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️SnapshotStorage
 
@@ -173,17 +173,17 @@ pub trait CatalogStorage: Send + Sync {
 pub trait IndexStorage: Send + Sync {
     /// @emoji ✍️ Durably writes `bytes` as run `run_id` of `document`'s index. Overwrites if the
     /// same `(document, run_id)` is written twice.
-    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError>;
+    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads run `run_id`'s complete bytes. Errors `NotFound` if absent.
-    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError>;
+    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 📋️ Every run id stored for `document`, ascending.
-    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError>;
+    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji 🗑️ Deletes run `run_id`, e.g. after `db_index`'s merge policy folds it into a
     /// larger run. Idempotent if already absent.
-    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError>;
+    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️IndexStorage
 
@@ -259,11 +259,11 @@ struct MemWalSegment {
 /// tests and `db_testkit`'s deterministic simulation runtime, never for a real deployment.
 #[derive(Default)]
 pub struct MemoryStorage {
-    wal: std::sync::Mutex<std::collections::HashMap<DocumentId, std::collections::HashMap<u64, MemWalSegment>>>,
-    snapshots: std::sync::Mutex<std::collections::HashMap<DocumentId, std::collections::HashMap<u64, Vec<u8>>>>,
+    wal: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, MemWalSegment>>>,
+    snapshots: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, Vec<u8>>>>,
     payloads: std::sync::Mutex<std::collections::HashMap<ContentHash, Vec<u8>>>,
     catalog: std::sync::Mutex<Option<(Vec<u8>, EpochFence)>>,
-    index_runs: std::sync::Mutex<std::collections::HashMap<DocumentId, std::collections::HashMap<u64, Vec<u8>>>>,
+    index_runs: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, Vec<u8>>>>,
     leases: std::sync::Mutex<std::collections::HashMap<String, LeaseInfo>>,
 }
 
@@ -281,7 +281,7 @@ impl MemoryStorage {
 }
 
 impl WalStorage for MemoryStorage {
-    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
         let segments = wal.entry(document.clone()).or_default();
         if segments.contains_key(&index) {
@@ -291,7 +291,7 @@ impl WalStorage for MemoryStorage {
         Ok(())
     }
 
-    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let mut wal = lock(&self.wal);
         let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         if segment.sealed {
@@ -301,19 +301,19 @@ impl WalStorage for MemoryStorage {
         Ok(segment.bytes.len() as u64)
     }
 
-    fn sync(&self, _document: &DocumentId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
+    fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ Nothing is ever persisted, so every durability class is trivially satisfied in-process.
         Ok(())
     }
 
-    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
         let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         segment.sealed = true;
         Ok(())
     }
 
-    fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let wal = lock(&self.wal);
         let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
@@ -325,20 +325,20 @@ impl WalStorage for MemoryStorage {
         Ok(segment.bytes[start..end].to_vec())
     }
 
-    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         let wal = lock(&self.wal);
         let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         Ok(segment.bytes.len() as u64)
     }
 
-    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         let wal = lock(&self.wal);
         let mut indices: Vec<u64> = wal.get(document).map(|segments| segments.keys().copied().collect()).unwrap_or_default();
         indices.sort_unstable();
         Ok(indices)
     }
 
-    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
         let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         if segment.sealed {
@@ -352,7 +352,7 @@ impl WalStorage for MemoryStorage {
         Ok(())
     }
 
-    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
         if let Some(segments) = wal.get_mut(document) {
             segments.remove(&index);
@@ -362,30 +362,30 @@ impl WalStorage for MemoryStorage {
 }
 
 impl SnapshotStorage for MemoryStorage {
-    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         let mut snapshots = lock(&self.snapshots);
         snapshots.entry(document.clone()).or_default().insert(generation, bytes.to_vec());
         Ok(())
     }
 
-    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
         let snapshots = lock(&self.snapshots);
         snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
     }
 
-    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         let snapshots = lock(&self.snapshots);
         Ok(snapshots.get(document).and_then(|generations| generations.keys().max().copied()))
     }
 
-    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         let snapshots = lock(&self.snapshots);
         let mut generations: Vec<u64> = snapshots.get(document).map(|generations| generations.keys().copied().collect()).unwrap_or_default();
         generations.sort_unstable();
         Ok(generations)
     }
 
-    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
         let mut snapshots = lock(&self.snapshots);
         if let Some(generations) = snapshots.get_mut(document) {
             generations.remove(&generation);
@@ -440,25 +440,25 @@ impl CatalogStorage for MemoryStorage {
 }
 
 impl IndexStorage for MemoryStorage {
-    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         let mut runs = lock(&self.index_runs);
         runs.entry(document.clone()).or_default().insert(run_id, bytes.to_vec());
         Ok(())
     }
 
-    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
         let runs = lock(&self.index_runs);
         runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
     }
 
-    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         let runs = lock(&self.index_runs);
         let mut ids: Vec<u64> = runs.get(document).map(|runs| runs.keys().copied().collect()).unwrap_or_default();
         ids.sort_unstable();
         Ok(ids)
     }
 
-    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
         let mut runs = lock(&self.index_runs);
         if let Some(runs) = runs.get_mut(document) {
             runs.remove(&run_id);
@@ -556,7 +556,7 @@ impl DbStorage for MemoryStorage {
 /// `pack::write_atomic` (temp file + `fsync` + `rename`) so a reader never observes a torn file.
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
 mod fs_storage {
-    use super::{ByteRange, ContentHash, DbError, DbStorage, DocumentId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
+    use super::{ByteRange, ContentHash, DbError, DbStorage, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use check_len;
     use std::io::{Read, Seek, SeekFrom, Write};
@@ -683,15 +683,15 @@ mod fs_storage {
             Ok(Self { root: root.to_path_buf(), catalog_lock: Mutex::new(()), lease_lock: Mutex::new(()) })
         }
 
-        fn wal_dir(&self, document: &DocumentId) -> Result<PathBuf, DbError> {
+        fn wal_dir(&self, document: &ArtifactId) -> Result<PathBuf, DbError> {
             Ok(self.root.join("wal").join(safe_component(&document.0)?))
         }
 
-        fn snapshot_dir(&self, document: &DocumentId) -> Result<PathBuf, DbError> {
+        fn snapshot_dir(&self, document: &ArtifactId) -> Result<PathBuf, DbError> {
             Ok(self.root.join("snapshot").join(safe_component(&document.0)?))
         }
 
-        fn index_dir(&self, document: &DocumentId) -> Result<PathBuf, DbError> {
+        fn index_dir(&self, document: &ArtifactId) -> Result<PathBuf, DbError> {
             Ok(self.root.join("index").join(safe_component(&document.0)?))
         }
 
@@ -710,7 +710,7 @@ mod fs_storage {
     }
 
     impl WalStorage for FsStorage {
-        fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let dir = self.wal_dir(document)?;
             std::fs::create_dir_all(&dir).map_err(io_err)?;
             let path = segment_path(&dir, index);
@@ -721,7 +721,7 @@ mod fs_storage {
             Ok(())
         }
 
-        fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+        fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             let dir = self.wal_dir(document)?;
             if sealed_marker_path(&dir, index).exists() {
                 return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
@@ -732,7 +732,7 @@ mod fs_storage {
             file.metadata().map_err(io_err).map(|meta| meta.len())
         }
 
-        fn sync(&self, document: &DocumentId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+        fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
             // 🎯️ `Memory`/`Os` are satisfied by the ordinary `write(2)` `append` already performed;
             // only `Fsync`/`Quorum` need this trait to force data to physical storage.
             if matches!(class, DurabilityClass::Memory | DurabilityClass::Os) {
@@ -744,7 +744,7 @@ mod fs_storage {
             file.sync_all().map_err(io_err)
         }
 
-        fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
             if !path.exists() {
@@ -754,7 +754,7 @@ mod fs_storage {
             Ok(())
         }
 
-        fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+        fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
@@ -773,17 +773,17 @@ mod fs_storage {
             Ok(buf)
         }
 
-        fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+        fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
             std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
         }
 
-        fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             list_indexed_files(&self.wal_dir(document)?, "segment-", ".bin")
         }
 
-        fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+        fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let dir = self.wal_dir(document)?;
             if sealed_marker_path(&dir, index).exists() {
                 return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
@@ -797,7 +797,7 @@ mod fs_storage {
             file.set_len(new_len).map_err(io_err)
         }
 
-        fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
             if path.exists() {
@@ -812,14 +812,14 @@ mod fs_storage {
     }
 
     impl SnapshotStorage for FsStorage {
-        fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+        fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             let dir = self.snapshot_dir(document)?;
             std::fs::create_dir_all(&dir).map_err(io_err)?;
             pack::write_atomic(&generation_path(&dir, generation), bytes)?;
             Ok(())
         }
 
-        fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+        fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let dir = self.snapshot_dir(document)?;
             let path = generation_path(&dir, generation);
             let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("snapshot generation {generation} for {document} not found")))?;
@@ -827,15 +827,15 @@ mod fs_storage {
             std::fs::read(&path).map_err(io_err)
         }
 
-        fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+        fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             Ok(self.list_generations(document)?.into_iter().max())
         }
 
-        fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             list_indexed_files(&self.snapshot_dir(document)?, "gen-", ".pack")
         }
 
-        fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+        fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let dir = self.snapshot_dir(document)?;
             let path = generation_path(&dir, generation);
             if path.exists() {
@@ -924,14 +924,14 @@ mod fs_storage {
     }
 
     impl IndexStorage for FsStorage {
-        fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+        fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             let dir = self.index_dir(document)?;
             std::fs::create_dir_all(&dir).map_err(io_err)?;
             pack::write_atomic(&run_path(&dir, run_id), bytes)?;
             Ok(())
         }
 
-        fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+        fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let dir = self.index_dir(document)?;
             let path = run_path(&dir, run_id);
             let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("index run {run_id} for {document} not found")))?;
@@ -939,11 +939,11 @@ mod fs_storage {
             std::fs::read(&path).map_err(io_err)
         }
 
-        fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             list_indexed_files(&self.index_dir(document)?, "run-", ".bin")
         }
 
-        fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+        fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let dir = self.index_dir(document)?;
             let path = run_path(&dir, run_id);
             if path.exists() {
@@ -1052,7 +1052,7 @@ mod tests {
 
     //#region 🔖️WalStorage
     fn exercise_wal_storage(storage: &dyn WalStorage) {
-        let document: DocumentId = "doc-wal".into();
+        let document: ArtifactId = "doc-wal".into();
 
         storage.create_segment(&document, 0).unwrap();
         assert!(matches!(storage.create_segment(&document, 0), Err(DbError::AlreadyExists(_))));
@@ -1100,7 +1100,7 @@ mod tests {
 
     //#region 🔖️SnapshotStorage
     fn exercise_snapshot_storage(storage: &dyn SnapshotStorage) {
-        let document: DocumentId = "doc-snap".into();
+        let document: ArtifactId = "doc-snap".into();
         assert_eq!(storage.latest_generation(&document).unwrap(), None);
 
         storage.write_generation(&document, 0, b"gen-zero-bytes").unwrap();
@@ -1194,7 +1194,7 @@ mod tests {
 
     //#region 🔖️IndexStorage
     fn exercise_index_storage(storage: &dyn IndexStorage) {
-        let document: DocumentId = "doc-index".into();
+        let document: ArtifactId = "doc-index".into();
         storage.write_run(&document, 0, b"run-zero").unwrap();
         storage.write_run(&document, 1, b"run-one").unwrap();
         assert_eq!(storage.list_runs(&document).unwrap(), vec![0, 1]);
@@ -1267,7 +1267,7 @@ mod tests {
     #[test]
     fn memory_storage_db_storage_accessors_and_capabilities() {
         let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(MemoryStorage::new());
-        let document: DocumentId = "doc-umbrella".into();
+        let document: ArtifactId = "doc-umbrella".into();
         storage.wal().create_segment(&document, 0).unwrap();
         storage.catalog().cas_root(EpochFence::INITIAL, b"root").unwrap();
 
@@ -1281,7 +1281,7 @@ mod tests {
     #[test]
     fn fs_storage_db_storage_accessors_and_capabilities() {
         let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(fs_scratch("umbrella"));
-        let document: DocumentId = "doc-umbrella".into();
+        let document: ArtifactId = "doc-umbrella".into();
         storage.index().write_run(&document, 0, b"run").unwrap();
         assert_eq!(storage.index().read_run(&document, 0).unwrap(), b"run");
 
@@ -1311,13 +1311,13 @@ mod tests {
     #[test]
     fn fs_storage_rejects_unsafe_path_components() {
         let storage = fs_scratch("path_safety");
-        let traversal_document: DocumentId = "../escape".into();
+        let traversal_document: ArtifactId = "../escape".into();
         assert!(matches!(storage.create_segment(&traversal_document, 0), Err(DbError::InvalidArgument(_))));
 
-        let separator_document: DocumentId = "sub/dir".into();
+        let separator_document: ArtifactId = "sub/dir".into();
         assert!(matches!(storage.create_segment(&separator_document, 0), Err(DbError::InvalidArgument(_))));
 
-        let empty_document: DocumentId = "".into();
+        let empty_document: ArtifactId = "".into();
         assert!(matches!(storage.create_segment(&empty_document, 0), Err(DbError::InvalidArgument(_))));
     }
 
@@ -1330,12 +1330,12 @@ mod tests {
 
         {
             let storage = FsStorage::open(&dir).unwrap();
-            let document: DocumentId = "doc-reopen".into();
+            let document: ArtifactId = "doc-reopen".into();
             storage.write_generation(&document, 0, b"persisted across reopen").unwrap();
         }
         {
             let storage = FsStorage::open(&dir).unwrap();
-            let document: DocumentId = "doc-reopen".into();
+            let document: ArtifactId = "doc-reopen".into();
             assert_eq!(storage.read_generation(&document, 0).unwrap(), b"persisted across reopen");
         }
     }

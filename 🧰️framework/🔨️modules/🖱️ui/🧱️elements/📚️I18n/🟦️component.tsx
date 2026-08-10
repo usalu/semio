@@ -119,11 +119,11 @@ export type UiTranslationSchema = {
       readonly spawnPrefix: UiLabelValue;
     };
     readonly panel: {
-      readonly document: UiLabelValue;
+      readonly artifact: UiLabelValue;
       readonly catalogue: UiLabelValue;
       readonly inspection: UiLabelValue;
       readonly parameters: UiLabelValue;
-      readonly documentEmpty: UiLabelValue;
+      readonly artifactEmpty: UiLabelValue;
       readonly spawnedAppsSuffix: UiLabelValue;
       readonly sync: UiLabelValue;
       readonly actions: UiLabelValue;

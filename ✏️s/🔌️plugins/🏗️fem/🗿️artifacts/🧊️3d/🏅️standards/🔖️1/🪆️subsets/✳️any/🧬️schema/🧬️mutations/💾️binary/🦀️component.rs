@@ -28,7 +28,7 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::engine;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dSnapshot {
         crate::artifacts::fem3d::Fem3dSnapshot {
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
         let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem3dMutation::SetSnapshot { snapshot: cantilever_fixture() }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Fem3dMutation::SetSnapshot { snapshot: cantilever_fixture() }], description: None }).expect("apply");
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
         semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
     }

@@ -27,7 +27,7 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 /// 🧱️ Stitched into the app manifest by `crate::apps::puzzle5d::create_puzzle5d_app`. Like puzzle2d,
 /// puzzle5d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
 /// and utility chrome before the first `refreshUi` tick; every later frame comes from
-/// `DocumentApp::window_measures`.
+/// `ArtifactApp::window_measures`.
 pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
@@ -39,7 +39,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         actions: actions::ids(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

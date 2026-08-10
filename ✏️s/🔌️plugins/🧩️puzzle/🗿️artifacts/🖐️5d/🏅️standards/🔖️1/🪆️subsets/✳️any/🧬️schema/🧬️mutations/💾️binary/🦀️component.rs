@@ -1,5 +1,5 @@
 //! 📡️ Puzzle 5d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `Puzzle5dMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `Puzzle5dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
 //! puzzle-5d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
@@ -14,7 +14,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::puzzle5d::schema::mutations::text::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use protocol::OpBinary;
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle5dMutation` to its binary command form.
 pub fn encode_op(operation: &Puzzle5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -27,8 +27,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle5dMutation, protocol::ProtocolErr
 }
 
 //#region 🔖️Store
-pub type Puzzle5dEnvelope = DocumentEnvelope<Puzzle5dSnapshot, Puzzle5dMutation>;
-pub type Puzzle5dStore = DocumentStore<Puzzle5dSnapshot, Puzzle5dMutation>;
+pub type Puzzle5dEnvelope = ArtifactEnvelope<Puzzle5dSnapshot, Puzzle5dMutation>;
+pub type Puzzle5dStore = ArtifactStore<Puzzle5dSnapshot, Puzzle5dMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -40,11 +40,11 @@ mod tests {
     fn puzzle5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA, Puzzle5dPartAnchor};
-        use store::{create_document_envelope, DocumentCommand};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(),
             anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
                 description: None,

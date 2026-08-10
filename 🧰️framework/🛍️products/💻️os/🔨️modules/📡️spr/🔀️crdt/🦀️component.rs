@@ -16,7 +16,7 @@
 //!   actor-tiebroken so a strict winner always exists.
 //! - **chronological semio_compose_rs**: order the two sides by `MutationMeta.timestamp` and call
 //!   `earlier.absorb(later)` — every real `absorb` impl in this codebase (see
-//!   `crate::os_store::DocumentVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
+//!   `crate::os_store::ArtifactVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
 //!   side set that field", i.e. later-in-time already wins per-field when absorbed in order. This
 //!   single combinator implements `OrderedSequence`/`TextSequence`'s semio_compose_rs behavior *and*
 //!   `TombstonedGraphSet`'s "tombstone outranks add only if its timestamp is greater, else the add

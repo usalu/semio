@@ -1,4 +1,4 @@
-//! 🧱️ Procedural3d play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🧱️ Procedural3d play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -16,7 +16,7 @@ use crate::artifacts::procedural3d::engine::procedural3d_io;
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -120,7 +120,7 @@ fn parse_preview_camera_json(args: &Value) -> crate::apps::procedural3d::config:
     crate::apps::procedural3d::config::Procedural3dPreviewCamera::default()
 }
 
-impl DocumentApp for Procedural3dPlayApp {
+impl ArtifactApp for Procedural3dPlayApp {
     type Snapshot = Procedural3dSnapshot;
     type Mutation = Procedural3dMutation;
     type Config = Procedural3dConfig;
@@ -145,7 +145,7 @@ impl DocumentApp for Procedural3dPlayApp {
 
     /// 🎞️ `geometry:out` plus the inherited `document:out` default, replicated inline (overriding
     /// `export_media` shadows the trait's provided body for every port on this app).
-    fn export_media(port: &str, doc: &DocumentView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "geometry:out" => {
                 let mesh = crate::artifacts::procedural3d::engine::export_mesh_from_document(doc.snapshot);
@@ -153,7 +153,7 @@ impl DocumentApp for Procedural3dPlayApp {
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented)}
@@ -161,7 +161,7 @@ impl DocumentApp for Procedural3dPlayApp {
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
     /// object; unmatched keys/non-slider widgets are silently ignored.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
@@ -297,12 +297,12 @@ impl DocumentApp for Procedural3dPlayApp {
             )))}
     }
 
-    fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
-    fn pending_effects(doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
         with_process_flow_eval_session(|session| {
             let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
@@ -313,7 +313,7 @@ impl DocumentApp for Procedural3dPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -330,7 +330,7 @@ impl DocumentApp for Procedural3dPlayApp {
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
     }
 
-    fn window_measures(_doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let measures = edit_preview::preview_window_measures(config, procedural3d_action);
         HashMap::from([
@@ -343,7 +343,7 @@ impl DocumentApp for Procedural3dPlayApp {
     /// 🗂️ Grouped disclosure: `reorganize`/`translateSelection`/`rotateSelection`/`scaleSelection` stay
     /// top-level; creation, removal and generation methods fold into taxonomy groups; `delete-selection`
     /// stays a direct destructive item last.
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -466,9 +466,9 @@ pub fn create_procedural3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Procedural3dApp = VcsDocumentApp<Procedural3dPlayApp>;
+    pub type Procedural3dApp = VcsArtifactApp<Procedural3dPlayApp>;
 
     pub fn app() -> Procedural3dApp {
         crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();

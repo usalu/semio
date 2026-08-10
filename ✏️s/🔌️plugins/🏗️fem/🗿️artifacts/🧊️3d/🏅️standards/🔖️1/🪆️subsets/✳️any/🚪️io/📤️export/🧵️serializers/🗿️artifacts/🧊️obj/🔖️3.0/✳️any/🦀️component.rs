@@ -1,6 +1,6 @@
 //! 📤️ Export Fem3dSnapshot as .obj.
 
-use semio_framework_plugin::{DocumentCodec, IoError, JsonCodec, MediaFormat};
+use semio_framework_plugin::{ArtifactCodec, IoError, JsonCodec, MediaFormat};
 
 //#region 🔖️Export
 pub fn export(snapshot: &crate::artifacts::fem3d::Fem3dSnapshot) -> Result<Vec<u8>, IoError> {

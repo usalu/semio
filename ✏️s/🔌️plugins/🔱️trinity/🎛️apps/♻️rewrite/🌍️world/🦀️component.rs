@@ -334,24 +334,24 @@ impl TrinityBridge {
     }
 
     pub fn undo(&mut self) -> Result<(), TrinityRewriteError> {
-        use store::DocumentCommand;
-        self.store.dispatch(DocumentCommand::Undo)?;
+        use store::ArtifactCommand;
+        self.store.dispatch(ArtifactCommand::Undo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
     pub fn redo(&mut self) -> Result<(), TrinityRewriteError> {
-        use store::DocumentCommand;
-        self.store.dispatch(DocumentCommand::Redo)?;
+        use store::ArtifactCommand;
+        self.store.dispatch(ArtifactCommand::Redo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
     pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
-        use store::DocumentCommand;
-        self.store.dispatch(DocumentCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from).map(|_| ())
+        use store::ArtifactCommand;
+        self.store.dispatch(ArtifactCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from).map(|_| ())
     }
 
     pub fn store_generation(&self) -> u64 {
@@ -681,14 +681,14 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct TrinityRewriteDocumentVcs {
+    pub struct TrinityRewriteArtifactVcs {
         store: RefCell<TrinityGraphStore>,
     }
 
     #[wasm_bindgen]
-    impl TrinityRewriteDocumentVcs {
+    impl TrinityRewriteArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<TrinityRewriteDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<TrinityRewriteArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -734,7 +734,7 @@ mod wasm_session {
     use crate::artifacts::jack::{Camera, Manifest};
     use std::cell::RefCell;
     use std::rc::Rc;
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
@@ -963,7 +963,7 @@ mod tests {
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::engine::{AssignmentJson, Lhs, PatternJson, Rhs};
     use crate::lexer::{TokenSpan as JackTokenSpan}; use math::graph::dsl::Completion as JackCompletion;
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {
         let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");

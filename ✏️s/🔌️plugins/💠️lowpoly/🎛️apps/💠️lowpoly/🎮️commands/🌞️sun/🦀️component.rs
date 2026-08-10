@@ -5,7 +5,7 @@ use crate::apps::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyCon
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "toggleSun", None)]))
     }
 }
@@ -42,7 +42,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunAzimuth", Some(payload.value))]))
     }
 }
@@ -58,7 +58,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunElevation", Some(payload.value))]))
     }
 }
@@ -74,7 +74,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunIntensity", Some(payload.value))]))
     }
 }
@@ -91,7 +91,7 @@ mod tests {
     fn toggle_sun_flips_enabled() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::ToggleSun(super::toggle_sun::ToggleSun {}));
-        // 🎯️ Config isn't directly readable off `VcsDocumentApp`; assert through window measures instead
+        // 🎯️ Config isn't directly readable off `VcsArtifactApp`; assert through window measures instead
         // (mirrors the pre-migration test's approach of reading effects, not internal state).
         let measures = a.window_measures();
         assert!(!measures.is_empty());

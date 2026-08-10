@@ -22,7 +22,7 @@ use crate::artifacts::present::engine::{empty_present_snapshot, PresentError};
 use crate::artifacts::present::schema::mutations::text::PresentMutation;
 use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use protocol::OpBinary;
-use store::{create_document_envelope, materialize_document_snapshot, DocumentEnvelope, DocumentStore};
+use store::{create_document_envelope, materialize_document_snapshot, ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `PresentMutation` to its binary state-patch form.
 pub fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -35,8 +35,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolErro
 }
 
 //#region 🔖️Store
-pub type PresentEnvelope = DocumentEnvelope<PresentSnapshot, PresentMutation>;
-pub type PresentStore = DocumentStore<PresentSnapshot, PresentMutation>;
+pub type PresentEnvelope = ArtifactEnvelope<PresentSnapshot, PresentMutation>;
+pub type PresentStore = ArtifactStore<PresentSnapshot, PresentMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️VcsEnvelope
@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::artifacts::present::schema::mutations::text::PresentMutation;
     use protocol::CollectionMutation;
-    use store::{os_store::test_support, DocumentCommand};
+    use store::{os_store::test_support, ArtifactCommand};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
@@ -82,7 +82,7 @@ mod tests {
     fn present_deck_materializes() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
@@ -95,7 +95,7 @@ mod tests {
     fn document_text_round_trip_with_operation_applied() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })

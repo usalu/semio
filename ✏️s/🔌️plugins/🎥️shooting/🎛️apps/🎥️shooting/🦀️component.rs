@@ -1,4 +1,4 @@
-//! 🖥️ Shooting play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Shooting play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -18,7 +18,7 @@ use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, MediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
@@ -127,7 +127,7 @@ use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_a
 #[derive(Default)]
 pub struct ShootingPlayApp;
 
-impl DocumentApp for ShootingPlayApp {
+impl ArtifactApp for ShootingPlayApp {
     type Snapshot = ShootingSnapshot;
     type Mutation = ShootingMutation;
     type Config = ShootingConfig;
@@ -154,12 +154,12 @@ impl DocumentApp for ShootingPlayApp {
     /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one).
-    fn export_media(port: &str, doc: &DocumentView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.snapshot),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -171,7 +171,7 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     /// 🏷️ Maps each `ShootingCommand` variant back to the action id it was declared under in
-    /// `create_shooting_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// `create_shooting_app` — used by `VcsArtifactApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check. Every row delegates to the macro-generated `command_id()`
     /// EXCEPT `ExportShots`, whose real manifest id is payload-dependent (`exportActiveShot` when
     /// `all == false`, `exportAllShots` when `all == true`) — `app_commands!`'s generated method is a
@@ -190,7 +190,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -221,7 +221,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
         let snapshot = doc.snapshot;
         let labels = shooting_play_labels(cfg.snapshot);
         match body_key {
@@ -234,12 +234,12 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
         let labels = shooting_play_labels(cfg.snapshot);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, cfg.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
     }
 
-    fn window_measures(doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = shooting_play_labels(cfg.snapshot);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.snapshot, labels))])
     }
@@ -365,9 +365,9 @@ pub fn create_shooting_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel, WindowMeasure};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel, WindowMeasure};
 
-    pub type ShootingApp = VcsDocumentApp<ShootingPlayApp>;
+    pub type ShootingApp = VcsArtifactApp<ShootingPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn shooting_app() -> ShootingApp {

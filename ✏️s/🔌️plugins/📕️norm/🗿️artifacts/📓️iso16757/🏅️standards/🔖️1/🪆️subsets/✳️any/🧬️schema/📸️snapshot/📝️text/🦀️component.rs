@@ -18,12 +18,12 @@ pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../
 
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Iso16757Snapshot, store::TextError> {
-    <Iso16757Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <Iso16757Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.iso16757` DSL text.
 pub fn print_dsl(document: &Iso16757Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]

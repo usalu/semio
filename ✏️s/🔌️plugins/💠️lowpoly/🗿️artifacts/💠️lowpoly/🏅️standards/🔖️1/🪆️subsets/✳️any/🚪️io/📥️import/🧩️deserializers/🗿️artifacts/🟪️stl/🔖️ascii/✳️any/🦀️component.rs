@@ -6,12 +6,12 @@ pub fn register() {}
 
 pub fn deserialize(from: &StlSnapshot) -> Result<LowpolySnapshot, store::TextError> {
     let _ = STDIO_STL_DOCUMENT_SCHEMA;
-    let bytes = <StlSnapshot as store::DocumentPack>::encode_pack(from);
+    let bytes = <StlSnapshot as store::ArtifactPack>::encode_pack(from);
     deserialize_bytes(&bytes)
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
-    <LowpolySnapshot as store::DocumentPack>::decode_pack(bytes).or_else(|_| {
-        <LowpolySnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
+    <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
+        <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
     })
 }

@@ -48,9 +48,9 @@ mod tests {
     fn math_document_text_round_trips_through_store() {
         let initial = MathematicalSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
-        let mut store = store::DocumentStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope);
         let graph = crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..crate::artifacts::mathematical::MathematicalGraph::default() };
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![MathematicalMutation::SetGraph { graph }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![MathematicalMutation::SetGraph { graph }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

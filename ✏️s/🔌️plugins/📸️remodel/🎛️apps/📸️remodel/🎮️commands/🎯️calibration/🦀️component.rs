@@ -4,7 +4,7 @@ use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️EditCalibration
@@ -30,7 +30,7 @@ pub mod edit_calibration {
         pub locked: bool,
     }
 
-    pub fn handle(payload: &EditCalibration, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let entry = CameraCalibration {
             id: payload.camera_id.clone(),
             label: payload.label.clone(),
@@ -67,7 +67,7 @@ pub mod calibrate_cameras {
     /// for every camera id referenced by a stream that has no calibration entry yet. A documented
     /// simplification standing in for a real Zhang/checkerboard calibration pass (no calibration target
     /// detection is wired into this program).
-    pub fn handle(_payload: &CalibrateCameras, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let scene = doc.snapshot;
         let mut calibration = scene.calibration.clone();
         for stream in &scene.streams {
@@ -111,7 +111,7 @@ pub mod add_gcp {
         pub world_z: f64,
     }
 
-    pub fn handle(payload: &AddGcp, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &AddGcp, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let id = next_remodel_id("gcp");
         let mut gcps = doc.snapshot.gcps.clone();
         gcps.push(GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() });
@@ -130,7 +130,7 @@ pub mod remove_gcp {
         pub gcp_id: String,
     }
 
-    pub fn handle(payload: &RemoveGcp, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveGcp, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let gcps: Vec<GroundControlPoint> = doc.snapshot.gcps.iter().filter(|gcp| gcp.id != payload.gcp_id).cloned().collect();
         Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
     }
@@ -151,7 +151,7 @@ pub mod place_gcp_observation {
         pub pixel_y: f32,
     }
 
-    pub fn handle(payload: &PlaceGcpObservation, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let mut gcps = doc.snapshot.gcps.clone();
         let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.gcp_id) else { return Ok(Emit::default()) };
         gcp.observations.push(GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] });

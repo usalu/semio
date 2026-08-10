@@ -1350,7 +1350,7 @@ impl Default for MapLayerVisibility {
     }
 }
 
-/// 🗺️ GIS feature tables mirrored from projection JSON — not authoritative document state (OS `DocumentStore` owns packs).
+/// 🗺️ GIS feature tables mirrored from projection JSON — not authoritative document state (OS `ArtifactStore` owns packs).
 #[derive(Default)]
 pub struct MapFeatureTables {
     pub positions: std::collections::BTreeMap<String, PositionData>,

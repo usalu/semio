@@ -1,0 +1,10 @@
+{
+  "title": "Fix Pre-Existing Failing Tests in Framework OS Kernel",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Fix 42 pre-existing failing tests in semio-framework-os-kernel",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪31d31eae23fb4ffea6304eeef0e8e491"
+  ]
+}

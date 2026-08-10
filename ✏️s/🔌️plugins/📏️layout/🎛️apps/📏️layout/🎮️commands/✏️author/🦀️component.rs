@@ -6,7 +6,7 @@ use crate::artifacts::layout::engine::text_to_rgba;
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{Frame, FramePatch, ImageLinkPatch, LayoutSnapshot, PageColumns, PageMargins, PagePatch, TextStoryPatch};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -50,7 +50,7 @@ pub mod add_frame {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let page_id = config.active_page_id.clone();
@@ -91,7 +91,7 @@ pub mod add_frame {
                 stroke: None,
             },
         };
-        Ok(Emit { document_mutations: vec![LayoutMutation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }], config_mutations: vec![LayoutConfigMutation::SetSelection { ids: vec![frame_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![LayoutMutation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }], config_mutations: vec![LayoutConfigMutation::SetSelection { ids: vec![frame_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddFrame
@@ -104,7 +104,7 @@ pub mod add_page {
     #[dsl(keyword = "add-page")]
     pub struct AddPage {}
 
-    pub fn handle(_payload: &AddPage, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
@@ -130,7 +130,7 @@ pub mod add_page {
             overrides: Vec::new(),
         };
         Ok(Emit {
-            document_mutations: vec![LayoutMutation::Pages(CollectionMutation::Add { index: document.pages.len(), item: page })],
+            artifact_mutations: vec![LayoutMutation::Pages(CollectionMutation::Add { index: document.pages.len(), item: page })],
             config_mutations: vec![LayoutConfigMutation::SetActivePage { page_id: page_id.clone() }, LayoutConfigMutation::SetSelection { ids: vec![page_id] }],
             ..Default::default()
         })
@@ -150,7 +150,7 @@ pub mod patch_page {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchPage, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
         match page_patch_for_field(&payload.field, &payload.value) {
             Some(patch) if doc.snapshot.pages.iter().any(|page| page.id == page_id) => Ok(Emit::mutations(vec![LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch })])),
@@ -173,7 +173,7 @@ pub mod patch_frame {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchFrame, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let document = doc.snapshot;
         let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
         if payload.frame_id.is_empty() {

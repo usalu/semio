@@ -6,9 +6,9 @@ pub fn register() {}
 
 pub fn deserialize(from: &MdSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    <DagSnapshot as store::DocumentDsl>::parse_dsl(&from.body)
+    <DagSnapshot as store::ArtifactDsl>::parse_dsl(&from.body)
 }
 
 pub fn deserialize_text(text: &str) -> Result<DagSnapshot, store::TextError> {
-    <DagSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <DagSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

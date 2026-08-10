@@ -60,9 +60,9 @@ mod tests {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let operation = LowpolyMutation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&doc_store);
         semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

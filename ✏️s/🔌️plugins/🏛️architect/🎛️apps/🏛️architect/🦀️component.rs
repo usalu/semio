@@ -1,4 +1,4 @@
-//! 🏛️ Architect play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🏛️ Architect play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the five window
@@ -24,7 +24,7 @@ use crate::apps::architect::modes::{report as report_mode, review as review_mode
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::{empty_plugin, sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -82,7 +82,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct ArchitectPlayApp;
 
-impl DocumentApp for ArchitectPlayApp {
+impl ArtifactApp for ArchitectPlayApp {
     type Snapshot = ProgramSnapshot;
     type Mutation = ProgramMutation;
     type Config = ArchitectConfig;
@@ -169,11 +169,11 @@ impl DocumentApp for ArchitectPlayApp {
         }
     }
 
-    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ArchitectCommand, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
         let program = doc.snapshot;
         let config = cfg.snapshot;
         match body_key {
@@ -300,9 +300,9 @@ pub fn create_architect_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{HistoryView, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type ArchitectApp = VcsDocumentApp<ArchitectPlayApp>;
+    pub type ArchitectApp = VcsArtifactApp<ArchitectPlayApp>;
 
     pub fn new_app() -> ArchitectApp {
         sdk_new_app::<ArchitectPlayApp>()
@@ -329,7 +329,7 @@ pub(crate) mod testkit {
 
     pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         let history = HistoryView::empty();
-        let doc = DocumentView { snapshot: program, history: &history };
+        let doc = ArtifactView { snapshot: program, history: &history };
         let cfg = ConfigView { snapshot: config };
         let draft_snapshot = NoDraft::default();
         let draft = DraftView { snapshot: &draft_snapshot };
@@ -338,7 +338,7 @@ pub(crate) mod testkit {
     }
 
     /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
-    /// `VcsDocumentApp`'s config store does when it dispatches them.
+    /// `VcsArtifactApp`'s config store does when it dispatches them.
     pub fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
         use protocol::Mutation;
         let mut next = base.clone();
@@ -350,7 +350,7 @@ pub(crate) mod testkit {
 
     pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> UiNode {
         let history = HistoryView::empty();
-        ArchitectPlayApp::render(body_key, &DocumentView { snapshot: program, history: &history }, &ConfigView { snapshot: config })
+        ArchitectPlayApp::render(body_key, &ArtifactView { snapshot: program, history: &history }, &ConfigView { snapshot: config })
     }
 }
 //#endregion 🧪️Testkit
@@ -523,7 +523,7 @@ mod tests {
             &program,
         );
         assert!(matches!(
-            emit.document_mutations.first(),
+            emit.artifact_mutations.first(),
             Some(ProgramMutation::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
         ));
     }
@@ -564,7 +564,7 @@ mod tests {
             &program,
         );
         assert!(matches!(
-            emit.document_mutations.first(),
+            emit.artifact_mutations.first(),
             Some(ProgramMutation::Elements(CollectionMutation::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
         ));
     }
@@ -596,7 +596,7 @@ mod tests {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
         let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
-        assert!(matches!(emit.document_mutations.first(), Some(ProgramMutation::SetSnapshot { .. })));
+        assert!(matches!(emit.artifact_mutations.first(), Some(ProgramMutation::SetSnapshot { .. })));
     }
 
     #[test]
@@ -615,7 +615,7 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, ArchitectCommand::SetSelection(set_selection::SetSelection { ids: vec!["e1".into()] }));
         assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");

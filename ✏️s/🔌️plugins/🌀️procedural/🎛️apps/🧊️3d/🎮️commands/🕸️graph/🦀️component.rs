@@ -6,7 +6,7 @@ use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -19,7 +19,7 @@ pub mod node_graph_edit {
     pub struct NodeGraphEdit {
         pub operations_json: String}
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let selected = cfg.snapshot.selected_node_ids.clone();
@@ -53,7 +53,7 @@ pub mod node_graph_edit {
         }
         let operations = commit_fixture(fixture, &host.fixture);
         let config_mutations = if cleared { vec![Procedural3dConfigMutation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -69,7 +69,7 @@ pub mod move_media_node {
         pub x: f64,
         pub y: f64}
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let mut host = host_from_fixture(fixture);
         if host.move_widget(&payload.node_id, payload.x, payload.y).is_ok() {
@@ -89,7 +89,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let mut host = host_from_fixture(fixture);
         if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
@@ -111,7 +111,7 @@ pub mod node_graph_viewport {
         #[dsl(block)]
         pub camera: CameraJson}
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -126,7 +126,7 @@ pub mod node_graph_select {
     pub struct NodeGraphSelect {
         pub node_ids: Vec<String>}
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
     }
 }
@@ -141,7 +141,7 @@ pub mod node_graph_hover {
     pub struct NodeGraphHover {
         pub widget_id: Option<String>}
 
-    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphHover, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetHover { node_id: payload.widget_id.clone() }]))
     }
 }
@@ -155,7 +155,7 @@ pub mod graph_pointer_down {
     #[dsl(keyword = "graph-pointer-down")]
     pub struct GraphPointerDown {}
 
-    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &GraphPointerDown, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -169,7 +169,7 @@ mod tests {
     use crate::apps::procedural3d::Procedural3dCommand;
 
     #[test]
-    fn set_lod_mode_is_a_view_action_with_no_document_mutations_via_reorganize_baseline() {
+    fn set_lod_mode_is_a_view_action_with_no_artifact_mutations_via_reorganize_baseline() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();

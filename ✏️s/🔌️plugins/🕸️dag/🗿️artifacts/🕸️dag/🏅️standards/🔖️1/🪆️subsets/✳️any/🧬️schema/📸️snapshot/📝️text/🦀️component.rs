@@ -1,6 +1,6 @@
 //! 📜️ DAG artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for DagSnapshot` is implemented directly in the DAG kernel crate
+//! `store::ArtifactDsl for DagSnapshot` is implemented directly in the DAG kernel crate
 //! (`infinite_board_port_directed_dag`); see `crate::artifacts::dag::op`'s doc for why. This module only
 //! adds the thin artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture
 //! constant and its round-trip law.
@@ -21,12 +21,12 @@ pub const DAG_EXAMPLE_TEXT: &str =
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
-    <DagSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <DagSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DagSnapshot` back to `.dag` DSL text.
 pub fn print_dsl(document: &DagSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

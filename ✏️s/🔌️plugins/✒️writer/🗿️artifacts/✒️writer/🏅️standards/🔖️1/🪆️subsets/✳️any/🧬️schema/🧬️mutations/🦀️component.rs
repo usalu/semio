@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::artifacts::writer::engine;
 
-    type WriterStore = store::DocumentStore<WriterSnapshot, WriterMutation>;
+    type WriterStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
     fn seeded_store() -> WriterStore {
         WriterStore::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None))
@@ -68,15 +68,15 @@ mod tests {
     #[test]
     fn writer_document_vcs_replays_text_mutations() {
         let mut store = seeded_store();
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").text, "hello");
     }
 
     #[test]
     fn writer_document_vcs_undoes_text_mutation() {
         let mut store = seeded_store();
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
-        store.dispatch(store::DocumentCommand::Undo).expect("undo");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").text, "");
     }
 }

@@ -2,7 +2,7 @@
 export * from "../../🤖️generated/📦️index.ts";
 //#region 🔖️validate
 /** @emoji 🛡️ Runtime validation helpers for graph manifest documents. */
-import type { GraphManifestDocument } from "../../🤖️generated/🟦️types.ts";
+import type { GraphManifestArtifact } from "../../🤖️generated/🟦️types.ts";
 import manifestSchema from "../../🤖️generated/🔣️manifest.schema.json";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -10,7 +10,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /** @emoji 🛡️ Validates unknown JSON against generated `manifest/v1` schema rules. */
-export function validateGraphManifestDocument(raw: unknown): GraphManifestDocument {
+export function validateGraphManifestArtifact(raw: unknown): GraphManifestArtifact {
   if (!isRecord(raw)) {
     throw new Error("graph manifest must be an object");
   }
@@ -21,6 +21,6 @@ export function validateGraphManifestDocument(raw: unknown): GraphManifestDocume
   if (typeof raw.id !== "string" || !raw.id.trim()) {
     throw new Error("graph manifest requires id");
   }
-  return raw as unknown as GraphManifestDocument;
+  return raw as unknown as GraphManifestArtifact;
 }
 //#endregion 🔖️validate

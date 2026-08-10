@@ -5,7 +5,7 @@ use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::parse_value_json;
 use crate::artifacts::forms::engine::{create_form_id, update_block_operation};
 use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -53,7 +53,7 @@ pub mod patch_question_options {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &PatchQuestionOptions, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchQuestionOptions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let raw_value = parse_value_json(&payload.value_json);
         let operations: Vec<FormMutation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();
@@ -76,7 +76,7 @@ pub mod add_question_option {
         pub label: String,
     }
 
-    pub fn handle(payload: &AddQuestionOption, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match add_question_option(doc.snapshot, &payload.question_id, &payload.label) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
@@ -96,7 +96,7 @@ pub mod remove_question_option {
         pub option_value: String,
     }
 
-    pub fn handle(payload: &RemoveQuestionOption, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match remove_question_option(doc.snapshot, &payload.question_id, &payload.option_value) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),

@@ -1,4 +1,4 @@
-//! 🖥️ Draw play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Draw play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window
@@ -18,12 +18,12 @@ use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement,
+    ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
 };
 use store::EngineHandles;
 use serde_json::Value;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 pub use catalogue_panel::DRAW_PLAY_BODY_CATALOGUE;
 pub use canvas_window::{DRAW_PLAY_BODY_COMPOSITE, DRAW_PLAY_WINDOW_CANVAS};
@@ -110,7 +110,7 @@ use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_poi
 #[derive(Default)]
 pub struct DrawPlayApp;
 
-impl DocumentApp for DrawPlayApp {
+impl ArtifactApp for DrawPlayApp {
     type Snapshot = DrawSnapshot;
     type Mutation = DrawMutation;
     type Config = DrawConfig;
@@ -136,7 +136,7 @@ impl DocumentApp for DrawPlayApp {
     /// 🎞️ `vector:out` (see `crate::artifacts::draw::engine::draw_vector_media`) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
         match port {
             "vector:out" => crate::artifacts::draw::engine::draw_vector_media(doc.snapshot),
             "document:out" => {
@@ -157,7 +157,7 @@ impl DocumentApp for DrawPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DrawCommand, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
         thread_local! {
             static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
         }
@@ -167,7 +167,7 @@ impl DocumentApp for DrawPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
@@ -286,9 +286,9 @@ pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
 //#endregion 🔗️StandaloneLinkage
 
 //#region 🔖️WasmBridge
-/// 🌉️ Generic `DocumentStore` aliases used only by the WASM bridge below.
-pub type DrawEnvelope = store::DocumentEnvelope<DrawSnapshot, DrawMutation>;
-pub type DrawStore = store::DocumentStore<DrawSnapshot, DrawMutation>;
+/// 🌉️ Generic `ArtifactStore` aliases used only by the WASM bridge below.
+pub type DrawEnvelope = store::ArtifactEnvelope<DrawSnapshot, DrawMutation>;
+pub type DrawStore = store::ArtifactStore<DrawSnapshot, DrawMutation>;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
@@ -350,9 +350,9 @@ mod wasm_bridge {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::VcsDocumentApp;
+    use semio_framework_plugin::VcsArtifactApp;
 
-    pub type DrawApp = VcsDocumentApp<DrawPlayApp>;
+    pub type DrawApp = VcsArtifactApp<DrawPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn draw_app() -> DrawApp {
@@ -669,7 +669,7 @@ mod tests {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
         let projection = app.snapshot().expect("projection");
-        let doc = DocumentView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let doc = ArtifactView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
         let app_impl = DrawPlayApp::default();
         let vector = DrawPlayApp::export_media("vector:out", &doc).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
@@ -693,7 +693,7 @@ mod tests {
         let mut config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
 
         let down = session.step_gesture(canvas::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
-        assert!(down.document_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
+        assert!(down.artifact_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
         let (key, seq_after_down, payload) = session.gesture_preview().expect("shape drag is live after pointer-down");
         assert_eq!(key, "gesture");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
@@ -701,14 +701,14 @@ mod tests {
         assert_eq!(value["cursor"], serde_json::json!([10.0, 10.0]));
 
         let moved = session.step_gesture(canvas::draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document, &mut config);
-        assert!(moved.document_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        assert!(moved.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (_, seq_after_move, payload) = session.gesture_preview().expect("shape drag is still live mid-drag");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
         assert_eq!(value["cursor"], serde_json::json!([40.0, 30.0]), "preview tracks the live cursor, not the drag start");
         assert!(seq_after_move > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
 
         let up = session.step_gesture(canvas::draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
-        assert_eq!(up.document_mutations.len(), 1, "pointer-up commits the shape as one real DrawMutation");
+        assert_eq!(up.artifact_mutations.len(), 1, "pointer-up commits the shape as one real DrawMutation");
         assert!(session.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
     }
 

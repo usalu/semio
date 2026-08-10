@@ -1,4 +1,4 @@
-//! 🏠️ S Home launcher app — `DocumentApp` impl, command dispatch, manifest (constitutional: ui).
+//! 🏠️ S Home launcher app — `ArtifactApp` impl, command dispatch, manifest (constitutional: ui).
 //!
 //! WIRING + DISPATCH ONLY: every command's real body lives in its own `🎮️commands/<group>/🦀️component.rs`
 //! payload module (see `app_commands!` below); this file holds only the shared catalog/draft/backbone
@@ -21,7 +21,7 @@ use semio_framework_os::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -164,11 +164,11 @@ pub fn resolve_studio_document_for(app: &HomeApp, space_id: &str) -> Option<OsSp
     None
 }
 
-/// @emoji 📦️ Pack+spr bytes for `HostEffect::LoadDocument` / host `loadAppDocumentPack`.
+/// @emoji 📦️ Pack+spr bytes for `HostEffect::LoadDocument` / host `loadAppArtifactPack`.
 ///
 /// 🌉️ `pub` (not `pub(crate)`): `apps::space`'s `openSpace` command loads the studio document it just
 /// resolved through this helper — see the note on {@link catalog_port}.
-pub fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::DocumentPackFiles> {
+pub fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::ArtifactPackFiles> {
     export_os_space_pack(document).ok()
 }
 
@@ -241,9 +241,9 @@ pub fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsW
 }
 
 /// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
-/// `HostEffect::LoadDocument` / host `loadAppDocumentPack`, sized to what `apps::space`'s
-/// `DocumentApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
-pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::DocumentPackFiles> {
+/// `HostEffect::LoadDocument` / host `loadAppArtifactPack`, sized to what `apps::space`'s
+/// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
+pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::ArtifactPackFiles> {
     export_backbone_pack(document).ok()
 }
 //#endregion 🔖️WorkflowArtifactResolution
@@ -326,7 +326,7 @@ app_commands! {
 #[derive(Default, Clone, Copy)]
 pub struct HomeApp;
 
-impl DocumentApp for HomeApp {
+impl ArtifactApp for HomeApp {
     type Snapshot = SHomeSnapshot;
     type Mutation = crate::artifacts::home::op::SHomeMutation;
     type Config = HomeConfig;
@@ -383,13 +383,13 @@ impl DocumentApp for HomeApp {
         }
     }
 
-    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, _doc: &DocumentView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.snapshot.locale);
-        // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
+        // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
@@ -468,7 +468,7 @@ mod tests {
         let history = empty_history();
         let home = HomeApp;
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = DocumentView { snapshot: &home_doc, history: &history };
+        let home_view = ArtifactView { snapshot: &home_doc, history: &history };
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
@@ -480,7 +480,7 @@ mod tests {
         let history = empty_history();
         let home = HomeApp;
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = DocumentView { snapshot: &home_doc, history: &history };
+        let home_view = ArtifactView { snapshot: &home_doc, history: &history };
         let config = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);

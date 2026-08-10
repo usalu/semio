@@ -6,14 +6,14 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ B1: draw's real `DocumentApp::Config` — absorbs every former `DrawInteractionState`
+/// 🧮️ B1: draw's real `ArtifactApp::Config` — absorbs every former `DrawInteractionState`
 /// (`ui`-crate `RefCell`) field (selection, hover, in-progress engagement-input text, the
 /// session-only free viewport camera) plus the two former `ViewModel`-driven fields the draw UI
 /// actually reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s
-/// identical B1 migration) — session view state now round-trips through the config `DocumentStore`
+/// identical B1 migration) — session view state now round-trips through the config `ArtifactStore`
 /// exactly like document content, with a real `backwards` per `DrawConfigMutation` instead of
 /// never being VCS'd at all.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "drawcfg")]
 #[dsl(id = "draw.config")]
@@ -37,9 +37,9 @@ pub struct DrawConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for DrawConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for DrawConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -59,7 +59,7 @@ impl store::DocumentDsl for DrawConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -68,12 +68,12 @@ impl store::DocumentDsl for DrawConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for DrawConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for DrawConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -82,10 +82,10 @@ impl store::DocumentPack for DrawConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -97,7 +97,7 @@ impl store::DocumentPack for DrawConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for DrawConfig {

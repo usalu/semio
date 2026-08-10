@@ -5,7 +5,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Empty shareable live state for all fifteen norm apps — nothing beyond local config is shareable.
@@ -20,7 +20,7 @@ impl protocol::MutationDiff<NormPresence> for NormPresence {
     fn absorb(&mut self, _other: Self) {}
 }
 
-impl store::DocumentDsl for NormPresence {
+impl store::ArtifactDsl for NormPresence {
     const EXTENSION: &'static str = "norm.presence";
     fn envelope_id() -> &'static str {
         "norm.presence"
@@ -36,7 +36,7 @@ impl store::DocumentDsl for NormPresence {
     }
 }
 
-impl DocumentPack for NormPresence {
+impl ArtifactPack for NormPresence {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
@@ -45,10 +45,10 @@ impl DocumentPack for NormPresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

@@ -7,5 +7,5 @@ pub fn serialize(from: &StepSnapshot) -> Result<TxtSnapshot, store::PackError> {
     Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
 }
 pub fn serialize_text(from: &StepSnapshot) -> Result<String, store::PackError> {
-    Ok(store::DocumentDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
 }

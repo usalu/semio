@@ -1,7 +1,7 @@
 //! 🔧️ DAG play app commands — node CRUD: add/remove/rename/patch. All document-mutating, dispatched as
 //! VCS operations with a true inverse.
 //!
-//! Ported from the pre-migration `dag_ui::DocumentApp::handle` match arms — several of those arms were
+//! Ported from the pre-migration `dag_ui::ArtifactApp::handle` match arms — several of those arms were
 //! found with unbalanced `Ok(` wraps and a missing `Fault` import (the repo-wide corruption pattern
 //! documented in the migration TEMPLATE §12.3, also hit by cad/vcs/shooting/sourcing's old ui crates);
 //! fixed here as part of the port, not a behavior change.
@@ -12,7 +12,7 @@ use crate::artifacts::dag::DagSnapshot;
 use crate::apps::dag::config::{DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{DagFixtureEdge, DagNodeSpec};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddNode
@@ -27,12 +27,12 @@ pub mod add_node {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let id = engine::next_node_id(document);
         let node = engine::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
         Ok(Emit {
-            document_mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: document.nodes.len(), item: node })],
+            artifact_mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: document.nodes.len(), item: node })],
             config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![id] }],
             ..Default::default()
         })
@@ -50,14 +50,14 @@ pub mod remove_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &RemoveNode, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let removes = engine::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
         if removes.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit { document_mutations: removes, config_mutations: vec![DagConfigMutation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != &payload.node_id).cloned().collect() }], ..Default::default() })
+            Ok(Emit { artifact_mutations: removes, config_mutations: vec![DagConfigMutation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != &payload.node_id).cloned().collect() }], ..Default::default() })
         }
     }
 }
@@ -74,7 +74,7 @@ pub mod rename_dag_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameDagNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let trimmed = payload.value.trim();
         if trimmed.is_empty() || trimmed == payload.old_id.as_str() || document.nodes.iter().any(|node| node.id == trimmed) {
@@ -94,7 +94,7 @@ pub mod rename_dag_node {
                 }
             })
             .collect();
-        Ok(Emit { document_mutations: vec![DagMutation::SetNodes { nodes }, DagMutation::SetEdges { edges }], config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![DagMutation::SetNodes { nodes }, DagMutation::SetEdges { edges }], config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() })
     }
 }
 //#endregion 🔖️RenameDagNode
@@ -111,7 +111,7 @@ pub mod patch_dag_nodes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchDagNodes, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let operations: Vec<DagMutation> = document
             .nodes

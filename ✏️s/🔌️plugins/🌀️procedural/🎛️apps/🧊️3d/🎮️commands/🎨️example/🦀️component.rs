@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Proced
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession};
 use flow::playbook::GenerationMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🧾️ Resets ephemeral selection/generation-preview to match a freshly-loaded example, keeping every
@@ -39,7 +39,7 @@ pub mod set_active_example {
     pub struct SetActiveExample {
         pub example_id: String}
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         session.set_eval_json(String::new());
         let fixture = &doc.snapshot.fixture;
         let target = if payload.example_id.is_empty() {
@@ -51,7 +51,7 @@ pub mod set_active_example {
         };
         let mut operations: Vec<Procedural3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| Procedural3dMutation::Generation(GenerationMutation::Remove { id: generation.id.clone() })).collect();
         operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
-        Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.snapshot, &target.fixture.camera) }], ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.snapshot, &target.fixture.camera) }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

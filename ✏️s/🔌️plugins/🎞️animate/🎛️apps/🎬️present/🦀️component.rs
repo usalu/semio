@@ -1,9 +1,9 @@
-//! 🎞️ Animate present app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🎞️ Animate present app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch. B1: the pure-trait pivot — `AnimatePresentPlayApp` is a unit struct; every former
 //! `AnimatePresentPlayRuntime` field (selection, engagement draft) now lives in
 //! `crate::apps::present::config::PresentConfig`, written via `PresentConfigMutation`s (real
 //! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
-//! `PresentCommand` channel via `DocumentApp::handle`.
+//! `PresentCommand` channel via `ArtifactApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
 //! in `🎭️modes/🖊️main/🪟️windows/🖼️tile-editor`, panel trees in `📌️panels/*`, labels in
@@ -21,7 +21,7 @@ use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashSet;
@@ -125,12 +125,12 @@ use view::{canvas_pointer_down, no_operation, set_locale, set_selected_ids};
 
 //#region 🔖️AnimatePresentPlayApp
 /// 🧪️ B1: unit struct — every former `AnimatePresentPlayRuntime` field now lives in
-/// `crate::apps::present::config::PresentConfig` (see `DocumentApp::Config`), written through
+/// `crate::apps::present::config::PresentConfig` (see `ArtifactApp::Config`), written through
 /// `PresentConfigMutation`s.
 #[derive(Default)]
 pub struct AnimatePresentPlayApp;
 
-impl DocumentApp for AnimatePresentPlayApp {
+impl ArtifactApp for AnimatePresentPlayApp {
     type Snapshot = PresentSnapshot;
     type Mutation = PresentMutation;
     type Config = PresentConfig;
@@ -162,7 +162,7 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
     /// natural insertion point). Never mutates anything directly: the caller applies the returned
     /// `Tiles(Add)` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -181,11 +181,11 @@ impl DocumentApp for AnimatePresentPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &PresentCommand, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
         let deck = doc.snapshot;
         let config = cfg.snapshot;
         let selected = &config.selected_ids;
@@ -268,9 +268,9 @@ pub fn create_animate_present_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type PresentApp = VcsDocumentApp<AnimatePresentPlayApp>;
+    pub type PresentApp = VcsArtifactApp<AnimatePresentPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn present_app() -> PresentApp {

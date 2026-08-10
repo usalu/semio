@@ -27,7 +27,7 @@ use std::rc::Rc;
 /// @emoji 📇️ A type that can serialize itself into a byte buffer in a canonical, deterministic
 /// order — the basis every persistent structure's `content_hash` is built on. Implemented for the
 /// handful of primitive value types the `db` family's overlays actually store; a higher crate
-/// (`db_document`) that needs to content-address an application-level value implements this for
+/// (`db_artifact`) that needs to content-address an application-level value implements this for
 /// its own wrapper type rather than `db_state` growing a dependency on a serialization crate.
 pub trait CanonicalEncode {
     fn encode_canonical(&self, out: &mut Vec<u8>);
@@ -1064,7 +1064,7 @@ impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + Canoni
 
 //#region 🔖️Overlay
 /// @emoji 🫧️ The read side of a document's immutable base — typically a lazily-decoded `pack`
-/// document. `db_document` implements this over the real pack reader; `db_state` only depends on
+/// document. `db_artifact` implements this over the real pack reader; `db_state` only depends on
 /// the trait, keeping this crate `pack`-decoder-free (it depends on `pack_core`, not `pack`).
 pub trait BaseSource {
     fn load(&self, path: &str) -> Result<Option<Vec<u8>>, DbError>;

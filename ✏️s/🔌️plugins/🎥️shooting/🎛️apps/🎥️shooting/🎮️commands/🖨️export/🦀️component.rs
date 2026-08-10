@@ -10,7 +10,7 @@ use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::engine::shooting_icon_render_request_json;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot};
-use semio_framework_plugin::{ConfigView, DocumentView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem};
+use semio_framework_plugin::{ConfigView, ArtifactView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -24,7 +24,7 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub fn handle(payload: &ExportShots, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         if let Some(asset) = crate::artifacts::shooting::engine::active_asset(doc.snapshot) {

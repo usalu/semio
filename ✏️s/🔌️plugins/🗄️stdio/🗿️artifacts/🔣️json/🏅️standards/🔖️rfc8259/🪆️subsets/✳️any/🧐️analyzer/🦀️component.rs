@@ -30,7 +30,7 @@ impl ArtifactAnalyzer for JsonAnalyzer {
         let mut confidence = IoConfidence::High;
         for source in sources {
             match source {
-                AnalyzeSource::Text(text) => match <JsonSnapshot as store::DocumentDsl>::parse_dsl(text) {
+                AnalyzeSource::Text(text) => match <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;
@@ -41,7 +41,7 @@ impl ArtifactAnalyzer for JsonAnalyzer {
                         ));
                     }
                 },
-                AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::DocumentPack>::decode_pack(bytes) {
+                AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;

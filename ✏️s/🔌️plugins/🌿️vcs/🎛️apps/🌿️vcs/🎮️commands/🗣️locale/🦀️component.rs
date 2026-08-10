@@ -7,7 +7,7 @@
 
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetLocale
@@ -20,7 +20,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::config(vec![VcsDemoConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

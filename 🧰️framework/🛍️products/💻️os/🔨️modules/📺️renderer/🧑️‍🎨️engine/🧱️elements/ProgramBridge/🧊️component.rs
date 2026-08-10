@@ -155,7 +155,7 @@ mod wasm_program_exchange {
         let seq = next_seq();
         let commands = if DOCUMENT_COMMAND_ACTION_IDS.contains(&action_name) {
             let envelope = serde_json::json!({ "action": action_name, "args": args });
-            vec![AppCommand::DocumentCommand { seq, command: encode_wire(&envelope)? }]
+            vec![AppCommand::ArtifactCommand { seq, command: encode_wire(&envelope)? }]
         } else {
             let envelope = serde_json::json!({ "kind": "action", "name": action_name, "args": args });
             vec![AppCommand::Command { seq, command: encode_wire(&envelope)?, view_state: pack_view_state(view_state)? }]
@@ -345,7 +345,7 @@ impl ProgramBridgeEntry {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
-                let load = get_fn(handle.as_ref(), "loadAppDocumentPack")?;
+                let load = get_fn(handle.as_ref(), "loadAppArtifactPack")?;
                 let args = Array::new();
                 args.push(&JsValue::from_f64(instance_id as f64));
                 args.push(&js_sys::Uint8Array::from(pack));

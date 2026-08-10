@@ -5,7 +5,7 @@ use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, flatten_blocks, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -69,7 +69,7 @@ pub mod nudge_selection {
         pub dy: f64,
     }
 
-    pub fn handle(payload: &NudgeSelection, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(nudge(doc.snapshot, cfg.snapshot, payload.dx, payload.dy))
     }
 }
@@ -85,7 +85,7 @@ macro_rules! directional_nudge {
             #[dsl(keyword = $key)]
             pub struct $Payload {}
 
-            pub fn handle(_payload: &$Payload, doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+            pub fn handle(_payload: &$Payload, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
                 Ok(nudge(doc.snapshot, cfg.snapshot, $dx, $dy))
             }
         }

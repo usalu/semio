@@ -3,18 +3,18 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.present` document. It still round-trips through a real
-//! `DocumentStore` (with a real `backwards`), so selection/engagement/locale edits are VCS'd exactly
+//! `ArtifactStore` (with a real `backwards`), so selection/engagement/locale edits are VCS'd exactly
 //! like document content.
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ B1: animate present's real `DocumentApp::Config` — absorbs every former
+/// 🧮️ B1: animate present's real `ArtifactApp::Config` — absorbs every former
 /// `AnimatePresentPlayRuntime` field (`selected_ids`/`engagement_input`) plus the locale the pre-B1
 /// host-pushed `ViewModel` used to carry (see `crate::apps::present::terminology`) — same "absorb every
 /// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "presentcfg")]
 #[dsl(id = "present.config")]
@@ -28,9 +28,9 @@ pub struct PresentConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for PresentConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for PresentConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -50,7 +50,7 @@ impl store::DocumentDsl for PresentConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -59,12 +59,12 @@ impl store::DocumentDsl for PresentConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for PresentConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for PresentConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -73,10 +73,10 @@ impl store::DocumentPack for PresentConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -88,7 +88,7 @@ impl store::DocumentPack for PresentConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for PresentConfig {
@@ -228,16 +228,16 @@ mod tests {
     #[test]
     fn present_config_dsl_round_trips() {
         let config = PresentConfig { selected_ids: vec!["t1".into()], engagement_input: "2x2".into(), locale: "de-DE".into() };
-        let text = store::DocumentDsl::print_dsl(&config);
-        let parsed = <PresentConfig as store::DocumentDsl>::parse_dsl(&text).expect("config dsl round trip");
+        let text = store::ArtifactDsl::print_dsl(&config);
+        let parsed = <PresentConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
         assert_eq!(parsed, config);
     }
 
     #[test]
     fn present_config_pack_round_trips() {
         let config = PresentConfig { selected_ids: vec!["t2".into()], engagement_input: "add".into(), locale: "en-US".into() };
-        let bytes = store::DocumentPack::encode_pack(&config);
-        let decoded = <PresentConfig as store::DocumentPack>::decode_pack(&bytes).expect("config pack round trip");
+        let bytes = store::ArtifactPack::encode_pack(&config);
+        let decoded = <PresentConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
         assert_eq!(decoded, config);
     }
 

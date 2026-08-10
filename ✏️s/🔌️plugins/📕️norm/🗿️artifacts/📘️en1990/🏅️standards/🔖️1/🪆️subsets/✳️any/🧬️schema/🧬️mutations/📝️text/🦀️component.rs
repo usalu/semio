@@ -1,8 +1,8 @@
 //! ⚡️ EN 1990 basis of structural design — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::document::SetDocumentMutation<D>`, with its `Mutation`/`MutationDiff`/`OpText`/`OpBinary`
-//! impls already generic over any `D: DocumentDsl + DocumentPack` — see `norm_core`'s `🔖️OpText`
+//! (`crate::document::SetArtifactMutation<D>`, with its `Mutation`/`MutationDiff`/`OpText`/`OpBinary`
+//! impls already generic over any `D: ArtifactDsl + ArtifactPack` — see `norm_core`'s `🔖️OpText`
 //! region) so this slot only needs to bind that generic operation to `crate::artifacts::en1990::En1990Snapshot`.
 
 

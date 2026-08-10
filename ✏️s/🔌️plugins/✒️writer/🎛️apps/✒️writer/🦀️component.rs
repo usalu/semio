@@ -1,4 +1,4 @@
-//! ✒️ Writer play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! ✒️ Writer play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
@@ -23,19 +23,19 @@ use crate::apps::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, Fault, Label,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, ArtifactApp, ArtifactView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_APP_ID: &str = "writer-play";
 pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 pub use catalogue_panel::WRITER_PLAY_BODY_CATALOGUE;
-pub use document_panel::WRITER_PLAY_BODY_DOCUMENT;
+pub use document_panel::WRITER_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::WRITER_PLAY_BODY_INSPECTION;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -180,7 +180,7 @@ fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&Context
 #[derive(Default)]
 pub struct WriterPlayApp;
 
-impl DocumentApp for WriterPlayApp {
+impl ArtifactApp for WriterPlayApp {
     type Snapshot = WriterSnapshot;
     type Mutation = WriterMutation;
     type Config = WriterConfig;
@@ -213,7 +213,7 @@ impl DocumentApp for WriterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &WriterCommand, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -221,7 +221,7 @@ impl DocumentApp for WriterPlayApp {
     /// `crate::artifacts::writer::engine::writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the
     /// intended consumer. Falls through to the default whole-document-pack export for `"document:out"`
     /// (duplicated inline, not delegated — Rust traits have no `super` call for an overridden default).
-    fn export_media(port: &str, doc: &DocumentView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
             let payload = crate::artifacts::writer::engine::writer_chapter_payload(doc.snapshot);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -234,20 +234,20 @@ impl DocumentApp for WriterPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = writer_play_labels(config);
         match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, config),
-            WRITER_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
+            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn window_engagements(_doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
         let config = cfg.snapshot;
@@ -284,12 +284,12 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(config)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = cfg.snapshot.locale.starts_with("de");
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
@@ -372,9 +372,9 @@ pub fn create_writer_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type WriterApp = VcsDocumentApp<WriterPlayApp>;
+    pub type WriterApp = VcsArtifactApp<WriterPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> WriterApp {
@@ -540,7 +540,7 @@ mod tests {
         let json = serde_json::to_string(&create_writer_app().definition).expect("app definition json");
         assert!(json.contains(WRITER_PLAY_WINDOW_KIND), "window kind missing from the manifest: {json}");
         assert!(json.contains(edit::WRITER_PLAY_MODE_EDIT), "mode missing from the manifest");
-        for body in [WRITER_PLAY_BODY_DOCUMENT, WRITER_PLAY_BODY_CATALOGUE, WRITER_PLAY_BODY_INSPECTION] {
+        for body in [WRITER_PLAY_BODY_ARTIFACT, WRITER_PLAY_BODY_CATALOGUE, WRITER_PLAY_BODY_INSPECTION] {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
         assert!(json.contains("text.document"), "artifact kind missing from the manifest");
@@ -574,7 +574,7 @@ mod tests {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::engine::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { snapshot: &document, history: &history };
+        let doc_view = ArtifactView { snapshot: &document, history: &history };
         let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
@@ -588,7 +588,7 @@ mod tests {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::engine::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = DocumentView { snapshot: &document, history: &history };
+        let doc_view = ArtifactView { snapshot: &document, history: &history };
         assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
@@ -603,7 +603,7 @@ mod tests {
         let document = crate::artifacts::writer::engine::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let cfg = ConfigView { snapshot: &config };
         let registry = AppActionRegistry::from_definition(&create_writer_app().definition);
         let request = ContextMenuRequest {

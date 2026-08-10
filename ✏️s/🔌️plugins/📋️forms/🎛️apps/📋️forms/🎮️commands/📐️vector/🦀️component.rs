@@ -5,7 +5,7 @@ use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::parse_value_json;
 use crate::artifacts::forms::engine::update_block_operation;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot, FormVectorField};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -58,7 +58,7 @@ pub mod patch_vector_field {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &PatchVectorField, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let raw_value = parse_value_json(&payload.value_json);
         match patch_vector_field(doc.snapshot, &payload.question_id, &payload.field_key, &payload.field, &raw_value) {
             Some(operation) => Ok(Emit::amend(vec![operation], format!("patch-vector:{}:{}:{}", payload.question_id, payload.field_key, payload.field))),
@@ -79,7 +79,7 @@ pub mod add_vector_field {
         pub field_key: String,
     }
 
-    pub fn handle(payload: &AddVectorField, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &AddVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match add_vector_field(doc.snapshot, &payload.question_id, &payload.field_key) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
@@ -99,7 +99,7 @@ pub mod remove_vector_field {
         pub field_key: String,
     }
 
-    pub fn handle(payload: &RemoveVectorField, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match remove_vector_field(doc.snapshot, &payload.question_id, &payload.field_key) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),

@@ -12,13 +12,13 @@
 //!
 //! 🎯️ Design choice (which "real db" each law drives): the `db` facade (`db/rs`) is still an
 //! unimplemented stub as of this wave, so the facade-shaped laws that only need `Database::{open_at,
-//! create_document, document}`/`DocumentHandle::{submit, frontier}` (`assert_replay_deterministic`)
+//! create_document, document}`/`ArtifactHandle::{submit, frontier}` (`assert_replay_deterministic`)
 //! drive `db_engine::Database` directly — the exact type the facade re-exports verbatim once it
 //! lands (see `db_engine`'s own module doc: "the crate that assembles every other `db_*` crate into
-//! the stable, contract-frozen `Database`/`DocumentHandle` API"). Laws needing capabilities
-//! `db_engine`'s current `DocumentHandle` documents as deliberately unreachable this wave (real
+//! the stable, contract-frozen `Database`/`ArtifactHandle` API"). Laws needing capabilities
+//! `db_engine`'s current `ArtifactHandle` documents as deliberately unreachable this wave (real
 //! snapshot publish, real preview publish/read, inverse undo, and projection wiring — see
-//! `db_engine`'s own `//🎯️ Design choice (scope)` note) drive `db_document::DocumentEngine`
+//! `db_engine`'s own `//🎯️ Design choice (scope)` note) drive `db_artifact::ArtifactEngine`
 //! directly instead, one layer below the facade: still the family's real, complete command
 //! pipeline (admit → dedupe → authz → conflict → execute → WAL append → durability → publish →
 //! project → vcs → preview-reconcile), composing real `db_wal`/`db_storage`/`db_state`/
@@ -119,7 +119,7 @@ impl WorkloadGen {
     /// given `seed`, and disjoint so the final materialized state never depends on submit order,
     /// which is exactly the property `assert_sync_convergence`/`SimRuntime`'s interleaving tests
     /// need from their workload.
-    pub fn disjoint_batch(&mut self, document: &protocol::DocumentId, count: usize) -> Vec<protocol::MutationEnvelope> {
+    pub fn disjoint_batch(&mut self, document: &protocol::ArtifactId, count: usize) -> Vec<protocol::MutationEnvelope> {
         (0..count)
             .map(|index| {
                 let path = format!("path-{index}");
@@ -134,8 +134,8 @@ impl WorkloadGen {
                     document_id: document.clone(),
                     actor,
                     dependencies: Vec::new(),
-                    diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-                    inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+                    diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+                    inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
                     timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 }
             })
@@ -170,8 +170,8 @@ impl SimClock {
 /// @emoji 📋️ One schedulable unit of `SimRuntime` work: a name (surfaced in the run order for
 /// assertions/debugging) plus a closure run synchronously when its turn comes. Deliberately not
 /// `Send` — `SimRuntime` is a single-threaded cooperative scheduler, so a scheduled action may
-/// freely capture `!Send` state (e.g. a `Rc<RefCell<db_document::DocumentEngine>>`, itself `!Send`
-/// per the family's convention — see `db_document::DocumentAuthority`'s own doc).
+/// freely capture `!Send` state (e.g. a `Rc<RefCell<db_artifact::ArtifactEngine>>`, itself `!Send`
+/// per the family's convention — see `db_artifact::ArtifactAuthority`'s own doc).
 struct SimTask {
     name: String,
     action: Box<dyn FnOnce(&mut SimClock)>,
@@ -233,7 +233,7 @@ impl SimRuntime {
 /// resulting state hash). A panicking assertion inside `run_one` names its own seed in the failure,
 /// which is what makes a failing interleaving reproducible from a single logged `u64` — `run_one`
 /// owns building its own fresh `SimRuntime`/system-under-test per call, since the "system" (e.g. a
-/// `db_document::DocumentEngine`) must start clean for every explored permutation.
+/// `db_artifact::ArtifactEngine`) must start clean for every explored permutation.
 pub fn explore_interleavings<T>(base_seed: u64, permutations: u32, mut run_one: impl FnMut(u64) -> T) -> Vec<T> {
     (0..permutations)
         .map(|i| {
@@ -316,11 +316,11 @@ impl FaultStorage {
 }
 
 impl WalStorage for FaultStorage {
-    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         self.inner.wal().create_segment(document, index)
     }
 
-    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let call = self.append_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let script = self.script();
         if script.fail_nth_write == Some(call) {
@@ -335,7 +335,7 @@ impl WalStorage for FaultStorage {
         self.inner.wal().append(document, index, bytes)
     }
 
-    fn sync(&self, document: &DocumentId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         if self.script().fsync_lies {
             return Ok(());
         }
@@ -343,49 +343,49 @@ impl WalStorage for FaultStorage {
         self.inner.wal().sync(document, index, class)
     }
 
-    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         self.inner.wal().seal(document, index)
     }
 
-    fn read(&self, document: &DocumentId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
+    fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
         self.inner.wal().read(document, index, range)
     }
 
-    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         self.inner.wal().segment_len(document, index)
     }
 
-    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.inner.wal().list_segments(document)
     }
 
-    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
         self.inner.wal().truncate_tail(document, index, new_len)
     }
 
-    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         self.inner.wal().delete_segment(document, index)
     }
 }
 
 impl SnapshotStorage for FaultStorage {
-    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         self.inner.snapshot().write_generation(document, generation, bytes)
     }
 
-    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
         self.inner.snapshot().read_generation(document, generation)
     }
 
-    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         self.inner.snapshot().latest_generation(document)
     }
 
-    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.inner.snapshot().list_generations(document)
     }
 
-    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
         self.inner.snapshot().delete_generation(document, generation)
     }
 }
@@ -428,19 +428,19 @@ impl CatalogStorage for FaultStorage {
 }
 
 impl IndexStorage for FaultStorage {
-    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         self.inner.index().write_run(document, run_id, bytes)
     }
 
-    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
         self.inner.index().read_run(document, run_id)
     }
 
-    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.inner.index().list_runs(document)
     }
 
-    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
         self.inner.index().delete_run(document, run_id)
     }
 }
@@ -514,7 +514,7 @@ impl CrashHarnessReport {
     }
 }
 
-/// @emoji 💥️ Drives `db_document::DocumentEngine` through a fixed, seeded workload once per WAL
+/// @emoji 💥️ Drives `db_artifact::ArtifactEngine` through a fixed, seeded workload once per WAL
 /// write boundary, injecting a `FaultScript::fail_nth_write` at that exact boundary and verifying
 /// recovery afterward — the family's "crash after every write boundary; recovery invariants hold"
 /// law.
@@ -527,20 +527,20 @@ impl CrashHarness {
     /// then for every write boundary strictly after genesis, reruns the workload against a fresh
     /// `FaultStorage`-wrapped `MemoryStorage` with `fail_nth_write` set to that boundary (the
     /// workload loop stops at the first injected error, simulating a crash mid-run), and reopens a
-    /// fault-free `DocumentEngine` on the very same (now-faulted) storage — recovery must never
+    /// fault-free `ArtifactEngine` on the very same (now-faulted) storage — recovery must never
     /// error, and the recovered document's frontier/state must be EXACTLY the prefix of commands
     /// that landed strictly before the crashed write, no more, no less.
     ///
     /// 🧩️ Extension seam (deliberately, honestly scoped): write boundary #1 — the document's own
     /// genesis header write — is not exercised here. Recovering from a genesis-write failure would
-    /// need `DocumentEngine::open` to tolerate a pre-existing, empty (zero committed records)
-    /// segment left behind by a partially-failed `DocumentEngine::create` (today's `create` always
+    /// need `ArtifactEngine::open` to tolerate a pre-existing, empty (zero committed records)
+    /// segment left behind by a partially-failed `ArtifactEngine::create` (today's `create` always
     /// assumes a clean slate and would hit `AlreadyExists` on `create_segment` if retried against
-    /// that same storage) — a real gap, but in `db_document`'s `create`/`open` split, not in this
+    /// that same storage) — a real gap, but in `db_artifact`'s `create`/`open` split, not in this
     /// testkit, so it is documented here rather than silently special-cased away.
     pub fn run_crash_after_every_write(seed: u64, op_count: usize) -> CrashHarnessReport {
         assert!(op_count >= 1, "run_crash_after_every_write needs at least one committed operation to crash between");
-        let document = protocol::DocumentId(format!("testkit-crash-{seed:x}"));
+        let document = protocol::ArtifactId(format!("testkit-crash-{seed:x}"));
         let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count);
 
         let baseline = Arc::new(FaultStorage::new(Arc::new(db_storage::MemoryStorage::new())));
@@ -556,7 +556,7 @@ impl CrashHarness {
             faulted.set_script(FaultScript { fail_nth_write: Some(crash_at), ..FaultScript::default() });
             run_workload_until_fault(&document, &ops, storage_as_dyn(faulted.clone()));
 
-            match db_document::DocumentEngine::open(document.clone(), &storage_as_dyn(faulted), db_document::DocumentEngineConfig::default(), 0) {
+            match db_artifact::ArtifactEngine::open(document.clone(), &storage_as_dyn(faulted), db_artifact::ArtifactEngineConfig::default(), 0) {
                 Ok((recovered, _report)) => {
                     if !recovered_state_matches_prefix(&recovered, &ops, expected_committed) {
                         report.state_mismatches.push(crash_at);
@@ -573,31 +573,31 @@ fn storage_as_dyn(storage: Arc<FaultStorage>) -> Arc<dyn DbStorage> {
     storage
 }
 
-fn run_workload_against(document: &protocol::DocumentId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
-    let mut engine = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
+fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
+    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
-        let batch = db_document::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        engine.submit(batch, db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("testkit: baseline submit must not fault");
+        let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
+        engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("testkit: baseline submit must not fault");
     }
 }
 
 /// @emoji 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
 /// panicking — the fault IS the point, simulating a crash mid-workload.
-fn run_workload_until_fault(document: &protocol::DocumentId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
-    let created = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0);
+fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
+    let created = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0);
     let mut engine = match created {
         Ok(engine) => engine,
         Err(_) => return, // the fault fired during genesis itself — nothing further to submit.
     };
     for (i, envelope) in ops.iter().enumerate() {
-        let batch = db_document::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        if engine.submit(batch, db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).is_err() {
+        let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
+        if engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).is_err() {
             return;
         }
     }
 }
 
-fn recovered_state_matches_prefix(recovered: &db_document::DocumentEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
+fn recovered_state_matches_prefix(recovered: &db_artifact::ArtifactEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
     if recovered.frontier().head_seq != expected_committed as u64 {
         return false;
     }
@@ -619,8 +619,8 @@ fn temp_dir(name: &str) -> std::path::PathBuf {
     dir
 }
 
-fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_document::CommandBatch {
-    db_document::CommandBatch::new(vec![envelope]).expect("testkit: single-envelope batch")
+fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artifact::CommandBatch {
+    db_artifact::CommandBatch::new(vec![envelope]).expect("testkit: single-envelope batch")
 }
 
 /// @emoji 🔁️ The replay-determinism law: (1) a document's WAL replay after a clean shutdown+reopen
@@ -629,15 +629,15 @@ fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_document::C
 /// whole submit→WAL→materialize pipeline, are both deterministic — not just idempotent once).
 /// Drives real `db_engine::Database::open_at` over `FsStorage` (see module doc).
 pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
-    let document = protocol::DocumentId(format!("testkit-replay-{seed:x}"));
+    let document = protocol::ArtifactId(format!("testkit-replay-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1));
 
     let root = temp_dir("replay");
     let frontier_first_run = {
         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
-        let handle = database.create_document(db_engine::DocumentSpec::new(document.clone())).expect("testkit: create_document for replay law");
+        let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
         for envelope in &ops {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().expect("frontier");
         drop(handle);
@@ -658,9 +658,9 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
     let root_independent = temp_dir("replay-independent");
     let frontier_independent = {
         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
-        let handle = database.create_document(db_engine::DocumentSpec::new(document)).expect("testkit: create independent replica document");
+        let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         handle.frontier().expect("frontier")
     };
@@ -670,33 +670,33 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
 /// @emoji 📸️ The "snapshot + WAL suffix == full replay" law: a replica that snapshots partway
 /// through a workload and reopens (materializing from snapshot ⊕ suffix) must reach the EXACT same
 /// frontier as a replica that never snapshots and reopens via full-from-genesis replay. Drives real
-/// `db_document::DocumentEngine::{create, submit, snapshot_now, open}` over two independent
+/// `db_artifact::ArtifactEngine::{create, submit, snapshot_now, open}` over two independent
 /// `MemoryStorage` backends (see module doc on why this law is driven one layer below the facade).
 pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usize, after_snapshot: usize) {
-    let document = protocol::DocumentId(format!("testkit-snap-{seed:x}"));
+    let document = protocol::ArtifactId(format!("testkit-snap-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, before_snapshot + after_snapshot.max(1));
 
     let storage_snapshotting: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     {
-        let mut engine = db_document::DocumentEngine::create(document.clone(), storage_snapshotting.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine a");
+        let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit a");
+            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit a");
             if i + 1 == before_snapshot {
                 engine.snapshot_now((i + 1) as u64).expect("snapshot_now");
             }
         }
     }
-    let (materialized_from_snapshot, report_a) = db_document::DocumentEngine::open(document.clone(), &storage_snapshotting, db_document::DocumentEngineConfig::default(), 0).expect("open engine a");
+    let (materialized_from_snapshot, report_a) = db_artifact::ArtifactEngine::open(document.clone(), &storage_snapshotting, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine a");
     assert!(before_snapshot == 0 || report_a.from_snapshot, "replica a must have materialized from a real snapshot when one was published");
 
     let storage_full_replay: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     {
-        let mut engine = db_document::DocumentEngine::create(document.clone(), storage_full_replay.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine b");
+        let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit b");
+            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit b");
         }
     }
-    let (materialized_full_replay, report_b) = db_document::DocumentEngine::open(document, &storage_full_replay, db_document::DocumentEngineConfig::default(), 0).expect("open engine b");
+    let (materialized_full_replay, report_b) = db_artifact::ArtifactEngine::open(document, &storage_full_replay, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine b");
     assert!(!report_b.from_snapshot, "replica b must never have snapshotted");
     assert_eq!(report_b.commands_replayed as usize, ops.len(), "a never-snapshotted replica must replay every command from genesis");
 
@@ -741,8 +741,8 @@ impl db_projection::ProjectionClass for CountingProjection {
 /// pure, storage-independent `rebuild_in_memory` pass over the same event sequence. Drives real
 /// `db_projection::ProjectionEngine` against a real `db_storage::MemoryStorage`'s `IndexStorage`.
 pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) {
-    let document_core = DocumentId(format!("testkit-proj-{seed:x}"));
-    let document = protocol::DocumentId(document_core.0.clone());
+    let document_core = ArtifactId(format!("testkit-proj-{seed:x}"));
+    let document = protocol::ArtifactId(document_core.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1));
 
     let storage = db_storage::MemoryStorage::new();
@@ -767,7 +767,7 @@ pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) 
     }
 }
 
-fn schema_erased_envelope(document: &protocol::DocumentId, mutation_id: &str, actor: &str, path: &str, forward: serde_json::Value, inverse: serde_json::Value) -> protocol::MutationEnvelope {
+fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &str, actor: &str, path: &str, forward: serde_json::Value, inverse: serde_json::Value) -> protocol::MutationEnvelope {
     let mut payload = serde_json::Map::with_capacity(1);
     payload.insert(path.to_string(), forward);
     let mut inverse_payload = serde_json::Map::with_capacity(1);
@@ -777,26 +777,26 @@ fn schema_erased_envelope(document: &protocol::DocumentId, mutation_id: &str, ac
         document_id: document.clone(),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
-        diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
 
 /// @emoji ↩️ The inverse-undo roundtrip law: undoing a committed operation must apply its recorded
 /// inverse exactly; undoing THAT undo (a redo, via the compensating envelope's own flipped inverse
-/// — `db_document::DocumentEngine::undo`'s "inverse of inverse" mechanism) must restore the exact
-/// original value. Drives a real `db_document::DocumentEngine` over `MemoryStorage`.
+/// — `db_artifact::ArtifactEngine::undo`'s "inverse of inverse" mechanism) must restore the exact
+/// original value. Drives a real `db_artifact::ArtifactEngine` over `MemoryStorage`.
 pub fn assert_inverse_undo_roundtrip(seed: u64) {
-    let document = protocol::DocumentId(format!("testkit-undo-{seed:x}"));
+    let document = protocol::ArtifactId(format!("testkit-undo-{seed:x}"));
     let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let mut engine = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("create engine");
+    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
     let forward_value = serde_json::json!(seed % 1000);
     let envelope = schema_erased_envelope(&document, "op-forward", "actor-1", &path, forward_value.clone(), serde_json::Value::Null);
     let target = envelope.mutation_id.clone();
-    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions::default(), 1).expect("submit forward");
+    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions::default(), 1).expect("submit forward");
 
     let after_forward: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("forward value present")).expect("json");
     assert_eq!(after_forward, forward_value);
@@ -812,38 +812,38 @@ pub fn assert_inverse_undo_roundtrip(seed: u64) {
 /// @emoji 🔀️ The sync-convergence law: a replica that catches up in one shot, and a replica that
 /// catches up across two resumed batches, must both converge to the EXACT same `Frontier` as the
 /// canonical source they are replicating from — real `db_sync::{replay_sync_state, missing_commands}`
-/// missing-command transfer over real `db_document::DocumentEngine` replicas.
+/// missing-command transfer over real `db_artifact::ArtifactEngine` replicas.
 pub fn assert_sync_convergence(seed: u64, op_count: usize) {
-    let document = protocol::DocumentId(format!("testkit-sync-{seed:x}"));
-    let document_core = DocumentId(document.0.clone());
+    let document = protocol::ArtifactId(format!("testkit-sync-{seed:x}"));
+    let document_core = ArtifactId(document.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(2));
 
     let server_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let mut server = db_document::DocumentEngine::create(document.clone(), server_storage.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create server");
+    let mut server = db_artifact::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
-        server.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("server submit");
+        server.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("server submit");
     }
     let server_frontier = server.frontier();
     let sync_state = db_sync::replay_sync_state(server_storage.wal(), document_core.clone()).expect("replay_sync_state");
 
     let replica1_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let mut replica1 = db_document::DocumentEngine::create(document.clone(), replica1_storage, db_document::DocumentEngineConfig::default(), 0).expect("create replica1");
+    let mut replica1 = db_artifact::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica1");
     let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
-        replica1.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica1 submit");
+        replica1.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica1 submit");
     }
 
     let replica2_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let mut replica2 = db_document::DocumentEngine::create(document, replica2_storage, db_document::DocumentEngineConfig::default(), 0).expect("create replica2");
+    let mut replica2 = db_artifact::ArtifactEngine::create(document, replica2_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica2");
     let half = ops.len() / 2;
     let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).expect("missing_commands first half");
     for (i, envelope) in missing2_first.into_iter().take(half).enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica2 submit (first half)");
+        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica2 submit (first half)");
     }
     let replica2_resume_frontier = replica2.frontier();
     let missing2_rest = db_sync::missing_commands(&sync_state, &replica2_resume_frontier).expect("missing_commands resumed");
     for (i, envelope) in missing2_rest.into_iter().enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, (half + i) as u64).expect("replica2 submit (rest)");
+        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, (half + i) as u64).expect("replica2 submit (rest)");
     }
 
     assert_eq!(server_frontier, replica1.frontier(), "a one-shot replica must converge to the server's exact frontier");
@@ -871,17 +871,17 @@ pub fn assert_fencing_excludes_stale_writer(storage: &dyn CatalogStorage) {
 /// @emoji 🌫️ The preview-never-durable law: publishing a preview must never append a single byte to
 /// the document's WAL, never create a new segment, and never advance the committed frontier — while
 /// still correctly shadowing the committed value for the preview's own reader. Drives a real
-/// `db_document::DocumentEngine` (backed by a real `db_preview::PreviewStore`) over `MemoryStorage`.
+/// `db_artifact::ArtifactEngine` (backed by a real `db_preview::PreviewStore`) over `MemoryStorage`.
 pub fn assert_preview_never_durable(seed: u64) {
-    let document = protocol::DocumentId(format!("testkit-preview-{seed:x}"));
+    let document = protocol::ArtifactId(format!("testkit-preview-{seed:x}"));
     let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let core_document = DocumentId(document.0.clone());
-    let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine");
+    let core_document = ArtifactId(document.0.clone());
+    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
     let committed_value = serde_json::json!("committed");
     let envelope = schema_erased_envelope(&document, "op-committed", "actor-1", &path, committed_value.clone(), serde_json::Value::Null);
-    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, 1).expect("submit committed");
+    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, 1).expect("submit committed");
 
     let segments_before = storage.wal().list_segments(&core_document).expect("list_segments");
     let lengths_before: Vec<u64> = segments_before.iter().map(|&index| storage.wal().segment_len(&core_document, index).expect("segment_len")).collect();
@@ -966,7 +966,7 @@ mod tests {
 
     #[test]
     fn workload_gen_disjoint_batch_is_deterministic_and_covers_distinct_paths() {
-        let document = protocol::DocumentId("gen-doc".to_string());
+        let document = protocol::ArtifactId("gen-doc".to_string());
         let ops_a = WorkloadGen::new(42).disjoint_batch(&document, 8);
         let ops_b = WorkloadGen::new(42).disjoint_batch(&document, 8);
         let ops_c = WorkloadGen::new(43).disjoint_batch(&document, 8);
@@ -1006,17 +1006,17 @@ mod tests {
 
     #[test]
     fn explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state() {
-        let document = protocol::DocumentId("explore-doc".to_string());
+        let document = protocol::ArtifactId("explore-doc".to_string());
         let hashes = explore_interleavings(4242, 12, |seed| {
             let ops = WorkloadGen::new(55).disjoint_batch(&document, 5);
             let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-            let engine = Rc::new(RefCell::new(db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("create engine")));
+            let engine = Rc::new(RefCell::new(db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine")));
             let mut runtime = SimRuntime::new(seed);
             for (i, envelope) in ops.into_iter().enumerate() {
                 let engine = engine.clone();
                 runtime.schedule(envelope.mutation_id.0.clone(), move |clock| {
                     let now = clock.now_ms() + i as u64;
-                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, now).expect("submit");
+                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, now).expect("submit");
                 });
             }
             runtime.run(4);
@@ -1032,7 +1032,7 @@ mod tests {
     fn fault_storage_passes_through_untouched_when_no_fault_is_scripted() {
         let inner = Arc::new(db_storage::MemoryStorage::new());
         let faulted = FaultStorage::new(inner);
-        let document = DocumentId("doc-1".to_string());
+        let document = ArtifactId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         assert_eq!(faulted.append(&document, 0, b"hello").unwrap(), 5);
         assert_eq!(faulted.read(&document, 0, pack::ByteRange { offset: 0, len: 5 }).unwrap(), b"hello");
@@ -1043,7 +1043,7 @@ mod tests {
     fn fault_storage_fail_nth_write_fails_exactly_once_at_the_scripted_call() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
         faulted.set_script(FaultScript { fail_nth_write: Some(2), ..FaultScript::default() });
-        let document = DocumentId("doc-1".to_string());
+        let document = ArtifactId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         assert!(faulted.append(&document, 0, b"first").is_ok(), "call #1 must succeed");
         assert!(faulted.append(&document, 0, b"second").is_err(), "call #2 must be the injected failure");
@@ -1054,7 +1054,7 @@ mod tests {
     fn fault_storage_torn_write_forwards_only_the_kept_prefix() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
         faulted.set_script(FaultScript { torn_write_at: Some((1, 3)), ..FaultScript::default() });
-        let document = DocumentId("doc-1".to_string());
+        let document = ArtifactId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         let new_len = faulted.append(&document, 0, b"hello world").unwrap();
         assert_eq!(new_len, 3, "a torn write must report only the bytes that actually landed");
@@ -1064,7 +1064,7 @@ mod tests {
     #[test]
     fn fault_storage_fsync_lies_never_delegates_to_the_inner_backend() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
-        let document = DocumentId("doc-1".to_string());
+        let document = ArtifactId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         assert!(faulted.sync(&document, 0, DurabilityClass::Fsync).is_ok());
         assert_eq!(faulted.sync_delegated_calls(), 1, "an unfaulted sync must delegate");
@@ -1098,14 +1098,14 @@ mod tests {
         // Call #1 is the document's own genesis header write; torn-write call #2 is the first
         // `submit()`'s commit — truncated to 1 byte, an unrecoverable partial commit frame.
         faulted.set_script(FaultScript { torn_write_at: Some((2, 1)), ..FaultScript::default() });
-        let document = protocol::DocumentId("torn-doc".to_string());
+        let document = protocol::ArtifactId("torn-doc".to_string());
         let storage: Arc<dyn DbStorage> = faulted;
         {
-            let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).unwrap();
+            let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
             let envelope = schema_erased_envelope(&document, "op-1", "actor-1", "x", serde_json::json!(1), serde_json::Value::Null);
-            let _ = engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, 1);
+            let _ = engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, 1);
         }
-        let (recovered, report) = db_document::DocumentEngine::open(document, &storage, db_document::DocumentEngineConfig::default(), 2).expect("recovery must not error");
+        let (recovered, report) = db_artifact::ArtifactEngine::open(document, &storage, db_artifact::ArtifactEngineConfig::default(), 2).expect("recovery must not error");
         assert_eq!(report.torn_tail_bytes, 1, "recovery must report exactly the torn bytes it discarded");
         assert_eq!(recovered.frontier().head_seq, 0, "the torn (unrecoverable) commit must not be visible after recovery");
     }
@@ -1171,25 +1171,25 @@ mod tests {
 
         fn decode_wal_bytes(bytes: &[u8]) -> Result<(), String> {
             let storage = db_storage::MemoryStorage::new();
-            let document = DocumentId("fuzz-doc".to_string());
+            let document = ArtifactId("fuzz-doc".to_string());
             storage.create_segment(&document, 0).map_err(|err| err.to_string())?;
             storage.append(&document, 0, bytes).map_err(|err| err.to_string())?;
             let storage: Arc<dyn DbStorage> = Arc::new(storage);
-            db_document::DocumentEngine::open(protocol::DocumentId(document.0), &storage, db_document::DocumentEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
+            db_artifact::ArtifactEngine::open(protocol::ArtifactId(document.0), &storage, db_artifact::ArtifactEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
         }
 
         #[test]
         fn wal_recovery_never_panics_under_truncation_or_bit_flip_corruption() {
-            let document = protocol::DocumentId("fuzz-doc".to_string());
+            let document = protocol::ArtifactId("fuzz-doc".to_string());
             let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
             {
-                let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).unwrap();
+                let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
                 for i in 0..2 {
                     let envelope = schema_erased_envelope(&document, &format!("op-{i}"), "actor-1", &format!("x{i}"), serde_json::json!(i), serde_json::Value::Null);
-                    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).unwrap();
+                    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).unwrap();
                 }
             }
-            let core_document = DocumentId(document.0);
+            let core_document = ArtifactId(document.0);
             let len = storage.wal().segment_len(&core_document, 0).unwrap();
             let bytes = storage.wal().read(&core_document, 0, pack::ByteRange { offset: 0, len }).unwrap();
 

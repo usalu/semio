@@ -6,7 +6,7 @@ use crate::artifacts::procedural2d::engine::host_operations;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -19,7 +19,7 @@ pub mod node_graph_edit {
     pub struct NodeGraphEdit {
         pub operations_json: String}
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let selected = cfg.snapshot.selected_ids.clone();
@@ -53,7 +53,7 @@ pub mod node_graph_edit {
             }
         });
         let config_mutations = if cleared { vec![Procedural2dConfigMutation::SetSelection { ids: Vec::new() }] } else { Vec::new() };
-        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -69,7 +69,7 @@ pub mod move_media_node {
         pub x: f64,
         pub y: f64}
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.move_widget(&payload.node_id, payload.x, payload.y);
@@ -90,7 +90,7 @@ pub mod connect_media_ports {
         pub target_node_id: String,
         pub target_port_id: String}
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
@@ -107,7 +107,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
@@ -125,7 +125,7 @@ pub mod node_graph_viewport {
     pub struct NodeGraphViewport {
         pub viewport_json: String}
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         match serde_json::from_str::<CameraJson>(&payload.viewport_json) {
             Ok(camera) => Ok(Emit::config(vec![Procedural2dConfigMutation::SetCamera { camera }])),
             Err(_) => Ok(Emit::default())}
@@ -142,7 +142,7 @@ pub mod node_graph_select {
     pub struct NodeGraphSelect {
         pub ids: Vec<String>}
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -156,7 +156,7 @@ pub mod node_graph_hover {
     #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }

@@ -16,12 +16,12 @@ use crate::artifacts::remodel::RemodelSnapshot;
 
 /// 📖️ Parses `.remodel` DSL text into a `RemodelSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RemodelSnapshot, store::TextError> {
-    <RemodelSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RemodelSnapshot` back to `.remodel` DSL text.
 pub fn print_dsl(scene: &RemodelSnapshot) -> String {
-    store::DocumentDsl::print_dsl(scene)
+    store::ArtifactDsl::print_dsl(scene)
 }
 
 //#region 🧪️Tests

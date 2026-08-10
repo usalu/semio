@@ -13,12 +13,12 @@ use crate::artifacts::vdi3805::Vdi3805Snapshot;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Vdi3805Snapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Vdi3805Snapshot, PackError> {
-    <Vdi3805Snapshot as store::DocumentPack>::decode_pack(bytes)
+    <Vdi3805Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]

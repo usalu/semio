@@ -15,12 +15,12 @@ pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../
 
 /// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, store::TextError> {
-    <GisTerrainSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisTerrainSnapshot` back to `.gisterrain` DSL text.
 pub fn print_dsl(document: &GisTerrainSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

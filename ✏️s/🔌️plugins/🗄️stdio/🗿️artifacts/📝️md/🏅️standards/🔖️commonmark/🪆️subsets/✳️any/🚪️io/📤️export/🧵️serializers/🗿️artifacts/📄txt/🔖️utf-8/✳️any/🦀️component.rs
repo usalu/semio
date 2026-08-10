@@ -14,6 +14,6 @@ pub fn serialize(from: &MdSnapshot) -> Result<TxtSnapshot, store::PackError> {
 
 /// 📤️ Encode as txt DSL.
 pub fn serialize_text(from: &MdSnapshot) -> Result<String, store::PackError> {
-    Ok(store::DocumentDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
 }
 //#endregion 🔖️Codec

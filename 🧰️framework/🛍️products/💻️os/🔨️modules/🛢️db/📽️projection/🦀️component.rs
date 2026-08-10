@@ -5,10 +5,10 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_projection` row) and Part 2 of the approved plan.
 //!
-//! 🎯️ Design choice: per the contract's "no db crate below `db_document` interprets operation
+//! 🎯️ Design choice: per the contract's "no db crate below `db_artifact` interprets operation
 //! semantics" rule, this crate never looks inside a `protocol::MutationEnvelope`'s
 //! `diff.schema`/`diff.payload` itself — every `ProjectionClass::apply` is supplied by a higher
-//! layer (`db_document`, or an app-level program) that owns the actual domain interpretation. This
+//! layer (`db_artifact`, or an app-level program) that owns the actual domain interpretation. This
 //! crate only owns the mechanism around that: dependency ordering, incremental application,
 //! checkpoint persistence/versioning, historical lookup, and preview augmentation.
 //!
@@ -47,7 +47,7 @@
 //! incremental-apply law holding by construction rather than by two independently-written rules
 //! happening to agree.
 
-use {DbError, DocumentId};
+use {DbError, ArtifactId};
 use db_index::ProjectionIndex;
 use db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
 use db_storage::IndexStorage;
@@ -355,7 +355,7 @@ fn should_run(projection: &dyn ErasedProjection, touched: &TouchedSet, changed_t
 /// preview augmentation (`preview_augmented`).
 pub struct ProjectionEngine<'a> {
     storage: &'a dyn IndexStorage,
-    document: DocumentId,
+    document: ArtifactId,
     projections: Vec<Box<dyn ErasedProjection>>,
     graph: ProjectionGraph,
 }
@@ -364,7 +364,7 @@ impl<'a> ProjectionEngine<'a> {
     /// @emoji 🏗️ Registers `projections` for `document` against `storage`, validating the
     /// dependency DAG up front (see `ProjectionGraph::build`) so a misconfigured cycle/dangling
     /// dependency fails at construction rather than mid-apply.
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId, projections: Vec<Box<dyn ErasedProjection>>) -> Result<Self, DbError> {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId, projections: Vec<Box<dyn ErasedProjection>>) -> Result<Self, DbError> {
         let graph = ProjectionGraph::build(&projections)?;
         Ok(ProjectionEngine { storage, document, projections, graph })
     }
@@ -617,10 +617,10 @@ mod tests {
     fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(operation.to_string()),
-            document_id: protocol::DocumentId(document.to_string()),
+            document_id: protocol::ArtifactId(document.to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }

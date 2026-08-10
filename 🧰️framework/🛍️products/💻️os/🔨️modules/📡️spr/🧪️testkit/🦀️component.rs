@@ -248,10 +248,10 @@ impl OpDagGen {
             }
             envelopes.push(crate::os_spr::MutationEnvelope {
                 mutation_id: crate::os_spr::MutationId(format!("op-{i}")),
-                document_id: crate::os_spr::DocumentId("doc-1".to_string()),
+                document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
                 actor: crate::os_spr::ActorId(format!("actor-{}", rng.next_range(4))),
                 dependencies,
-                diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
+                diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
                 inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
             });
@@ -939,7 +939,7 @@ mod tests {
     fn wire_frame_round_trip_holds_for_client_and_server_samples() {
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::Bye, crate::os_spr::Lane::Command));
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, crate::os_spr::Lane::Preview));
-        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::DocumentId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
+        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
         assert_wire_frame_round_trip(&WireFrameSample::Server(crate::os_spr::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: crate::os_spr::Bootstrap::Tail }, crate::os_spr::Lane::Command));
     }
 

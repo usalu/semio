@@ -22,10 +22,10 @@ impl ArtifactBuilder for BmpBuilder {
         Self { snapshot, diagnostics: Vec::new() }
     }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<BmpSnapshot as store::DocumentDsl>::parse_dsl(text)?))
+        Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
     }
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<BmpSnapshot as store::DocumentPack>::decode_pack(bytes)?))
+        Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
         crate::artifacts::bmp::schema::mutations::apply_bmp_mutation(&mut self.snapshot, &mutation);

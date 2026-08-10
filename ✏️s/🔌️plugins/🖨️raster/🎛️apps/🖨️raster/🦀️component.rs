@@ -1,4 +1,4 @@
-//! 🖥️ Raster app — DocumentApp impl, render, manifest (constitutional: ui/general). B1: `RasterPlayApp`
+//! 🖥️ Raster app — ArtifactApp impl, render, manifest (constitutional: ui/general). B1: `RasterPlayApp`
 //! is a unit struct — every former `RasterConfig` (`ui`-crate `RefCell`) field (selection, hover, brush
 //! size/opacity, navigator composite-viewport size, the session-only free camera) now lives in
 //! `crate::apps::raster::config::RasterConfig`, written via `RasterConfigMutation`s. Every action
@@ -14,13 +14,13 @@ use crate::artifacts::raster::engine::{raster_composite_media, raster_io, semio_
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, MediaFormat, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_APP_ID: &str = "raster-play";
@@ -141,7 +141,7 @@ use crate::apps::raster::commands::utility::set_active_utility;
 #[derive(Default)]
 pub struct RasterPlayApp;
 
-impl DocumentApp for RasterPlayApp {
+impl ArtifactApp for RasterPlayApp {
     type Snapshot = RasterSnapshot;
     type Mutation = RasterMutation;
     type Config = RasterConfig;
@@ -168,7 +168,7 @@ impl DocumentApp for RasterPlayApp {
     /// raster_composite_media}`) plus the inherited `document:out` default (the pack of
     /// `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new ones).
-    fn export_media(port: &str, doc: &DocumentView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.snapshot),
             "document:out" => {
@@ -184,7 +184,7 @@ impl DocumentApp for RasterPlayApp {
     /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterMutation` has
     /// no granular "add asset" step (see that function's doc). Falls through to the inherited
     /// `document:in` default (base64 pack replace) for any other port.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -203,15 +203,15 @@ impl DocumentApp for RasterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &RasterCommand, doc: &DocumentView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &RasterCommand, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(_doc: &DocumentView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.snapshot))])
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = raster_play_labels(config);
@@ -307,7 +307,7 @@ pub fn create_raster_app() -> App {
                 ]).required().default_value("pixel"),
             ])
             .action_args("setSnapshot", vec![
-                ActionArgDef::text("document", LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument")),
+                ActionArgDef::text("document", LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument")),
             ])
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
@@ -329,9 +329,9 @@ pub fn create_raster_app() -> App {
 pub(crate) mod testkit {
     //! 🧪️ Shared harness for every `apps::raster` node's tests — mirrors TEMPLATE.md §7.
     use super::*;
-    use semio_framework_plugin::{testkit as framework_testkit, InvocationResult, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{testkit as framework_testkit, InvocationResult, VcsArtifactApp, ViewModel};
 
-    pub type RasterApp = VcsDocumentApp<RasterPlayApp>;
+    pub type RasterApp = VcsArtifactApp<RasterPlayApp>;
 
     use semio_framework_plugin::PluginApp;
 
@@ -646,7 +646,7 @@ mod tests {
     #[test]
     fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
         let projection = empty_raster_document();
-        let doc = DocumentView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let doc = ArtifactView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
         let app = RasterPlayApp;
         let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
         let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };

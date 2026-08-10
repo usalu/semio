@@ -42,11 +42,11 @@ mod tests {
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
         store::os_store::test_support::assert_live_equals_replay(&doc_store);
@@ -58,17 +58,17 @@ mod tests {
     /// existing pack round-trip law.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
         let edit: &Edit<DrawMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<DrawSnapshot, DrawMutation>(edit, &DocumentId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<DrawSnapshot, DrawMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

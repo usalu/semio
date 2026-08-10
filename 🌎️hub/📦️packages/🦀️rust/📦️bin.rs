@@ -5,7 +5,7 @@
 //! The WebSocket endpoint speaks `protocol_wire`'s binary lane-tagged `ClientFrame`/`ServerFrame`
 //! frames directly (see `protocol/wire/rs/lib.rs`) — the server-side counterpart to
 //! `framework/sync`'s client actors (CW5). Command-lane persistence/ordering flows through
-//! `db::Database::hello`/`DocumentHandle::submit`/`db::sync::handle_frontier_advertise`;
+//! `db::Database::hello`/`ArtifactHandle::submit`/`db::sync::handle_frontier_advertise`;
 //! preview-lane and presence frames are ephemeral, best-effort fan-out this crate owns directly via
 //! a per-document `tokio::sync::broadcast` registry (never durable, matching the preview lane's
 //! contract). "Space" is a namespacing convention this crate applies on top of `db`'s flat document
@@ -21,7 +21,7 @@ use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, ArtifactId as ProtocolArtifactId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::model::SpaceRole;
@@ -63,12 +63,12 @@ fn scope_key(space_id: &str, document_id: &str) -> String {
     format!("{space_id}:{document_id}")
 }
 
-fn db_document_id(space_id: &str, document_id: &str) -> ProtocolDocumentId {
-    ProtocolDocumentId(scope_key(space_id, document_id))
+fn db_artifact_id(space_id: &str, document_id: &str) -> ProtocolArtifactId {
+    ProtocolArtifactId(scope_key(space_id, document_id))
 }
 
-fn db_core_document_id(id: &ProtocolDocumentId) -> db::core::DocumentId {
-    db::core::DocumentId(id.0.clone())
+fn db_core_document_id(id: &ProtocolArtifactId) -> db::core::ArtifactId {
+    db::core::ArtifactId(id.0.clone())
 }
 
 #[derive(Clone)]
@@ -77,7 +77,7 @@ struct HubState {
     directory: Arc<dyn HubDirectory>,
     admin_token: Option<String>,
     /// @emoji 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per `scope_key` —
-    /// `db::Database`'s own `DocumentHandle` exposes no live-subscription seam yet (see
+    /// `db::Database`'s own `ArtifactHandle` exposes no live-subscription seam yet (see
     /// `db_engine`'s module doc: `subscribe`/`preview` are honest `Unimplemented` extension seams),
     /// so relaying newly-committed commands / preview blobs / presence updates to other connected
     /// sessions on the same document is this crate's own, deliberately thin responsibility — it
@@ -87,13 +87,13 @@ struct HubState {
     /// @emoji 👥️ `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
     presence: Arc<DashMap<(String, String), Vec<u8>>>,
-    /// @emoji 🧬️ W5.7: `scope_key` -> the first non-zero `store::DocumentCodec::pack_schema_hash`
+    /// @emoji 🧬️ W5.7: `scope_key` -> the first non-zero `store::ArtifactCodec::pack_schema_hash`
     /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
     /// pinning belongs in the db catalog once it grows a column for it; this wave's scope is the
     /// in-memory pin only). A later `Hello` with a different non-zero hash for the same document is
     /// rejected with an `error_frame("schema-hash-mismatch", ...)` before `Welcome` — catches two
     /// builds of the same app disagreeing on a document's field shape. A zero hash always skips
-    /// validation (schema-agnostic client, see `DocumentCodec::pack_schema_hash`'s own doc).
+    /// validation (schema-agnostic client, see `ArtifactCodec::pack_schema_hash`'s own doc).
     schema_hashes: Arc<DashMap<String, [u8; 32]>>,
     /// @emoji 🧩️ Wave 1.B: installed runtime extensions mirrored from dev `/extensions` static dir —
     /// populated by hub deploy copy / sideload; `GET /extensions` lists `install.json` rows.
@@ -116,10 +116,10 @@ impl HubState {
     /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
     /// tolerating the race of two sessions doing so concurrently (the loser's `AlreadyExists`
     /// resolves to the same live handle the winner just registered).
-    fn ensure_document(&self, id: &ProtocolDocumentId) -> Result<db::DocumentHandle, db::DbError> {
+    fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
         match self.db.document(id) {
             Ok(handle) => Ok(handle),
-            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::DocumentSpec::new(id.clone())) {
+            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::ArtifactSpec::new(id.clone())) {
                 Ok(handle) => Ok(handle),
                 Err(db::DbError::AlreadyExists(_)) => self.db.document(id),
                 Err(other) => Err(other),
@@ -256,7 +256,7 @@ async fn get_document_status(Path((space_id, document_id)): Path<(String, String
     if !authorized(&state, &space_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let handle = state.ensure_document(&db_document_id(&space_id, &document_id)).map_err(|e| db_error_status(&e))?;
+    let handle = state.ensure_document(&db_artifact_id(&space_id, &document_id)).map_err(|e| db_error_status(&e))?;
     let frontier = handle.frontier().map_err(|e| db_error_status(&e))?;
     Ok(Json(DocumentStatusResponse { document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
 }
@@ -347,7 +347,7 @@ fn error_frame(code: &str, message: impl Into<String>) -> Message {
 /// failed — re-reads the document's current (unaffected) frontier so the client still learns
 /// "where the server actually is", falling back to an all-zero genesis summary only if even that
 /// read fails (a document wedged badly enough that this happens has bigger problems than one Ack).
-fn best_effort_frontier(handle: &db::DocumentHandle) -> RuntimeFrontierSummary {
+fn best_effort_frontier(handle: &db::ArtifactHandle) -> RuntimeFrontierSummary {
     match handle.frontier() {
         Ok(frontier) => engine_frontier_to_wire(&frontier, String::new()),
         Err(_) => RuntimeFrontierSummary { document_id: handle.document_id().clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] },
@@ -358,11 +358,11 @@ fn engine_frontier_to_wire(frontier: &db::Frontier, head_edit_id: String) -> Run
     RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
-/// @emoji ✍️ Submits `envelopes` as one `db_document::CommandBatch` through `handle`, returning the
+/// @emoji ✍️ Submits `envelopes` as one `db_artifact::CommandBatch` through `handle`, returning the
 /// `Ack` to send the submitter plus (on acceptance) the `Commands` frame to fan out to every other
 /// session on the same document. `Fsync` durability: a hub session's `submit` genuinely committing
 /// is the promise `AckStage::Persisted` makes to the client.
-async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
+async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
     let batch = match db::document::CommandBatch::new(envelopes.clone()) {
         Ok(batch) => batch,
         Err(error) => {
@@ -386,13 +386,13 @@ async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id:
 
 /// @emoji 🚪️ Runs `envelopes` through `gate.admit_command` one at a time (tenant isolation, then
 /// `Action::Write` authz on `AuthzScope::CommandKind`, DoS budget, replay dedupe — see
-/// `SecurityGate::admit_command`'s own doc) before any of them reach `db::DocumentHandle::submit`.
+/// `SecurityGate::admit_command`'s own doc) before any of them reach `db::ArtifactHandle::submit`.
 /// Returns the first rejection reason, or `None` once every envelope is admitted. `kind` is a
 /// constant ("write") rather than a per-envelope command-kind string: this crate sits above
-/// `db_document`'s pipeline and never interprets an operation's schema/diff semantics (matches
+/// `db_artifact`'s pipeline and never interprets an operation's schema/diff semantics (matches
 /// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
 /// granularity inside one document is not this wave's concern.
-fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolDocumentId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
+fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
     envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.operation_id, physical_ms).err().map(|error| error.to_string()))
 }
 
@@ -401,8 +401,8 @@ fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Pri
 #[allow(clippy::too_many_arguments)]
 async fn handle_client_frame(
     state: &HubState,
-    handle: &db::DocumentHandle,
-    db_id: &ProtocolDocumentId,
+    handle: &db::ArtifactHandle,
+    db_id: &ProtocolArtifactId,
     key: &str,
     fanout: &broadcast::Sender<ServerFrame>,
     actor: &ActorId,
@@ -511,7 +511,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
     };
     let principal = db::security::Principal::new(actor.clone(), tenant.clone(), vec![role_str]);
 
-    let db_id = db_document_id(&space_id, &document_id);
+    let db_id = db_artifact_id(&space_id, &document_id);
     let handle = match state.ensure_document(&db_id) {
         Ok(handle) => handle,
         Err(error) => {
@@ -789,7 +789,7 @@ async fn main() -> Result<(), HubError> {
 #[cfg(all(test, feature = "sqlite"))]
 mod tests {
     use super::*;
-    use protocol::{Bootstrap, DocumentId as WireDocumentId};
+    use protocol::{Bootstrap, ArtifactId as WireArtifactId};
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
@@ -814,13 +814,13 @@ mod tests {
         HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()), extensions_root: dir.path().join("extension-modules") }
     }
 
-    fn sample_envelope(id: &str, document: &WireDocumentId) -> MutationEnvelope {
+    fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
@@ -877,7 +877,7 @@ mod tests {
         b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
 
-        let document = WireDocumentId(format!("{STUDIO}:default"));
+        let document = WireArtifactId(format!("{STUDIO}:default"));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
 
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { batch_id: 1, .. }));
@@ -902,7 +902,7 @@ mod tests {
     async fn reconnect_replays_missing_commands_via_bootstrap_tail() {
         let addr = spawn_server(test_state().await).await;
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
-        let document = WireDocumentId(format!("{STUDIO}:default"));
+        let document = WireArtifactId(format!("{STUDIO}:default"));
 
         let (mut a, _) = connect_async(&url).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
@@ -933,7 +933,7 @@ mod tests {
         let (mut a, _) = connect_async(&url_a).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
-        let document = WireDocumentId("space-a:shared-doc".to_string());
+        let document = WireArtifactId("space-a:shared-doc".to_string());
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document)] }, Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
@@ -972,7 +972,7 @@ mod tests {
 
     // 🔬️ `SecurityGate` wiring: a `Spectator` session may `Hello` into a document (reads are
     // unaffected) but a `Commands` submission is rejected — `admit_writes` catches it via
-    // `space_grants`'s role-scoped `RoleBasedPolicy` before `db::DocumentHandle::submit` ever
+    // `space_grants`'s role-scoped `RoleBasedPolicy` before `db::ArtifactHandle::submit` ever
     // runs — while an `Author` session on the same space succeeds, proving the gate is wired into
     // the real write path rather than merely unit-tested in isolation.
     #[tokio::test]
@@ -988,7 +988,7 @@ mod tests {
 
         let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{space}/documents/gated-doc/ws");
-        let document = WireDocumentId(format!("{space}:gated-doc"));
+        let document = WireArtifactId(format!("{space}:gated-doc"));
         let hello_with_token = |actor: &str, token: String| ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId(actor.to_string()), token: Some(token), resume_token: None, frontier: None };
 
         let (mut spectator, _) = connect_async(&url).await.unwrap();
@@ -1099,8 +1099,8 @@ mod tests {
         let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state.clone())).await.expect("status");
         assert_eq!(status.0.head_seq, 0);
 
-        let handle = state.ensure_document(&db_document_id(STUDIO, "fresh")).expect("ensure");
-        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_document_id(STUDIO, "fresh"))]).unwrap();
+        let handle = state.ensure_document(&db_artifact_id(STUDIO, "fresh")).expect("ensure");
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_artifact_id(STUDIO, "fresh"))]).unwrap();
         handle.submit(batch, db::document::SubmitOptions::default()).await.unwrap().unwrap();
 
         let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state)).await.expect("status after submit");

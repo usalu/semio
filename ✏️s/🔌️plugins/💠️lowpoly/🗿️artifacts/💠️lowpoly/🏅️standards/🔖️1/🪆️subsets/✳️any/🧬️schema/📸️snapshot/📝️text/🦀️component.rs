@@ -15,12 +15,12 @@ pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚�
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
 pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {
-    <LowpolySnapshot as store::DocumentDsl>::parse_dsl(text)
+    <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LowpolySnapshot` back to `.lowpoly` DSL text.
 pub fn print_dsl(document: &LowpolySnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

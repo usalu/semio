@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `En1998Snapshot` to its binary pack form.
 pub fn encode(document: &En1998Snapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `En1998Snapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1998Snapshot, PackError> {
-    <En1998Snapshot as store::DocumentPack>::decode_pack(bytes)
+    <En1998Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

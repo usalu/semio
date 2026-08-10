@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `LayoutSnapshot` to its binary pack form.
 pub fn encode(document: &LayoutSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `LayoutSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
-    <LayoutSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

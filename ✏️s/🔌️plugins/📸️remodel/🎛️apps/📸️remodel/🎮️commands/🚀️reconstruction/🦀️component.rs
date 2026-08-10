@@ -14,7 +14,7 @@ use crate::artifacts::remodel::engine::{build_engine_params, build_qc_snapshot, 
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelSnapshot, SparseCloud};
 use base64::Engine as _;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -32,7 +32,7 @@ const REMODEL_MAX_RECONSTRUCTION_TICKS: u32 = 200_000;
 /// stream's already-persisted frames into it, then loops `advance()` in-process until `Done`/`Failed`
 /// and returns exactly one `Emit` carrying only the FINAL state — one call, one `Emit`, one undo step;
 /// no coalesce key needed. Shared by all three rows in this group.
-pub fn run_whole_pipeline(doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let engine_params = build_engine_params(&scene.params);
     let mut engine = remodel_engine::ReconstructionEngine::new(&engine_params);
@@ -150,7 +150,7 @@ pub mod run_reconstruction {
     #[dsl(keyword = "run-reconstruction")]
     pub struct RunReconstruction {}
 
-    pub fn handle(_payload: &RunReconstruction, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }
@@ -168,7 +168,7 @@ pub mod retry_stage {
 
     /// 🔁️ A retry is a fresh whole run (see the module doc comment): resuming at `payload.stage` would
     /// need the mid-pipeline engine state the pure-trait pivot removed, so the stage name is accepted and ignored.
-    pub fn handle(_payload: &RetryStage, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RetryStage, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }
@@ -185,7 +185,7 @@ pub mod run_stage {
     }
 
     /// ▶️ Same body as `retry_stage` — see the module doc comment.
-    pub fn handle(_payload: &RunStage, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RunStage, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }

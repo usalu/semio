@@ -51,7 +51,7 @@ pub fn empty_glb_snapshot() -> GlbSnapshot { GlbSnapshot::default() }
 pub fn register() {
     crate::artifacts::glb::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::glb::schema::glb_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<GlbSnapshot, GlbMutation>(STDIO_GLB_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<GlbSnapshot, GlbMutation>(STDIO_GLB_DOCUMENT_SCHEMA));
 }
 
 pub struct GlbEngine { artifact_state: GlbArtifact, snapshot_state: GlbSnapshot }

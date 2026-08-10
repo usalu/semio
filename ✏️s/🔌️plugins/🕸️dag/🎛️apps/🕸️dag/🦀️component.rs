@@ -1,4 +1,4 @@
-//! 🔀️ DAG play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🔀️ DAG play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window renders
@@ -8,7 +8,7 @@
 //! `definition()` per node.
 
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DagMutation, DagConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
+// `Result<Emit<DagMutation, DagConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here
 // would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -26,7 +26,7 @@ use crate::apps::dag::terminology::{dag_play_labels, is_de_locale};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -87,7 +87,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::apps::da
     // 🗂️ Grouped disclosure: `addNode`/`reorganize` stay top-level (the most frequent verbs);
     // `renameDagNode` joins them only for a single-node selection; `disconnect` folds into the
     // "transfer" taxonomy group when an edge is hit — `organize_context_menu` (applied automatically at
-    // the `VcsDocumentApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
+    // the `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
     // inserts the pre-destructive separator itself, so no `.separator()` call is needed ahead of the
     // `deleteSelection`/`nodeGraphEdit` destructive row below.
     let mut menu = Menu::of(registry).action_args("addNode", serde_json::json!({ "kind": "computation" })).action("reorganize");
@@ -110,7 +110,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::apps::da
 #[derive(Default)]
 pub struct DagPlayApp;
 
-impl DocumentApp for DagPlayApp {
+impl ArtifactApp for DagPlayApp {
     type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
     type Config = DagConfig;
@@ -139,11 +139,11 @@ impl DocumentApp for DagPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let selected = &config.selected_node_ids;
@@ -159,7 +159,7 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(cfg.snapshot);
         let is_de = is_de_locale(cfg.snapshot);
         let selected = &cfg.snapshot.selected_node_ids;
@@ -235,9 +235,9 @@ pub fn create_dag_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type DagApp = VcsDocumentApp<DagPlayApp>;
+    pub type DagApp = VcsArtifactApp<DagPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> DagApp {

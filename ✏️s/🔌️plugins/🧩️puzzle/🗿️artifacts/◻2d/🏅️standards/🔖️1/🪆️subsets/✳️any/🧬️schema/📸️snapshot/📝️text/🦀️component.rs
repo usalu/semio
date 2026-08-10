@@ -18,12 +18,12 @@ pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../
 
 /// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, store::TextError> {
-    <Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle2dSnapshot` back to `.puzzle2d` DSL text.
 pub fn print_dsl(document: &Puzzle2dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -106,14 +106,14 @@ mod tests {
         use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
         use crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA;
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None));
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
         let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 

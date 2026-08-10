@@ -9,8 +9,8 @@ use protocol::{inverse_collection_mutation, CollectionMutation, Mutation, Mutati
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
-pub type DagEnvelope = store::DocumentEnvelope<DagSnapshot, DagMutation>;
-pub type DagStore = store::DocumentStore<DagSnapshot, DagMutation>;
+pub type DagEnvelope = store::ArtifactEnvelope<DagSnapshot, DagMutation>;
+pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Mutations

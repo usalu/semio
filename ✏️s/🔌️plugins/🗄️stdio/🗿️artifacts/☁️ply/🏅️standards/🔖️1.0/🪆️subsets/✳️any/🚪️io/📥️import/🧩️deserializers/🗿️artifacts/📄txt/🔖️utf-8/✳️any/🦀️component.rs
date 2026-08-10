@@ -16,6 +16,6 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<PlySnapshot, store::TextError> 
 
 /// 📥 Parse DSL/text bytes via txt then ply.
 pub fn deserialize_text(text: &str) -> Result<PlySnapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::DocumentDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }
 //#endregion 🔖️Codec

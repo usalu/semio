@@ -4,14 +4,14 @@ pub mod add_vortex {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "addVortex")]
     pub struct AddVortex {}
 
-    pub fn handle(_payload: &AddVortex, doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddVortex, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let Some(vortex_kind_id) = doc.snapshot.vortex_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
@@ -25,7 +25,7 @@ pub mod remove_vortex {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -34,7 +34,7 @@ pub mod remove_vortex {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveVortex, _doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveVortex, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![Block3dMutation::RemoveVortex { id: payload.id.clone() }]))
     }
 }

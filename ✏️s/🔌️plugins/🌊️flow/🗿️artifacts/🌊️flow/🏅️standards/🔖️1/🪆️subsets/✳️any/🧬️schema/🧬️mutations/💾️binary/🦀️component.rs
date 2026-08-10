@@ -46,8 +46,8 @@ mod tests {
     #[test]
     fn flow_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-text-test", FlowSnapshot::default(), None);
-        let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![FlowMutation::SetLayout { entries: Vec::new() }], description: None }).expect("apply");
+        let mut doc_store = store::ArtifactStore::new(envelope);
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![FlowMutation::SetLayout { entries: Vec::new() }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

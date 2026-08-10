@@ -9,7 +9,7 @@ use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{host_operations, widget_id};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::{ FlowEvalSession, Widget};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -25,7 +25,7 @@ pub mod add_widget {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let descriptor = match payload.kind.as_str() {
             "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
             other => json!({ "kind": other }).to_string(),
@@ -41,7 +41,7 @@ pub mod add_widget {
             Err(_) => false,
         });
         match new_id {
-            Some(id) => Ok(Emit { document_mutations: operations, config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }),
+            Some(id) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }),
             None => Ok(Emit::mutations(operations)),
         }
     }
@@ -57,7 +57,7 @@ pub mod remove_widget {
         pub widget_id: String,
     }
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let target_id = &payload.widget_id;
         let operations = host_operations(doc.snapshot, config, session, |host| host.remove_widget(target_id).is_ok());
@@ -66,7 +66,7 @@ pub mod remove_widget {
         }
         let remaining: Vec<String> = config.selected_node_ids.iter().filter(|id| *id != target_id).cloned().collect();
         Ok(Emit {
-            document_mutations: operations,
+            artifact_mutations: operations,
             config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: remaining, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
             ..Default::default()
         })
@@ -121,12 +121,12 @@ pub mod rename_flow_widget {
         Some(next)
     }
 
-    pub fn handle(payload: &RenameFlowWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match renamed_fixture(fixture, &payload.old_id, &payload.value) {
             Some(next) => Ok(Emit {
-                document_mutations: crate::artifacts::flow::engine::snapshot_operations(fixture, &next),
+                artifact_mutations: crate::artifacts::flow::engine::snapshot_operations(fixture, &next),
                 config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                 ..Default::default()
             }),
@@ -170,7 +170,7 @@ pub mod patch_flow_widgets {
         next
     }
 
-    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
         let operations = crate::artifacts::flow::engine::snapshot_operations(fixture, &next);
@@ -194,7 +194,7 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
             host.begin_change();
             host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()

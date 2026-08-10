@@ -1,7 +1,7 @@
-//! 🧮️ CAD app — `DocumentApp::Config`: every field that used to live in the app struct's ephemeral
+//! 🧮️ CAD app — `ArtifactApp::Config`: every field that used to live in the app struct's ephemeral
 //! `CadPlayRuntime` (selection, hover, engagement session, per-pane cameras, sun, dislocate handles)
 //! plus the locale/terminology/active-utility the shell used to push through the deleted `ViewModel`.
-//! Session view state round-trips through the config `DocumentStore` exactly like document content,
+//! Session view state round-trips through the config `ArtifactStore` exactly like document content,
 //! with a real `backwards` via `CadConfigMutation` at the bottom of this file.
 
 use crate::artifacts::cad::CadCamera;
@@ -65,7 +65,7 @@ impl Default for CadComponentSelection {
 
 /// 🎛️ Per-pane handle groups exposed by the Dislocate gumball utility — was keyed by an arbitrary
 /// host-pushed `ViewModel.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
-/// pure `DocumentApp::render`/`window_measures` surface has no per-window-instance parameter anymore
+/// pure `ArtifactApp::render`/`window_measures` surface has no per-window-instance parameter anymore
 /// (only `body_key`, which already resolves 1:1 to one of the 4 fixed CAD panes), so `CadConfig` keys
 /// this by PANE instead — one named field per pane, mirroring `camera`/`camera_building`/…
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -108,14 +108,14 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
     semio_framework_plugin::WorldSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
 }
 
-/// 🧮️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: cad's real `DocumentApp::Config` — see the region doc
+/// 🧮️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: cad's real `ArtifactApp::Config` — see the region doc
 /// comment above for the full absorption story. `selected_object_ids` is a plain `Vec<String>` (not
 /// `semio_framework_plugin::SelectionSet`, which is foreign and has no `dsl` derive); `cad_ui` still
 /// uses the richer `SelectionSet` internally and converts at the boundary.
 /// `engagement_session_json` is the pre-serialized JSON of `cad_document_engine::interaction::
 /// CadEngagementScratch` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
 /// (arbitrary JSON), so it round-trips as an opaque string rather than a nested `#[dsl(block)]`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "cadcfg")]
 #[dsl(id = "cad.config")]
@@ -195,9 +195,9 @@ pub struct CadConfig {
     pub contributions_json: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for CadConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for CadConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -217,7 +217,7 @@ impl store::DocumentDsl for CadConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -226,12 +226,12 @@ impl store::DocumentDsl for CadConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for CadConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for CadConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -240,10 +240,10 @@ impl store::DocumentPack for CadConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -255,7 +255,7 @@ impl store::DocumentPack for CadConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 fn default_contributions_json() -> String {
@@ -447,8 +447,8 @@ mod tests {
         config.component_selection.mode = "face".into();
         config.component_selection.ids = vec![1, 2, 3];
         config.camera.position = [1.0, 2.0, 3.0];
-        let text = store::DocumentDsl::print_dsl(&config);
-        let parsed = <CadConfig as store::DocumentDsl>::parse_dsl(&text).expect("cad config dsl parses");
+        let text = store::ArtifactDsl::print_dsl(&config);
+        let parsed = <CadConfig as store::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
         assert_eq!(parsed, config);
     }
 
@@ -456,8 +456,8 @@ mod tests {
     fn cad_config_pack_round_trips() {
         let mut config = CadConfig { selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         config.dislocate_building.rotate_enabled = false;
-        let bytes = store::DocumentPack::encode_pack(&config);
-        let decoded = <CadConfig as store::DocumentPack>::decode_pack(&bytes).expect("decode");
+        let bytes = store::ArtifactPack::encode_pack(&config);
+        let decoded = <CadConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, config);
     }
 

@@ -69,9 +69,9 @@ pub struct En1994Snapshot {
     #[state(persistent)]
     pub delta_tau_stud_mpa: f64,
 }
-//#region 🔖️HandcraftedDocumentCodecs
+//#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted En1994SnapshotDsl/En1994SnapshotPack (derive no longer emits these traits).
-impl store::DocumentDsl for En1994Snapshot {
+impl store::ArtifactDsl for En1994Snapshot {
     const EXTENSION: &'static str = "en1994";
     fn envelope_id() -> &'static str { "norm.en1994" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -89,7 +89,7 @@ impl store::DocumentDsl for En1994Snapshot {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -97,11 +97,11 @@ impl store::DocumentDsl for En1994Snapshot {
     }
 }
 
-impl store::DocumentPack for En1994Snapshot {
+impl store::ArtifactPack for En1994Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -110,10 +110,10 @@ impl store::DocumentPack for En1994Snapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -122,7 +122,7 @@ impl store::DocumentPack for En1994Snapshot {
     }
     fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1994Snapshot {
     fn default() -> Self {

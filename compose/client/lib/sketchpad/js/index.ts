@@ -66,9 +66,9 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -14147,7 +14147,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       sections.push({
         type: "section",
         id: "sketchpad.document.docs",
-        label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+        label: FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
         children: [{ type: "text", value: sketchpadTitleFromDocPath(parseSketchpadRouteScopeFromPath(pathOnly).docsPath) }],
       });
       return uiDeclarativeSectionsToTree(sections);
@@ -14188,7 +14188,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
   }
   const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
   if (!kit) {
-    return uiDeclarativeSectionsToTree([{ type: "section", id: "sketchpad.document.loading", label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, children: [{ type: "text", value: "Kit loading…" }] }]);
+    return uiDeclarativeSectionsToTree([{ type: "section", id: "sketchpad.document.loading", label: FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, children: [{ type: "text", value: "Kit loading…" }] }]);
   }
   const designItems: UiTreeItemNode[] = sketchpadKitItemsOf<Design>(kit.designs).map((design) => ({
     id: `sketchpad.document.design.${design.id}`,
@@ -15376,7 +15376,7 @@ function sketchpadKitAppActions(): readonly SearchItemSpec[] {
 
 function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
   return [
-    { id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
+    { id: FRAMEWORK_PANEL_TAB_ARTIFACT_ID, iconId: FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL },
     { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
   ];
 }
@@ -15423,7 +15423,7 @@ function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
   const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return [
     { id: "display", iconId: "display-windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: l.display },
-    { id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
+    { id: FRAMEWORK_PANEL_TAB_ARTIFACT_ID, iconId: FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL },
     { id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SKETCHPAD_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
     { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
   ];

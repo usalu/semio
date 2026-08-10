@@ -406,6 +406,15 @@ fn parse_production_line(cursor: &mut Cursor) -> Result<Production, TextError> {
 
 /// @emoji 📖️ Parses one `.grammar` file. Protocol dialect sources project through
 /// [`parse_protocol`] into a shallow [`GrammarFile`] (empty productions).
+fn parse_grammar_id(cursor: &mut Cursor) -> Result<String, TextError> {
+    let first = cursor.expect_ident_or_int()?;
+    let mut id = first.text;
+    if cursor.peek().kind == GKind::Ident {
+        id.push_str(&cursor.advance().text);
+    }
+    Ok(id)
+}
+
 pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     if is_protocol_source(text) {
         return Ok(project_protocol(parse_protocol(text)?));
@@ -429,7 +438,7 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     };
 
     cursor.expect_ident("grammar")?;
-    let id = cursor.expect(GKind::Ident)?.text;
+    let id = parse_grammar_id(&mut cursor)?;
     cursor.skip_newlines();
 
     let mut extension = None;
@@ -444,7 +453,7 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
         let head = cursor.expect(GKind::Ident)?;
         match head.text.as_str() {
             "extension" => {
-                extension = Some(cursor.expect(GKind::Ident)?.text);
+                extension = Some(parse_grammar_id(&mut cursor)?);
                 cursor.skip_newlines();
             }
             "use" => {
@@ -1177,6 +1186,32 @@ impl FragmentRegistry {
         Self::default()
     }
 
+    pub fn builtin() -> Self {
+        let mut reg = Self::new();
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🌍️geo/📖️family-geo.grammar.semio")) {
+            reg.insert("family-geo", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/📎️embed/📖️family-embed.grammar.semio")) {
+            reg.insert("family-embed", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🕸️graph/📖️family-graph.grammar.semio")) {
+            reg.insert("family-graph", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/📊️sheet/📖️family-sheet.grammar.semio")) {
+            reg.insert("family-sheet", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🗂️catalog/📖️family-catalog.grammar.semio")) {
+            reg.insert("family-catalog", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🎬️scene/📖️family-scene.grammar.semio")) {
+            reg.insert("family-scene", g);
+        }
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🧑‍🍳️recipe/📖️family-recipe.grammar.semio")) {
+            reg.insert("family-recipe", g);
+        }
+        reg
+    }
+
     pub fn insert(&mut self, name: impl Into<String>, grammar: GrammarFile) {
         self.fragments.insert(name.into(), grammar);
     }
@@ -1193,7 +1228,7 @@ pub struct Recognizer {
 
 impl Recognizer {
     pub fn compile(grammar: &GrammarFile) -> Self {
-        Self::compile_with(grammar, &FragmentRegistry::new())
+        Self::compile_with(grammar, &FragmentRegistry::builtin())
     }
 
     /// @emoji 🔗️ Compile grammar, merging productions from each use via registry.
@@ -1369,7 +1404,7 @@ impl Recognizer {
         tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
     ) -> Option<usize> {
-        for end in pos + 1..=tokens.len() {
+        for end in (pos + 1..=tokens.len()).rev() {
             let slice_text = slice_source_text(&tokens[pos..end]);
             if (matcher.try_match)(&slice_text) {
                 return Some(end);

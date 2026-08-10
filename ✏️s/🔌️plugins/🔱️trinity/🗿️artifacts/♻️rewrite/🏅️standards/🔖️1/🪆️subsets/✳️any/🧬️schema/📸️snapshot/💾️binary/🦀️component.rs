@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `RewriteSnapshot` to its binary pack form.
 pub fn encode(document: &RewriteSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `RewriteSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<RewriteSnapshot, PackError> {
-    <RewriteSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <RewriteSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

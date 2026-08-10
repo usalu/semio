@@ -1,6 +1,6 @@
 //! 🕸️ Version graph seam and Emit observability.
 
-use crate::db_ids::{ActorId, DbError, DocumentId};
+use crate::db_ids::{ActorId, DbError, ArtifactId};
 use pack::ContentHash;
 
 //#region 🔖️VersionGraph
@@ -28,24 +28,24 @@ pub struct CheckpointRequest {
 
 /// @emoji 🌿️ The vcs seam: per the contract's hard dependency rule, only `db_engine` (behind the
 /// `vcs` Cargo feature) may depend on the `vcs` crate — every crate below it, including
-/// `db_document` (which drives commits), talks to version history ONLY through this
-/// `vcs`-type-free trait. `db_engine` supplies the real implementation over `vcs::DocumentVcs*`;
+/// `db_artifact` (which drives commits), talks to version history ONLY through this
+/// `vcs`-type-free trait. `db_engine` supplies the real implementation over `vcs::ArtifactVcs*`;
 /// anything vcs-agnostic (e.g. a deployment with the `vcs` feature disabled) can supply
 /// `NullVersionGraph` instead.
 pub trait VersionGraph: Send + Sync {
     /// @emoji 📝️ Records `change` against `document`, returning its assigned change id.
-    fn record_change(&self, document: &DocumentId, change: ChangeRecord) -> Result<String, DbError>;
+    fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError>;
 
     /// @emoji 🏁️ Records a checkpoint over previously-recorded changes, returning its assigned
     /// content-addressed checkpoint id (`vcs`'s own concern how that id is derived).
-    fn checkpoint(&self, document: &DocumentId, request: CheckpointRequest) -> Result<String, DbError>;
+    fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError>;
 
     /// @emoji 🔀️ The nearest common ancestor checkpoint of `a` and `b`, or `None` if they share
     /// none (disjoint histories).
-    fn merge_base(&self, document: &DocumentId, a: &str, b: &str) -> Result<Option<String>, DbError>;
+    fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError>;
 
     /// @emoji 🎯️ The current head checkpoint id of `alternative`, or `None` if it has none yet.
-    fn head(&self, document: &DocumentId, alternative: &str) -> Result<Option<String>, DbError>;
+    fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError>;
 }
 
 /// @emoji 🚫️ A `VersionGraph` that answers every call with `DbError::Unimplemented` rather than
@@ -56,19 +56,19 @@ pub trait VersionGraph: Send + Sync {
 pub struct NullVersionGraph;
 
 impl VersionGraph for NullVersionGraph {
-    fn record_change(&self, _document: &DocumentId, _change: ChangeRecord) -> Result<String, DbError> {
+    fn record_change(&self, _document: &ArtifactId, _change: ChangeRecord) -> Result<String, DbError> {
         Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
     }
 
-    fn checkpoint(&self, _document: &DocumentId, _request: CheckpointRequest) -> Result<String, DbError> {
+    fn checkpoint(&self, _document: &ArtifactId, _request: CheckpointRequest) -> Result<String, DbError> {
         Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
     }
 
-    fn merge_base(&self, _document: &DocumentId, _a: &str, _b: &str) -> Result<Option<String>, DbError> {
+    fn merge_base(&self, _document: &ArtifactId, _a: &str, _b: &str) -> Result<Option<String>, DbError> {
         Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
     }
 
-    fn head(&self, _document: &DocumentId, _alternative: &str) -> Result<Option<String>, DbError> {
+    fn head(&self, _document: &ArtifactId, _alternative: &str) -> Result<Option<String>, DbError> {
         Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
     }
 }
@@ -92,7 +92,7 @@ pub enum EmitField {
 #[derive(Clone, Debug)]
 pub struct EmitEvent {
     pub name: &'static str,
-    pub document: Option<DocumentId>,
+    pub document: Option<ArtifactId>,
     pub fields: Vec<(&'static str, EmitField)>,
 }
 
@@ -103,7 +103,7 @@ impl EmitEvent {
     }
 
     /// @emoji 🪪️ Scopes the event to `document` (builder-style).
-    pub fn with_document(mut self, document: DocumentId) -> Self {
+    pub fn with_document(mut self, document: ArtifactId) -> Self {
         self.document = Some(document);
         self
     }
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn null_version_graph_never_panics_always_reports_unimplemented() {
         let graph = NullVersionGraph;
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([0u8; 32]), author: "actor-1".into(), message: "msg".to_string(), timestamp_ms: 0 };
         assert!(matches!(graph.record_change(&document, change), Err(DbError::Unimplemented(_))));
 
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn version_graph_trait_object_is_dyn_compatible() {
         let graph: Box<dyn VersionGraph> = Box::new(NullVersionGraph);
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         assert!(graph.head(&document, "main").is_err());
     }
     //#endregion 🔖️VersionGraph
@@ -178,7 +178,7 @@ mod tests {
         let events = sink.events.lock().unwrap();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].name, "command.applied");
-        assert_eq!(events[0].document, Some(DocumentId::from("doc-1")));
+        assert_eq!(events[0].document, Some(ArtifactId::from("doc-1")));
         assert_eq!(events[0].fields.len(), 2);
     }
 

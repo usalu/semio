@@ -5,7 +5,7 @@ use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::engine::default_document;
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetActiveExample
@@ -21,7 +21,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() { GisMapSnapshot::default() } else { default_document() };
         let mut config_mutations = vec![Gis2dConfigMutation::SetSelection { ids: Vec::new() }];
         if !payload.example_id.is_empty() {
@@ -29,7 +29,7 @@ pub mod set_active_example {
             host.fit_world_camera();
             config_mutations.push(Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() });
         }
-        Ok(Emit { document_mutations: vec![GisMapMutation::SetSnapshot { snapshot: next }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![GisMapMutation::SetSnapshot { snapshot: next }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

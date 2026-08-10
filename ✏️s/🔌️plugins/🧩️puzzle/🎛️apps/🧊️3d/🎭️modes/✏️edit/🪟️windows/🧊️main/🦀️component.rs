@@ -47,12 +47,12 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle".into(),
         // 🪟️ `options.measures` stays empty: puzzle3d's chrome is config-derived per frame by
-        // `DocumentApp::window_measures`, never frozen into the static manifest.
+        // `ArtifactApp::window_measures`, never frozen into the static manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![utilities::transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

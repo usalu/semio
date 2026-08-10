@@ -30,7 +30,7 @@ impl ArtifactAnalyzer for GifAnalyzer {
         let mut confidence = IoConfidence::High;
         for source in sources {
             match source {
-                AnalyzeSource::Text(text) => match <GifSnapshot as store::DocumentDsl>::parse_dsl(text) {
+                AnalyzeSource::Text(text) => match <GifSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;
@@ -41,7 +41,7 @@ impl ArtifactAnalyzer for GifAnalyzer {
                         ));
                     }
                 },
-                AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::DocumentPack>::decode_pack(bytes) {
+                AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;

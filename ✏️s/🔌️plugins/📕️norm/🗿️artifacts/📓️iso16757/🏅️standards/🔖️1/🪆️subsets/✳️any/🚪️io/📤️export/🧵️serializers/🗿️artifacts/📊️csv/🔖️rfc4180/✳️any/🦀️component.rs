@@ -8,10 +8,10 @@ pub fn serialize(snapshot: &Iso16757Snapshot) -> Result<CsvSnapshot, store::Text
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         headers: vec!["payload".into()],
-        rows: vec![vec![<Iso16757Snapshot as store::DocumentDsl>::print_dsl(snapshot)]],
+        rows: vec![vec![<Iso16757Snapshot as store::ArtifactDsl>::print_dsl(snapshot)]],
     })
 }
 
 pub fn serialize_bytes(snapshot: &Iso16757Snapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<CsvSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

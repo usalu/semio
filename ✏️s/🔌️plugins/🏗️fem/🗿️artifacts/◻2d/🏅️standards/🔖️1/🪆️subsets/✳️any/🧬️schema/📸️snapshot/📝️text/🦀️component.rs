@@ -16,12 +16,12 @@ pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️e
 
 /// 📖️ Parses `.fem2d` DSL text into a `Fem2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Fem2dSnapshot, store::TextError> {
-    <Fem2dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Fem2dSnapshot` back to `.fem2d` DSL text.
 pub fn print_dsl(document: &Fem2dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 // #region 🧪️Tests

@@ -10,17 +10,17 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::draw::DrawSnapshot;
 
-/// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::DocumentDsl`).
+/// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::ArtifactDsl`).
 pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.draw` DSL text into a `DrawSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
-    <DrawSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <DrawSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DrawSnapshot` back to `.draw` DSL text.
 pub fn print_dsl(document: &DrawSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
     use crate::artifacts::draw::engine::{create_draw_boolean_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, layer_id};
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
 
     fn representative_draw_document() -> DrawSnapshot {
         let mut assets = std::collections::BTreeMap::new();

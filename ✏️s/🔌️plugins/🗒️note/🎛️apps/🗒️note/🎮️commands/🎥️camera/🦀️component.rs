@@ -3,7 +3,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetCamera
@@ -18,7 +18,7 @@ pub mod set_camera {
         pub camera: NoteCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod set_camera_zoom {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let mut camera = cfg.snapshot.camera.clone();
         camera.zoom = payload.value;
         Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera }]))
@@ -54,7 +54,7 @@ mod tests {
     /// edit, no undo entry on the document store) and instead write into `cfg.camera`, which the
     /// composite scene's `documentJson.camera` then reflects.
     #[test]
-    fn set_camera_writes_config_and_emits_no_document_mutations() {
+    fn set_camera_writes_config_and_emits_no_artifact_mutations() {
         let mut app = note_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, NoteCommand::SetCamera(set_camera::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));

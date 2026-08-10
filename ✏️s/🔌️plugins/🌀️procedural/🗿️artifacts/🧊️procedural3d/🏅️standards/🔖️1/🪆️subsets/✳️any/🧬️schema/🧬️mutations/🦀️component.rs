@@ -14,7 +14,7 @@ use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{invert_generation_operation, GenerationMutation};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Operation
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -175,8 +175,8 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 }
 //#endregion 🔖️Operation
 
-pub type Procedural3dEnvelope = DocumentEnvelope<Procedural3dSnapshot, Procedural3dMutation>;
-pub type Procedural3dStore = DocumentStore<Procedural3dSnapshot, Procedural3dMutation>;
+pub type Procedural3dEnvelope = ArtifactEnvelope<Procedural3dSnapshot, Procedural3dMutation>;
+pub type Procedural3dStore = ArtifactStore<Procedural3dSnapshot, Procedural3dMutation>;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -196,8 +196,8 @@ mod tests {
 
     #[test]
     fn store_applies_widget_add() {
-        let mut store = DocumentStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let mut store = ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None));
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 

@@ -53,7 +53,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
             utilities::world_relocate::UTILITY_ID.into(),
         ],
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

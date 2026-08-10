@@ -4,7 +4,7 @@ use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::empty_wires_snapshot;
 use crate::artifacts::wires::engine::metabolism_wires_example_snapshot;
 use crate::artifacts::wires::op::WiresMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🧬️ Manifest `.example` id for the metabolism fixture — shared by `SetActiveExample`'s payload check
@@ -21,10 +21,10 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_snapshot() } else { empty_wires_snapshot() };
         Ok(Emit {
-            document_mutations: vec![WiresMutation::SetSnapshot { snapshot: next }],
+            artifact_mutations: vec![WiresMutation::SetSnapshot { snapshot: next }],
             config_mutations: vec![WiresConfigMutation::SetSelection { ids: Vec::new() }, WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
             ..Default::default()
         })

@@ -6,7 +6,7 @@ extern crate self as flow_extension_wasm;
 extern crate self as flow_extension_sdk;
 
 //#region 🔖️KernelCrateAliases
-/// 🧬️ Derive macros (`DslRecord`/`DslDocument`/`DslOps`) resolve `dsl`/`store`/`pack`/`spr` as crate roots.
+/// 🧬️ Derive macros (`DslRecord`/`DslArtifact`/`DslOps`) resolve `dsl`/`store`/`pack`/`spr` as crate roots.
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as pack;

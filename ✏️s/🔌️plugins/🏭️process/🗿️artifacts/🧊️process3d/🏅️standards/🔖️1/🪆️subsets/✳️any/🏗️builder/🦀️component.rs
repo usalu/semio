@@ -17,10 +17,10 @@ impl ArtifactBuilder for Process3dBuilder {
     fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<Process3dSnapshot as store::DocumentDsl>::parse_dsl(text)?))
+        Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
     }
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<Process3dSnapshot as store::DocumentPack>::decode_pack(bytes)?))
+        Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
         let d = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &self.snapshot);

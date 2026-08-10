@@ -4,7 +4,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::{CameraJson, FlowEvalSession};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️NodeGraphViewport
@@ -17,7 +17,7 @@ pub mod node_graph_viewport {
         pub camera: CameraJson,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ pub mod node_graph_hover {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -45,7 +45,7 @@ pub mod open_spotlight {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct OpenSpotlight {}
 
-    pub fn handle(_payload: &OpenSpotlight, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &OpenSpotlight, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -61,7 +61,7 @@ pub mod replace_image {
         pub id: String,
     }
 
-    pub fn handle(_payload: &ReplaceImage, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &ReplaceImage, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -77,7 +77,7 @@ pub mod set_preview_off {
         pub value: bool,
     }
 
-    pub fn handle(payload: &SetPreviewOff, _doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetPreviewOff, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let mut next = cfg.snapshot.preview_off_node_ids.clone();
         if payload.value {
             for id in &payload.ids {
@@ -101,7 +101,7 @@ mod tests {
     use crate::apps::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
     use serde_json::{json, Value};
 
-    fn preview_off_ids(app: &mut semio_framework_plugin::VcsDocumentApp<crate::apps::flow::FlowPlayApp>) -> Value {
+    fn preview_off_ids(app: &mut semio_framework_plugin::VcsArtifactApp<crate::apps::flow::FlowPlayApp>) -> Value {
         let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN)).expect("render json");
         rendered.pointer("/nodeGraph/previewOffJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
     }

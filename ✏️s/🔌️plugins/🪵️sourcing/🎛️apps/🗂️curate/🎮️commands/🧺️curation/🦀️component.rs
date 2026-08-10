@@ -5,7 +5,7 @@ use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMuta
 use crate::artifacts::curate::engine::{curate_delta, curate_set};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 fn set_snapshot(snapshot: CurateSnapshot) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
@@ -22,7 +22,7 @@ pub mod curate_add {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateAdd, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.snapshot.clone();
         curate_delta(&mut document, &payload.object_id, 1);
         Ok(set_snapshot(document))
@@ -44,7 +44,7 @@ pub mod curate_set_count {
 
     /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
     /// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first.
-    pub fn handle(payload: &CurateSetCount, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &CurateSetCount, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.snapshot.clone();
         if let Some(delta) = payload.delta {
             curate_delta(&mut document, &payload.object_id, delta as i64);
@@ -66,7 +66,7 @@ pub mod curate_remove {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateRemove, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &CurateRemove, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.snapshot.clone();
         curate_set(&mut document, &payload.object_id, 0);
         Ok(set_snapshot(document))
@@ -85,7 +85,7 @@ pub mod drop_on_pool {
     }
 
     /// 🪂️ Dropping a curated row back onto the pool mirrors `curate_remove`: zero its curated count.
-    pub fn handle(payload: &DropOnPool, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &DropOnPool, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.snapshot.clone();
         curate_set(&mut document, &payload.object_id, 0);
         Ok(set_snapshot(document))
@@ -103,7 +103,7 @@ pub mod drop_on_curated {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DropOnCurated, doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &DropOnCurated, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.snapshot.clone();
         curate_delta(&mut document, &payload.object_id, 1);
         Ok(set_snapshot(document))

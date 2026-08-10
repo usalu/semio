@@ -258,9 +258,9 @@ struct Procedural2dSnapshotDsl {
     preview_text: Option<String>,
     #[dsl(table)]
     generations: Vec<FormGenerationDsl>}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Procedural2dSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
+impl store::ArtifactDsl for Procedural2dSnapshotDsl {
     const EXTENSION: &'static str = "procedural2d";
     fn envelope_id() -> &'static str { "procedural.procedural2d" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -277,7 +277,7 @@ impl store::DocumentDsl for Procedural2dSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -285,11 +285,11 @@ impl store::DocumentDsl for Procedural2dSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for Procedural2dSnapshotDsl {
+impl store::ArtifactPack for Procedural2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -298,10 +298,10 @@ impl store::DocumentPack for Procedural2dSnapshotDsl {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -310,7 +310,7 @@ impl store::DocumentPack for Procedural2dSnapshotDsl {
     }
     fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 
 
@@ -339,28 +339,28 @@ fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Pro
 }
 
 /// 📜️ `.procedural2d` textual document — derive-engine grammar via `Procedural2dSnapshotDsl`.
-impl store::DocumentDsl for Procedural2dSnapshot {
+impl store::ArtifactDsl for Procedural2dSnapshot {
     const EXTENSION: &'static str = "procedural2d";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <Procedural2dSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <Procedural2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         procedural2d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Procedural2dSnapshotDsl as store::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
+        <Procedural2dSnapshotDsl as store::ArtifactDsl>::print_dsl(&procedural2d_document_to_dsl(self))
     }
 }
 
-/// 📦️ `.procedural2d` binary pack — same `Procedural2dSnapshotDsl` mirror as `DocumentDsl` above;
-/// `dsl::DslDocument`'s derive already gives `Procedural2dSnapshotDsl` its own `DocumentPack` impl.
-impl store::DocumentPack for Procedural2dSnapshot {
+/// 📦️ `.procedural2d` binary pack — same `Procedural2dSnapshotDsl` mirror as `ArtifactDsl` above;
+/// `dsl::DslArtifact`'s derive already gives `Procedural2dSnapshotDsl` its own `ArtifactPack` impl.
+impl store::ArtifactPack for Procedural2dSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Procedural2dSnapshotDsl as store::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+        <Procedural2dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Procedural2dSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <Procedural2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         procedural2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 }
@@ -368,12 +368,12 @@ impl store::DocumentPack for Procedural2dSnapshot {
 
 /// 📖️ Parses `.procedural2d` DSL text into a `Procedural2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Procedural2dSnapshot, store::TextError> {
-    <Procedural2dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Procedural2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Procedural2dSnapshot` back to `.procedural2d` DSL text.
 pub fn print_dsl(document: &Procedural2dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -382,7 +382,7 @@ mod tests {
     use super::*;
     use crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA;
     use semio_framework_os_kernel::os_store::test_support;
-    use store::{DocumentDsl};
+    use store::{ArtifactDsl};
 
     //#region 🔖️DslTests
     #[test]
@@ -438,13 +438,13 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::procedural2d::op::Procedural2dMutation;
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: DocumentStore<Procedural2dSnapshot, Procedural2dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let mut store: ArtifactStore<Procedural2dSnapshot, Procedural2dMutation> = ArtifactStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         let edit: &Edit<Procedural2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Procedural2dSnapshot, Procedural2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        test_support::assert_command_envelope_round_trip::<Procedural2dSnapshot, Procedural2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 

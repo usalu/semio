@@ -30,7 +30,7 @@ impl ArtifactAnalyzer for BmpAnalyzer {
         let mut confidence = IoConfidence::High;
         for source in sources {
             match source {
-                AnalyzeSource::Text(text) => match <BmpSnapshot as store::DocumentDsl>::parse_dsl(text) {
+                AnalyzeSource::Text(text) => match <BmpSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;
@@ -41,7 +41,7 @@ impl ArtifactAnalyzer for BmpAnalyzer {
                         ));
                     }
                 },
-                AnalyzeSource::Binary(bytes) => match <BmpSnapshot as store::DocumentPack>::decode_pack(bytes) {
+                AnalyzeSource::Binary(bytes) => match <BmpSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;

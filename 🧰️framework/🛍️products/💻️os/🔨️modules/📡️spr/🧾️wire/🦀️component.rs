@@ -147,9 +147,9 @@ pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
 // surface today's code lacks (crate::os_store::merge_concurrent_diffs collapses everything to absorb
 // regardless of declared strategy — protocol_crdt fixes this using ConflictRule).
 //
-// Note: the contract's prose also mentions `DocumentKind` moving alongside `MergeStrategyKind`,
+// Note: the contract's prose also mentions `ArtifactKind` moving alongside `MergeStrategyKind`,
 // but the frozen signature block below only defines `UndoPolicy`/`MergeStrategyKind`/
-// `ConflictRule` — `DocumentKind` is not redefined here (it stays in `framework/core` until a
+// `ConflictRule` — `ArtifactKind` is not redefined here (it stays in `framework/core` until a
 // later wave's contract actually specifies its new home).
 
 /// @emoji ↩️ How an undo of this operation kind should be computed.
@@ -415,7 +415,7 @@ pub fn read_f64(bytes: &[u8], pos: &mut usize) -> Result<f64, ProtocolError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DictBuilder, DictReader, DocumentVersion, HybridLogicalTimestamp, MutationId, RecordHasher};
+    use crate::{DictBuilder, DictReader, ArtifactVersion, HybridLogicalTimestamp, MutationId, RecordHasher};
 
     //#region 🔖️Errors
     #[test]
@@ -777,15 +777,15 @@ mod tests {
         assert_eq!(json, "\"op-1\"");
         assert_eq!(serde_json::from_str::<MutationId>(&json).unwrap(), op);
 
-        let version = DocumentVersion(42);
+        let version = ArtifactVersion(42);
         let json = serde_json::to_string(&version).unwrap();
         assert_eq!(json, "42");
-        assert_eq!(serde_json::from_str::<DocumentVersion>(&json).unwrap(), version);
+        assert_eq!(serde_json::from_str::<ArtifactVersion>(&json).unwrap(), version);
     }
 
     #[test]
     fn document_version_orders_numerically() {
-        assert!(DocumentVersion(1) < DocumentVersion(2));
+        assert!(ArtifactVersion(1) < ArtifactVersion(2));
     }
     //#endregion 🔖️Identifiers
 

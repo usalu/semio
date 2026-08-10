@@ -37,7 +37,7 @@
 //! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
@@ -393,7 +393,7 @@ impl Neo4jStorage {
 
 //#region 🔖️WalStorage
 impl WalStorage for Neo4jStorage {
-    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await?;
@@ -407,7 +407,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
@@ -429,13 +429,13 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn sync(&self, _document: &DocumentId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
+    fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ See module doc's "Durability" section: every prior `append`/`seal` already committed
         // server-side, so there is nothing left to force for any `DurabilityClass`.
         Ok(())
     }
 
-    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_WAL_SEAL).param("document", document.0.clone()).param("index", idx)).await?;
@@ -444,7 +444,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
@@ -457,7 +457,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
@@ -466,7 +466,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let mut stream = self.graph.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
@@ -477,7 +477,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(async {
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
@@ -499,7 +499,7 @@ impl WalStorage for Neo4jStorage {
         })
     }
 
-    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         self.block_on(self.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.0.clone()).param("index", idx)))
     }
@@ -508,13 +508,13 @@ impl WalStorage for Neo4jStorage {
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jStorage {
-    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
         self.block_on(self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)))
     }
 
-    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
@@ -525,7 +525,7 @@ impl SnapshotStorage for Neo4jStorage {
         })
     }
 
-    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_SNAPSHOT_LATEST).param("document", document.0.clone())).await?;
             match row.and_then(|row| row.get::<i64>("maxGeneration").ok()) {
@@ -535,7 +535,7 @@ impl SnapshotStorage for Neo4jStorage {
         })
     }
 
-    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let mut stream = self.graph.execute(query(CYPHER_SNAPSHOT_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
@@ -546,7 +546,7 @@ impl SnapshotStorage for Neo4jStorage {
         })
     }
 
-    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
         self.block_on(self.run(query(CYPHER_SNAPSHOT_DELETE).param("document", document.0.clone()).param("generation", generation_param)))
     }
@@ -639,13 +639,13 @@ impl CatalogStorage for Neo4jStorage {
 
 //#region 🔖️IndexStorage
 impl IndexStorage for Neo4jStorage {
-    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         self.block_on(self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)))
     }
 
-    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         self.block_on(async {
             let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
@@ -656,7 +656,7 @@ impl IndexStorage for Neo4jStorage {
         })
     }
 
-    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let mut stream = self.graph.execute(query(CYPHER_INDEX_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
@@ -667,7 +667,7 @@ impl IndexStorage for Neo4jStorage {
         })
     }
 
-    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         self.block_on(self.run(query(CYPHER_INDEX_DELETE).param("document", document.0.clone()).param("runId", run_id_param)))
     }

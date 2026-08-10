@@ -3,7 +3,7 @@
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SelectRow
@@ -16,7 +16,7 @@ pub mod select_row {
         pub object_id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectRow, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectRow, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSelectedObject { object_id: payload.object_id.clone() }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod world_select {
 
     /// 🖱️ `worldSelect` keeps only the LAST id as the single selection (matches the pool/curated tables'
     /// single-select semantics — sourcing has no multi-select surface).
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         match payload.ids.last() {
             Some(id) => Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSelectedObject { object_id: Some(id.clone()) }])),
             None => Ok(Emit::default()),

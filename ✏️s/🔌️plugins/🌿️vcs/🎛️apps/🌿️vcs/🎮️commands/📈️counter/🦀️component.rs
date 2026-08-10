@@ -2,7 +2,7 @@
 
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IncrementCounter
@@ -13,7 +13,7 @@ pub mod increment_counter {
     #[dsl(keyword = "increment-counter")]
     pub struct IncrementCounter {}
 
-    pub fn handle(_payload: &IncrementCounter, doc: &DocumentView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+    pub fn handle(_payload: &IncrementCounter, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![VcsDemoMutation::SetCounter { counter: doc.snapshot.counter + 1 }]))
     }
 }

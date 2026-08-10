@@ -100,8 +100,8 @@ pub fn csv_table_from_text(text: &str) -> (Vec<String>, Vec<Vec<String>>) {
 }
 //#endregion 🔖️CsvTextCodec
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for CsvSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for CsvSnapshot {
     const EXTENSION: &'static str = "csv";
     fn envelope_id() -> &'static str { "stdio.csv" }
 
@@ -116,7 +116,7 @@ impl store::DocumentDsl for CsvSnapshot {
     fn print_dsl(&self) -> String {
         let body = csv_table_to_text(&self.headers, &self.rows);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -124,12 +124,12 @@ impl store::DocumentDsl for CsvSnapshot {
     }
 }
 
-impl store::DocumentPack for CsvSnapshot {
+impl store::ArtifactPack for CsvSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = csv_table_to_text(&self.headers, &self.rows).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -138,10 +138,10 @@ impl store::DocumentPack for CsvSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -151,4 +151,4 @@ impl store::DocumentPack for CsvSnapshot {
         Ok(Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

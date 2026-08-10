@@ -23,5 +23,5 @@ col = IDENT ":" IDENT
 row = field+
 field = IDENT "=" value | value
 verdict = "pass" TEXT? | "fail" TEXT? | "warn" TEXT?
-eng-node = "node" "=" (INT | IDENT) | "element" "=" IDENT | "material" "=" IDENT | "section" "=" IDENT | "support" "=" IDENT | "load" "=" IDENT | "load-case" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-node = "node" "=" {INT | IDENT} | "element" "=" IDENT | "material" "=" IDENT | "section" "=" IDENT | "support" "=" IDENT | "load" "=" IDENT | "load-case" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
 eng-record = eng-node*

@@ -1,4 +1,4 @@
-//! 🎛️ Puzzle 2d play app — its `DocumentApp::Config`: every piece of view state the app owns but the
+//! 🎛️ Puzzle 2d play app — its `ArtifactApp::Config`: every piece of view state the app owns but the
 //! document must never carry (camera, selection, per-pane LOD/engagement input, brush scratch, grid
 //! settings, active utility, locale/terminology), plus the whole-snapshot `ConfigMutation` that
 //! patches it.
@@ -50,7 +50,7 @@ fn default_terminology() -> String {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Config
-/// 🧮️ B1: puzzle2d's real `DocumentApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
+/// 🧮️ B1: puzzle2d's real `ArtifactApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
 /// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
 /// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.snapshot`, every
 /// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
@@ -134,7 +134,7 @@ impl Default for Puzzle2dConfig {
 /// 🏷️ Alias kept for call sites that still name the runtime.
 pub type Puzzle2dPlayRuntime = Puzzle2dConfig;
 
-impl store::DocumentDsl for Puzzle2dConfig {
+impl store::ArtifactDsl for Puzzle2dConfig {
     const EXTENSION: &'static str = "puzzle2dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -146,7 +146,7 @@ impl store::DocumentDsl for Puzzle2dConfig {
     }
 }
 
-impl store::DocumentPack for Puzzle2dConfig {
+impl store::ArtifactPack for Puzzle2dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }

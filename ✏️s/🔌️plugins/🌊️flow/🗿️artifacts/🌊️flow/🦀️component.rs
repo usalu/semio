@@ -18,7 +18,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
         name: "Flow".into(),
-        source_format: "flow.document".into(),
+        source_format: "flow.artifact".into(),
         component_kind: "flow".into(),
         dimension: "graph".into(),
         media_capability: OsMediaCapability::MeshOnly,
@@ -26,7 +26,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
             class: MediaClass::Computation,
             form: MediaForm::Flow,
         },
-        schema: "flow.document".into(),
+        schema: "flow.artifact".into(),
         export_formats: vec![],
         import_formats: vec![],
             export_stdio_kinds: vec![],
@@ -40,12 +40,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("flow.document") is deliberately NOT
+    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("flow.artifact") is deliberately NOT
     /// `FLOW_DOCUMENT_SCHEMA` ("flow.fixture") — the former names the artifact kind in the OS media
     /// catalogue, the latter keys the store envelope. Pinned so a future edit can't silently merge them.
     #[test]
     fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "flow.document");
+        assert_eq!(artifact_kind().schema, "flow.artifact");
         assert_eq!(FLOW_DOCUMENT_SCHEMA, "flow.fixture");
     }
 

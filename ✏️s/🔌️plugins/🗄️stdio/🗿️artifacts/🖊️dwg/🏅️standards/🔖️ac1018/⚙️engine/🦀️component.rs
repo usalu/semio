@@ -15,7 +15,7 @@ pub fn register() {
     crate::artifacts::dwg::composer::register();
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (dwg).
@@ -95,12 +95,12 @@ mod tests {
     fn codec_round_trip() {
         let stub = b"AC1018\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
         let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(stub).expect("decode stub");
-        let text = store::DocumentDsl::print_dsl(&snap);
-        let parsed = <DwgSnapshot as store::DocumentDsl>::parse_dsl(&text).expect("parse");
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.version, "AC1018");
         assert_eq!(parsed.bytes, stub);
-        let bytes = store::DocumentPack::encode_pack(&snap);
-        let decoded = <DwgSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode");
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 }

@@ -9,5 +9,5 @@ edge-label = "[" edge-label-inner "]" | edge-label-inner
 edge-label-inner = IDENT? {":" IDENT}?
 edge = wire-endpoint edge-arrow wire-endpoint edge-props?
 edge-props = "{" edge-field* "}"
-edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
+edge-field = "weight" "=" {FLOAT | INT} | "kind" "=" {TEXT | IDENT} | "label" "=" TEXT | "id" "=" IDENT
 chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+

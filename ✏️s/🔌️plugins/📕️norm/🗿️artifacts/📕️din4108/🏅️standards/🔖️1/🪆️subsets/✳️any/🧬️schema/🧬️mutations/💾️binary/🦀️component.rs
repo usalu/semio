@@ -38,9 +38,9 @@ mod tests {
     #[test]
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None);
-        let mut store = store::DocumentStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope);
         let next = Din4108Snapshot { airtightness_n50: 1.2, ..Din4108Snapshot::default() };
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Din4108Mutation::SetSnapshot { snapshot: next }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Din4108Mutation::SetSnapshot { snapshot: next }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

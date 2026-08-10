@@ -5,7 +5,7 @@
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetSelection
@@ -18,7 +18,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod document_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &DocumentSelect, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &DocumentSelect, _doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -48,14 +48,14 @@ mod tests {
     use crate::apps::wires::WiresCommand;
 
     #[test]
-    fn set_selection_is_config_state_and_emits_no_document_mutations() {
+    fn set_selection_is_config_state_and_emits_no_artifact_mutations() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into()] }));
         assert!(result.mutations.is_empty(), "selection must not produce document operations");
     }
 
     #[test]
-    fn document_select_is_config_state_and_emits_no_document_mutations() {
+    fn document_select_is_config_state_and_emits_no_artifact_mutations() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::DocumentSelect(document_select::DocumentSelect { ids: vec!["node-1".into()] }));
         assert!(result.mutations.is_empty(), "document select must not produce document operations");

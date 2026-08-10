@@ -10,5 +10,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<MathematicalSnapshot, store::T
 }
 
 pub fn deserialize_text(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
-    <MathematicalSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <MathematicalSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

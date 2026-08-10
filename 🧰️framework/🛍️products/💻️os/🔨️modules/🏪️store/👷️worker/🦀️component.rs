@@ -1,20 +1,20 @@
-//! 🧵️ WASM backbone worker — browser-side `DocumentHost` actor relaying the same protocol as
+//! 🧵️ WASM backbone worker — browser-side `ArtifactHost` actor relaying the same protocol as
 //! `framework/product/os/core/js/🟦️backbone-worker.ts`, without materializing snapshots.
 
 use crate::os_store::sync::{
     backbone_worker_wire::{self, BackboneWorkerRequest, BackboneWorkerResponse},
-    DocumentActorMsg, DocumentHost,
+    ArtifactActorMsg, ArtifactHost,
 };
 use wasm_bindgen::prelude::*;
 
 //#region 🔖️Worker
 struct DocumentEntry {
-    cmd_tx: tokio::sync::mpsc::UnboundedSender<DocumentActorMsg>,
+    cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
 }
 
 #[wasm_bindgen]
 pub struct BackboneWorkerHost {
-    host: DocumentHost,
+    host: ArtifactHost,
     documents: std::collections::HashMap<String, DocumentEntry>,
 }
 
@@ -23,7 +23,7 @@ impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         console_error_panic_hook::set_once();
-        Self { host: DocumentHost::new(), documents: std::collections::HashMap::new() }
+        Self { host: ArtifactHost::new(), documents: std::collections::HashMap::new() }
     }
 
     #[wasm_bindgen(js_name = handleRequestBytes)]
@@ -31,7 +31,7 @@ impl BackboneWorkerHost {
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
             BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {
-                let config = crate::os_store::sync::DocumentActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
+                let config = crate::os_store::sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
                 self.host.close(&document_id);
                 let channels = self.host.open(config);
                 let mut events = self.host.subscribe(&document_id);
@@ -52,7 +52,7 @@ impl BackboneWorkerHost {
                 });
             }
             BackboneWorkerRequest::Close { document_id } => {
-                self.host.send(&document_id, DocumentActorMsg::Detach);
+                self.host.send(&document_id, ArtifactActorMsg::Detach);
                 self.host.close(&document_id);
                 self.documents.remove(&document_id);
             }

@@ -449,7 +449,7 @@ pub mod layout {
         out
     }
 
-    /// 🗂️ Pure organizer enforced at every context-menu funnel (SDK `VcsDocumentApp::context_menu`, shell
+    /// 🗂️ Pure organizer enforced at every context-menu funnel (SDK `VcsArtifactApp::context_menu`, shell
     /// builders) — recurses into `children`, normalizes separators (labeled = kept header, bare
     /// leading/trailing/doubled = dropped), merges duplicate `menu.group.<category>` rows (deduping their
     /// children by id), then applies the ≤9-row / >9-row emission policy from D2 of the grouped-context-menu
@@ -580,10 +580,10 @@ pub mod layout {
     /// 🖱️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
     /// must never reference `semio_framework`'s `ViewModel`, same boundary as every other type
     /// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewModel`
-    /// as a separate `DocumentApp` method parameter rather than embedding it in the request payload; the
+    /// as a separate `ArtifactApp` method parameter rather than embedding it in the request payload; the
     /// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES
     /// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
-    /// smaller struct plus a typed `ViewModel` before calling `DocumentApp::context_menu`.
+    /// smaller struct plus a typed `ViewModel` before calling `ArtifactApp::context_menu`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
@@ -609,13 +609,13 @@ pub mod layout {
     //#endregion 🔖️ContextMenu
 
     //#region 🔖️PanelTabConstants
-    pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
+    pub const FRAMEWORK_PANEL_TAB_ARTIFACT_ID: &str = "framework.panel.artifact";
     pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
     pub const FRAMEWORK_PANEL_TAB_INSPECTION_ID: &str = "framework.panel.inspection";
-    pub const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL: &str = "Document";
+    pub const FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL: &str = "Document";
     pub const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL: &str = "Catalogue";
     pub const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL: &str = "Inspection";
-    pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID: &str = "framework.panel.document";
+    pub const FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID: &str = "framework.panel.artifact";
     pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID: &str = "framework.panel.catalogue";
     pub const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID: &str = "framework.panel.inspection";
     pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ID: &str = "framework.panel.parameters";
@@ -627,15 +627,15 @@ pub mod layout {
     pub const FRAMEWORK_PANEL_TAB_HISTORY_ID: &str = "framework.panel.history";
     pub const FRAMEWORK_PANEL_TAB_HISTORY_LABEL: &str = "History";
     pub const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID: &str = "framework.panel.history";
-    /// 🕰️ Reserved `body_key` intercepted first in `VcsDocumentApp::render`, before any app-specific
+    /// 🕰️ Reserved `body_key` intercepted first in `VcsArtifactApp::render`, before any app-specific
     /// body-key match — both renderers fetch it like any other panel-tab body.
     pub const FRAMEWORK_HISTORY_BODY_KEY: &str = "framework.body.history";
 
     /// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
     pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
         match (id, is_de) {
-            (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, false) => Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL),
-            (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, true) => Some("Dokument"),
+            (FRAMEWORK_PANEL_TAB_ARTIFACT_ID, false) => Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL),
+            (FRAMEWORK_PANEL_TAB_ARTIFACT_ID, true) => Some("Dokument"),
             (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, false) => Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL),
             (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, true) => Some("Katalog"),
             (FRAMEWORK_PANEL_TAB_INSPECTION_ID, false) => Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
@@ -1594,7 +1594,7 @@ pub mod utilities {
     /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
     /// utilities stay flat siblings. A group that ends with exactly one child is hoisted to a top-level toggle —
     /// a lone `group:transform`/`transform` pair must not render as two nested "Transform" rows. This is the
-    /// single source of truth for the utility bar — `DocumentApp::utilities` no longer exists.
+    /// single source of truth for the utility bar — `ArtifactApp::utilities` no longer exists.
     pub fn derive_utility_nodes(controller_id: &str, utilities: &[DerivedUtilitySpec], active_utility_id: Option<&str>) -> Vec<UtilityNode> {
         fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
             UtilityNode::Toggle {

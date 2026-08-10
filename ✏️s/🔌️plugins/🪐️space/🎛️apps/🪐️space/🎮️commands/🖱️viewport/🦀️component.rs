@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{OsWorkflowCamera, WorkflowSnapshot, WorkflowMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️Hover
 /// 🔁️ Shared body for `node_graph_hover` and `text_hover` — both decode an optional `{nodeId}` JSON
@@ -22,7 +22,7 @@ pub mod node_graph_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphHover, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -37,7 +37,7 @@ pub mod text_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &TextHover, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -54,7 +54,7 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match serde_json::from_str::<OsWorkflowCamera>(&payload.viewport_json) {
             Ok(camera) => Ok(Emit::config(vec![SpaceConfigMutation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
             Err(_) => Ok(Emit::default()),

@@ -32,7 +32,7 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot { XlsxSnapshot::default() }
 pub fn register() {
     crate::artifacts::xlsx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA));
 }
 
 pub struct XlsxEngine { artifact_state: XlsxArtifact, snapshot_state: XlsxSnapshot }

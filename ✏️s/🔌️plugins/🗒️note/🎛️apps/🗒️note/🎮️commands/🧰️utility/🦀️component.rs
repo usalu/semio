@@ -4,7 +4,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetActiveUtility
@@ -17,7 +17,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::config(vec![NoteConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
@@ -33,7 +33,7 @@ mod tests {
     /// 🧰️ The active utility now lives in `cfg.active_utility_id` — switching utilities is still
     /// document-op-free, but it must actually persist.
     #[test]
-    fn set_active_utility_emits_no_document_mutations_but_persists_in_config() {
+    fn set_active_utility_emits_no_artifact_mutations_but_persists_in_config() {
         let mut app = note_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, NoteCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pencil".into() }));

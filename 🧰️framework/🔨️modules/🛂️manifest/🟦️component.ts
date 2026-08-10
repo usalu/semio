@@ -66,15 +66,15 @@ import type {
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
-export const CANVAS_HOVER_SOURCE_DOCUMENT = "document";
+export const CANVAS_HOVER_SOURCE_ARTIFACT = "document";
 
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_ID = "framework.panel.document";
+export const FRAMEWORK_PANEL_TAB_ARTIFACT_ID = "framework.panel.artifact";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL = "Document";
+export const FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL = "Artifact";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID = "framework.panel.document";
+export const FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID = "framework.panel.artifact";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
@@ -646,9 +646,9 @@ export type TutorialUiSample =
 
 export type TutorialUiKeyframe = { readonly at: number; readonly sample: TutorialUiSample };
 
-/** 🖋️ Mirrors `store::DocumentCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
+/** 🖋️ Mirrors `store::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
  * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
-export type TutorialDocumentEventKind =
+export type TutorialArtifactEventKind =
   | { readonly kind: "edit"; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[]; readonly description?: string; readonly coalesceKey?: string }
   | { readonly kind: "undo" }
   | { readonly kind: "redo" }
@@ -657,7 +657,7 @@ export type TutorialDocumentEventKind =
   | { readonly kind: "switchAlternative"; readonly alternativeId: string }
   | { readonly kind: "load"; readonly documentDsl: string; readonly previousDsl: string };
 
-export type TutorialDocumentEvent = { readonly at: number; readonly kind: TutorialDocumentEventKind };
+export type TutorialArtifactEvent = { readonly at: number; readonly kind: TutorialArtifactEventKind };
 
 export type TutorialCameraState =
   | { readonly kind: "orbit"; readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly up: readonly [number, number, number]; readonly fov?: number }
@@ -675,7 +675,7 @@ export type TutorialTracks = {
   readonly video: readonly TutorialVideoCue[];
   readonly events: readonly TutorialEvent[];
   readonly ui: readonly TutorialUiKeyframe[];
-  readonly document: readonly TutorialDocumentEvent[];
+  readonly artifact: readonly TutorialArtifactEvent[];
   readonly camera: readonly TutorialCameraKeyframe[];
   readonly gestures: readonly TutorialGestureCue[];
 };
@@ -892,7 +892,7 @@ export type PluginManifest = {
     readonly workflowStepId: string;
     readonly appId: string;
     readonly label: string;
-    readonly document?: readonly string[];
+    readonly breadcrumb?: readonly string[];
     readonly yields: string;
   }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];

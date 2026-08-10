@@ -29,7 +29,7 @@ impl Default for XlsxSnapshot {
     }
 }
 
-impl store::DocumentDsl for XlsxSnapshot {
+impl store::ArtifactDsl for XlsxSnapshot {
     const EXTENSION: &'static str = "xlsx";
     fn envelope_id() -> &'static str { "stdio.xlsx" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -53,7 +53,7 @@ impl store::DocumentDsl for XlsxSnapshot {
         let bytes = crate::artifacts::xlsx::engine::encode_xlsx(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -61,12 +61,12 @@ impl store::DocumentDsl for XlsxSnapshot {
     }
 }
 
-impl store::DocumentPack for XlsxSnapshot {
+impl store::ArtifactPack for XlsxSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::xlsx::engine::encode_xlsx(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -75,7 +75,7 @@ impl store::DocumentPack for XlsxSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;

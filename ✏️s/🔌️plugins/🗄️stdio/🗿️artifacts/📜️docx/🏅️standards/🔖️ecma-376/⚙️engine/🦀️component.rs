@@ -32,7 +32,7 @@ pub fn empty_docx_snapshot() -> DocxSnapshot { DocxSnapshot::default() }
 pub fn register() {
     crate::artifacts::docx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::docx::schema::docx_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA));
 }
 
 pub struct DocxEngine { artifact_state: DocxArtifact, snapshot_state: DocxSnapshot }

@@ -20,7 +20,7 @@ const Info = createIconComponent("info");
 const Settings = createIconComponent("settings");
 
 const mobileTabs = [
-  singleTreeLeaf({ id: "mobile.document", icon: Layers, name: "Document", order: 0, tree: { sections: [{ id: "mobile.document.section", label: "", items: [{ id: "mobile.document.item", label: "", control: <div className="p-2">Document body</div> }] }] } }),
+  singleTreeLeaf({ id: "mobile.document", icon: Layers, name: "Artifact", order: 0, tree: { sections: [{ id: "mobile.document.section", label: "", items: [{ id: "mobile.document.item", label: "", control: <div className="p-2">Document body</div> }] }] } }),
   singleTreeLeaf({ id: "mobile.info", icon: Info, name: "Info", order: 1, tree: { sections: [{ id: "mobile.info.section", label: "", items: [{ id: "mobile.info.item", label: "", control: <div className="p-2">Info body</div> }] }] } }),
   singleTreeLeaf({ id: "mobile.settings", icon: Settings, name: "Settings", order: 2, tree: { sections: [{ id: "mobile.settings.section", label: "", items: [{ id: "mobile.settings.item", label: "", control: <div className="p-2">Settings body</div> }] }] } }),
 ];

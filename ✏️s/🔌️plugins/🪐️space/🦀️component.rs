@@ -22,7 +22,7 @@ pub const DEMO_STUDIO_DSL: &str = include_str!("../../../🧰️framework/🛍�
 /// that references them.
 pub fn ensure_space_fixtures_registered() {
     static FIXTURES: LazyLock<()> = LazyLock::new(|| {
-        // 🩹️ draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::DocumentDsl`);
+        // 🩹️ draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::ArtifactDsl`);
         // this registry is still JSON-shaped (framework/product/os hasn't migrated yet), so
         // `materialize_os_app_instance_document_json`'s `serde_json::from_str` will fall back to
         // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
@@ -38,7 +38,7 @@ pub fn ensure_space_fixtures_registered() {
 /// holds only the `WorkflowSnapshot` payload (`DEMO_STUDIO_DSL`); the envelope metadata
 /// (schema/id/name, freshly-minted history) is built via `create_backbone_document`.
 pub fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
-    let initial_snapshot = <WorkflowSnapshot as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
+    let initial_snapshot = <WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
     create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_snapshot)
 }
 

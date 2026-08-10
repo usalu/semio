@@ -12,12 +12,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 /// 📦️ Encodes a `Fem2dSnapshot` to its binary pack form.
 pub fn encode(document: &Fem2dSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Fem2dSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
-    <Fem2dSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 // #region 🧪️Tests

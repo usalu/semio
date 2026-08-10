@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn compose_direct_round_trips_a_native_binary_payload() {
         let snapshot = crate::artifacts::binary::standards::v_raw::engine::empty_binary_snapshot();
-        let bytes = store::DocumentPack::encode_pack(&snapshot);
+        let bytes = store::ArtifactPack::encode_pack(&snapshot);
         let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes) }];
         let composed = compose(DIALECT, &sources).expect("compose");
         assert_eq!(composed.dialect, DIALECT);

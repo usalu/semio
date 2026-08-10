@@ -28,14 +28,14 @@ mod tests {
     use super::*;
     use crate::artifacts::block2d::{Block2dSnapshot, BLOCK_2D_SCHEMA};
     use crate::BlockKindIdentity;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn block2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block2d::schema::mutations::Block2dStore;
 
         let mut store = Block2dStore::new(create_document_envelope(BLOCK_2D_SCHEMA, "block2d", Block2dSnapshot::default(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Block2dMutation::SetNodeKind { node_kind: BlockKindIdentity { id: "n1".into(), name: "n1".into(), label: "N1".into(), ..Default::default() } }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Block2dMutation::SetNodeKind { node_kind: BlockKindIdentity { id: "n1".into(), name: "n1".into(), label: "N1".into(), ..Default::default() } }], description: None }).expect("apply");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.node_kind.id, "n1");
     }

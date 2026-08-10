@@ -15,10 +15,10 @@ impl ArtifactBuilder for DrawBuilder {
     fn empty() -> Self { Self { snapshot: DrawSnapshot::default(), diagnostics: Vec::new() } }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<DrawSnapshot as store::DocumentDsl>::parse_dsl(text)?))
+        Ok(Self::from_snapshot(<DrawSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
     }
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<DrawSnapshot as store::DocumentPack>::decode_pack(bytes)?))
+        Ok(Self::from_snapshot(<DrawSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
         self.snapshot = crate::artifacts::draw::schema::mutations::apply_draw_edit_mutation(&self.snapshot, &mutation);

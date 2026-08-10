@@ -1897,7 +1897,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagSnapshot as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagSnapshot text");
+        let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagSnapshot text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -7260,15 +7260,15 @@ mod tests {
 }
 // #endregion 🔖️Tests
 
-// #region 🔖️DocumentVcs
+// #region 🔖️ArtifactVcs
 use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, OpText, Mutation, MutationDiff, Patchable};
 #[cfg(test)]
-use crate::os_spr::{DocumentId, Edit, SchemaId};
+use crate::os_spr::{ArtifactId, Edit, SchemaId};
 #[cfg(any(test, target_arch = "wasm32"))]
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
-use crate::os_store::DocumentCommand;
-use crate::os_store::{DocumentEnvelope, DocumentStore};
+use crate::os_store::ArtifactCommand;
+use crate::os_store::{ArtifactEnvelope, ArtifactStore};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 
@@ -7519,8 +7519,8 @@ impl Mutation<DagSnapshot> for DagMutation {
     }
 }
 
-pub type DagEnvelope = DocumentEnvelope<DagSnapshot, DagMutation>;
-pub type DagStore = DocumentStore<DagSnapshot, DagMutation>;
+pub type DagEnvelope = ArtifactEnvelope<DagSnapshot, DagMutation>;
+pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 
 //#region 🔖️Dsl
 // 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
@@ -7718,7 +7718,7 @@ fn dag_node_patch_from_dsl(mirror: DagNodePatchDsl) -> DagNodePatch {
 
 /// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
 /// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
 #[dsl(extension = "dag")]
 #[dsl(layout = "lines")]
 struct DagSnapshotDsl {
@@ -7737,8 +7737,8 @@ fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
 }
 
 
-/// 📜️ Handcrafted DocumentDsl (P6): derive no longer emits DocumentDsl/DocumentPack.
-impl crate::os_store::DocumentDsl for DagSnapshotDsl {
+/// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
+impl crate::os_store::ArtifactDsl for DagSnapshotDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -7758,7 +7758,7 @@ impl crate::os_store::DocumentDsl for DagSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
             crate::os_store::semio_format::Component::Dsl,
             1,
         )
@@ -7767,12 +7767,12 @@ impl crate::os_store::DocumentDsl for DagSnapshotDsl {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6).
-impl crate::os_store::DocumentPack for DagSnapshotDsl {
+/// 📦️ Handcrafted ArtifactPack (P6).
+impl crate::os_store::ArtifactPack for DagSnapshotDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
             crate::os_store::semio_format::Component::Pack,
             1,
         )
@@ -7781,10 +7781,10 @@ impl crate::os_store::DocumentPack for DagSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as crate::os_store::DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -7796,28 +7796,28 @@ impl crate::os_store::DocumentPack for DagSnapshotDsl {
     }
 }
 
-impl crate::os_store::DocumentDsl for DagSnapshot {
+impl crate::os_store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::DocumentDsl>::parse_dsl(text)?))
+        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?))
     }
 
     fn print_dsl(&self) -> String {
-        <DagSnapshotDsl as crate::os_store::DocumentDsl>::print_dsl(&dag_snapshot_to_dsl(self))
+        <DagSnapshotDsl as crate::os_store::ArtifactDsl>::print_dsl(&dag_snapshot_to_dsl(self))
     }
 }
 
-/// 📦️ Binary counterpart of the `DocumentDsl` impl above — `DagSnapshot` can't `#[derive(crate::os_dsl::
-/// DslDocument)]` directly (see this region's opening doc comment), so `DocumentPack` is hand-routed
+/// 📦️ Binary counterpart of the `ArtifactDsl` impl above — `DagSnapshot` can't `#[derive(crate::os_dsl::
+/// DslArtifact)]` directly (see this region's opening doc comment), so `ArtifactPack` is hand-routed
 /// through the same `DagSnapshotDsl` mirror, which does derive it.
-impl crate::os_store::DocumentPack for DagSnapshot {
+impl crate::os_store::ArtifactPack for DagSnapshot {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <DagSnapshotDsl as crate::os_store::DocumentPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
+        <DagSnapshotDsl as crate::os_store::ArtifactPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::DocumentPack>::decode_pack_with(bytes, options)?))
+        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?))
     }
 }
 //#endregion 🔖️DslMirror
@@ -8045,7 +8045,7 @@ mod dag_vcs_tests {
     #[test]
     fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
     }
 
@@ -8215,14 +8215,14 @@ mod dag_vcs_tests {
     }
 
     #[test]
-    fn op_text_round_trips_set_document() {
+    fn op_text_round_trips_set_artifact() {
         crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetSnapshot { snapshot: kitchen_sink_snapshot() });
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
         crate::os_store::test_support::assert_document_text_round_trip(&store);
         crate::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -8234,10 +8234,10 @@ mod dag_vcs_tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️DslTests
 }
-// #endregion 🔖️DocumentVcs
+// #endregion 🔖️ArtifactVcs

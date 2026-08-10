@@ -25,14 +25,14 @@ impl ArtifactAnalyzer for PlaygroundAnalyzer {
         let mut confidence = IoConfidence::High;
         for source in sources {
             match source {
-                AnalyzeSource::Text(text) => match <PlaygroundSnapshot as store::DocumentDsl>::parse_dsl(text) {
+                AnalyzeSource::Text(text) => match <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;
                         diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                     }
                 },
-                AnalyzeSource::Binary(bytes) => match <PlaygroundSnapshot as store::DocumentPack>::decode_pack(bytes) {
+                AnalyzeSource::Binary(bytes) => match <PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                     Ok(snapshot) => parts.snapshot = Some(snapshot),
                     Err(err) => {
                         confidence = IoConfidence::Low;

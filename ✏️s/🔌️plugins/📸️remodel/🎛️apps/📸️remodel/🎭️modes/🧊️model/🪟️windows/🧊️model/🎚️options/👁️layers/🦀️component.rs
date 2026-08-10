@@ -1,6 +1,6 @@
 //! 👁️ Remodel play app — the Model window's `remodel.layers` toggle group: which point-cloud/mesh
 //! layers the 3D scene draws. Supplied per frame from the LIVE config by
-//! `DocumentApp::window_measures`, never frozen into the manifest (a manifest-frozen snapshot could not
+//! `ArtifactApp::window_measures`, never frozen into the manifest (a manifest-frozen snapshot could not
 //! reflect a toggle the user just flipped).
 
 use crate::apps::remodel::config::RemodelLayerVisibility;

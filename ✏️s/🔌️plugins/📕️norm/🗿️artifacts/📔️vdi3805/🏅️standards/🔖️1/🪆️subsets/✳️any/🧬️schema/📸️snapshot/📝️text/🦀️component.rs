@@ -15,12 +15,12 @@ pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚
 
 /// 📖️ Parses VDI 3805 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Vdi3805Snapshot, store::TextError> {
-    <Vdi3805Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.vdi3805` DSL text.
 pub fn print_dsl(document: &Vdi3805Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]

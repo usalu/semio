@@ -4,7 +4,7 @@ use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::artifacts::playbook::engine::default_block;
 use crate::artifacts::playbook::op::{add_block_operation, move_block_operation, remove_block_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddBlock
@@ -18,13 +18,13 @@ pub mod add_block {
         pub step_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddBlock, doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let Some(step_id) = payload.step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
             return Ok(Emit::default());
         };
         let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
-        Ok(Emit { document_mutations: vec![add_block_operation(&step_id, default_block(block_id.clone(), &payload.kind), None)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: vec![block_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![add_block_operation(&step_id, default_block(block_id.clone(), &payload.kind), None)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: vec![block_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddBlock
@@ -40,13 +40,13 @@ pub mod remove_block {
         pub block_id: String,
     }
 
-    pub fn handle(payload: &RemoveBlock, _doc: &DocumentView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         if payload.step_id.is_empty() || payload.block_id.is_empty() {
             return Ok(Emit::default());
         }
         let config = cfg.snapshot;
         let remaining: Vec<String> = config.selected_ids.iter().filter(|id| **id != payload.block_id).cloned().collect();
-        Ok(Emit { document_mutations: vec![remove_block_operation(&payload.step_id, &payload.block_id)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: remaining }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![remove_block_operation(&payload.step_id, &payload.block_id)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: remaining }], ..Default::default() })
     }
 }
 //#endregion 🔖️RemoveBlock
@@ -64,7 +64,7 @@ pub mod move_block {
         pub index: usize,
     }
 
-    pub fn handle(payload: &MoveBlock, _doc: &DocumentView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![move_block_operation(&payload.block_id, &payload.from_step_id, &payload.to_step_id, payload.index)]))
     }
 }

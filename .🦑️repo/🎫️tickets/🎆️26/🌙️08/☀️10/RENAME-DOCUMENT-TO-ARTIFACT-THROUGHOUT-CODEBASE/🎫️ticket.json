@@ -1,0 +1,10 @@
+{
+  "id": "26/08/10/RENAME-DOCUMENT-TO-ARTIFACT-THROUGHOUT-CODEBASE",
+  "title": "Rename Document to Artifact Throughout Codebase",
+  "status": "open",
+  "due": "2026-08-12",
+  "llm": "gemini-3-pro",
+  "client": "antigravity-chat",
+  "description": "The term document is the legacy term for artifact. Rename all Document* types, document_* fields, document/ folders, message Document in protos, read-document/write-document WIT functions, DslDocument macro, set-document DSL keyword, and document_ref paths to their artifact equivalents throughout the framework and all plugins.",
+  "goals": ["AI-OPTIMIZED-REPO"]
+}

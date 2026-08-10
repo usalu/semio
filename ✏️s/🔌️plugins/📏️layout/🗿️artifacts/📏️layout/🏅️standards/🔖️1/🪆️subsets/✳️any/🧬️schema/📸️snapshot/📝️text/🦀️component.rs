@@ -15,12 +15,12 @@ pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../../../../../📚️e
 
 /// 📖️ Parses `.layout` DSL text into a `LayoutSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<LayoutSnapshot, store::TextError> {
-    <LayoutSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LayoutSnapshot` back to `.layout` DSL text.
 pub fn print_dsl(document: &LayoutSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -123,7 +123,7 @@ mod tests {
     fn parse_dsl_reports_engine_parser_errors() {
         // The hand-rolled lexer/parser (and its bespoke error messages) is gone — parsing now goes
         // through the `dsl::` derive engine directly, so these assert only on the public
-        // `store::DocumentDsl` surface, generically on failure rather than on exact internal wording
+        // `store::ArtifactDsl` surface, generically on failure rather than on exact internal wording
         // that no longer exists.
         assert!(parse_dsl("").is_err(), "empty text must fail: a document has required fields");
         assert!(parse_dsl("not a document at all").is_err(), "unrecognized leading token must fail");

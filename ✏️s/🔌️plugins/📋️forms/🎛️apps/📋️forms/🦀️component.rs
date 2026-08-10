@@ -1,4 +1,4 @@
-//! 📋️ Forms play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 📋️ Forms play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -26,7 +26,7 @@ use crate::artifacts::forms::op::FormMutation;
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, DocumentApp, DocumentView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, ArtifactApp, ArtifactView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
 };
 use store::EngineHandles;
@@ -245,7 +245,7 @@ use vector::{add_vector_field, patch_vector_field, remove_vector_field};
 #[derive(Default)]
 pub struct FormsPlayApp;
 
-impl DocumentApp for FormsPlayApp {
+impl ArtifactApp for FormsPlayApp {
     type Snapshot = FormsSnapshot;
     type Mutation = FormMutation;
     type Config = FormsConfig;
@@ -275,7 +275,7 @@ impl DocumentApp for FormsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &FormsCommand, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -286,10 +286,10 @@ impl DocumentApp for FormsPlayApp {
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
     /// `Self::Config`).
-    fn export_media(port: &str, doc: &DocumentView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "dictionary:out" => {
@@ -302,7 +302,7 @@ impl DocumentApp for FormsPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(config);
@@ -415,9 +415,9 @@ pub fn create_forms_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type FormsApp = VcsDocumentApp<FormsPlayApp>;
+    pub type FormsApp = VcsArtifactApp<FormsPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn forms_app() -> FormsApp {
@@ -654,8 +654,8 @@ mod tests {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
-        let media = <FormsPlayApp as DocumentApp>::export_media("dictionary:out", &doc).expect("export dictionary:out");
+        let doc = ArtifactView { snapshot: &document, history: &history };
+        let media = <FormsPlayApp as ArtifactApp>::export_media("dictionary:out", &doc).expect("export dictionary:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "form.dictionary");
@@ -668,12 +668,12 @@ mod tests {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
-        let media = <FormsPlayApp as DocumentApp>::export_media("document:out", &doc).expect("export document:out");
+        let doc = ArtifactView { snapshot: &document, history: &history };
+        let media = <FormsPlayApp as ArtifactApp>::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-        let decoded = <FormsSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let decoded = <FormsSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(decoded, document);
     }
 

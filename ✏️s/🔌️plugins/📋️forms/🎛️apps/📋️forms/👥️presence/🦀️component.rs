@@ -5,7 +5,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of forms view state (none yet — all UI state lives in `FormsConfig`).
@@ -13,7 +13,7 @@ use store::DocumentPack;
 #[serde(rename_all = "camelCase")]
 pub struct FormsPresence {}
 
-impl store::DocumentDsl for FormsPresence {
+impl store::ArtifactDsl for FormsPresence {
     const EXTENSION: &'static str = "formspres";
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         if text.trim().is_empty() {
@@ -26,7 +26,7 @@ impl store::DocumentDsl for FormsPresence {
     }
 }
 
-impl DocumentPack for FormsPresence {
+impl ArtifactPack for FormsPresence {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }

@@ -1,4 +1,4 @@
-//! 🖥️ Layout play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Layout play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -8,7 +8,7 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -23,7 +23,7 @@ use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, MediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
 };
 use store::EngineHandles;
@@ -127,7 +127,7 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
 #[derive(Default)]
 pub struct LayoutPlayApp;
 
-impl DocumentApp for LayoutPlayApp {
+impl ArtifactApp for LayoutPlayApp {
     type Snapshot = LayoutSnapshot;
     type Mutation = LayoutMutation;
     type Config = LayoutConfig;
@@ -155,7 +155,7 @@ impl DocumentApp for LayoutPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -166,10 +166,10 @@ impl DocumentApp for LayoutPlayApp {
     /// `export_document_svg` (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg`
     /// parameter reaches this method, so there is no config-carried "active page" to prefer over the
     /// first page.
-    fn export_media(port: &str, doc: &DocumentView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => {
@@ -187,7 +187,7 @@ impl DocumentApp for LayoutPlayApp {
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
     /// named data source (see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "fields:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -200,7 +200,7 @@ impl DocumentApp for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = layout_labels(config);
@@ -216,7 +216,7 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(_doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = layout_labels(config);
         HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
@@ -316,9 +316,9 @@ pub fn create_layout_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type LayoutApp = VcsDocumentApp<LayoutPlayApp>;
+    pub type LayoutApp = VcsArtifactApp<LayoutPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn layout_app() -> LayoutApp {
@@ -569,7 +569,7 @@ mod tests {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let app = LayoutPlayApp::default();
         let media = LayoutPlayApp::export_media("layout:out", &doc).expect("export layout:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
@@ -583,13 +583,13 @@ mod tests {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let app = LayoutPlayApp::default();
         let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-        let decoded = <LayoutSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let decoded = <LayoutSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(decoded, document);
     }
 

@@ -3,7 +3,7 @@
 use crate::artifacts::en1992::En1992Snapshot;
 
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
-/// (`store::DocumentDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
+/// (`store::ArtifactDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
 /// checked with a FEM-based analysis, an R90 fire rating, and a post-installed anchor in cracked
 /// concrete, under the EN annex — distinct from `En1992Snapshot::default()`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
@@ -19,12 +19,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, store::TextError> {
-    <En1992Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <En1992Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1992` DSL text.
 pub fn print_dsl(document: &En1992Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]

@@ -10,5 +10,5 @@ pub fn serialize(from: &WriterSnapshot) -> Result<JsonSnapshot, store::PackError
 }
 
 pub fn serialize_text(from: &WriterSnapshot) -> Result<String, store::PackError> {
-    Ok(<WriterSnapshot as store::DocumentDsl>::print_dsl(from))
+    Ok(<WriterSnapshot as store::ArtifactDsl>::print_dsl(from))
 }

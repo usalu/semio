@@ -484,7 +484,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         
         let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
+            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
         )
         .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
@@ -568,7 +568,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         
         let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
+            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
         )
         .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());

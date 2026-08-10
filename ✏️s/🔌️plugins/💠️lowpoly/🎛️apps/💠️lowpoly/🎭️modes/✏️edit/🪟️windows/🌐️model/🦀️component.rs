@@ -42,12 +42,12 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::World3d,
         icon_id: "lowpoly-model".into(),
         // 🎚️ `measures` stays empty here: measures are config-derived per frame by
-        // `DocumentApp::window_measures`, never frozen into the manifest.
+        // `ArtifactApp::window_measures`, never frozen into the manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: LOWPOLY_MAIN_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

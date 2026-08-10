@@ -44,10 +44,10 @@ mod tests {
     fn curate_document_text_round_trips_through_a_vcs_store() {
         let document = CurateSnapshot { stock: crate::artifacts::curate::engine::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() };
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let mut next = doc_store.snapshot().expect("snapshot");
         crate::artifacts::curate::engine::curate_delta(&mut next, "beam-glulam-gl24h", 3);
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![SourcingMutation::SetSnapshot { snapshot: next }], description: None }).expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SourcingMutation::SetSnapshot { snapshot: next }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

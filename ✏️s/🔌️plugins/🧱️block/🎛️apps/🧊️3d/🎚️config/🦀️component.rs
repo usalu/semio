@@ -1,6 +1,6 @@
 //! 🧮️ Block 3D play app — the view-state config artifact and its operation enum, plus the per-window
 //! view record (`Block3dWindowView`) and transient brush-preview pose (`Block3dBrushPreview`) nested
-//! inside it. Session-only but real, undoable config: it round-trips through the config `DocumentStore`
+//! inside it. Session-only but real, undoable config: it round-trips through the config `ArtifactStore`
 //! exactly like document content, with a true `backwards` per operation. Nothing here is document
 //! state — the object kind's identity/representations/vortices live in `crate::artifacts::block3d`.
 
@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 
 
 //#region 🔖️Config
-/// 🧮️ `Block3dPlayApp`'s real `DocumentApp::Config` — B1 pure-trait conversion. Absorbs every former
+/// 🧮️ `Block3dPlayApp`'s real `ArtifactApp::Config` — B1 pure-trait conversion. Absorbs every former
 /// `Block3dPlayApp` `RefCell` runtime field (`selected_ids`/`active_representation_id`) plus the
 /// locale this app resolves itself. `wanted_tags` is ready for whenever a later wave threads `cfg`
 /// into `export_media` (see that fn's doc for why it's currently unused there).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block3dcfg")]
 #[dsl(id = "block3d.config")]
@@ -48,9 +48,9 @@ pub struct Block3dConfig {
     pub hovered_vortex_full_id: Option<String>,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for Block3dConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for Block3dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -70,7 +70,7 @@ impl store::DocumentDsl for Block3dConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -79,12 +79,12 @@ impl store::DocumentDsl for Block3dConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for Block3dConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for Block3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -93,10 +93,10 @@ impl store::DocumentPack for Block3dConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -108,7 +108,7 @@ impl store::DocumentPack for Block3dConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 fn default_brush_radius() -> f64 {

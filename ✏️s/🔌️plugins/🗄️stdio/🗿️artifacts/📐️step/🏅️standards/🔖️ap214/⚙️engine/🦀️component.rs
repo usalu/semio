@@ -15,7 +15,7 @@ pub fn register() {
     crate::artifacts::step::composer::register();
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
@@ -94,11 +94,11 @@ mod tests {
     #[test]
     fn codec_round_trip() {
         let snap = empty_step_snapshot();
-        let text = store::DocumentDsl::print_dsl(&snap);
-        let parsed = <StepSnapshot as store::DocumentDsl>::parse_dsl(&text).expect("parse");
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
-        let bytes = store::DocumentPack::encode_pack(&snap);
-        let decoded = <StepSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode");
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <StepSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 }

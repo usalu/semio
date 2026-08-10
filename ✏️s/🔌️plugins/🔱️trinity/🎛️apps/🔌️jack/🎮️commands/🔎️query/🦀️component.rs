@@ -7,7 +7,7 @@ use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::json;
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
@@ -34,7 +34,7 @@ pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_
     let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map_or_else(|| current_query.to_string(), str::to_string);
     let (result_json, operations) = run_jack_query(fixture, &resolved);
     Ok(Emit {
-        document_mutations: operations,
+        artifact_mutations: operations,
         config_mutations: vec![JackConfigMutation::SetQuery { value: resolved }, JackConfigMutation::SetResult { value: result_json }, JackConfigMutation::SetResultsEngagementInput { value: String::new() }],
         ..Default::default()
     })
@@ -42,7 +42,7 @@ pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_
 
 pub(crate) fn load_example_query(fixture: &JackSnapshot, query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let (result_json, operations) = run_jack_query(fixture, query);
-    Ok(Emit { document_mutations: operations, config_mutations: vec![JackConfigMutation::SetQuery { value: query.to_string() }, JackConfigMutation::SetResult { value: result_json }], ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, config_mutations: vec![JackConfigMutation::SetQuery { value: query.to_string() }, JackConfigMutation::SetResult { value: result_json }], ..Default::default() })
 }
 
 fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
@@ -66,7 +66,7 @@ pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMu
             let query = preset_query(example_id).to_string();
             let (result_json, _) = run_jack_query(&next, &query);
             Ok(Emit {
-                document_mutations: vec![TrinityGraphMutation::SetFixture { fixture: next.clone() }],
+                artifact_mutations: vec![TrinityGraphMutation::SetFixture { fixture: next.clone() }],
                 config_mutations: vec![
                     JackConfigMutation::SetActiveFixture { value: example_id.to_string() },
                     JackConfigMutation::SetCamera { camera: next.camera },

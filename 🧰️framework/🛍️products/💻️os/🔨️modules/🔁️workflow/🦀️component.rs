@@ -21,7 +21,7 @@ pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
 pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
 
 /// 🚧️ W5/W6: `s.run`/`s.automation` schema ids are reserved here (the plan's schema lattice puts
-/// `RunDocument`/`AutomationDocument` in this crate, execution in `🏃️run`) — full bodies are
+/// `RunArtifact`/`AutomationDocument` in this crate, execution in `🏃️run`) — full bodies are
 /// deliberately NOT built in W3 (SpaceRunner rework is W5, automation dispatcher is W6); inventing a
 /// shape now without the runner rework driving it risks rework. See
 /// `.claude/plans/the-final-goal-for-jolly-spindle.md` `### Workflow / Run / Automation (Track C)`.
@@ -429,7 +429,7 @@ pub struct WorkflowNode {
     pub app_id: String,
     pub label: String,
     pub yields: String,
-    pub document_ref: String,
+    pub artifact_ref: String,
     pub config_ref: String,
     pub x: f64,
     pub y: f64,
@@ -451,7 +451,7 @@ pub struct WorkflowEdge {
     pub contract: MediaContract,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "workflow", layout = "lines")]
 pub struct Workflow {
@@ -492,7 +492,7 @@ pub fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id: &str
         // pending a locale plumbed through the workflow canvas API.
         label: app.label.resolve(Terminology::Native, Locale::En).to_string(),
         yields,
-        document_ref: format!("documents/{node_id}"),
+        artifact_ref: format!("artifacts/{node_id}"),
         config_ref: format!("config/{node_id}"),
         x: position.x,
         y: position.y,
@@ -625,7 +625,7 @@ pub fn plan_workflow(graph: &Workflow, dirty_node_ids: &HashSet<String>) -> Vec<
 /// `plan_workflow` must produce for them. Ships as a `dsl`+`pack` document — see
 /// `framework/product/os/core/fixtures/*.dsl`/`*.spk` and `README.md` — so the fixture corpus itself
 /// proves the dsl≡pack law instead of riding untyped JSON.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "workflow-fixture")]
 pub struct WorkflowFixture {
@@ -1015,7 +1015,7 @@ pub struct WorkflowOutputBinding {
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[dsl(id = "s.workflow")]
 pub struct WorkflowSnapshot {
     pub schema: String,
@@ -1043,8 +1043,8 @@ pub fn empty_workflow_snapshot() -> WorkflowSnapshot {
 
 
 //#region 🔖️HandcraftedWorkflowSnapshotCodecs
-/// 🧬️ P6: `DslDocument` emits helpers only — DocumentDsl/DocumentPack are handcrafted here.
-impl store::DocumentDsl for WorkflowSnapshot {
+/// 🧬️ P6: `DslArtifact` emits helpers only — ArtifactDsl/ArtifactPack are handcrafted here.
+impl store::ArtifactDsl for WorkflowSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -1064,7 +1064,7 @@ impl store::DocumentDsl for WorkflowSnapshot {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -1073,12 +1073,12 @@ impl store::DocumentDsl for WorkflowSnapshot {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for WorkflowSnapshot {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for WorkflowSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -1087,10 +1087,10 @@ impl store::DocumentPack for WorkflowSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -1607,9 +1607,9 @@ pub fn validate_workflow_snapshot(document: &WorkflowSnapshot) -> WorkflowValida
 }
 //#endregion 🔖️WorkflowSnapshot
 
-//#region 🔖️RunDocument
+//#region 🔖️RunArtifact
 //#region 🔖️RunScalars
-/// 🚦️ Lifecycle state of a whole run. `sealed` (on `RunDocument`) is a distinct bool, not folded into
+/// 🚦️ Lifecycle state of a whole run. `sealed` (on `RunArtifact`) is a distinct bool, not folded into
 /// this enum — "sealed" and "final status" are orthogonal (a `Failed` run is sealed with `status:
 /// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
 /// `#[derive(dsl::DslEnum)]`: this is a plain field-less scalar, not a tagged-variant-with-data sum
@@ -1833,7 +1833,7 @@ pub struct RunOutputArtifact {
     pub path: String,
 }
 
-/// 📇️ Everything one run remembers about one workflow node — the `RunDocument`-native replacement
+/// 📇️ Everything one run remembers about one workflow node — the `RunArtifact`-native replacement
 /// for `run`'s old `NodeRunRecord`/`RunState` (deleted by W5 Lane A): memoization now compares
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
@@ -1865,7 +1865,7 @@ pub struct RunLogLine {
 }
 //#endregion 🔖️RunRecords
 
-//#region 🔖️RunDocumentBody
+//#region 🔖️RunArtifactBody
 /// 🏃️ The `s.run` persisted artifact (W5 Lane A) — one headless workflow execution's full record:
 /// which workflow/checkpoint/input snapshot it ran against, its resolved parameter overlay, where its
 /// outputs landed, per-node `RunNodeRecord`s (the new memoization ground truth), and a `sealed` flag
@@ -1873,9 +1873,9 @@ pub struct RunLogLine {
 /// rejects every further operation, see `🔖️RunMutation` below). Sealing is meant to promote a run
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[dsl(extension = "run-document")]
-pub struct RunDocument {
+pub struct RunArtifact {
     pub schema: String,
     pub workflow_ref: String,
     pub workflow_checkpoint_id: String,
@@ -1896,8 +1896,8 @@ pub struct RunDocument {
     pub sealed: bool,
 }
 
-pub fn empty_run_document() -> RunDocument {
-    RunDocument {
+pub fn empty_run_document() -> RunArtifact {
+    RunArtifact {
         schema: S_RUN_SCHEMA.into(),
         workflow_ref: String::new(),
         workflow_checkpoint_id: String::new(),
@@ -1914,10 +1914,10 @@ pub fn empty_run_document() -> RunDocument {
         sealed: false,
     }
 }
-//#endregion 🔖️RunDocumentBody
+//#endregion 🔖️RunArtifactBody
 
 //#region 🔖️RunMutation
-/// ⚡️ One settled `RunDocument` mutation — mirrors `WorkflowMutation`'s shape (this same crate).
+/// ⚡️ One settled `RunArtifact` mutation — mirrors `WorkflowMutation`'s shape (this same crate).
 /// `Start` seeds the run's identity/parameter overlay and flips `status` to `Running`;
 /// `NodeStarted`/`NodeFinished`/`Log` are emitted once per node by `run::SpaceRunner`; `Seal` is the
 /// terminal operation — see `RunMutation::validate` below for the law this whole wave exists to prove
@@ -1936,7 +1936,7 @@ pub enum RunMutation {
     Seal { status: RunStatus },
 }
 
-pub fn apply_run_operation(document: &RunDocument, operation: &RunMutation) -> RunDocument {
+pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
     let mut next = document.clone();
     match operation {
         RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
@@ -1981,8 +1981,8 @@ pub enum RunDiff {
     Seal { status: RunStatus },
 }
 
-impl protocol::MutationDiff<RunDocument> for RunDiff {
-    fn apply(&self, document: &RunDocument) -> RunDocument {
+impl protocol::MutationDiff<RunArtifact> for RunDiff {
+    fn apply(&self, document: &RunArtifact) -> RunArtifact {
         let operation = match self {
             RunDiff::Empty => return document.clone(),
             RunDiff::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
@@ -2003,10 +2003,10 @@ impl protocol::MutationDiff<RunDocument> for RunDiff {
     }
 }
 
-impl protocol::Mutation<RunDocument> for RunMutation {
+impl protocol::Mutation<RunArtifact> for RunMutation {
     type Diff = RunDiff;
 
-    fn diff(&self, _document: &RunDocument) -> RunDiff {
+    fn diff(&self, _document: &RunArtifact) -> RunDiff {
         match self {
             RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
                 RunDiff::Start { workflow_ref: workflow_ref.clone(), workflow_checkpoint_id: workflow_checkpoint_id.clone(), input_collection_ref: input_collection_ref.clone(), input_snapshot_id: input_snapshot_id.clone(), parameter_values: parameter_values.clone(), output_collection_ref: output_collection_ref.clone(), trigger: trigger.clone() }
@@ -2018,7 +2018,7 @@ impl protocol::Mutation<RunDocument> for RunMutation {
         }
     }
 
-    fn inverse(&self, base: &RunDocument) -> Vec<Self> {
+    fn inverse(&self, base: &RunArtifact) -> Vec<Self> {
         match self {
             // 🧷️ `Start` is a run's genesis operation (always applied to a freshly-`empty_run_document`
             // document in practice) and `Seal`/`NodeStarted`/`Log` have no meaningful undo target —
@@ -2029,17 +2029,17 @@ impl protocol::Mutation<RunDocument> for RunMutation {
         }
     }
 
-    /// 🔒️ THE law this whole wave exists to prove: once `RunDocument.sealed` is true, no further
+    /// 🔒️ THE law this whole wave exists to prove: once `RunArtifact.sealed` is true, no further
     /// operation may apply — a sealed run's per-node bytes are immutable history, never re-mutated by
     /// a later invocation. Unlike `WorkflowMutation` (whose `validate` stays the trait's no-op
-    /// default), `RunMutation` overrides it for real. `store::DocumentStore::dispatch`'s `Apply` arm
+    /// default), `RunMutation` overrides it for real. `store::ArtifactStore::dispatch`'s `Apply` arm
     /// never calls `Mutation::validate` on its own (verified directly in `store/rs/lib.rs` — no
     /// caller anywhere in this crate family invokes it outside `protocol_command`'s own unit tests),
     /// so this hook alone would be silently unenforced if a caller went straight through
-    /// `DocumentStore`; `run::SpaceRunner`'s write path instead always goes through
+    /// `ArtifactStore`; `run::SpaceRunner`'s write path instead always goes through
     /// `apply_run_operation_checked` (below), which calls this before ever calling
-    /// `apply_run_operation` — the one real write seam this crate ships for a `RunDocument`.
-    fn validate(&self, snapshot: &RunDocument) -> Result<(), String> {
+    /// `apply_run_operation` — the one real write seam this crate ships for a `RunArtifact`.
+    fn validate(&self, snapshot: &RunArtifact) -> Result<(), String> {
         if snapshot.sealed {
             return Err(format!("run document is sealed; cannot apply {self:?}"));
         }
@@ -2047,11 +2047,11 @@ impl protocol::Mutation<RunDocument> for RunMutation {
     }
 }
 
-/// 🔒️ The one real write seam for a `RunDocument`: validates (rejecting anything post-`Seal`) before
+/// 🔒️ The one real write seam for a `RunArtifact`: validates (rejecting anything post-`Seal`) before
 /// delegating to `apply_run_operation`. `run::SpaceRunner` calls this, never `apply_run_operation`
 /// directly, for every operation it emits.
-pub fn apply_run_operation_checked(document: &RunDocument, operation: RunMutation) -> Result<RunDocument, String> {
-    <RunMutation as protocol::Mutation<RunDocument>>::validate(&operation, document)?;
+pub fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, String> {
+    <RunMutation as protocol::Mutation<RunArtifact>>::validate(&operation, document)?;
     Ok(apply_run_operation(document, &operation))
 }
 //#endregion 🔖️RunMutation
@@ -2168,7 +2168,7 @@ impl protocol::OpBinary for RunMutation {
     }
 }
 //#endregion 🔖️RunMutationOpText
-//#endregion 🔖️RunDocument
+//#endregion 🔖️RunArtifact
 
 #[cfg(test)]
 mod tests {
@@ -2192,7 +2192,7 @@ mod tests {
             app_id: "app".into(),
             label: id.into(),
             yields: String::new(),
-            document_ref: format!("documents/{id}"),
+            artifact_ref: format!("artifacts/{id}"),
             config_ref: format!("config/{id}"),
             x: 0.0,
             y: 0.0,
@@ -2472,7 +2472,7 @@ mod tests {
     }
     //#endregion 🧪️WorkflowSnapshotLaws
 
-    //#region 🧪️RunDocumentLaws
+    //#region 🧪️RunArtifactLaws
     fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {
         RunNodeRecord {
             node_id: node_id.into(),
@@ -2486,7 +2486,7 @@ mod tests {
         }
     }
 
-    fn sample_run_document() -> RunDocument {
+    fn sample_run_document() -> RunArtifact {
         let mut document = empty_run_document();
         document = apply_run_operation(
             &document,
@@ -2579,5 +2579,5 @@ mod tests {
         document.node_records.push(record);
         store::test_support::assert_dsl_pack_equivalence(&document);
     }
-    //#endregion 🧪️RunDocumentLaws
+    //#endregion 🧪️RunArtifactLaws
 }

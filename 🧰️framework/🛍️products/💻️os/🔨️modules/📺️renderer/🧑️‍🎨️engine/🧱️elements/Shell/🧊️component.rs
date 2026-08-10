@@ -17,11 +17,11 @@ use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, seed
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use semio_framework::{app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::{DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState};
+use store_sync::{ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 use ui_wgpu::wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
@@ -29,7 +29,7 @@ use ui_wgpu::wgpu::{
 };
 use ui_wgpu::wgpu::{
     ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
-    WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -178,7 +178,7 @@ pub struct SpaceProgramEntry {
     pub workflow_step_id: String,
     pub app_id: String,
     pub label: String,
-    pub document: Vec<String>,
+    pub breadcrumb: Vec<String>,
     pub yields: String,
 }
 
@@ -190,7 +190,7 @@ pub struct SpawnedAppEntry {
     pub instance_id: u32,
     pub app_id: String,
     pub label: String,
-    pub document: Vec<String>,
+    pub breadcrumb: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -392,7 +392,7 @@ pub struct ActiveSession {
 
 //#region 🔖️NativeSyncChannel
 /// @emoji 🧵️ One open document's live `framework/sync` actor channel held by the native wgpu shell.
-/// Mirrors `os-shell.tsx`'s `openDocumentSessionsRef` entry: the shell owns the `cmd_tx`/event
+/// Mirrors `os-shell.tsx`'s `openArtifactSessionsRef` entry: the shell owns the `cmd_tx`/event
 /// receiver while the sandboxed plugin instance's store pumps through the registered
 /// `ChannelBackbone` (see `framework/product/os/core/rs`'s `host_runtime` canonical sequence).
 #[cfg(not(target_arch = "wasm32"))]
@@ -401,8 +401,8 @@ pub struct ShellSyncChannel {
     pub actor_uri: String,
     pub instance_id: u32,
     pub plugin_id: String,
-    pub cmd_tx: tokio::sync::mpsc::UnboundedSender<DocumentActorMsg>,
-    pub events: tokio::sync::broadcast::Receiver<DocumentEvent>,
+    pub cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
+    pub events: tokio::sync::broadcast::Receiver<ArtifactEvent>,
 }
 //#endregion 🔖️NativeSyncChannel
 
@@ -501,15 +501,15 @@ pub struct ShellState {
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_dsl: Option<String>,
     /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
-    /// has no native `DocumentHost` — its sync flows through the React shell's `🟦️backbone-worker.ts`.
+    /// has no native `ArtifactHost` — its sync flows through the React shell's `🟦️backbone-worker.ts`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub document_host: DocumentHost,
+    pub document_host: ArtifactHost,
     /// @emoji 🧵️ The currently attached document's live actor channel (native only).
     #[cfg(not(target_arch = "wasm32"))]
     pub sync_channel: Option<ShellSyncChannel>,
     /// @emoji 🚦️ Latest sync health for the active document's status badge (native only).
     #[cfg(not(target_arch = "wasm32"))]
-    pub sync_status: Option<DocumentSyncStatus>,
+    pub sync_status: Option<ArtifactSyncStatus>,
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub utility_collection_expanded: HashMap<String, bool>,
@@ -778,7 +778,7 @@ impl ShellState {
             sync_card_anchor: None,
             last_envelope_dsl: None,
             #[cfg(not(target_arch = "wasm32"))]
-            document_host: DocumentHost::new(),
+            document_host: ArtifactHost::new(),
             #[cfg(not(target_arch = "wasm32"))]
             sync_channel: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -836,7 +836,7 @@ impl ShellState {
                     workflow_step_id: app.id.clone(),
                     app_id: app.id.clone(),
                     label: app.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
-                    document: app.document.clone(),
+                    breadcrumb: app.breadcrumb.clone(),
                     yields: String::new(),
                 })
             })
@@ -1624,7 +1624,7 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     fn detach_sync_backbone_internal(&mut self) {
         if let Some(channel) = self.sync_channel.take() {
-            let _ = channel.cmd_tx.send(DocumentActorMsg::Detach);
+            let _ = channel.cmd_tx.send(ArtifactActorMsg::Detach);
             if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id) {
                 let _ = plugin.detach_backbone(channel.instance_id);
                 if let Some(runtime) = plugin.wasm_runtime() {
@@ -1649,7 +1649,7 @@ impl ShellState {
             let Some(channel) = self.sync_channel.as_mut() else {
                 return false;
             };
-            let mut events: Vec<DocumentEvent> = Vec::new();
+            let mut events: Vec<ArtifactEvent> = Vec::new();
             loop {
                 match channel.events.try_recv() {
                     Ok(event) => events.push(event),
@@ -1666,7 +1666,7 @@ impl ShellState {
         let mut changed = false;
         for event in events {
             match event {
-                DocumentEvent::RemoteMutations { envelopes } => {
+                ArtifactEvent::RemoteMutations { envelopes } => {
                     if let Some(plugin) = plugin.as_ref() {
                         let operations = protocol::encode_envelopes(&envelopes);
                         match plugin.apply_mutations(instance_id, &operations) {
@@ -1675,7 +1675,7 @@ impl ShellState {
                         }
                     }
                 }
-                DocumentEvent::SnapshotReplaced { pack, spr } => {
+                ArtifactEvent::SnapshotReplaced { pack, spr } => {
                     if let Some(plugin) = plugin.as_ref() {
                         match plugin.load_app_document_pack(instance_id, &pack, &spr) {
                             Ok(()) => changed = true,
@@ -1683,24 +1683,24 @@ impl ShellState {
                         }
                     }
                 }
-                DocumentEvent::Status(status) => {
+                ArtifactEvent::Status(status) => {
                     self.sync_status = Some(status);
                     changed = true;
                 }
-                DocumentEvent::Presence { .. } => {
+                ArtifactEvent::Presence { .. } => {
                     // 👥️ The Rust `semio_framework::ViewModel` has no presence field yet (only the
                     // TS shell threads `presencePeersJson`); presence roster display in the native
                     // wgpu shell is a documented follow-up once core `ViewModel` carries it.
                 }
-                DocumentEvent::Conflict(_) => {
+                ArtifactEvent::Conflict(_) => {
                     self.sync_card_kind = Some("conflict".into());
                     changed = true;
                 }
-                DocumentEvent::Preview { .. } => {
+                ArtifactEvent::Preview { .. } => {
                     // 👻️ Ephemeral peer previews (wire v2's uncredited preview lane) have no native
                     // wgpu shell UI yet — same documented-follow-up status as `Presence` above.
                 }
-                DocumentEvent::CommandOutcome { .. } => {
+                ArtifactEvent::CommandOutcome { .. } => {
                     // 📮️ Terminal batch dispositions (accepted/transformed/rejected) have no native
                     // wgpu shell surfacing yet — `RemoteMutations`/rollback already keep document
                     // state correct; this event is purely informational until a UI is built for it.
@@ -1716,7 +1716,7 @@ impl ShellState {
     /// @emoji 🚦️ Human-readable summary of a document's sync health for the attach card, mirroring
     /// the React shell's `syncStatusLabel`.
     #[cfg(not(target_arch = "wasm32"))]
-    fn sync_status_label(status: &DocumentSyncStatus) -> String {
+    fn sync_status_label(status: &ArtifactSyncStatus) -> String {
         let remote = match &status.remote {
             RemoteState::Live { peer_count } => {
                 format!("live · {peer_count} peer{}", if *peer_count == 1 { "" } else { "s" })
@@ -1731,7 +1731,7 @@ impl ShellState {
     }
     //#endregion 🔖️NativeBackboneSync
 
-    /// @emoji 🔗️ Opens the shell's active app document on a `framework/sync` `DocumentHost` actor and
+    /// @emoji 🔗️ Opens the shell's active app document on a `framework/sync` `ArtifactHost` actor and
     /// wires the sandboxed plugin store to it, following `framework/product/os/core/rs`'s
     /// `host_runtime` canonical sequence (open → subscribe → register host channel → program
     /// `attach-backbone`). The React shell's `openDocument` is the TS twin of this exact sequence.
@@ -1742,18 +1742,18 @@ impl ShellState {
             let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
             let runtime = plugin.wasm_runtime().ok_or("native plugin runtime missing")?;
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-            let schema = session.app.document.join(".");
+            let schema = session.app.breadcrumb.join(".");
             let bindings = Self::parse_persistence_binding(&uri)?;
             self.detach_sync_backbone_internal();
             let actor_uri = format!("actor://{document_id}");
-            let channels = self.document_host.open(store_sync::DocumentActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor: format!("wgpu-{}", session.instance_id) });
+            let channels = self.document_host.open(store_sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor: format!("wgpu-{}", session.instance_id) });
             let events = self.document_host.subscribe(&document_id);
             runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
-            let _ = cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() });
+            let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
             self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events });
-            self.sync_status = Some(DocumentSyncStatus::default());
+            self.sync_status = Some(ArtifactSyncStatus::default());
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
             eprintln!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default());
@@ -1983,7 +1983,7 @@ impl ShellState {
             for operation_json in batch {
                 let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
-                    // 🔗️ Document sync now flows through the `framework/sync` `DocumentHost` actor + the
+                    // 🔗️ Document sync now flows through the `framework/sync` `ArtifactHost` actor + the
                     // program store's `ChannelBackbone` (see `attach_sync_backbone`), not a CRUD envelope
                     // write on every `setDocument` — the old `shell_backbone_write` mirror is deleted.
                     document_changed = true;
@@ -2215,7 +2215,7 @@ impl ShellState {
         let default_catalogue_tab_id = self.host_catalogue_tab_id().unwrap_or_default();
         let mut panel = Self::panel_state_from_view(&view_state).unwrap_or(SpacePanelState { active_panel_tab: default_catalogue_tab_id, workflows: workflows.clone(), spawned_apps: vec![], active_spawned_id: None });
         let spawned_id = format!("{}-{}", bridge.plugin_id, instance_id);
-        panel.spawned_apps.push(SpawnedAppEntry { id: spawned_id.clone(), plugin_id: bridge.plugin_id.clone(), instance_id, app_id: workflow.app_id.clone(), label: workflow.label.clone(), document: workflow.document.clone() });
+        panel.spawned_apps.push(SpawnedAppEntry { id: spawned_id.clone(), plugin_id: bridge.plugin_id.clone(), instance_id, app_id: workflow.app_id.clone(), label: workflow.label.clone(), breadcrumb: workflow.breadcrumb.clone() });
         panel.active_spawned_id = Some(spawned_id);
         view_state.panel_json = Some(Self::panel_json(&panel));
         if let Some(session) = self.session.as_mut() {
@@ -4465,7 +4465,7 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     if tab.id().contains("inspector") || tab.id().contains("inspection") || tab.id() == FRAMEWORK_PANEL_TAB_INSPECTION_ID {
         return "text-search";
     }
-    if tab.id() == FRAMEWORK_PANEL_TAB_DOCUMENT_ID {
+    if tab.id() == FRAMEWORK_PANEL_TAB_ARTIFACT_ID {
         return "file-text";
     }
     if tab.id() == FRAMEWORK_DISPLAY_WINDOWS_TAB_ID {
@@ -4988,7 +4988,7 @@ impl ShellState {
     /// exactly that shape (see `build_os_commands`) — expands into one concrete item per option (e.g. "Set
     /// Appearance: Light") rather than redirecting to a staged form, since (unlike window-scoped actions)
     /// os commands have no hosting window whose Actions rail could show that form. Arg-carrying Plugin/
-    /// App/Mode-scope commands are skipped here — there is no `DocumentApp::handle_command` RPC wired on
+    /// App/Mode-scope commands are skipped here — there is no `ArtifactApp::handle_command` RPC wired on
     /// the plugin bridge yet (only `handle_action` exists; see `ProgramBridgeEntry`), so the same staged
     /// redirect would open a form with no way to actually execute; they still appear in
     /// `resolved_commands()`/`build_command_panel_ui()` for completeness.
@@ -5390,7 +5390,7 @@ mod command_registry_tests {
         AppDefinition {
             id: "test-app".into(),
             label: LocalizedLabel::data("Test App"),
-            document: vec!["semio".into(), "test".into()],
+            breadcrumb: vec!["semio".into(), "test".into()],
             icon_id: None,
             controller_id: "test".into(),
             modes: Modes::one(ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: mode_commands }),
@@ -5405,7 +5405,7 @@ mod command_registry_tests {
                 actions: vec![],
                 utilities: vec![],
                 params_schema: None,
-                document_snapshot_schema: None,
+                artifact_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
@@ -5420,7 +5420,7 @@ mod command_registry_tests {
             named_layouts: vec![],
             default_layout: None,
             terminologies: vec!["de".into()],
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_breadcrumbs: std::collections::HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),
@@ -6113,7 +6113,7 @@ pub struct TutorialRuntime {
 /// than applied inline (the plugin bridge's document calls are async, chrome rendering isn't).
 #[derive(Clone, Debug)]
 pub enum TutorialPendingDocOp {
-    LoadDocumentDsl(String),
+    LoadArtifactDsl(String),
     ApplyOperations(Vec<String>),
     /// 🖋️ `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` all replay as a bare
     /// generic action dispatch (`"undo"`/`"redo"`/… against the session's `controller_id`) — the same
@@ -6442,12 +6442,12 @@ fn tutorial_save_recording(tutorial_id: &str, json: &str) {
 //#endregion 📅️Provenance
 
 //#region ✂️PendingDocOps
-/// ✂️ One `TutorialDocumentEvent` → the pending op(s) needed to apply it in `direction` — `forward` uses
+/// ✂️ One `TutorialArtifactEvent` → the pending op(s) needed to apply it in `direction` — `forward` uses
 /// `Edit::forwards`/dispatches the named history action as-is; backward uses `Edit::backwards`/inverts
-/// the history action (undo↔redo) per `TutorialDocumentEventKind::Edit`'s own doc comment on exact
+/// the history action (undo↔redo) per `TutorialArtifactEventKind::Edit`'s own doc comment on exact
 /// bidirectional scrubbing.
-fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialDocumentEvent, forward: bool) -> TutorialPendingDocOp {
-    use semio_framework::TutorialDocumentEventKind as K;
+fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialArtifactEvent, forward: bool) -> TutorialPendingDocOp {
+    use semio_framework::TutorialArtifactEventKind as K;
     match &entry.kind {
         K::Edit { forwards, backwards, .. } => {
             let ops = if forward { forwards } else { backwards };
@@ -6458,7 +6458,7 @@ fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialDocumentEvent, 
         K::Checkpoint { message } => TutorialPendingDocOp::HistoryAction { action_id: "checkpoint".into(), args: message.as_ref().map(|m| serde_json::json!({ "message": m })) },
         K::CheckoutCheckpoint { checkpoint_id } => TutorialPendingDocOp::HistoryAction { action_id: "checkoutCheckpoint".into(), args: Some(serde_json::json!({ "checkpointId": checkpoint_id })) },
         K::SwitchAlternative { alternative_id } => TutorialPendingDocOp::HistoryAction { action_id: "switchAlternative".into(), args: Some(serde_json::json!({ "alternativeId": alternative_id })) },
-        K::Load { document_dsl, previous_dsl } => TutorialPendingDocOp::LoadDocumentDsl(if forward { document_dsl.clone() } else { previous_dsl.clone() }),
+        K::Load { document_dsl, previous_dsl } => TutorialPendingDocOp::LoadArtifactDsl(if forward { document_dsl.clone() } else { previous_dsl.clone() }),
     }
 }
 //#endregion ✂️PendingDocOps
@@ -6502,10 +6502,10 @@ impl ShellState {
         chrome_skip_introduction();
         let pre_sandbox_ui = tutorial_capture_ui_snapshot(self);
         // 🚧️ `last_envelope_dsl` is this shell's own best-effort stand-in for "the live document's full
-        // `DocumentEnvelope` JSON" — there is no other reachable accessor for it from here.
+        // `ArtifactEnvelope` JSON" — there is no other reachable accessor for it from here.
         let pre_sandbox_document_dsl = self.last_envelope_dsl.clone();
         if let Some(document_dsl) = definition.base.document_dsl.clone() {
-            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentDsl(document_dsl));
+            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(document_dsl));
         } else if let Some(example_id) = definition.base.example_id.as_ref() {
             // 🚧️ No "load example by id" plugin-bridge primitive is reachable from here without
             // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
@@ -6592,7 +6592,7 @@ impl ShellState {
             _ => {
                 tutorial_apply_ui_snapshot(self, &runtime.pre_sandbox_ui);
                 if let Some(document_dsl) = runtime.pre_sandbox_document_dsl {
-                    self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentDsl(document_dsl));
+                    self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(document_dsl));
                 }
             }
         }
@@ -6790,7 +6790,7 @@ impl ShellState {
                 // itself never set past its `None` default); a real loader needs the tutorial-content
                 // dsl-text conversion this plan's B5 tutorial-track bullet scopes separately, not a
                 // whole-envelope JSON reader (deleted with `PluginApp::load_document`/`document_dsl`).
-                TutorialPendingDocOp::LoadDocumentDsl(_json) => {
+                TutorialPendingDocOp::LoadArtifactDsl(_json) => {
                     eprintln!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge");
                 }
                 TutorialPendingDocOp::ApplyOperations(operations) => {
@@ -7285,13 +7285,13 @@ impl ShellState {
             ],
             LeftPanelKind::Workbench => {
                 let mut tabs: Vec<PanelTabDefinition> = session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "left").cloned().collect();
-                let has_document = tabs.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+                let has_document = tabs.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
                 if !has_document {
                     tabs.insert(
                         0,
                         PanelTabDefinition {
-                            kind: semio_framework::PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
-                            label: LocalizedLabel::data(shell_panel_tab_label(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, "Document", is_de)),
+                            kind: semio_framework::PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+                            label: LocalizedLabel::data(shell_panel_tab_label(FRAMEWORK_PANEL_TAB_ARTIFACT_ID, "Document", is_de)),
                             group: PanelGroup::Workbench,
                             body_key: Some(String::new()),
                             children: Vec::new(),
@@ -7356,7 +7356,7 @@ impl ShellState {
                             return id.clone();
                         }
                     }
-                    tabs.first().map(|t| t.id().to_string()).unwrap_or_else(|| FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into())
+                    tabs.first().map(|t| t.id().to_string()).unwrap_or_else(|| FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into())
                 }
             }
         }
@@ -7402,7 +7402,7 @@ impl ShellState {
         let logo_size = btn_h - theme.gap_standard;
         chrome_icon(draw, icons, "semio-logo", x, btn_y + (btn_h - logo_size) * 0.5, logo_size, theme.text);
         x += logo_size + theme.gap_standard;
-        let title = self.session.as_ref().map(|s| app_document_label(resolve_app_document(&s.app, &self.terminology_id))).unwrap_or_else(|| if self.space_mode { format!("semio · {}", self.plugin_filter) } else { "semio · os".into() });
+        let title = self.session.as_ref().map(|s| app_breadcrumb(resolve_app_breadcrumb(&s.app, &self.terminology_id))).unwrap_or_else(|| if self.space_mode { format!("semio · {}", self.plugin_filter) } else { "semio · os".into() });
         chrome_text(draw, atlas, input, theme, &title, x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
         x += atlas.measure_text(&title, theme.font_size_body).0 + theme.gap_standard * 2.0;
         let examples = self.active_plugin_examples();
@@ -7694,7 +7694,7 @@ impl ShellState {
             }
         }
         let window_labels: HashMap<String, String> =
-            session.app.window_kinds.iter().map(|kind| (kind.id.clone(), app_window_document_label(&session.app, &self.terminology_id, self.active_locale(), kind.label.resolve(self.active_terminology(), self.active_locale())))).collect();
+            session.app.window_kinds.iter().map(|kind| (kind.id.clone(), app_window_label(&session.app, &self.terminology_id, self.active_locale(), kind.label.resolve(self.active_terminology(), self.active_locale())))).collect();
         let window_icon_ids: HashMap<String, String> = session.app.window_kinds.iter().map(|kind| (kind.id.clone(), kind.icon_id.as_str().to_string())).collect();
         self.dock_canvas_bounds = canvas;
         self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels, &window_icon_ids);
@@ -7740,7 +7740,7 @@ impl ShellState {
             self.dock.register_resize_hits(&mut resize_ctx, canvas);
         }
         if show_fallback {
-            chrome_text(draw, atlas, input, theme, &app_document_label(resolve_app_document(&session.app, &self.terminology_id)), canvas.x + 16.0, canvas.y + 32.0, theme.font_size_body, theme.text_muted);
+            chrome_text(draw, atlas, input, theme, &app_breadcrumb(resolve_app_breadcrumb(&session.app, &self.terminology_id)), canvas.x + 16.0, canvas.y + 32.0, theme.font_size_body, theme.text_muted);
         }
         if let Some(drag) = &self.dock_drag {
             if let Some(zone) = &drag.drop_zone {
@@ -7777,7 +7777,7 @@ impl ShellState {
         }
         if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
             if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
-                let label = format!("Back to Workflow · {}", app_document_label(&spawned.document));
+                let label = format!("Back to Workflow · {}", app_breadcrumb(&spawned.breadcrumb));
                 let item = ChromeGroupItem { control_id: "space.canvas.back", icon_id: Some("chevron-left"), label: Some(&label), active: false, disabled: false, kind: HitKind::Button };
                 let bar_w = measure_chrome_group_item(atlas, theme, &item).min(canvas.w);
                 let bar = Rect::new(canvas.x, canvas.y, bar_w, bar_h);

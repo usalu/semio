@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `FlowSnapshot` to its binary pack form.
 pub fn encode(snapshot: &FlowSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(snapshot)
+    store::ArtifactPack::encode_pack(snapshot)
 }
 
 /// 📖️ Decodes a `FlowSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
-    <FlowSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

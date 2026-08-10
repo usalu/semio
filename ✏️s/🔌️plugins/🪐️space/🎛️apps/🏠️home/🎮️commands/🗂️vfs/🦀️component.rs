@@ -6,7 +6,7 @@
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 
 //#region 🔖️NavigateVirtualFileSystemNode
 pub mod navigate_virtual_file_system_node {
@@ -19,7 +19,7 @@ pub mod navigate_virtual_file_system_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let space_id = payload.node_id.strip_prefix("studio:").unwrap_or(&payload.node_id);
         eprintln!("[DEBUG] home navigateVirtualFileSystemNode id={space_id}");
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }))
@@ -39,7 +39,7 @@ pub mod delete_virtual_file_system_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let generation = doc.snapshot.catalog_generation;
         match payload.node_id.strip_prefix("studio:") {
             Some(space_id) => {
@@ -63,7 +63,7 @@ pub mod go_home {
     #[dsl(keyword = "go-home")]
     pub struct GoHome {}
 
-    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
     }
 }

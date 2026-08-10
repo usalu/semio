@@ -1,5 +1,5 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
-//! derive-generated `store::DocumentDsl`, plus the handcrafted `default` example the app registers.
+//! derive-generated `store::ArtifactDsl`, plus the handcrafted `default` example the app registers.
 
 use crate::artifacts::cad::CadSnapshot;
 
@@ -16,12 +16,12 @@ pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../�
 
 /// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
-    <CadSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CadSnapshot` back to `.cad` DSL text.
 pub fn print_dsl(document: &CadSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

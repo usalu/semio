@@ -4,7 +4,7 @@
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
-use semio_framework_plugin::{merge_world_selection_ids, ConfigView, DocumentView, Emit, Fault, SelectionSet};
+use semio_framework_plugin::{merge_world_selection_ids, ConfigView, ArtifactView, Emit, Fault, SelectionSet};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetSelection
@@ -18,7 +18,7 @@ pub mod set_selection {
         pub asset_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: payload.shot_ids.clone(), asset_ids: payload.asset_ids.clone() }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod set_selection_method {
         pub method: String,
     }
 
-    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectionMethod, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetSelectionMethod { method: payload.method.clone() }]))
     }
 }
@@ -51,7 +51,7 @@ pub mod world_select {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let merged = merge_world_selection_ids(&SelectionSet::from_ids(config.selected_asset_ids.clone()), &payload.ids, &payload.merge).to_vec();
         Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
@@ -69,7 +69,7 @@ pub mod set_hover {
         pub asset_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetHover, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetHoveredAsset { asset_id: payload.asset_id.clone() }]))
     }
 }
@@ -87,7 +87,7 @@ pub mod world_pick {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldPick, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let resolved = payload.asset_index.and_then(|index| doc.snapshot.assets.get(index as usize)).map(|asset| asset.id.clone()).or_else(|| payload.asset_id.clone());
         match resolved {
@@ -110,7 +110,7 @@ pub mod world_pointer_down {
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
-    pub fn handle(_payload: &WorldPointerDown, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &WorldPointerDown, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -124,7 +124,7 @@ pub mod world_pointer_move {
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
-    pub fn handle(_payload: &WorldPointerMove, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &WorldPointerMove, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -140,7 +140,7 @@ pub mod set_center_model {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetCenterModel, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let next = payload.pressed.unwrap_or(!config.center_model);
         let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel { value: next }];
@@ -162,7 +162,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }, ShootingConfigMutation::SetHoveredAsset { asset_id: None }]))
     }
 }
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_utility_clears_hover_and_emits_no_document_mutations() {
+    fn set_active_utility_clears_hover_and_emits_no_artifact_mutations() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetHover(set_hover::SetHover { asset_id: Some("base".into()) }));
         let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));

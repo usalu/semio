@@ -35,8 +35,8 @@ impl Default for JpgSnapshot {
 }
 //#endregion Snapshot
 
-//#region HandcraftedDocumentCodecs
-impl store::DocumentDsl for JpgSnapshot {
+//#region HandcraftedArtifactCodecs
+impl store::ArtifactDsl for JpgSnapshot {
     const EXTENSION: &'static str = "jpg";
     fn envelope_id() -> &'static str { "stdio.jpg" }
 
@@ -65,7 +65,7 @@ impl store::DocumentDsl for JpgSnapshot {
         let bytes = crate::artifacts::jpg::engine::encode_jpg(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -73,12 +73,12 @@ impl store::DocumentDsl for JpgSnapshot {
     }
 }
 
-impl store::DocumentPack for JpgSnapshot {
+impl store::ArtifactPack for JpgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::jpg::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -88,10 +88,10 @@ impl store::DocumentPack for JpgSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -99,4 +99,4 @@ impl store::DocumentPack for JpgSnapshot {
         crate::artifacts::jpg::engine::decode_jpg(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
-//#endregion HandcraftedDocumentCodecs
+//#endregion HandcraftedArtifactCodecs

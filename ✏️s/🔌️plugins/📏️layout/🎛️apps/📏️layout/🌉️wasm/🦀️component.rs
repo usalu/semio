@@ -1,5 +1,5 @@
 //! 🕸️ Layout play app — the WASM bridge: a stateful `LayoutSession` object the JS shell drives directly
-//! for GPU canvas rendering, pointer/camera interaction and export, independent of the `DocumentApp`
+//! for GPU canvas rendering, pointer/camera interaction and export, independent of the `ArtifactApp`
 //! dispatch surface (this is host-canvas plumbing, not a document command).
 
 #[cfg(target_arch = "wasm32")]
@@ -113,7 +113,7 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = setDocumentJson)]
-        pub fn set_document_json(&mut self, json: &str) -> Result<(), JsValue> {
+        pub fn set_artifact_json(&mut self, json: &str) -> Result<(), JsValue> {
             parse_layout_document(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().document_json = json.to_string();
             Ok(())

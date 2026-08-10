@@ -58,8 +58,8 @@ impl PlaybookSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for PlaybookSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for PlaybookSnapshot {
     const EXTENSION: &'static str = "playbook";
     fn envelope_id() -> &'static str {
         "playbook.playbook"
@@ -69,7 +69,7 @@ impl store::DocumentDsl for PlaybookSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(Self::from_kernel(<crate::playbook::PlaybookSpec as store::DocumentDsl>::parse_dsl(body)?))
+        Ok(Self::from_kernel(<crate::playbook::PlaybookSpec as store::ArtifactDsl>::parse_dsl(body)?))
     }
     fn print_dsl(&self) -> String {
         let kernel = self.as_kernel();
@@ -79,7 +79,7 @@ impl store::DocumentDsl for PlaybookSnapshot {
             dsl::JoinMode::Document,
         );
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -88,7 +88,7 @@ impl store::DocumentDsl for PlaybookSnapshot {
     }
 }
 
-impl store::DocumentPack for PlaybookSnapshot {
+impl store::ArtifactPack for PlaybookSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let kernel = self.as_kernel();
         let inner = store::pack_rt::encode_document(
@@ -97,7 +97,7 @@ impl store::DocumentPack for PlaybookSnapshot {
             options,
         )?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -107,10 +107,10 @@ impl store::DocumentPack for PlaybookSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) =
             store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -120,4 +120,4 @@ impl store::DocumentPack for PlaybookSnapshot {
         ))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

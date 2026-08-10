@@ -22,7 +22,7 @@ export const BACKBONE_ENDPOINT_PATH = "/semio-backbone";
 
 export type BackboneKind = "file" | "folder" | "remote" | "unknown";
 
-export type DocumentBackboneRef = {
+export type ArtifactBackboneRef = {
   readonly kind: BackboneKind;
   readonly uri: string;
 };
@@ -34,7 +34,7 @@ export function backboneKindFromUri(uri: string): BackboneKind {
   return "unknown";
 }
 
-export function documentBackboneRef(uri: string): DocumentBackboneRef {
+export function artifactBackboneRef(uri: string): ArtifactBackboneRef {
   return { kind: backboneKindFromUri(uri), uri };
 }
 
@@ -142,8 +142,8 @@ export function documentFromEnvelopeJson(_envelopeJson: string): unknown {
 }
 
 /** @deprecated Use {@link encodeDocumentPackBundle}. */
-export function wrapDocumentEnvelope(_document: unknown, _documentId: string, _uri: string): string {
-  throw new Error("wrapDocumentEnvelope removed — use encodeDocumentPackBundle");
+export function wrapArtifactEnvelope(_document: unknown, _documentId: string, _uri: string): string {
+  throw new Error("wrapArtifactEnvelope removed — use encodeDocumentPackBundle");
 }
 
 //#region 🔀️ApplyBackboneMessage
@@ -277,8 +277,8 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
 
 //#region 🔖️SyncProtocol
 /**
- * 🔁️ TS mirror of `store_sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
- * `DocumentEvent`/`DocumentSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
+ * 🔁️ TS mirror of `store_sync`'s Rust actor protocol (`ArtifactActorConfig`/`ArtifactActorMsg`/
+ * `ArtifactEvent`/`ArtifactSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
  * shapes `🟦️backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
  * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`store/sync/fixtures/`)
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
@@ -339,7 +339,7 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope): Mutati
 }
 
 /** 📡️ Wire-protocol presence identity — distinct from the UI-rendering {@link PresencePeer} scene prop. */
-export type DocumentPresencePeer = {
+export type ArtifactPresencePeer = {
   readonly actor: string;
   readonly label?: string;
   readonly selectionJson?: string;
@@ -357,7 +357,7 @@ export type DocumentPresencePeer = {
  * binary codec (see `encodeClientFrame`/`decodeClientFrame` below), where Rust field names are
  * plain (not renamed), so it stays snake_case like the Rust source. 🎯️ W5: `diff`/`inverse` payloads
  * are opaque bytes now (a JSON number array here, matching every other `Vec<u8>` field on this
- * boundary), not a schema-erased JSON value — `protocol_causal::DocumentDiff`/`InverseMutation`
+ * boundary), not a schema-erased JSON value — `protocol_causal::ArtifactDiff`/`InverseMutation`
  * both flipped from `serde_json::Value` to `Vec<u8>`. */
 export type WireMutationEnvelope = {
   readonly mutation_id: string;
@@ -553,7 +553,7 @@ function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
  * f64,f64,f64? | drag_ghost_json str?)` — the TS twin of `semio_framework_core::encode_presence_peer`
  * (`framework/core/rs/lib.rs`). This is what `ClientFrame::Presence.peer`/`ServerFrame::Presence.
  * peers[]` actually carry — real binary, not JSON bytes. */
-export function encodePresencePeer(peer: DocumentPresencePeer): number[] {
+export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   const out: number[] = [];
   writeStr(out, peer.actor);
   let presence = 0;
@@ -585,7 +585,7 @@ export function encodePresencePeer(peer: DocumentPresencePeer): number[] {
 
 /** 🎯️ The inverse of {@link encodePresencePeer} — the TS twin of
  * `semio_framework_core::decode_presence_peer`. */
-export function decodePresencePeer(bytes: Uint8Array, pos: [number]): DocumentPresencePeer {
+export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPresencePeer {
   const actor = readStr(bytes, pos);
   const presence = bytes[pos[0]];
   if (presence === undefined) throw new Error("presence peer: truncated");
@@ -719,32 +719,32 @@ function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]): read
   return out;
 }
 
-function wireDocumentActorMsg(message: DocumentActorMsg): unknown {
+function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "localMutations") {
     return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes) };
   }
   return message;
 }
 
-function parseDocumentActorMsg(message: Record<string, unknown>): DocumentActorMsg {
+function parseArtifactActorMsg(message: Record<string, unknown>): ArtifactActorMsg {
   if (message.kind === "localMutations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[]) };
   }
-  return message as DocumentActorMsg;
+  return message as ArtifactActorMsg;
 }
 
-function wireDocumentEvent(event: DocumentEvent): unknown {
+function wireArtifactEvent(event: ArtifactEvent): unknown {
   if (event.kind === "remoteMutations") {
     return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes) };
   }
   return event;
 }
 
-function parseDocumentEvent(event: Record<string, unknown>): DocumentEvent {
+function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
   if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[]) };
   }
-  return event as DocumentEvent;
+  return event as ArtifactEvent;
 }
 //#endregion 🔖️EnvelopeCodec
 
@@ -1018,8 +1018,8 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
 export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly token?: string };
 
-/** 🧾️ Everything the worker needs to open one document's actor — mirrors `DocumentActorConfig`. */
-export type DocumentActorConfig = {
+/** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
+export type ArtifactActorConfig = {
   readonly documentId: string;
   readonly schema: string;
   readonly bindings: readonly PersistenceBinding[];
@@ -1027,16 +1027,16 @@ export type DocumentActorConfig = {
   readonly actor: string;
   /** 🧬️ W5.7: this document kind's `store::DocumentCodec.pack_schema_hash`, for hub schema-hash
    * validation (`ClientFrame::Hello.pack_schema_hash`) — the shell fills this from the wasm
-   * renderer's `document_pack_schema_hash(schema)` export before calling `openDocument`. Omitted
+   * renderer's `document_pack_schema_hash(schema)` export before calling `openArtifact`. Omitted
    * (or all-zero) means "schema-agnostic client", which the hub never validates. */
   readonly packSchemaHash?: readonly number[];
 };
 
-/** 📨️ Caller→actor control messages — mirrors Rust `DocumentActorMsg`. */
-export type DocumentActorMsg =
+/** 📨️ Caller→actor control messages — mirrors Rust `ArtifactActorMsg`. */
+export type ArtifactActorMsg =
   | { readonly kind: "localMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "localSnapshot"; readonly pack: readonly number[]; readonly spr: readonly number[] }
-  | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
+  | { readonly kind: "presenceHeartbeat"; readonly peer: ArtifactPresencePeer }
   | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "externalChanged" }
   | { readonly kind: "detach" };
@@ -1044,8 +1044,8 @@ export type DocumentActorMsg =
 /** 📶️ Connection state of a document's remote (hub) transport — mirrors Rust `RemoteState`. */
 export type RemoteState = { readonly kind: "detached" } | { readonly kind: "connecting" } | { readonly kind: "live"; readonly peerCount: number } | { readonly kind: "backoff"; readonly retryInMs: number };
 
-/** 🚦️ Sync health snapshot for status badges — mirrors Rust `DocumentSyncStatus`. */
-export type DocumentSyncStatus = {
+/** 🚦️ Sync health snapshot for status badges — mirrors Rust `ArtifactSyncStatus`. */
+export type ArtifactSyncStatus = {
   readonly persisted: boolean;
   readonly pendingMutations: number;
   readonly remote: RemoteState;
@@ -1060,12 +1060,12 @@ export type SyncConflict = { readonly message?: string } & Record<string, unknow
  * mirrors Rust `CommandAckOutcome`. */
 export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string };
 
-/** 📬️ Actor→subscriber events — mirrors Rust `DocumentEvent`. */
-export type DocumentEvent =
+/** 📬️ Actor→subscriber events — mirrors Rust `ArtifactEvent`. */
+export type ArtifactEvent =
   | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "snapshotReplaced"; readonly pack: readonly number[]; readonly spr: readonly number[] }
-  | ({ readonly kind: "status" } & DocumentSyncStatus)
-  | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
+  | ({ readonly kind: "status" } & ArtifactSyncStatus)
+  | { readonly kind: "presence"; readonly peers: readonly ArtifactPresencePeer[] }
   | { readonly kind: "preview"; readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
@@ -1087,7 +1087,7 @@ function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) =
 export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
   const wire =
     request.kind === "send"
-      ? { ...request, message: wireDocumentActorMsg(request.message) }
+      ? { ...request, message: wireArtifactActorMsg(request.message) }
       : request;
   const packed = encodePackValue(wire);
   return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
@@ -1100,7 +1100,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     return {
       kind: "send",
       documentId: String(parsed.documentId),
-      message: parseDocumentActorMsg(parsed.message as Record<string, unknown>),
+      message: parseArtifactActorMsg(parsed.message as Record<string, unknown>),
     };
   }
   return parsed as BackboneWorkerRequest;
@@ -1109,7 +1109,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
 /** @emoji 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
 export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): Uint8Array {
   const wire =
-    response.kind === "event" ? { ...response, event: wireDocumentEvent(response.event) } : response;
+    response.kind === "event" ? { ...response, event: wireArtifactEvent(response.event) } : response;
   const packed = encodePackValue(wire);
   return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
 }
@@ -1118,16 +1118,16 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
-    return { kind: "event", documentId: String(parsed.documentId), event: parseDocumentEvent(parsed.event as Record<string, unknown>) };
+    return { kind: "event", documentId: String(parsed.documentId), event: parseArtifactEvent(parsed.event as Record<string, unknown>) };
   }
   return parsed as BackboneWorkerResponse;
 }
 
 /** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}). */
-export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
+export type BackboneWorkerRequest = ({ readonly kind: "open" } & ArtifactActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: ArtifactActorMsg };
 
 /** 📥️ `🟦️backbone-worker.ts` → main thread messages. */
-export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent } | { readonly kind: "ready" };
+export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent } | { readonly kind: "ready" };
 //#endregion 🔖️SyncProtocol
 
 //#region 🔖️WorkflowPlanner
@@ -1601,7 +1601,7 @@ export type AppCommandValue =
   | { readonly CommandText: { readonly seq: number; readonly line: string } }
   | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[]; readonly view_state: readonly number[] } }
   | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
-  | { readonly DocumentCommand: { readonly seq: number; readonly command: readonly number[] } }
+  | { readonly ArtifactCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly MutationEnvelope[] } }
   | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
@@ -1667,7 +1667,7 @@ function readVecSectionProbe(bytes: Uint8Array, pos: [number]): SectionProbe[] {
 
 //#region 🔖️Codec
 const APP_COMMAND_TAGS = {
-  Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, DocumentCommand: 6, ApplyEnvelopes: 7,
+  Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, ArtifactCommand: 6, ApplyEnvelopes: 7,
   LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
   MediaFingerprint: 16, Bye: 17,
 } as const;
@@ -1711,10 +1711,10 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.ContextMenu);
     writeVarintU64(out, cmd.ContextMenu.seq);
     writeBytes(out, cmd.ContextMenu.request);
-  } else if ("DocumentCommand" in cmd) {
-    out.push(APP_COMMAND_TAGS.DocumentCommand);
-    writeVarintU64(out, cmd.DocumentCommand.seq);
-    writeBytes(out, cmd.DocumentCommand.command);
+  } else if ("ArtifactCommand" in cmd) {
+    out.push(APP_COMMAND_TAGS.ArtifactCommand);
+    writeVarintU64(out, cmd.ArtifactCommand.seq);
+    writeBytes(out, cmd.ArtifactCommand.command);
   } else if ("ApplyEnvelopes" in cmd) {
     out.push(APP_COMMAND_TAGS.ApplyEnvelopes);
     writeVarintU64(out, cmd.ApplyEnvelopes.seq);
@@ -1796,8 +1796,8 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.ContextMenu:
       return { ContextMenu: { seq: readVarintU64(bytes, pos), request: readBytes(bytes, pos) } };
-    case APP_COMMAND_TAGS.DocumentCommand:
-      return { DocumentCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.ArtifactCommand:
+      return { ArtifactCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.ApplyEnvelopes: {
       const seq = readVarintU64(bytes, pos);
       const wire = readVecEnvelope(bytes, pos);
@@ -2384,7 +2384,7 @@ if (import.meta.vitest) {
       { CommandText: { seq: 3, line: "move 1 2" } },
       { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }], view_state: [] } },
       { ContextMenu: { seq: 5, request: [9, 9] } },
-      { DocumentCommand: { seq: 6, command: [7] } },
+      { ArtifactCommand: { seq: 6, command: [7] } },
       { ApplyEnvelopes: { seq: 7, envelopes: [] } },
       { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
       { ReadDocument: { seq: 9 } },
@@ -2453,7 +2453,7 @@ if (import.meta.vitest) {
         ["CommandText", { CommandText: { seq: 1, line: "go" } }],
         ["RefreshUi", { RefreshUi: { seq: 1, sections: [{ kind: 1, key: "a", hash: 1 }], view_state: [] } }],
         ["ContextMenu", { ContextMenu: { seq: 1, request: [1] } }],
-        ["DocumentCommand", { DocumentCommand: { seq: 1, command: [1] } }],
+        ["ArtifactCommand", { ArtifactCommand: { seq: 1, command: [1] } }],
         ["ApplyEnvelopes", { ApplyEnvelopes: { seq: 1, envelopes: [] } }],
         ["LoadDocument", { LoadDocument: { seq: 1, pack: [1], spr: [2] } }],
         ["ReadDocument", { ReadDocument: { seq: 1 } }],
@@ -2473,7 +2473,7 @@ if (import.meta.vitest) {
         CommandText: "030102676f",
         RefreshUi: "040101010161010100",
         ContextMenu: "05010101",
-        DocumentCommand: "06010101",
+        ArtifactCommand: "06010101",
         ApplyEnvelopes: "070100",
         LoadDocument: "080101010102",
         ReadDocument: "0901",
@@ -2494,7 +2494,7 @@ if (import.meta.vitest) {
         ["Effects", { Effects: { in_reply_to: null, effects: [[1]] } }],
         ["Events", { Events: { in_reply_to: null, events: [] } }],
         ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
-        ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
+        ["Artifact", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
         ["Config", { Config: { in_reply_to: 1, pack: [1], spr: [2], ops: "c" } }],
         ["ConfigChanged", { ConfigChanged: { envelopes: [], origin: "o" } }],
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],

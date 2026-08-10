@@ -1,6 +1,6 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, DocumentApp, Plugin, PluginApp};
+use crate::app::{App, ArtifactApp, Plugin, PluginApp};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition, Contribution};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -131,16 +131,16 @@ impl PluginBuilder<Ready> {
     }
 
     /// 🧬️ Registers a typed document app factory.
-    pub fn document_app<A: DocumentApp>(mut self, app: App) -> Self {
+    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> =
-            Box::new(move || Box::new(crate::app::VcsDocumentApp::with_registry(A::default(), registry.clone())));
+            Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self
     }
 
     /// 🧬️ Alias for [`Self::document_app`] — matches the retired `Plugin` method name used by `semio_plugin!`.
-    pub fn register_document_app<A: DocumentApp>(self, app: App) -> Self {
+    pub fn register_document_app<A: ArtifactApp>(self, app: App) -> Self {
         self.document_app::<A>(app)
     }
 

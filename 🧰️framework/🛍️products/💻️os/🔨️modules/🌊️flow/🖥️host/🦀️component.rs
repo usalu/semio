@@ -27,7 +27,7 @@ use crate::drawing::*;
 use crate::wasm_session::*;
 use crate::vcs::*;
 use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
-use crate::os_store::{create_document_envelope, DocumentCommand};
+use crate::os_store::{create_document_envelope, ArtifactCommand};
 
 
 // #region ⚠️ Errors
@@ -117,7 +117,7 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<DagNodeSpec>,
-    /// ↩️ Undo/redo, backed by the standard `crate::os_store::DocumentStore<FlowFixture, FlowMutation>`
+    /// ↩️ Undo/redo, backed by the standard `crate::os_store::ArtifactStore<FlowFixture, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     history_store: FlowStore,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
@@ -228,8 +228,8 @@ impl FlowHost {
         Ok(serde_json::to_string(&self.fixture)?)
     }
 
-    pub fn document(&self) -> FlowDocument {
-        self.fixture.to_document()
+    pub fn document(&self) -> FlowArtifact {
+        self.fixture.to_artifact()
     }
 
     pub fn catalogue_json(&self) -> Result<String, FlowCoreError> {
@@ -303,7 +303,7 @@ impl FlowHost {
     pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>) {
         self.previous_snapshot = snapshot;
         self.previous_channels = channels;
-        // Receiverless DocumentApp rebuilds a fresh FlowHost per call; restore outputs so
+        // Receiverless ArtifactApp rebuilds a fresh FlowHost per call; restore outputs so
         // blocked-port status and preview wiring see the last completed eval channels.
         if let Some(channels) = self.previous_channels.as_ref() {
             self.outputs = channels.outputs.clone();
@@ -1738,7 +1738,7 @@ impl FlowHost {
     }
 
     /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowMutation::SetFixture` edit — the standard `crate::os_store::DocumentStore`/`Mutation`/
+    /// invertible `FlowMutation::SetFixture` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
     /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
     /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
@@ -1746,7 +1746,7 @@ impl FlowHost {
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let _ = self.history_store.dispatch(DocumentCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
+            let _ = self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
         }
     }
 
@@ -1771,7 +1771,7 @@ impl FlowHost {
             self.gesture_active = false;
             let committed = self.history_store.snapshot().unwrap_or_else(|_| self.fixture.clone());
             if Self::content_changed(&committed, &self.fixture) {
-                let _ = self.history_store.dispatch(DocumentCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
+                let _ = self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
             }
         }
     }
@@ -1780,7 +1780,7 @@ impl FlowHost {
     pub fn undo(&mut self) -> bool {
         self.flush_pending_change();
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(DocumentCommand::Undo).is_err() {
+        if self.history_store.dispatch(ArtifactCommand::Undo).is_err() {
             return false;
         }
         let Ok(mut restored) = self.history_store.snapshot() else {
@@ -1795,7 +1795,7 @@ impl FlowHost {
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(DocumentCommand::Redo).is_err() {
+        if self.history_store.dispatch(ArtifactCommand::Redo).is_err() {
             return false;
         }
         let Ok(mut restored) = self.history_store.snapshot() else {
@@ -2064,7 +2064,7 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
 }
 
 //#region 🔖️ProcessSession
-/// 🧠 Process-local eval session — `DocumentApp::handle`/`render`/`pending_effects` are receiverless
+/// 🧠 Process-local eval session — `ArtifactApp::handle`/`render`/`pending_effects` are receiverless
 /// (B1), so the off-main-thread eval driver cannot live on the app ZST. One session per plugin wasm
 /// instance is correct for the playground/single-document hosts; multi-instance hosts must graduate
 /// this to an instance-keyed map when that lands.
@@ -2807,7 +2807,7 @@ mod tests {
     fn flow_document_tree_is_shakable() {
         let host = host_with_test_bridge();
         let document = host.document();
-        assert_eq!(document.schema, "flow.document");
+        assert_eq!(document.schema, "flow.artifact");
         assert!(!document.tree.neurons.is_empty());
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
@@ -2938,7 +2938,7 @@ mod tests {
         install_first_party_light_flow_extensions_for_tests();
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(<FlowFixture as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../📚️examples/🌊️default.flow")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🌊️default.flow")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);
@@ -2978,7 +2978,7 @@ mod tests {
         assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     }
 
-    /// ↩️ Exercises the standard `crate::os_store::DocumentStore<FlowFixture, FlowMutation>` undo/redo
+    /// ↩️ Exercises the standard `crate::os_store::ArtifactStore<FlowFixture, FlowMutation>` undo/redo
     /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
     /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
     /// hand-rolled `Vec<FlowFixture>` snapshot stack.
@@ -2995,15 +2995,15 @@ mod tests {
 
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
         let mut store = FlowStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations, description: None }).expect("apply add-widget operations");
+        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).expect("apply add-widget operations");
         assert_eq!(store.snapshot().expect("projection").widgets.len(), count_before + 1);
 
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         let after_undo = store.snapshot().expect("projection");
         assert_eq!(after_undo.widgets.len(), count_before);
         assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
 
-        store.dispatch(DocumentCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
         let after_redo = store.snapshot().expect("projection");
         assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     }
@@ -3833,7 +3833,7 @@ mod tests {
     fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
         // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`crate::os_store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",
@@ -3921,7 +3921,7 @@ mod tests {
     fn rectangle_extrude_fixture_evaluates_solid_output() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
         // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`crate::os_store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",
@@ -3995,7 +3995,7 @@ mod tests {
     #[test]
     fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
         // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`crate::os_store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",

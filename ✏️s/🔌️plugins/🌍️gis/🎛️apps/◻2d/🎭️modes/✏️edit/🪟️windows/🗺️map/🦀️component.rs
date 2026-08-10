@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ Collects this window's chrome from its own `🎚️options/*` nodes rather than re-listing them —
-/// measures are config-derived per frame by `DocumentApp::window_measures`, never frozen into the
+/// measures are config-derived per frame by `ArtifactApp::window_measures`, never frozen into the
 /// manifest.
 pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::apps::gis2d::modes::edit::windows::map::options;

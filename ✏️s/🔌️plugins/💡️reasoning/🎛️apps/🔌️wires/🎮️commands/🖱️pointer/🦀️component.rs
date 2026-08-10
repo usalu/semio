@@ -5,7 +5,7 @@ use crate::artifacts::wires::engine::{fixture_camera, find_board_node, node_posi
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -21,7 +21,7 @@ pub mod canvas_pointer_down {
         pub y: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         match payload.id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
             Some(id) => Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: vec![id.to_string()] }, WiresConfigMutation::SetDrag { node_id: Some(id.to_string()), last_x: payload.x, last_y: payload.y }])),
@@ -42,7 +42,7 @@ pub mod canvas_pointer_move {
         pub y: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default()) };
@@ -54,7 +54,7 @@ pub mod canvas_pointer_move {
         patch.insert("x".into(), dsl::to_dsl_value(&(cur_x + dx)).unwrap_or(DslValue::Null));
         patch.insert("y".into(), dsl::to_dsl_value(&(cur_y + dy)).unwrap_or(DslValue::Null));
         Ok(Emit {
-            document_mutations: vec![WiresMutation::PatchNode { node_id: drag_node_id.clone(), patch }],
+            artifact_mutations: vec![WiresMutation::PatchNode { node_id: drag_node_id.clone(), patch }],
             config_mutations: vec![WiresConfigMutation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y }],
             coalesce_key: Some(format!("drag:{drag_node_id}")),
             ..Default::default()
@@ -71,7 +71,7 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         Ok(Emit::config(vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]))
     }
 }

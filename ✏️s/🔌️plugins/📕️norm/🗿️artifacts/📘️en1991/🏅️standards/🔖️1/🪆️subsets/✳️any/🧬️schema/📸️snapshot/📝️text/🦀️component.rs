@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::en1991::En1991Snapshot;
 
 /// 🏬️ The retail-hydrocarbon-fire example fixture, handcrafted in `en1991`'s DSL
-/// (`store::DocumentDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
+/// (`store::ArtifactDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
 /// hydrocarbon fire curve and a full set of the other action sub-scenarios (snow, wind, thermal,
 /// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
 /// from `En1991Snapshot::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
@@ -20,12 +20,12 @@ pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../.
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, store::TextError> {
-    <En1991Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <En1991Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1991` DSL text.
 pub fn print_dsl(document: &En1991Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]

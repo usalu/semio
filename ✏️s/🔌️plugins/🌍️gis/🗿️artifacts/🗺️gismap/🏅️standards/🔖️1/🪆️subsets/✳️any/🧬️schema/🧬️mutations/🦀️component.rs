@@ -9,7 +9,7 @@ use crate::artifacts::gismap::diff::{diff_set_snapshot, features_delta_from_coll
 use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
 use protocol::{inverse_collection_mutation, CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
 /// 🗺️ Typed, invertible map operation.
@@ -53,8 +53,8 @@ impl Mutation<GisMapSnapshot> for GisMapMutation {
     }
 }
 
-pub type GisMapEnvelope = DocumentEnvelope<GisMapSnapshot, GisMapMutation>;
-pub type GisMapStore = DocumentStore<GisMapSnapshot, GisMapMutation>;
+pub type GisMapEnvelope = ArtifactEnvelope<GisMapSnapshot, GisMapMutation>;
+pub type GisMapStore = ArtifactStore<GisMapSnapshot, GisMapMutation>;
 //#endregion 🔹Operation
 
 //#region 🔹Tests
@@ -64,7 +64,7 @@ mod tests {
     use crate::artifacts::gismap::engine::{empty_gis_map_snapshot, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
         let forward = vcs::apply_mutation(document, operation);
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
 }

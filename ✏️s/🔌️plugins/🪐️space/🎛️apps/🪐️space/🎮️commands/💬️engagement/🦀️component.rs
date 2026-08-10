@@ -3,7 +3,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️WorkflowEngagementSubmit
 pub mod workflow_engagement_submit {
@@ -16,12 +16,12 @@ pub mod workflow_engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &WorkflowEngagementSubmit, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &WorkflowEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let raw = payload.value.clone().unwrap_or_else(|| cfg.snapshot.workflow_engagement_input.clone());
         let mut parts = raw.split_whitespace();
         match (parts.next(), parts.next()) {
             (Some(plugin_id), Some(app_id)) => match crate::apps::space::engine::add_workflow_node_operation(plugin_id, app_id, None, 80.0, 80.0) {
-                Some((operation, node_id)) => Ok(Emit { document_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() }),
+                Some((operation, node_id)) => Ok(Emit { artifact_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() }),
                 None => Ok(Emit::default()),
             },
             _ => Ok(Emit::default()),
@@ -39,7 +39,7 @@ pub mod compiled_dag_engagement_submit {
     #[dsl(keyword = "compiled-dag-engagement-submit")]
     pub struct CompiledDagEngagementSubmit {}
 
-    pub fn handle(_payload: &CompiledDagEngagementSubmit, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(_payload: &CompiledDagEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -56,7 +56,7 @@ pub mod workflow_engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &WorkflowEngagementInput, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &WorkflowEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SpaceConfigMutation::SetWorkflowEngagementInput { value: payload.value.clone() }]))
     }
 }
@@ -73,7 +73,7 @@ pub mod compiled_dag_engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &CompiledDagEngagementInput, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &CompiledDagEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SpaceConfigMutation::SetCompiledDagEngagementInput { value: payload.value.clone() }]))
     }
 }

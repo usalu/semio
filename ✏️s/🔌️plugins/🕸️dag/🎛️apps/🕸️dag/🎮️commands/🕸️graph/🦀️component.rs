@@ -6,7 +6,7 @@
 //! field of `NodeGraphEdit`'s payload, so it lives beside the command it belongs to rather than in
 //! `📡️spr` (which now only carries the artifact-level `DagMutation` wire codec).
 //!
-//! Ported from the pre-migration `dag_ui::DocumentApp::handle` match arms — several of those arms were
+//! Ported from the pre-migration `dag_ui::ArtifactApp::handle` match arms — several of those arms were
 //! found with unbalanced `Ok(` wraps (the repo-wide corruption pattern documented in the migration
 //! TEMPLATE §12.3); fixed here as part of the port, not a behavior change.
 
@@ -16,7 +16,7 @@ use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions, DagNodePatch};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -44,11 +44,11 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         match delete_selection_result(document, &config.selected_node_ids) {
-            Some((removes, clear_selection)) => Ok(Emit { document_mutations: removes, config_mutations: vec![clear_selection], ..Default::default() }),
+            Some((removes, clear_selection)) => Ok(Emit { artifact_mutations: removes, config_mutations: vec![clear_selection], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -79,33 +79,33 @@ pub mod node_graph_edit {
         pub operations: Vec<DagNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let mut document_mutations: Vec<DagMutation> = Vec::new();
+        let mut artifact_mutations: Vec<DagMutation> = Vec::new();
         let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
         for sub_operation in &payload.operations {
             match sub_operation {
                 DagNodeGraphEditOp::SetFixture { fixture_json } => {
                     if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
                         config_mutations.push(DagConfigMutation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
-                        document_mutations.push(DagMutation::SetSnapshot { snapshot: dag_document_from_fixture(&fixture).into() });
+                        artifact_mutations.push(DagMutation::SetSnapshot { snapshot: dag_document_from_fixture(&fixture).into() });
                     }
                 }
                 DagNodeGraphEditOp::DeleteSelection => {
                     if let Some((removes, clear_selection)) = delete_selection_result(document, &config.selected_node_ids) {
-                        document_mutations.extend(removes);
+                        artifact_mutations.extend(removes);
                         config_mutations.push(clear_selection);
                     }
                 }
                 DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                     if let Ok(edge) = engine::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
-                        document_mutations.push(DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge }));
+                        artifact_mutations.push(DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge }));
                     }
                 }
             }
         }
-        Ok(Emit { document_mutations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -123,7 +123,7 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
             Ok(edge) => Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge })])),
@@ -143,7 +143,7 @@ pub mod disconnect {
         pub edge_id: String,
     }
 
-    pub fn handle(payload: &Disconnect, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         if document.edges.iter().any(|edge| edge.id == payload.edge_id) {
             Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Remove { id: payload.edge_id.clone() })]))
@@ -166,7 +166,7 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         if document.nodes.iter().any(|node| node.id == payload.node_id) {
             Ok(Emit::amend(vec![DagMutation::Nodes(CollectionMutation::Patch { id: payload.node_id.clone(), patch: DagNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } })], format!("move-{}", payload.node_id)))
@@ -185,7 +185,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);

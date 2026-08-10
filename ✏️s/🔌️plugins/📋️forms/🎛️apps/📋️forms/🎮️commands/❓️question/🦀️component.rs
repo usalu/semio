@@ -4,7 +4,7 @@ use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{parse_value_json, reset_try_config_mutations};
 use crate::artifacts::forms::engine::{create_form_id, locate_question, update_block_operation, value_to_dsl};
 use crate::artifacts::forms::{op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -192,7 +192,7 @@ pub mod add_question {
         pub step_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddQuestion, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let Some(step_id) = payload.step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
             return Ok(Emit::default());
@@ -200,7 +200,7 @@ pub mod add_question {
         let question = default_question_for_kind(&payload.kind, create_form_id("q"));
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
-        Ok(Emit { document_mutations: vec![FormMutation::AddBlock { step_id, block: question, index: None }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![FormMutation::AddBlock { step_id, block: question, index: None }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️AddQuestion
@@ -215,7 +215,7 @@ pub mod remove_question {
         pub question_id: String,
     }
 
-    pub fn handle(payload: &RemoveQuestion, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let Some(location) = locate_question(spec, &payload.question_id) else {
@@ -223,7 +223,7 @@ pub mod remove_question {
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| **id != payload.question_id).cloned().collect() });
-        Ok(Emit { document_mutations: vec![FormMutation::RemoveBlock { step_id: location.step_id, block_id: payload.question_id.clone() }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![FormMutation::RemoveBlock { step_id: location.step_id, block_id: payload.question_id.clone() }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️RemoveQuestion
@@ -241,7 +241,7 @@ pub mod patch_questions {
         pub param_key: Option<String>,
     }
 
-    pub fn handle(payload: &PatchQuestions, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let raw_value = parse_value_json(&payload.value_json);
         let operations: Vec<FormMutation> = if payload.field == "param" {
@@ -253,7 +253,7 @@ pub mod patch_questions {
         if operations.is_empty() {
             return Ok(Emit::config(reset_try_config_mutations()));
         }
-        Ok(Emit { document_mutations: operations, config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
     }
 }
 //#endregion 🔖️PatchQuestions
@@ -272,7 +272,7 @@ pub mod move_question {
         pub index: Option<u64>,
     }
 
-    pub fn handle(payload: &MoveQuestion, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let Some(source) = locate_question(spec, &payload.question_id) else {
             return Ok(Emit::default());
@@ -280,7 +280,7 @@ pub mod move_question {
         let target_id = payload.target_id.as_deref().unwrap_or(&payload.question_id);
         let resolved_index = payload.index.map_or_else(|| resolve_question_insert_index(spec, &payload.to_step_id, target_id, &payload.position).unwrap_or(0), |value| value as usize);
         Ok(Emit {
-            document_mutations: vec![FormMutation::MoveBlock { block_id: payload.question_id.clone(), from_step_id: source.step_id, to_step_id: payload.to_step_id.clone(), index: resolved_index }],
+            artifact_mutations: vec![FormMutation::MoveBlock { block_id: payload.question_id.clone(), from_step_id: source.step_id, to_step_id: payload.to_step_id.clone(), index: resolved_index }],
             config_mutations: reset_try_config_mutations(),
             ..Default::default()
         })
@@ -300,7 +300,7 @@ pub mod drop_question_kind {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &DropQuestionKind, doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let Some(step_id) = resolve_step_id_from_tree_target(spec, &payload.target_id) else {
             return Ok(Emit::default());
@@ -309,7 +309,7 @@ pub mod drop_question_kind {
         let question = default_question_for_kind(&payload.kind, create_form_id("q"));
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
-        Ok(Emit { document_mutations: vec![FormMutation::AddBlock { step_id, block: question, index }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![FormMutation::AddBlock { step_id, block: question, index }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️DropQuestionKind

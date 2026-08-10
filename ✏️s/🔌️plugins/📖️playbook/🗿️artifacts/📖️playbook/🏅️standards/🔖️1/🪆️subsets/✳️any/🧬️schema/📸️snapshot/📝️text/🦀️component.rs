@@ -13,12 +13,12 @@ pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../../../../
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {
-    <PlaybookSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaybookSnapshot` back to `.playbook` DSL text.
 pub fn print_dsl(document: &PlaybookSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

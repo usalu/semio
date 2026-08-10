@@ -5,7 +5,7 @@
 //! ui crate's `DagPlayRuntime` (an app-struct `RefCell`) AND the two fields the dag UI actually read off
 //! the deleted host-pushed `ViewModel` (`locale`, via `dag_play_labels`/`app_labels`/`context_menu`): the
 //! selected node ids, the free/live node-graph viewport camera, and the BCP-47 locale tag — session-only
-//! view state round-trips through the config `DocumentStore` exactly like document content, with a real
+//! view state round-trips through the config `ArtifactStore` exactly like document content, with a real
 //! `backwards` per `DagConfigMutation` instead of never being VCS'd at all.
 
 use infinite_board_port_directed_dag::DagCamera;
@@ -13,7 +13,7 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ `DagPlayApp::Config` — the pure-trait `DocumentApp::Config` for the dag app.
+/// 🧮️ `DagPlayApp::Config` — the pure-trait `ArtifactApp::Config` for the dag app.
 ///
 /// The camera is flattened to its three scalar fields (`camera_x`/`camera_y`/`camera_zoom`) rather than
 /// embedding `infinite_board_port_directed_dag::DagCamera` as a `#[dsl(block)]`: that kernel type is
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// `Clone`/`Debug`/`PartialEq`/`Serialize`/`Deserialize`), so it can't satisfy a nested-block field —
 /// three plain `f64` fields need no such support at all. See `dag_config_camera` below for the seam back
 /// to the real `DagCamera` type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "dagcfg")]
 #[dsl(id = "dag.config")]
@@ -39,9 +39,9 @@ pub struct DagConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for DagConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for DagConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -61,7 +61,7 @@ impl store::DocumentDsl for DagConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -70,12 +70,12 @@ impl store::DocumentDsl for DagConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for DagConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for DagConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -84,10 +84,10 @@ impl store::DocumentPack for DagConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -99,7 +99,7 @@ impl store::DocumentPack for DagConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for DagConfig {

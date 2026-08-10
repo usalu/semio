@@ -9,5 +9,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<GltfSnapshot, store::TextError
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), vertices, document: from.value.clone() })
 }
 pub fn deserialize_text(text: &str) -> Result<GltfSnapshot, store::TextError> {
-    deserialize(&<JsonSnapshot as store::DocumentDsl>::parse_dsl(text)?)
+    deserialize(&<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }

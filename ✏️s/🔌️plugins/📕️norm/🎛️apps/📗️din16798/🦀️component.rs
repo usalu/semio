@@ -1,4 +1,4 @@
-//! 🌬️ DIN EN 16798 play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🌬️ DIN EN 16798 play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the two surfaces
@@ -15,7 +15,7 @@ use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -47,7 +47,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct Din16798PlayApp;
 
-impl DocumentApp for Din16798PlayApp {
+impl ArtifactApp for Din16798PlayApp {
     type Snapshot = Din16798Snapshot;
     type Mutation = Din16798Mutation;
     type Config = NormConfig;
@@ -78,11 +78,11 @@ impl DocumentApp for Din16798PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Din16798Command, doc: &DocumentView<'_, Din16798Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Din16798Command, doc: &ArtifactView<'_, Din16798Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Din16798Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Din16798Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
         let host = NormHost::<DinEn16798Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
@@ -98,12 +98,12 @@ impl DocumentApp for Din16798PlayApp {
     /// 🎞️ `"report:out"`/`"document:out"` — see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(port: &str, doc: &DocumentView<'_, Din16798Snapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Din16798Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<DinEn16798Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Din16798Snapshot>) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Din16798Snapshot>) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
         crate::app_surface::import_media(port, media, |snapshot| Din16798Mutation::SetSnapshot { snapshot })
     }
     //#endregion 🔖️MediaPorts
@@ -141,9 +141,9 @@ pub fn create_din16798_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type NormApp = VcsDocumentApp<Din16798PlayApp>;
+    pub type NormApp = VcsArtifactApp<Din16798PlayApp>;
 
     pub fn new_app() -> NormApp {
         sdk_new_app::<Din16798PlayApp>()
@@ -286,7 +286,7 @@ mod tests {
     /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
     /// operations.
     #[test]
-    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) }));
         assert!(result.mutations.is_empty());

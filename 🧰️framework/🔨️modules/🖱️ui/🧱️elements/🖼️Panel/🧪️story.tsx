@@ -128,7 +128,7 @@ export const PanelNestedTabs: Story = {
               icon: Layers,
               name: "Workbench",
               order: 0,
-              children: [leafTab("document", Info, "Document", 0, "Document tab content"), leafTab("catalogue", Layers, "Catalogue", 1, "Catalogue tab content")],
+              children: [leafTab("document", Info, "Artifact", 0, "Document tab content"), leafTab("catalogue", Layers, "Catalogue", 1, "Catalogue tab content")],
             },
             {
               kind: "branch",
@@ -191,7 +191,7 @@ function ChromeHostedPanelDemo({ anchor }: { readonly anchor: "top-left" | "top-
       icon: Layers,
       name: "Category",
       order: 0,
-      children: [leafTab("document", Info, "Document", 0, "Document body"), leafTab("catalogue", Layers, "Catalogue", 1, "Catalogue body")],
+      children: [leafTab("document", Info, "Artifact", 0, "Document body"), leafTab("catalogue", Layers, "Catalogue", 1, "Catalogue body")],
     },
     leafTab("settings", Settings, "Settings", 1, "Settings body"),
   ];

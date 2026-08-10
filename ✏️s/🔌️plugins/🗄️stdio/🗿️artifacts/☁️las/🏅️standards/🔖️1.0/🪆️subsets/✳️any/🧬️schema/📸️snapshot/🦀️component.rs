@@ -113,7 +113,7 @@ pub fn las_bytes_from_vertices(verts: &[MeshVertex]) -> Vec<u8> {
 }
 
 
-impl store::DocumentDsl for LasSnapshot {
+impl store::ArtifactDsl for LasSnapshot {
     const EXTENSION: &'static str = "las";
     fn envelope_id() -> &'static str { "stdio.las" }
 
@@ -143,7 +143,7 @@ impl store::DocumentDsl for LasSnapshot {
     fn print_dsl(&self) -> String {
         let body: String = las_bytes_from_vertices(&self.vertices).iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -151,12 +151,12 @@ impl store::DocumentDsl for LasSnapshot {
     }
 }
 
-impl store::DocumentPack for LasSnapshot {
+impl store::ArtifactPack for LasSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = las_bytes_from_vertices(&self.vertices);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -165,10 +165,10 @@ impl store::DocumentPack for LasSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

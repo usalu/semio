@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Din18599Snapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Din18599Snapshot, PackError> {
-    <Din18599Snapshot as store::DocumentPack>::decode_pack(bytes)
+    <Din18599Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

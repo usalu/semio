@@ -1,6 +1,6 @@
 //! ♻️ Trinity Rewrite app — parametric rewrite play app bundled as a hot-swappable WASM plugin.
 //!
-//! 📌️ Pure-trait `DocumentApp`: `TrinityRewritePlayApp` is a unit struct; every former
+//! 📌️ Pure-trait `ArtifactApp`: `TrinityRewritePlayApp` is a unit struct; every former
 //! `RewritePlayRuntime` field (selection, hover/select var, camera, LOD, …) lives in
 //! `config::RewriteConfig`, written via `config::RewriteConfigMutation`s. Every rule/parameter/
 //! before-fixture mutation flows through the single LWW `RewriteRuleMutation::SetState`. The
@@ -13,13 +13,13 @@ use crate::artifacts::rewrite::{LayoutPoint, RewriteSnapshot, REWRITE_RULE_SCHEM
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigMutation};
 use crate::apps::rewrite::presence::{RewritePresence, RewritePresenceMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use store::EngineHandles;
 use std::collections::{BTreeMap, HashMap};
-use store::{DocumentDsl, DocumentPack};
+use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";
@@ -139,7 +139,7 @@ fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteSnapshot) -> Strin
 }
 
 /// ♻️ Pure computation of the rule-applied result graph — reused both by the `After` window's render
-/// and by `DocumentApp::export_media`'s `"graph:out"` port.
+/// and by `ArtifactApp::export_media`'s `"graph:out"` port.
 pub(crate) fn after_fixture_json(state: &RewriteSnapshot) -> String {
     apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
@@ -479,7 +479,7 @@ impl protocol::OpBinary for TrinityRewriteCommand {
 #[derive(Default)]
 pub struct TrinityRewritePlayApp;
 
-impl DocumentApp for TrinityRewritePlayApp {
+impl ArtifactApp for TrinityRewritePlayApp {
     type Snapshot = RewriteSnapshot;
     type Mutation = RewriteRuleMutation;
     type Config = RewriteConfig;
@@ -512,16 +512,16 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
-    /// working graph. `"document:in"` reimplements the default `DocumentApp::import_media` body for
+    /// working graph. `"document:in"` reimplements the default `ArtifactApp::import_media` body for
     /// the rule document itself.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "graph:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let fixture = <JackSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let mut next = doc.snapshot.clone();
                 next.before_fixture_json = fixture_json;
@@ -532,7 +532,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <RewriteSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <RewriteSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -543,12 +543,12 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    fn export_media(port: &str, doc: &DocumentView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
                 let fixture_json = after_fixture_json(doc.snapshot);
                 let fixture = JackSnapshot::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let bytes = DocumentPack::encode_pack(&fixture);
+                let bytes = ArtifactPack::encode_pack(&fixture);
                 Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "document:out" => {
@@ -583,7 +583,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &TrinityRewriteCommand, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         match command {
@@ -606,7 +606,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
@@ -624,7 +624,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
@@ -635,7 +635,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         ])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
@@ -721,8 +721,8 @@ pub fn create_rewrite_app() -> App {
             )
             .default_layout(rewrite_layout())
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
+                FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 TRINITY_REWRITE_PLAY_BODY_DOCUMENT,
             )
@@ -785,7 +785,7 @@ mod tests {
     use super::*;
     use crate::artifacts::rewrite::engine::Rhs;
     use protocol::{OpBinary, OpText};
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, Locale, Terminology, ViewModel};
+    use semio_framework_plugin::{testkit, PluginApp, VcsArtifactApp, Locale, Terminology, ViewModel};
 
     fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
@@ -821,7 +821,7 @@ mod tests {
         }
     }
 
-    fn new_app() -> VcsDocumentApp<TrinityRewritePlayApp> {
+    fn new_app() -> VcsArtifactApp<TrinityRewritePlayApp> {
         testkit::new_app::<TrinityRewritePlayApp>()
     }
 
@@ -848,7 +848,7 @@ mod tests {
     }
 
     #[test]
-    fn set_viewport_writes_before_pane_config_camera_without_document_mutations() {
+    fn set_viewport_writes_before_pane_config_camera_without_artifact_mutations() {
         let mut app = new_app();
         let before_state = app.snapshot().unwrap();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
@@ -975,7 +975,7 @@ mod tests {
         let graph_out = app.export_media("graph:out").expect("graph:out export");
         let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
-        let fixture = <JackSnapshot as DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         let expected = JackSnapshot::from_json(&after_fixture_json(&app.snapshot().unwrap())).unwrap();
         assert_eq!(fixture.nodes.len(), expected.nodes.len());
     }

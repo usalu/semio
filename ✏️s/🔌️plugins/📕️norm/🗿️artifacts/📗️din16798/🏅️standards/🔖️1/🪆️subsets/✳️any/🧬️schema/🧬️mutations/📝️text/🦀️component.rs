@@ -1,7 +1,7 @@
 //! ⚡️ DIN EN 16798 app — operation type + laws (constitutional: op).
 //!
 //! 📌️ DIN EN 16798 has no bespoke operation enum: every session mutation is a whole-document
-//! replace, so `Mutation` is a re-export of `norm_core`'s generic `SetDocumentMutation<Din16798Snapshot>`,
+//! replace, so `Mutation` is a re-export of `norm_core`'s generic `SetArtifactMutation<Din16798Snapshot>`,
 //! which already carries its own `Mutation`/`OpText`/`OpBinary` impls — nothing to implement here.
 
 

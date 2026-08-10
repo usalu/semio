@@ -159,7 +159,7 @@ pub fn gltf_value_from_vertices(verts: &[MeshVertex]) -> serde_json::Value {
 }
 
 
-impl store::DocumentDsl for GltfSnapshot {
+impl store::ArtifactDsl for GltfSnapshot {
     const EXTENSION: &'static str = "gltf";
     fn envelope_id() -> &'static str { "stdio.gltf" }
 
@@ -184,7 +184,7 @@ impl store::DocumentDsl for GltfSnapshot {
         };
         let body = serde_json::to_string_pretty(&doc).unwrap_or_else(|_| "{}".into());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -192,7 +192,7 @@ impl store::DocumentDsl for GltfSnapshot {
     }
 }
 
-impl store::DocumentPack for GltfSnapshot {
+impl store::ArtifactPack for GltfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let doc = if self.document.is_null() {
@@ -202,7 +202,7 @@ impl store::DocumentPack for GltfSnapshot {
         };
         let raw = serde_json::to_vec(&doc).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -211,10 +211,10 @@ impl store::DocumentPack for GltfSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

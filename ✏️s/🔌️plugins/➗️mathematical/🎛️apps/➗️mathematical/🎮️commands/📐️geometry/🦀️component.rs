@@ -3,7 +3,7 @@
 use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetPoints
@@ -17,7 +17,7 @@ pub mod set_points {
         pub geometry: MathematicalGeometry,
     }
 
-    pub fn handle(payload: &SetPoints, _doc: &DocumentView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+    pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![MathematicalMutation::SetGeometry { geometry: payload.geometry.clone() }]))
     }
 }

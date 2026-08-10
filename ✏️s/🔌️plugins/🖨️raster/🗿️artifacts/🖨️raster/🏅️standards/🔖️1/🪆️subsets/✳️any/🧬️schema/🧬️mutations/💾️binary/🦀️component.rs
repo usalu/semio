@@ -57,9 +57,9 @@ mod tests {
         use crate::artifacts::raster::RasterSnapshot;
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
-        let mut store = store::DocumentStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope);
         store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::AddLayer {
                     parent_id: None,
                     index: 1,
@@ -89,12 +89,12 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::raster::RasterSnapshot;
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
-        let mut store = store::DocumentStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope);
         store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::AddLayer {
                     parent_id: None,
                     index: 0,
@@ -115,7 +115,7 @@ mod tests {
             })
             .expect("apply");
         let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

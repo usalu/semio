@@ -6,7 +6,7 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: every `db_*` crate below `db_document` takes `&dyn Emit` /
+//! 🎯️ Design choice: every `db_*` crate below `db_artifact` takes `&dyn Emit` /
 //! `Arc<dyn Emit>` rather than depending on this crate directly (see `db_core`'s `Emit`
 //! doc) — this crate supplies the real sinks that implement that trait, plus the standalone
 //! registries (`MetricRegistry`, `SpanRegistry`, `HealthRegistry`, `DeterminismVerifier`) a
@@ -484,7 +484,7 @@ pub struct CompletedSpan {
     pub id: SpanId,
     pub name: &'static str,
     pub parent: Option<SpanId>,
-    pub document: Option<DocumentId>,
+    pub document: Option<ArtifactId>,
     pub start_ms: u64,
     pub end_ms: u64,
     pub duration_ms: u64,
@@ -493,7 +493,7 @@ pub struct CompletedSpan {
 struct ActiveSpan {
     name: &'static str,
     parent: Option<SpanId>,
-    document: Option<DocumentId>,
+    document: Option<ArtifactId>,
     start_ms: u64,
 }
 
@@ -520,7 +520,7 @@ impl<C: Clock> SpanRegistry<C> {
     }
 
     /// @emoji ▶️ Starts a new span, returning its id (pass to `end`).
-    pub fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<DocumentId>) -> SpanId {
+    pub fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<ArtifactId>) -> SpanId {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let start_ms = self.clock.now_ms();
         lock(&self.active).insert(id, ActiveSpan { name, parent, document, start_ms });
@@ -712,7 +712,7 @@ mod tests {
     #[test]
     fn encode_emit_event_json_escapes_and_shapes_fields() {
         let event = EmitEvent::new("wal.append")
-            .with_document(DocumentId::from("doc\"1"))
+            .with_document(ArtifactId::from("doc\"1"))
             .field("bytes", EmitField::U64(42))
             .field("ok", EmitField::Bool(true))
             .field("note", EmitField::Text("line\nbreak".to_string()));

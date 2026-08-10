@@ -63,7 +63,7 @@ pub(crate) fn delete_selection(fixture: &JackSnapshot, selected_node_ids: &[Stri
     if deletes.is_empty() {
         Ok(Emit::default())
     } else {
-        Ok(Emit { document_mutations: deletes, config_mutations: vec![JackConfigMutation::SetSelection { node_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: deletes, config_mutations: vec![JackConfigMutation::SetSelection { node_ids: Vec::new() }], ..Default::default() })
     }
 }
 
@@ -79,7 +79,7 @@ pub(crate) fn patch_nodes(fixture: &JackSnapshot, node_ids: &[String], field: &s
 pub(crate) fn reorganize(fixture: &JackSnapshot, reorganize_epoch: u64) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let config_mutations = vec![JackConfigMutation::SetReorganizeEpoch { value: reorganize_epoch + 1 }];
     match force_layout_fixture(fixture) {
-        Some(after) => Ok(Emit { document_mutations: reposition_operations(fixture, &after), config_mutations, ..Default::default() }),
+        Some(after) => Ok(Emit { artifact_mutations: reposition_operations(fixture, &after), config_mutations, ..Default::default() }),
         None => Ok(Emit::config(config_mutations)),
     }
 }

@@ -15,12 +15,12 @@ pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../�
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
-    <RasterSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RasterSnapshot` back to `.raster` DSL text.
 pub fn print_dsl(document: &RasterSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

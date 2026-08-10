@@ -4,7 +4,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetCatalogueSections
@@ -16,7 +16,7 @@ pub mod set_catalogue_sections {
         pub sections_json: String,
     }
 
-    pub fn handle(payload: &SetCatalogueSections, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCatalogueSections, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetCatalogueSections { sections_json: payload.sections_json.clone() }]))
     }
 }
@@ -30,7 +30,7 @@ mod tests {
     use crate::apps::flow::FlowCommand;
 
     #[test]
-    fn setting_catalogue_sections_emits_no_document_mutations() {
+    fn setting_catalogue_sections_emits_no_artifact_mutations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: "[]".into() }));
         assert!(result.mutations.is_empty());

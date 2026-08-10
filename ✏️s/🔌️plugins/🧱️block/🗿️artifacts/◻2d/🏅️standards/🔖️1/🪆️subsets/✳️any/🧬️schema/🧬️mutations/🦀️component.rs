@@ -155,8 +155,8 @@ impl Mutation<Block2dSnapshot> for Block2dMutation {
     }
 }
 
-pub type Block2dEnvelope = store::DocumentEnvelope<Block2dSnapshot, Block2dMutation>;
-pub type Block2dStore = store::DocumentStore<Block2dSnapshot, Block2dMutation>;
+pub type Block2dEnvelope = store::ArtifactEnvelope<Block2dSnapshot, Block2dMutation>;
+pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 // #endregion 🔖️Operation
 
 //#region 🧪️Tests

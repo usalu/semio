@@ -14,7 +14,7 @@ use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{invert_generation_operation, GenerationMutation};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Operation
 /// 🧮️ Procedural-2d operation: id-keyed widget/synapse/layout collection edits, the scalar canvas
@@ -179,8 +179,8 @@ pub fn procedural2d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 }
 //#endregion 🔖️Operation
 
-pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dSnapshot, Procedural2dMutation>;
-pub type Procedural2dStore = DocumentStore<Procedural2dSnapshot, Procedural2dMutation>;
+pub type Procedural2dEnvelope = ArtifactEnvelope<Procedural2dSnapshot, Procedural2dMutation>;
+pub type Procedural2dStore = ArtifactStore<Procedural2dSnapshot, Procedural2dMutation>;
 
 //#region 🧪️Tests
 #[cfg(test)]

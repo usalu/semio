@@ -11,12 +11,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 /// 📦️ Encodes a `MathematicalSnapshot` to its binary pack form.
 pub fn encode(snapshot: &MathematicalSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(snapshot)
+    store::ArtifactPack::encode_pack(snapshot)
 }
 
 /// 📖️ Decodes a `MathematicalSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<MathematicalSnapshot, PackError> {
-    <MathematicalSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <MathematicalSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -49,17 +49,17 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::mathematical::op::MathematicalMutation;
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: DocumentStore<MathematicalSnapshot, MathematicalMutation> =
-            DocumentStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None));
+        let mut store: ArtifactStore<MathematicalSnapshot, MathematicalMutation> =
+            ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None));
         let graph = MathematicalGraph {
             algorithm: "components".into(),
             ..MathematicalGraph::default()
         };
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![MathematicalMutation::SetGraph { graph }],
                 description: None,
             })
@@ -67,7 +67,7 @@ mod tests {
         let edit: &Edit<MathematicalMutation> = store.envelope().vcs.edits.last().expect("edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<MathematicalSnapshot, MathematicalMutation>(
             edit,
-            &DocumentId(store.envelope().id.clone()),
+            &ArtifactId(store.envelope().id.clone()),
             &SchemaId(store.envelope().schema.clone()),
         );
     }

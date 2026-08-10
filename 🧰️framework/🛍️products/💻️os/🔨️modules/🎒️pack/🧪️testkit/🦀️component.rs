@@ -354,7 +354,7 @@ pub fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordValue) 
 /// @emoji 🔀️ LAW: `decode_pack(encode_pack(sample)) == parse_dsl(print_dsl(sample)) == sample` —
 /// the DSL text and pack binary encodings of the same value must agree with each other and with
 /// the original. Kept generic over closures so this crate needs no dependency on `vcs`/
-/// `dsl_derive`; their own `test_support` wraps this with concrete `P: DocumentDsl + DocumentPack`
+/// `dsl_derive`; their own `test_support` wraps this with concrete `P: ArtifactDsl + ArtifactPack`
 /// bounds in wave 1.
 pub fn assert_dsl_pack_bidirectional<P>(parse_dsl: impl Fn(&str) -> P, print_dsl: impl Fn(&P) -> String, encode_pack: impl Fn(&P) -> Vec<u8>, decode_pack: impl Fn(&[u8]) -> P, sample: &P)
 where

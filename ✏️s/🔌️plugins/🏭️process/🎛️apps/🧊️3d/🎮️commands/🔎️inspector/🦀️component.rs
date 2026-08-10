@@ -4,7 +4,7 @@
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, ProcessMeasure, ProcessStepPatch, SolidSpec, WorkshopMachine, WorkshopMachinePatch};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -178,7 +178,7 @@ pub mod patch_inspector {
         pub text: Option<String>,
     }
 
-    pub fn handle(payload: &PatchInspector, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchInspector, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let value = payload.number.map(|n| json!(n)).or_else(|| payload.text.clone().map(Value::String));
         match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),

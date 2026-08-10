@@ -15,7 +15,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
 // 📌️ Command-group handler functions (`🎮️commands/<group>/component.rs`) are decomposed out of a
-// single `DocumentApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
+// single `ArtifactApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
 // Fault>` signature is dictated by the dispatch call site (some commands in the same group DO fail;
 // others never do), so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
 #[allow(clippy::unnecessary_wraps)]

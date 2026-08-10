@@ -128,7 +128,7 @@ impl Mutation<Puzzle3dSnapshot> for Puzzle3dMutation {
 //#region 🔖️ValueBridge
 // 🌉️ The play app's scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture. Bridging `Puzzle3dMutation`/`Puzzle3dDiff` onto that `Value`
-// boundary too keeps `puzzle3d_document_delta_operations` and the app's `DocumentApp::Snapshot`
+// boundary too keeps `puzzle3d_document_delta_operations` and the app's `ArtifactApp::Snapshot`
 // newtype compiling unchanged — mirrors `puzzle2d`'s bridge.
 fn puzzle3d_value_item_id(item: &serde_json::Value) -> Option<&str> {
     item.get("id").and_then(|value| value.as_str())
@@ -444,8 +444,8 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
 //#region 🔖️PlaySnapshot
 /// 🌱️ `Puzzle3dPlayApp` predates the typed `Puzzle3dSnapshot` above and stays on this ad-hoc
 /// `serde_json::Value` fixture shape for its scene-mutation helpers. This newtype exists only to
-/// satisfy `DocumentApp::Snapshot: store::DocumentDsl + store::DocumentPack` post the repo-wide
-/// `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
+/// satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack` post the repo-wide
+/// `store::ArtifactDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
 /// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot` and `semio_compose_rs`'s
@@ -459,7 +459,7 @@ impl PartialEq for Puzzle3dPlaySnapshot {
     }
 }
 
-impl store::DocumentDsl for Puzzle3dPlaySnapshot {
+impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle3d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -471,7 +471,7 @@ impl store::DocumentDsl for Puzzle3dPlaySnapshot {
     }
 }
 
-impl store::DocumentPack for Puzzle3dPlaySnapshot {
+impl store::ArtifactPack for Puzzle3dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }

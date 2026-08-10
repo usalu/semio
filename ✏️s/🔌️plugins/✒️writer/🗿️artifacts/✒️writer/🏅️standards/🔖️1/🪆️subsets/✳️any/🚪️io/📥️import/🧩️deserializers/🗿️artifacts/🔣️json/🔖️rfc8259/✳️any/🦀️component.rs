@@ -10,5 +10,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<WriterSnapshot, store::TextErr
 }
 
 pub fn deserialize_text(text: &str) -> Result<WriterSnapshot, store::TextError> {
-    <WriterSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

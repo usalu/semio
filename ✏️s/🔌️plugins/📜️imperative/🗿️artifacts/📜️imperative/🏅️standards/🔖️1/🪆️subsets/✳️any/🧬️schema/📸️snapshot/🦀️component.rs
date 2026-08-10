@@ -73,8 +73,8 @@ fn dictionary_to_seed_map(dict: &Dictionary) -> BTreeMap<String, Value> {
 }
 //#endregion 🔖️DslMirror
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for ImperativeSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for ImperativeSnapshotDsl {
     const EXTENSION: &'static str = "imperative";
     fn envelope_id() -> &'static str {
         "imperative.imperative"
@@ -94,7 +94,7 @@ impl store::DocumentDsl for ImperativeSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -103,11 +103,11 @@ impl store::DocumentDsl for ImperativeSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for ImperativeSnapshotDsl {
+impl store::ArtifactPack for ImperativeSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -116,10 +116,10 @@ impl store::DocumentPack for ImperativeSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -131,25 +131,25 @@ impl store::DocumentPack for ImperativeSnapshotDsl {
     }
 }
 
-impl store::DocumentDsl for ImperativeSnapshot {
+impl store::ArtifactDsl for ImperativeSnapshot {
     const EXTENSION: &'static str = "imperative";
     fn envelope_id() -> &'static str {
         "imperative.imperative"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        Ok(snapshot_from_dsl(<ImperativeSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?))
+        Ok(snapshot_from_dsl(<ImperativeSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?))
     }
     fn print_dsl(&self) -> String {
-        <ImperativeSnapshotDsl as store::DocumentDsl>::print_dsl(&snapshot_to_dsl(self))
+        <ImperativeSnapshotDsl as store::ArtifactDsl>::print_dsl(&snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for ImperativeSnapshot {
+impl store::ArtifactPack for ImperativeSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <ImperativeSnapshotDsl as store::DocumentPack>::encode_pack_with(&snapshot_to_dsl(self), options)
+        <ImperativeSnapshotDsl as store::ArtifactPack>::encode_pack_with(&snapshot_to_dsl(self), options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        Ok(snapshot_from_dsl(<ImperativeSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?))
+        Ok(snapshot_from_dsl(<ImperativeSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

@@ -331,7 +331,7 @@ pub fn raster_to_png_asset(raster: &remodel_geo::Raster) -> ImageAsset {
     ImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width: raster.width, height: raster.height }
 }
 
-pub fn video_codec_to_document(codec: remodel_video::VideoCodec) -> DocumentVideoCodec {
+pub fn video_codec_to_artifact(codec: remodel_video::VideoCodec) -> DocumentVideoCodec {
     match codec {
         remodel_video::VideoCodec::Avc => DocumentVideoCodec::Avc,
         remodel_video::VideoCodec::Hevc => DocumentVideoCodec::Hevc,

@@ -17,9 +17,9 @@ pub mod host {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
+    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore, SpaceConflict};
     use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
-    use vcs::{DocumentVcs, VcsError};
+    use vcs::{ArtifactVcs, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -330,11 +330,11 @@ pub mod host {
         pub schema: String,
         pub id: String,
         pub name: String,
-        pub vcs: DocumentVcs<P, Op>,
+        pub vcs: ArtifactVcs<P, Op>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub applied_edit_ids: Vec<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub backbone: Option<DocumentBackboneRef>,
+        pub backbone: Option<ArtifactBackboneRef>,
     }
 
     /// 🏠️ A space's manifest document — the space-catalog half of the dissolved `OsSnapshot`.
@@ -345,12 +345,12 @@ pub mod host {
     /// (see the kernel `workflow` crate's `WorkflowSnapshot`).
     pub type OsWorkflowArtifactDocument = BackboneDocument<workflow::WorkflowSnapshot, workflow::WorkflowMutation>;
 
-    /// 🌉️ Live `DocumentStore` handle for a space-manifest session — no bespoke wrapper needed (unlike
+    /// 🌉️ Live `ArtifactStore` handle for a space-manifest session — no bespoke wrapper needed (unlike
     /// `OsWorkflowStore` below, whose only extra logic is workflow-specific node/parameter id-minting);
-    /// every generic `DocumentStore` method (`snapshot`/`dispatch`/`attach_backbone`/...) already
+    /// every generic `ArtifactStore` method (`snapshot`/`dispatch`/`attach_backbone`/...) already
     /// applies directly. `OsWorkflowStore::add_workflow_node` dispatches into one of these to install
     /// the spawned app's plugin into the owning space's `programs` list.
-    pub type OsSpaceStore = DocumentStore<space::SpaceSnapshot, space::SpaceMutation>;
+    pub type OsSpaceStore = ArtifactStore<space::SpaceSnapshot, space::SpaceMutation>;
 
     /// @emoji 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
@@ -360,14 +360,14 @@ pub mod host {
         BackboneDocument { schema: schema.into(), id: id.into(), name: name.into(), vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs, applied_edit_ids: Vec::new(), backbone: None }
     }
 
-    /// @emoji 🌉️ Builds the bare `DocumentEnvelope` a `BackboneDocument` wraps (dropping the app-level
+    /// @emoji 🌉️ Builds the bare `ArtifactEnvelope` a `BackboneDocument` wraps (dropping the app-level
     /// `name`/`applied_edit_ids` fields) — shared by every typed pack/text export path below.
-    fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> DocumentEnvelope<P, Op>
+    fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> ArtifactEnvelope<P, Op>
     where
         P: Clone,
         Op: Clone,
     {
-        DocumentEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None }
+        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None }
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
@@ -380,18 +380,18 @@ pub mod host {
     }
 
     /// @emoji 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
-    pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::DocumentPackFiles, VcsError>
+    pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
     where
-        P: Clone + store::DocumentPack,
+        P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
         store::print_document_pack(&backbone_envelope_of(document))
     }
 
     /// @emoji 📤️ DSL-text counterpart of `export_backbone_pack`.
-    pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::DocumentTextFiles, VcsError>
+    pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
     where
-        P: Clone + store::DocumentDsl,
+        P: Clone + store::ArtifactDsl,
         Op: Clone + protocol::OpText,
     {
         store::print_document_text(&backbone_envelope_of(document))
@@ -403,11 +403,11 @@ pub mod host {
     /// `cursor` so `spr`'s cursor line restores the exact undo/redo position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
-        P: Clone + store::DocumentPack,
+        P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
         let mut envelope = backbone_envelope_of(document);
-        envelope.cursor = Some(store::DocumentCursor { applied_edit_ids: document.applied_edit_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None });
+        envelope.cursor = Some(store::ArtifactCursor { applied_edit_ids: document.applied_edit_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None });
         let files = store::print_document_pack(&envelope)?;
         let inner = store::encode_document_pack_bytes(&files.pack, &files.spr);
         Ok(store::encode_document_pack_bytes(document.name.as_bytes(), &inner))
@@ -417,7 +417,7 @@ pub mod host {
     /// document kind's bytes as another.
     pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
     where
-        P: Clone + store::DocumentPack,
+        P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P>,
     {
         let (name_bytes, inner) = store::decode_document_pack_bytes(bytes)?;
@@ -613,15 +613,15 @@ pub mod host {
 
     //#region 🔖️OsWorkflowStore
     pub struct OsWorkflowStore {
-        inner: DocumentStore<workflow::WorkflowSnapshot, workflow::WorkflowMutation>,
+        inner: ArtifactStore<workflow::WorkflowSnapshot, workflow::WorkflowMutation>,
         name: String,
     }
 
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
-            let envelope = DocumentEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None };
-            let mut inner = DocumentStore::new(envelope);
+            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None };
+            let mut inner = ArtifactStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
                 inner.reset(snapshot, applied_edit_ids, Vec::new()).expect("reset snapshot");
@@ -659,7 +659,7 @@ pub mod host {
         }
 
         pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>) -> Result<(), VcsError> {
-            self.inner.dispatch(DocumentCommand::Apply { mutations, description: None }).map(|_| ())
+            self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None }).map(|_| ())
         }
 
         pub fn set_workflow_name(&mut self, name: &str) {
@@ -682,7 +682,7 @@ pub mod host {
                 node.label = label.into();
             }
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode { node }])?;
-            space_store.dispatch(DocumentCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None })?;
+            space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None })?;
             Ok(node_id)
         }
 
@@ -709,14 +709,14 @@ pub mod host {
         /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
         /// see {@link attach_backbone} for the native counterpart, which takes an explicit
         /// `Box<dyn store::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
-        /// `host_runtime` module owns constructing the real endpoint via `DocumentHost`).
+        /// `host_runtime` module owns constructing the real endpoint via `ArtifactHost`).
         #[cfg(target_arch = "wasm32")]
         pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
             self.inner.attach_backbone_uri(uri)
         }
 
         /// @emoji 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
-        /// out by `framework/sync`'s `DocumentHost::open`, per `host_runtime`'s canonical sequence).
+        /// out by `framework/sync`'s `ArtifactHost::open`, per `host_runtime`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
         pub fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), VcsError> {
             self.inner.attach_backbone(backbone)
@@ -726,7 +726,7 @@ pub mod host {
             self.inner.detach_backbone();
         }
 
-        pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+        pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> {
             self.inner.backbone_ref()
         }
     }
@@ -771,7 +771,7 @@ pub mod host {
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError>
     where
-        P: Clone + store::DocumentPack,
+        P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
         let mut synced = document.clone();
@@ -783,7 +783,7 @@ pub mod host {
     // 🫀️ Presence used to be a `presence:` backbone-URI polling hack (`OS_PRESENCE_URI_PREFIX` /
     // `write_os_presence` / `read_os_presence_peers`) — deleted. Presence now flows through the semio_hub's
     // duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖️HubProtocol
-    // region) via `framework/sync`'s `DocumentHost::subscribe` yielding `DocumentEvent::Presence`; the
+    // region) via `framework/sync`'s `ArtifactHost::subscribe` yielding `ArtifactEvent::Presence`; the
     // `host_runtime` module below is where a native host translates that event into
     // `ViewModel.presence_peers_json` — the plugin read-side contract is unchanged.
 
@@ -911,7 +911,7 @@ pub mod host {
     /// backbone. Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let snapshot = <space::SpaceSnapshot as store::DocumentDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+        let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs;
         admit_os_space_document(BackboneDocument { schema: space::S_SPACE_SCHEMA.into(), id: String::new(), name: String::new(), vcs, applied_edit_ids: Vec::new(), backbone: None }, port)
     }
@@ -925,12 +925,12 @@ pub mod host {
     }
 
     /// @emoji 📤️ Exports an already-loaded space manifest as pack bytes + ops text.
-    pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::DocumentPackFiles, VcsError> {
+    pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::ArtifactPackFiles, VcsError> {
         export_backbone_pack(document)
     }
 
     /// @emoji 📤️ DSL-text counterpart of `export_os_space_pack`.
-    pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::DocumentTextFiles, VcsError> {
+    pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::ArtifactTextFiles, VcsError> {
         export_backbone_dsl(document)
     }
 
@@ -978,7 +978,7 @@ pub mod host {
                 apps: vec![AppDefinition {
                     id: "draw-play".into(),
                     label: "Draw".into(),
-                    document: vec!["semio".into(), "draw".into()],
+                    breadcrumb: vec!["semio".into(), "draw".into()],
                     icon_id: None,
                     controller_id: "draw-play".into(),
                     modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -993,7 +993,7 @@ pub mod host {
                         actions: Vec::new(),
                         utilities: Vec::new(),
                         params_schema: None,
-                        document_snapshot_schema: None,
+                        artifact_snapshot_schema: None,
                         input_event_schema: None,
                         output_schema: None,
                         capabilities: vec![],
@@ -1007,7 +1007,7 @@ pub mod host {
                     named_layouts: Vec::new(),
                     default_layout: None,
                     terminologies: Vec::new(),
-                    terminology_documents: std::collections::HashMap::new(),
+                    terminology_breadcrumbs: std::collections::HashMap::new(),
                     introduction: None,
                     dialogs: Vec::new(),
                     media_inputs: Vec::new(),
@@ -1033,7 +1033,7 @@ pub mod host {
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
                 label: "Draw".into(),
-                document: vec!["semio".into(), "draw".into()],
+                breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -1048,7 +1048,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_snapshot_schema: None,
+                    artifact_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1062,7 +1062,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_documents: std::collections::HashMap::new(),
+                terminology_breadcrumbs: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1076,7 +1076,7 @@ pub mod host {
             let note_app = AppDefinition {
                 id: "note-play".into(),
                 label: "Note".into(),
-                document: vec!["semio".into(), "note".into()],
+                breadcrumb: vec!["semio".into(), "note".into()],
                 icon_id: None,
                 controller_id: "note-play".into(),
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -1091,7 +1091,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_snapshot_schema: None,
+                    artifact_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1105,7 +1105,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_documents: std::collections::HashMap::new(),
+                terminology_breadcrumbs: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1142,7 +1142,7 @@ pub mod host {
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
                 label: "Draw".into(),
-                document: vec!["semio".into(), "draw".into()],
+                breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -1157,7 +1157,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_snapshot_schema: None,
+                    artifact_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1171,7 +1171,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_documents: std::collections::HashMap::new(),
+                terminology_breadcrumbs: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1264,7 +1264,7 @@ pub mod host {
             AppDefinition {
                 id: id.into(),
                 label: label.into(),
-                document: vec!["semio".into(), id.into()],
+                breadcrumb: vec!["semio".into(), id.into()],
                 icon_id: None,
                 controller_id: format!("{id}-play"),
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -1279,7 +1279,7 @@ pub mod host {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_snapshot_schema: None,
+                    artifact_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: Vec::new(),
@@ -1293,7 +1293,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_documents: std::collections::HashMap::new(),
+                terminology_breadcrumbs: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1324,7 +1324,7 @@ pub mod host {
 
         fn test_space_store() -> OsSpaceStore {
             let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
-            DocumentStore::new(envelope)
+            ArtifactStore::new(envelope)
         }
 
         fn test_workflow_store() -> OsWorkflowStore {
@@ -1418,7 +1418,7 @@ pub mod host {
         // 🫀️ The old `presence_upserts_prunes_and_excludes_self` test exercised the deleted `presence:`
         // backbone-URI hack (`write_os_presence`/`read_os_presence_peers`). Presence now flows through
         // the semio_hub's `PresencePeer`/`HubServerFrame::Presence` frames and `framework/sync`'s
-        // `DocumentEvent::Presence` — see `framework/product/os/semio_hub/rs/bin.rs` and
+        // `ArtifactEvent::Presence` — see `framework/product/os/semio_hub/rs/bin.rs` and
         // `framework/sync/rs/lib.rs` for that layer's own coverage.
 
         // #region 🔖️DslAndOpText
@@ -1432,7 +1432,7 @@ pub mod host {
                 app_id: "puzzle2d".into(),
                 label: "Puzzle Board \"3D\"".into(),
                 yields: "puzzle.2d.fixture".into(),
-                document_ref: "documents/app-1".into(),
+                artifact_ref: "artifacts/app-1".into(),
                 config_ref: "config/app-1".into(),
                 x: 0.0,
                 y: 0.0,
@@ -1458,7 +1458,7 @@ pub mod host {
                 app_id: "draw".into(),
                 label: "Draw Sink".into(),
                 yields: "draw.document".into(),
-                document_ref: "documents/app-2".into(),
+                artifact_ref: "artifacts/app-2".into(),
                 config_ref: "config/app-2".into(),
                 x: 240.0,
                 y: 0.0,
@@ -1507,7 +1507,7 @@ pub mod host {
         #[test]
         fn dsl_round_trips_demo_workflow_example() {
             let text = include_str!("../../📚️examples/🎬️demo.workflow-document");
-            let document = <workflow::WorkflowSnapshot as store::DocumentDsl>::parse_dsl(text).expect("🎬️demo.workflow-document must parse as WorkflowSnapshot");
+            let document = <workflow::WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("🎬️demo.workflow-document must parse as WorkflowSnapshot");
             store::test_support::assert_dsl_round_trip(&document);
             store::test_support::assert_dsl_pack_equivalence(&document);
         }
@@ -1533,7 +1533,7 @@ pub mod host {
                     app_id: "puzzle2d".into(),
                     label: "Puzzle Board".into(),
                     yields: "puzzle.2d.fixture".into(),
-                    document_ref: "documents/node-1".into(),
+                    artifact_ref: "artifacts/node-1".into(),
                     config_ref: "config/node-1".into(),
                     x: 10.0,
                     y: -20.5,
@@ -1620,8 +1620,8 @@ pub mod host {
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
             let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
-            let mut store = DocumentStore::new(envelope);
-            store.dispatch(DocumentCommand::Apply { mutations: vec![workflow::WorkflowMutation::SyncNodePorts], description: None }).expect("apply");
+            let mut store = ArtifactStore::new(envelope);
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::SyncNodePorts], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
         }
@@ -1647,7 +1647,7 @@ pub mod backbone {
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
     /// folder holds exactly one os document at its root (app documents get their own document ids once
-    /// {@link OsDocumentRef} routes them through `framework/sync`'s multi-document `DocumentHost`).
+    /// {@link OsArtifactRef} routes them through `framework/sync`'s multi-document `ArtifactHost`).
     #[cfg(not(target_arch = "wasm32"))]
     const SPACE_FOLDER_DOCUMENT_ID: &str = "studio";
 
@@ -1656,7 +1656,7 @@ pub mod backbone {
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
         /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
         /// `print_document_pack::<OsSnapshot, OsMutation>` (this crate is fully typed, no
-        /// `store::DocumentCodec` indirection needed).
+        /// `store::ArtifactCodec` indirection needed).
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
@@ -1704,7 +1704,7 @@ pub mod backbone {
                         } else {
                             match storage.read(document_id, extension)? {
                                 Some(text_files) => {
-                                    let snapshot = <space::SpaceSnapshot as store::DocumentDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+                                    let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                     let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
                                     let pack_files = store::print_document_pack(&envelope)?;
                                     (pack_files.pack, pack_files.spr)
@@ -1734,8 +1734,8 @@ pub mod backbone {
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
                         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::DocumentDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
-                        let pack_files = store::DocumentPackFiles { pack, spr, ops: String::new() };
+                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
+                        let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
                     }
                     #[cfg(not(target_arch = "wasm32"))]
@@ -1797,7 +1797,7 @@ pub mod backbone {
 pub mod host_runtime {
     // #region host_runtime
     //! 🧵️ Canonical native document-open sequencing shared by every native host that links this crate
-    //! (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `DocumentHost`, whose
+    //! (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `ArtifactHost`, whose
     //! actor is a native-thread (or wasm `spawn_local`) concern — WASI-P2 plugins never see it, and the
     //! browser React shell talks to its own TS twin (`framework/product/os/core/js/🟦️backbone-worker.ts`)
     //! through a different FFI boundary (the WIT program sandbox), not through this Rust module. Keeping
@@ -1806,10 +1806,10 @@ pub mod host_runtime {
     //! lockstep without a literal shared code path across the Rust/TS boundary.
     //!
     //! ## Canonical open/spawn/effect sequence (mirrored in TS by `os-shell.tsx`'s `openDocument`):
-    //! 1. Build a `DocumentActorConfig{document_id, schema, bindings, watch_external, actor}` for the
+    //! 1. Build a `ArtifactActorConfig{document_id, schema, bindings, watch_external, actor}` for the
     //!    document being opened — either the os/studio document itself, or one app instance's
-    //!    {@link crate::instance::OsDocumentRef}.
-    //! 2. `DocumentHost::open(config)` → `DocumentChannels{cmd_tx, channel_backbone}`.
+    //!    {@link crate::instance::OsArtifactRef}.
+    //! 2. `ArtifactHost::open(config)` → `ArtifactChannels{cmd_tx, channel_backbone}`.
     //! 3. Attach `channel_backbone` to the document's own store: `store.attach_backbone(Box::new(...))`.
     //!    For a native WASM plugin instance this ALSO means calling `framework/plugin/host`'s
     //!    `WasmPluginRuntime::register_host_backbone(uri, Box::new(channel_backbone))` so the sandboxed
@@ -1817,7 +1817,7 @@ pub mod host_runtime {
     //!    not link `framework/plugin/host` directly (no existing dependency edge), so the wgpu shell,
     //!    which links both, is the one that actually performs that registration call using the
     //!    {@link OpenedDocument} this module hands back.
-    //! 4. `DocumentHost::subscribe(&document_id)` → `broadcast::Receiver<DocumentEvent>`; on each event:
+    //! 4. `ArtifactHost::subscribe(&document_id)` → `broadcast::Receiver<ArtifactEvent>`; on each event:
     //!    - `RemoteMutations`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
     //!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
     //!    - `Presence{peers}` translates into `ViewModel.presence_peers_json` via
@@ -1826,14 +1826,14 @@ pub mod host_runtime {
     //!    - `Status`/`Conflict` surface on the shell's sync-status badge / conflict card.
     //! 5. Every tick/frame: `store.tick()` drains the attached backbone's inbound queue into the store.
     //! 6. On `HostEffect::SpawnPluginInstance`/`OpenPluginInstance` from an action result: mint (if
-    //!    needed) a fresh `OsDocumentRef` (see {@link crate::instance::create_os_document_id}), then repeat
+    //!    needed) a fresh `OsArtifactRef` (see {@link crate::instance::create_os_artifact_id}), then repeat
     //!    steps 1-5 for that app's own document.
-    //! 7. On close: send `DocumentActorMsg::Detach` (flushes pending operations) via `host.send(id, Detach)`, then
-    //!    `DocumentHost::close(&id)`, then `store.detach_backbone()` /
+    //! 7. On close: send `ArtifactActorMsg::Detach` (flushes pending operations) via `host.send(id, Detach)`, then
+    //!    `ArtifactHost::close(&id)`, then `store.detach_backbone()` /
     //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
 
-    use crate::instance::OsDocumentRef;
-    use crate::store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
+    use crate::instance::OsArtifactRef;
+    use crate::store_sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactChannels, ArtifactEvent, ArtifactHost, PersistenceBinding};
 
     /// @emoji 📌️ The local persistence binding for a folder-backed document (one row per `document_id`
     /// in the folder's `.semio` sqlite store — see `FolderSqliteStorage`).
@@ -1846,41 +1846,41 @@ pub mod host_runtime {
         PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token }
     }
 
-    /// @emoji 🔗️ Builds the `DocumentActorConfig` to open an app instance's own document, from its
-    /// `OsDocumentRef` — step 1 of the canonical sequence.
-    pub fn app_document_config(document: &OsDocumentRef, bindings: Vec<PersistenceBinding>, actor: &str) -> DocumentActorConfig {
-        DocumentActorConfig { document_id: document.document_id.clone(), schema: document.schema.clone(), bindings, watch_external: true, actor: actor.to_string() }
+    /// @emoji 🔗️ Builds the `ArtifactActorConfig` to open an app instance's own document, from its
+    /// `OsArtifactRef` — step 1 of the canonical sequence.
+    pub fn app_artifact_config(document: &OsArtifactRef, bindings: Vec<PersistenceBinding>, actor: &str) -> ArtifactActorConfig {
+        ArtifactActorConfig { document_id: document.document_id.clone(), schema: document.schema.clone(), bindings, watch_external: true, actor: actor.to_string() }
     }
 
     /// @emoji 🧵️ Channels + a fresh event receiver for one opened document — steps 2 and 4 of the
     /// canonical sequence.
     pub struct OpenedDocument {
-        pub channels: DocumentChannels,
-        pub events: tokio::sync::broadcast::Receiver<DocumentEvent>,
+        pub channels: ArtifactChannels,
+        pub events: tokio::sync::broadcast::Receiver<ArtifactEvent>,
     }
 
     /// @emoji 🚀️ Opens a document on `host` and subscribes to its events in one call (steps 1-2 & 4).
-    pub fn open_document(host: &DocumentHost, document_id: &str, schema: &str, bindings: Vec<PersistenceBinding>, actor: &str) -> OpenedDocument {
-        let channels = host.open(DocumentActorConfig { document_id: document_id.to_string(), schema: schema.to_string(), bindings, watch_external: true, actor: actor.to_string() });
+    pub fn open_document(host: &ArtifactHost, document_id: &str, schema: &str, bindings: Vec<PersistenceBinding>, actor: &str) -> OpenedDocument {
+        let channels = host.open(ArtifactActorConfig { document_id: document_id.to_string(), schema: schema.to_string(), bindings, watch_external: true, actor: actor.to_string() });
         let events = host.subscribe(document_id);
         OpenedDocument { channels, events }
     }
 
-    /// @emoji ✂️ Detaches and closes a document's actor (step 7's `DocumentHost` half).
-    pub fn close_document(host: &DocumentHost, document_id: &str) {
-        host.send(document_id, DocumentActorMsg::Detach);
+    /// @emoji ✂️ Detaches and closes a document's actor (step 7's `ArtifactHost` half).
+    pub fn close_document(host: &ArtifactHost, document_id: &str) {
+        host.send(document_id, ArtifactActorMsg::Detach);
         host.close(document_id);
     }
 
-    /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewModel.presence_peers_json` contract
+    /// @emoji 👥️ Translates a `ArtifactEvent::Presence` into the `ViewModel.presence_peers_json` contract
     /// plugins already read (`semio_framework::PresencePeer` → JSON array) — the new (only) source
     /// of presence data; the deleted `presence:` backbone hack used to be it.
     ///
-    /// Each peer's typed app presence is carried as `presencePack` (base64 of `DocumentPack` bytes),
+    /// Each peer's typed app presence is carried as `presencePack` (base64 of `ArtifactPack` bytes),
     /// replacing the former untyped `selectionJson` string.
-    pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
+    pub fn presence_peers_json(event: &ArtifactEvent) -> Option<String> {
         match event {
-            DocumentEvent::Presence { peers } => serde_json::to_string(peers).ok(),
+            ArtifactEvent::Presence { peers } => serde_json::to_string(peers).ok(),
             _ => None,
         }
     }
@@ -1891,16 +1891,16 @@ pub mod host_runtime {
 
         #[test]
         fn opens_a_document_and_subscribes_to_its_events() {
-            let host = DocumentHost::new();
+            let host = ArtifactHost::new();
             let opened = open_document(&host, "doc-1", "test.schema", vec![], "actor-1");
             drop(opened.events);
             close_document(&host, "doc-1");
         }
 
         #[test]
-        fn app_document_config_carries_the_document_ref_through() {
-            let document = OsDocumentRef { document_id: "doc-2".into(), schema: "draw.document".into() };
-            let config = app_document_config(&document, vec![], "actor-1");
+        fn app_artifact_config_carries_the_artifact_ref_through() {
+            let document = OsArtifactRef { document_id: "doc-2".into(), schema: "draw.document".into() };
+            let config = app_artifact_config(&document, vec![], "actor-1");
             assert_eq!(config.document_id, "doc-2");
             assert_eq!(config.schema, "draw.document");
         }
@@ -1909,9 +1909,9 @@ pub mod host_runtime {
         fn presence_peers_json_only_matches_presence_events() {
             use semio_framework::PresencePeer;
             let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
-            let json = presence_peers_json(&DocumentEvent::Presence { peers: peers.clone() }).expect("json");
+            let json = presence_peers_json(&ArtifactEvent::Presence { peers: peers.clone() }).expect("json");
             assert!(json.contains("\"actor\":\"a\""));
-            assert!(presence_peers_json(&DocumentEvent::Status(Default::default())).is_none());
+            assert!(presence_peers_json(&ArtifactEvent::Status(Default::default())).is_none());
         }
     }
     // #endregion host_runtime
@@ -1934,23 +1934,23 @@ pub mod instance {
 
     //#region 🔖️Schemas
     /// @emoji 🔗️ Handle to an app's own `framework/sync`-hosted vcs document — the os document never
-    /// embeds app content, only this reference (mirrors `framework/sync`'s `DocumentActorConfig`).
+    /// embeds app content, only this reference (mirrors `framework/sync`'s `ArtifactActorConfig`).
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsDocumentRef {
+    pub struct OsArtifactRef {
         pub document_id: String,
         pub schema: String,
     }
 
     /// @emoji 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape semio_hub already
     /// uses for its own entities (`framework/product/os/semio_hub/rs/bin.rs`'s `Uuid::now_v7()`).
-    pub fn create_os_document_id() -> String {
+    pub fn create_os_artifact_id() -> String {
         uuid::Uuid::now_v7().to_string()
     }
 
     // 🧷️ `OsAppInstance` is deleted — `workflow::WorkflowNode` (kernel crate) absorbs it entirely;
     // `WorkflowNode.id` IS the app-instance identity now (see the kernel crate's `🔖️InstanceIdentity`
-    // region doc). `OsDocumentRef` stays (still used generically by `host_runtime`'s document-open
+    // region doc). `OsArtifactRef` stays (still used generically by `host_runtime`'s document-open
     // sequence), just no longer nested inside a per-instance record here.
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2301,7 +2301,7 @@ pub mod instance {
     /// @emoji 📎️ Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
     /// document. Replaces the old `OsSourceDocument.payloadRef = "fixture:…"` resolution: since app
     /// content no longer embeds in the os document, seeding now happens once, host-side, at
-    /// {@link OsDocumentRef} creation time (see `host_runtime`), not on every materialize/read.
+    /// {@link OsArtifactRef} creation time (see `host_runtime`), not on every materialize/read.
     pub fn os_fixture_json(slug: &str) -> Option<String> {
         os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
     }
@@ -2364,7 +2364,7 @@ pub mod instance {
 
     /// @emoji 🧩️ Overlays bound parameter values onto an app instance's current document snapshot.
     /// Content itself lives in the app's own `framework/sync`-hosted document (referenced by
-    /// {@link OsDocumentRef}, read host-side and passed in as `current_document_json`) — this function
+    /// {@link OsArtifactRef}, read host-side and passed in as `current_document_json`) — this function
     /// no longer resolves embedded/upstream source documents; that concept was deleted with
     /// `OsSourceDocument`. Cross-instance ("upstream") dataflow through workflow edges is deferred
     /// (see `host_runtime` doc-comment) to a follow-up that reads the upstream app's live document.
@@ -2378,10 +2378,10 @@ pub mod instance {
     /// patched document JSON for every app instance with a field bound to it, keyed by document id — the
     /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the program
     /// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
-    /// `DocumentHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
+    /// `ArtifactHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
     /// {@link apply_parameter_values_to_snapshot} already established — a true typed operation into the bound
     /// app's own `Mutation` vocabulary requires that app's real (non-opaque) Mutation type and is left to each app's
-    /// own `DocumentApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
+    /// own `ArtifactApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
     pub fn app_instance_document_patches_for_binding(
         parameter_id: &str,
         nodes: &[workflow::WorkflowNode],
@@ -2394,9 +2394,9 @@ pub mod instance {
             .iter()
             .filter(|node| bound_node_ids.contains(&node.id))
             .filter_map(|node| {
-                let current_json = current_document_json(&node.document_ref)?;
+                let current_json = current_document_json(&node.artifact_ref)?;
                 let patched = materialize_os_app_instance_document_json(&current_json, &node.id, bindings, parameters);
-                Some((node.document_ref.clone(), patched))
+                Some((node.artifact_ref.clone(), patched))
             })
             .collect()
     }
@@ -3081,7 +3081,25 @@ pub use crate::workflow_kernel::{
                 }
             }
         }
+        if let Some(format) = registry_shared_stdio_dialect(&source.kind, &target.kind) {
+            return Some(MediaWireFormat::Binary { format });
+        }
         source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format: *format })
+    }
+
+    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
+    /// the full rationale — consults the live typed IO registry as a supplement to the
+    /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
+    fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Option<MediaFormat> {
+        use semio_framework::IoDirection;
+        let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
+        if target_reads.contains(source_kind) {
+            if let Some(format) = MediaFormat::parse(source_kind) {
+                return Some(format);
+            }
+        }
+        let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
+        target_reads.intersection(&source_reads).find_map(|candidate| MediaFormat::parse(candidate))
     }
 
     /// @emoji ✅️ Validates workflow connectivity, cycle freedom (via `workflow::validate_workflow`,
@@ -3533,12 +3551,46 @@ pub use crate::workflow_kernel::{
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
         let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
+        if let Some(result) = registry_export_media(&node.yields, short, source_document) {
+            return result;
+        }
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
             .get(&os_media_handler_key(&node.yields, short))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(source_document)
+    }
+
+    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
+    /// the full rationale -- dispatches export via the typed registry's EXPORT-direction entries
+    /// before falling back to the old stringly handler map.
+    fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
+        use semio_framework::{IoDirection, IoKey, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
+        let native_kind = format!("s.{artifact_kind}");
+        let target_kind = format!("s.stdio.{format_kind}");
+        let target = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
+            .into_iter()
+            .find(|d| d.artifact_kind == target_kind)?;
+        let key = IoKey {
+            artifact_kind: native_kind,
+            standard: "1".to_string(),
+            subset: "*".to_string(),
+            direction: IoDirection::Export,
+            format_kind: target.artifact_kind.to_string(),
+            format_standard: target.standard.0.to_string(),
+            format_subset: target.subset.0.to_string(),
+        };
+        let entry = semio_framework::io_resolve(&key).ok()?;
+        let json_bridge = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
+        let json_text = serde_json::to_string(source_document).ok()?;
+        let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
+        let composed = (entry.compose)(&sources).ok()?;
+        let bytes = match composed.payload {
+            IoPayload::Binary(b) => b,
+            IoPayload::Text(t) => t.into_bytes(),
+        };
+        Some(OsMediaExportResult::from_format_kind_bytes(bytes, format_kind, artifact_kind))
     }
 
     pub fn export_os_app_instance_media(node: &WorkflowNode, source_document: &Value, format: MediaFormat) -> Result<OsMediaExportResult, String> {
@@ -3599,12 +3651,51 @@ pub use crate::workflow_kernel::{
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
         let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
+        if let Some(result) = registry_import_media(&node.yields, short, data) {
+            return result;
+        }
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
             .get(&os_media_handler_key(&node.yields, short))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no import handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(data)
+    }
+
+    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
+    /// the full rationale -- two-hop dispatch (target bytes -> native pack bytes -> json text)
+    /// through the typed registry before falling back to the old stringly handler map.
+    fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
+        use semio_framework::{IoDirection, IoKey, ErasedComposeSource, IoPayload};
+        let native_kind = format!("s.{artifact_kind}");
+        let target_kind = format!("s.stdio.{format_kind}");
+
+        let source_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Import)
+            .into_iter().find(|d| d.artifact_kind == target_kind)?;
+        let import_key = IoKey {
+            artifact_kind: native_kind.clone(), standard: "1".to_string(), subset: "*".to_string(),
+            direction: IoDirection::Import,
+            format_kind: source_dialect.artifact_kind.to_string(), format_standard: source_dialect.standard.0.to_string(), format_subset: source_dialect.subset.0.to_string(),
+        };
+        let import_entry = semio_framework::io_resolve(&import_key).ok()?;
+        let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
+        let native = (import_entry.compose)(&sources).ok()?;
+
+        let export_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
+            .into_iter().find(|d| d.artifact_kind == "s.stdio.json")?;
+        let export_key = IoKey {
+            artifact_kind: native_kind, standard: "1".to_string(), subset: "*".to_string(),
+            direction: IoDirection::Export,
+            format_kind: export_dialect.artifact_kind.to_string(), format_standard: export_dialect.standard.0.to_string(), format_subset: export_dialect.subset.0.to_string(),
+        };
+        let export_entry = semio_framework::io_resolve(&export_key).ok()?;
+        let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
+        let json_out = (export_entry.compose)(&native_sources).ok()?;
+        let bytes = match json_out.payload {
+            IoPayload::Binary(b) => b,
+            IoPayload::Text(t) => t.into_bytes(),
+        };
+        Some(serde_json::from_slice(&bytes).map_err(|e| e.to_string()))
     }
 
     /// @emoji 📥️ Imports raw bytes for an app instance's resource kind, returning the new inline source document.
@@ -3717,7 +3808,7 @@ pub use crate::workflow_kernel::{
                 app_id: "draw".into(),
                 label: id.into(),
                 yields: "2d.drawing".into(),
-                document_ref: format!("documents/{id}"),
+                artifact_ref: format!("artifacts/{id}"),
                 config_ref: format!("config/{id}"),
                 x,
                 y,
@@ -3942,7 +4033,7 @@ pub use crate::workflow_kernel::{
             let paths = workflow_fixture_dsl_paths();
             for path in &paths {
                 let contents = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("read fixture {path:?}: {error}"));
-                let fixture = <WorkflowFixture as store::DocumentDsl>::parse_dsl(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
+                let fixture = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
                 let dirty: HashSet<String> = fixture.dirty_node_ids.iter().cloned().collect();
                 let deliveries = plan_workflow(&fixture.graph, &dirty);
                 assert_eq!(deliveries, fixture.expected_deliveries, "fixture {} mismatch", fixture.name);
@@ -3964,11 +4055,11 @@ pub use crate::workflow_kernel::{
                 let spk_path = dsl_path.with_file_name(spk_name);
                 let dsl_text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("read {dsl_path:?}: {error}"));
                 let spk_bytes = std::fs::read(&spk_path).unwrap_or_else(|error| panic!("read {spk_path:?}: {error}"));
-                let via_dsl = <WorkflowFixture as store::DocumentDsl>::parse_dsl(&dsl_text).unwrap_or_else(|error| panic!("parse {dsl_path:?}: {error}"));
-                let via_pack = <WorkflowFixture as store::DocumentPack>::decode_pack(&spk_bytes).unwrap_or_else(|error| panic!("decode {spk_path:?}: {error}"));
+                let via_dsl = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(&dsl_text).unwrap_or_else(|error| panic!("parse {dsl_path:?}: {error}"));
+                let via_pack = <WorkflowFixture as store::ArtifactPack>::decode_pack(&spk_bytes).unwrap_or_else(|error| panic!("decode {spk_path:?}: {error}"));
                 assert_eq!(via_dsl, via_pack, "{dsl_path:?} and {spk_path:?} decode to different documents");
-                assert_eq!(store::DocumentDsl::print_dsl(&via_dsl), dsl_text, "{dsl_path:?} is not its own canonical print_dsl fixpoint");
-                assert_eq!(store::DocumentPack::encode_pack(&via_dsl), spk_bytes, "{spk_path:?} does not match a fresh canonical encode_pack()");
+                assert_eq!(store::ArtifactDsl::print_dsl(&via_dsl), dsl_text, "{dsl_path:?} is not its own canonical print_dsl fixpoint");
+                assert_eq!(store::ArtifactPack::encode_pack(&via_dsl), spk_bytes, "{spk_path:?} does not match a fresh canonical encode_pack()");
                 store::test_support::assert_dsl_pack_equivalence(&via_dsl);
             }
         }
@@ -3992,14 +4083,14 @@ pub mod wasm_exports {
     /// 📦️ Decodes a `WorkflowFixture` from its binary `.spk` pack form into a plain JS object.
     #[wasm_bindgen(js_name = decodeWorkflowFixturePack)]
     pub fn decode_workflow_fixture_pack(bytes: &[u8]) -> Result<JsValue, JsValue> {
-        let fixture = <WorkflowFixture as store::DocumentPack>::decode_pack(bytes).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let fixture = <WorkflowFixture as store::ArtifactPack>::decode_pack(bytes).map_err(|error| JsValue::from_str(&error.to_string()))?;
         serde_wasm_bindgen::to_value(&fixture).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     /// 📖️ Parses a `WorkflowFixture` from its `.dsl` text form into a plain JS object.
     #[wasm_bindgen(js_name = parseWorkflowFixtureDsl)]
     pub fn parse_workflow_fixture_dsl(text: &str) -> Result<JsValue, JsValue> {
-        let fixture = <WorkflowFixture as store::DocumentDsl>::parse_dsl(text).map_err(|error| JsValue::from_str(&error.message))?;
+        let fixture = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(text).map_err(|error| JsValue::from_str(&error.message))?;
         serde_wasm_bindgen::to_value(&fixture).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
@@ -4252,7 +4343,7 @@ pub mod registry {
     pub struct OsAppRegistration {
         pub id: String,
         pub label: LocalizedLabel,
-        pub document: Vec<String>,
+        pub label: Vec<String>,
         pub controller_id: String,
         pub inputs: Vec<semio_framework::MediaPortSpec>,
         pub outputs: Vec<semio_framework::MediaPortSpec>,
@@ -4357,7 +4448,7 @@ pub mod registry {
             actions: Vec::new(),
             utilities: Vec::new(),
             params_schema: None,
-            document_snapshot_schema: None,
+            artifact_snapshot_schema: None,
             input_event_schema: None,
             output_schema: None,
             capabilities: Vec::new(),
@@ -4381,7 +4472,7 @@ pub mod registry {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: HashMap::new(),
+            terminology_breadcrumbs: HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
@@ -4475,7 +4566,7 @@ pub mod registry {
             let app = AppDefinition {
                 id: "draw".into(),
                 label: "Draw".into(),
-                document: vec!["semio".into(), "draw".into()],
+                breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
@@ -4490,7 +4581,7 @@ pub mod registry {
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
-                    document_snapshot_schema: None,
+                    artifact_snapshot_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: Vec::new(),
@@ -4504,7 +4595,7 @@ pub mod registry {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_documents: HashMap::new(),
+                terminology_breadcrumbs: HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -4542,8 +4633,8 @@ pub use host::{
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use instance::{
-    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
-    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsDocumentRef, OsInstanceState,
+    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
@@ -4562,7 +4653,7 @@ pub use semio_framework::*;
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use crate::space::*;
-pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
+pub use store::{document_backbone_ref, set_host_backbone_port, ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 #[cfg(feature = "os-host-full")]

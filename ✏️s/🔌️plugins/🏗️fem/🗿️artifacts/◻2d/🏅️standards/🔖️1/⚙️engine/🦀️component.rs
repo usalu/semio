@@ -535,7 +535,7 @@ mod tests {
     // #region 🔖️ExampleFixture
     #[test]
     fn example_fixture_parses_and_solves() {
-        use store::DocumentDsl;
+        use store::ArtifactDsl;
         let doc: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
         assert_eq!(doc.nodes.len(), 12);
         assert_eq!(doc.elements.len(), 9);

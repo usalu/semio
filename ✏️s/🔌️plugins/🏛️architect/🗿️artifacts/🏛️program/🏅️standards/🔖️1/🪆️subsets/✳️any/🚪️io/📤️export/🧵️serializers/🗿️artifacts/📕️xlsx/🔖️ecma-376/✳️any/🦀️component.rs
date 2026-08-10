@@ -11,5 +11,5 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::Text
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<XlsxSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

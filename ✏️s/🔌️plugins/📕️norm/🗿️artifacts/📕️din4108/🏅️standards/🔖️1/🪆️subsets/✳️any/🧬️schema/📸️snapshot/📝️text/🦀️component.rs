@@ -15,12 +15,12 @@ pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚�
 
 /// 📖️ Parses DIN 4108 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Din4108Snapshot, store::TextError> {
-    <Din4108Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <Din4108Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.din4108` DSL text.
 pub fn print_dsl(document: &Din4108Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

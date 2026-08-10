@@ -1,4 +1,4 @@
-//! 🖥️ Sequence play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Sequence play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -23,7 +23,7 @@ use crate::apps::sequence::terminology::sequence_play_labels;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceSnapshot, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
 };
 use store::EngineHandles;
@@ -80,12 +80,12 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️SequencePlayApp
 /// 🧪️ B1: unit struct — every former `SequencePlayRuntime` field now lives in
-/// `crate::apps::sequence::config::SequenceConfig` (see `DocumentApp::Config`), written through
+/// `crate::apps::sequence::config::SequenceConfig` (see `ArtifactApp::Config`), written through
 /// `SequenceConfigMutation`s.
 #[derive(Default)]
 pub struct SequencePlayApp;
 
-impl DocumentApp for SequencePlayApp {
+impl ArtifactApp for SequencePlayApp {
     type Snapshot = SequenceSnapshot;
     type Mutation = SequenceMutation;
     type Config = SequenceConfig;
@@ -113,7 +113,7 @@ impl DocumentApp for SequencePlayApp {
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
     /// returned `StepsAdd` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -136,7 +136,7 @@ impl DocumentApp for SequencePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SequenceCommand, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -147,7 +147,7 @@ impl DocumentApp for SequencePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sequence_play_labels(config);
@@ -165,10 +165,10 @@ impl DocumentApp for SequencePlayApp {
     /// 🗂️ Grouped disclosure: `run`/`stop`/`addStep` stay top-level (the most frequent verbs);
     /// `reorganize` folds into the `transform` group and a single-node hit's `setStepCollapsed` folds
     /// into the `selection` group; `deleteSelection` stays a direct destructive item last —
-    /// `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu` funnel)
+    /// `organize_context_menu` (applied automatically at the `VcsArtifactApp::context_menu` funnel)
     /// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
     /// separator itself.
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
@@ -271,9 +271,9 @@ pub fn create_sequence_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type SequenceApp = VcsDocumentApp<SequencePlayApp>;
+    pub type SequenceApp = VcsArtifactApp<SequencePlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> SequenceApp {

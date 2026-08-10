@@ -7,7 +7,7 @@ use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{effective_try_values, parse_value_json, reset_try_config_mutations, try_values_json_text, try_values_map};
 use crate::artifacts::forms::engine::can_advance;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
@@ -48,7 +48,7 @@ pub mod set_try_value {
         pub param_key: Option<String>,
     }
 
-    pub fn handle(payload: &SetTryValue, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetTryValue, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let mut values = try_values_map(config);
         if let Some(option_value) = &payload.option_value {
@@ -88,7 +88,7 @@ pub mod set_try_values {
         pub values_json: String,
     }
 
-    pub fn handle(payload: &SetTryValues, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(payload: &SetTryValues, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let mut values = try_values_map(cfg.snapshot);
         if let Some(incoming) = serde_json::from_str::<Value>(&payload.values_json).ok().and_then(|value| value.as_object().cloned()) {
             for (key, value) in incoming {
@@ -108,7 +108,7 @@ pub mod reset_try {
     #[dsl(keyword = "reset-try")]
     pub struct ResetTry {}
 
-    pub fn handle(_payload: &ResetTry, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &ResetTry, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::config(reset_try_config_mutations()))
     }
 }
@@ -122,7 +122,7 @@ pub mod previous_step {
     #[dsl(keyword = "previous-step")]
     pub struct PreviousStep {}
 
-    pub fn handle(_payload: &PreviousStep, _doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &PreviousStep, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: cfg.snapshot.current_step_index.saturating_sub(1) }]))
     }
 }
@@ -136,7 +136,7 @@ pub mod next_step {
     #[dsl(keyword = "next-step")]
     pub struct NextStep {}
 
-    pub fn handle(_payload: &NextStep, doc: &DocumentView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &NextStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let index = config.current_step_index as usize;
@@ -160,7 +160,7 @@ pub mod submit {
     #[dsl(keyword = "submit")]
     pub struct Submit {}
 
-    pub fn handle(_payload: &Submit, _doc: &DocumentView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    pub fn handle(_payload: &Submit, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }

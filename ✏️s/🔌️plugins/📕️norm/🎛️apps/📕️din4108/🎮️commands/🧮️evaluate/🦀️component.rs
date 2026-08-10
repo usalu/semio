@@ -7,7 +7,7 @@
 use crate::artifacts::din4108::op::Din4108Mutation;
 use crate::artifacts::din4108::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -19,7 +19,7 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot(Din4108Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
 }
 //#endregion 🔖️Handler
@@ -34,8 +34,8 @@ mod tests {
     fn handle_recommits_the_current_projection_under_its_action_id() {
         let projection = Din4108Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(&Evaluate {}, &DocumentView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
-        assert_eq!(emit.document_mutations, vec![Din4108Mutation::SetSnapshot { snapshot: Din4108Snapshot::default() }]);
+        let emit = handle(&Evaluate {}, &ArtifactView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
+        assert_eq!(emit.artifact_mutations, vec![Din4108Mutation::SetSnapshot { snapshot: Din4108Snapshot::default() }]);
         assert_eq!(emit.description.as_deref(), Some("evaluate"));
     }
 }

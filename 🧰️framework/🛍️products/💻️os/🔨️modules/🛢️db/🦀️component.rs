@@ -1,12 +1,12 @@
 //! 🗄️ Db facade — re-exports the complete public surface of every `db_*` crate in the family
 //! (`db_core, db_actor, db_state, db_storage, db_wal, db_snapshot, db_index, db_conflict,
-//! db_projection, db_query, db_preview, db_security, db_document, db_compact, db_sync,
+//! db_projection, db_query, db_preview, db_security, db_artifact, db_compact, db_sync,
 //! db_cluster, db_observe, db_engine`, plus the optional `db_storage_sqlite`/`db_storage_postgres`/
 //! `db_storage_neo4j` backends) behind one crate. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, "Stable API" block).
 //!
-//! 🎯️ Design choice (layout): the frozen `Database`/`DocumentHandle` API and its companion types
+//! 🎯️ Design choice (layout): the frozen `Database`/`ArtifactHandle` API and its companion types
 //! (`CommandReceipt`, `Frontier`, `Consistency`, `DurabilityClass`, …) already live in `db_engine`
 //! — this crate promotes exactly that surface to its own root (`//#region 🔖️Database`), unchanged,
 //! since that is the "primary entry point" every downstream caller (`os-semio_hub`, `semio_compose_rs-semio_hub`,
@@ -23,12 +23,12 @@
 //! only their submodules are feature-gated, matching this crate's own `Cargo.toml` feature names.
 
 //#region 🔖️Database
-/// 🗄️🚪️ The frozen `Database`/`DocumentHandle` API and its companion types, promoted verbatim from
+/// 🗄️🚪️ The frozen `Database`/`ArtifactHandle` API and its companion types, promoted verbatim from
 /// `db_engine` — see the module doc's "Design choice (layout)" note. This is the primary entry
 /// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
 /// document database over `FsStorage`.
 pub use db_engine::{
-    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, DocumentHandle, DocumentSpec, DurabilityClass, Frontier, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle,
+    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, DurabilityClass, Frontier, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle,
     Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
@@ -132,11 +132,11 @@ pub mod security {
     pub use db_security::*;
 }
 
-/// 🗄️🏛️ `db_document` — the document authority actor: admit → dedupe → base-resolve → authz →
+/// 🗄️🏛️ `db_artifact` — the document authority actor: admit → dedupe → base-resolve → authz →
 /// deps → validate → conflict → execute → WAL append → durability → publish → project → vcs →
 /// preview-reconcile → receipt.
 pub mod document {
-    pub use db_document::*;
+    pub use db_artifact::*;
 }
 
 /// 🗄️🧹️ `db_compact` — WAL segment retention, payload GC, index compaction, and snapshot chain
@@ -208,7 +208,7 @@ mod tests {
         dir
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::DocumentId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
+    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let mut payload = serde_json::Map::new();
         for (path, value) in entries {
             payload.insert((*path).to_string(), value.clone());
@@ -218,7 +218,7 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
@@ -228,16 +228,16 @@ mod tests {
     //#region 🔖️Facade round trip
     /// @emoji 🧪️ The facade's own core law: everything needed for a real submit -> durable ->
     /// query -> frontier -> history round trip is reachable through THIS crate's re-exported
-    /// names alone (`db::Database`, `db::DocumentSpec`, `db::Consistency`, `db::Query`,
+    /// names alone (`db::Database`, `db::ArtifactSpec`, `db::Consistency`, `db::Query`,
     /// `db::document::CommandBatch`/`SubmitOptions`) — never by reaching past the facade into
-    /// `db_engine`/`db_document` directly. A rename or a dropped re-export in `//#region
+    /// `db_engine`/`db_artifact` directly. A rename or a dropped re-export in `//#region
     /// 🔖️Database`/`//#region 🔖️Family` would fail this test to compile.
     #[test]
     fn full_round_trip_reachable_purely_through_facade_reexports() {
         let root = tempdir("round-trip");
         let database = Database::open_at(&root, Profile::Dev).unwrap();
-        let document = protocol::DocumentId("doc-1".to_string());
-        let handle = database.create_document(DocumentSpec::new(document.clone())).unwrap();
+        let document = protocol::ArtifactId("doc-1".to_string());
+        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
 
         let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
         let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
@@ -263,7 +263,7 @@ mod tests {
     fn database_error_type_is_reachable_at_the_facade_root() {
         let root = tempdir("db-error");
         let database = Database::open_at(&root, Profile::Test).unwrap();
-        let result = database.document(&protocol::DocumentId("never-created".to_string()));
+        let result = database.document(&protocol::ArtifactId("never-created".to_string()));
         assert!(matches!(result, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Facade round trip
@@ -317,8 +317,8 @@ mod tests {
         let sink = observe::MemorySink::new();
         assert!(sink.lines().is_empty());
 
-        let from = durability::Frontier::genesis(ids::DocumentId("doc-1".to_string()));
-        let to = durability::Frontier { head_seq: 3, commit_seq: 3, ..durability::Frontier::genesis(ids::DocumentId("doc-1".to_string())) };
+        let from = durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string()));
+        let to = durability::Frontier { head_seq: 3, commit_seq: 3, ..durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string())) };
         let delta = sync::frontier_delta(&from, &to).unwrap();
         assert_eq!(delta.commands, 3);
     }

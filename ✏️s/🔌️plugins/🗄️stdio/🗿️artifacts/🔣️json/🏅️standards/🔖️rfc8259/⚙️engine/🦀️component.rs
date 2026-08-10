@@ -15,7 +15,7 @@ pub fn register() {
     crate::artifacts::json::composer::register();
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
@@ -94,11 +94,11 @@ mod tests {
     #[test]
     fn codec_round_trip() {
         let snap = empty_json_snapshot();
-        let text = store::DocumentDsl::print_dsl(&snap);
-        let parsed = <JsonSnapshot as store::DocumentDsl>::parse_dsl(&text).expect("parse");
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
-        let bytes = store::DocumentPack::encode_pack(&snap);
-        let decoded = <JsonSnapshot as store::DocumentPack>::decode_pack(&bytes).expect("decode");
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 }

@@ -4,7 +4,7 @@ use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceCamera, SequenceSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -18,7 +18,7 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let selected = cfg.snapshot.selected_step_ids.clone();
@@ -50,7 +50,7 @@ pub mod node_graph_edit {
             }
         });
         if cleared {
-            Ok(Emit { document_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
+            Ok(Emit { artifact_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
         } else {
             Ok(Emit::mutations(ops))
         }
@@ -69,7 +69,7 @@ pub mod set_viewport {
         pub camera: SequenceCamera,
     }
 
-    pub fn handle(payload: &SetViewport, _doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }

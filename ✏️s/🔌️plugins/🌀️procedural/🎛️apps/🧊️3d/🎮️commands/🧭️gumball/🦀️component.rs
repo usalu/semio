@@ -8,7 +8,7 @@ use crate::artifacts::procedural3d::engine::{
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -57,7 +57,7 @@ pub mod translate_selection {
         pub dy: f64,
         pub dz: f64}
 
-    pub fn handle(payload: &TranslateSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let ids = mesh_selection_ids_typed(&payload.node_ids, &cfg.snapshot.selected_node_ids);
         let (dx, dy, dz) = (payload.dx, payload.dy, payload.dz);
@@ -66,7 +66,7 @@ pub mod translate_selection {
             let next = [current[0] + dx, current[1] + dy, current[2] + dz];
             host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
         }) {
-            Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }),
+            Some((operations, new_selection)) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }),
             None => Ok(Emit::default())}
     }
 }
@@ -85,7 +85,7 @@ pub mod rotate_selection {
         pub az: f64,
         pub angle: f64}
 
-    pub fn handle(payload: &RotateSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let ids = mesh_selection_ids_typed(&payload.node_ids, &cfg.snapshot.selected_node_ids);
         let (ax, ay, az, angle) = (payload.ax, payload.ay, payload.az, payload.angle);
@@ -93,7 +93,7 @@ pub mod rotate_selection {
             let current_angle = gumball_widget_number_param(host, transform_id, "angle", 0.0);
             host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
         }) {
-            Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }),
+            Some((operations, new_selection)) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }),
             None => Ok(Emit::default())}
     }
 }
@@ -111,7 +111,7 @@ pub mod scale_selection {
         pub sy: f64,
         pub sz: f64}
 
-    pub fn handle(payload: &ScaleSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let ids = mesh_selection_ids_typed(&payload.node_ids, &cfg.snapshot.selected_node_ids);
         let uniform_factor = (payload.sx + payload.sy + payload.sz) / 3.0;
@@ -119,7 +119,7 @@ pub mod scale_selection {
             let current_factor = gumball_widget_number_param(host, transform_id, "factor", 1.0);
             host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
         }) {
-            Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() }),
+            Some((operations, new_selection)) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() }),
             None => Ok(Emit::default())}
     }
 }

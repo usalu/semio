@@ -2,7 +2,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.forms` document. It still round-trips through a real
-//! `DocumentStore` (with a real `backwards`), so selection/wizard edits are VCS'd exactly like document
+//! `ArtifactStore` (with a real `backwards`), so selection/wizard edits are VCS'd exactly like document
 //! content. B1: absorbs every field that used to live on `forms_ui::FormsPlayApp`'s
 //! `RefCell<FormsPlayRuntime>` (blueprint selection, the Try wizard's active step, its in-progress answer
 //! values) plus `locale` (was read off `view_state.locale`) and `contributions_json` (was read off
@@ -15,13 +15,13 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ `FormsPlayApp::Config` — the pure-trait `DocumentApp::Config` for the forms app.
+/// 🧮️ `FormsPlayApp::Config` — the pure-trait `ArtifactApp::Config` for the forms app.
 /// `try_values_json`/`contributions_json` are both heterogeneous JSON (per-question-kind value shapes; an
 /// arbitrary `Contribution` list) with no single concrete `dsl`-typed shape, so both stay JSON-blob
 /// strings — the same idiom `layout_engine::LayoutConfig`'s port-recipe sibling
 /// (`LayoutDocument::data_fields_json`) and `shooting_protocol::ShootingCommand::SetFixtureJson` use for
 /// "opaque JSON payload, never a document/config field type of its own" data.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "formscfg")]
 #[dsl(id = "forms.config")]
@@ -41,9 +41,9 @@ pub struct FormsConfig {
     pub contributions_json: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for FormsConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for FormsConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -63,7 +63,7 @@ impl store::DocumentDsl for FormsConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -72,12 +72,12 @@ impl store::DocumentDsl for FormsConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for FormsConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for FormsConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -86,10 +86,10 @@ impl store::DocumentPack for FormsConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -101,7 +101,7 @@ impl store::DocumentPack for FormsConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for FormsConfig {

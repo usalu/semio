@@ -1,6 +1,6 @@
 //! 📥️ Import .zip into Fem3dSnapshot.
 
-use semio_framework_plugin::{DocumentCodec, IoError, JsonCodec, MediaFormat};
+use semio_framework_plugin::{ArtifactCodec, IoError, JsonCodec, MediaFormat};
 
 //#region 🔖️Import
 pub fn import(bytes: &[u8]) -> Result<crate::artifacts::fem3d::Fem3dSnapshot, IoError> {

@@ -3,11 +3,11 @@
 use flow::CameraJson;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of flow view state (graph selection, preview toggles, node-graph camera).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "flow.presence")]
 #[dsl(layout = "lines")]
@@ -41,7 +41,7 @@ impl protocol::MutationDiff<FlowPresence> for FlowPresence {
     }
 }
 
-impl store::DocumentDsl for FlowPresence {
+impl store::ArtifactDsl for FlowPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -64,7 +64,7 @@ impl store::DocumentDsl for FlowPresence {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -73,11 +73,11 @@ impl store::DocumentDsl for FlowPresence {
     }
 }
 
-impl DocumentPack for FlowPresence {
+impl ArtifactPack for FlowPresence {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -89,10 +89,10 @@ impl DocumentPack for FlowPresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

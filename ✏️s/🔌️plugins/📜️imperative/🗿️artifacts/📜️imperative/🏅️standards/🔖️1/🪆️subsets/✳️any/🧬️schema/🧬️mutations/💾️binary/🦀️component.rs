@@ -178,10 +178,10 @@ mod tests {
 
         let document = crate::artifacts::imperative::engine::default_snapshot();
         let envelope = store::create_document_envelope::<ImperativeSnapshot, ImperativeMutation>("imperative.document/v1", "test", document, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Add { index: 0, item: step } };
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

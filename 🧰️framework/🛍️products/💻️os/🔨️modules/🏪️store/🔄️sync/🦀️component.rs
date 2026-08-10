@@ -3,7 +3,7 @@
 //! that feeds remote {@link MutationEnvelope}s into a document's vcs edit timeline.
 //!
 //! # Threading model
-//! - **Native** (wgpu native host, tests): {@link DocumentHost::open} spawns a dedicated `std::thread`
+//! - **Native** (wgpu native host, tests): {@link ArtifactHost::open} spawns a dedicated `std::thread`
 //!   running a current-thread tokio runtime; the actor `select!`s over the store's outbound queue, a
 //!   semio_hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
@@ -18,7 +18,7 @@ use crate::os_spr::{ActorId, MutationId};
 use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, SpaceConflict};
+use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, SpaceConflict};
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
@@ -100,10 +100,10 @@ pub enum PersistenceBinding {
     },
 }
 
-/// @emoji 🧾️ Everything {@link DocumentHost::open} needs to spawn one document's actor.
+/// @emoji 🧾️ Everything {@link ArtifactHost::open} needs to spawn one document's actor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentActorConfig {
+pub struct ArtifactActorConfig {
     pub document_id: String,
     pub schema: String,
     pub bindings: Vec<PersistenceBinding>,
@@ -114,10 +114,10 @@ pub struct DocumentActorConfig {
     pub actor: String,
 }
 
-/// @emoji 📨️ Caller → actor control messages, sent on the {@link DocumentChannels} command channel.
+/// @emoji 📨️ Caller → actor control messages, sent on the {@link ArtifactChannels} command channel.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum DocumentActorMsg {
+pub enum ArtifactActorMsg {
     /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
     LocalMutations {
@@ -149,22 +149,22 @@ pub enum RemoteState {
 /// @emoji 🚦️ Snapshot of a document's sync health for status badges.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentSyncStatus {
+pub struct ArtifactSyncStatus {
     pub persisted: bool,
     pub pendingMutations: usize,
     pub remote: RemoteState,
 }
 
-impl Default for DocumentSyncStatus {
+impl Default for ArtifactSyncStatus {
     fn default() -> Self {
         Self { persisted: false, pendingMutations: 0, remote: RemoteState::Detached }
     }
 }
 
-/// @emoji 📬️ Actor → subscriber events, delivered on the broadcast channel from {@link DocumentHost::subscribe}.
+/// @emoji 📬️ Actor → subscriber events, delivered on the broadcast channel from {@link ArtifactHost::subscribe}.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum DocumentEvent {
+pub enum ArtifactEvent {
     /// @emoji 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
     RemoteMutations {
@@ -175,17 +175,17 @@ pub enum DocumentEvent {
     /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
     SnapshotReplaced { pack: Vec<u8>, spr: Vec<u8> },
     /// @emoji 🚦️ Sync status changed.
-    Status(DocumentSyncStatus),
+    Status(ArtifactSyncStatus),
     /// @emoji 📡️ The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
     /// @emoji 👻️ A peer published an ephemeral preview blob (`crate::os_spr::wire::ServerFrame::Preview`)
     /// on the uncredited, loss-tolerant preview lane — the counterpart of
-    /// {@link DocumentActorMsg::PublishPreview}.
+    /// {@link ArtifactActorMsg::PublishPreview}.
     Preview { actor: String, key: String, seq: u64, payload: Vec<u8> },
     /// @emoji 📮️ The semio_hub's terminal disposition for one outbound `Commands` batch
     /// (`crate::os_spr::wire::ServerFrame::Ack`'s `Applied` stage) — accepted as-is, transformed against
     /// concurrent history (the transformed envelope is already delivered as a
-    /// {@link DocumentEvent::RemoteMutations} replacing the speculative local one), or rejected
+    /// {@link ArtifactEvent::RemoteMutations} replacing the speculative local one), or rejected
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
     CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
     /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / semio_hub CAS reject).
@@ -193,8 +193,8 @@ pub enum DocumentEvent {
 }
 
 /// @emoji ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
-/// envelope payload (already delivered separately as {@link DocumentEvent::RemoteMutations} by
-/// the time this fires — see {@link DocumentEvent::CommandOutcome}).
+/// envelope payload (already delivered separately as {@link ArtifactEvent::RemoteMutations} by
+/// the time this fires — see {@link ArtifactEvent::CommandOutcome}).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum CommandAckOutcome {
@@ -208,7 +208,7 @@ pub enum CommandAckOutcome {
 /// @emoji 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
 /// tree (serde-shaped), shared by the wasm `store_worker` and `🟦️backbone-worker.ts`.
 pub mod backbone_worker_wire {
-    use super::{DocumentActorConfig, DocumentActorMsg, DocumentEvent, PersistenceBinding};
+    use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
     use crate::os_dsl::{from_dsl_value, to_dsl_value};
 
     pub const MAGIC: u8 = 0x01;
@@ -229,23 +229,23 @@ pub mod backbone_worker_wire {
         },
         Send {
             document_id: String,
-            message: DocumentActorMsg,
+            message: ArtifactActorMsg,
         },
     }
 
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum BackboneWorkerResponse {
-        Event { document_id: String, event: DocumentEvent },
+        Event { document_id: String, event: ArtifactEvent },
         Ready,
     }
 
     impl BackboneWorkerRequest {
-        pub fn actor_config(&self) -> Option<DocumentActorConfig> {
+        pub fn actor_config(&self) -> Option<ArtifactActorConfig> {
             let Self::Open { document_id, schema, bindings, watch_external, actor } = self else {
                 return None;
             };
-            Some(DocumentActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone() })
+            Some(ArtifactActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone() })
         }
     }
 
@@ -284,11 +284,11 @@ pub mod backbone_worker_wire {
 //#endregion 🔖️BackboneWorkerWire
 
 //#region 🔖️Endpoints
-// 🧱️ `DocumentId` is used only by native-only test helpers below (the wire bridge and production
+// 🧱️ `ArtifactId` is used only by native-only test helpers below (the wire bridge and production
 // folder-reconstruction path move `crate::os_spr::MutationEnvelope`s without spelling this type), so it
 // stays a native-only import to avoid an unused-import warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
-use crate::os_spr::DocumentId;
+use crate::os_spr::ArtifactId;
 
 /// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
@@ -346,10 +346,10 @@ fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &
         let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(MutationEnvelope {
             mutation_id: MutationId(op_ids[index].clone()),
-            document_id: DocumentId(document_id.to_string()),
+            document_id: ArtifactId(document_id.to_string()),
             actor: ActorId(actor),
             dependencies,
-            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
         });
@@ -411,7 +411,7 @@ fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str) -> String {
 /// to end (never touches `vcs`/`protocol_command`'s typed `Mutation`/`MutationDiff` trait
 /// machinery — see the crate doc), so "the inverse machinery" it uses is simply replaying the
 /// envelope's own already-computed inverse payload as a synthetic remote operation, the same path
-/// {@link DocumentActor::deliver_remote_operations} already uses for any other remote edit. 🎯️ W6:
+/// {@link ArtifactActor::deliver_remote_operations} already uses for any other remote edit. 🎯️ W6:
 /// re-emits `envelope.inverse` as the rollback's forward diff; the rollback's OWN inverse is the
 /// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseMutation` carries no
 /// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
@@ -423,7 +423,7 @@ fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
         document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
         dependencies: vec![envelope.mutation_id.clone()],
-        diff: crate::os_spr::DocumentDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
+        diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
     }
@@ -479,27 +479,27 @@ fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalT
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::DocumentPack,
+    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
-    pub store: DocumentStore<P, Mutation>,
-    cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
-    events: Option<broadcast::Receiver<DocumentEvent>>,
-    status: DocumentSyncStatus,
+    pub store: ArtifactStore<P, Mutation>,
+    cmd_tx: Option<mpsc::UnboundedSender<ArtifactActorMsg>>,
+    events: Option<broadcast::Receiver<ArtifactEvent>>,
+    status: ArtifactSyncStatus,
 }
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::DocumentPack,
+    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
-    pub fn new(store: DocumentStore<P, Mutation>) -> Self {
-        Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
+    pub fn new(store: ArtifactStore<P, Mutation>) -> Self {
+        Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
     }
 
     /// @emoji 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
     /// is wired into the store, and the command/event channels are retained for wake + status.
-    pub fn attach(&mut self, channels: DocumentChannels, events: broadcast::Receiver<DocumentEvent>) -> Result<(), SyncError> {
+    pub fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
         self.store.attach_backbone(Box::new(channels.channel_backbone)).map_err(|error| SyncError::Vcs(error.to_string()))?;
         self.cmd_tx = Some(channels.cmd_tx);
         self.events = Some(events);
@@ -509,7 +509,7 @@ where
     /// @emoji ✂️ Detaches from the actor (asking it to flush + stop) and unbinds the store's backbone.
     pub fn detach(&mut self) {
         if let Some(cmd_tx) = &self.cmd_tx {
-            let _ = cmd_tx.send(DocumentActorMsg::Detach);
+            let _ = cmd_tx.send(ArtifactActorMsg::Detach);
         }
         self.store.detach_backbone();
         self.cmd_tx = None;
@@ -519,15 +519,15 @@ where
     /// @emoji 🔔️ Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
     pub fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
-            let _ = cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() });
+            let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         }
     }
 
     /// @emoji 👻️ Publishes an ephemeral preview blob on the semio_hub's preview lane. See
-    /// {@link DocumentActorMsg::PublishPreview}.
+    /// {@link ArtifactActorMsg::PublishPreview}.
     pub fn publish_preview(&self, key: String, seq: u64, payload: Vec<u8>) {
         if let Some(cmd_tx) = &self.cmd_tx {
-            let _ = cmd_tx.send(DocumentActorMsg::PublishPreview { key, seq, payload });
+            let _ = cmd_tx.send(ArtifactActorMsg::PublishPreview { key, seq, payload });
         }
     }
 
@@ -536,7 +536,7 @@ where
     pub fn tick(&mut self) -> Result<bool, SyncError> {
         if let Some(events) = &mut self.events {
             while let Ok(event) = events.try_recv() {
-                if let DocumentEvent::Status(status) = &event {
+                if let ArtifactEvent::Status(status) = &event {
                     self.status = status.clone();
                 }
             }
@@ -545,14 +545,14 @@ where
     }
 
     /// @emoji 🚦️ The latest sync status seen on the event stream (updated by {@link SyncSession::tick}).
-    pub fn status(&self) -> DocumentSyncStatus {
+    pub fn status(&self) -> ArtifactSyncStatus {
         self.status.clone()
     }
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
     pub fn receive(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), SyncError> {
-        self.store.dispatch(crate::os_store::DocumentCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     pub fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
@@ -567,37 +567,37 @@ where
 //#endregion 🔖️SyncSession
 
 //#region 🔖️Host
-/// @emoji 🎛️ The channels {@link DocumentHost::open} hands back to a caller: attach `channel_backbone`
-/// to your `DocumentStore`, and send control messages (or wakes) on `cmd_tx`.
-pub struct DocumentChannels {
-    pub cmd_tx: mpsc::UnboundedSender<DocumentActorMsg>,
+/// @emoji 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
+/// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
+pub struct ArtifactChannels {
+    pub cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
     /// @emoji 🔗️ The store-side backbone end. The caller owns store attachment:
     /// `store.attach_backbone(Box::new(channels.channel_backbone))`.
     pub channel_backbone: ChannelBackbone,
 }
 
 struct OpenDocument {
-    cmd_tx: mpsc::UnboundedSender<DocumentActorMsg>,
-    events: broadcast::Sender<DocumentEvent>,
+    cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
+    events: broadcast::Sender<ArtifactEvent>,
     #[cfg(not(target_arch = "wasm32"))]
     join: Option<std::thread::JoinHandle<()>>,
 }
 
-/// @emoji 🏛️ Registry of open per-document actors. One `DocumentHost` per host process (wgpu native,
+/// @emoji 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
 /// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
 #[derive(Clone, Default)]
-pub struct DocumentHost {
+pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, OpenDocument>>>,
 }
 
-impl DocumentHost {
+impl ArtifactHost {
     pub fn new() -> Self {
         Self::default()
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
     /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
-    pub fn open(&self, config: DocumentActorConfig) -> DocumentChannels {
+    pub fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         self.close(&document_id);
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}"));
@@ -614,12 +614,12 @@ impl DocumentHost {
             join,
         };
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(document_id, entry);
-        DocumentChannels { cmd_tx, channel_backbone }
+        ArtifactChannels { cmd_tx, channel_backbone }
     }
 
     /// @emoji 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
-    pub fn subscribe(&self, document_id: &str) -> broadcast::Receiver<DocumentEvent> {
+    pub fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
         let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         match guard.get(document_id) {
             Some(document) => document.events.subscribe(),
@@ -631,7 +631,7 @@ impl DocumentHost {
     }
 
     /// @emoji 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
-    pub fn send(&self, document_id: &str, message: DocumentActorMsg) {
+    pub fn send(&self, document_id: &str, message: ArtifactActorMsg) {
         if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
             let _ = document.cmd_tx.send(message);
         }
@@ -642,7 +642,7 @@ impl DocumentHost {
     pub fn close(&self, document_id: &str) {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
-            let _ = document.cmd_tx.send(DocumentActorMsg::Detach);
+            let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(join) = document.join {
                 let _ = join.join();
@@ -651,17 +651,17 @@ impl DocumentHost {
     }
 
     /// @emoji 🧹️ Ids of every currently-open document.
-    pub fn open_documents(&self) -> Vec<String> {
+    pub fn open_artifacts(&self) -> Vec<String> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect()
     }
 }
 
-impl Drop for DocumentHost {
+impl Drop for ArtifactHost {
     fn drop(&mut self) {
         if std::sync::Arc::strong_count(&self.inner) > 1 {
             return;
         }
-        for document_id in self.open_documents() {
+        for document_id in self.open_artifacts() {
             self.close(&document_id);
         }
     }
@@ -733,11 +733,11 @@ mod native_actor {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let Some(codec) = crate::os_store::document_codec(schema) else {
-                        let pack_files = crate::os_store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+                        let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
                         return storage.write_pack(document_id, extension, &pack_files, "").map_err(|error| error.to_string());
                     };
                     let mirror = (codec.print_mirror)(pack, spr).map_err(|error| error.to_string())?;
-                    let pack_files = crate::os_store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+                    let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
                     storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).map_err(|error| error.to_string())
                 }
             }
@@ -746,13 +746,13 @@ mod native_actor {
 
     /// @emoji 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
     /// ingests semio_hub/file changes back into the store, and keeps subscribers current with status/events.
-    pub(super) struct DocumentActor {
+    pub(super) struct ArtifactActor {
         document_id: String,
         schema: String,
         actor: String,
         remote: ChannelBackboneRemote,
-        events: broadcast::Sender<DocumentEvent>,
-        cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>,
+        events: broadcast::Sender<ArtifactEvent>,
+        cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
         folder: Option<FolderEndpoint>,
         folder_watch_path: Option<PathBuf>,
         watch_external: bool,
@@ -781,14 +781,14 @@ mod native_actor {
         known_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
         remote_state: RemoteState,
-        last_status: Option<DocumentSyncStatus>,
+        last_status: Option<ArtifactSyncStatus>,
         watcher: Option<notify::RecommendedWatcher>,
         fs_rx: Option<mpsc::UnboundedReceiver<()>>,
         fs_deadline: Option<Instant>,
     }
 
-    impl DocumentActor {
-        pub(super) fn new(config: DocumentActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>, events: broadcast::Sender<DocumentEvent>) -> Self {
+    impl ArtifactActor {
+        pub(super) fn new(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
@@ -911,9 +911,9 @@ mod native_actor {
         }
 
         /// @emoji 📨️ Handles a caller control message. Returns `true` when the actor should stop.
-        async fn handle_cmd(&mut self, message: DocumentActorMsg) -> bool {
+        async fn handle_cmd(&mut self, message: ArtifactActorMsg) -> bool {
             match message {
-                DocumentActorMsg::LocalMutations { envelopes } => {
+                ArtifactActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay().await;
                     if !drained && !envelopes.is_empty() {
                         self.persist_operations(&envelopes);
@@ -921,19 +921,19 @@ mod native_actor {
                     }
                     false
                 }
-                DocumentActorMsg::PresenceHeartbeat { peer } => {
+                ArtifactActorMsg::PresenceHeartbeat { peer } => {
                     self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview).await;
                     false
                 }
-                DocumentActorMsg::PublishPreview { key, seq, payload } => {
+                ArtifactActorMsg::PublishPreview { key, seq, payload } => {
                     self.send_client_frame(ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
                     false
                 }
-                DocumentActorMsg::ExternalChanged => {
+                ArtifactActorMsg::ExternalChanged => {
                     self.handle_external_change();
                     false
                 }
-                DocumentActorMsg::Detach => {
+                ArtifactActorMsg::Detach => {
                     self.drain_and_relay().await;
                     true
                 }
@@ -970,7 +970,7 @@ mod native_actor {
 
         //#region 🔖️Folder
         /// @emoji ✍️ Persists the current pack+spr bytes to the folder binding and records the
-        /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::DocumentCodec`
+        /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::ArtifactCodec`
         /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write`)
         /// is swallowed here the same way every other best-effort path in this actor already is, but
         /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
@@ -1044,7 +1044,7 @@ mod native_actor {
                 self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
-                    self.emit(DocumentEvent::Conflict(SpaceConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
+                    self.emit(ArtifactEvent::Conflict(SpaceConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
@@ -1149,13 +1149,13 @@ mod native_actor {
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
                     if actor != ActorId(self.actor.clone()) {
-                        self.emit(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
+                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
                 ServerFrame::Presence { peers } => {
                     let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
-                    self.emit(DocumentEvent::Presence { peers });
+                    self.emit(ArtifactEvent::Presence { peers });
                 }
                 ServerFrame::CreditGrant { .. } => {
                     // 🪙️ Command-lane credit-based flow control: no client-side backpressure
@@ -1163,7 +1163,7 @@ mod native_actor {
                     // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(DocumentEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    self.emit(ArtifactEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
             }
         }
@@ -1178,7 +1178,7 @@ mod native_actor {
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
                 match *outcome {
                     ApplyOutcome::Accepted => {
-                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
@@ -1187,13 +1187,13 @@ mod native_actor {
                         let converted = *envelope;
                         self.persist_operations(std::slice::from_ref(&converted));
                         self.deliver_remote_operations(vec![converted]);
-                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.persist_operations(&rollbacks);
                         self.deliver_remote_operations(rollbacks);
-                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
                     }
                 }
             }
@@ -1238,21 +1238,21 @@ mod native_actor {
                 return;
             }
             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
-            self.emit(DocumentEvent::RemoteMutations { envelopes });
+            self.emit(ArtifactEvent::RemoteMutations { envelopes });
         }
 
         /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
         fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() });
-            self.emit(DocumentEvent::SnapshotReplaced { pack, spr });
+            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr });
         }
 
-        fn emit(&self, event: DocumentEvent) {
+        fn emit(&self, event: ArtifactEvent) {
             let _ = self.events.send(event);
         }
 
-        fn status(&self) -> DocumentSyncStatus {
-            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingMutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
+        fn status(&self) -> ArtifactSyncStatus {
+            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingMutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
@@ -1264,7 +1264,7 @@ mod native_actor {
             let status = self.status();
             if self.last_status.as_ref() != Some(&status) {
                 self.last_status = Some(status.clone());
-                self.emit(DocumentEvent::Status(status));
+                self.emit(ArtifactEvent::Status(status));
             }
         }
         //#endregion 🔖️Deliver
@@ -1332,12 +1332,12 @@ mod native_actor {
     }
 
     /// @emoji 🚀️ Spawns a dedicated OS thread running a current-thread tokio runtime that drives the actor.
-    pub(super) fn spawn_actor(config: DocumentActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>, events: broadcast::Sender<DocumentEvent>) -> Option<std::thread::JoinHandle<()>> {
+    pub(super) fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Option<std::thread::JoinHandle<()>> {
         let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().ok()?;
         std::thread::Builder::new()
             .name(format!("sync-actor-{}", config.document_id))
             .spawn(move || {
-                let actor = DocumentActor::new(config, remote, cmd_rx, events);
+                let actor = ArtifactActor::new(config, remote, cmd_rx, events);
                 runtime.block_on(actor.run());
             })
             .ok()
@@ -1364,7 +1364,7 @@ mod wasm_actor {
         schema: String,
         actor: String,
         remote: ChannelBackboneRemote,
-        events: broadcast::Sender<DocumentEvent>,
+        events: broadcast::Sender<ArtifactEvent>,
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
         hub_token: Option<String>,
@@ -1459,21 +1459,21 @@ mod wasm_actor {
             drained
         }
 
-        fn handle_cmd(&mut self, message: DocumentActorMsg) {
+        fn handle_cmd(&mut self, message: ArtifactActorMsg) {
             match message {
-                DocumentActorMsg::LocalMutations { envelopes } => {
+                ArtifactActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay();
                     if !drained && !envelopes.is_empty() {
                         self.relay_operations(&envelopes);
                     }
                 }
-                DocumentActorMsg::PresenceHeartbeat { peer } => {
+                ArtifactActorMsg::PresenceHeartbeat { peer } => {
                     self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview);
                 }
-                DocumentActorMsg::PublishPreview { key, seq, payload } => {
+                ArtifactActorMsg::PublishPreview { key, seq, payload } => {
                     self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview);
                 }
-                DocumentActorMsg::ExternalChanged | DocumentActorMsg::Detach => {}
+                ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
             }
         }
 
@@ -1504,16 +1504,16 @@ mod wasm_actor {
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
                     if actor != ActorId(self.actor.clone()) {
-                        let _ = self.events.send(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
+                        let _ = self.events.send(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
                 ServerFrame::Presence { peers } => {
                     let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
-                    let _ = self.events.send(DocumentEvent::Presence { peers });
+                    let _ = self.events.send(ArtifactEvent::Presence { peers });
                 }
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
-                    let _ = self.events.send(DocumentEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    let _ = self.events.send(ArtifactEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
             }
         }
@@ -1525,19 +1525,19 @@ mod wasm_actor {
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
                 match *outcome {
                     ApplyOutcome::Accepted => {
-                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
                         let converted = *envelope;
                         self.deliver_remote_operations(vec![converted]);
-                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
-                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
                     }
                 }
             }
@@ -1548,11 +1548,11 @@ mod wasm_actor {
                 return;
             }
             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
-            let _ = self.events.send(DocumentEvent::RemoteMutations { envelopes });
+            let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
         }
     }
 
-    pub(super) fn spawn_actor(config: DocumentActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>, events: broadcast::Sender<DocumentEvent>) {
+    pub(super) fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
         let mut hub_space_id = None;
@@ -1594,7 +1594,7 @@ mod wasm_actor {
                     cmd = cmd_rx.recv() => {
                         match cmd {
                             None => break,
-                            Some(DocumentActorMsg::Detach) => { actor.drain_and_relay(); break; }
+                            Some(ArtifactActorMsg::Detach) => { actor.drain_and_relay(); break; }
                             Some(message) => actor.handle_cmd(message),
                         }
                     }
@@ -1616,7 +1616,7 @@ use wasm_actor::spawn_actor;
 
 //#region 🔖️Fixtures
 /// @emoji 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
-/// Each fixture drives inbound events at a document actor and asserts the resulting `DocumentEvent`
+/// Each fixture drives inbound events at a document actor and asserts the resulting `ArtifactEvent`
 /// sequence and the final persisted envelope edit ids. See `framework/sync/fixtures/README.md`.
 #[derive(Clone, Debug)]
 pub struct ActorFixture {
@@ -1625,7 +1625,7 @@ pub struct ActorFixture {
     pub document_id: String,
     /// @emoji 📥️ Inbound stimulus applied to the actor, in order.
     pub inbound: Vec<FixtureInbound>,
-    /// @emoji 📤️ The `DocumentEvent` variant tags expected on the subscriber channel, in order.
+    /// @emoji 📤️ The `ArtifactEvent` variant tags expected on the subscriber channel, in order.
     pub expected_events: Vec<String>,
     /// @emoji 📇️ Edit ids expected in the document's timeline after replay.
     pub expected_edit_ids: Vec<String>,
@@ -1858,7 +1858,7 @@ impl FolderSqliteStorage {
 /// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
 /// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderSqliteStorage` above, this actor
 /// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
-/// sqlite storage today — a technology adopts it by implementing `DocumentDsl`/`OpText` and having
+/// sqlite storage today — a technology adopts it by implementing `ArtifactDsl`/`OpText` and having
 /// its sync endpoint construct one of these instead; nothing currently reads or writes through it
 /// automatically.
 #[cfg(not(target_arch = "wasm32"))]
@@ -1895,7 +1895,7 @@ impl FolderTextStorage {
     }
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
-    pub fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<DocumentTextFiles>, vcs::VcsError> {
+    pub fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
         let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
@@ -1906,12 +1906,12 @@ impl FolderTextStorage {
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        Ok(Some(DocumentTextFiles { dsl, ops }))
+        Ok(Some(ArtifactTextFiles { dsl, ops }))
     }
 
     /// @emoji ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
     /// checkpoint/alternative).
-    pub fn write(&self, document_id: &str, envelope_id: &str, files: &DocumentTextFiles) -> Result<(), vcs::VcsError> {
+    pub fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.dsl_path(document_id, envelope_id), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
@@ -1923,7 +1923,7 @@ impl FolderTextStorage {
     /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
     /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
     /// manual edit, never a valid state to silently recover from.
-    pub fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<DocumentPackFiles>, vcs::VcsError> {
+    pub fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactPackFiles>, vcs::VcsError> {
         let pack = match std::fs::read(self.pack_path(document_id, envelope_id)) {
             Ok(bytes) => bytes,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
@@ -1943,13 +1943,13 @@ impl FolderTextStorage {
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        Ok(Some(DocumentPackFiles { pack, spr, ops }))
+        Ok(Some(ArtifactPackFiles { pack, spr, ops }))
     }
 
     /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
     /// initial snapshot) — the pack-aware sibling of `write`.
-    pub fn write_pack(&self, document_id: &str, envelope_id: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
+    pub fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.pack_path(document_id, envelope_id), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.spr_path(document_id, envelope_id), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -2028,9 +2028,9 @@ mod tests {
     use super::*;
     use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff};
     use serde::{Deserialize, Serialize};
-    use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec, DocumentCommand, DocumentDsl, ParsedDocumentText};
+    use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, ArtifactCodec, ArtifactCommand, ArtifactDsl, ParsedDocumentText};
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslDocument)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
     #[dsl(extension = "demo")]
     struct DemoSnapshot {
         n: i32,
@@ -2081,7 +2081,7 @@ mod tests {
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            register_document_codec(DocumentCodec::of::<DemoSnapshot, DemoMutation>("demo/v1"));
+            register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1"));
         });
     }
 
@@ -2098,7 +2098,7 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::DocumentId("demo".to_string());
+        let document_id = crate::os_spr::ArtifactId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
         let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
@@ -2107,8 +2107,8 @@ mod tests {
     //#region 🧪️SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = DocumentStore::new(envelope);
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let store = ArtifactStore::new(envelope);
         let mut session = SyncSession::new(store);
         session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
         assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
@@ -2117,8 +2117,8 @@ mod tests {
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = DocumentStore::new(envelope);
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let store = ArtifactStore::new(envelope);
         let mut session = SyncSession::new(store);
         let first = sample_operation_envelope("edit-1", 5);
         let mut second = sample_operation_envelope("edit-2", 9);
@@ -2190,13 +2190,13 @@ mod tests {
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
-        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::DocumentId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
+        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
         let wire_envelope = crate::os_spr::MutationEnvelope {
             mutation_id: crate::os_spr::MutationId("op-1".to_string()),
-            document_id: crate::os_spr::DocumentId("doc-1".to_string()),
+            document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
             actor: crate::os_spr::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
@@ -2271,10 +2271,10 @@ mod tests {
     fn sample_wire_envelope_for_fixtures() -> crate::os_spr::MutationEnvelope {
         crate::os_spr::MutationEnvelope {
             mutation_id: crate::os_spr::MutationId("op-2".to_string()),
-            document_id: crate::os_spr::DocumentId("doc-1".to_string()),
+            document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
             actor: crate::os_spr::ActorId("actor-2".to_string()),
             dependencies: vec![crate::os_spr::MutationId("op-1".to_string())],
-            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
@@ -2316,7 +2316,7 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> {
+        fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
             create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
         }
 
@@ -2343,7 +2343,7 @@ mod tests {
             }
         }
 
-        async fn wait_for_event(events: &mut broadcast::Receiver<DocumentEvent>, mut predicate: impl FnMut(&DocumentEvent) -> bool) -> DocumentEvent {
+        async fn wait_for_event(events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
             let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
             loop {
                 match tokio::time::timeout_at(deadline, events.recv()).await {
@@ -2363,15 +2363,15 @@ mod tests {
         async fn folder_external_edit_delivers_remote_operations() {
             ensure_demo_codec_registered();
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = DocumentHost::new();
-            let channels = host.open(DocumentActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
+            let host = ArtifactHost::new();
+            let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe("doc-a");
-            let mut store = DocumentStore::new(demo_envelope("doc-a"));
+            let mut store = ArtifactStore::new(demo_envelope("doc-a"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-            channels.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
+            store.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -2402,11 +2402,11 @@ mod tests {
             storage.write("doc-a", "demo/v1", &pack, &new_spr).expect("out-of-band write");
 
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
-            channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
+            channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
 
-            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
+            let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
             match event {
-                DocumentEvent::RemoteMutations { envelopes } => {
+                ArtifactEvent::RemoteMutations { envelopes } => {
                     assert_eq!(envelopes.len(), 1);
                     assert_eq!(envelopes[0].mutation_id.0, "external-1#0", "single-op edit -> mutation_id is edit.id#0 (crate::os_spr::mutation_envelope_from_edit's ordinal-suffix convention)");
                 }
@@ -2433,7 +2433,7 @@ mod tests {
         }
 
         fn mock_frontier(ordinal: u64) -> crate::os_spr::RuntimeFrontierSummary {
-            crate::os_spr::RuntimeFrontierSummary { document_id: DocumentId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
+            crate::os_spr::RuntimeFrontierSummary { document_id: ArtifactId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
         }
 
         async fn spawn_mock_hub() -> (std::net::SocketAddr, Arc<MockHub>) {
@@ -2535,25 +2535,25 @@ mod tests {
         }
         //#endregion 🔖️MockHub
 
-        // 🔬️ Two DocumentHosts converge through a semio_hub: A's operation fans out to B, whose store materializes it.
+        // 🔬️ Two ArtifactHosts converge through a semio_hub: A's operation fans out to B, whose store materializes it.
         #[tokio::test]
         async fn two_hosts_converge_through_hub() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = DocumentHost::new();
-            let channels_a = host_a.open(DocumentActorConfig {
+            let host_a = ArtifactHost::new();
+            let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentStore::new(demo_envelope("shared"));
+            let mut store_a = ArtifactStore::new(demo_envelope("shared"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
 
-            let host_b = DocumentHost::new();
-            let channels_b = host_b.open(DocumentActorConfig {
+            let host_b = ArtifactHost::new();
+            let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
@@ -2561,18 +2561,18 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("shared");
-            let mut store_b = DocumentStore::new(demo_envelope("shared"));
+            let mut store_b = ArtifactStore::new(demo_envelope("shared"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
-            channels_a.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
+            store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
+            channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
+            let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
             match event {
-                DocumentEvent::RemoteMutations { envelopes } => assert_eq!(envelopes.len(), 1),
+                ArtifactEvent::RemoteMutations { envelopes } => assert_eq!(envelopes.len(), 1),
                 other => panic!("expected RemoteMutations on B, got {other:?}"),
             }
             store_b.tick().expect("tick b");
@@ -2589,35 +2589,35 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = DocumentHost::new();
-            let channels_a = host_a.open(DocumentActorConfig {
+            let host_a = ArtifactHost::new();
+            let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentStore::new(demo_envelope("catchup"));
+            let mut store_a = ArtifactStore::new(demo_envelope("catchup"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
-                channels_a.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
+                store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
+                channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
 
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
-            let host_b = DocumentHost::new();
+            let host_b = ArtifactHost::new();
             let channels_b =
-                host_b.open(DocumentActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("catchup");
-            let mut store_b = DocumentStore::new(demo_envelope("catchup"));
+            let mut store_b = ArtifactStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
-            if let DocumentEvent::RemoteMutations { envelopes } = event {
+            let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
+            if let ArtifactEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
             }
             store_b.tick().expect("tick b");
@@ -2635,8 +2635,8 @@ mod tests {
             let base_url = format!("ws://{addr}");
 
             // Observer B stays connected to witness A's last operation.
-            let host_b = DocumentHost::new();
-            let channels_b = host_b.open(DocumentActorConfig {
+            let host_b = ArtifactHost::new();
+            let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
@@ -2644,22 +2644,22 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("drain");
-            let mut store_b = DocumentStore::new(demo_envelope("drain"));
+            let mut store_b = ArtifactStore::new(demo_envelope("drain"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
-            let host_a = DocumentHost::new();
+            let host_a = ArtifactHost::new();
             let channels_a =
-                host_a.open(DocumentActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
-            let mut store_a = DocumentStore::new(demo_envelope("drain"));
+                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+            let mut store_a = ArtifactStore::new(demo_envelope("drain"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
-            if let DocumentEvent::RemoteMutations { envelopes } = event {
+            let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
+            if let ArtifactEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
             store_b.tick().expect("tick b");
@@ -2668,39 +2668,39 @@ mod tests {
         }
 
         // 🔬️ The mock semio_hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
-        // `DocumentEvent::CommandOutcome` wiring actually fires (not just that it compiles).
+        // `ArtifactEvent::CommandOutcome` wiring actually fires (not just that it compiles).
         #[tokio::test]
         async fn command_outcome_accepted_fires_after_hub_ack() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
-            let host = DocumentHost::new();
+            let host = ArtifactHost::new();
             let channels =
-                host.open(DocumentActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
             let mut events = host.subscribe("outcome");
-            let mut store = DocumentStore::new(demo_envelope("outcome"));
+            let mut store = ArtifactStore::new(demo_envelope("outcome"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-            channels.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
+            store.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
-            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::CommandOutcome { .. })).await;
+            let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
             match event {
-                DocumentEvent::CommandOutcome { outcome, .. } => assert_eq!(outcome, CommandAckOutcome::Accepted),
+                ArtifactEvent::CommandOutcome { outcome, .. } => assert_eq!(outcome, CommandAckOutcome::Accepted),
                 other => panic!("expected CommandOutcome, got {other:?}"),
             }
             host.close("outcome");
         }
 
         // 🔬️ `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock semio_hub's
-        // preview-lane fan-out -> `ServerFrame::Preview` -> `DocumentEvent::Preview` on another peer.
+        // preview-lane fan-out -> `ServerFrame::Preview` -> `ArtifactEvent::Preview` on another peer.
         #[tokio::test]
         async fn publish_preview_round_trips_through_hub() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = DocumentHost::new();
-            let channels_a = host_a.open(DocumentActorConfig {
+            let host_a = ArtifactHost::new();
+            let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "preview".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
@@ -2708,16 +2708,16 @@ mod tests {
                 actor: "A".into(),
             });
 
-            let host_b = DocumentHost::new();
-            host_b.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+            let host_b = ArtifactHost::new();
+            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("preview");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            channels_a.cmd_tx.send(DocumentActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
+            channels_a.cmd_tx.send(ArtifactActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::Preview { .. })).await;
+            let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::Preview { .. })).await;
             match event {
-                DocumentEvent::Preview { key, seq, payload, .. } => {
+                ArtifactEvent::Preview { key, seq, payload, .. } => {
                     assert_eq!(key, "cursor");
                     assert_eq!(seq, 1);
                     assert_eq!(payload, vec![1, 2, 3]);
@@ -2728,7 +2728,7 @@ mod tests {
             host_b.close("preview");
         }
 
-        // 🔬️ Shared fixtures replay: each fixture's inbound stimuli produce the expected DocumentEvent
+        // 🔬️ Shared fixtures replay: each fixture's inbound stimuli produce the expected ArtifactEvent
         // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
         #[tokio::test]
         async fn fixtures_replay_matches_expected_events() {
@@ -2744,11 +2744,11 @@ mod tests {
             ensure_demo_codec_registered();
             let codec = crate::os_store::document_codec(&fixture.schema).unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = DocumentHost::new();
+            let host = ArtifactHost::new();
             let channels =
-                host.open(DocumentActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
+                host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None));
+            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
@@ -2780,12 +2780,12 @@ mod tests {
                             .collect();
                         let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).expect("append fixture edits");
                         storage.write(&fixture.document_id, &fixture.schema, &pack, &new_spr).expect("write");
-                        channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
+                        channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
                         let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
                         storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("replace write");
-                        channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
+                        channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::HubFrame { .. } => {
                         panic!("fixture {} uses a HubFrame stimulus not supported by the Rust harness", fixture.name);
@@ -2803,15 +2803,15 @@ mod tests {
             host.close(&fixture.document_id);
         }
 
-        fn document_event_tag(event: &DocumentEvent) -> &'static str {
+        fn document_event_tag(event: &ArtifactEvent) -> &'static str {
             match event {
-                DocumentEvent::RemoteMutations { .. } => "remoteMutations",
-                DocumentEvent::SnapshotReplaced { .. } => "snapshotReplaced",
-                DocumentEvent::Status(_) => "status",
-                DocumentEvent::Presence { .. } => "presence",
-                DocumentEvent::Preview { .. } => "preview",
-                DocumentEvent::CommandOutcome { .. } => "commandOutcome",
-                DocumentEvent::Conflict(_) => "conflict",
+                ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
+                ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
+                ArtifactEvent::Status(_) => "status",
+                ArtifactEvent::Presence { .. } => "presence",
+                ArtifactEvent::Preview { .. } => "preview",
+                ArtifactEvent::CommandOutcome { .. } => "commandOutcome",
+                ArtifactEvent::Conflict(_) => "conflict",
             }
         }
     }
@@ -2849,11 +2849,11 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
 
-        let mut store = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
         let post_e1 = store.snapshot().expect("post-e1");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
-        store.dispatch(DocumentCommand::Undo).expect("undo e2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
+        store.dispatch(ArtifactCommand::Undo).expect("undo e2");
         assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
         let files = print_document_pack(store.envelope()).expect("print document pack");
@@ -2862,15 +2862,15 @@ mod tests {
         let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
         let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
-        let mut reloaded = DocumentStore::new(parsed.envelope);
+        let mut reloaded = ArtifactStore::new(parsed.envelope);
         assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
-        reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after folder reload");
+        reloaded.dispatch(ArtifactCommand::Redo).expect("redo e2 after folder reload");
         assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
     }
 
     /// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
-    /// synced once an edit is dispatched, see `DocumentStore::sync_cursor`) so both edits are then
+    /// synced once an edit is dispatched, see `ArtifactStore::sync_cursor`) so both edits are then
     /// added purely via the raw `append_ops` hot path with no cursor line ever written; a cursor
     /// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
     /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
@@ -2881,16 +2881,16 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let seed = DocumentStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 
-        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        let mut store = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
@@ -2906,7 +2906,7 @@ mod tests {
     /// wave's job to thread through this storage layer) — `write_pack` is the whole-file cold path
     /// for the AUTHORITATIVE pair, called again after every edit. `append_ops` still keeps the
     /// `.ops` TEXT MIRROR current independently (it is never read by the pack+spr-first
-    /// `parse_document_pack`/`read_pack` path — see `DocumentPackFiles`'s doc — only by
+    /// `parse_document_pack`/`read_pack` path — see `ArtifactPackFiles`'s doc — only by
     /// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
     /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
     /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
@@ -2916,17 +2916,17 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let seed = DocumentStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         let files = print_document_pack(seed.envelope()).expect("print document pack");
         let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
-        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        let mut store = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 

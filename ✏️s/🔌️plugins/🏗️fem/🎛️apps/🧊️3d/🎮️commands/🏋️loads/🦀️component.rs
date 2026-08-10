@@ -4,7 +4,7 @@
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoadCase};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
@@ -33,7 +33,7 @@ pub mod add_nodal_load {
         pub case_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddNodalLoad, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
         let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value });
@@ -57,7 +57,7 @@ pub mod add_member_udl {
         pub case_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddMemberUdl, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
         let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy, wz: payload.wz });
@@ -79,7 +79,7 @@ pub mod add_area_load {
         pub case_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddAreaLoad, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
         let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure });
@@ -100,7 +100,7 @@ pub mod add_load_case {
         pub self_weight: bool,
     }
 
-    pub fn handle(payload: &AddLoadCase, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddLoadCase, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.load_cases.iter().map(|lc| lc.id.clone()), "case-");
         let index = snapshot.load_cases.len();
@@ -124,7 +124,7 @@ pub mod add_combination {
         pub terms: String,
     }
 
-    pub fn handle(payload: &AddCombination, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         match serde_json::from_str::<Vec<(String, f64)>>(&payload.terms) {
             Ok(parsed) => {
@@ -151,7 +151,7 @@ pub mod set_self_weight {
         pub enabled: bool,
     }
 
-    pub fn handle(payload: &SetSelfWeight, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelfWeight, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         match snapshot.load_cases.iter().position(|lc| lc.id == payload.case_id) {
             Some(index) => {

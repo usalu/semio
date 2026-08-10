@@ -2,7 +2,7 @@
 //! `dsl::DslField`/`dsl::DslVariants` bindings (nested usage composes through), so a technology
 //! declares its grammar instead of hand-writing a parser/printer. Analyze → IR → emit.
 //!
-//! P6: `DslDocument`/`DslOps` no longer emit `DocumentDsl`/`DocumentPack`/`OpText`/`OpBinary` —
+//! P6: `DslArtifact`/`DslOps` no longer emit `ArtifactDsl`/`ArtifactPack`/`OpText`/`OpBinary` —
 //! those traits are handcrafted per artifact. `DslRecord` stays for field helpers only.
 
 use proc_macro::TokenStream;
@@ -326,7 +326,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
     out
 }
 
-/// @emoji 🏗️ Builds the three code fragments shared by `DslRecord`/`DslDocument`/`DslOps` variant
+/// @emoji 🏗️ Builds the three code fragments shared by `DslRecord`/`DslArtifact`/`DslOps` variant
 /// bodies: the `RecordSpec` field-spec expressions, the struct→`RecordValue` conversion, and the
 /// `RecordValue`→struct conversion.
 fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<syn::Ident>) {
@@ -623,8 +623,8 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
 }
 //#endregion 🔖️DslRecord
 
-//#region 🔖️DslDocument
-#[proc_macro_derive(DslDocument, attributes(dsl))]
+//#region 🔖️DslArtifact
+#[proc_macro_derive(DslArtifact, attributes(dsl))]
 pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -634,7 +634,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         None => {
             return syn::Error::new_spanned(
                 &input,
-                "DslDocument requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]",
+                "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]",
             )
             .to_compile_error()
             .into();
@@ -644,7 +644,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let envelope_id_lit = envelope_id.as_str();
     let extension_suffix_lit = extension_suffix;
     let Data::Struct(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslDocument only supports structs").to_compile_error().into();
+        return syn::Error::new_spanned(&input, "DslArtifact only supports structs").to_compile_error().into();
     };
     let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
     let keyword_expr = match &container.keyword {
@@ -671,13 +671,13 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
-            /// ✉️ Envelope constants for handcrafted DocumentDsl/DocumentPack wiring (P6: derive no longer emits those traits).
+            /// ✉️ Envelope constants for handcrafted ArtifactDsl/ArtifactPack wiring (P6: derive no longer emits those traits).
             pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id_lit;
             pub const __DSL_EXTENSION: &'static str = #extension_suffix_lit;
         }
 
         // A document type can also be nested as an ordinary field (e.g. a "whole document
-        // snapshot" operation variant), so it needs `DslField` too, not just `store::DocumentDsl`.
+        // snapshot" operation variant), so it needs `DslField` too, not just `store::ArtifactDsl`.
         impl ::dsl::DslField for #name {
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
@@ -696,16 +696,16 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     };
     expanded.into()
 }
-//#endregion 🔖️DslDocument
+//#endregion 🔖️DslArtifact
 
 //#region 🔖️DslDiff
 /// @emoji 🧬️ W1 foundation of the `handcrafted-grammar-for-every-artifact` diff track (design ruling
 /// B-R4): emits a `protocol::DiffCodec` impl from the SAME `RecordSpec`-generation machinery
-/// `#[derive(DslRecord)]`/`#[derive(DslDocument)]` already use — a diff is structurally just another
+/// `#[derive(DslRecord)]`/`#[derive(DslArtifact)]` already use — a diff is structurally just another
 /// record, so this reuses `record_codegen` verbatim rather than reinventing field lowering. Unlike
-/// `DslDocument` there is no `EXTENSION`/file-extension concept (a diff is never opened as its own
-/// file) and no `DocumentPack` (the pack/binary side is `DiffCodec::encode_diff`/`decode_diff`
-/// instead, routed through the same `store::pack_rt` the `DocumentPack` impl above uses — every
+/// `DslArtifact` there is no `EXTENSION`/file-extension concept (a diff is never opened as its own
+/// file) and no `ArtifactPack` (the pack/binary side is `DiffCodec::encode_diff`/`decode_diff`
+/// instead, routed through the same `store::pack_rt` the `ArtifactPack` impl above uses — every
 /// crate that already derives an operation/document alongside its diff already depends on `store`).
 #[proc_macro_derive(DslDiff, attributes(dsl))]
 pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {

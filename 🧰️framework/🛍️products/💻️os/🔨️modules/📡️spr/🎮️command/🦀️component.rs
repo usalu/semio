@@ -20,7 +20,7 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
 /// @emoji 🔁️ Stored operation: emits a diff and computes inverse from pre-state. Moved from
 /// `crate::os_store::Mutation` verbatim except: `mutation_id`/`dependencies`/`author_id` now return the
 /// `protocol_core` id newtypes (were bare `String`) and `base_version` now returns
-/// `Option<crate::os_spr::ids::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
+/// `Option<crate::os_spr::ids::ArtifactVersion>` (was a bare `u64` defaulting to `0`, which conflated
 /// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
 /// defaulted methods so every existing `impl` recompiles unchanged; `reconcile` becomes an instance
 /// method (`&self`) returning this crate's own `ReconcileReport` instead of `crate::os_store::SpaceConflict`,
@@ -38,7 +38,7 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     fn dependencies(&self) -> Vec<crate::os_spr::ids::MutationId> {
         Vec::new()
     }
-    fn base_version(&self) -> Option<crate::os_spr::ids::DocumentVersion> {
+    fn base_version(&self) -> Option<crate::os_spr::ids::ArtifactVersion> {
         None
     }
     fn author_id(&self) -> Option<crate::os_spr::ids::ActorId> {
@@ -105,7 +105,7 @@ pub trait OpText: Sized {
 /// @emoji 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
 /// byte encoding are two renderings of the same operation, implemented per technology next to its
 /// `Mutation` enum (in practice emitted by `#[derive(crate::os_dsl::DslOps)]` through `crate::os_dsl::op_rt`, the
-/// exact mirror of the `DocumentDsl`/`DocumentPack` pairing). Layout (owned by the runtime, not
+/// exact mirror of the `ArtifactDsl`/`ArtifactPack` pairing). Layout (owned by the runtime, not
 /// by implementors): `format u8 (=1) | variant ordinal varint | record body`. LAWS:
 /// `Op::decode_op(op.encode_op()) == op == Op::parse_op(op.print_op())`, and encoding is
 /// deterministic — byte-identical output for equal operations.
@@ -122,7 +122,7 @@ pub trait OpBinary: Sized {
 /// today every `*Diff` type is serde-only, this trait promotes a diff to a first-class grammared value
 /// exactly like `OpText`/`OpBinary` already did for operations. In practice emitted by
 /// `#[derive(crate::os_dsl::DslDiff)]` through the same `RecordSpec`-generation machinery `DslRecord`/
-/// `DslDocument` already use (a diff is structurally just another record). Schema id convention:
+/// `DslArtifact` already use (a diff is structurally just another record). Schema id convention:
 /// `"<doc-schema>#diff"`. Deliberately NOT (yet) a supertrait bound of [`MutationDiff`] — W1 only
 /// proves the mechanism on a handful of real diff types (tracked in `script.ts`'s
 /// `POLICY_DIFF_COMPLETENESS_ALLOWLIST`); wiring it as a hard bound across all diff types is deferred

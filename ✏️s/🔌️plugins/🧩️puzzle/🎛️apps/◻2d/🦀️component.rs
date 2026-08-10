@@ -1,11 +1,11 @@
-//! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `DocumentApp` impl (dispatch-only), the
+//! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `ArtifactApp` impl (dispatch-only), the
 //! transient `Puzzle2dScene` bundle its command/panel/window nodes mutate and render, the shared
 //! fixture helpers they build on, and the manifest that stitches those nodes together.
 //!
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
+//! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle2d::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle2dSnapshot` — every helper below therefore works on `Value`, and each action emits the
 //! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
@@ -28,7 +28,7 @@ use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
@@ -54,7 +54,7 @@ const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
 
-/// 🌉️ This app's own fixture (and `DocumentApp::Snapshot`) stays a bare `serde_json::Value`, so the
+/// 🌉️ This app's own fixture (and `ArtifactApp::Snapshot`) stays a bare `serde_json::Value`, so the
 /// DSL-text example fixtures are parsed once into the typed `Puzzle2dSnapshot` and re-serialized to
 /// the JSON string this module's `serde_json::from_str`/`.example(...)` call sites expect. The typed
 /// bridge still carries a mandatory `camera` block — strip it before handing the JSON back, since the
@@ -62,7 +62,7 @@ const BOARD_DEFAULT_HEIGHT: u32 = 768;
 /// leaving it in would permanently trip `puzzle2d_document_delta_operations`'s known-keys guard on
 /// every subsequent action.
 fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
+    let projection = <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     let mut value = serde_json::to_value(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"));
     if let Some(object) = value.as_object_mut() {
         object.remove("camera");
@@ -76,7 +76,7 @@ pub fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate
 
 //#region 🔖️Scene
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare fixture json) with
-/// the app's view config. It is never persisted — the `VcsDocumentApp` store owns the fixture as its
+/// the app's view config. It is never persisted — the `VcsArtifactApp` store owns the fixture as its
 /// projection and `Puzzle2dConfig` owns the runtime — but rebuilding it per call lets the panel,
 /// canvas and engagement helpers keep one `&Puzzle2dScene` signature.
 pub struct Puzzle2dScene {
@@ -729,7 +729,7 @@ impl protocol::OpBinary for Puzzle2dCommand {
 //#region 🔖️ActionContext
 /// 🎬️ Everything one `🎮️commands/*` arm may read or write. The prologue/epilogue around the dispatch
 /// match (host sync, host-event replay, delta computation, config snapshotting) stays in
-/// [`DocumentApp::handle`]; an arm only mutates this bundle.
+/// [`ArtifactApp::handle`]; an arm only mutates this bundle.
 pub struct Puzzle2dActionCtx<'a> {
     /// 🎲️ The app's long-lived board engine — every arm reaching it goes through `borrow_mut()`.
     pub host: &'a RefCell<BoardHost>,
@@ -748,7 +748,7 @@ pub struct Puzzle2dActionCtx<'a> {
 /// toggleHidden/toggleLocked/duplicate/focusSelection stay top-level (the four most frequent
 /// verbs); selectSameKind folds into the "selection" taxonomy group; deleteSelection stays the
 /// destructive tail. `organize_context_menu` (applied automatically at the
-/// `VcsDocumentApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
+/// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
 fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
@@ -820,7 +820,7 @@ fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegis
 
 //#region 🔖️PlayApp
 /// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare fixture json)
-/// lives in the wrapping `VcsDocumentApp`'s operation store and the view state in `Puzzle2dConfig`.
+/// lives in the wrapping `VcsArtifactApp`'s operation store and the view state in `Puzzle2dConfig`.
 #[derive(Default, Clone, Copy)]
 pub struct Puzzle2dPlayApp;
 
@@ -835,7 +835,7 @@ impl Puzzle2dPlayApp {
     }
 }
 
-impl DocumentApp for Puzzle2dPlayApp {
+impl ArtifactApp for Puzzle2dPlayApp {
     const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
     type Snapshot = Puzzle2dPlaySnapshot;
@@ -860,13 +860,13 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.snapshot;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.snapshot.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
         let mut scene = Self::scene_for(before.clone(), config, window_id);
-        // 🐚️ DocumentApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
+        // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
         // each call. The previous last_synced_fixture cache lived on &self and cannot return.
         let host = RefCell::new(BoardHost::default());
         {
@@ -940,7 +940,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         let config_mutations = if &scene.runtime != config { vec![Puzzle2dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
         // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but it
         // is now a View-kind action that never touches the document.
-        Ok(Emit { document_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() })
     }
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
@@ -977,11 +977,11 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
     /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
     /// this always reports `NotImplemented` — no normalization is attempted.
-    fn import_media(_port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
         let config = cfg.snapshot;
         let document_json = doc.snapshot.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
@@ -1005,7 +1005,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
@@ -1021,7 +1021,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn window_measures(doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         PUZZLE2D_PANES
@@ -1040,7 +1040,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn tool_measures(doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let envelope = Self::scene_for(doc.snapshot.0.clone(), config, None);
         let labels = puzzle2d_labels(config);
@@ -1049,7 +1049,7 @@ impl DocumentApp for Puzzle2dPlayApp {
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle2dPlaySnapshot>,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
@@ -1204,9 +1204,9 @@ pub fn register_puzzle2d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{ActionMeta, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Puzzle2dApp = VcsDocumentApp<Puzzle2dPlayApp>;
+    pub type Puzzle2dApp = VcsArtifactApp<Puzzle2dPlayApp>;
 
     pub fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
@@ -1222,7 +1222,7 @@ pub(crate) mod testkit {
         semio_framework_plugin::testkit::new_app_with_registry::<Puzzle2dPlayApp>(create_puzzle2d_app)
     }
 
-    /// 🧪️ B1: test-only replacement for the deleted `VcsDocumentApp::handle_action` app-dispatch path
+    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
@@ -1345,14 +1345,14 @@ mod tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None));
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
         let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 

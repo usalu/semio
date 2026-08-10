@@ -6,10 +6,10 @@ pub fn register() {}
 
 pub fn deserialize(from: &TxtSnapshot) -> Result<RewriteSnapshot, store::TextError> {
     let _ = STDIO_TXT_DOCUMENT_SCHEMA;
-    <RewriteSnapshot as store::DocumentDsl>::parse_dsl(&from.text)
+    <RewriteSnapshot as store::ArtifactDsl>::parse_dsl(&from.text)
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RewriteSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    <RewriteSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <RewriteSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

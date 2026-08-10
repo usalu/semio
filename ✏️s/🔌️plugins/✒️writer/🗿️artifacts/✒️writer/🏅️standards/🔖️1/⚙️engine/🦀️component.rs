@@ -309,7 +309,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// the source of truth for every call site below (`setActiveExample`, `.example("jack", ...)`, tests,
 /// "file-text"); never re-embed the raw text.
 pub fn jack_example_document() -> WriterSnapshot {
-    <WriterSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
+    <WriterSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::writer::dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
@@ -321,7 +321,7 @@ pub fn jack_example_json() -> String {
 /// 📄️ The `dag.jack` example, parsed once from {@link crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT}
 /// — see {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterSnapshot {
-    <WriterSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
+    <WriterSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::writer::dsl::DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.

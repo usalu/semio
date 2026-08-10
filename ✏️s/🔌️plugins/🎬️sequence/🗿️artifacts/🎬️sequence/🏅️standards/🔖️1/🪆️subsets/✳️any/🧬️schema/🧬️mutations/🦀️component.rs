@@ -7,8 +7,8 @@ use protocol::{inverse_collection_mutation, CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
-pub type SequenceEnvelope = store::DocumentEnvelope<SequenceSnapshot, SequenceMutation>;
-pub type SequenceStore = store::DocumentStore<SequenceSnapshot, SequenceMutation>;
+pub type SequenceEnvelope = store::ArtifactEnvelope<SequenceSnapshot, SequenceMutation>;
+pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Mutations
@@ -187,7 +187,7 @@ pub fn sequence_snapshot_mutations(before: &SequenceSnapshot, after: &SequenceSn
 mod tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
     use vcs::apply_mutation;
 
     fn round_trip(snapshot: &SequenceSnapshot, operation: &SequenceMutation) -> SequenceSnapshot {
@@ -225,7 +225,7 @@ mod tests {
     fn store_applies_and_undoes_step_add() {
         let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![SequenceMutation::StepsAdd {
                     index: 2,
                     item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false },

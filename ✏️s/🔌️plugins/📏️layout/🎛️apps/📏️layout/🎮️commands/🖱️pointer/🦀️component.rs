@@ -11,7 +11,7 @@ use crate::apps::layout::config::LayoutConfigMutation;
 use crate::artifacts::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -55,7 +55,7 @@ pub mod canvas_pointer_down {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint || payload.button != 0 {
             return Ok(Emit::default());
@@ -92,7 +92,7 @@ pub mod canvas_pointer_move {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
             return Ok(Emit::default());
@@ -110,7 +110,7 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -131,7 +131,7 @@ pub mod canvas_drag_over {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasDragOver, _doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasDragOver, _doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
             return Ok(Emit::default());
@@ -150,7 +150,7 @@ pub mod canvas_drag_leave {
     #[dsl(keyword = "canvas-drag-leave")]
     pub struct CanvasDragLeave {}
 
-    pub fn handle(_payload: &CanvasDragLeave, _doc: &DocumentView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(_payload: &CanvasDragLeave, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]))
     }
 }
@@ -167,7 +167,7 @@ pub mod set_camera {
         pub camera: LayoutCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         let _ = cfg;
         if blueprint {
@@ -196,7 +196,7 @@ pub mod canvas_drop {
 
     /// 🐛️ Delegates document creation to `add_page`/`add_frame`'s own handlers so "drop adds content"
     /// has one implementation, then always clears the drag-ghost regardless of surface/outcome.
-    pub fn handle(payload: &CanvasDrop, doc: &DocumentView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
             return Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]));

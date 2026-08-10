@@ -1,7 +1,7 @@
 //! 📡️ Puzzle 3d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
 //! `Puzzle3dMutation`'s binary wire form, `encode_engine_command`/`decode_engine_command` for the
-//! headless engine's own `Puzzle3dEngineCommand` envelope, plus the `DocumentEnvelope`/
-//! `DocumentStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
+//! headless engine's own `Puzzle3dEngineCommand` envelope, plus the `ArtifactEnvelope`/
+//! `ArtifactStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
 //! `📡️protocol` module; both wire formats are unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
 
@@ -15,7 +15,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::puzzle3d::schema::mutations::text::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use protocol::OpBinary;
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle3dMutation` to its binary command form.
 pub fn encode_op(operation: &Puzzle3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -28,8 +28,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolErr
 }
 
 //#region 🔖️Store
-pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dSnapshot, Puzzle3dMutation>;
-pub type Puzzle3dStore = DocumentStore<Puzzle3dSnapshot, Puzzle3dMutation>;
+pub type Puzzle3dEnvelope = ArtifactEnvelope<Puzzle3dSnapshot, Puzzle3dMutation>;
+pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Puzzle3dEngineCommand
@@ -60,11 +60,11 @@ mod tests {
     fn puzzle3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle3d::engine::empty_puzzle3d_snapshot;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
-        use store::{create_document_envelope, DocumentCommand};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![Puzzle3dMutation::SetObject {
                     index: 0,
                     object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },

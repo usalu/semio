@@ -73,7 +73,7 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#endregion 🔖️Schema
 
 //#region 🔖️Runtime
-use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
@@ -199,7 +199,7 @@ fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(),
 
 //#region 🔖️WalStorage
 impl WalStorage for PostgresStorage {
-    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             sqlx::query("INSERT INTO db_wal_segment (document_id, segment_index) VALUES ($1, $2)")
@@ -212,7 +212,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             let doc = document.0.as_str();
@@ -229,7 +229,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn sync(&self, _document: &DocumentId, _index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    fn sync(&self, _document: &ArtifactId, _index: u64, class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ Every write above already ran as a committed statement/transaction, and Postgres
         // fsyncs its own WAL at COMMIT under the default `synchronous_commit = on` — so `Fsync` is
         // already satisfied by the time `append`/`truncate_tail` return, with nothing left for this
@@ -241,7 +241,7 @@ impl WalStorage for PostgresStorage {
         Ok(())
     }
 
-    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             let result: Option<(bool,)> =
@@ -250,7 +250,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let idx = to_i64(index)?;
         self.block_on(async {
@@ -264,7 +264,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
@@ -272,14 +272,14 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(index,)| index as u64).collect())
         })
     }
 
-    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             let doc = document.0.as_str();
@@ -294,7 +294,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
             sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).execute(&self.pool).await.map_err(map_sqlx_error)?;
@@ -306,7 +306,7 @@ impl WalStorage for PostgresStorage {
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for PostgresStorage {
-    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
         self.block_on(async {
             sqlx::query(
@@ -323,7 +323,7 @@ impl SnapshotStorage for PostgresStorage {
         })
     }
 
-    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
         let gen = to_i64(generation)?;
         self.block_on(async {
             let doc = document.0.as_str();
@@ -335,21 +335,21 @@ impl SnapshotStorage for PostgresStorage {
         })
     }
 
-    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         self.block_on(async {
             let row: (Option<i64>,) = sqlx::query_as("SELECT MAX(generation) FROM db_snapshot_generation WHERE document_id = $1").bind(document.0.as_str()).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(row.0.map(|generation| generation as u64))
         })
     }
 
-    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(generation,)| generation as u64).collect())
         })
     }
 
-    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
         self.block_on(async {
             sqlx::query("DELETE FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(document.0.as_str()).bind(gen).execute(&self.pool).await.map_err(map_sqlx_error)?;
@@ -434,7 +434,7 @@ impl CatalogStorage for PostgresStorage {
 
 //#region 🔖️IndexStorage
 impl IndexStorage for PostgresStorage {
-    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         let run = to_i64(run_id)?;
         self.block_on(async {
             sqlx::query(
@@ -451,7 +451,7 @@ impl IndexStorage for PostgresStorage {
         })
     }
 
-    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
         let run = to_i64(run_id)?;
         self.block_on(async {
             let doc = document.0.as_str();
@@ -463,14 +463,14 @@ impl IndexStorage for PostgresStorage {
         })
     }
 
-    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(run_id,)| run_id as u64).collect())
         })
     }
 
-    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
         let run = to_i64(run_id)?;
         self.block_on(async {
             sqlx::query("DELETE FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(document.0.as_str()).bind(run).execute(&self.pool).await.map_err(map_sqlx_error)?;

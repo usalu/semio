@@ -74,7 +74,7 @@ pub fn empty_jpg_snapshot() -> JpgSnapshot { JpgSnapshot::default() }
 pub fn register() {
     crate::artifacts::jpg::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::jpg::schema::jpg_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA));
 }
 
 pub struct JpgEngine { artifact_state: JpgArtifact, snapshot_state: JpgSnapshot }

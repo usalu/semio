@@ -3,7 +3,7 @@
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemAnalysisSettings;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
@@ -20,7 +20,7 @@ pub mod set_analysis_settings {
         pub deformation_scale: Option<f64>,
     }
 
-    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let current = &doc.snapshot.analysis;
         let settings = FemAnalysisSettings {
             modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),

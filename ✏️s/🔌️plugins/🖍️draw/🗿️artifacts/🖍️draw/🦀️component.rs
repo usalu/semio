@@ -1,7 +1,7 @@
 //! ✏️ Draw artifact — document schema (the `2d.drawing` document type).
 
 use serde::{Deserialize, Serialize};
-pub use store::DocumentDsl;
+pub use store::ArtifactDsl;
 
 pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
 pub const DRAW_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];

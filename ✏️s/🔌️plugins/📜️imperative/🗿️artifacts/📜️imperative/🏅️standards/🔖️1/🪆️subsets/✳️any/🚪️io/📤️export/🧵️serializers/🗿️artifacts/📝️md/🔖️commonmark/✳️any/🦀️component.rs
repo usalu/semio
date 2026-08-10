@@ -7,10 +7,10 @@ pub fn register() {}
 pub fn serialize(snapshot: &ImperativeSnapshot) -> Result<MdSnapshot, store::TextError> {
     Ok(MdSnapshot {
         schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-        body: <ImperativeSnapshot as store::DocumentDsl>::print_dsl(snapshot),
+        body: <ImperativeSnapshot as store::ArtifactDsl>::print_dsl(snapshot),
     })
 }
 
 pub fn serialize_bytes(snapshot: &ImperativeSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<MdSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<MdSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

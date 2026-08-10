@@ -6,19 +6,19 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: this crate sits BELOW `db_document` per the dependency table, so per the
-//! contract's "command payloads are opaque ... below `db_document`" rule it never interprets
+//! 🎯️ Design choice: this crate sits BELOW `db_artifact` per the dependency table, so per the
+//! contract's "command payloads are opaque ... below `db_artifact`" rule it never interprets
 //! operation/diff *semantics*. It does read `protocol::MutationEnvelope`'s routing fields
 //! (`mutation_id`/`document_id`/`actor`/`timestamp`) for replay/authz addressing — those are
 //! envelope plumbing, not payload interpretation — and it walks a `serde_json::Value` payload
 //! purely structurally (field paths in, redacted value out) for field-level redaction, never
 //! reasoning about what the payload means. `serde_json` is added as a genuine dependency beyond
-//! the contract's bare `db_core, protocol` table entry: `protocol_causal::DocumentDiff.payload`
+//! the contract's bare `db_core, protocol` table entry: `protocol_causal::ArtifactDiff.payload`
 //! is already typed `serde_json::Value` (protocol's own generic-JSON choice, not a new format
 //! this crate invents), and field redaction has no way to walk "the field named X" without
 //! sharing that concrete type.
 //!
-//! 🎯️ `SecurityGate` is this crate's composition root: it is the piece `db_document`'s pipeline
+//! 🎯️ `SecurityGate` is this crate's composition root: it is the piece `db_artifact`'s pipeline
 //! ("admit → dedupe → base-resolve → authz → ...") is expected to call for the admit/dedupe/authz
 //! stages. Every building block (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, signing
 //! functions, `redact_fields`, `check_tenant`) is also usable standalone, since a deployment may
@@ -103,12 +103,12 @@ pub enum Action {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AuthzScope {
     Database,
-    Document { document: protocol::DocumentId },
-    CommandKind { document: protocol::DocumentId, kind: String },
-    Object { document: protocol::DocumentId, object_id: String },
-    Field { document: protocol::DocumentId, object_id: String, field: String },
-    Historical { document: protocol::DocumentId },
-    Preview { document: protocol::DocumentId },
+    Document { document: protocol::ArtifactId },
+    CommandKind { document: protocol::ArtifactId, kind: String },
+    Object { document: protocol::ArtifactId, object_id: String },
+    Field { document: protocol::ArtifactId, object_id: String, field: String },
+    Historical { document: protocol::ArtifactId },
+    Preview { document: protocol::ArtifactId },
 }
 
 impl AuthzScope {
@@ -139,7 +139,7 @@ impl AuthzScope {
     }
 
     /// @emoji 📄️ The document this scope is nested under, or `None` for `AuthzScope::Database`.
-    pub fn document(&self) -> Option<&protocol::DocumentId> {
+    pub fn document(&self) -> Option<&protocol::ArtifactId> {
         match self {
             AuthzScope::Database => None,
             AuthzScope::Document { document } | AuthzScope::CommandKind { document, .. } | AuthzScope::Object { document, .. } | AuthzScope::Field { document, .. } | AuthzScope::Historical { document } | AuthzScope::Preview { document } => {
@@ -342,7 +342,7 @@ pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &
 /// given actor has already submitted within `window_ms`. Deliberately NOT a permanent ledger —
 /// bounded by both `window_ms` (time) and `capacity_per_actor` (space, oldest-evicted-first) so
 /// memory never grows unboundedly under a hostile or buggy high-volume actor; durable dedupe
-/// beyond the window is `db_wal`/`db_document`'s job (WAL sequencing already rejects a
+/// beyond the window is `db_wal`/`db_artifact`'s job (WAL sequencing already rejects a
 /// truly-duplicate commit once applied), this guard's job is only to catch replay CHEAPLY, in
 /// memory, before that heavier machinery runs.
 #[derive(Clone, Debug)]
@@ -467,18 +467,18 @@ fn redacted_marker() -> serde_json::Value {
 }
 
 /// @emoji 🫥️ Structurally walks `value` (an object's JSON payload — e.g.
-/// `protocol::DocumentDiff.payload`), replacing every dotted field path the `policy` denies
+/// `protocol::ArtifactDiff.payload`), replacing every dotted field path the `policy` denies
 /// `Action::Read` on (scoped as `AuthzScope::Field { document, object_id, field: <path> }`) with
 /// `redacted_marker()`. Only walks JSON objects (arrays are left as opaque leaves — this crate's
 /// own scope choice: array-element-level redaction would need array-index-stable paths, which is
 /// payload-schema knowledge this crate must not depend on per the module doc). A denied subtree
 /// is never recursed into further — its whole value is replaced, so nested fields under a denied
 /// field are never separately evaluated (and can't leak).
-pub fn redact_fields(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::DocumentId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
+pub fn redact_fields(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
     redact_fields_at(policy, principal, document, object_id, "", value, 0)
 }
 
-fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::DocumentId, object_id: &str, path: &str, value: &serde_json::Value, depth: usize) -> serde_json::Value {
+fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, path: &str, value: &serde_json::Value, depth: usize) -> serde_json::Value {
     if depth > MAX_REDACT_DEPTH {
         return redacted_marker();
     }
@@ -514,7 +514,7 @@ pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope
         .field("action", EmitField::Text(format!("{action:?}")))
         .field("scope", EmitField::Text(scope.segments().join("/")));
     if let Some(document) = scope.document() {
-        event = event.with_document(DocumentId::from(document.0.clone()));
+        event = event.with_document(ArtifactId::from(document.0.clone()));
     }
     if let Decision::Deny { reason } = decision {
         event = event.field("reason", EmitField::Text(reason.clone()));
@@ -525,10 +525,10 @@ pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope
 /// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
-pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::DocumentId) {
+pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
     emit.emit(
         EmitEvent::new("security.replay_rejected")
-            .with_document(DocumentId::from(document.0.clone()))
+            .with_document(ArtifactId::from(document.0.clone()))
             .field("actor", EmitField::Text(actor.0.clone()))
             .field("mutation_id", EmitField::Text(mutation_id.0.clone())),
     );
@@ -536,8 +536,8 @@ pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutatio
 
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
 /// when `BudgetRegistry` rejects a submission.
-pub fn audit_budget_exceeded(emit: &dyn Emit, key: &str, document: &protocol::DocumentId) {
-    emit.emit(EmitEvent::new("security.budget_exceeded").with_document(DocumentId::from(document.0.clone())).field("key", EmitField::Text(key.to_string())));
+pub fn audit_budget_exceeded(emit: &dyn Emit, key: &str, document: &protocol::ArtifactId) {
+    emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string())));
 }
 //#endregion 🔖️Audit
 
@@ -549,7 +549,7 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// @emoji 🚪️ The composition root: everything `db_document`'s pipeline needs from this crate for
+/// @emoji 🚪️ The composition root: everything `db_artifact`'s pipeline needs from this crate for
 /// its "admit → dedupe → ... → authz" stages, bundled behind one type. Every piece
 /// (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, `Emit`) is independently usable —
 /// `SecurityGate` is a convenience, not the only entry point.
@@ -584,7 +584,7 @@ impl SecurityGate {
         &self,
         principal: &Principal,
         resource_tenant: &TenantId,
-        document: &protocol::DocumentId,
+        document: &protocol::ArtifactId,
         kind: &str,
         envelope_actor: &protocol::ActorId,
         mutation_id: &protocol::MutationId,
@@ -605,7 +605,7 @@ impl SecurityGate {
 
     /// @emoji 🫥️ Convenience forward to the free `redact_fields` function using the gate's own
     /// policy.
-    pub fn redact(&self, principal: &Principal, document: &protocol::DocumentId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
+    pub fn redact(&self, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
         redact_fields(&self.policy, principal, document, object_id, value)
     }
 }
@@ -616,8 +616,8 @@ impl SecurityGate {
 mod tests {
     use super::*;
 
-    fn doc(id: &str) -> protocol::DocumentId {
-        protocol::DocumentId(id.to_string())
+    fn doc(id: &str) -> protocol::ArtifactId {
+        protocol::ArtifactId(id.to_string())
     }
     fn actor(id: &str) -> protocol::ActorId {
         protocol::ActorId(id.to_string())
@@ -926,7 +926,7 @@ mod tests {
         audit_decision(&sink, &principal("editor"), &AuthzScope::Document { document: doc("doc-1") }, Action::Read, &decision);
         let events = sink.events.lock().unwrap();
         assert_eq!(events[0].name, "security.authz_denied");
-        assert_eq!(events[0].document, Some(DocumentId::from("doc-1")));
+        assert_eq!(events[0].document, Some(ArtifactId::from("doc-1")));
     }
     //#endregion 🔖️Audit
 

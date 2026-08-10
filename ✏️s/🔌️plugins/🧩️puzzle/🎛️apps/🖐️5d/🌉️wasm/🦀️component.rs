@@ -1,5 +1,5 @@
 //! 🌐️ Puzzle 5d play app — the browser wasm-bindgen bridge (`wasm32`, non-WASI-P2 only): a
-//! `Puzzle5dDocumentVcs` handle over the typed `Puzzle5dStore`. Lives at the app level — the
+//! `Puzzle5dArtifactVcs` handle over the typed `Puzzle5dStore`. Lives at the app level — the
 //! `.puzzle5d` DSL-text parser stays in the headless `⚙️engine` artifact node next to the session it
 //! shares a target gate with, and this is where every other wasm-bindgen-exported puzzle-5d document
 //! surface already lived.
@@ -14,14 +14,14 @@ use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct Puzzle5dDocumentVcs {
+pub struct Puzzle5dArtifactVcs {
     store: RefCell<Puzzle5dStore>,
 }
 
 #[wasm_bindgen]
-impl Puzzle5dDocumentVcs {
+impl Puzzle5dArtifactVcs {
     #[wasm_bindgen(constructor)]
-    pub fn new(envelope_json: Option<String>) -> Result<Puzzle5dDocumentVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<Puzzle5dArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;

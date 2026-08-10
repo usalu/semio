@@ -1,9 +1,9 @@
 //! ⚡️ VDI 3805 artifact — the operation alias, its store aliases, and its laws.
 //!
-//! 🧬️ `SetDocumentMutation<Vdi3805Snapshot>` (whole-document replace) already implements both
-//! `store::Mutation<Vdi3805Snapshot>` and, now that `Document` derives `dsl::DslDocument` (i.e.
-//! `store::DocumentDsl`), `store::OpText` too — see `crate::core`'s generic `impl<D: DocumentDsl + ...>
-//! OpText for SetDocumentMutation<D>`. A coarse, whole-value-replace operation is the legitimate,
+//! 🧬️ `SetArtifactMutation<Vdi3805Snapshot>` (whole-document replace) already implements both
+//! `store::Mutation<Vdi3805Snapshot>` and, now that `Document` derives `dsl::DslArtifact` (i.e.
+//! `store::ArtifactDsl`), `store::OpText` too — see `crate::core`'s generic `impl<D: ArtifactDsl + ...>
+//! OpText for SetArtifactMutation<D>`. A coarse, whole-value-replace operation is the legitimate,
 //! sufficient choice: this reference/lookup-table document has no interactive editor driving
 //! fine-grained field-level edits, so reusing the generic pair (rather than hand-deriving a redundant
 //! one-variant `#[derive(dsl::DslEnum)]` enum that would duplicate exactly this shape) keeps every norm

@@ -70,7 +70,7 @@ pub struct OpPayload {
 /// edit id) because undo-then-apply interleavings are not representable by a single marker: an
 /// edit undone mid-history precedes later-applied edits in file order, and the redo stack can
 /// contain edits in any order relative to `applied`. `checkpoint_id` mirrors
-/// `DocumentStore::current_checkpoint_id`; the active alternative stays on the existing
+/// `ArtifactStore::current_checkpoint_id`; the active alternative stays on the existing
 /// `HistoryLog::active_alternative_id` (unrelated lifecycle — churns far less often).
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryCursor {

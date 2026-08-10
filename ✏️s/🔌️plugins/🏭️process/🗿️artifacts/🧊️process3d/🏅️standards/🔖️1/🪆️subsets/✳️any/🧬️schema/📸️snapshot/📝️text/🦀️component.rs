@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::process3d::Process3dSnapshot;
 
-/// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::DocumentDsl`).
+/// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗄️ The drilled-plate example fixture, handcrafted inline (same DSL surface as the timber demo asset).
@@ -63,12 +63,12 @@ pose {
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
-    <Process3dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Process3dSnapshot` back to `.process3d` DSL text.
 pub fn print_dsl(document: &Process3dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

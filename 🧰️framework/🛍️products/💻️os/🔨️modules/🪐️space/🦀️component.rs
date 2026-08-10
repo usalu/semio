@@ -85,7 +85,7 @@ pub const S_SPACE_SCHEMA: &str = "s.space";
 
 /// 🔗️ One entry in `SpaceSnapshot.collections` — the collection's identity, display name, and the
 /// `s.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
-/// artifact id == DocumentEnvelope.id` for document artifacts; a `CollectionRef` follows the same
+/// artifact id == ArtifactEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CollectionRef {
@@ -99,7 +99,7 @@ pub struct CollectionRef {
 /// `OsSnapshot` in W3 — see `## The inversion` in the plan), and the durable extension ledger
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[dsl(id = "s.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
@@ -492,7 +492,7 @@ pub struct CollectionFolder {
 }
 
 /// 📦️ What a `CollectionEntry` addresses: either a document artifact (`schema` + the `s.<schema>`
-/// document's own id — see `🔖️Addressing`: `CollectionEntry.id == artifact id == DocumentEnvelope.id`
+/// document's own id — see `🔖️Addressing`: `CollectionEntry.id == artifact id == ArtifactEnvelope.id`
 /// for document artifacts) or a content-addressed blob (files/meshes/breps-as-bytes).
 ///
 /// 🧬️ Hand-crafted `dsl::DslVariants` instead of `#[derive(dsl::DslEnum)]`: the `Blob` variant embeds
@@ -577,7 +577,7 @@ impl dsl::DslVariants for ArtifactBody {
 }
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
-/// DocumentEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
+/// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CollectionEntry {
     pub id: String,
@@ -589,7 +589,7 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[dsl(id = "s.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
@@ -608,9 +608,9 @@ pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
 }
 
 
-//#region 🔖️HandcraftedDocumentCodecs
-/// 🧬️ P6: `DslDocument` emits helpers only — DocumentDsl/DocumentPack are handcrafted here.
-impl store::DocumentDsl for SpaceSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+/// 🧬️ P6: `DslArtifact` emits helpers only — ArtifactDsl/ArtifactPack are handcrafted here.
+impl store::ArtifactDsl for SpaceSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -630,7 +630,7 @@ impl store::DocumentDsl for SpaceSnapshot {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -639,12 +639,12 @@ impl store::DocumentDsl for SpaceSnapshot {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for SpaceSnapshot {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for SpaceSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -653,10 +653,10 @@ impl store::DocumentPack for SpaceSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -668,7 +668,7 @@ impl store::DocumentPack for SpaceSnapshot {
     }
 }
 
-impl store::DocumentDsl for CollectionSnapshot {
+impl store::ArtifactDsl for CollectionSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -688,7 +688,7 @@ impl store::DocumentDsl for CollectionSnapshot {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -697,12 +697,12 @@ impl store::DocumentDsl for CollectionSnapshot {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for CollectionSnapshot {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for CollectionSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -711,10 +711,10 @@ impl store::DocumentPack for CollectionSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -725,7 +725,7 @@ impl store::DocumentPack for CollectionSnapshot {
         Some(Self::__dsl_spec())
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️CollectionMutation
 /// ⚡️ One settled collection-tree mutation. `Move*`/`Rename*`/`ReplaceEntryBody` diff as the WHOLE
@@ -1425,7 +1425,7 @@ impl DraftCatalog {
     /// `CollectionMutation::AddEntry` the caller applies to their `CollectionSnapshot` — promotion
     /// stays operation-sourced even though it now really touches bytes. The artifact keeps its id
     /// (`entry.id == draft.artifact_id == document id`); a caller who knows the artifact's concrete
-    /// `<P, Mutation>` pair can reconstruct a live `store::DocumentStore<P, Mutation>` from the SAME
+    /// `<P, Mutation>` pair can reconstruct a live `store::ArtifactStore<P, Mutation>` from the SAME
     /// moved bytes via `import_document_artifact` (see `🔖️ZipStoreBridge` above) and register it into
     /// their `store::SpaceHost` (`register_member`/`register_space_documents`) — this catalog stays
     /// type-erased on purpose (same reasoning as `ArtifactBody`'s hand-written `DslVariants`) and never
@@ -1553,7 +1553,7 @@ fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, nam
 /// document artifact at `<folder path>/<name>.pack` + `.spr` (lossless — full VCS history survives via
 /// the injected `read_artifact` bytes), each blob raw at its path. IO-free: `read_artifact`/`read_blob`
 /// are injected so this crate never touches a live store/filesystem itself — the caller supplies
-/// already-serialized bytes from wherever they actually live (a `DocumentEnvelope`'s pack/spr, a
+/// already-serialized bytes from wherever they actually live (a `ArtifactEnvelope`'s pack/spr, a
 /// `BlobStore`). Entries are written in id order for determinism (the byte-stability law below).
 pub fn export_collection_zip(
     collection: &CollectionSnapshot,
@@ -1564,7 +1564,7 @@ pub fn export_collection_zip(
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let options = zip_file_options();
 
-    write_zip_file(&mut writer, "collection.collection.pack", &store::DocumentPack::encode_pack(collection), options)?;
+    write_zip_file(&mut writer, "collection.collection.pack", &store::ArtifactPack::encode_pack(collection), options)?;
     write_zip_file(&mut writer, "collection.collection.spr", collection_spr, options)?;
 
     let mut entries: Vec<&CollectionEntry> = collection.entries.iter().collect();
@@ -1595,7 +1595,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
     let mut archive = zip::ZipArchive::new(Cursor::new(bytes))?;
     let collection_pack = read_zip_entry(&mut archive, "collection.collection.pack")?;
     let collection_spr = read_zip_entry(&mut archive, "collection.collection.spr")?;
-    let collection = <CollectionSnapshot as store::DocumentPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let collection = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
     let mut blobs = Vec::new();
@@ -1621,8 +1621,8 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 
 //#region 🔖️ZipStoreBridge
 /// 🌉️ Real (non-mock) reader/writer bridge from `export_collection_zip`/`import_collection_zip`'s
-/// injected-callback shape to the actual `store` crate types (`store::DocumentStore`/
-/// `store::DocumentPackFiles`/`store::BlobStore`). This crate depends on `store` (see this crate's
+/// injected-callback shape to the actual `store` crate types (`store::ArtifactStore`/
+/// `store::ArtifactPackFiles`/`store::BlobStore`). This crate depends on `store` (see this crate's
 /// `Cargo.toml`), never the reverse, so the bridge lives HERE rather than inside `store` — the
 /// direction that keeps the dependency graph acyclic; `store` itself stays app-agnostic and never
 /// names a collection/space type. W2 shipped `export_collection_zip`/`import_collection_zip` IO-free
@@ -1631,19 +1631,19 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 /// wave) plugs into those closures so a real collection with real document/blob artifacts actually
 /// round-trips through a real `.zip` byte stream.
 ///
-/// 📤️ EXPORT side: a caller snapshots each open document artifact's `store::DocumentStore<P,
-/// Mutation>` via its own `snapshot_pack()` into a `document_id -> store::DocumentPackFiles` table,
+/// 📤️ EXPORT side: a caller snapshots each open document artifact's `store::ArtifactStore<P,
+/// Mutation>` via its own `snapshot_pack()` into a `document_id -> store::ArtifactPackFiles` table,
 /// then hands `real_artifact_reader`/`real_blob_reader` (closures over that table and a live
 /// `store::BlobStore`) straight to `export_collection_zip`.
 ///
 /// 📥️ IMPORT side: `import_document_artifact`/`import_blob` are the inverse — reconstructing a real
-/// `store::DocumentStore<P, Mutation>` from one `ImportedCollection::artifacts` entry's pack+spr
+/// `store::ArtifactStore<P, Mutation>` from one `ImportedCollection::artifacts` entry's pack+spr
 /// bytes (generic over the artifact's own concrete schema, mirroring `store::parse_document_pack`'s
 /// own genericity — this crate never knows a document artifact's concrete type, only its `schema`
 /// string, so the caller supplies `P`/`Mutation` at the call site), and re-`put`-ing one imported
 /// blob's bytes into a live `store::BlobStore`, verifying the freshly computed content hash still
 /// matches the `store::BlobRef` recorded in the collection.
-pub fn real_artifact_reader(pack_files: &HashMap<String, store::DocumentPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
+pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
     move |entry_id: &str| -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> {
         let files = pack_files.get(entry_id).ok_or_else(|| SpaceZipError::MissingPath(entry_id.to_string()))?;
         Ok((files.pack.clone(), files.spr.clone()))
@@ -1656,15 +1656,15 @@ pub fn real_blob_reader(blob_store: &dyn store::BlobStore) -> impl Fn(&str) -> R
     }
 }
 
-/// 📥️ Reconstructs a real `store::DocumentStore<P, Mutation>` from one imported document artifact's
+/// 📥️ Reconstructs a real `store::ArtifactStore<P, Mutation>` from one imported document artifact's
 /// pack+spr bytes — the import-side counterpart to snapshotting it for `real_artifact_reader`.
-pub fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::DocumentStore<P, Mutation>, SpaceZipError>
+pub fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    P: Clone + Serialize + serde::de::DeserializeOwned + store::ArtifactPack,
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText,
 {
     let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    Ok(store::DocumentStore::new(parsed.envelope))
+    Ok(store::ArtifactStore::new(parsed.envelope))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed
@@ -1685,7 +1685,7 @@ pub fn import_blob(blob_store: &dyn store::BlobStore, blob: &store::BlobRef, byt
 mod tests {
     use super::*;
     use protocol::DiffCodec;
-    use store::{BlobStore, DocumentDsl};
+    use store::{BlobStore, ArtifactDsl};
 
     //#region 🧸️Fixtures
     fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
@@ -1747,7 +1747,7 @@ mod tests {
     #[test]
     fn space_default_example_dsl_round_trips() {
         let text = include_str!("../../📚️examples/🎬️demo.space");
-        let parsed = <SpaceSnapshot as DocumentDsl>::parse_dsl(text).expect("parse default .space example");
+        let parsed = <SpaceSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .space example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
     //#endregion 🧪️SpaceDocumentLaws
@@ -1769,28 +1769,28 @@ mod tests {
 
     #[test]
     fn collection_envelope_id_is_two_dot_segments() {
-        let id = <CollectionSnapshot as store::DocumentDsl>::envelope_id();
+        let id = <CollectionSnapshot as store::ArtifactDsl>::envelope_id();
         assert_eq!(id, "s.collection");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-        let pack = store::DocumentPack::encode_pack(&empty_collection_snapshot("test")).expect("encode");
-        let decoded = <CollectionSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test")).expect("encode");
+        let decoded = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.name, "test");
     }
 
     #[test]
     fn space_envelope_id_is_two_dot_segments() {
-        let id = <SpaceSnapshot as store::DocumentDsl>::envelope_id();
+        let id = <SpaceSnapshot as store::ArtifactDsl>::envelope_id();
         assert_eq!(id, "s.space");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-        let pack = store::DocumentPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private)).expect("encode");
-        let decoded = <SpaceSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private)).expect("encode");
+        let decoded = <SpaceSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.name, "test");
     }
 
     #[test]
     fn collection_default_example_dsl_round_trips() {
         let text = include_str!("../../📚️examples/🎬️demo.collection");
-        let parsed = <CollectionSnapshot as DocumentDsl>::parse_dsl(text).expect("parse default .collection example");
+        let parsed = <CollectionSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .collection example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
     //#endregion 🧪️CollectionDocumentLaws
@@ -2257,18 +2257,18 @@ mod tests {
     }
 
     /// 🧪️ End-to-end law with REAL `store` types (not the fixture-string readers `zip_fixture_bytes`
-    /// injects above): a real `store::DocumentStore<SpaceSnapshot, SpaceMutation>` document
-    /// artifact (itself an ordinary `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` document —
-    /// exercising exactly the same `DocumentPack`/`OpBinary`/`OpText` machinery any real app document
+    /// injects above): a real `store::ArtifactStore<SpaceSnapshot, SpaceMutation>` document
+    /// artifact (itself an ordinary `#[derive(dsl::DslArtifact)]`/`#[derive(dsl::DslOps)]` document —
+    /// exercising exactly the same `ArtifactPack`/`OpBinary`/`OpText` machinery any real app document
     /// would) plus a real blob round-trip through `real_artifact_reader`/`real_blob_reader`/
     /// `import_document_artifact`/`import_blob`, asserting the round trip preserves collection
     /// structure AND artifact envelope bytes byte-for-byte (the plan's "lossless" requirement), and
     /// that export->import->export stays byte-stable with real data too.
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
-        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
-        nested_space_store.dispatch(store::DocumentCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
-        nested_space_store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
+        let mut nested_space_store = store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
+        nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
+        nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
         let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");
 
         let blob_store = TestBlobStore::default();
@@ -2312,7 +2312,7 @@ mod tests {
         // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes
         // holds end-to-end.
         let mut reexport_pack_files = HashMap::new();
-        reexport_pack_files.insert("art-nested-space".to_string(), store::DocumentPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
+        reexport_pack_files.insert("art-nested-space".to_string(), store::ArtifactPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
         let re_read_artifact = real_artifact_reader(&reexport_pack_files);
         let re_read_blob = real_blob_reader(&fresh_blob_store);
         let twice = export_collection_zip(&imported.collection, &imported.collection_spr, &re_read_artifact, &re_read_blob).expect("re-export");

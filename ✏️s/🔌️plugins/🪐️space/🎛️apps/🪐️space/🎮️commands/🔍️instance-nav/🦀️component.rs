@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 
 //#region 🔖️OpenInstance
 pub mod open_instance {
@@ -15,7 +15,7 @@ pub mod open_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &OpenInstance, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match payload.node_id.clone().or_else(|| crate::apps::space::primary_selected_node_id(cfg.snapshot)) {
             Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
                 Some(node) => Ok(Emit {
@@ -44,7 +44,7 @@ pub mod close_focused_instance {
     #[dsl(keyword = "close-focused-instance")]
     pub struct CloseFocusedInstance {}
 
-    pub fn handle(_payload: &CloseFocusedInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(_payload: &CloseFocusedInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]))
     }
 }
@@ -71,7 +71,7 @@ mod tests {
         let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
         let emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node.id.clone()) })).expect("handle");
-        assert!(emit.document_mutations.is_empty(), "opening an instance is a host effect, not a document operation");
+        assert!(emit.artifact_mutations.is_empty(), "opening an instance is a host effect, not a document operation");
         let opened = emit
             .effects
             .iter()

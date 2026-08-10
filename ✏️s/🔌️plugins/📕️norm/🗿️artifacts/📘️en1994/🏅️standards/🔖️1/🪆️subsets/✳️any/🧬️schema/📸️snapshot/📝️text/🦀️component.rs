@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::en1994::En1994Snapshot;
 
-/// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`store::DocumentDsl`):
+/// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`store::ArtifactDsl`):
 /// an EN-annex EN 1994-2 composite bridge girder with a re-entrant deck under an R90 fire rating and a
 /// shear-connector fatigue detail, distinct from `En1994Snapshot::default()`'s DE-annex/R60/trapezoidal-deck/
 /// stud-welded values so the grammar's non-default branches (annex, fire rating, deck type, fatigue
@@ -19,12 +19,12 @@ pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../.
 
 /// 📖️ Parses `.en1994` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1994Snapshot, store::TextError> {
-    <En1994Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <En1994Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1994` DSL text.
 pub fn print_dsl(document: &En1994Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

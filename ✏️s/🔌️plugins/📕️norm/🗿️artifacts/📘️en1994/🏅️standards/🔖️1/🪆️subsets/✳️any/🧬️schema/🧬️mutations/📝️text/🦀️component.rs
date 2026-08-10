@@ -1,7 +1,7 @@
 //! ⚡️ EN 1994 design of composite steel and concrete structures — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::document::SetDocumentMutation<D>`) so this slot only needs to bind that generic operation to
+//! (`crate::document::SetArtifactMutation<D>`) so this slot only needs to bind that generic operation to
 //! `crate::artifacts::en1994::En1994Snapshot`.
 
 

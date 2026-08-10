@@ -17,12 +17,12 @@ pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️ex
 
 /// 📖️ Parses `.shome` DSL text into an `SHomeSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<SHomeSnapshot, store::TextError> {
-    <SHomeSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <SHomeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `SHomeSnapshot` back to `.shome` DSL text.
 pub fn print_dsl(document: &SHomeSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

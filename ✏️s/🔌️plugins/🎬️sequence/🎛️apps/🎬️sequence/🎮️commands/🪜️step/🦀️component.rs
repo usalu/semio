@@ -5,7 +5,7 @@ use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::{host_from_snapshot, ops_from_host_mutation};
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddStep
@@ -20,11 +20,11 @@ pub mod add_step {
         pub y: f64,
     }
 
-    pub fn handle(payload: &AddStep, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step(&payload.kind, payload.x, payload.y);
-        Ok(Emit { document_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 
@@ -41,11 +41,11 @@ pub mod add_step_to_slot {
         pub slot_name: String,
     }
 
-    pub fn handle(payload: &AddStepToSlot, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &AddStepToSlot, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step_in_slot(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
-        Ok(Emit { document_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 
@@ -61,11 +61,11 @@ pub mod add_step_dropped {
         pub picked_step_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddStepDropped, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &AddStepDropped, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
-        Ok(Emit { document_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddStep
@@ -80,7 +80,7 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let ops = ops_from_host_mutation(fixture, |host| {
             host.remove_step(&payload.id);
@@ -89,7 +89,7 @@ pub mod remove_step {
             Ok(Emit::default())
         } else {
             let step_ids = cfg.snapshot.selected_step_ids.iter().filter(|selected| **selected != payload.id).cloned().collect();
-            Ok(Emit { document_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids }], ..Default::default() })
+            Ok(Emit { artifact_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids }], ..Default::default() })
         }
     }
 }
@@ -101,7 +101,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let selected = cfg.snapshot.selected_step_ids.clone();
         let ops = ops_from_host_mutation(fixture, |host| {
@@ -112,7 +112,7 @@ pub mod delete_selection {
         if ops.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit { document_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
+            Ok(Emit { artifact_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
         }
     }
 }
@@ -130,7 +130,7 @@ pub mod move_step {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         if !fixture.steps.iter().any(|step| step.id == payload.node_id) {
             return Ok(Emit::default());
@@ -158,7 +158,7 @@ pub mod set_step_params {
         pub params_json: String,
     }
 
-    pub fn handle(payload: &SetStepParams, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {
             let _ = host.set_step_params_json(&payload.id, &payload.params_json);
@@ -177,7 +177,7 @@ pub mod set_step_collapsed {
         pub id: String,
     }
 
-    pub fn handle(payload: &SetStepCollapsed, doc: &DocumentView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetStepCollapsed, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let collapsed = fixture.steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {

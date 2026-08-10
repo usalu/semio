@@ -381,15 +381,15 @@ mod tests {
 
         let initial = crate::artifacts::layout::engine::default_document();
         let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-text-test", initial, None);
-        let mut doc_store: store::DocumentStore<LayoutSnapshot, LayoutMutation> = store::DocumentStore::new(envelope);
+        let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope);
         doc_store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
                 description: Some("resize page".into()),
             })
             .expect("apply patch page width");
         doc_store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],
                 description: Some("rename page".into()),
             })

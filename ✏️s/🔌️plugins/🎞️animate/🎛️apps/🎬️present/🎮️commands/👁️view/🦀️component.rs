@@ -5,7 +5,7 @@ use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::valid_tile_ids;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetSelectedIds
@@ -18,7 +18,7 @@ pub mod set_selected_ids {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelectedIds, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectedIds, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: valid_tile_ids(doc.snapshot, payload.ids.clone()) }]))
     }
 }
@@ -34,7 +34,7 @@ pub mod canvas_pointer_down {
         pub layer_id: Option<String>,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         match &payload.layer_id {
             Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: vec![id.clone()] }])),
@@ -54,7 +54,7 @@ pub mod no_operation {
     #[dsl(keyword = "no-op")]
     pub struct NoMutation {}
 
-    pub fn handle(_payload: &NoMutation, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -70,7 +70,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::config(vec![PresentConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

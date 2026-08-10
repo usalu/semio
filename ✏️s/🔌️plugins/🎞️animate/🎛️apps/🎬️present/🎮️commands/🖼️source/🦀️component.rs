@@ -3,7 +3,7 @@
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileFrame, FigureTileSource, PresentSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetSource
@@ -17,7 +17,7 @@ pub mod set_source {
         pub source: FigureTileSource,
     }
 
-    pub fn handle(payload: &SetSource, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         let replaced = payload.source.src != deck.source.src;
         let mut operations = vec![PresentMutation::SetSource { source: payload.source.clone() }];
@@ -26,7 +26,7 @@ pub mod set_source {
             operations.push(PresentMutation::SetTiles { tiles: Vec::new() });
             config_mutations.push(PresentConfigMutation::SetSelectedIds { ids: Vec::new() });
         }
-        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetSource
@@ -42,7 +42,7 @@ pub mod set_frame {
         pub frame: FigureTileFrame,
     }
 
-    pub fn handle(payload: &SetFrame, doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFrame, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         let mut source = deck.source.clone();
         source.frame = payload.frame.clone();
@@ -61,9 +61,9 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         if payload.example_id == "demo" || payload.example_id.is_empty() {
-            Ok(Emit { document_mutations: vec![PresentMutation::SetSnapshot { snapshot: default_present_snapshot() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
+            Ok(Emit { artifact_mutations: vec![PresentMutation::SetSnapshot { snapshot: default_present_snapshot() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
         } else {
             Ok(Emit::default())
         }

@@ -178,7 +178,7 @@ mod tests {
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use protocol::OpText;
     use semio_framework_os_kernel::os_store::test_support;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     //#region 🔖️OpTextTests
     #[test]
@@ -251,8 +251,8 @@ mod tests {
 
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::DocumentStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }

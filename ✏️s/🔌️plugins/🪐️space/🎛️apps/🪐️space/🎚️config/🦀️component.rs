@@ -1,4 +1,4 @@
-//! ⚙️ S Studio app — `DocumentApp::Config` + its operation enum (constitutional: engine + op, merged
+//! ⚙️ S Studio app — `ArtifactApp::Config` + its operation enum (constitutional: engine + op, merged
 //! at app level: `Config`/`ConfigMutation` are inherently app-scoped, and this app owns no
 //! document-side artifact — see `🦀️component.rs`'s module doc for why).
 
@@ -41,14 +41,14 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 //#endregion 🔖️Types
 
 //#region 🔖️Config
-/// 🧮️ Space's real `DocumentApp::Config` — the studio app's config artifact. A node IS the app
+/// 🧮️ Space's real `ArtifactApp::Config` — the studio app's config artifact. A node IS the app
 /// instance now (see the kernel `🔁️workflow` crate's `🔖️InstanceIdentity` doc), so the old disjoint
 /// `selected_media_node_ids`/`selected_app_instance_ids`/`clipboard_instance_ids` pairs collapse into
 /// one `*_node_ids` field apiece. `camera`/per-window options are keyed by window id (`BTreeMap<String,
 /// _>`, per the Configured Node Apps recipe) — today that's always
 /// `crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW`, since split-pane
 /// window *instances* aren't a thing anywhere in this codebase yet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "s.spacecfg")]
 #[dsl(layout = "lines")]
@@ -86,9 +86,9 @@ pub struct SpaceConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for SpaceConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for SpaceConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -108,7 +108,7 @@ impl store::DocumentDsl for SpaceConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -117,12 +117,12 @@ impl store::DocumentDsl for SpaceConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for SpaceConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for SpaceConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -131,10 +131,10 @@ impl store::DocumentPack for SpaceConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -146,7 +146,7 @@ impl store::DocumentPack for SpaceConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for SpaceConfig {

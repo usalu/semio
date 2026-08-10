@@ -37,7 +37,7 @@
 //#region 🔖️SqliteStorage
 #[cfg(not(target_arch = "wasm32"))]
 mod sqlite_storage {
-    use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+    use {check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
     use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️WalStorage
     impl WalStorage for SqliteStorage {
-        fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let index = to_sql_i64(index, "wal_storage::create_segment index")?;
             let conn = self.lock();
             let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(())
         }
 
-        fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+        fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append")?;
             let sql_index = to_sql_i64(index, "wal_storage::append index")?;
             let conn = self.lock();
@@ -205,13 +205,13 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(new_len as u64)
         }
 
-        fn sync(&self, _document: &DocumentId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
+        fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
             // 🎯️ See module doc's "Durability choice": `synchronous = FULL` already fsyncs every
             // commit, so every class this crate could be asked to sync to is already satisfied.
             Ok(())
         }
 
-        fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
             let conn = self.lock();
             // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(())
         }
 
-        fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+        fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read")?;
             let sql_index = to_sql_i64(index, "wal_storage::read index")?;
             let conn = self.lock();
@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(bytes[start..end].to_vec())
         }
 
-        fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
+        fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
             let conn = self.lock();
             let len: i64 = conn
@@ -253,7 +253,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(len as u64)
         }
 
-        fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.lock();
             let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
             let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -264,7 +264,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(out)
         }
 
-        fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+        fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
             let conn = self.lock();
             let (sealed, current_len): (i64, i64) = conn
@@ -283,7 +283,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(())
         }
 
-        fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
+        fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
             let conn = self.lock();
             conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️SnapshotStorage
     impl SnapshotStorage for SqliteStorage {
-        fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+        fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation")?;
             let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
             let conn = self.lock();
@@ -307,7 +307,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(())
         }
 
-        fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+        fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
             let conn = self.lock();
             conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation], |row| row.get(0))
@@ -316,13 +316,13 @@ CREATE TABLE IF NOT EXISTS lease (
                 .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
         }
 
-        fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
+        fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let conn = self.lock();
             let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
             Ok(max.map(|value| value as u64))
         }
 
-        fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.lock();
             let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
             let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -333,7 +333,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(out)
         }
 
-        fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
+        fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
             let conn = self.lock();
             conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
@@ -410,7 +410,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️IndexStorage
     impl IndexStorage for SqliteStorage {
-        fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+        fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run")?;
             let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
             let conn = self.lock();
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(())
         }
 
-        fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+        fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
             let conn = self.lock();
             conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
@@ -432,7 +432,7 @@ CREATE TABLE IF NOT EXISTS lease (
                 .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
         }
 
-        fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
+        fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.lock();
             let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
             let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -443,7 +443,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Ok(out)
         }
 
-        fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
+        fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
             let conn = self.lock();
             conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
@@ -591,7 +591,7 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn wal_storage_append_seal_truncate_and_bounds_laws() {
             let storage = sqlite_scratch("wal_laws");
-            let document: DocumentId = "doc-wal".into();
+            let document: ArtifactId = "doc-wal".into();
 
             storage.create_segment(&document, 0).unwrap();
             assert!(matches!(storage.create_segment(&document, 0), Err(DbError::AlreadyExists(_))));
@@ -631,7 +631,7 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn snapshot_storage_generations_overwrite_and_delete_laws() {
             let storage = sqlite_scratch("snapshot_laws");
-            let document: DocumentId = "doc-snap".into();
+            let document: ArtifactId = "doc-snap".into();
             assert_eq!(storage.latest_generation(&document).unwrap(), None);
 
             storage.write_generation(&document, 0, b"gen-zero-bytes").unwrap();
@@ -698,7 +698,7 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn index_storage_runs_list_read_and_delete_laws() {
             let storage = sqlite_scratch("index_laws");
-            let document: DocumentId = "doc-index".into();
+            let document: ArtifactId = "doc-index".into();
             storage.write_run(&document, 0, b"run-zero").unwrap();
             storage.write_run(&document, 1, b"run-one").unwrap();
             assert_eq!(storage.list_runs(&document).unwrap(), vec![0, 1]);
@@ -751,7 +751,7 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn db_storage_accessors_and_capabilities() {
             let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(sqlite_scratch("umbrella"));
-            let document: DocumentId = "doc-umbrella".into();
+            let document: ArtifactId = "doc-umbrella".into();
             storage.wal().create_segment(&document, 0).unwrap();
             storage.catalog().cas_root(EpochFence::INITIAL, b"root").unwrap();
             storage.index().write_run(&document, 0, b"run").unwrap();
@@ -771,13 +771,13 @@ CREATE TABLE IF NOT EXISTS lease (
             let path = sqlite_scratch_path("reopen");
             {
                 let storage = SqliteStorage::open(&path).unwrap();
-                let document: DocumentId = "doc-reopen".into();
+                let document: ArtifactId = "doc-reopen".into();
                 storage.write_generation(&document, 0, b"persisted across reopen").unwrap();
                 storage.payload().put(b"payload persisted across reopen").unwrap();
             }
             {
                 let storage = SqliteStorage::open(&path).unwrap();
-                let document: DocumentId = "doc-reopen".into();
+                let document: ArtifactId = "doc-reopen".into();
                 assert_eq!(storage.read_generation(&document, 0).unwrap(), b"persisted across reopen");
                 let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
                 assert_eq!(storage.payload().get(&hash).unwrap(), b"payload persisted across reopen");
@@ -787,7 +787,7 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn in_memory_storage_works_without_a_file() {
             let storage = SqliteStorage::open_in_memory().unwrap();
-            let document: DocumentId = "doc-mem".into();
+            let document: ArtifactId = "doc-mem".into();
             storage.create_segment(&document, 0).unwrap();
             assert_eq!(storage.append(&document, 0, b"in memory").unwrap(), 9);
         }

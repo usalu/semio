@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{index_of, Fem2dDiff};
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -172,8 +172,8 @@ impl Mutation<Fem2dSnapshot> for Fem2dMutation {
     }
 }
 
-pub type Fem2dEnvelope = DocumentEnvelope<Fem2dSnapshot, Fem2dMutation>;
-pub type Fem2dStore = DocumentStore<Fem2dSnapshot, Fem2dMutation>;
+pub type Fem2dEnvelope = ArtifactEnvelope<Fem2dSnapshot, Fem2dMutation>;
+pub type Fem2dStore = ArtifactStore<Fem2dSnapshot, Fem2dMutation>;
 // #endregion 🔖️Operation
 
 // #region 🧪️Tests

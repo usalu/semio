@@ -11,7 +11,7 @@ use flow::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widge
 use flow::tessellate_geometry; // crate-root re-export via flow alias
 use flow::playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 //#region 🔖️Constants
 pub const PROCEDURAL_EXAMPLE_HEX_COLUMN: &str = "hexagonal-mushroom-column";

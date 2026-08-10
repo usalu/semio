@@ -10,9 +10,9 @@
 //! (`## db crate family`, `db_compact` row).
 //!
 //! 🎯️ Scope boundary — "diff collapse": per the contract's hard dependency rule, no db crate
-//! below `db_document` interprets operation semantics; `WAL_DIFF`/`WAL_INVERSE` records are
+//! below `db_artifact` interprets operation semantics; `WAL_DIFF`/`WAL_INVERSE` records are
 //! opaque bytes to this crate (see `db_wal::WalRecord`'s own doc). Collapsing two diffs into one
-//! requires knowing what a diff *means*, which only `db_document`/`protocol` know — this crate's
+//! requires knowing what a diff *means*, which only `db_artifact`/`protocol` know — this crate's
 //! honest contribution is structural, not semantic: once `WalRetention` proves a whole segment's
 //! diffs are covered by a published snapshot, the segment (diffs included) is deleted outright
 //! rather than rewritten record-by-record.
@@ -30,7 +30,7 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 
-use {check_len, DbError, DocumentId};
+use {check_len, DbError, ArtifactId};
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
@@ -73,28 +73,28 @@ pub struct CompactionLease;
 
 impl CompactionLease {
     /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s compaction pass.
-    pub fn resource(document: &DocumentId) -> String {
+    pub fn resource(document: &ArtifactId) -> String {
         format!("compact:{document}")
     }
 
     /// @emoji 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
-    pub fn acquire(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+    pub fn acquire(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms)
     }
 
     /// @emoji ♻️ Extends `holder`'s existing compaction lease for `document`.
-    pub fn renew(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub fn renew(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms)
     }
 
     /// @emoji 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
     /// calls this once, even if the pass itself failed (see that method's doc).
-    pub fn release(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+    pub fn release(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence)
     }
 
     /// @emoji 👀️ The compaction lease's current holder/fence for `document`, or `None` if unheld.
-    pub fn current(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
+    pub fn current(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
         storage.current(&Self::resource(document), now_ms)
     }
 }
@@ -170,7 +170,7 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
 /// @emoji 🗑️ Applies `plan_wal_retention`'s output: deletes each selected segment from `storage`.
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
-pub fn apply_wal_retention(storage: &dyn db_storage::WalStorage, document: &DocumentId, segments: &[u64]) -> Result<u64, DbError> {
+pub fn apply_wal_retention(storage: &dyn db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
     for &index in segments {
         storage.delete_segment(document, index)?;
     }
@@ -236,7 +236,7 @@ pub struct IndexKindReport {
 /// `IndexKind::Preview`/`Conflict` specifically, its share of "tombstone/preview GC": once a
 /// withdrawn preview key or a resolved conflict marker is the only thing a tombstone shadows,
 /// compacting reclaims it for good.
-pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &DocumentId) -> Result<Vec<IndexKindReport>, DbError> {
+pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &ArtifactId) -> Result<Vec<IndexKindReport>, DbError> {
     let mut reports = Vec::with_capacity(db_index::IndexKind::ALL.len());
     for kind in db_index::IndexKind::ALL {
         let handle = db_index::IndexHandle::new(storage, document.clone(), kind);
@@ -251,7 +251,7 @@ pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &Do
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
-fn collect_chain_pages(manager: &db_snapshot::SnapshotManager<'_>, document: &DocumentId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
+fn collect_chain_pages(manager: &db_snapshot::SnapshotManager<'_>, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
     let combined = manager.materialize_chain(document, through_generation)?;
     let mut handle = db_snapshot::open_latest(&combined)?;
     let latest_descriptor = handle.descriptor.clone();
@@ -299,7 +299,7 @@ impl<'storage> SnapshotConsolidator<'storage> {
     /// unreachable pages needs the application-level page-tree structure this crate doesn't have
     /// (see module doc's "diff collapse" scope note for the same underlying constraint) and is left
     /// as this crate's deliberate extension seam.
-    pub fn consolidate(&self, document: &DocumentId, through_generation: u64, budget: &CompactionBudget) -> Result<u64, DbError> {
+    pub fn consolidate(&self, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<u64, DbError> {
         let (latest, pages) = collect_chain_pages(&self.manager, document, through_generation, budget)?;
         let body = db_snapshot::SnapshotBody {
             head_seq: latest.head_seq,
@@ -317,7 +317,7 @@ impl<'storage> SnapshotConsolidator<'storage> {
 
     /// @emoji 🗑️ Forwards to `db_snapshot::SnapshotManager::retain_from` — `floor_generation` must
     /// itself be a full baseline (typically the generation `consolidate` just returned).
-    pub fn retain_from(&self, document: &DocumentId, floor_generation: u64) -> Result<(), DbError> {
+    pub fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
         self.manager.retain_from(document, floor_generation)
     }
 }
@@ -333,7 +333,7 @@ impl<'storage> SnapshotConsolidator<'storage> {
 /// 🎯️ Scope boundary: `db_storage` defines no `ColdStorage` trait, so this crate returns the
 /// archive bytes rather than inventing a storage seam unilaterally in a crate that isn't
 /// `db_storage`'s own.
-pub fn build_cold_archive(storage: &dyn db_storage::SnapshotStorage, document: &DocumentId, through_generation: u64) -> Result<Vec<u8>, DbError> {
+pub fn build_cold_archive(storage: &dyn db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
     db_snapshot::SnapshotManager::new(storage).materialize_chain(document, through_generation)
 }
 //#endregion 🔖️ColdArchive
@@ -369,7 +369,7 @@ impl<'storage> Compactor<'storage> {
     /// `DbError::Conflict` rather than silently racing another compactor. The lease is ALWAYS
     /// released before returning, including when a step fails partway through — a failed pass must
     /// never leave a document permanently unfenceable.
-    pub fn run(&self, document: &DocumentId, holder: &str, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
+    pub fn run(&self, document: &ArtifactId, holder: &str, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let fence = CompactionLease::acquire(self.storage.lease(), document, holder, DEFAULT_LEASE_TTL_MS, now_ms)?;
         let result = self.run_under_lease(document, wal_floor_head_seq, consolidate_snapshots, budget);
         let release_result = CompactionLease::release(self.storage.lease(), document, holder, fence);
@@ -382,12 +382,12 @@ impl<'storage> Compactor<'storage> {
 
     /// @emoji 🧭️ Convenience over `run`: derives `wal_floor_head_seq` from `document`'s current
     /// latest snapshot generation (or `0`, i.e. nothing deletable, if it has none yet).
-    pub fn run_from_latest_snapshot(&self, document: &DocumentId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
+    pub fn run_from_latest_snapshot(&self, document: &ArtifactId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let floor = db_snapshot::SnapshotManager::new(self.storage.snapshot()).load_latest(document)?.map_or(0, |(_, descriptor)| descriptor.head_seq);
         self.run(document, holder, floor, consolidate_snapshots, budget, now_ms)
     }
 
-    fn run_under_lease(&self, document: &DocumentId, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget) -> Result<CompactionReport, DbError> {
+    fn run_under_lease(&self, document: &ArtifactId, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget) -> Result<CompactionReport, DbError> {
         let mut report = CompactionReport::default();
 
         let records = db_wal::replay_document(self.storage.wal(), document)?;
@@ -424,11 +424,11 @@ mod tests {
     use db_storage::{MemoryStorage, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
     use db_wal::{WalPayloadRef, WalRecord};
 
-    fn doc(id: &str) -> DocumentId {
-        DocumentId::from(id)
+    fn doc(id: &str) -> ArtifactId {
+        ArtifactId::from(id)
     }
 
-    fn frontier(document: &DocumentId, head_seq: u64) -> Frontier {
+    fn frontier(document: &ArtifactId, head_seq: u64) -> Frontier {
         Frontier { document: document.clone(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }
     }
 
@@ -670,7 +670,7 @@ mod tests {
     fn run_never_deletes_the_sole_or_active_wal_segment() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let mut wal = db_wal::DocumentWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
         wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100))], DurabilityClass::Fsync, 0).unwrap();
 
         let compactor = Compactor::new(&storage);
@@ -742,7 +742,7 @@ mod tests {
         let manager = db_snapshot::SnapshotManager::new(&storage);
         manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42)).unwrap();
 
-        let mut wal = db_wal::DocumentWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
         wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42))], DurabilityClass::Fsync, 0).unwrap();
 
         let compactor = Compactor::new(&storage);

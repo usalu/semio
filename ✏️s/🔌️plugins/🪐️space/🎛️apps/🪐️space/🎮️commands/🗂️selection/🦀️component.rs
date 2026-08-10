@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️SelectInstance
 pub mod select_instance {
@@ -15,7 +15,7 @@ pub mod select_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectInstance, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let node_ids = payload.node_id.iter().cloned().collect();
         Ok(Emit::config(vec![SpaceConfigMutation::SetActiveNode { node_id: payload.node_id.clone() }, SpaceConfigMutation::SetSelection { node_ids }]))
     }
@@ -46,7 +46,7 @@ pub mod node_graph_select {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.snapshot, cfg.snapshot))
     }
 }
@@ -62,7 +62,7 @@ pub mod set_media_node_selection {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMediaNodeSelection, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.snapshot, cfg.snapshot))
     }
 }
@@ -79,7 +79,7 @@ pub mod set_app_instance_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetAppInstanceSelection, _doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAppInstanceSelection, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let mut config_mutations = vec![SpaceConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }];
         if payload.node_ids.len() == 1 {
             config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: payload.node_ids.first().cloned() });

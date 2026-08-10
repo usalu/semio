@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `VcsSnapshot` to its binary pack form.
 pub fn encode(projection: &VcsSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(projection)
+    store::ArtifactPack::encode_pack(projection)
 }
 
 /// 📖️ Decodes a `VcsSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<VcsSnapshot, PackError> {
-    <VcsSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <VcsSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -43,14 +43,14 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: DocumentStore<VcsSnapshot, VcsDemoMutation> =
-            DocumentStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
+        let mut store: ArtifactStore<VcsSnapshot, VcsDemoMutation> =
+            ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_snapshot(), None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
         let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

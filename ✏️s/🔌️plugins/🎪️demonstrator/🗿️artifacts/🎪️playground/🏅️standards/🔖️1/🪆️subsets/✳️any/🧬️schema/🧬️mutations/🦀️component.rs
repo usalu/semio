@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn playground_mutation_round_trips_store() {
-        let mut store = store::DocumentStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
+        let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
             "playground.document",
             "playground",
             engine::empty_playground_snapshot(),
@@ -66,7 +66,7 @@ mod tests {
         ));
         let next = PlaygroundSnapshot { schema: "playground.playground".into() };
         store
-            .dispatch(store::DocumentCommand::Apply {
+            .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![PlaygroundMutation::SetSnapshot { snapshot: next.clone() }],
                 description: None,
             })

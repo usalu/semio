@@ -27,8 +27,8 @@ impl Default for BinarySnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for BinarySnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for BinarySnapshot {
     const EXTENSION: &'static str = "bin";
     fn envelope_id() -> &'static str { "stdio.binary" }
 
@@ -55,7 +55,7 @@ impl store::DocumentDsl for BinarySnapshot {
     fn print_dsl(&self) -> String {
         let body: String = self.bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -63,12 +63,12 @@ impl store::DocumentDsl for BinarySnapshot {
     }
 }
 
-impl store::DocumentPack for BinarySnapshot {
+impl store::ArtifactPack for BinarySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -78,10 +78,10 @@ impl store::DocumentPack for BinarySnapshot {
 
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -89,4 +89,4 @@ impl store::DocumentPack for BinarySnapshot {
         Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: inner })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

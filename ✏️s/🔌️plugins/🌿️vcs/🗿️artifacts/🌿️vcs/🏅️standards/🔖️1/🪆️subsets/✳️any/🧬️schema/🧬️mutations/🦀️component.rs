@@ -78,8 +78,8 @@ mod tests {
 
     #[test]
     fn vcs_demo_mutation_round_trips_store() {
-        let mut store = store::DocumentStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", engine::empty_vcs_snapshot(), None));
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 3 }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", engine::empty_vcs_snapshot(), None));
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 3 }], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }
 }

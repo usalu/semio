@@ -19,6 +19,6 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<DeflateSnapshot, store::Pack
 
 /// Decode a Binary pack then zlib-compress.
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<DeflateSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

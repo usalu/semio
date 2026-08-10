@@ -3,7 +3,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.shooting` document. It still round-trips through a real
-//! `DocumentStore` (with a real `backwards`), so selection/camera/utility edits are VCS'd exactly like
+//! `ArtifactStore` (with a real `backwards`), so selection/camera/utility edits are VCS'd exactly like
 //! document content.
 
 use crate::artifacts::shooting::ShootingCamera;
@@ -11,15 +11,15 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ B1: shooting's real `DocumentApp::Config` — the pure-trait pilot's config artifact. Absorbs
+/// 🧮️ B1: shooting's real `ArtifactApp::Config` — the pure-trait pilot's config artifact. Absorbs
 /// both the old sticky `ActionArgDef` defaults (`default_shot_format`/`shape`/`default_asset_format`)
 /// AND everything that used to live in an app-struct `RefCell` runtime (selection, hover, selection
 /// method, center-model toggle, fit-revision counter, camera draft label, and the free/live viewport
-/// camera) — session-only view state now round-trips through the config `DocumentStore` exactly like
+/// camera) — session-only view state now round-trips through the config `ArtifactStore` exactly like
 /// document content, with a real `backwards` per [`ShootingConfigMutation`] instead of never being
 /// VCS'd at all. `locale`/`active_utility_id` are the two view-state fields the shooting UI actually
 /// reads (`resolve_labels`/the transform-gumball utility) — see `crate::apps::shooting::render`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.config")]
 #[dsl(id = "shooting.config")]
@@ -54,9 +54,9 @@ pub struct ShootingConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for ShootingConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for ShootingConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -76,7 +76,7 @@ impl store::DocumentDsl for ShootingConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -85,12 +85,12 @@ impl store::DocumentDsl for ShootingConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for ShootingConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for ShootingConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -99,10 +99,10 @@ impl store::DocumentPack for ShootingConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -114,7 +114,7 @@ impl store::DocumentPack for ShootingConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for ShootingConfig {

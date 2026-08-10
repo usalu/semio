@@ -1,10 +1,10 @@
 //! 🔱️ Trinity Jack app — jack query play app bundled as a hot-swappable WASM plugin.
 //!
-//! 📌️ Pure-trait `DocumentApp`: `TrinityJackPlayApp` is a unit struct; every former
+//! 📌️ Pure-trait `ArtifactApp`: `TrinityJackPlayApp` is a unit struct; every former
 //! `TrinityJackRuntime` field (selection, camera, query draft, LOD, …) lives in
 //! `config::JackConfig`, written via `config::JackConfigMutation`s (real `backwards()`, no ad hoc
 //! inverse-action bookkeeping). Every action dispatches through the single typed `TrinityJackCommand`
-//! channel via `DocumentApp::handle`, which fans out to `🎮️commands/<group>/component.rs` (the
+//! channel via `ArtifactApp::handle`, which fans out to `🎮️commands/<group>/component.rs` (the
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
 use crate::apps::jack::config::{JackConfig, JackConfigMutation};
@@ -12,14 +12,14 @@ use crate::apps::jack::presence::{JackPresence, JackPresenceMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use store::EngineHandles;
 use std::collections::HashMap;
-use store::{DocumentDsl, DocumentPack};
+use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
 const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -257,7 +257,7 @@ impl protocol::OpBinary for TrinityJackCommand {
 #[derive(Default)]
 pub struct TrinityJackPlayApp;
 
-impl DocumentApp for TrinityJackPlayApp {
+impl ArtifactApp for TrinityJackPlayApp {
     type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
     type Config = JackConfig;
@@ -290,7 +290,7 @@ impl DocumentApp for TrinityJackPlayApp {
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.
-    fn export_media(port: &str, doc: &DocumentView<'_, JackSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" | "document:out" => {
                 let bytes = doc.snapshot.encode_pack();
@@ -326,7 +326,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn handle(command: &TrinityJackCommand, doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match command {
@@ -352,7 +352,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
         let fixture = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::jack::terminology::TrinityJackLabels>(&cfg.snapshot.locale);
         match body_key {
@@ -366,12 +366,12 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![crate::apps::jack::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_action)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
@@ -446,8 +446,8 @@ pub fn create_trinity_jack_app() -> App {
             .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Table, "table-2")
             .default_layout(jack_layout())
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
+                FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 TRINITY_JACK_PLAY_BODY_DOCUMENT,
             )
@@ -516,7 +516,7 @@ pub fn create_trinity_jack_app() -> App {
 mod tests {
     use super::*;
     use protocol::{OpBinary, OpText};
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{testkit, PluginApp, VcsArtifactApp, ViewModel};
 
     /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityJackCommand` variant round-trips
     /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
@@ -549,11 +549,11 @@ mod tests {
         testkit::meta(actor)
     }
 
-    fn new_app() -> VcsDocumentApp<TrinityJackPlayApp> {
+    fn new_app() -> VcsArtifactApp<TrinityJackPlayApp> {
         testkit::new_app::<TrinityJackPlayApp>()
     }
 
-    fn node_id_at(app: &VcsDocumentApp<TrinityJackPlayApp>, index: usize) -> String {
+    fn node_id_at(app: &VcsArtifactApp<TrinityJackPlayApp>, index: usize) -> String {
         app.snapshot().expect("projection").nodes[index].id.clone()
     }
 

@@ -13,12 +13,12 @@ pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️ex
 
 /// 📖️ Parses `.flow` DSL text into a `FlowSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<FlowSnapshot, store::TextError> {
-    <FlowSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `FlowSnapshot` back to `.flow` DSL text.
 pub fn print_dsl(snapshot: &FlowSnapshot) -> String {
-    store::DocumentDsl::print_dsl(snapshot)
+    store::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests

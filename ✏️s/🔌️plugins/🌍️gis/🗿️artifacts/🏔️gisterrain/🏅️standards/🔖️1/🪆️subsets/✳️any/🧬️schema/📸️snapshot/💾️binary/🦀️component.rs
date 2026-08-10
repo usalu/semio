@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `GisTerrainSnapshot` to its binary pack form.
 pub fn encode(document: &GisTerrainSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `GisTerrainSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<GisTerrainSnapshot, PackError> {
-    <GisTerrainSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

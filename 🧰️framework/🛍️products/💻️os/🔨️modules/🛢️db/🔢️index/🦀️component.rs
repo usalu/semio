@@ -7,7 +7,7 @@
 //! (`## db crate family`) and Part 2 of the approved plan.
 //!
 //! 🎯️ Design choice: this crate has no opinion on what a key/value byte string *means* — that's
-//! `db_document`'s job (it decides what to index and when). This crate only guarantees the LSM-lite
+//! `db_artifact`'s job (it decides what to index and when). This crate only guarantees the LSM-lite
 //! law: for a fixed `(document, kind)`, `get`/`scan_prefix` always resolve to the value written by
 //! the most recent `put`/`delete`, regardless of how many runs that history is currently spread
 //! across, and `compact`/the automatic merge policy never change what a reader observes — only how
@@ -15,7 +15,7 @@
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
 
-use {check_len, ActorId, DbError, DocumentId, Frontier};
+use {check_len, ActorId, DbError, ArtifactId, Frontier};
 use db_storage::IndexStorage;
 use pack::{crc32c, ByteReader, ByteWriter};
 
@@ -35,7 +35,7 @@ const MAX_RUN_ENTRIES: u64 = 1_000_000;
 //#endregion 🔖️Limits
 
 //#region 🔖️IndexKind
-/// @emoji 🗂️ The ten index namespaces `db_document`/`db_conflict`/`db_projection`/`db_query` build
+/// @emoji 🗂️ The ten index namespaces `db_artifact`/`db_conflict`/`db_projection`/`db_query` build
 /// on top of this crate's sorted-run engine (per the contract's per-crate responsibility line for
 /// `db_index`). Every kind shares the same generic `IndexHandle` mechanism (`put`/`get`/`delete`/
 /// `scan_prefix`/`compact`/`stats` all work identically for any kind); the typed wrappers below
@@ -362,20 +362,20 @@ pub type KeyValuePairs = Vec<(Vec<u8>, Vec<u8>)>;
 /// interprets key/value bytes itself; that's the typed layer's job.
 pub struct IndexHandle<'a> {
     storage: &'a dyn IndexStorage,
-    document: DocumentId,
+    document: ArtifactId,
     kind: IndexKind,
     policy: MergePolicy,
 }
 
 impl<'a> IndexHandle<'a> {
     /// @emoji 🚀️ Opens a handle with the default `MergePolicy`.
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId, kind: IndexKind) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind) -> Self {
         Self::with_policy(storage, document, kind, MergePolicy::default())
     }
 
     /// @emoji 🚀️ Opens a handle with an explicit `MergePolicy` (e.g. a tighter threshold for a
     /// hot, frequently-scanned kind, or a looser one for a write-heavy, rarely-read kind).
-    pub fn with_policy(storage: &'a dyn IndexStorage, document: DocumentId, kind: IndexKind, policy: MergePolicy) -> Self {
+    pub fn with_policy(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind, policy: MergePolicy) -> Self {
         Self { storage, document, kind, policy }
     }
 
@@ -559,7 +559,7 @@ struct SeqLocationIndex<'a> {
 }
 
 impl<'a> SeqLocationIndex<'a> {
-    fn new(storage: &'a dyn IndexStorage, document: DocumentId, kind: IndexKind) -> Self {
+    fn new(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind) -> Self {
         Self { handle: IndexHandle::new(storage, document, kind) }
     }
 
@@ -578,13 +578,13 @@ impl<'a> SeqLocationIndex<'a> {
 //#endregion 🔖️RecordLocation
 
 //#region 🔖️CommandIndex
-/// @emoji 🗃️ `command_seq -> RecordLocation` — `db_document`'s primary lookup for "where in the
+/// @emoji 🗃️ `command_seq -> RecordLocation` — `db_artifact`'s primary lookup for "where in the
 /// WAL is command N", the backbone of replay-from-a-point and `Consistency::Exact`/`AtLeast` query
 /// resolution.
 pub struct CommandIndex<'a>(SeqLocationIndex<'a>);
 
 impl<'a> CommandIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Command))
     }
 
@@ -612,11 +612,11 @@ impl<'a> CommandIndex<'a> {
 
 //#region 🔖️InverseIndex
 /// @emoji ↩️ `command_seq -> RecordLocation` of that command's inverse operation payload —
-/// `db_document`'s undo machinery's lookup.
+/// `db_artifact`'s undo machinery's lookup.
 pub struct InverseIndex<'a>(SeqLocationIndex<'a>);
 
 impl<'a> InverseIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Inverse))
     }
 
@@ -674,7 +674,7 @@ fn decode_u64_le(bytes: &[u8]) -> Result<u64, DbError> {
 }
 
 impl<'a> ActorSeqIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::ActorSeq) }
     }
 
@@ -730,7 +730,7 @@ fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
     let document_len = reader.read_varint_u64()?;
     check_len(document_len, MAX_KEY_LEN, "db_index::frontier_document")?;
     let document_bytes = reader.read_bytes(document_len as usize)?.to_vec();
-    let document = DocumentId(String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?);
+    let document = ArtifactId(String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?);
     let head_seq = reader.read_varint_u64()?;
     let commit_seq = reader.read_varint_u64()?;
     let chain_hash = reader.read_array32()?;
@@ -739,7 +739,7 @@ fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
 }
 
 impl<'a> FrontierIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Frontier) }
     }
 
@@ -787,7 +787,7 @@ fn decode_postings(bytes: &[u8]) -> Result<Vec<u64>, DbError> {
 }
 
 impl<'a> TouchedRegionIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::TouchedRegion) }
     }
 
@@ -819,7 +819,7 @@ pub struct CommitIndex<'a> {
 }
 
 impl<'a> CommitIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Commit) }
     }
 
@@ -848,7 +848,7 @@ fn tokenize(text: &str) -> Vec<String> {
 }
 
 impl<'a> FullTextIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::FullText) }
     }
 
@@ -922,7 +922,7 @@ pub struct ConflictIndex<'a> {
 }
 
 impl<'a> ConflictIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Conflict) }
     }
 
@@ -981,7 +981,7 @@ fn projection_key(projection_id: &str, frontier_seq: u64) -> Result<Vec<u8>, DbE
 }
 
 impl<'a> ProjectionIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Projection) }
     }
 
@@ -1048,7 +1048,7 @@ fn encode_preview_key(actor: &ActorId, preview_key: &str) -> Result<Vec<u8>, DbE
 }
 
 impl<'a> PreviewIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: DocumentId) -> Self {
+    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Preview) }
     }
 
@@ -1198,7 +1198,7 @@ mod tests {
     #[test]
     fn index_handle_put_get_delete_round_trips() {
         let storage = MemoryStorage::new();
-        let handle = IndexHandle::new(&storage, DocumentId::from("doc-1"), IndexKind::Command);
+        let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
         handle.put(b"k1".to_vec(), b"v1".to_vec()).expect("put");
         handle.put(b"k2".to_vec(), b"v2".to_vec()).expect("put");
         assert_eq!(handle.get(b"k1").expect("get"), Some(b"v1".to_vec()));
@@ -1213,7 +1213,7 @@ mod tests {
     #[test]
     fn index_handle_put_overwrites_earlier_value_for_same_key() {
         let storage = MemoryStorage::new();
-        let handle = IndexHandle::new(&storage, DocumentId::from("doc-1"), IndexKind::Command);
+        let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
         handle.put(b"k".to_vec(), b"first".to_vec()).expect("put");
         handle.put(b"k".to_vec(), b"second".to_vec()).expect("put");
         assert_eq!(handle.get(b"k").expect("get"), Some(b"second".to_vec()));
@@ -1222,7 +1222,7 @@ mod tests {
     #[test]
     fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
         let storage = MemoryStorage::new();
-        let handle = IndexHandle::new(&storage, DocumentId::from("doc-1"), IndexKind::Command);
+        let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
         handle.put(b"a/1".to_vec(), b"1".to_vec()).expect("put");
         handle.put(b"a/2".to_vec(), b"2".to_vec()).expect("put");
         handle.put(b"b/1".to_vec(), b"3".to_vec()).expect("put");
@@ -1236,7 +1236,7 @@ mod tests {
     fn index_handle_auto_merges_to_stay_within_policy() {
         let storage = MemoryStorage::new();
         let policy = MergePolicy { max_runs_before_merge: 2 };
-        let handle = IndexHandle::with_policy(&storage, DocumentId::from("doc-1"), IndexKind::Command, policy);
+        let handle = IndexHandle::with_policy(&storage, ArtifactId::from("doc-1"), IndexKind::Command, policy);
         for i in 0..6u64 {
             handle.put(format!("k{i:03}").into_bytes(), i.to_le_bytes().to_vec()).expect("put");
         }
@@ -1251,7 +1251,7 @@ mod tests {
     #[test]
     fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
         let storage = MemoryStorage::new();
-        let handle = IndexHandle::new(&storage, DocumentId::from("doc-1"), IndexKind::Command);
+        let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
         handle.put(b"a".to_vec(), b"1".to_vec()).expect("put");
         handle.put(b"b".to_vec(), b"2".to_vec()).expect("put");
         handle.delete(b"a").expect("delete");
@@ -1267,7 +1267,7 @@ mod tests {
     #[test]
     fn index_handle_compact_of_one_run_is_a_no_op() {
         let storage = MemoryStorage::new();
-        let handle = IndexHandle::new(&storage, DocumentId::from("doc-1"), IndexKind::Command);
+        let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
         handle.put(b"a".to_vec(), b"1".to_vec()).expect("put");
         let before = handle.stats().expect("stats");
         let after = handle.compact().expect("compact");
@@ -1277,7 +1277,7 @@ mod tests {
     #[test]
     fn different_kinds_do_not_collide_for_the_same_document() {
         let storage = MemoryStorage::new();
-        let document = DocumentId::from("doc-1");
+        let document = ArtifactId::from("doc-1");
         let commands = IndexHandle::new(&storage, document.clone(), IndexKind::Command);
         let regions = IndexHandle::new(&storage, document, IndexKind::TouchedRegion);
 
@@ -1295,7 +1295,7 @@ mod tests {
     #[test]
     fn command_index_records_and_looks_up_locations() {
         let storage = MemoryStorage::new();
-        let index = CommandIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = CommandIndex::new(&storage, ArtifactId::from("doc-1"));
         let location = RecordLocation { segment: 3, offset: 128, len: 64 };
         index.record(42, location).expect("record");
         assert_eq!(index.lookup(42).expect("lookup"), Some(location));
@@ -1307,7 +1307,7 @@ mod tests {
     #[test]
     fn inverse_index_records_and_looks_up_locations() {
         let storage = MemoryStorage::new();
-        let index = InverseIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = InverseIndex::new(&storage, ArtifactId::from("doc-1"));
         let location = RecordLocation { segment: 1, offset: 0, len: 16 };
         index.record(7, location).expect("record");
         assert_eq!(index.lookup(7).expect("lookup"), Some(location));
@@ -1316,7 +1316,7 @@ mod tests {
     #[test]
     fn actor_seq_index_resolves_and_tracks_latest_per_actor() {
         let storage = MemoryStorage::new();
-        let index = ActorSeqIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1"));
         let alice = ActorId::from("alice");
         let bob = ActorId::from("bob");
         index.record(&alice, 1, 100).expect("record");
@@ -1333,7 +1333,7 @@ mod tests {
     #[test]
     fn actor_seq_index_rejects_actor_id_with_embedded_nul() {
         let storage = MemoryStorage::new();
-        let index = ActorSeqIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1"));
         let unsafe_actor = ActorId::from("bad\u{0}actor");
         assert!(matches!(index.record(&unsafe_actor, 1, 1), Err(DbError::InvalidArgument(_))));
     }
@@ -1341,9 +1341,9 @@ mod tests {
     #[test]
     fn frontier_index_round_trips_and_tracks_latest() {
         let storage = MemoryStorage::new();
-        let index = FrontierIndex::new(&storage, DocumentId::from("doc-1"));
-        let first = Frontier { document: DocumentId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
-        let second = Frontier { document: DocumentId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
+        let index = FrontierIndex::new(&storage, ArtifactId::from("doc-1"));
+        let first = Frontier { document: ArtifactId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
+        let second = Frontier { document: ArtifactId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
         index.record(&first).expect("record");
         index.record(&second).expect("record");
 
@@ -1354,7 +1354,7 @@ mod tests {
     #[test]
     fn touched_region_index_accumulates_sorted_unique_seqs() {
         let storage = MemoryStorage::new();
-        let index = TouchedRegionIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = TouchedRegionIndex::new(&storage, ArtifactId::from("doc-1"));
         index.record_touch(b"region-a", 5).expect("record_touch");
         index.record_touch(b"region-a", 2).expect("record_touch");
         index.record_touch(b"region-a", 5).expect("record_touch");
@@ -1365,7 +1365,7 @@ mod tests {
     #[test]
     fn commit_index_round_trips() {
         let storage = MemoryStorage::new();
-        let index = CommitIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = CommitIndex::new(&storage, ArtifactId::from("doc-1"));
         index.record("ck-abc123", 9).expect("record");
         assert_eq!(index.lookup("ck-abc123").expect("lookup"), Some(9));
         assert_eq!(index.lookup("ck-missing").expect("lookup"), None);
@@ -1374,7 +1374,7 @@ mod tests {
     #[test]
     fn full_text_index_search_finds_indexed_documents() {
         let storage = MemoryStorage::new();
-        let index = FullTextIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = FullTextIndex::new(&storage, ArtifactId::from("doc-1"));
         index.index_document(1, "The Quick Brown Fox").expect("index");
         index.index_document(2, "quick jumps").expect("index");
 
@@ -1387,7 +1387,7 @@ mod tests {
     #[test]
     fn conflict_index_accumulates_multiple_records_per_command() {
         let storage = MemoryStorage::new();
-        let index = ConflictIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = ConflictIndex::new(&storage, ArtifactId::from("doc-1"));
         index.record_conflict(5, b"region-collision".to_vec()).expect("record_conflict");
         index.record_conflict(5, b"constraint-violation".to_vec()).expect("record_conflict");
         index.record_conflict(6, b"other".to_vec()).expect("record_conflict");
@@ -1400,7 +1400,7 @@ mod tests {
     #[test]
     fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id() {
         let storage = MemoryStorage::new();
-        let index = ProjectionIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1"));
         index.record("by-author", 10, b"state-10".to_vec()).expect("record");
         index.record("by-author", 20, b"state-20".to_vec()).expect("record");
 
@@ -1417,14 +1417,14 @@ mod tests {
     #[test]
     fn projection_index_rejects_projection_id_with_embedded_nul() {
         let storage = MemoryStorage::new();
-        let index = ProjectionIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1"));
         assert!(matches!(index.record("bad\u{0}id", 1, vec![1]), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
     fn preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key() {
         let storage = MemoryStorage::new();
-        let index = PreviewIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1"));
         let alice = ActorId::from("alice");
 
         index.publish(&alice, "drag-ghost", vec![1]).expect("publish");
@@ -1446,7 +1446,7 @@ mod tests {
     #[test]
     fn preview_index_rejects_actor_id_with_embedded_nul() {
         let storage = MemoryStorage::new();
-        let index = PreviewIndex::new(&storage, DocumentId::from("doc-1"));
+        let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1"));
         let unsafe_actor = ActorId::from("bad\u{0}actor");
         assert!(matches!(index.publish(&unsafe_actor, "k", vec![1]), Err(DbError::InvalidArgument(_))));
     }

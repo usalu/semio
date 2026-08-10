@@ -3,7 +3,7 @@
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetGridVisible
@@ -16,7 +16,7 @@ pub mod set_grid_visible {
         pub value: Option<bool>,
     }
 
-    pub fn handle(payload: &SetGridVisible, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGridVisible, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next = payload.value.unwrap_or(!doc.snapshot.grid_visible.unwrap_or(true));
         Ok(Emit::mutations(vec![NoteMutation::SetGridVisible { visible: Some(next) }]))
     }
@@ -33,7 +33,7 @@ pub mod set_grid_spacing {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetGridSpacing, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![NoteMutation::SetGridSpacing { spacing: Some(payload.value.max(4.0)) }]))
     }
 }
@@ -49,7 +49,7 @@ pub mod set_grid_subdivisions {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetGridSubdivisions, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGridSubdivisions, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![NoteMutation::SetGridSubdivisions { value: Some(payload.value.round().clamp(1.0, 16.0)) }]))
     }
 }
@@ -65,7 +65,7 @@ pub mod set_grid_opacity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetGridOpacity, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGridOpacity, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![NoteMutation::SetGridOpacity { opacity: Some(payload.value.clamp(0.05, 1.0)) }]))
     }
 }

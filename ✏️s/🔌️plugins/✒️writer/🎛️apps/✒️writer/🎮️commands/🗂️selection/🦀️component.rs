@@ -4,13 +4,13 @@ use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEdit
 use crate::artifacts::writer::engine::{jack_ast_node_by_id, jack_ast_node_for_selection, parse_jack_ast};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️TextSelectShared
 /// 🙈️ Shared body for `TextSelect`/`SetEditorSelection` — both stage a raw start/end range into
 /// `editor_selection`, additionally resolving the covering jack AST node for jack documents.
-fn text_select_operations(start: usize, end: usize, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Vec<WriterConfigMutation> {
+fn text_select_operations(start: usize, end: usize, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Vec<WriterConfigMutation> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let mut ops = vec![WriterConfigMutation::SetEditorSelection { selection: Some(WriterEditorSelection { start, end }) }];
@@ -37,7 +37,7 @@ pub mod text_select {
         pub end: usize,
     }
 
-    pub fn handle(payload: &TextSelect, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &TextSelect, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::config(text_select_operations(payload.start, payload.end, doc, cfg)))
     }
 }
@@ -54,7 +54,7 @@ pub mod set_editor_selection {
         pub end: usize,
     }
 
-    pub fn handle(payload: &SetEditorSelection, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetEditorSelection, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::config(text_select_operations(payload.start, payload.end, doc, cfg)))
     }
 }
@@ -72,7 +72,7 @@ pub mod select_ast_node {
         pub end: usize,
     }
 
-    pub fn handle(payload: &SelectAstNode, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectAstNode, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let ids = if payload.id.is_empty() { Vec::new() } else { vec![payload.id.clone()] };
         Ok(Emit::config(vec![
@@ -94,7 +94,7 @@ pub mod set_ast_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetAstSelection, doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAstSelection, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let mut ops = vec![WriterConfigMutation::SetSelectedAstIds { ids: payload.ids.clone() }];
@@ -122,7 +122,7 @@ pub mod set_ast_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetAstHover, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAstHover, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.snapshot;
         if payload.id != config.tree_hovered_ast_id {
             Ok(Emit::config(vec![WriterConfigMutation::SetTreeHoveredAstId { id: payload.id.clone() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
@@ -144,7 +144,7 @@ pub mod text_hover {
         pub end: Option<usize>,
     }
 
-    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(payload: &TextHover, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let offset = match (payload.start, payload.end) {
             (Some(s), Some(e)) => Some(s + e.saturating_sub(s) / 2),

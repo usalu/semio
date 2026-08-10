@@ -15,7 +15,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;

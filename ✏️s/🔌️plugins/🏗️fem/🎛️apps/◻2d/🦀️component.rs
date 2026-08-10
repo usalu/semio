@@ -1,4 +1,4 @@
-//! 🖥️ Fem2d play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Fem2d play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -17,7 +17,7 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
     UiNode,
 };
 use store::EngineHandles;
@@ -143,7 +143,7 @@ fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Va
 #[derive(Default)]
 pub struct Fem2dPlayApp;
 
-impl DocumentApp for Fem2dPlayApp {
+impl ArtifactApp for Fem2dPlayApp {
     type Snapshot = Fem2dSnapshot;
     type Mutation = Fem2dMutation;
     type Config = Fem2dConfig;
@@ -173,11 +173,11 @@ impl DocumentApp for Fem2dPlayApp {
     /// `Structured` payload — `MediaPayload::Structured.json` doesn't require a `pack`-encoded value. A
     /// document with no load cases, or a solve failure, is reported as `MediaError::Payload` rather than
     /// an empty/panicking export.
-    fn export_media(port: &str, doc: &DocumentView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-                let bytes = <Fem2dSnapshot as store::DocumentPack>::encode_pack(doc.snapshot);
+                let bytes = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
@@ -200,14 +200,14 @@ impl DocumentApp for Fem2dPlayApp {
     /// decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion`, defaulted to the document's first existing
     /// material if any, else an `"unassigned"` placeholder id.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Fem2dSnapshot as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -239,7 +239,7 @@ impl DocumentApp for Fem2dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Fem2dCommand, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -251,7 +251,7 @@ impl DocumentApp for Fem2dPlayApp {
         ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
         let camera = &cfg.snapshot.camera;
         match body_key {
             model_window::BODY_KEY => model_window::render(doc.snapshot, camera),
@@ -360,9 +360,9 @@ pub fn create_fem2d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{DocumentApp, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{ArtifactApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Fem2dApp = VcsDocumentApp<Fem2dPlayApp>;
+    pub type Fem2dApp = VcsArtifactApp<Fem2dPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn fem2d_app() -> Fem2dApp {
@@ -389,8 +389,8 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::fem2d::testkit::{fem2d_app, render};
-    use semio_framework_plugin::{DocumentApp, PluginApp};
-    use store::DocumentDsl;
+    use semio_framework_plugin::{ArtifactApp, PluginApp};
+    use store::ArtifactDsl;
 
     //#region 🔖️CommandSurface
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -593,16 +593,16 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let media = Fem2dPlayApp::export_media("document:out", &doc).expect("document:out exports");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Vector);
         let empty_projection = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         let empty_history = semio_framework_plugin::HistoryView::empty();
-        let empty_doc = DocumentView { snapshot: &empty_projection, history: &empty_history };
+        let empty_doc = ArtifactView { snapshot: &empty_projection, history: &empty_history };
         let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
-        assert_eq!(emit.document_mutations.len(), 1);
-        match &emit.document_mutations[0] {
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        match &emit.artifact_mutations[0] {
             Fem2dMutation::SetSnapshot { snapshot: got } => assert_eq!(got, &snapshot),
             _ => panic!("expected SetSnapshot"),
         }
@@ -613,7 +613,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let media = Fem2dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
@@ -637,7 +637,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
         match error {
             MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
@@ -650,7 +650,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
     }
 
@@ -660,12 +660,12 @@ mod tests {
         let mut snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         snapshot.materials.push(crate::artifacts::fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
-        assert_eq!(emit.document_mutations.len(), 1);
-        match &emit.document_mutations[0] {
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        match &emit.artifact_mutations[0] {
             Fem2dMutation::SetRegion { region, .. } => {
                 assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
                 assert!(region.holes.is_empty());
@@ -680,11 +680,11 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
-        match &emit.document_mutations[0] {
+        match &emit.artifact_mutations[0] {
             Fem2dMutation::SetRegion { region, .. } => assert_eq!(region.material_id, "unassigned"),
             _ => panic!("expected SetRegion"),
         }

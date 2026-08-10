@@ -40,8 +40,8 @@ import {
   effectiveActionArgs,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -214,7 +214,7 @@ export const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> =
   "bottom-middle": "footer",
   "bottom-right": "footer",
 };
-const APP_DOCUMENT_SEPARATOR = " · ";
+const APP_BREADCRUMB_SEPARATOR = " · ";
 
 /** 🧭️ Shell-only action id `World3dHost`'s `WorldOrbitGated.onNavigationGestures` dispatches through the
  * standard `onAction` funnel to report a completed pan/zoom/orbit gesture — intercepted in `onAction`
@@ -941,28 +941,28 @@ export function parseSpaceShellPath(path: string): SpaceShellPath | null {
   return { spaceId: route.spaceId, instanceId: route.instanceId };
 }
 
-export function appDocumentLabel(document: readonly string[]): string {
-  return document.join(APP_DOCUMENT_SEPARATOR);
+export function appBreadcrumb(breadcrumb: readonly string[]): string {
+  return breadcrumb.join(APP_BREADCRUMB_SEPARATOR);
 }
 
-/** 🗺️ Resolves the document path effective under the active terminology; unknown/native ids fall back to `app.document`. */
-export function resolveAppDocument(app: Pick<AppDefinition, "document" | "terminologyDocuments">, terminology: string): readonly string[] {
-  return app.terminologyDocuments?.[terminology] ?? app.document;
+/** 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to `app.breadcrumb`. */
+export function resolveAppBreadcrumb(app: Pick<AppDefinition, "breadcrumb" | "terminologyBreadcrumbs">, terminology: string): readonly string[] {
+  return app.terminologyBreadcrumbs?.[terminology] ?? app.breadcrumb;
 }
 
-/** 🗺️ Resolves the document path for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw `document` when the app can't be found. */
-export function resolveDocumentByAppId(loadedPlugins: readonly LoadedProgramState[], appId: string, document: readonly string[], terminology: string): readonly string[] {
+/** 🗺️ Resolves the breadcrumb for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw breadcrumb when the app can't be found. */
+export function resolveArtifactByAppId(loadedPlugins: readonly LoadedProgramState[], appId: string, breadcrumb: readonly string[], terminology: string): readonly string[] {
   for (const program of loadedPlugins) {
     const app = program.manifest.apps.find((candidate) => candidate.id === appId);
-    if (app) return resolveAppDocument(app, terminology);
+    if (app) return resolveAppBreadcrumb(app, terminology);
   }
-  return document;
+  return breadcrumb;
 }
 
-export function appWindowDocumentLabel(app: AppDefinition, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
+export function appWindowLabel(app: AppDefinition, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
   const trimmed = windowLabel.trim();
   if (trimmed) return trimmed;
-  const override = app.terminologyDocuments?.[terminology];
+  const override = app.terminologyBreadcrumbs?.[terminology];
   return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
 }
 
@@ -1697,7 +1697,7 @@ function declarativeUiChildToTreeItems(node: UiNode, fallbackId: string, onActio
 export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
   return function ShellTabIcon({ size = 16 }: { size?: number }) {
     const iconName: IconName =
-      iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID
+      iconId === FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID
         ? "file-text"
         : iconId === FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID
           ? "panel-catalogue"
@@ -1722,7 +1722,7 @@ export function shellLabel(key: UiTranslationKey, options?: Record<string, unkno
 
 /** @emoji 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
-  [FRAMEWORK_PANEL_TAB_DOCUMENT_ID]: "ui.panel.document",
+  [FRAMEWORK_PANEL_TAB_ARTIFACT_ID]: "ui.panel.artifact",
   [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
   [FRAMEWORK_PANEL_TAB_INSPECTION_ID]: "ui.panel.inspection",
   [FRAMEWORK_PANEL_TAB_PARAMETERS_ID]: "ui.panel.parameters",

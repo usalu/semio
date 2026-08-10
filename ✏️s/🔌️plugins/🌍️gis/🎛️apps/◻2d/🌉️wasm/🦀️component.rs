@@ -1,6 +1,6 @@
 //! 🗂️ GIS 2D play app — the raw wasm-bindgen JS binding surface for `GisMapSnapshot`'s VCS store.
 //!
-//! Independent of the `App`/`DocumentApp` plugin-registry path (`create_gis2d_app`/`Gis2dPlayApp`),
+//! Independent of the `App`/`ArtifactApp` plugin-registry path (`create_gis2d_app`/`Gis2dPlayApp`),
 //! this exposes the document store directly for callers that talk to the compiled wasm module without
 //! going through the host's app registry.
 

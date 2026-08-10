@@ -25,7 +25,7 @@
 //! deliberately takes raw bytes rather than holding a `&ProjectionEngine` reference itself:
 //! constructing/registering a real `db_projection::ErasedProjection` requires naming
 //! `protocol::MutationEnvelope` in its `apply`/`apply_bytes` signature, and this crate's frozen
-//! dependency list grants it `db_projection` but not `protocol` (only `db_document`, which already
+//! dependency list grants it `db_projection` but not `protocol` (only `db_artifact`, which already
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
 
@@ -41,7 +41,7 @@ use std::collections::BTreeMap;
 /// own type rather than `pack_value` (forbidden by the contract's hard dependency rules) or a
 /// `db_state` structure directly (those are the *storage* representation; a document's queryable
 /// shape is resolved into this tree by whichever layer above `db_query` owns the schema — typically
-/// `db_document`).
+/// `db_artifact`).
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Null,
@@ -238,7 +238,7 @@ impl std::fmt::Display for Path {
 //#endregion 🔖️Value
 
 //#region 🔖️Consistency
-/// @emoji 🧭️ The six read-consistency modes `DocumentHandle::query` accepts (frozen in the db
+/// @emoji 🧭️ The six read-consistency modes `ArtifactHandle::query` accepts (frozen in the db
 /// facade's stable API): read the live head, wait for at least a given frontier, pin to an exact
 /// one, replay as of a named commit, read through a named preview overlay only, or read canonical
 /// state augmented by a named preview.
@@ -544,7 +544,7 @@ pub trait QuerySource {
 
 /// @emoji 🧵️ The natural `QuerySource` over a `db_state::PVec`: row id = element index. This is the
 /// crate's one built-in `QuerySource`, demonstrating the intended wiring to `db_state`'s persistent
-/// structures — a caller with a richer per-document schema (`db_document`) supplies its own
+/// structures — a caller with a richer per-document schema (`db_artifact`) supplies its own
 /// `QuerySource` over whatever `PMap`/`PTree`/overlay shape it actually stores.
 impl QuerySource for PVec<Value> {
     fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
@@ -694,7 +694,7 @@ fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
 }
 
 /// @emoji 🔌️ `Value`'s `db_projection::ProjectionState` impl — lets any `db_projection::ProjectionClass`
-/// (registered by a higher layer, e.g. `db_document`, which owns the `protocol::MutationEnvelope`
+/// (registered by a higher layer, e.g. `db_artifact`, which owns the `protocol::MutationEnvelope`
 /// interpretation this crate deliberately never touches — see the module doc) declare `State = Value`
 /// and get this crate's query/planner/live-diff machinery for free over its checkpointed state, via
 /// `projection_query_source` below.
@@ -882,7 +882,7 @@ pub fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&dyn Fu
 //#endregion 🔖️Execute
 
 //#region 🔖️Stream
-/// @emoji 🌊️ A `QueryResult`'s rows as an `Iterator`, for callers (`DocumentHandle::query`'s
+/// @emoji 🌊️ A `QueryResult`'s rows as an `Iterator`, for callers (`ArtifactHandle::query`'s
 /// contract-frozen return type) that want to consume incrementally rather than hold the whole
 /// `Vec`. Backed by an already-materialized `Vec::IntoIter` — see `db_state::PMap::iter`'s doc for
 /// this crate family's established "eagerly materialize, simple to reason about" precedent; a
@@ -909,8 +909,8 @@ impl Iterator for QueryStream {
 
 //#region 🔖️LiveQuery
 /// @emoji 📡️ A `Query` plus the `Consistency` it should be (re-)evaluated under — what a caller
-/// hands to `DocumentHandle::subscribe`. This crate only owns the diffing law (below); actor-level
-/// registration/notification wiring belongs to `db_document`.
+/// hands to `ArtifactHandle::subscribe`. This crate only owns the diffing law (below); actor-level
+/// registration/notification wiring belongs to `db_artifact`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LiveQuerySpec {
     pub query: Query,
@@ -1319,7 +1319,7 @@ mod tests {
         }
 
         fn frontier_at(seq: u64) -> Frontier {
-            Frontier { document: DocumentId::from("doc-1"), head_seq: seq, commit_seq: seq, chain_hash: [0u8; 32], epoch: 0 }
+            Frontier { document: ArtifactId::from("doc-1"), head_seq: seq, commit_seq: seq, chain_hash: [0u8; 32], epoch: 0 }
         }
 
         #[test]

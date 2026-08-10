@@ -4,7 +4,7 @@
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetActiveExample
@@ -21,13 +21,13 @@ pub mod set_active_example {
     /// 📚️ `"default"` loads the bundled `.fem3d` fixture; any other id resets to an empty document —
     /// fem3d only ships the one example (mirrors the pre-migration `handle_action` behavior). Also
     /// resets the whole config back to its default (camera, result display) via a `Snapshot`.
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let document = if payload.example_id == "default" {
-            <Fem3dSnapshot as store::DocumentDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default()
+            <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default()
         } else {
             Fem3dSnapshot::default()
         };
-        Ok(Emit { document_mutations: vec![Fem3dMutation::SetSnapshot { snapshot: document }], config_mutations: vec![Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![Fem3dMutation::SetSnapshot { snapshot: document }], config_mutations: vec![Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

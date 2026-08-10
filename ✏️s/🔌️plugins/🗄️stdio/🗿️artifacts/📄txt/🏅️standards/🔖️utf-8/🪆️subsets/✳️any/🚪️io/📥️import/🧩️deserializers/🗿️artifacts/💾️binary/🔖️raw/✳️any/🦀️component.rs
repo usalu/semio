@@ -7,5 +7,5 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<TxtSnapshot, store::PackErro
     Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
 }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<TxtSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }

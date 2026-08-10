@@ -1,7 +1,7 @@
 //! 🖌️ Lowpoly play app — the `app_commands!` dispatch context (`LowpolyScratch`): the mid-drag paint
 //! stroke scratch, gumball transform-drag scratch, paint texture cache and preview sequence counter.
 //! These are genuine mid-gesture scratch buffers, never document or config state — the "scratch +
-//! commit" pattern the `DocumentApp` trait itself sanctions. Held behind one `RefCell<LowpolyScratch>`
+//! commit" pattern the `ArtifactApp` trait itself sanctions. Held behind one `RefCell<LowpolyScratch>`
 //! on `LowpolyPlayApp` (mirrors `flow`'s `Mutex<FlowEvalSession>` pattern) so `render(&self, ..)` can
 //! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
 
@@ -177,7 +177,7 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, edit: imp
 //#region 🔖️LowpolyScratch
 /// @emoji 🖌️ B1: `LowpolyPlayApp` sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime
 /// field now lives in `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`.
-/// This struct holds the genuine mid-gesture scratch state the `DocumentApp` trait sanctions.
+/// This struct holds the genuine mid-gesture scratch state the `ArtifactApp` trait sanctions.
 #[derive(Default)]
 pub struct LowpolyScratch {
     stroke: Option<PaintStrokeSession>,
@@ -379,10 +379,10 @@ impl LowpolyScratch {
             }
             apply_transform(doc, transform)
         });
-        if emitted.document_mutations.is_empty() {
+        if emitted.artifact_mutations.is_empty() {
             Emit::default()
         } else {
-            Emit::commit(emitted.document_mutations, description)
+            Emit::commit(emitted.artifact_mutations, description)
         }
     }
 
@@ -466,7 +466,7 @@ mod tests {
         scratch.set_transform_drag_active(true);
 
         let tick_a = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.5, 0.0, 0.0)), "translate");
-        assert!(tick_a.document_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        assert!(tick_a.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (key, seq_after_a, payload_a) = scratch.gesture_preview().expect("a live gumball drag is previewable");
         assert_eq!(key, "gesture:transform");
         let value_a: serde_json::Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
@@ -474,13 +474,13 @@ mod tests {
         assert_ne!(value_a["patch"], serde_json::json!(LowpolyObjectPatch::default()), "the patch anchored to the drag-start snapshot must reflect the first tick");
 
         let tick_b = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.25, 0.0, 0.0)), "translate");
-        assert!(tick_b.document_mutations.is_empty());
+        assert!(tick_b.artifact_mutations.is_empty());
         let (_, seq_after_b, payload_b) = scratch.gesture_preview().expect("still live mid-drag");
         assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
         assert_ne!(payload_a, payload_b, "the base-anchored patch accumulates both ticks, not just the latest one");
 
         let end = scratch.commit_transform();
-        assert_eq!(end.document_mutations.len(), 1, "the whole drag commits as exactly one real operation");
+        assert_eq!(end.artifact_mutations.len(), 1, "the whole drag commits as exactly one real operation");
         assert!(scratch.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
     }
 

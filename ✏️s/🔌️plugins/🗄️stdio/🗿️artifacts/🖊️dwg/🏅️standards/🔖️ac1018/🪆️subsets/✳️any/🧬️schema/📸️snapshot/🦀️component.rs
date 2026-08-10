@@ -114,8 +114,8 @@ pub fn encode_dwg(snap: &DwgSnapshot) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️DwgCodec
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for DwgSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for DwgSnapshot {
     const EXTENSION: &'static str = "dwg";
     fn envelope_id() -> &'static str { "stdio.dwg" }
 
@@ -139,7 +139,7 @@ impl store::DocumentDsl for DwgSnapshot {
         let raw = encode_dwg(self).unwrap_or_default();
         let body: String = raw.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -147,12 +147,12 @@ impl store::DocumentDsl for DwgSnapshot {
     }
 }
 
-impl store::DocumentPack for DwgSnapshot {
+impl store::ArtifactPack for DwgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_dwg(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -161,10 +161,10 @@ impl store::DocumentPack for DwgSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -172,4 +172,4 @@ impl store::DocumentPack for DwgSnapshot {
         decode_dwg(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

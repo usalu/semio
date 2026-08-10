@@ -5,7 +5,7 @@ use crate::artifacts::shooting::engine::next_shooting_id;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingSnapshot};
 use protocol::CollectionMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -28,9 +28,9 @@ pub mod set_active_asset {
         pub asset_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetActiveAsset, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
-            Some(id) => Ok(Emit { document_mutations: vec![ShootingMutation::SetActiveAsset { asset_id: Some(id.into()) }], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
+            Some(id) => Ok(Emit { artifact_mutations: vec![ShootingMutation::SetActiveAsset { asset_id: Some(id.into()) }], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -49,7 +49,7 @@ pub mod patch_assets {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchAssets, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match asset_patch_for_field(&payload.field, &json!(payload.value)) {
             Some(patch) if !payload.asset_ids.is_empty() => Ok(Emit::mutations(payload.asset_ids.iter().cloned().map(|id| ShootingMutation::Assets(CollectionMutation::Patch { id, patch: patch.clone() })).collect())),
             _ => Ok(Emit::default()),
@@ -68,13 +68,13 @@ pub mod add_asset {
         pub format: String,
     }
 
-    pub fn handle(payload: &AddAsset, doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &AddAsset, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let format = &payload.format;
         let asset = ShootingAsset { id: id.clone(), name: format!("Asset {}", snapshot.assets.len() + 1), url: format!("/mesh/placeholder.{format}"), format: format.clone(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            document_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            artifact_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
             config_mutations: vec![ShootingConfigMutation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }],
             ..Default::default()
         })
@@ -93,13 +93,13 @@ pub mod import_asset {
         pub name: Option<String>,
     }
 
-    pub fn handle(payload: &ImportAsset, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportAsset, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let resolved_name = payload.name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", snapshot.assets.len() + 1));
         let asset = ShootingAsset { id: id.clone(), name: resolved_name, url: payload.payload.clone(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            document_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            artifact_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
             config_mutations: vec![ShootingConfigMutation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }, ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }],
             ..Default::default()
         })
@@ -115,7 +115,7 @@ pub mod import_asset_request {
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 
-    pub fn handle(_payload: &ImportAssetRequest, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
     }
 }

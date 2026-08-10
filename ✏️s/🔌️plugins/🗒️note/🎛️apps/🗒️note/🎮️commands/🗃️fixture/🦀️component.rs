@@ -5,7 +5,7 @@ use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{empty_note_snapshot, semio_example_snapshot};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -19,9 +19,9 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next_document = if payload.example_id == "semio" { semio_example_snapshot() } else { empty_note_snapshot() };
-        Ok(Emit { document_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -36,7 +36,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next_document = if let Ok(document) = crate::artifacts::note::dsl::parse_dsl(&payload.json) {
             document
         } else {
@@ -51,7 +51,7 @@ pub mod set_fixture_json {
             };
             document
         };
-        Ok(Emit { document_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetFixtureJson

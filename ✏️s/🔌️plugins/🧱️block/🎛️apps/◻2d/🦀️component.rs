@@ -1,4 +1,4 @@
-//! 🩻️ Block 2D play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🩻️ Block 2D play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board window
@@ -20,7 +20,7 @@ use crate::apps::block2d::terminology::block2d_labels;
 use crate::artifacts::block2d::op::Block2dMutation;
 use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -66,7 +66,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct Block2dPlayApp;
 
-impl DocumentApp for Block2dPlayApp {
+impl ArtifactApp for Block2dPlayApp {
     type Snapshot = Block2dSnapshot;
     type Mutation = Block2dMutation;
     type Config = Block2dConfig;
@@ -122,11 +122,11 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn handle(command: &Block2dCommand, doc: &DocumentView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
         let labels = block2d_labels(&cfg.snapshot.locale);
         match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels),
@@ -141,9 +141,9 @@ impl DocumentApp for Block2dPlayApp {
     /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
     /// declared in `crate::artifacts::block2d::engine::block2d_io`. Falls through to the default
     /// whole-document pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this app.
@@ -151,7 +151,7 @@ impl DocumentApp for Block2dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+            let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::artifacts::block2d::engine::puzzle2d_manifest_fragment(doc.snapshot);
@@ -222,9 +222,9 @@ pub fn create_block2d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Block2dApp = VcsDocumentApp<Block2dPlayApp>;
+    pub type Block2dApp = VcsArtifactApp<Block2dPlayApp>;
 
     pub fn new_app() -> Block2dApp {
         sdk_new_app::<Block2dPlayApp>()
@@ -408,7 +408,7 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }));
         assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");

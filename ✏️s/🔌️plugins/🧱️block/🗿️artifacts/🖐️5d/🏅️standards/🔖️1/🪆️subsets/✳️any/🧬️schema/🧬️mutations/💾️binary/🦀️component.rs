@@ -28,14 +28,14 @@ mod tests {
     use super::*;
     use crate::artifacts::block5d::{Block5dSnapshot, BLOCK_5D_SCHEMA};
     use crate::BlockKindIdentity;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn block5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block5d::schema::mutations::Block5dStore;
 
         let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Block5dMutation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Block5dMutation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "p1");
     }

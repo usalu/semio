@@ -3,7 +3,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.sequence` document. It still round-trips through a real
-//! `DocumentStore` (with a real `backwards`), so selection/camera/orientation edits are VCS'd exactly
+//! `ArtifactStore` (with a real `backwards`), so selection/camera/orientation edits are VCS'd exactly
 //! like document content.
 
 use crate::artifacts::sequence::SequenceCamera;
@@ -11,12 +11,12 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ B1: sequence's real `DocumentApp::Config` — absorbs every former `SequencePlayRuntime` field
+/// 🧮️ B1: sequence's real `ArtifactApp::Config` — absorbs every former `SequencePlayRuntime` field
 /// (`selected_step_ids`/`last_run_json`/`orientation`) plus the node-graph viewport camera
 /// (session-only, never a document field) and the locale the pre-B1 host-pushed `ViewModel` used to
 /// carry (see `crate::apps::sequence::terminology::sequence_play_labels`) — same "absorb every
 /// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sequencecfg")]
 #[dsl(id = "sequence.config")]
@@ -40,9 +40,9 @@ pub struct SequenceConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for SequenceConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for SequenceConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -62,7 +62,7 @@ impl store::DocumentDsl for SequenceConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -71,12 +71,12 @@ impl store::DocumentDsl for SequenceConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for SequenceConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for SequenceConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -85,10 +85,10 @@ impl store::DocumentPack for SequenceConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -100,7 +100,7 @@ impl store::DocumentPack for SequenceConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for SequenceConfig {
@@ -250,16 +250,16 @@ mod tests {
     #[test]
     fn sequence_config_dsl_round_trips() {
         let config = SequenceConfig { selected_step_ids: vec!["step-1".into()], last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
-        let text = store::DocumentDsl::print_dsl(&config);
-        let parsed = <SequenceConfig as store::DocumentDsl>::parse_dsl(&text).expect("config dsl round trip");
+        let text = store::ArtifactDsl::print_dsl(&config);
+        let parsed = <SequenceConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
         assert_eq!(parsed, config);
     }
 
     #[test]
     fn sequence_config_pack_round_trips() {
         let config = SequenceConfig { selected_step_ids: vec!["step-2".into()], last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
-        let bytes = store::DocumentPack::encode_pack(&config);
-        let decoded = <SequenceConfig as store::DocumentPack>::decode_pack(&bytes).expect("config pack round trip");
+        let bytes = store::ArtifactPack::encode_pack(&config);
+        let decoded = <SequenceConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
         assert_eq!(decoded, config);
     }
 

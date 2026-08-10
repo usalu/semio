@@ -29,16 +29,16 @@ use crate::wasm_session::*;
 use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
 
 
-// #region 🔖️DocumentVcs
-// 🧾️ `create_document_envelope`/`DocumentCommand` are unconditional (not test/wasm-only)
+// #region 🔖️ArtifactVcs
+// 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
 use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationDiff, Patchable};
 #[cfg(test)]
-use crate::os_spr::{DocumentId, Edit, SchemaId};
+use crate::os_spr::{ArtifactId, Edit, SchemaId};
 use crate::os_store::create_document_envelope;
-use crate::os_store::DocumentCommand;
-use crate::os_store::{DocumentEnvelope, DocumentStore};
+use crate::os_store::ArtifactCommand;
+use crate::os_store::{ArtifactEnvelope, ArtifactStore};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -383,7 +383,7 @@ enum NeuronNodeDsl {
 /// 🔌️ DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
 /// `Tree`) — models the `from`/`fromPort` -> `to`/`toPort` connection as a single unified
 /// `crate::os_dsl::Wire` literal (`from@fromPort->to@toPort`) instead of four separate string fields, per
-/// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::DocumentDsl`/
+/// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::ArtifactDsl`/
 /// `crate::os_store::OpText` boundary only (`flow_fixture_to_dsl`/`flow_mutation_to_dsl` and their inverses,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
 /// itself (JSON shape, `tree_from_fixture`, `flow_fixture_operations`, every other consumer
@@ -441,7 +441,7 @@ fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
 /// hatch (untyped but byte-for-byte round-tripping JSON), not its own nested DSL grammar: `FlowGui`/
 /// `FlowNodeGui`/`NodeChrome`/`FlowPreviewGui` are GUI-only view state (see each type's own doc
 /// comment) that never feeds neural evaluation — `tree_from_fixture`'s `Cluster` handling reads only
-/// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowDocument`
+/// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowArtifact`
 /// itself gets relative to `FlowFixture`, just one level further in.
 #[derive(Clone, Debug, PartialEq, crate::os_dsl::DslEnum)]
 enum WidgetDsl {
@@ -548,10 +548,10 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
 
 /// 📄️ Local mirror of `FlowFixture` — see this region's opening doc comment for why `widgets:
 /// Vec<Widget>` (which embeds foreign `Dictionary`/`Tree` types) can't stay as-is under a direct
-/// `#[derive(crate::os_dsl::DslDocument)]`. `FlowDocument` (the derived read-view built by
-/// `FlowFixture::to_document()`) deliberately does NOT get this treatment — it's a computed
+/// `#[derive(crate::os_dsl::DslArtifact)]`. `FlowArtifact` (the derived read-view built by
+/// `FlowFixture::to_artifact()`) deliberately does NOT get this treatment — it's a computed
 /// snapshot for rendering, never itself round-tripped through DSL text.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslArtifact)]
 #[dsl(extension = "flow")]
 #[dsl(layout = "lines")]
 struct FlowFixtureDsl {
@@ -584,8 +584,8 @@ fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, S
         layout: fixture.layout,
     })
 }
-/// 📜️ Handcrafted DocumentDsl (P6): derive no longer emits DocumentDsl/DocumentPack.
-impl crate::os_store::DocumentDsl for FlowFixtureDsl {
+/// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
+impl crate::os_store::ArtifactDsl for FlowFixtureDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -605,7 +605,7 @@ impl crate::os_store::DocumentDsl for FlowFixtureDsl {
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
             crate::os_store::semio_format::Component::Dsl,
             1,
         )
@@ -614,12 +614,12 @@ impl crate::os_store::DocumentDsl for FlowFixtureDsl {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6).
-impl crate::os_store::DocumentPack for FlowFixtureDsl {
+/// 📦️ Handcrafted ArtifactPack (P6).
+impl crate::os_store::ArtifactPack for FlowFixtureDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
             crate::os_store::semio_format::Component::Pack,
             1,
         )
@@ -628,10 +628,10 @@ impl crate::os_store::DocumentPack for FlowFixtureDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as crate::os_store::DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -643,31 +643,31 @@ impl crate::os_store::DocumentPack for FlowFixtureDsl {
     }
 }
 
-impl crate::os_store::DocumentDsl for FlowFixture {
+impl crate::os_store::ArtifactDsl for FlowFixture {
     const EXTENSION: &'static str = "flow";
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let dsl_fixture = <FlowFixtureDsl as crate::os_store::DocumentDsl>::parse_dsl(text)?;
+        let dsl_fixture = <FlowFixtureDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?;
         flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <FlowFixtureDsl as crate::os_store::DocumentDsl>::print_dsl(&flow_fixture_to_dsl(self))
+        <FlowFixtureDsl as crate::os_store::ArtifactDsl>::print_dsl(&flow_fixture_to_dsl(self))
     }
 }
 
-/// 🗜️ `FlowFixture` has no `#[derive(crate::os_dsl::DslDocument)]` of its own (see `FlowFixtureDsl`'s doc
-/// comment above), so it doesn't automatically gain `crate::os_store::DocumentPack` the way every derived type
-/// does — this hand-written twin of the `crate::os_store::DocumentDsl` impl just above delegates through the
+/// 🗜️ `FlowFixture` has no `#[derive(crate::os_dsl::DslArtifact)]` of its own (see `FlowFixtureDsl`'s doc
+/// comment above), so it doesn't automatically gain `crate::os_store::ArtifactPack` the way every derived type
+/// does — this hand-written twin of the `crate::os_store::ArtifactDsl` impl just above delegates through the
 /// same `flow_fixture_to_dsl`/`flow_fixture_dsl_to_fixture` mirror instead of `__dsl_to_record`/
 /// `__dsl_from_record`.
-impl crate::os_store::DocumentPack for FlowFixture {
+impl crate::os_store::ArtifactPack for FlowFixture {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <FlowFixtureDsl as crate::os_store::DocumentPack>::encode_pack_with(&flow_fixture_to_dsl(self), options)
+        <FlowFixtureDsl as crate::os_store::ArtifactPack>::encode_pack_with(&flow_fixture_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let dsl_fixture = <FlowFixtureDsl as crate::os_store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let dsl_fixture = <FlowFixtureDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
         flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1))))
     }
 }
@@ -825,8 +825,8 @@ impl crate::os_spr::OpBinary for FlowMutation {
 }
 //#endregion 🔖️OpText
 
-pub type FlowEnvelope = DocumentEnvelope<FlowFixture, FlowMutation>;
-pub type FlowStore = DocumentStore<FlowFixture, FlowMutation>;
+pub type FlowEnvelope = ArtifactEnvelope<FlowFixture, FlowMutation>;
+pub type FlowStore = ArtifactStore<FlowFixture, FlowMutation>;
 
 pub fn empty_flow_snapshot() -> FlowFixture {
     FlowFixture::default()
@@ -839,14 +839,14 @@ mod flow_vcs_wasm {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct FlowDocumentVcs {
+    pub struct FlowArtifactVcs {
         store: RefCell<FlowStore>,
     }
 
     #[wasm_bindgen]
-    impl FlowDocumentVcs {
+    impl FlowArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<FlowDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<FlowArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -1154,7 +1154,7 @@ mod flow_vcs_tests {
         let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None));
         for y in [10.0, 20.0, 30.0] {
             store
-                .dispatch(DocumentCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
+                .dispatch(ArtifactCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
                 .expect("drag tick");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
@@ -1207,7 +1207,7 @@ mod flow_vcs_tests {
         crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::SetFixture { fixture: FlowFixture::default() });
     }
 
-    /// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `DocumentStore<FlowFixture,
+    /// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowFixture,
     /// FlowMutation>` — proves the `Mutation`/`MutationDiff` (`🔖️Mutations`) and `OpText`
     /// (`🔖️OpText`) layers semio_compose_rs correctly end to end, matching every other converted crate's test.
     #[test]
@@ -1224,11 +1224,11 @@ mod flow_vcs_tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
-        let mut store = DocumentStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope);
         let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
-        store.dispatch(DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         let edit: &Edit<FlowMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 
     /// 📜️ `flow/example/🌊️default.flow` is the handcrafted `.flow` DSL-text migration of what used to
@@ -1237,9 +1237,9 @@ mod flow_vcs_tests {
     #[test]
     fn default_flow_example_dsl_round_trips() {
         let text = include_str!("../../../📚️examples/🌊️default.flow");
-        let fixture = <FlowFixture as crate::os_store::DocumentDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
+        let fixture = <FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
         crate::os_store::test_support::assert_dsl_round_trip(&fixture);
         crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 }
-// #endregion 🔖️DocumentVcs
+// #endregion 🔖️ArtifactVcs

@@ -4,7 +4,7 @@
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️RequestCompletions
@@ -15,7 +15,7 @@ pub mod request_completions {
     #[dsl(keyword = "request-completions")]
     pub struct RequestCompletions {}
 
-    pub fn handle(_payload: &RequestCompletions, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(_payload: &RequestCompletions, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.snapshot;
         Ok(Emit::config(vec![WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }
@@ -30,7 +30,7 @@ pub mod lint_document {
     #[dsl(keyword = "lint-document")]
     pub struct LintDocument {}
 
-    pub fn handle(_payload: &LintDocument, _doc: &DocumentView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.snapshot;
         Ok(Emit::config(vec![WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }

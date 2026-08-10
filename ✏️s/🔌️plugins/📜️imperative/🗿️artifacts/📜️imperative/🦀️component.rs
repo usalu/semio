@@ -22,7 +22,7 @@ pub fn seed_dictionary(seed: &std::collections::BTreeMap<String, Value>) -> Dict
     serde_json::from_value(serde_json::to_value(seed).expect("seed serializes")).expect("seed is a dictionary")
 }
 
-/// 🗂️ The `store::DocumentStore` schema key — deliberately distinct from the snapshot's `schema`
+/// 🗂️ The `store::ArtifactStore` schema key — deliberately distinct from the snapshot's `schema`
 /// field (`"imperative.document"`, the field inside the document itself): this one keys the store envelope.
 pub use crate::artifacts::imperative::schema::mutations::ImperativeMutation;
 

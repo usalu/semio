@@ -9,7 +9,7 @@ use crate::mesh::MediaType;
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct DocumentHandle(pub u128);
+pub struct ArtifactHandle(pub u128);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -27,11 +27,7 @@ pub struct CapabilityToken(pub u128);
 #[serde(transparent)]
 pub struct PluginInstanceId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct ArtifactId(pub String);
-
-// 🎞️ CW3 kernel cut-over: MutationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
+// 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
 // `protocol_core` (frozen contract `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
@@ -41,7 +37,7 @@ pub struct ArtifactId(pub String);
 // protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
 // several external crates (`framework/sync`, semio_hub storage crates) still construct from plain
 // strings; moving it would be a breaking shape change out of this wave's scope.
-pub use protocol_core::{ActorId, DocumentId, DocumentVersion, MutationId, SchemaId};
+pub use protocol_core::{ActorId, ArtifactId, ArtifactVersion, MutationId, SchemaId};
 
 /// 🪪️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
 /// `KernelMutation`/`UndoGroup` history bookkeeping.
@@ -209,7 +205,7 @@ pub struct PastePlacement {
 }
 
 /// 📋️ A copied document fragment: `dsl_text` is the human-readable/`text/plain`-fallback encoding
-/// (printed via the source app's own `DocumentDsl` grammar over a fragment-shaped projection),
+/// (printed via the source app's own `ArtifactDsl` grammar over a fragment-shaped projection),
 /// `pack_bytes` is the lossless binary lane for same-app/compatible paste. `media_type` is the
 /// cross-app compatibility key (see `media_types_compatible`) an app's `clipboard_accepts()` checks
 /// before offering to paste a fragment copied from a different app.
@@ -253,14 +249,14 @@ pub enum HostEffect {
     CloseWindow { window: WindowHandle },
     Notify { message: String },
     /// 📋️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
-    /// available, session-local fallback otherwise) — emitted by `VcsDocumentApp`'s `copy`/`cut`
+    /// available, session-local fallback otherwise) — emitted by `VcsArtifactApp`'s `copy`/`cut`
     /// interception, never constructed by an app directly.
     ClipboardWrite { fragment: ClipboardFragment },
     RequestSync,
     /// @emoji 🧭️ Navigates the shell to a URI (studio/instance/document route).
     Navigate { uri: String },
     /// @emoji 📂️ Replaces the active app instance's document with pack+spr bytes — the host-owned
-    /// counterpart of `loadAppDocumentPack`, used when the plugin resolves a catalog/example studio
+    /// counterpart of `loadAppArtifactPack`, used when the plugin resolves a catalog/example studio
     /// and needs the shell to swap the live store without going through a persistence binding.
     LoadDocument { pack: Vec<u8>, spr: Vec<u8> },
     /// @emoji 🌐️ Opens an external URL in a new browser tab — the host-bridge substitute for a program
@@ -363,7 +359,7 @@ pub enum HostEffect {
     /// whose real mutation and its inverse both live client-side — the plugin has no access to that
     /// state, so `revertToCommand` on a `Shell`-kind history row bubbles the row's stored inverse out
     /// here instead of replaying it internally the way a `View`-kind row does (see
-    /// `NOTE_SHELL_COMMAND_ACTION_ID` and `VcsDocumentApp::dispatch_action`'s `REVERT_TO_COMMAND_ACTION_ID`
+    /// `NOTE_SHELL_COMMAND_ACTION_ID` and `VcsArtifactApp::dispatch_action`'s `REVERT_TO_COMMAND_ACTION_ID`
     /// arm). The shell is expected to redispatch `action_id`/`args` through its normal command funnel,
     /// which itself calls `noteShellCommand` again — so the revert is itself a new, further-revertible row.
     ReplayShellCommand {
@@ -406,13 +402,13 @@ pub struct AppEvent {
     pub payload: DslValue,
 }
 
-// 🎯️ W6 kernel unification: re-exports `protocol::DocumentDiff` (schema: `SchemaId`, payload:
+// 🎯️ W6 kernel unification: re-exports `protocol::ArtifactDiff` (schema: `SchemaId`, payload:
 // `Vec<u8>` — the binary shape from W5's causal envelope reshape) in place of the old kernel-local
 // `{schema_id, payload: Value}` shape. Zero external consumers of the old shape existed outside
 // this crate's own (now-deleted) OS JSON-patch kernel and `store`/`store_sync` (both repointed to
-// `protocol::DocumentDiff` directly in this same wave) — verified by a repo-wide grep before this
+// `protocol::ArtifactDiff` directly in this same wave) — verified by a repo-wide grep before this
 // change, not assumed.
-pub use protocol::DocumentDiff;
+pub use protocol::ArtifactDiff;
 
 // 🎯️ W6 kernel unification: re-exports `protocol_core::UndoPolicy` (identical variants; the old
 // CW3-era deferral note about a `#[serde(rename_all = "camelCase")]` mismatch no longer applies —
@@ -423,8 +419,8 @@ pub use protocol_core::UndoPolicy;
 #[serde(rename_all = "camelCase")]
 pub struct InverseMutation {
     pub target_mutation: MutationId,
-    pub inverse_diff: DocumentDiff,
-    pub base_version: DocumentVersion,
+    pub inverse_diff: ArtifactDiff,
+    pub base_version: ArtifactVersion,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<MutationId>,
     pub undo_policy: UndoPolicy,
@@ -434,10 +430,10 @@ pub struct InverseMutation {
 #[serde(rename_all = "camelCase")]
 pub struct KernelMutation {
     pub id: MutationId,
-    pub document: DocumentHandle,
-    pub base_version: DocumentVersion,
+    pub document: ArtifactHandle,
+    pub base_version: ArtifactVersion,
     pub invocation_id: InvocationId,
-    pub diff: DocumentDiff,
+    pub diff: ArtifactDiff,
     pub inverse: InverseMutation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<MutationId>,
@@ -513,7 +509,7 @@ pub struct ActionContext {
 }
 
 /// @emoji 🎛️ Context for a dispatched `CommandInvocation` — the command mirror of `ActionContext`.
-/// No `document_snapshot`/`granted_capabilities`: `VcsDocumentApp` owns the store directly and
+/// No `document_snapshot`/`granted_capabilities`: `VcsArtifactApp` owns the store directly and
 /// commands don't yet carry a capability grant model (mirrors actions' current state).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -559,7 +555,7 @@ pub struct ActionRequest {
 pub struct WindowKindDef {
     pub id: WindowKindId,
     pub params_schema: SchemaId,
-    pub document_snapshot_schema: SchemaId,
+    pub artifact_snapshot_schema: SchemaId,
     pub input_event_schema: SchemaId,
     pub output_schema: SchemaId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -591,7 +587,7 @@ pub struct WindowOutput {
 //#region 🔖️MergeStrategy
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum DocumentKind {
+pub enum ArtifactMergeKind {
     PlainRecord,
     OrderedSequence,
     TextSequence,
@@ -612,14 +608,14 @@ pub enum MergeStrategyKind {
     ContentAddressedBlob,
 }
 
-impl DocumentKind {
+impl ArtifactMergeKind {
     pub fn merge_strategy(&self) -> MergeStrategyKind {
         match self {
-            DocumentKind::PlainRecord => MergeStrategyKind::LwwRegister,
-            DocumentKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
-            DocumentKind::TextSequence => MergeStrategyKind::TextSequence,
-            DocumentKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
-            DocumentKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
+            ArtifactMergeKind::PlainRecord => MergeStrategyKind::LwwRegister,
+            ArtifactMergeKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
+            ArtifactMergeKind::TextSequence => MergeStrategyKind::TextSequence,
+            ArtifactMergeKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
+            ArtifactMergeKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
         }
     }
 }

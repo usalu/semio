@@ -4,14 +4,14 @@ pub mod add_handle {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
     use crate::artifacts::block2d::{Block2dSnapshot, Block2dHandleTemplate};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "addHandle")]
     pub struct AddHandle {}
 
-    pub fn handle(_payload: &AddHandle, doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddHandle, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         let Some(handle_kind_id) = doc.snapshot.handle_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
@@ -25,7 +25,7 @@ pub mod remove_handle {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
     use crate::artifacts::block2d::Block2dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -34,7 +34,7 @@ pub mod remove_handle {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveHandle, _doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveHandle, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![Block2dMutation::RemoveHandle { id: payload.id.clone() }]))
     }
 }

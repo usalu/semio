@@ -174,7 +174,7 @@ mod tests {
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use flow::playbook::GenerationMutation;
     use semio_framework_os_kernel::os_store::test_support;
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn op_text_round_trip_set_widget() {
@@ -230,8 +230,8 @@ mod tests {
 
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::DocumentStore::<Procedural3dSnapshot, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }

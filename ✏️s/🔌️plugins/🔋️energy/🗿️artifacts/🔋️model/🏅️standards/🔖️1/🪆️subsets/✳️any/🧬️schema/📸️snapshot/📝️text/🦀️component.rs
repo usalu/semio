@@ -14,12 +14,12 @@ pub const SEMIO_ENERGY_MODEL_EXAMPLE_TEXT: &str =
 
 /// 📖️ Parses `.energy` DSL text into an `EnergyModelSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<EnergyModelSnapshot, store::TextError> {
-    <EnergyModelSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `EnergyModelSnapshot` back to `.energy` DSL text.
 pub fn print_dsl(document: &EnergyModelSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

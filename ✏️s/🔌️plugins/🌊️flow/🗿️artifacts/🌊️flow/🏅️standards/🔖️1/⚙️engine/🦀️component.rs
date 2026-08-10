@@ -49,14 +49,14 @@ pub fn register_artifact_schema() {
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
-        id: "flow.document",
+        id: "flow.artifact",
         extension: Some("flow"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("flow.document"),
+        hooks: dsl::passthrough_hooks("flow.artifact"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "flow.op",

@@ -74,13 +74,13 @@ impl From<FlowSnapshot> for flow::FlowFixture {
 }
 //#endregion 🔹DefaultsAndBridge
 
-//#region 🔹HandcraftedDocumentCodecs
-/// ✉️ DocumentDsl — JSON body under envelope id `flow.flow`.
+//#region 🔹HandcraftedArtifactCodecs
+/// ✉️ ArtifactDsl — JSON body under envelope id `flow.flow`.
 ///
 /// Does not call `flow::FlowFixture`'s codecs: that framework type still emits envelope id `flow`,
 /// which `SemioEnvelope::from_envelope_id` rejects (`plugin.artifact` required). Fixup belongs in
 /// `semio-framework-os-flow`; this plugin snapshot owns a valid envelope of its own.
-impl store::DocumentDsl for FlowSnapshot {
+impl store::ArtifactDsl for FlowSnapshot {
     const EXTENSION: &'static str = "flow";
     fn envelope_id() -> &'static str {
         "flow.flow"
@@ -96,12 +96,12 @@ impl store::DocumentDsl for FlowSnapshot {
                 store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))
             });
         }
-        <flow::FlowFixture as store::DocumentDsl>::parse_dsl(text).map(Self::from_fixture)
+        <flow::FlowFixture as store::ArtifactDsl>::parse_dsl(text).map(Self::from_fixture)
     }
     fn print_dsl(&self) -> String {
         let body = serde_json::to_string_pretty(self).expect("FlowSnapshot serde");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -110,12 +110,12 @@ impl store::DocumentDsl for FlowSnapshot {
     }
 }
 
-/// 📦️ DocumentPack — JSON body under envelope id `flow.flow` (see DocumentDsl note).
-impl store::DocumentPack for FlowSnapshot {
+/// 📦️ ArtifactPack — JSON body under envelope id `flow.flow` (see ArtifactDsl note).
+impl store::ArtifactPack for FlowSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -124,7 +124,7 @@ impl store::DocumentPack for FlowSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        let our_id = <Self as store::DocumentDsl>::envelope_id();
+        let our_id = <Self as store::ArtifactDsl>::envelope_id();
         if envelope.envelope_id() != our_id {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {our_id}, got {}",
@@ -137,4 +137,4 @@ impl store::DocumentPack for FlowSnapshot {
         None
     }
 }
-//#endregion 🔹HandcraftedDocumentCodecs
+//#endregion 🔹HandcraftedArtifactCodecs

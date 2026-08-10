@@ -70,7 +70,7 @@ pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
 pub fn register() {
     crate::artifacts::gif::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::schema::gif_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
 }
 
 pub struct GifEngine { artifact_state: GifArtifact, snapshot_state: GifSnapshot }

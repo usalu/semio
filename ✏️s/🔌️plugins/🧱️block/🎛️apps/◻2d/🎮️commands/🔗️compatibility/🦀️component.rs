@@ -5,7 +5,7 @@ pub mod add_compatibility_rule {
     use crate::artifacts::block2d::op::Block2dMutation;
     use crate::artifacts::block2d::Block2dSnapshot;
     use crate::BlockCompatibilityRule;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -15,7 +15,7 @@ pub mod add_compatibility_rule {
         pub target: String,
     }
 
-    pub fn handle(payload: &AddCompatibilityRule, doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddCompatibilityRule, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         if payload.source.is_empty() || payload.target.is_empty() {
             return Ok(Emit::default());
         }
@@ -29,7 +29,7 @@ pub mod remove_compatibility_rule {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
     use crate::artifacts::block2d::Block2dSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -38,7 +38,7 @@ pub mod remove_compatibility_rule {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveCompatibilityRule, _doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveCompatibilityRule, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![Block2dMutation::RemoveCompatibilityRule { id: payload.id.clone() }]))
     }
 }

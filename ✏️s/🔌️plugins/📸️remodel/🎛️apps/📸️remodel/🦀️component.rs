@@ -1,8 +1,8 @@
-//! 📸️ Remodel play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 📸️ Remodel play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch. `RemodelPlayApp` is a unit struct; every former `RemodelPlayRuntime` field
 //! (camera/selection/layers/frame cursor/report table) lives in `crate::apps::remodel::config`, written
 //! via `RemodelConfigMutation`s (real `backwards`, no ad hoc runtime mutation); every action dispatches
-//! through the single typed `RemodelCommand` channel via `DocumentApp::handle`.
+//! through the single typed `RemodelCommand` channel via `ArtifactApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window scenes in
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
@@ -21,13 +21,13 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::{DocumentDsl, DocumentPack};
+use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
 pub const REMODEL_PLAY_APP_ID: &str = "remodel-play";
@@ -116,7 +116,7 @@ use view::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibilit
 //#endregion 🔖️Commands
 
 //#region 🔖️ActionBridge
-/// 🌉️ Host-args → typed-payload readers plus the action-id match — see `DocumentApp::command_from_action`
+/// 🌉️ Host-args → typed-payload readers plus the action-id match — see `ArtifactApp::command_from_action`
 /// for why this exists (it did not before this migration). Kept in its own module so the routing table
 /// above stays a routing table.
 mod args_bridge {
@@ -321,11 +321,11 @@ mod args_bridge {
 
 //#region 🔖️RemodelPlayApp
 /// 🧪️ Unit struct — every former `RemodelPlayRuntime` field now lives in
-/// `crate::apps::remodel::config::RemodelConfig` (see `DocumentApp::Config`).
+/// `crate::apps::remodel::config::RemodelConfig` (see `ArtifactApp::Config`).
 #[derive(Default)]
 pub struct RemodelPlayApp;
 
-impl DocumentApp for RemodelPlayApp {
+impl ArtifactApp for RemodelPlayApp {
     type Snapshot = RemodelSnapshot;
     type Mutation = RemodelMutation;
     type Config = RemodelConfig;
@@ -351,7 +351,7 @@ impl DocumentApp for RemodelPlayApp {
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
     /// default (the pack of `doc.snapshot`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let mesh = &doc.snapshot.results.mesh.mesh;
@@ -372,7 +372,7 @@ impl DocumentApp for RemodelPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
     /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
     /// (`RemodelMutation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -422,11 +422,11 @@ impl DocumentApp for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
         let scene = doc.snapshot;
         let config = cfg.snapshot;
         let labels = remodel_labels(config);
@@ -447,7 +447,7 @@ impl DocumentApp for RemodelPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodel_labels(cfg.snapshot)))])
     }
 }
@@ -670,9 +670,9 @@ pub fn create_remodel_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type RemodelApp = VcsDocumentApp<RemodelPlayApp>;
+    pub type RemodelApp = VcsArtifactApp<RemodelPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn app() -> RemodelApp {
@@ -972,7 +972,7 @@ mod tests {
     fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = DocumentView { snapshot: &projection, history: &HistoryView::empty() };
+        let doc = ArtifactView { snapshot: &projection, history: &HistoryView::empty() };
         let inner = RemodelPlayApp;
         let media = Media {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -982,15 +982,15 @@ mod tests {
             },
         };
         let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
-        assert_eq!(emit.document_mutations.len(), 2, "one SetAsset + one SetStreams");
-        let next = emit.document_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
+        assert_eq!(emit.artifact_mutations.len(), 2, "one SetAsset + one SetStreams");
+        let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
 
-        let doc2 = DocumentView { snapshot: &next, history: &HistoryView::empty() };
+        let doc2 = ArtifactView { snapshot: &next, history: &HistoryView::empty() };
         let emit2 = RemodelPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
-        let next2 = emit2.document_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
+        let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
         assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
     }
@@ -1000,7 +1000,7 @@ mod tests {
     fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = DocumentView { snapshot: &projection, history: &HistoryView::empty() };
+        let doc = ArtifactView { snapshot: &projection, history: &HistoryView::empty() };
         let media = RemodelPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);

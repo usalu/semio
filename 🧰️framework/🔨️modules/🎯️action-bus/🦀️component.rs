@@ -2,7 +2,7 @@
 //! 🎯️ Action routing between renderer and app controllers.
 //!
 //! `ActionBus` is an ephemeral controller dispatch table for native chrome prototypes — production
-//! shells route through OS `DocumentApp::dispatch_action`; this type is not durable CORE state.
+//! shells route through OS `ArtifactApp::dispatch_action`; this type is not durable CORE state.
 
 use dsl::DslValue;
 use std::collections::HashMap;

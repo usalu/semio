@@ -2,9 +2,9 @@
 
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
@@ -21,13 +21,13 @@ pub mod set_active_example {
     /// 🌍️ Replaces the whole document (and resets config to its default — the pre-migration
     /// `Fem2dPlayApp::camera`/`result_display` reset) via `SetSnapshot` — the example choice never
     /// merges into the CURRENT document.
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let document = if payload.example_id == "default" {
             Fem2dSnapshot::parse_dsl(crate::apps::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::engine::empty_fem2d_snapshot())
         } else {
             crate::artifacts::fem2d::engine::empty_fem2d_snapshot()
         };
-        Ok(Emit { document_mutations: vec![Fem2dMutation::SetSnapshot { snapshot: document }], config_mutations: vec![Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![Fem2dMutation::SetSnapshot { snapshot: document }], config_mutations: vec![Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

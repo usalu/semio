@@ -263,8 +263,8 @@ mod tests {
     fn gis_map_document_text_round_trips_through_store() {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
-        let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() })], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::new(envelope);
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() })], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

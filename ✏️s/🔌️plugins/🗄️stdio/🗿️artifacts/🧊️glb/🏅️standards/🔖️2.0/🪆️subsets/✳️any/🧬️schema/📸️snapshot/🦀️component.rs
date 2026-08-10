@@ -30,7 +30,7 @@ impl Default for GlbSnapshot {
     }
 }
 
-impl store::DocumentDsl for GlbSnapshot {
+impl store::ArtifactDsl for GlbSnapshot {
     const EXTENSION: &'static str = "glb";
     fn envelope_id() -> &'static str { "stdio.glb" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -50,7 +50,7 @@ impl store::DocumentDsl for GlbSnapshot {
     }
 }
 
-impl store::DocumentPack for GlbSnapshot {
+impl store::ArtifactPack for GlbSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::glb::engine::encode_glb(self).map_err(|e| store::PackError::Schema(e))?;

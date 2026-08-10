@@ -27,8 +27,8 @@ impl Default for JsonSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for JsonSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for JsonSnapshot {
     const EXTENSION: &'static str = "json";
     fn envelope_id() -> &'static str { "stdio.json" }
 
@@ -45,7 +45,7 @@ impl store::DocumentDsl for JsonSnapshot {
     fn print_dsl(&self) -> String {
         let body = serde_json::to_string_pretty(&self.value).unwrap_or_else(|_| "null".into());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -53,13 +53,13 @@ impl store::DocumentDsl for JsonSnapshot {
     }
 }
 
-impl store::DocumentPack for JsonSnapshot {
+impl store::ArtifactPack for JsonSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let raw = serde_json::to_vec(&self.value).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -69,10 +69,10 @@ impl store::DocumentPack for JsonSnapshot {
 
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -81,4 +81,4 @@ impl store::DocumentPack for JsonSnapshot {
         Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

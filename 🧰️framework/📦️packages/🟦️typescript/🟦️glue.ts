@@ -133,7 +133,7 @@ if (import.meta.vitest) {
     it("falls back to os layer when app layer absent", () => {
       const storage = createMemoryStoragePort();
       const store = new DockUiStateStore(storage, "my-app");
-      const osState: DockUiState = { ...emptyUiState(), pathMemory: { "framework.category.workbench": "framework.panel.document" } };
+      const osState: DockUiState = { ...emptyUiState(), pathMemory: { "framework.category.workbench": "framework.panel.artifact" } };
       store.saveOs(osState);
       expect(store.getSnapshot()).toEqual(osState);
     });

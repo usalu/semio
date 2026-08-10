@@ -268,7 +268,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
 }
 
 /// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
-/// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned. Cached so manifest registration,
+/// wrapped into a `ArtifactStore` by `VcsArtifactApp` when spawned. Cached so manifest registration,
 /// `initial_snapshot`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
 pub fn forest_play_scene() -> CadSnapshot {
     static FOREST_PLAY_SCENE: OnceLock<CadSnapshot> = OnceLock::new();

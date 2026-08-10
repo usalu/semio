@@ -20,6 +20,6 @@ pub fn deserialize(from: &ObjSnapshot) -> Result<CadSnapshot, store::TextError> 
 }
 
 pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {
-    <CadSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 //#endregion Deserialize

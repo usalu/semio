@@ -767,7 +767,7 @@ mod error {
         Conflict { property: String, reason: String },
         #[error("validation error: {0}")]
         Validation(String),
-        // 🗄️ CW6b: the bespoke Postgres error variant is retired — `db::Database`/`DocumentHandle`
+        // 🗄️ CW6b: the bespoke Postgres error variant is retired — `db::Database`/`ArtifactHandle`
         // (WAL, conflict detection, durability) now own document persistence end to end.
         #[error("database error: {0}")]
         Database(#[from] db::DbError),
@@ -812,7 +812,7 @@ pub use error::*;
 mod store {
     // 🗄️Store
     // Specs: `db::Database` (WAL/conflict/durability/frontier authority, generic path-value document
-    // documents per `db_document`'s schema-erased convention) replaces the bespoke Postgres schema +
+    // documents per `db_artifact`'s schema-erased convention) replaces the bespoke Postgres schema +
     // persistence layer. `ComposeDirectoryStore` holds identity/tenancy-shaped bookkeeping db does not
     // own (session ownership, share tokens, compaction config) — the semio_compose_rs-semio_hub analog of the plan's
     // `HubDirectory` split, file-backed (zero-touch, no external service) instead of sqlite/postgres/
@@ -844,8 +844,8 @@ mod store {
     }
 
     /// 🗄️#⃣ The document id a semio_compose_rs session's `db::Database` document lives under.
-    pub fn document_id(session_id: Uuid) -> protocol::DocumentId {
-        protocol::DocumentId(session_id.to_string())
+    pub fn document_id(session_id: Uuid) -> protocol::ArtifactId {
+        protocol::ArtifactId(session_id.to_string())
     }
 
     /// 🗄️🌉️ `db::Frontier` -> `protocol::RuntimeFrontierSummary` (the `protocol_wire` frame shape) —
@@ -1598,7 +1598,7 @@ pub use store::*;
 mod actor {
     // 🎹️Actor
     // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in
-    // arrival order, submitting through `db::DocumentHandle` (WAL/conflict/durability/frontier
+    // arrival order, submitting through `db::ArtifactHandle` (WAL/conflict/durability/frontier
     // authority) and keeping an in-memory `SessionState` replica for fast reads + kit-JSON history.
     // Summary: Session actor: single-writer task processing commands sequentially against `db`.
 
@@ -1633,7 +1633,7 @@ mod actor {
     pub struct SessionActor {
         session_id: Uuid,
         state: SessionState,
-        handle: db::DocumentHandle,
+        handle: db::ArtifactHandle,
         history: Arc<HistoryStore>,
         directory: Arc<ComposeDirectoryStore>,
         event_tx: broadcast::Sender<SessionEvent>,
@@ -1641,7 +1641,7 @@ mod actor {
     }
 
     impl SessionActor {
-        pub fn new(session_id: Uuid, state: SessionState, handle: db::DocumentHandle, history: Arc<HistoryStore>, directory: Arc<ComposeDirectoryStore>, event_tx: broadcast::Sender<SessionEvent>, wire_tx: broadcast::Sender<WireEvent>) -> Self {
+        pub fn new(session_id: Uuid, state: SessionState, handle: db::ArtifactHandle, history: Arc<HistoryStore>, directory: Arc<ComposeDirectoryStore>, event_tx: broadcast::Sender<SessionEvent>, wire_tx: broadcast::Sender<WireEvent>) -> Self {
             Self { session_id, state, handle, history, directory, event_tx, wire_tx }
         }
 
@@ -1664,12 +1664,12 @@ mod actor {
         }
 
         async fn handle_domain_command(&mut self, envelope: CommandEnvelope, command: DomainCommand) -> Result<CommandResult, SessionError> {
-            // 🗄️ `db::DocumentHandle::submit` dedupes durably by `operation_id` — keyed here by
+            // 🗄️ `db::ArtifactHandle::submit` dedupes durably by `operation_id` — keyed here by
             // `(client_id, request_id)` (this actor's own logical idempotency key, matching the old
             // `runtime.session_command` UNIQUE(session_id, client_id, request_id) constraint) rather
             // than the client-supplied `command_id`, so a retried request with a fresh `command_id`
             // still dedupes correctly. A resubmit resolves to the SAME cached `CommandReceipt` (same
-            // frontier) db_document already returned for the first submit — comparing the frontier
+            // frontier) db_artifact already returned for the first submit — comparing the frontier
             // before/after is this actor's way of telling a genuine commit from a replay, since this
             // actor is the sole writer to its document (single-writer-per-session, unchanged from the
             // pre-CW6b design).
@@ -1686,7 +1686,7 @@ mod actor {
                 document_id: document_id(self.session_id),
                 actor: protocol::ActorId(envelope.actor_person_id.0.to_string()),
                 dependencies: Vec::new(),
-                diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+                diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
                 // 🎯️ No real inverse yet — semio_compose_rs-semio_hub has no undo/redo feature today (the original
                 // Postgres implementation didn't have one either); a per-command-kind inverse is
                 // future work, flagged in this ticket's report.
@@ -1775,7 +1775,7 @@ mod actor {
         state.designs.values().find(|d| d.connections.contains_key(&connection_id)).map(|d| d.design_id)
     }
 
-    /// 🗄️ Mutates `state` and collects `(path, value)` diff entries (the `db_document` generic
+    /// 🗄️ Mutates `state` and collects `(path, value)` diff entries (the `db_artifact` generic
     /// path-value convention — `None` is an explicit tombstone) plus typed `EntityChange`s for the
     /// kit-history change log. Pure/synchronous — no I/O — unlike the pre-CW6b version this replaces
     /// (which interleaved a Postgres `UPDATE`/`INSERT` per field inside this same match).
@@ -2291,7 +2291,7 @@ mod directory {
         pub async fn create_session(&self, fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<(Uuid, Uuid, Uuid), SessionError> {
             let session_id = Uuid::now_v7();
             let (kit_id, _kit_name, kit_json) = initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
-            self.db.create_document(db::DocumentSpec::new(document_id(session_id)))?;
+            self.db.create_document(db::ArtifactSpec::new(document_id(session_id)))?;
             let owner_token = self.directory_store.create_session(session_id, kit_id)?;
 
             // Validates the kit JSON shape up front (same `session_kit_id`/`session_kit_name`
@@ -2411,8 +2411,8 @@ mod api {
 
     /// 🗄️ `db::Database::document` translated into `SessionError::SessionNotFound` (a clean 404)
     /// rather than the generic `SessionError::Database` 500 a bare `?` would produce — every read/
-    /// write handler that needs a live `db::DocumentHandle` for an EXISTING session goes through this.
-    fn open_session_handle(state: &AppState, session_id: Uuid) -> Result<db::DocumentHandle, SessionError> {
+    /// write handler that needs a live `db::ArtifactHandle` for an EXISTING session goes through this.
+    fn open_session_handle(state: &AppState, session_id: Uuid) -> Result<db::ArtifactHandle, SessionError> {
         state.directory.db().document(&document_id(session_id)).map_err(|err| match err {
             db::DbError::NotFound(_) => SessionError::SessionNotFound(session_id.to_string()),
             other => SessionError::Database(other),
@@ -2488,7 +2488,7 @@ mod api {
             document_id: document_id(session_id),
             actor: protocol::ActorId("system".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
             inverse: protocol::InverseOperation {
                 schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
                 payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap_or_default(),
@@ -2730,14 +2730,14 @@ mod ws {
     }
 
     /// 🎞️ Handles one decoded `ClientFrame`. `Commands` submits its envelopes straight through
-    /// `db::DocumentHandle::submit` (this is the wire-native path — raw `db_document` path-value
+    /// `db::ArtifactHandle::submit` (this is the wire-native path — raw `db_artifact` path-value
     /// diffs, not semio_compose_rs's typed `DomainCommand`s, so unlike the HTTP `/commands/domain` route it
     /// does not update `SessionActor`'s typed `SessionState`/`EntityChange` history; reconciling wire-
     /// native diffs back into semio_compose_rs's typed replica is future work for the client-side rewrite this
     /// wave scoped out — see this ticket's report). `Hello`/`FrontierAdvertise`/`CreditGrant` are
     /// acknowledged but otherwise inert (no credit-based flow control or resume-token validation
     /// implemented yet, matching `db_sync`'s own current scope).
-    async fn handle_client_frame(db_handle: &db::DocumentHandle, session: &SessionHandle, session_id: Uuid, frame: protocol::ClientFrame, ws_tx: &mut futures::stream::SplitSink<WebSocket, Message>) -> Result<(), ()> {
+    async fn handle_client_frame(db_handle: &db::ArtifactHandle, session: &SessionHandle, session_id: Uuid, frame: protocol::ClientFrame, ws_tx: &mut futures::stream::SplitSink<WebSocket, Message>) -> Result<(), ()> {
         match frame {
             protocol::ClientFrame::Hello { .. } | protocol::ClientFrame::FrontierAdvertise { .. } | protocol::ClientFrame::CreditGrant { .. } => Ok(()),
             protocol::ClientFrame::Commands { batch_id, envelopes } => {

@@ -3,7 +3,7 @@
 //! `LowpolyPlayRuntime` app-struct `RefCell` (selection, active object, paint utility/layer, selection
 //! method/mode, hover, world camera, sun, show-edges) plus the two `ViewModel` fields lowpoly actually
 //! read (`active_utility_id`/`locale`) — session-only view state round-trips through the config
-//! `DocumentStore` exactly like document content, with a real `backwards` per
+//! `ArtifactStore` exactly like document content, with a real `backwards` per
 //! `LowpolyConfigMutation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested value types
 //! (`LowpolySelection`, the world camera, hover target, sun, paint color) are flattened into scalar
 //! fields rather than embedded as DSL blocks — `LowpolySelection`/`WorldSunConfig` aren't
@@ -14,7 +14,7 @@ use semio_framework_plugin::WorldSunConfig;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "lowpoly.lowpolycfg")]
 #[dsl(layout = "lines")]
@@ -76,9 +76,9 @@ pub struct LowpolyConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for LowpolyConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for LowpolyConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -98,7 +98,7 @@ impl store::DocumentDsl for LowpolyConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -107,12 +107,12 @@ impl store::DocumentDsl for LowpolyConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for LowpolyConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for LowpolyConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -121,10 +121,10 @@ impl store::DocumentPack for LowpolyConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -136,7 +136,7 @@ impl store::DocumentPack for LowpolyConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for LowpolyConfig {
@@ -407,7 +407,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use store::DocumentPack;
+    use store::ArtifactPack;
 
     #[test]
     fn lowpoly_config_dsl_round_trips_default() {

@@ -1,6 +1,6 @@
 //! 📤️ Export Puzzle3dSnapshot as .zip.
 
-use semio_framework_plugin::{DocumentCodec, IoError, JsonCodec, MediaFormat};
+use semio_framework_plugin::{ArtifactCodec, IoError, JsonCodec, MediaFormat};
 
 //#region 🔖️Export
 pub fn export(snapshot: &crate::artifacts::puzzle3d::Puzzle3dSnapshot) -> Result<Vec<u8>, IoError> {

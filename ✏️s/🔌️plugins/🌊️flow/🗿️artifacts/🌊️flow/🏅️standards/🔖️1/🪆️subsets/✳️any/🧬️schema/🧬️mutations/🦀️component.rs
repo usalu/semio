@@ -14,7 +14,7 @@ use crate::artifacts::flow::FlowSnapshot;
 use flow::{FlowLayoutEntry, SynapseSpec, Widget};
 use protocol::{inverse_collection_mutation, CollectionMutation, Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
 /// 🌊️ Typed, invertible flow-document operation owned by this plugin.
@@ -79,8 +79,8 @@ impl Mutation<FlowSnapshot> for FlowMutation {
     }
 }
 
-pub type FlowEnvelope = DocumentEnvelope<FlowSnapshot, FlowMutation>;
-pub type FlowStore = DocumentStore<FlowSnapshot, FlowMutation>;
+pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
+pub type FlowStore = ArtifactStore<FlowSnapshot, FlowMutation>;
 
 /// 🌈️ Applies a mutation onto a snapshot in place.
 pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) {

@@ -19,6 +19,6 @@ pub fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackEr
 
 /// Inflate then encode as binary pack bytes.
 pub fn serialize_bytes(from: &DeflateSnapshot) -> Result<Vec<u8>, store::PackError> {
-    store::DocumentPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
+    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

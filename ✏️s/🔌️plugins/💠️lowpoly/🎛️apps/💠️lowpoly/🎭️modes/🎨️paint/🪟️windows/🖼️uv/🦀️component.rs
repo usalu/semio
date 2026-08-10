@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: LOWPOLY_UV_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
         utilities: ["brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

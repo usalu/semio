@@ -3,7 +3,7 @@
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetExaggeration
@@ -20,7 +20,7 @@ pub mod set_exaggeration {
         pub exaggeration: f64,
     }
 
-    pub fn handle(payload: &SetExaggeration, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(Emit::amend(vec![GisTerrainMutation::SetExaggeration { exaggeration: payload.exaggeration }], GIS3D_EXAGGERATION_COALESCE_KEY))
     }
 }

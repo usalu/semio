@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `DrawSnapshot` to its binary pack form.
 pub fn encode(document: &DrawSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `DrawSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<DrawSnapshot, PackError> {
-    <DrawSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <DrawSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -117,17 +117,17 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::draw::op::DrawMutation;
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-        let mut doc_store = store::DocumentStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope);
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
         let edit: &Edit<DrawMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<DrawSnapshot, DrawMutation>(edit, &DocumentId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<DrawSnapshot, DrawMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

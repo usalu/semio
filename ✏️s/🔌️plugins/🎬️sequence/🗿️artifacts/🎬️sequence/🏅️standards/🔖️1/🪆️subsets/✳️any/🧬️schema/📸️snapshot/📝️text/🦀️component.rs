@@ -1,6 +1,6 @@
 //! 📜️ Sequence artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for SequenceSnapshot` is implemented on the snapshot facet (see
+//! `store::ArtifactDsl for SequenceSnapshot` is implemented on the snapshot facet (see
 //! `📸️snapshot/🧬️schema`). This component only adds edge wire mirrors, example text, and laws.
 
 
@@ -16,7 +16,7 @@ use crate::artifacts::sequence::{SequenceEdge, SequenceSnapshot};
 //#region 🔖️Dsl
 /// 🔌️ DSL-only mirror of `SequenceEdge` — models the `from`/`to` step-id pair as a single unified
 /// `dsl::Wire` literal (`from->to`) instead of two separate string fields, per the unified syntax
-/// law for graph edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary
+/// law for graph edges/connections. Converts at the `store::ArtifactDsl`/`protocol::OpText` boundary
 /// only; `SequenceEdge` itself (and every consumer matching on its `from`/`to` fields directly)
 /// is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
@@ -57,12 +57,12 @@ pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚�
 
 /// 📖️ Parses `.sequence` DSL text into a `SequenceSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<SequenceSnapshot, store::TextError> {
-    <SequenceSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `SequenceSnapshot` back to `.sequence` DSL text.
 pub fn print_dsl(snapshot: &SequenceSnapshot) -> String {
-    store::DocumentDsl::print_dsl(snapshot)
+    store::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️Example
 

@@ -6,7 +6,7 @@ use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;
 use semio_framework_plugin::kernel::HostEffect;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️OpenSource
@@ -19,7 +19,7 @@ pub mod open_source {
         pub feature_id: String,
     }
 
-    pub fn handle(payload: &OpenSource, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let host = map_host_from(doc.snapshot, cfg.snapshot);
         match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
             Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url })),

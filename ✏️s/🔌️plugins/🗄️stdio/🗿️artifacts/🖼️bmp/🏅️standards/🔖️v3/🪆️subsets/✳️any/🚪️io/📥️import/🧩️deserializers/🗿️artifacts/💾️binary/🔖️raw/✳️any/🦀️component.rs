@@ -11,5 +11,5 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<BmpSnapshot, store::PackErro
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<BmpSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }

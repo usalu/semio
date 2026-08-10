@@ -1,4 +1,4 @@
-//! ⚙️ S Home launcher app — `DocumentApp::Config` + its operation enum (constitutional: engine + op,
+//! ⚙️ S Home launcher app — `ArtifactApp::Config` + its operation enum (constitutional: engine + op,
 //! merged at app level per the per-app recipe: `Config`/`ConfigMutation` are inherently app-scoped,
 //! never artifact-scoped).
 //!
@@ -7,13 +7,13 @@
 //! out a pure `empty_home_document()`/compute helper (every call site builds the literal
 //! `SHomeSnapshot { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
 //! document-side `⚙️engine` node under `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the
-//! Home launcher's real `DocumentApp::Config`: the one `view_state.locale` read `apps::home`'s labels
+//! Home launcher's real `ArtifactApp::Config`: the one `view_state.locale` read `apps::home`'s labels
 //! actually need, plus the `active_panel_tab` action.
 
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "home.config")]
 #[dsl(extension = "homecfg")]
@@ -25,9 +25,9 @@ pub struct HomeConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for HomeConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for HomeConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         "home.config"
@@ -47,7 +47,7 @@ impl store::DocumentDsl for HomeConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -56,12 +56,12 @@ impl store::DocumentDsl for HomeConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for HomeConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for HomeConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -70,10 +70,10 @@ impl store::DocumentPack for HomeConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -85,7 +85,7 @@ impl store::DocumentPack for HomeConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for HomeConfig {

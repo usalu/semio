@@ -146,8 +146,8 @@ pub fn write_ply_text(vertices: &[MeshVertex], faces: &[MeshTriangle]) -> String
 
 //#endregion 🔖️FormatCodec
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for PlySnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for PlySnapshot {
     const EXTENSION: &'static str = "ply";
     fn envelope_id() -> &'static str { "stdio.ply" }
 
@@ -164,7 +164,7 @@ impl store::DocumentDsl for PlySnapshot {
     fn print_dsl(&self) -> String {
         let body = write_ply_text(&self.vertices, &self.faces);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -172,12 +172,12 @@ impl store::DocumentDsl for PlySnapshot {
     }
 }
 
-impl store::DocumentPack for PlySnapshot {
+impl store::ArtifactPack for PlySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_ply_text(&self.vertices, &self.faces).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -186,10 +186,10 @@ impl store::DocumentPack for PlySnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -199,4 +199,4 @@ impl store::DocumentPack for PlySnapshot {
         Ok(Self { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), vertices, faces })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

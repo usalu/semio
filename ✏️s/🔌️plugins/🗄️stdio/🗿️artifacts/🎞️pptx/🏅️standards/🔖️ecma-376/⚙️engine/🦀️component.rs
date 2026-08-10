@@ -32,7 +32,7 @@ pub fn empty_pptx_snapshot() -> PptxSnapshot { PptxSnapshot::default() }
 pub fn register() {
     crate::artifacts::pptx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA));
 }
 
 pub struct PptxEngine { artifact_state: PptxArtifact, snapshot_state: PptxSnapshot }

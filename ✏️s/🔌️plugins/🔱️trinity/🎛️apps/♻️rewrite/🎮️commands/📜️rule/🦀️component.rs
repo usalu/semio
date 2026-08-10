@@ -235,7 +235,7 @@ pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[Stri
         return Ok(Emit::default());
     }
     let config_mutations = if clear_selection { vec![RewriteConfigMutation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-    Ok(Emit { document_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
 }
 
 pub(crate) fn set_lhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
@@ -302,7 +302,7 @@ pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMuta
     if &next == state {
         Ok(Emit::config(config_mutations))
     } else {
-        Ok(Emit { document_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
     }
 }
 

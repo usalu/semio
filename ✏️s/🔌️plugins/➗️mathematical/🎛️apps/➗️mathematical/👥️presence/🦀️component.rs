@@ -2,7 +2,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ No shareable live surface state yet — graph edits are document mutations and viewport/locale live in config.
@@ -17,7 +17,7 @@ impl protocol::MutationDiff<MathematicalPresence> for MathematicalPresence {
     fn absorb(&mut self, _other: Self) {}
 }
 
-impl store::DocumentDsl for MathematicalPresence {
+impl store::ArtifactDsl for MathematicalPresence {
     const EXTENSION: &'static str = "mathematical.presence";
     fn envelope_id() -> &'static str {
         "mathematical.mathematical.presence"
@@ -33,7 +33,7 @@ impl store::DocumentDsl for MathematicalPresence {
     }
 }
 
-impl DocumentPack for MathematicalPresence {
+impl ArtifactPack for MathematicalPresence {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }

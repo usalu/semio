@@ -1,5 +1,5 @@
 //! 🌉️ Sequence play app — direct-canvas WASM bridge: a bespoke JS API (`SequenceSession`) for
-//! driving the sequence DAG canvas outside the generic `DocumentApp`/`PluginApp` render pipeline
+//! driving the sequence DAG canvas outside the generic `ArtifactApp`/`PluginApp` render pipeline
 //! (raw GPU frame painting, pointer/wheel routing). Only compiled for `target_arch = "wasm32"` (see
 //! the `#[cfg(target_arch = "wasm32")]` on this file's `mod wasm;` declaration in `📦️glue.rs`).
 

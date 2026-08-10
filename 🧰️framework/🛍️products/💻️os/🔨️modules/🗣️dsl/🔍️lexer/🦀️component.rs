@@ -27,11 +27,11 @@ fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
         if j >= chars.len() || !is_ident_start(chars[j]) {
             return None;
         }
-        while j < chars.len() && is_ident_continue(chars[j]) {
+        while j < chars.len() && is_ident_continue(chars[j]) && chars[j] != '-' {
             j += 1;
         }
     } else if is_ident_start(chars[j]) {
-        while j < chars.len() && is_ident_continue(chars[j]) {
+        while j < chars.len() && is_ident_continue(chars[j]) && chars[j] != '-' {
             j += 1;
         }
         if j < chars.len() && chars[j] == ':' {
@@ -39,7 +39,7 @@ fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
             if j >= chars.len() || !is_ident_start(chars[j]) {
                 return None;
             }
-            while j < chars.len() && is_ident_continue(chars[j]) {
+            while j < chars.len() && is_ident_continue(chars[j]) && chars[j] != '-' {
                 j += 1;
             }
         }

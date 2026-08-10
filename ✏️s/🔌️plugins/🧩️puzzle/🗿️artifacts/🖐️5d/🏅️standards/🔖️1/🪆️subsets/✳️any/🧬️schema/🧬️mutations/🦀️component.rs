@@ -100,7 +100,7 @@ impl Mutation<Puzzle5dSnapshot> for Puzzle5dMutation {
 //#region 🔖️ValueBridge
 // 🌉️ The play app's scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture. Bridging `Puzzle5dMutation`/`Puzzle5dDiff` onto that `Value`
-// boundary too keeps `puzzle5d_document_delta_operations` and the app's `DocumentApp::Snapshot`
+// boundary too keeps `puzzle5d_document_delta_operations` and the app's `ArtifactApp::Snapshot`
 // compiling unchanged — mirrors `puzzle2d`/`puzzle3d`'s bridge.
 fn puzzle5d_value_item_id(item: &Value) -> Option<&str> {
     item.get("id").and_then(|value| value.as_str())
@@ -356,7 +356,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 //#region 🔖️PlaySnapshot
 /// 🌱️ The play app's `Puzzle5dPlayApp` predates the typed `Puzzle5dSnapshot` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers. This newtype exists
-/// only to satisfy `DocumentApp::Snapshot: store::DocumentDsl + store::DocumentPack`;
+/// only to satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack`;
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
 /// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot` and `puzzle3d`'s
@@ -371,7 +371,7 @@ impl PartialEq for Puzzle5dPlaySnapshot {
     }
 }
 
-impl store::DocumentDsl for Puzzle5dPlaySnapshot {
+impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -383,7 +383,7 @@ impl store::DocumentDsl for Puzzle5dPlaySnapshot {
     }
 }
 
-impl store::DocumentPack for Puzzle5dPlaySnapshot {
+impl store::ArtifactPack for Puzzle5dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }

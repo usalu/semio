@@ -1,6 +1,6 @@
-//! 🗄️ Generic document version-graph algebra — Author/Change/Checkpoint/Alternative/DocumentVcs,
+//! 🗄️ Generic document version-graph algebra — Author/Change/Checkpoint/Alternative/ArtifactVcs,
 //! `VcsError`, content-addressed checkpoint ids, and the raw collection-diff/operation helpers. Pure
-//! data plus pure functions: nothing here touches a live document (that's `store::DocumentStore`,
+//! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
 use serde::{Deserialize, Serialize};
@@ -82,7 +82,7 @@ pub struct Author {
 }
 
 // 🎞️ `MutationMeta` lives in `protocol_command`; `Edit<Mutation>` (imported above) is this
-// crate's own field type for `DocumentVcs.edits` below.
+// crate's own field type for `ArtifactVcs.edits` below.
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -117,7 +117,7 @@ pub struct Alternative {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentVcs<P, Mutation> {
+pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
     pub edits: Vec<Edit<Mutation>>,
     pub changes: Vec<Change>,
@@ -305,7 +305,7 @@ where
 //#region 🔖️MergeStrategy
 // 🎞️ `merge_concurrent_diffs` (real per-`MergeStrategyKind` dispatch) lives in `protocol_crdt`. The
 // checkpoint-ancestor/merge-base helpers that used to live in this region moved to `store` along
-// with `DocumentEnvelope` (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an
+// with `ArtifactEnvelope` (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an
 // envelope) — only the envelope-free id-minting primitive stays here.
 
 /// @emoji 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_

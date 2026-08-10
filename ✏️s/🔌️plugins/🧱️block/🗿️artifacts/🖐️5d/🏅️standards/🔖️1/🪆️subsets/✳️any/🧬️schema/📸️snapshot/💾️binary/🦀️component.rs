@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Block5dSnapshot` to its binary pack form.
 pub fn encode(document: &Block5dSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Block5dSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Block5dSnapshot, PackError> {
-    <Block5dSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests

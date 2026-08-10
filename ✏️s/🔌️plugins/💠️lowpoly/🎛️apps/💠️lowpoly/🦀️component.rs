@@ -1,4 +1,4 @@
-//! 🖌️ Lowpoly play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖌️ Lowpoly play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -19,13 +19,13 @@ use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targe
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
+    ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -46,7 +46,7 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 
 //#region 🔖️ScratchSlot
 thread_local! {
-    /// 🖌️ Mid-gesture scratch survives across `DocumentApp::handle` calls (associated fn has no `&mut self`).
+    /// 🖌️ Mid-gesture scratch survives across `ArtifactApp::handle` calls (associated fn has no `&mut self`).
     /// Host-owned session scratch lands with CHANNEL_VERSION 5; until then one TLS slot per thread.
     static LOWPOLY_SCRATCH: std::cell::RefCell<crate::apps::lowpoly::session::LowpolyScratch> = std::cell::RefCell::new(crate::apps::lowpoly::session::LowpolyScratch::default());
 }
@@ -246,11 +246,11 @@ use chrome::toggle_show_edges;
 /// @emoji 🖌️ B1: sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime field now lives in
 /// `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`. The one remaining
 /// field is genuine mid-gesture scratch state (`LowpolyScratch`) — the "scratch + commit" pattern the
-/// `DocumentApp` trait itself sanctions for `&self`-only `handle`/`render`.
+/// `ArtifactApp` trait itself sanctions for `&self`-only `handle`/`render`.
 #[derive(Default, Clone, Copy)]
 pub struct LowpolyPlayApp;
 
-impl DocumentApp for LowpolyPlayApp {
+impl ArtifactApp for LowpolyPlayApp {
     type Snapshot = LowpolySnapshot;
     type Mutation = LowpolyMutation;
     type Config = LowpolyConfig;
@@ -280,7 +280,7 @@ impl DocumentApp for LowpolyPlayApp {
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
     /// not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let document_json = serde_json::to_value(doc.snapshot).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
@@ -301,7 +301,7 @@ impl DocumentApp for LowpolyPlayApp {
     /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetSnapshot` op; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "mesh:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -318,7 +318,7 @@ impl DocumentApp for LowpolyPlayApp {
                     return Err(MediaError::Payload(port.into(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let projection = <LowpolySnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let projection = <LowpolySnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -332,11 +332,11 @@ impl DocumentApp for LowpolyPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
         LOWPOLY_SCRATCH.with(|scratch| command.dispatch(doc, cfg, &mut scratch.borrow_mut()))
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
@@ -365,7 +365,7 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let active_utility = config.active_utility_id.as_str();
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
@@ -373,7 +373,7 @@ impl DocumentApp for LowpolyPlayApp {
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let measures = lowpoly_window_measures(config, labels);
@@ -519,9 +519,9 @@ pub fn create_lowpoly_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type LowpolyApp = VcsDocumentApp<LowpolyPlayApp>;
+    pub type LowpolyApp = VcsArtifactApp<LowpolyPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn app() -> LowpolyApp {
@@ -711,10 +711,10 @@ mod tests {
         let lowpoly_app = LowpolyPlayApp::default();
         let projection = crate::artifacts::lowpoly::engine::default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
-        assert_eq!(emit.document_mutations.len(), 1);
-        match &emit.document_mutations[0] {
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        match &emit.artifact_mutations[0] {
             LowpolyMutation::SetSnapshot { snapshot } => assert_eq!(projection.objects.len(), 1),
             other => panic!("expected SetSnapshot, got {other:?}"),
         }

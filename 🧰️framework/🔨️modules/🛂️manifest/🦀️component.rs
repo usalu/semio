@@ -666,7 +666,7 @@ pub enum CommandScope {
 
 /// @emoji 🎛️ Declares one command: a scoped, categorized verb offered in the footer command panel.
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
-/// `DocumentApp::handle_command`/`ActionEmit`.
+/// `ArtifactApp::handle_command`/`ActionEmit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -756,7 +756,7 @@ impl From<String> for CommandRef {
 /// Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
 /// window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
 /// and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
-/// field or VCS operation. A tool's live options are supplied dynamically via `DocumentApp::tool_measures`,
+/// field or VCS operation. A tool's live options are supplied dynamically via `ArtifactApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -1425,11 +1425,11 @@ pub struct TutorialChapter {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialBase {
-    /// 📂️ Full document DSL text (`DocumentTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
+    /// 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub document_dsl: Option<String>,
+    pub artifact_dsl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub example_id: Option<String>,
@@ -1456,9 +1456,9 @@ pub struct TutorialTracks {
     pub events: Vec<TutorialEvent>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ui: Vec<TutorialUiKeyframe>,
-    /// 🖋️ The sole source of document mutation during playback — see `TutorialDocumentEventKind`.
+    /// 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub document: Vec<TutorialDocumentEvent>,
+    pub document: Vec<TutorialArtifactEvent>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub camera: Vec<TutorialCameraKeyframe>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1722,7 +1722,7 @@ pub enum TutorialUiChange {
     }
 }
 
-/// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Mutation =
+/// @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
 /// serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
@@ -1730,17 +1730,17 @@ pub enum TutorialUiChange {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct TutorialDocumentEvent {
+pub struct TutorialArtifactEvent {
     pub at: u64,
-    pub kind: TutorialDocumentEventKind,
+    pub kind: TutorialArtifactEventKind,
 }
 
-/// @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+/// @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
-pub enum TutorialDocumentEventKind {
+pub enum TutorialArtifactEventKind {
     Edit {
         #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
         forwards: Vec<DslValue>,
@@ -1767,9 +1767,9 @@ pub enum TutorialDocumentEventKind {
         alternative_id: String,
     },
     /// 📂️ Wholesale document replacement (e.g. a mid-tutorial example switch) — full
-    /// `DocumentEnvelope` JSON in both directions.
+    /// `ArtifactEnvelope` JSON in both directions.
     Load {
-        document_dsl: String,
+        artifact_dsl: String,
         previous_dsl: String,
     }
 }
@@ -2074,14 +2074,14 @@ pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSn
 /// @emoji ✂️ Everything a live director's tick from `from_ms` to `to_ms` must apply: annotational
 /// events, document edits, and UI deltas within the half-open interval on the crossing direction (empty
 /// when `from_ms == to_ms`). Backward direction (scrubbing left) reverses entry order so callers apply
-/// each `TutorialDocumentEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
+/// each `TutorialArtifactEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
 /// struct (not ts-rs mirrored) — the TS port lives in `framework/renderer/react/index.tsx` and is pinned
 /// to this one via shared golden fixtures, not a wasm call per frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TutorialSlice {
     pub forward: bool,
     pub events: Vec<TutorialEvent>,
-    pub document: Vec<TutorialDocumentEvent>,
+    pub document: Vec<TutorialArtifactEvent>,
     pub ui_changes: Vec<TutorialUiChange>,
 }
 
@@ -2100,7 +2100,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
     let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
 
     let mut events: Vec<TutorialEvent> = def.tracks.events.iter().filter(|e| in_range(e.at)).cloned().collect();
-    let mut document: Vec<TutorialDocumentEvent> = def.tracks.document.iter().filter(|e| in_range(e.at)).cloned().collect();
+    let mut document: Vec<TutorialArtifactEvent> = def.tracks.document.iter().filter(|e| in_range(e.at)).cloned().collect();
     let mut ui_changes: Vec<TutorialUiChange> = Vec::new();
     for keyframe in def.tracks.ui.iter().filter(|k| in_range(k.at)) {
         if let TutorialUiSample::Delta { changes } = &keyframe.sample {
@@ -2334,7 +2334,7 @@ pub struct WindowKindDefinition {
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub document_snapshot_schema: Option<String>,
+    pub artifact_snapshot_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub input_event_schema: Option<String>,
@@ -2447,7 +2447,7 @@ pub struct AppDefinition {
     /// see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub label: LocalizedLabel,
-    pub document: Vec<String>,
+    pub breadcrumb: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<IconName>,
@@ -2484,10 +2484,10 @@ pub struct AppDefinition {
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terminologies: Vec<String>,
-    /// 🗺️ Terminology id -> full replacement document path (product + app segments), e.g. "reuse" ->
-    /// ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep `document` under that terminology.
+    /// 🗺️ Terminology id -> full replacement breadcrumb (product + app segments), e.g. "reuse" ->
+    /// ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep the canonical breadcrumb under that terminology.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    pub terminology_breadcrumbs: std::collections::HashMap<String, Vec<String>>,
     /// 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -2538,7 +2538,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 //#region 🔖️action-args
 /// @emoji 🧮️ Computes the effective argument map for an action: for each declared arg, the staged value
 /// if present, else its declared `default`, else omitted. Renderers stage edits locally and pass them
-/// here; the contract enforcer ({@link VcsDocumentApp}) materializes defaults before dispatch so plugins
+/// here; the contract enforcer ({@link VcsArtifactApp}) materializes defaults before dispatch so plugins
 /// never re-implement default-filling.
 pub fn effective_action_args(
     defs: &[ActionArgDef],
@@ -2641,29 +2641,29 @@ pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a 
 }
 //#endregion 🔖️action-args
 
-/// 🪜️ Formats a canonical app document for chrome.
-pub fn app_document_label(document: &[String]) -> String {
-    document.join(" · ")
+/// 🪜️ Formats a canonical app breadcrumb for chrome.
+pub fn app_breadcrumb(breadcrumb: &[String]) -> String {
+    breadcrumb.join(" · ")
 }
 
-/// 🗺️ Resolves the document path effective under the active terminology; unknown/native ids fall back to `document`.
-pub fn resolve_app_document<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
-    app.terminology_documents.get(terminology).map(Vec::as_slice).unwrap_or(&app.document)
+/// 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to the canonical breadcrumb.
+pub fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
+    app.terminology_breadcrumbs.get(terminology).map(Vec::as_slice).unwrap_or(&app.breadcrumb)
 }
 
-/// 🗂️ Formats a window tab within its canonical app document, resolved under the active terminology
+/// 🗂️ Formats a window tab within its canonical app breadcrumb, resolved under the active terminology
 /// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
-pub fn app_window_document_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
-    let mut document = resolve_app_document(app, terminology).to_vec();
+pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
+    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
     if !normalized_window.is_empty()
         && normalized_window != normalized_app
-        && document.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
+        && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
     {
-        document.push(normalized_window);
+        breadcrumb.push(normalized_window);
     }
-    app_document_label(&document)
+    app_breadcrumb(&breadcrumb)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2675,7 +2675,7 @@ pub struct ExampleDefinition {
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub label: LocalizedLabel,
     pub icon_id: IconName,
-    pub document_json: String,
+    pub artifact_json: String,
     pub app_id: String,
 }
 
@@ -2885,7 +2885,7 @@ pub struct ViewWindowInstance {
 // 🎗️ `AppLabelsOverlay` (the stringly-typed, per-id runtime label-patch map) is deleted — manifest
 // labels are now `LocalizedLabel` fields resolved directly via `.resolve(terminology, locale)`, so a
 // separate locale-aware overlay merged in after the fact is no longer needed. Downstream callers
-// (plugin crates' `DocumentApp::app_labels()`, the OS renderer's overlay-merge call sites) are
+// (plugin crates' `ArtifactApp::app_labels()`, the OS renderer's overlay-merge call sites) are
 // follow-up work owned by other agents — left broken intentionally, out of scope here.
 
 //#region 🔖️Kernel
@@ -2894,8 +2894,8 @@ pub mod kernel;
 //#endregion 🔖️Kernel
 
 #[cfg(test)]
-mod app_document_tests {
-    use super::app_document_label;
+mod app_label_tests {
+    use super::app_breadcrumb;
 
     //#region 🔖️UiDirtyScopeTests
     /// 🐢️ Regression: `rename_all = "camelCase"` on an enum only renames *variant* names via `tag`, not
@@ -2938,17 +2938,17 @@ mod app_document_tests {
     //#endregion UiDirtyScopeTests
 
     #[test]
-    fn formats_app_document_for_chrome() {
+    fn formats_app_label_for_chrome() {
         assert_eq!(
-            app_document_label(&["semio".into(), "puzzle".into(), "3d".into()]),
+            app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]),
             "semio · puzzle · 3d"
         );
     }
 
     //#region 🔖️ActionArgsAndUtilitiesTests
     use crate::ui::{
-        app_window_document_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
-        resolve_app_document, resolve_layout_for_mode, resolve_mode_tools,
+        app_window_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
+        resolve_app_breadcrumb, resolve_layout_for_mode, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
         CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, Terminology,
@@ -2958,7 +2958,7 @@ mod app_document_tests {
         panel_tab_first_draggable_element_id,
         compose_tutorial_ui, interpolate_tutorial_camera, record_tutorial_action_definition, start_tutorial_action_definition,
         tutorial_camera_at, tutorial_slice, validate_tutorial, TutorialAssetSrc, TutorialBase, TutorialCameraKeyframe, TutorialCameraState,
-        TutorialChapter, TutorialDefinition, TutorialDocumentEvent, TutorialDocumentEventKind, TutorialEasing, TutorialEvent, TutorialEventKind,
+        TutorialChapter, TutorialDefinition, TutorialArtifactEvent, TutorialArtifactEventKind, TutorialEasing, TutorialEvent, TutorialEventKind,
         TutorialNarrationCue, TutorialTracks, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, TutorialUiSnapshot,
         RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
     };
@@ -3024,7 +3024,7 @@ mod app_document_tests {
         AppDefinition {
             id: "a".into(),
             label: LocalizedLabel::data("A"),
-            document: vec!["semio".into(), "a".into()],
+            breadcrumb: vec!["semio".into(), "a".into()],
             icon_id: None,
             controller_id: "a".into(),
             modes: Modes::one(crate::ui::ModeDefinition {
@@ -3046,7 +3046,7 @@ mod app_document_tests {
                 actions: window_actions,
                 utilities: Vec::new(),
                 params_schema: None,
-                document_snapshot_schema: None,
+                artifact_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -3060,7 +3060,7 @@ mod app_document_tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_breadcrumbs: std::collections::HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),
@@ -3216,27 +3216,27 @@ mod app_document_tests {
     }
 
     #[test]
-    fn resolve_app_document_uses_terminology_override_else_falls_back_to_native_document() {
+    fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
         let mut app = app_with(vec![], vec![]);
-        app.terminology_documents.insert("de".into(), vec!["semio".into(), "a-de".into()]);
-        assert_eq!(resolve_app_document(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
-        assert_eq!(resolve_app_document(&app, "native"), app.document.as_slice());
-        assert_eq!(resolve_app_document(&app, "unregistered"), app.document.as_slice());
+        app.terminology_breadcrumbs.insert("de".into(), vec!["semio".into(), "a-de".into()]);
+        assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
+        assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
+        assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
     }
 
     #[test]
-    fn app_window_document_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
+    fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
         let mut app = app_with(vec![], vec![]);
         app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
-        assert_eq!(app_window_document_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
-        assert_eq!(app_window_document_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
+        assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
         assert_eq!(
-            app_window_document_label(&app, "native", Locale::En, "Draw"),
+            app_window_label(&app, "native", Locale::En, "Draw"),
             "semio · a",
             "window label equal to the app label appends nothing"
         );
         assert_eq!(
-            app_window_document_label(&app, "native", Locale::En, "A"),
+            app_window_label(&app, "native", Locale::En, "A"),
             "semio · a",
             "window label equal to the document's trailing segment appends nothing"
         );
@@ -3584,7 +3584,7 @@ mod app_document_tests {
             description: None,
             duration_ms: 10_000,
             chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Start"), body: None }],
-            base: TutorialBase { document_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            base: TutorialBase { artifact_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
             tracks: TutorialTracks::default(),
             recorded_at: None,
         }
@@ -3650,8 +3650,8 @@ mod app_document_tests {
     }
 
     #[test]
-    fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
-        let edit = TutorialDocumentEventKind::Edit {
+    fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
+        let edit = TutorialArtifactEventKind::Edit {
             forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate"})).expect("tutorial forward operation")],
             backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate", "inverse": true})).expect("tutorial backward operation")],
             description: Some("Move object".into()),
@@ -3660,10 +3660,10 @@ mod app_document_tests {
         let json = serde_json::to_string(&edit).unwrap();
         assert!(json.contains("\"kind\":\"edit\""), "{json}");
         assert!(json.contains("\"coalesceKey\":\"camera\""), "field must be camelCase: {json}");
-        let round: TutorialDocumentEventKind = serde_json::from_str(&json).unwrap();
+        let round: TutorialArtifactEventKind = serde_json::from_str(&json).unwrap();
         assert_eq!(round, edit);
 
-        let undo = TutorialDocumentEventKind::Undo;
+        let undo = TutorialArtifactEventKind::Undo;
         let json = serde_json::to_string(&undo).unwrap();
         assert_eq!(json, r#"{"kind":"undo"}"#);
     }
@@ -3833,21 +3833,21 @@ mod app_document_tests {
     }
 
     #[test]
-    fn tutorial_slice_forward_and_reverse_cross_document_events() {
+    fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
         let mut def = minimal_tutorial();
         def.tracks.document = vec![
-            TutorialDocumentEvent {
+            TutorialArtifactEvent {
                 at: 100,
-                kind: TutorialDocumentEventKind::Edit {
+                kind: TutorialArtifactEventKind::Edit {
                     forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "a"})).expect("tutorial forward operation")],
                     backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "a"})).expect("tutorial backward operation")],
                     description: None,
                     coalesce_key: None,
                 },
             },
-            TutorialDocumentEvent {
+            TutorialArtifactEvent {
                 at: 200,
-                kind: TutorialDocumentEventKind::Edit {
+                kind: TutorialArtifactEventKind::Edit {
                     forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "b"})).expect("tutorial forward operation")],
                     backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "b"})).expect("tutorial backward operation")],
                     description: None,
@@ -3858,13 +3858,13 @@ mod app_document_tests {
         let forward = tutorial_slice(&def, 0.0, 250.0);
         assert!(forward.forward);
         assert_eq!(forward.document.len(), 2);
-        let TutorialDocumentEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
+        let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
         let backward = tutorial_slice(&def, 250.0, 0.0);
         assert!(!backward.forward);
         assert_eq!(backward.document.len(), 2);
-        let TutorialDocumentEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
+        let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
         let empty = tutorial_slice(&def, 250.0, 250.0);
@@ -3872,7 +3872,7 @@ mod app_document_tests {
     }
 
     #[test]
-    fn tutorial_slice_partitions_events_document_and_ui_by_track() {
+    fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
         let mut def = minimal_tutorial();
         def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
         def.tracks.ui =
@@ -4206,8 +4206,8 @@ mod app_document_tests {
         crate::ui::TutorialUiSample::export().unwrap();
         crate::ui::TutorialUiSnapshot::export().unwrap();
         crate::ui::TutorialUiChange::export().unwrap();
-        crate::ui::TutorialDocumentEvent::export().unwrap();
-        crate::ui::TutorialDocumentEventKind::export().unwrap();
+        crate::ui::TutorialArtifactEvent::export().unwrap();
+        crate::ui::TutorialArtifactEventKind::export().unwrap();
         crate::ui::TutorialCameraKeyframe::export().unwrap();
         crate::ui::TutorialCameraState::export().unwrap();
         crate::ui::TutorialEasing::export().unwrap();

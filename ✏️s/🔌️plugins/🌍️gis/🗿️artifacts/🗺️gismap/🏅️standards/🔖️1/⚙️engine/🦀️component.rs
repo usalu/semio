@@ -63,7 +63,7 @@ pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
 /// 🗺️ The default map document, seeded from the bundled reuse example (see
 /// `crate::artifacts::gismap::GisMapSnapshot`'s derive-generated `.gismap` DSL).
 pub fn default_document() -> GisMapSnapshot {
-    <GisMapSnapshot as store::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot())
+    <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -1,13 +1,13 @@
 package semio:framework;
 
 interface types {
-  record migrate-document-input {
+  record migrate-artifact-input {
     from-version: string,
     to-version: string,
     data: list<u8>,
   }
 
-  record migrate-document-output {
+  record migrate-artifact-output {
     data: list<u8>,
   }
 
@@ -18,8 +18,8 @@ interface types {
 
 interface plugin {
   use types.{
-    migrate-document-input,
-    migrate-document-output,
+    migrate-artifact-input,
+    migrate-artifact-output,
     plugin-error,
   };
 
@@ -41,7 +41,7 @@ interface plugin {
   exchange: func(instance-id: u32, commands: list<list<u8>>) -> result<list<list<u8>>, plugin-error>;
   /// 📦️ `data` (both directions) is pack-container bytes (see `document-pack-files`, carried inside
   /// `AppFrame::Document`/`AppCommand::LoadDocument` on the channel now) — signature unchanged.
-  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
+  migrate-artifact: func(input: migrate-artifact-input) -> result<migrate-artifact-output, plugin-error>;
   /// 🩹️ Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
   /// must only call this between serialized top-level calls — never while another call is in flight.
   clear-instance-guard: func();
@@ -62,8 +62,8 @@ interface host {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
   /// 📦️ `read-document`/`write-document` payloads are `store::pack_rt::encode_wire_value` bytes.
-  read-document: func(handle: u64) -> result<list<u8>, list<u8>>;
-  write-document: func(handle: u64, payload: list<u8>) -> result<_, list<u8>>;
+  read-artifact: func(handle: u64) -> result<list<u8>, list<u8>>;
+  write-artifact: func(handle: u64, payload: list<u8>) -> result<_, list<u8>>;
   /// 📦️ `params` is a wire-encoded `DslValue` (`encode_wire_value`).
   open-window: func(kind: string, params: list<u8>) -> result<u64, list<u8>>;
   /// 📦️ `invocation`/`result` are wire-encoded `DslValue` blobs.

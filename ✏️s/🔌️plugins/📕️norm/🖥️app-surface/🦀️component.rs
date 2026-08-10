@@ -14,7 +14,7 @@
 
 use crate::document::{CheckReport, NormFamily, NormHost};
 use semio_framework_plugin::{
-    ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec,
+    ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec,
     MediaType, ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions,
 };
 use serde::de::DeserializeOwned;
@@ -88,7 +88,7 @@ pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_i
         actions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -131,7 +131,7 @@ pub fn artifact_kind_id(variant: &str) -> String {
 /// a generic "raw model" field to receive one into yet) and `report:out` (the computed `CheckReport`,
 /// pinned to this family's own already-declared `computation.norm.{variant}` artifact kind via
 /// `kind_id`). One function serves both the builder's `.io(...)` declaration and each app's
-/// `DocumentApp::io` override, so the two never drift apart.
+/// `ArtifactApp::io` override, so the two never drift apart.
 pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
     let artifact_kind_id = artifact_kind_id(variant);
     AppIo {
@@ -171,7 +171,7 @@ pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
 pub fn export_media<F>(port: &str, variant: &str, document_schema: &str, document: &F::Document) -> Result<Media, MediaError>
 where
     F: NormFamily,
-    F::Document: store::DocumentPack,
+    F::Document: store::ArtifactPack,
 {
     if port == "report:out" {
         let host = NormHost::<F>::from_document(document.clone());
@@ -181,7 +181,7 @@ where
     if port != "document:out" {
         return Err(MediaError::NotImplemented);
     }
-    let bytes = store::DocumentPack::encode_pack(document);
+    let bytes = store::ArtifactPack::encode_pack(document);
     Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: document_schema.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
 }
 
@@ -191,7 +191,7 @@ where
 /// replicates the SDK default (decodes the base64 pack).
 pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
 where
-    D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::DocumentPack,
+    D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::ArtifactPack,
     F: Fn(D) -> M,
 {
     if port == "model:in" {
@@ -209,7 +209,7 @@ where
         return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
     };
     let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    let document = <D as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+    let document = <D as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
     Ok(Emit::mutations(vec![wrap(document)]))
 }
 //#endregion 🔖️MediaPorts
@@ -223,8 +223,8 @@ pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crat
     Ok(Emit::commit(vec![mutation], description))
 }
 
-pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, Fault> {
-    Ok(Emit::commit(vec![crate::document::SetDocumentMutation::SetDocument { document }], description))
+pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetArtifactMutation<D>, crate::config::NormConfigMutation>, Fault> {
+    Ok(Emit::commit(vec![crate::document::SetArtifactMutation::SetArtifact { document }], description))
 }
 
 /// ☑️ The one config-only edit every app's `selected-check` command emits.
@@ -245,9 +245,9 @@ pub fn selected_check_index(cfg: &ConfigView<'_, crate::config::NormConfig>) -> 
     cfg.snapshot.selected_check_index
 }
 
-/// 📄️ Reads the document out of a `DocumentView` — spelled once so every app's `render`/`handle` reads
+/// 📄️ Reads the document out of a `ArtifactView` — spelled once so every app's `render`/`handle` reads
 /// it the same way.
-pub fn snapshot<'a, D>(doc: &'a DocumentView<'_, D>) -> &'a D {
+pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
     doc.snapshot
 }
 //#endregion 🔖️Views

@@ -6,7 +6,7 @@ use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{apply_component_selection, selection_keys_for};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{merge_world_selection_ids, ConfigView, DocumentView, Emit, Fault, SelectionSet};
+use semio_framework_plugin::{merge_world_selection_ids, ConfigView, ArtifactView, Emit, Fault, SelectionSet};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️WorldSelect
@@ -20,7 +20,7 @@ pub mod world_select {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let current = SelectionSet::from_ids(config.selected_object_ids.clone());
         let merged = merge_world_selection_ids(&current, &payload.ids, &payload.merge).to_vec();
@@ -43,7 +43,7 @@ pub mod world_hover {
         pub object_id: Option<String>,
     }
 
-    pub fn handle(payload: &WorldHover, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldHover, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let target = payload.object_id.as_ref().map(|id| (id.clone(), "mesh".to_string(), 0u32));
         Ok(Emit::config(vec![
             LowpolyConfigMutation::SetHoveredObject { object_id: payload.object_id.clone() },
@@ -65,7 +65,7 @@ pub mod set_hover {
         pub id: Option<u32>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetHover, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![
             LowpolyConfigMutation::SetHoveredObject { object_id: payload.object_id.clone() },
             LowpolyConfigMutation::SetHoveredTarget { object_id: payload.object_id.clone(), mode: payload.mode.clone(), id: payload.id },
@@ -86,7 +86,7 @@ pub mod world_pick {
         pub id: Option<u32>,
     }
 
-    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldPick, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         match payload.id {
             None => {

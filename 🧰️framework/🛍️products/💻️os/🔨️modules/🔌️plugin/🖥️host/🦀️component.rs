@@ -45,9 +45,9 @@ fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<
     os_dsl::encode_fault_bytes(&os_dsl::Fault::new(os_dsl::FaultOrigin::Os, os_dsl::FaultCode::new(code), message))
 }
 
-//#region 🔖️DocumentSession
-/// 📦️ Opaque pack triple for one artifact lane (document / config / draft). Typed `DocumentStore`
-/// still lives in guest `VcsDocumentApp` until `AppCommand::PureCommand` + host `dispatch` land;
+//#region 🔖️ArtifactSession
+/// 📦️ Opaque pack triple for one artifact lane (document / config / draft). Typed `ArtifactStore`
+/// still lives in guest `VcsArtifactApp` until `AppCommand::PureCommand` + host `dispatch` land;
 /// the host already mirrors these bytes as the authority seam.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SessionLanePack {
@@ -77,7 +77,7 @@ impl SessionLanePack {
         self.pending_binary_ops.clear();
     }
 
-    /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `DocumentCodec` when `schema` is set.
+    /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `ArtifactCodec` when `schema` is set.
     pub fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>) {
         if ops.is_empty() {
             return;
@@ -117,7 +117,7 @@ impl SessionLanePack {
 /// counters. The plugin-wide {@link EngineCache} lives on `HostState` (WIT `engine-derive`/`engine-read`
 /// have no instance id). Typed stores and the command log remain guest-side until PureCommand apply.
 #[derive(Clone, Debug, Default)]
-pub struct DocumentSession {
+pub struct ArtifactSession {
     pub generation: u64,
     pub command_log_len: u64,
     pub document_schema: Option<String>,
@@ -128,7 +128,7 @@ pub struct DocumentSession {
     pub draft: SessionLanePack,
 }
 
-impl DocumentSession {
+impl ArtifactSession {
     /// 🏗️ Empty per-instance session (no packs yet).
     pub fn new() -> Self {
         Self::default()
@@ -136,7 +136,7 @@ impl DocumentSession {
 }
 
 const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
-//#endregion 🔖️DocumentSession
+//#endregion 🔖️ArtifactSession
 
 //#region 🔖️HostState
 struct HostState {
@@ -152,7 +152,7 @@ struct HostState {
     /// @emoji ⚙️ Plugin-wide host engine cache (content-addressed; not per document instance).
     engines: store::EngineCache,
     /// @emoji 🧾 Per-instance opaque pack authority (`create_app` inserts; `destroy_app` removes).
-    sessions: HashMap<u32, DocumentSession>,
+    sessions: HashMap<u32, ArtifactSession>,
 }
 
 impl WasiView for HostState {
@@ -178,13 +178,13 @@ impl HostState {
     /// ever sees an opaque channel; this host process owns the actual sync endpoint. Native URI→IO
     /// resolution left this crate with WS-A (`store::resolve_backbone` is wasm-only now); the endpoint
     /// must be registered up front via {@link WasmPluginRuntime::register_host_backbone}. WS-E wires a
-    /// `sync::DocumentHost`-backed backbone in here; until then this is an explicit-registration map.
+    /// `sync::ArtifactHost`-backed backbone in here; until then this is an explicit-registration map.
     fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn store::Backbone>, String> {
-        self.backbones.get_mut(uri).ok_or_else(|| format!("no host backbone registered for {uri}; call register_host_backbone (WS-E wires DocumentHost here)"))
+        self.backbones.get_mut(uri).ok_or_else(|| format!("no host backbone registered for {uri}; call register_host_backbone (WS-E wires ArtifactHost here)"))
     }
 
-    fn ensure_session(&mut self, instance_id: u32) -> &mut DocumentSession {
-        self.sessions.entry(instance_id).or_insert_with(DocumentSession::new)
+    fn ensure_session(&mut self, instance_id: u32) -> &mut ArtifactSession {
+        self.sessions.entry(instance_id).or_insert_with(ArtifactSession::new)
     }
 
     fn adopt_document(&mut self, instance_id: u32, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
@@ -215,11 +215,11 @@ impl semio::framework::host::Host for HostState {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
     }
 
-    fn read_document(&mut self, _handle: u64) -> Result<Vec<u8>, Vec<u8>> {
+    fn read_artifact(&mut self, _handle: u64) -> Result<Vec<u8>, Vec<u8>> {
         Err(host_fault_bytes("os.host.read-document", "read-document not implemented"))
     }
 
-    fn write_document(&mut self, _handle: u64, _payload: Vec<u8>) -> Result<(), Vec<u8>> {
+    fn write_artifact(&mut self, _handle: u64, _payload: Vec<u8>) -> Result<(), Vec<u8>> {
         Err(host_fault_bytes("os.host.write-document", "write-document not implemented"))
     }
 
@@ -440,7 +440,7 @@ impl WasmPluginRuntime {
         }
     }
 
-    /// Bind document/config/draft schema ids so Emit can fold through DocumentCodec.
+    /// Bind document/config/draft schema ids so Emit can fold through ArtifactCodec.
     pub fn bind_session_schemas(
         &self,
         instance_id: u32,
@@ -457,14 +457,14 @@ impl WasmPluginRuntime {
     }
 
     /// 👁 Host-authoritative opaque packs for `instance_id`, if a session was allocated.
-    pub fn document_session(&self, instance_id: u32) -> Result<Option<DocumentSession>, PluginHostError> {
+    pub fn document_session(&self, instance_id: u32) -> Result<Option<ArtifactSession>, PluginHostError> {
         let store = self.store_guard()?;
         Ok(store.data().sessions.get(&instance_id).cloned())
     }
 
     /// @emoji 🔗️ Registers the native-side backbone endpoint the sandboxed plugin's `backbone-send`/
     /// `backbone-poll`/`backbone-status` host calls operate against, keyed by uri. WS-E calls this
-    /// with a `sync::DocumentHost`-backed backbone once the actor layer is wired; until then it is an
+    /// with a `sync::ArtifactHost`-backed backbone once the actor layer is wired; until then it is an
     /// explicit in-process registration (there is no native URI→IO resolution in this crate anymore).
     pub fn register_host_backbone(&self, uri: &str, backbone: Box<dyn store::Backbone>) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
@@ -510,7 +510,7 @@ impl WasmPluginRuntime {
     /// `protocol_channel::AppCommand` batch forwarded here; the result is every `AppFrame` the batch
     /// produced plus anything queued since the previous call. `exchange(id, [])` is a pure drain, the
     /// heartbeat tick. Host mirrors LoadDocument/LoadConfig inputs and Document/Config/Draft/Emit
-    /// outputs into the per-instance {@link DocumentSession} pack authority.
+    /// outputs into the per-instance {@link ArtifactSession} pack authority.
     pub fn exchange(&self, instance_id: u32, commands: Vec<Vec<u8>>) -> Result<Vec<Vec<u8>>, PluginHostError> {
         let mut store = self.store_guard()?;
         store.data_mut().ensure_session(instance_id);
@@ -617,12 +617,12 @@ impl WasmPluginRuntime {
 
     /// @emoji 🩹️ Mirrors the WIT `migrate-document` call unchanged — `input`/output `data` is
     /// pack-container bytes (see `document-pack-files`).
-    pub fn migrate_document(&self, from_version: &str, to_version: &str, data: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub fn migrate_artifact(&self, from_version: &str, to_version: &str, data: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
         let input = semio::framework::types::MigrateDocumentInput { from_version: from_version.to_string(), to_version: to_version.to_string(), data };
-        let result = bindings.semio_framework_plugin().call_migrate_document(&mut *store, &input).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let result = bindings.semio_framework_plugin().call_migrate_artifact(&mut *store, &input).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result).map(|output| output.data)
     }
 

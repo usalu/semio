@@ -1,6 +1,6 @@
 //! 🗣️ Architect program artifact — the textual document surface (constitutional: dsl).
 //!
-//! `ProgramSnapshot`'s `store::DocumentDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
+//! `ProgramSnapshot`'s `store::ArtifactDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
 //! type itself (see `🦀️component.rs`); this node owns the named entry points every consumer calls and
 //! the bundled `.architect` example the derive is validated against.
 
@@ -24,12 +24,12 @@ pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
 pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
-    <ProgramSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an Architect program in its canonical textual DSL representation.
 pub fn print(document: &ProgramSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

@@ -13,12 +13,12 @@ pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../..
 
 /// 📖️ Parses playground DSL text into a `PlaygroundSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, store::TextError> {
-    <PlaygroundSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaygroundSnapshot` back to DSL text.
 pub fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
-    store::DocumentDsl::print_dsl(snapshot)
+    store::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests

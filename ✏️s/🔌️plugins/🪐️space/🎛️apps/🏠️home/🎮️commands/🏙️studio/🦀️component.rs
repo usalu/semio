@@ -6,7 +6,7 @@
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 
 //#region 🔖️CreateStudio
 pub mod create_studio {
@@ -36,10 +36,10 @@ pub mod create_studio {
     /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
     /// and navigate the shell to the new studio route (host effect).
     fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
-        Emit { document_mutations: vec![SHomeMutation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
+        Emit { artifact_mutations: vec![SHomeMutation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
     }
 
-    pub fn handle(payload: &CreateStudio, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let generation = doc.snapshot.catalog_generation;
         match payload.kind.as_str() {
             "folder" => {
@@ -100,7 +100,7 @@ pub mod bind_space_file {
         Ok(())
     }
 
-    pub fn handle(payload: &BindSpaceFile, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &BindSpaceFile, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = bind_studio_file(&payload.space_id, &payload.file_path);
@@ -126,7 +126,7 @@ pub mod import_space {
         pub dsl: Option<String>,
     }
 
-    pub fn handle(payload: &ImportSpace, doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportSpace, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let generation = doc.snapshot.catalog_generation;
         match &payload.dsl {
             Some(dsl) => {
@@ -153,7 +153,7 @@ pub mod open_space {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         eprintln!("[DEBUG] home openSpace id={}", payload.space_id);
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
     }
@@ -165,7 +165,7 @@ pub mod open_space {
 mod tests {
     use super::*;
     use semio_framework_os::list_os_space_catalog_entries;
-    use semio_framework_plugin::{testkit, HistoryView, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, HistoryView, VcsArtifactApp};
 
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
@@ -182,7 +182,7 @@ mod tests {
     fn creates_studio_via_home_action() {
         let port = crate::apps::home::catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
-        let mut home = VcsDocumentApp::new(crate::apps::home::HomeApp::default());
+        let mut home = VcsArtifactApp::new(crate::apps::home::HomeApp::default());
         home.dispatch_typed(crate::apps::home::HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &testkit::meta("local")).expect("create");
         let after = list_os_space_catalog_entries(port).expect("list").len();
         assert!(after >= before);
@@ -192,7 +192,7 @@ mod tests {
     fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");

@@ -1,15 +1,15 @@
 //! 🗃️ Local-first, non-blocking, client-side, in-memory document store — hot-swappable
 //! backbones (`temp://`/`file://`/`folder://`/`remote://`) layered on `vcs`'s version-graph
-//! algebra. `DocumentStore`/`Backbone`/`BlobStore`/`Space`/the serialization seam
-//! (`DocumentDsl`/`DocumentPack`/`pack_rt`/`DocumentCodec`) all live here — apps depend on
+//! algebra. `ArtifactStore`/`Backbone`/`BlobStore`/`Space`/the serialization seam
+//! (`ArtifactDsl`/`ArtifactPack`/`pack_rt`/`ArtifactCodec`) all live here — apps depend on
 //! `store`, never on `vcs`/`pack`/`dsl_core` directly (moved from `vcs/rs/lib.rs` by ticket
 //! `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 //!
-//! Mutation of document state is sealed: public writes go through [`DocumentStore::dispatch`]
-//! (`Apply`/`IngestRemote`/`PruneDrafts`/…) or [`DocumentStore::reset`]. Envelope fields stay
-//! `pub` for serde/plugins; treat them as read-mostly and prefer [`DocumentEnvelopeView`].
+//! Mutation of document state is sealed: public writes go through [`ArtifactStore::dispatch`]
+//! (`Apply`/`IngestRemote`/`PruneDrafts`/…) or [`ArtifactStore::reset`]. Envelope fields stay
+//! `pub` for serde/plugins; treat them as read-mostly and prefer [`ArtifactEnvelopeView`].
 
-// The `crate::os_dsl::DslDocument`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::DocumentDsl`/`::crate::os_store::OpText`
+// The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
 // external crate — every real consumer, INCLUDING this crate's own `.ops` header grammar
 // (`OpsHeaderLine` in `🔖️TextFormat` below, derived on the engine directly) as well as its in-crate
@@ -20,7 +20,7 @@
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff, MutationMeta, ReconcileReport};
-use crate::os_spr::{ActorId, DocumentId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
+use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -31,30 +31,30 @@ use std::sync::{Arc, Mutex};
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
     apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, create_document_vcs_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionMutation,
-    DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
+    ArtifactVcs, Identified, ItemPatch, Patchable, VcsError,
 };
 
 //#region 🔖️Schemas
 /// @emoji 🔗️ Identifies the channel a document synchronizes through, when one is attached.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentBackboneRef {
+pub struct ArtifactBackboneRef {
     pub uri: String,
 }
 
 /// @emoji 🔗️ Builds a backbone reference from a channel URI.
-pub fn document_backbone_ref(uri: &str) -> DocumentBackboneRef {
-    DocumentBackboneRef { uri: uri.to_string() }
+pub fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
+    ArtifactBackboneRef { uri: uri.to_string() }
 }
 
 /// @emoji 🎯️ Undo/redo/checkout position — the store-facing twin of `crate::os_spr::HistoryCursor`.
 /// Carries the FULL applied-edit list (not just the tail edit id): an edit undone mid-history
 /// precedes later-applied edits in file order, and the redo stack can contain edits in any order
 /// relative to `applied_edit_ids` — a single marker id cannot represent that. `checkpoint_id`
-/// mirrors `DocumentStore::current_checkpoint_id`.
+/// mirrors `ArtifactStore::current_checkpoint_id`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentCursor {
+pub struct ArtifactCursor {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub applied_edit_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -65,25 +65,25 @@ pub struct DocumentCursor {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentEnvelope<P, Mutation> {
+pub struct ArtifactEnvelope<P, Mutation> {
     pub schema: String,
     pub id: String,
-    pub vcs: DocumentVcs<P, Mutation>,
+    pub vcs: ArtifactVcs<P, Mutation>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub backbone: Option<DocumentBackboneRef>,
+    pub backbone: Option<ArtifactBackboneRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
     /// @emoji 🎯️ Undo/redo/checkout position, present only once a store has synced it (see
-    /// `DocumentStore::sync_cursor`) — absent for a freshly-constructed envelope or one loaded
+    /// `ArtifactStore::sync_cursor`) — absent for a freshly-constructed envelope or one loaded
     /// from a source that predates this field, in which case position stays runtime-only exactly
     /// as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<DocumentCursor>,
+    pub cursor: Option<ArtifactCursor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum DocumentCommand<Mutation> {
+pub enum ArtifactCommand<Mutation> {
     Apply {
         mutations: Vec<Mutation>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -94,7 +94,7 @@ pub enum DocumentCommand<Mutation> {
     UndoWithPolicy {
         policy: UndoPolicy,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        semantic_command: Option<Box<DocumentCommand<Mutation>>>,
+        semantic_command: Option<Box<ArtifactCommand<Mutation>>>,
     },
     CommitCheckpoint {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -137,22 +137,22 @@ pub struct CommandReceipt {
 
 /// @emoji 👁️ Read-only view over a document envelope — mutation is sealed through `dispatch`/`reset`.
 #[derive(Clone, Copy, Debug)]
-pub struct DocumentEnvelopeView<'a, P, Mutation> {
-    envelope: &'a DocumentEnvelope<P, Mutation>,
+pub struct ArtifactEnvelopeView<'a, P, Mutation> {
+    envelope: &'a ArtifactEnvelope<P, Mutation>,
 }
 
-impl<'a, P, Mutation> DocumentEnvelopeView<'a, P, Mutation> {
+impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
     pub fn schema(&self) -> &str { &self.envelope.schema }
     pub fn id(&self) -> &str { &self.envelope.id }
-    pub fn vcs(&self) -> &DocumentVcs<P, Mutation> { &self.envelope.vcs }
-    pub fn backbone(&self) -> Option<&DocumentBackboneRef> { self.envelope.backbone.as_ref() }
+    pub fn vcs(&self) -> &ArtifactVcs<P, Mutation> { &self.envelope.vcs }
+    pub fn backbone(&self) -> Option<&ArtifactBackboneRef> { self.envelope.backbone.as_ref() }
     pub fn active_alternative_id(&self) -> Option<&str> { self.envelope.active_alternative_id.as_deref() }
-    pub fn cursor(&self) -> Option<&DocumentCursor> { self.envelope.cursor.as_ref() }
-    pub fn inner(&self) -> &'a DocumentEnvelope<P, Mutation> { self.envelope }
+    pub fn cursor(&self) -> Option<&ArtifactCursor> { self.envelope.cursor.as_ref() }
+    pub fn inner(&self) -> &'a ArtifactEnvelope<P, Mutation> { self.envelope }
 }
 
-/// @emoji 📝 Draft-lane store alias — same algebra as DocumentStore; PruneDrafts never enters a Change.
-pub type DraftStore<P, Mutation> = DocumentStore<P, Mutation>;
+/// @emoji 📝 Draft-lane store alias — same algebra as ArtifactStore; PruneDrafts never enters a Change.
+pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 //#endregion 🔖️Authority
 
 //#region 🔖️Text
@@ -166,7 +166,7 @@ pub use crate::os_dsl::{TextError, TextSpan};
 /// technology next to its `Snapshot` type. LAW: `P::parse_dsl(&snapshot.print_dsl())` recovers
 /// an equal snapshot — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
 /// text may normalize (whitespace, ordering) before reaching that fixpoint.
-pub trait DocumentDsl: Sized {
+pub trait ArtifactDsl: Sized {
     /// @emoji 🏷️ Legacy single-segment suffix used by fixture paths and codecs.
     const EXTENSION: &'static str;
     fn parse_dsl(text: &str) -> Result<Self, TextError>;
@@ -189,15 +189,15 @@ pub use crate::os_semio as semio_format;
 /// @emoji 📦️ Binary counterpart of `🔖️Text` above — see the wave-1 design at
 /// `.🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
-/// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `DocumentPack` impl and
+/// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
 /// every downstream caller spell them `crate::os_store::PackEncodeOptions`/`crate::os_store::PackDecodeOptions`/
 /// `crate::os_store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
 pub use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
 
 /// @emoji 🧵️ Thin runtime bridge to `crate::os_pack::{encode_document, decode_document}`, resolved as
-/// `::crate::os_store::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
+/// `::crate::os_store::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::crate::os_dsl::RecordSpec`/`RecordValue` already use). Also
-/// hosts the schema-less `DslValue` bridge behind `impl DocumentPack for DslValue` below.
+/// hosts the schema-less `DslValue` bridge behind `impl ArtifactPack for DslValue` below.
 pub mod pack_rt {
     use super::{PackDecodeOptions, PackEncodeOptions, PackError};
     use crate::os_dsl::{DslValue, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
@@ -365,19 +365,19 @@ pub mod pack_rt {
     }
 }
 
-/// @emoji 📦️ Binary counterpart to `DocumentDsl` — same shape, opposite face. LAW: `P::decode_pack(
+/// @emoji 📦️ Binary counterpart to `ArtifactDsl` — same shape, opposite face. LAW: `P::decode_pack(
 /// &p.encode_pack())` recovers an equal `p`, AND (structurally, not just by test) `decode_pack(
 /// encode_pack(p)) == parse_dsl(print_dsl(p))` — dsl and pack are two encodings of the identical
 /// `(RecordSpec, RecordValue)` pair keyed by the same stable `u16` field ids `dsl_derive` assigns,
 /// never two independent sources of truth. The `_with` methods are required (the seam
 /// `dsl_derive`'s generated impl calls through `::crate::os_store::pack_rt`); the plain names are provided
 /// defaults over `Pack{Encode,Decode}Options::default()`.
-pub trait DocumentPack: Sized {
+pub trait ArtifactPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;
 
     /// @emoji 📦️ `encode_pack_with` at default options — infallible in practice (mirrors
-    /// `DocumentDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.
+    /// `ArtifactDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.
     fn encode_pack(&self) -> Vec<u8> {
         self.encode_pack_with(&PackEncodeOptions::default()).expect("default-options pack encode is infallible")
     }
@@ -387,11 +387,11 @@ pub trait DocumentPack: Sized {
         Self::decode_pack_with(bytes, &PackDecodeOptions::default())
     }
 
-    /// @emoji 🧬️ This document kind's structural field spec, for `DocumentCodec::pack_schema_hash`
+    /// @emoji 🧬️ This document kind's structural field spec, for `ArtifactCodec::pack_schema_hash`
     /// (W5.7's semio_hub schema-hash validation — see that field's doc). Default `None` for hand-written
-    /// `DocumentPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.
+    /// `ArtifactPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.
     /// `serde_json::Value` above): those document kinds simply opt out (a zero hash reads as
-    /// "schema-agnostic" everywhere this is consumed). `#[derive(crate::os_dsl::DslDocument)]` overrides this
+    /// "schema-agnostic" everywhere this is consumed). `#[derive(crate::os_dsl::DslArtifact)]` overrides this
     /// with the real generated `__dsl_spec()`, giving every derive-based app kind (the overwhelming
     /// majority) a genuine structural fingerprint with zero manual per-app wiring.
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
@@ -399,12 +399,12 @@ pub trait DocumentPack: Sized {
     }
 }
 
-/// @emoji 📦️ Binary counterpart to `DocumentTextFiles`. `pack` (whole `.spk` container bytes) and
+/// @emoji 📦️ Binary counterpart to `ArtifactTextFiles`. `pack` (whole `.spk` container bytes) and
 /// `spr` (whole `.spr` op-log bytes, carrying real `inverse`/binary op payloads/cursor — see
 /// `print_document_spr`) are AUTHORITATIVE; `ops` stays the op-log TEXT as a human-readable mirror
 /// only (format-invariant across text/pack/spr, but forwards-only — see `print_ops_log`'s doc).
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct DocumentPackFiles {
+pub struct ArtifactPackFiles {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
     pub ops: String,
@@ -412,7 +412,7 @@ pub struct DocumentPackFiles {
 
 
 
-/// @emoji 🔌️ Wire codec for the authoritative half of `DocumentPackFiles` (`pack` + `spr`; `ops` is
+/// @emoji 🔌️ Wire codec for the authoritative half of `ArtifactPackFiles` (`pack` + `spr`; `ops` is
 /// a derived text mirror, not carried — `parse_document_pack` never reads it) — one length-prefixed
 /// `pack` blob followed by the remaining bytes as `spr`. Used wherever a single binary blob must
 /// stand in for a whole document (media document wire, WIT `list<u8>` document hops).
@@ -436,7 +436,7 @@ pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vc
 }
 
 /// @emoji 🧩️ Compose-only pack bridge (external technology).
-impl DocumentPack for serde_json::Value {
+impl ArtifactPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_json_value(self))
     }
@@ -446,7 +446,7 @@ impl DocumentPack for serde_json::Value {
 }
 
 /// @emoji 🌱️ Pack counterpart of the schema-less `DslValue` escape hatch: delegates to `pack_rt`'s value bridge.
-impl DocumentPack for DslValue {
+impl ArtifactPack for DslValue {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_pack_value(self))
     }
@@ -473,16 +473,16 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
 //#region 🔖️CodecRegistry
 /// @emoji 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
 /// `framework/sync`'s `FolderEndpoint`) uses to print/parse pack+ops without naming the concrete
-/// `P`/`Mutation` types at that layer. Built once per document kind via `DocumentCodec::of`
+/// `P`/`Mutation` types at that layer. Built once per document kind via `ArtifactCodec::of`
 /// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
 /// wave 2) and looked up by `schema` string through `register_document_codec`/`document_codec`.
 #[derive(Clone)]
-pub struct DocumentCodec {
+pub struct ArtifactCodec {
     pub schema: String,
     pub extension: &'static str,
     /// @emoji 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
     /// `crate::os_pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
-    /// `RecordSpec` (hand-written `DocumentPack` impls, see that trait method's doc). Hub actors
+    /// `RecordSpec` (hand-written `ArtifactPack` impls, see that trait method's doc). Hub actors
     /// send this in `ClientFrame::Hello`; the semio_hub pins the first non-zero hash it sees per
     /// `(space, document)` scope and rejects a later mismatching one before `Welcome` — a zero
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
@@ -492,11 +492,11 @@ pub struct DocumentCodec {
     /// imported fallback path: compiles text straight to binary pack+spr (no JSON envelope
     /// currency anywhere in between). Returns the re-printed canonical dsl mirror alongside the
     /// pack files so a caller can write all four files (`.pack`/`.spr`/`.dsl`/`.ops`) in one shot.
-    pub compile_dsl: fn(&str, &str) -> Result<(DocumentPackFiles, String), VcsError>,
+    pub compile_dsl: fn(&str, &str) -> Result<(ArtifactPackFiles, String), VcsError>,
     /// @emoji 📥️ `(pack bytes, spr bytes) -> (dsl text, ops text)` — the sanctioned human/agent
     /// LOGGING mirror, produced from the authoritative binary for schema-agnostic callers
     /// (`store_sync`'s `FolderEndpoint::Pack` write path) that never touch a concrete `P`/`Mutation`.
-    pub print_mirror: fn(&[u8], &[u8]) -> Result<DocumentTextFiles, VcsError>,
+    pub print_mirror: fn(&[u8], &[u8]) -> Result<ArtifactTextFiles, VcsError>,
     /// @emoji 🧩️ One `MutationEnvelope` -> one printed `.ops` edit block (header line + indented
     /// op line), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
@@ -506,18 +506,18 @@ pub struct DocumentCodec {
     pub apply_ops_binary: fn(&[u8], &[u8], &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError>,
 }
 
-impl DocumentCodec {
+impl ArtifactCodec {
     /// @emoji 🏗️ Monomorphizes three non-capturing bridge functions for `(P, Mutation)` — each a
     /// genuine zero-sized `fn` item, coercible to a bare `fn` pointer — and pairs them with `schema`/
     /// `P::EXTENSION`. One call site per document kind (`register_document_codec_for_app`).
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
-        P: Clone + PartialEq + Serialize + DeserializeOwned + DocumentDsl + DocumentPack + Send + 'static,
+        P: Clone + PartialEq + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + 'static,
         Mutation: self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + 'static,
     {
-        fn compile_dsl_impl<P, Mutation>(dsl: &str, ops: &str) -> Result<(DocumentPackFiles, String), VcsError>
+        fn compile_dsl_impl<P, Mutation>(dsl: &str, ops: &str) -> Result<(ArtifactPackFiles, String), VcsError>
         where
-            P: Clone + DocumentDsl + DocumentPack,
+            P: Clone + ArtifactDsl + ArtifactPack,
             Mutation: OpText + OpBinary + self::Mutation<P>,
         {
             let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -526,9 +526,9 @@ impl DocumentCodec {
             Ok((pack_files, dsl_mirror))
         }
 
-        fn print_mirror_impl<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<DocumentTextFiles, VcsError>
+        fn print_mirror_impl<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ArtifactTextFiles, VcsError>
         where
-            P: Clone + DocumentDsl + DocumentPack,
+            P: Clone + ArtifactDsl + ArtifactPack,
             Mutation: OpText + OpBinary + self::Mutation<P>,
         {
             let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -537,7 +537,7 @@ impl DocumentCodec {
 
         fn apply_ops_binary_impl<P, Mutation>(pack: &[u8], spr: &[u8], ops_vec: &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError>
         where
-            P: Clone + Serialize + DeserializeOwned + DocumentDsl + DocumentPack,
+            P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack,
             Mutation: OpText + OpBinary + self::Mutation<P>,
         {
             if ops_vec.is_empty() {
@@ -562,11 +562,11 @@ impl DocumentCodec {
                     None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
                 };
                 let envelope = parsed.envelope;
-                let mut store = DocumentStore::new(envelope.clone());
+                let mut store = ArtifactStore::new(envelope.clone());
                 store.reset(envelope, applied, redo)?;
                 store
             };
-            store.dispatch(DocumentCommand::Apply { mutations, description: None })?;
+            store.dispatch(ArtifactCommand::Apply { mutations, description: None })?;
             let files = print_document_pack(store.envelope())?;
             Ok((files.pack, files.spr, files.ops))
         }
@@ -591,21 +591,21 @@ impl DocumentCodec {
     }
 }
 
-static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, DocumentCodec>>> = std::sync::OnceLock::new();
+static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
 
-fn document_codec_registry() -> &'static std::sync::RwLock<HashMap<String, DocumentCodec>> {
+fn document_codec_registry() -> &'static std::sync::RwLock<HashMap<String, ArtifactCodec>> {
     DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
 }
 
 /// @emoji 📝️ Registers (or overwrites) the codec for `codec.schema` — idempotent, safe to call
 /// repeatedly (every app's registration fn calls this once per document kind at program-init time).
-pub fn register_document_codec(codec: DocumentCodec) {
+pub fn register_document_codec(codec: ArtifactCodec) {
     let mut registry = document_codec_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.insert(codec.schema.clone(), codec);
 }
 
 /// @emoji 🔎️ Looks up the codec registered for `schema`, if any.
-pub fn document_codec(schema: &str) -> Option<DocumentCodec> {
+pub fn document_codec(schema: &str) -> Option<ArtifactCodec> {
     let registry = document_codec_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(schema).cloned()
 }
@@ -627,7 +627,7 @@ pub fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
 /// (`checkpoint_id` itself is the first entry). Cycle-guarded (a malformed/adversarial parent chain
 /// stops instead of looping forever) — every well-formed chain built by `reconcile_alternative`/
 /// `CommitCheckpoint` is already acyclic, this is defense in depth, not a documented invariant break.
-fn checkpoint_ancestors<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<String> {
+fn checkpoint_ancestors<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<String> {
     let mut chain = Vec::new();
     let mut seen = HashSet::new();
     let mut current = Some(checkpoint_id.to_string());
@@ -647,12 +647,12 @@ fn checkpoint_ancestors<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, c
 /// Supports branch-merge tooling that needs to know "everything since the fork point" on either
 /// side. `b`'s chain is walked nearest-to-farthest so the FIRST hit in `a`'s ancestor set is the
 /// nearest (not merely *a*) common ancestor.
-pub fn merge_base<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, a: &str, b: &str) -> Option<String> {
+pub fn merge_base<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, a: &str, b: &str) -> Option<String> {
     let ancestors_a: HashSet<String> = checkpoint_ancestors(envelope, a).into_iter().collect();
     checkpoint_ancestors(envelope, b).into_iter().find(|id| ancestors_a.contains(id))
 }
 
-pub fn reconcile_alternative<P, Mutation>(envelope: &mut DocumentEnvelope<P, Mutation>, alternative_name: &str, checkpoint_message: Option<String>, authors: Vec<Author>) -> Result<String, VcsError>
+pub fn reconcile_alternative<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, alternative_name: &str, checkpoint_message: Option<String>, authors: Vec<Author>) -> Result<String, VcsError>
 where
     P: Clone + Serialize + DeserializeOwned,
     Mutation: Clone + Serialize + DeserializeOwned,
@@ -680,10 +680,10 @@ where
 //#endregion 🔖️MergeHelpers
 
 //#region 🔖️Config
-pub type ConfigEnvelope<C, ConfigMutation> = DocumentEnvelope<C, ConfigMutation>;
-pub type ConfigStore<C, ConfigMutation> = DocumentStore<C, ConfigMutation>;
+pub type ConfigEnvelope<C, ConfigMutation> = ArtifactEnvelope<C, ConfigMutation>;
+pub type ConfigStore<C, ConfigMutation> = ArtifactStore<C, ConfigMutation>;
 
-pub fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_snapshot: C, backbone: Option<DocumentBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
+pub fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_snapshot: C, backbone: Option<ArtifactBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
 where
     C: Clone,
 {
@@ -691,7 +691,7 @@ where
 }
 
 /// @emoji 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
-pub trait ConfigRecord: DocumentDsl {}
+pub trait ConfigRecord: ArtifactDsl {}
 
 /// @emoji 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
 /// config) with the trivial `ConfigRecord` + `MutationDiff<Self>` pair every hand-rolled
@@ -719,14 +719,14 @@ macro_rules! impl_whole_record_config {
 //#endregion 🔖️Config
 
 //#region 🔖️Materialize
-pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<DocumentBackboneRef>) -> DocumentEnvelope<P, Mutation>
+pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<ArtifactBackboneRef>) -> ArtifactEnvelope<P, Mutation>
 where
     P: Clone,
 {
-    DocumentEnvelope { schema: schema.into(), id: id.into(), vcs: DocumentVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None }
+    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None }
 }
 
-pub fn edit_ids_for_changes<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
+pub fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
 where
     Mutation: Clone,
     P: Clone,
@@ -740,7 +740,7 @@ where
     edit_ids
 }
 
-pub fn materialize_document_snapshot<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+pub fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
@@ -774,9 +774,9 @@ fn reconcile_with_last<P, Op: Mutation<P>>(last_operation: Option<&Op>, snapshot
 /// @emoji 🤝️ Same replay as {@link materialize_document_snapshot}, additionally surfacing whatever
 /// {@link Mutation::reconcile} reports for the resulting snapshot. Kept as a twin function (rather
 /// than changing `materialize_document_snapshot`'s signature) so every existing caller across the
-/// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentStore`) opt into
+/// workspace is unaffected; call sites that care about conflicts (e.g. `ArtifactStore`) opt into
 /// this one instead.
-pub fn materialize_document_snapshot_with_conflicts<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<(P, Vec<SpaceConflict>), VcsError>
+pub fn materialize_document_snapshot_with_conflicts<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<(P, Vec<SpaceConflict>), VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
@@ -812,7 +812,7 @@ fn now_ms() -> u64 {
     }
 }
 
-fn uncommitted_edit_ids<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Vec<String>
+fn uncommitted_edit_ids<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Vec<String>
 where
     Mutation: Clone,
     P: Clone,
@@ -828,7 +828,7 @@ where
 /// @emoji 📄️ The two files a textual VCS document is made of: the DSL text (initial snapshot) and
 /// the append-only op log (every edit ever created, forwards-only — see {@link parse_document_text}).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct DocumentTextFiles {
+pub struct ArtifactTextFiles {
     pub dsl: String,
     pub ops: String,
 }
@@ -837,7 +837,7 @@ pub struct DocumentTextFiles {
 /// snapshot folded from every edit, so a caller never has to replay again after loading.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Mutation> {
-    pub envelope: DocumentEnvelope<P, Mutation>,
+    pub envelope: ArtifactEnvelope<P, Mutation>,
     pub snapshot: P,
 }
 
@@ -918,7 +918,7 @@ enum OpsHeaderLine {
         id: String,
     },
     /// @emoji 🎯️ Undo/redo/checkout position — the FULL applied/redo edit-id lists, not a tail
-    /// marker (see `DocumentCursor`'s doc for why). Mirrors `crate::os_spr::HistoryCursor`'s grammar.
+    /// marker (see `ArtifactCursor`'s doc for why). Mirrors `crate::os_spr::HistoryCursor`'s grammar.
     Cursor { applied: Vec<String>, redo: Vec<String>, checkpoint: Option<String> },
 }
 
@@ -1020,7 +1020,7 @@ pub fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result<Strin
 /// `print_document_text` and `print_document_pack`: the op-log grammar never touches
 /// `initial_snapshot`, so it is provably format-invariant and both printers thin out to this plus
 /// their own initial-snapshot encoding.
-fn print_ops_log<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<String, VcsError>
+fn print_ops_log<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<String, VcsError>
 where
     Mutation: OpText,
 {
@@ -1067,18 +1067,18 @@ where
 /// @emoji 📤️ Prints the full textual VCS document: the DSL text (initial snapshot) and the complete
 /// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
 /// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
-pub fn print_document_text<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<DocumentTextFiles, VcsError>
+pub fn print_document_text<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<ArtifactTextFiles, VcsError>
 where
-    P: DocumentDsl,
+    P: ArtifactDsl,
     Mutation: OpText,
 {
     let dsl = envelope.vcs.initial_snapshot.print_dsl();
     let ops = print_ops_log(envelope)?;
-    Ok(DocumentTextFiles { dsl, ops })
+    Ok(ArtifactTextFiles { dsl, ops })
 }
 
 /// @emoji 🎞️ `crate::os_spr::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
-/// distinct from `undo_policy_ordinal` above, which maps THIS crate's `DocumentCommand`-facing
+/// distinct from `undo_policy_ordinal` above, which maps THIS crate's `ArtifactCommand`-facing
 /// `UndoPolicy` (currently `semio_framework::UndoPolicy`; the two enums have identical
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
 fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
@@ -1183,7 +1183,7 @@ pub fn append_history_edits_to_spr(spr: &[u8], edits: &[crate::os_spr::HistoryEd
     crate::os_spr::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
-pub fn print_document_spr<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<Vec<u8>, VcsError>
+pub fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<Vec<u8>, VcsError>
 where
     Mutation: OpBinary,
 {
@@ -1220,11 +1220,11 @@ where
 /// @emoji 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's `edits`/`changes`/
 /// `checkpoints`/`alternatives`/`cursor` from a decoded `HistoryLog`, recovering `inverse` and
 /// `mutation_meta` from the persisted data (never replay-recomputed, unlike the text path) — the
-/// initial snapshot comes from `pack` via `DocumentPack::decode_pack`, matching
+/// initial snapshot comes from `pack` via `ArtifactPack::decode_pack`, matching
 /// `parse_document_pack`'s contract.
 pub fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + DocumentPack,
+    P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
     let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
@@ -1282,11 +1282,11 @@ where
         });
     }
 
-    let cursor = log.cursor.map(|cursor| DocumentCursor { applied_edit_ids: cursor.applied_edit_ids, redo_edit_ids: cursor.redo_edit_ids, checkpoint_id: cursor.checkpoint_id });
-    let envelope = DocumentEnvelope {
+    let cursor = log.cursor.map(|cursor| ArtifactCursor { applied_edit_ids: cursor.applied_edit_ids, redo_edit_ids: cursor.redo_edit_ids, checkpoint_id: cursor.checkpoint_id });
+    let envelope = ArtifactEnvelope {
         schema: log.schema,
         id: log.doc_id,
-        vcs: DocumentVcs {
+        vcs: ArtifactVcs {
             initial_snapshot,
             edits,
             changes: log.changes.into_iter().map(|change| Change { id: change.id, edit_ids: change.edit_ids, description: change.description, saved_at: change.saved_at }).collect(),
@@ -1332,17 +1332,17 @@ where
 
 /// @emoji 📤️ Pack counterpart of `print_document_text`: identical op-log TEXT body (`print_ops_log`)
 /// for the human-readable mirror, but the initial snapshot is encoded to pack bytes
-/// (`DocumentPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
+/// (`ArtifactPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
 /// binary op log (`print_document_spr`), which carries real inverse/binary payloads/cursor.
-pub fn print_document_pack<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<DocumentPackFiles, VcsError>
+pub fn print_document_pack<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: DocumentPack,
+    P: ArtifactPack,
     Mutation: OpText + OpBinary,
 {
     let pack = envelope.vcs.initial_snapshot.encode_pack();
     let spr = print_document_spr(envelope)?;
     let ops = print_ops_log(envelope)?;
-    Ok(DocumentPackFiles { pack, spr, ops })
+    Ok(ArtifactPackFiles { pack, spr, ops })
 }
 
 /// @emoji 📥️ Replays `ops` against an already-obtained `initial_snapshot` — the parse-independent
@@ -1364,7 +1364,7 @@ where
     let mut checkpoints: Vec<Checkpoint> = Vec::new();
     let mut alternatives: Vec<Alternative> = Vec::new();
     let mut active_alternative_id: Option<String> = None;
-    let mut cursor: Option<DocumentCursor> = None;
+    let mut cursor: Option<ArtifactCursor> = None;
     let mut snapshot = initial_snapshot.clone();
 
     /// @emoji 🕰️ An `edit` header line's fields, held until its trailing indented op-lines are all
@@ -1455,13 +1455,13 @@ where
                 active_alternative_id = Some(active_id);
             }
             OpsHeaderLine::Cursor { applied, redo, checkpoint } => {
-                cursor = Some(DocumentCursor { applied_edit_ids: applied, redo_edit_ids: redo, checkpoint_id: checkpoint });
+                cursor = Some(ArtifactCursor { applied_edit_ids: applied, redo_edit_ids: redo, checkpoint_id: checkpoint });
             }
         }
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut snapshot)?;
 
-    let envelope = DocumentEnvelope { schema, id, vcs: DocumentVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone() };
+    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone() };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
@@ -1493,7 +1493,7 @@ where
 /// snapshot — obtains the initial snapshot via `P::parse_dsl` then shares `replay_ops`.
 pub fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + DocumentDsl,
+    P: Clone + ArtifactDsl,
     Mutation: OpText + self::Mutation<P>,
 {
     let initial_snapshot = P::parse_dsl(dsl)?;
@@ -1501,11 +1501,11 @@ where
 }
 
 /// @emoji 📥️ spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
-/// pair (see `DocumentPackFiles`'s doc) — this is a thin forward onto `parse_document_spr`, which
+/// pair (see `ArtifactPackFiles`'s doc) — this is a thin forward onto `parse_document_spr`, which
 /// recovers real `inverse`/`mutation_meta`/`cursor` instead of recomputing them via replay.
 pub fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + DocumentPack,
+    P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
     parse_document_spr(pack, spr)
@@ -1529,7 +1529,7 @@ mod operation_envelope_serde {
     }
 }
 
-/// @emoji 🕹️ One structural `DocumentCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
+/// @emoji 🕹️ One structural `ArtifactCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
 /// `create-alternative`/`switch-alternative`/`checkout`/`amend` — the command-level twin of
 /// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply`/`Amend` carry no
 /// operations here (those follow as 2-space-indented `Op::print_op` lines, exactly like
@@ -1719,27 +1719,27 @@ fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
     Ok(out)
 }
 
-/// @emoji 📤️ Prints a `DocumentCommand` as its one-line-per-structural-field header, plus any
+/// @emoji 📤️ Prints a `ArtifactCommand` as its one-line-per-structural-field header, plus any
 /// 2-space-indented operation lines (`Apply`/`AmendLast`) or a further-indented nested command
 /// block (`UndoWithPolicy`'s `semantic_command`) — the maximum-token-efficient textual twin of
 /// `encode_command`. `Author::avatar` is never printed, mirroring `OpsAuthor`'s `by=[...]` law.
-pub fn print_command<Op: OpText>(command: &DocumentCommand<Op>) -> Result<String, VcsError> {
+pub fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<String, VcsError> {
     let mut out = String::new();
     match command {
-        DocumentCommand::Apply { mutations, description } => {
+        ArtifactCommand::Apply { mutations, description } => {
             out.push_str(&CommandHeaderLine::Apply { description: description.clone() }.print_op());
             out.push('\n');
             print_indented_ops(&mut out, mutations)?;
         }
-        DocumentCommand::Undo => {
+        ArtifactCommand::Undo => {
             out.push_str(&CommandHeaderLine::Undo { policy: None }.print_op());
             out.push('\n');
         }
-        DocumentCommand::Redo => {
+        ArtifactCommand::Redo => {
             out.push_str(&CommandHeaderLine::Redo.print_op());
             out.push('\n');
         }
-        DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
+        ArtifactCommand::UndoWithPolicy { policy, semantic_command } => {
             out.push_str(&CommandHeaderLine::Undo { policy: Some(undo_policy_to_token(*policy).to_string()) }.print_op());
             out.push('\n');
             if let Some(nested) = semantic_command {
@@ -1751,32 +1751,32 @@ pub fn print_command<Op: OpText>(command: &DocumentCommand<Op>) -> Result<String
                 }
             }
         }
-        DocumentCommand::CommitCheckpoint { message, authors } => {
+        ArtifactCommand::CommitCheckpoint { message, authors } => {
             let header = CommandHeaderLine::CommitCheckpoint { message: message.clone(), by: authors.iter().map(OpsAuthor::from).collect() };
             out.push_str(&header.print_op());
             out.push('\n');
         }
-        DocumentCommand::CreateAlternative { name } => {
+        ArtifactCommand::CreateAlternative { name } => {
             out.push_str(&CommandHeaderLine::CreateAlternative { name: name.clone() }.print_op());
             out.push('\n');
         }
-        DocumentCommand::SwitchAlternative { alternative_id } => {
+        ArtifactCommand::SwitchAlternative { alternative_id } => {
             out.push_str(&CommandHeaderLine::SwitchAlternative { id: alternative_id.clone() }.print_op());
             out.push('\n');
         }
-        DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+        ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
             out.push_str(&CommandHeaderLine::Checkout { id: checkpoint_id.clone() }.print_op());
             out.push('\n');
         }
-        DocumentCommand::AmendLast { mutations, coalesce_key } => {
+        ArtifactCommand::AmendLast { mutations, coalesce_key } => {
             out.push_str(&CommandHeaderLine::Amend { key: coalesce_key.clone() }.print_op());
             out.push('\n');
             print_indented_ops(&mut out, mutations)?;
         }
-        DocumentCommand::IngestRemote { .. } => {
+        ArtifactCommand::IngestRemote { .. } => {
             return Err(VcsError::Serialize("IngestRemote has no text command form".into()));
         }
-        DocumentCommand::PruneDrafts => {
+        ArtifactCommand::PruneDrafts => {
             out.push_str(&CommandHeaderLine::PruneDrafts.print_op());
             out.push('\n');
         }
@@ -1785,8 +1785,8 @@ pub fn print_command<Op: OpText>(command: &DocumentCommand<Op>) -> Result<String
 }
 
 /// @emoji 📥️ Parses a `print_command`-produced (or hand-authored) command text back into a
-/// `DocumentCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
-pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, TextError> {
+/// `ArtifactCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
+pub fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
     let all_lines: Vec<&str> = text.lines().collect();
     let mut header: Option<(u32, &str)> = None;
     let mut body_start = all_lines.len();
@@ -1809,9 +1809,9 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, Text
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("apply requires at least one operation line"));
             }
-            Ok(DocumentCommand::Apply { mutations, description })
+            Ok(ArtifactCommand::Apply { mutations, description })
         }
-        CommandHeaderLine::Undo { policy: None } => Ok(DocumentCommand::Undo),
+        CommandHeaderLine::Undo { policy: None } => Ok(ArtifactCommand::Undo),
         CommandHeaderLine::Undo { policy: Some(token) } => {
             let policy = parse_undo_policy_token(&token)?;
             let semantic_command = if body_lines.is_empty() {
@@ -1820,21 +1820,21 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, Text
                 let dedented = dedent_command_lines(&body_lines)?;
                 Some(Box::new(parse_command::<Op>(&dedented)?))
             };
-            Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
+            Ok(ArtifactCommand::UndoWithPolicy { policy, semantic_command })
         }
-        CommandHeaderLine::Redo => Ok(DocumentCommand::Redo),
-        CommandHeaderLine::CommitCheckpoint { message, by } => Ok(DocumentCommand::CommitCheckpoint { message, authors: by.into_iter().map(Author::from).collect() }),
-        CommandHeaderLine::CreateAlternative { name } => Ok(DocumentCommand::CreateAlternative { name }),
-        CommandHeaderLine::SwitchAlternative { id } => Ok(DocumentCommand::SwitchAlternative { alternative_id: id }),
-        CommandHeaderLine::Checkout { id } => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: id }),
+        CommandHeaderLine::Redo => Ok(ArtifactCommand::Redo),
+        CommandHeaderLine::CommitCheckpoint { message, by } => Ok(ArtifactCommand::CommitCheckpoint { message, authors: by.into_iter().map(Author::from).collect() }),
+        CommandHeaderLine::CreateAlternative { name } => Ok(ArtifactCommand::CreateAlternative { name }),
+        CommandHeaderLine::SwitchAlternative { id } => Ok(ArtifactCommand::SwitchAlternative { alternative_id: id }),
+        CommandHeaderLine::Checkout { id } => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: id }),
         CommandHeaderLine::Amend { key } => {
             let mutations = parse_indented_ops(&body_lines)?;
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("amend requires at least one operation line"));
             }
-            Ok(DocumentCommand::AmendLast { mutations, coalesce_key: key })
+            Ok(ArtifactCommand::AmendLast { mutations, coalesce_key: key })
         }
-        CommandHeaderLine::PruneDrafts => Ok(DocumentCommand::PruneDrafts),
+        CommandHeaderLine::PruneDrafts => Ok(ArtifactCommand::PruneDrafts),
     }
 }
 
@@ -1874,22 +1874,22 @@ fn read_command_ops<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -
     Ok(mutations)
 }
 
-/// @emoji 🎯️ B-R6 "one documented generic impl": `DocumentCommand<Op>` cannot go through
+/// @emoji 🎯️ B-R6 "one documented generic impl": `ArtifactCommand<Op>` cannot go through
 /// `#[derive(crate::os_dsl::DslOps)]` like every concrete per-technology `Mutation` enum does — it is generic
 /// over a FOREIGN `Op: OpBinary` from whichever technology is dispatching, and the derive
 /// only lowers a CONCRETE type's own fields to a `RecordSpec`; there is no way to describe "some
 /// other crate's already-`OpBinary` type" as a `crate::os_dsl::DslField` shape. This hand-written impl is the
-/// one place `DocumentCommand`'s binary layout is still spelled out by hand — everywhere else in the
+/// one place `ArtifactCommand`'s binary layout is still spelled out by hand — everywhere else in the
 /// workspace, encoding is derive-generated. Byte layout matches the convention exactly: `format u8
-/// (=1, see `COMMAND_BINARY_FORMAT`) | variant ordinal varint (`DocumentCommand` declaration order,
+/// (=1, see `COMMAND_BINARY_FORMAT`) | variant ordinal varint (`ArtifactCommand` declaration order,
 /// numerically identical to the old hand-rolled tag byte for these 9 variants since LEB128 varints
 /// under 128 are single bytes) | body`. The binary twin of `print_command`/`parse_command`. LAW:
-/// `DocumentCommand::decode_op(&command.encode_op()?) == Ok(command)`.
-impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
+/// `ArtifactCommand::decode_op(&command.encode_op()?) == Ok(command)`.
+impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         let mut out = vec![COMMAND_BINARY_FORMAT];
         match self {
-            DocumentCommand::Apply { mutations, description } => {
+            ArtifactCommand::Apply { mutations, description } => {
                 crate::os_pack::write_varint_u64(&mut out, 0);
                 out.push(if description.is_some() { 0b01 } else { 0 });
                 if let Some(text) = description {
@@ -1897,9 +1897,9 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                 }
                 write_command_ops(&mut out, mutations)?;
             }
-            DocumentCommand::Undo => crate::os_pack::write_varint_u64(&mut out, 1),
-            DocumentCommand::Redo => crate::os_pack::write_varint_u64(&mut out, 2),
-            DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
+            ArtifactCommand::Undo => crate::os_pack::write_varint_u64(&mut out, 1),
+            ArtifactCommand::Redo => crate::os_pack::write_varint_u64(&mut out, 2),
+            ArtifactCommand::UndoWithPolicy { policy, semantic_command } => {
                 crate::os_pack::write_varint_u64(&mut out, 3);
                 out.push(undo_policy_ordinal(*policy));
                 out.push(if semantic_command.is_some() { 0b01 } else { 0 });
@@ -1909,7 +1909,7 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                     out.extend_from_slice(&nested_bytes);
                 }
             }
-            DocumentCommand::CommitCheckpoint { message, authors } => {
+            ArtifactCommand::CommitCheckpoint { message, authors } => {
                 crate::os_pack::write_varint_u64(&mut out, 4);
                 out.push(if message.is_some() { 0b01 } else { 0 });
                 if let Some(text) = message {
@@ -1921,19 +1921,19 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                     write_command_str(&mut out, &author.name);
                 }
             }
-            DocumentCommand::CreateAlternative { name } => {
+            ArtifactCommand::CreateAlternative { name } => {
                 crate::os_pack::write_varint_u64(&mut out, 5);
                 write_command_str(&mut out, name);
             }
-            DocumentCommand::SwitchAlternative { alternative_id } => {
+            ArtifactCommand::SwitchAlternative { alternative_id } => {
                 crate::os_pack::write_varint_u64(&mut out, 6);
                 write_command_str(&mut out, alternative_id);
             }
-            DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+            ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
                 crate::os_pack::write_varint_u64(&mut out, 7);
                 write_command_str(&mut out, checkpoint_id);
             }
-            DocumentCommand::AmendLast { mutations, coalesce_key } => {
+            ArtifactCommand::AmendLast { mutations, coalesce_key } => {
                 crate::os_pack::write_varint_u64(&mut out, 8);
                 out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
                 if let Some(key) = coalesce_key {
@@ -1941,14 +1941,14 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                 }
                 write_command_ops(&mut out, mutations)?;
             }
-            DocumentCommand::IngestRemote { envelope } => {
+            ArtifactCommand::IngestRemote { envelope } => {
                 crate::os_pack::write_varint_u64(&mut out, 9);
                 let mut bytes = Vec::new();
                 crate::os_spr::encode_envelope(envelope, &mut bytes);
                 crate::os_pack::write_varint_u64(&mut out, bytes.len() as u64);
                 out.extend_from_slice(&bytes);
             }
-            DocumentCommand::PruneDrafts => crate::os_pack::write_varint_u64(&mut out, 10),
+            ArtifactCommand::PruneDrafts => crate::os_pack::write_varint_u64(&mut out, 10),
         }
         Ok(out)
     }
@@ -1965,21 +1965,21 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                 let presence = reader.read_u8()?;
                 let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
                 let mutations = read_command_ops(&mut reader)?;
-                Ok(DocumentCommand::Apply { mutations, description })
+                Ok(ArtifactCommand::Apply { mutations, description })
             }
-            1 => Ok(DocumentCommand::Undo),
-            2 => Ok(DocumentCommand::Redo),
+            1 => Ok(ArtifactCommand::Undo),
+            2 => Ok(ArtifactCommand::Redo),
             3 => {
                 let policy = undo_policy_from_ordinal(reader.read_u8()?)?;
                 let presence = reader.read_u8()?;
                 let semantic_command = if presence & 0b01 != 0 {
                     let len = reader.read_varint_u64()?;
                     let nested_bytes = reader.read_bytes(len as usize)?;
-                    Some(Box::new(DocumentCommand::<Op>::decode_op(nested_bytes)?))
+                    Some(Box::new(ArtifactCommand::<Op>::decode_op(nested_bytes)?))
                 } else {
                     None
                 };
-                Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
+                Ok(ArtifactCommand::UndoWithPolicy { policy, semantic_command })
             }
             4 => {
                 let presence = reader.read_u8()?;
@@ -1991,25 +1991,25 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                     let name = read_command_str(&mut reader)?;
                     authors.push(Author { id, name, avatar: None });
                 }
-                Ok(DocumentCommand::CommitCheckpoint { message, authors })
+                Ok(ArtifactCommand::CommitCheckpoint { message, authors })
             }
-            5 => Ok(DocumentCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
-            6 => Ok(DocumentCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
-            7 => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
+            5 => Ok(ArtifactCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
+            6 => Ok(ArtifactCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
+            7 => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
             8 => {
                 let presence = reader.read_u8()?;
                 let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
                 let mutations = read_command_ops(&mut reader)?;
-                Ok(DocumentCommand::AmendLast { mutations, coalesce_key })
+                Ok(ArtifactCommand::AmendLast { mutations, coalesce_key })
             }
             9 => {
                 let len = reader.read_varint_u64()?;
                 let bytes = reader.read_bytes(len as usize)?;
                 let mut pos = 0;
                 let envelope = crate::os_spr::decode_envelope(bytes, &mut pos).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "ingest envelope", offset: 0, detail: error.to_string() })?;
-                Ok(DocumentCommand::IngestRemote { envelope })
+                Ok(ArtifactCommand::IngestRemote { envelope })
             }
-            10 => Ok(DocumentCommand::PruneDrafts),
+            10 => Ok(ArtifactCommand::PruneDrafts),
             other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
         }
     }
@@ -2036,15 +2036,15 @@ pub struct HistoryColumn {
     pub alternative_ids: Vec<String>,
 }
 
-fn checkpoint_alternatives<'a, P, Mutation>(envelope: &'a DocumentEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<&'a Alternative> {
+fn checkpoint_alternatives<'a, P, Mutation>(envelope: &'a ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<&'a Alternative> {
     envelope.vcs.alternatives.iter().filter(|alternative| alternative.checkpoint_ids.iter().any(|id| id == checkpoint_id)).collect()
 }
 
-fn is_checkpoint_main_only<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, checkpoint_id: &str) -> bool {
+fn is_checkpoint_main_only<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> bool {
     checkpoint_alternatives(envelope, checkpoint_id).is_empty()
 }
 
-fn has_main_only_descendant<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, children_of: &HashMap<String, Vec<String>>, checkpoint_id: &str, seen: &mut HashSet<String>) -> bool {
+fn has_main_only_descendant<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, children_of: &HashMap<String, Vec<String>>, checkpoint_id: &str, seen: &mut HashSet<String>) -> bool {
     if !seen.insert(checkpoint_id.to_string()) {
         return false;
     }
@@ -2060,7 +2060,7 @@ fn has_main_only_descendant<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation
 /// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
 /// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
 /// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
-fn assign_history_checkpoint_lanes<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> HashMap<String, usize> {
+fn assign_history_checkpoint_lanes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> HashMap<String, usize> {
     let mut lane_by_alternative: HashMap<String, usize> = HashMap::new();
     for (index, alternative) in envelope.vcs.alternatives.iter().enumerate() {
         lane_by_alternative.insert(alternative.id.clone(), index + 1);
@@ -2093,7 +2093,7 @@ fn assign_history_checkpoint_lanes<P, Mutation>(envelope: &DocumentEnvelope<P, M
 /// @emoji 📜️ Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
 /// each carrying its swimlane, labels (alternative names, `"main"` fallback on the newest unlabeled
 /// row), and authors. Mirrors premigration `buildHistoryColumns`.
-pub fn build_history_columns<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Vec<HistoryColumn> {
+pub fn build_history_columns<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Vec<HistoryColumn> {
     let lane_by_checkpoint_id = assign_history_checkpoint_lanes(envelope);
     envelope
         .vcs
@@ -2123,14 +2123,14 @@ pub fn build_history_columns<P, Mutation>(envelope: &DocumentEnvelope<P, Mutatio
 }
 //#endregion 🔖️History
 
-//#region 🔖️DocumentStore
-//#region 🔖️DocumentStore
-pub struct DocumentStore<P, Mutation>
+//#region 🔖️ArtifactStore
+//#region 🔖️ArtifactStore
+pub struct ArtifactStore<P, Mutation>
 where
     P: Clone + Serialize + DeserializeOwned,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
 {
-    envelope: DocumentEnvelope<P, Mutation>,
+    envelope: ArtifactEnvelope<P, Mutation>,
     backbone: Option<Box<dyn Backbone>>,
     dag: crate::os_spr::MutationDag,
     applied_edit_ids: Vec<String>,
@@ -2174,9 +2174,9 @@ fn edit_actor_from_meta(mutation_meta: &[MutationMeta]) -> Option<String> {
     mutation_meta.first().and_then(|meta| meta.author_id.clone()).map(|actor_id| actor_id.0)
 }
 
-impl<P, Mutation> DocumentStore<P, Mutation>
+impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + DocumentPack,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
 {
     /// @emoji 🚫️ A store is always constructed with no backbone attached — the envelope's
@@ -2187,10 +2187,10 @@ where
     /// `parse_document_spr`), `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id`/`current`
     /// are seeded from it — restoring the exact undo/redo position across a save/load cycle.
     /// `local_actor_id` is seeded from the tail applied edit's actor so `UndoPolicy::ExactBaseOnly`'s
-    /// foreign-edit check keeps working immediately after reload (a real `VcsDocumentApp` overrides
+    /// foreign-edit check keeps working immediately after reload (a real `VcsArtifactApp` overrides
     /// it anyway via `set_local_actor_id` on every dispatch). Absent a cursor, every edit is
     /// treated as applied and `local_actor_id` stays `None` (pre-W4 behavior).
-    pub fn new(envelope: DocumentEnvelope<P, Mutation>) -> Self {
+    pub fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
         let (applied_edit_ids, redo_edit_ids, current_checkpoint_id, current, local_actor_id) = match &envelope.cursor {
             Some(cursor) => {
                 let mut folded = envelope.vcs.initial_snapshot.clone();
@@ -2218,13 +2218,13 @@ where
         self.generation
     }
 
-    pub fn envelope(&self) -> &DocumentEnvelope<P, Mutation> {
+    pub fn envelope(&self) -> &ArtifactEnvelope<P, Mutation> {
         &self.envelope
     }
 
     /// @emoji 👁️ Read-only envelope view — prefer this over mutating through public fields.
-    pub fn envelope_view(&self) -> DocumentEnvelopeView<'_, P, Mutation> {
-        DocumentEnvelopeView { envelope: &self.envelope }
+    pub fn envelope_view(&self) -> ArtifactEnvelopeView<'_, P, Mutation> {
+        ArtifactEnvelopeView { envelope: &self.envelope }
     }
 
     pub fn applied_edit_ids(&self) -> &[String] {
@@ -2275,18 +2275,18 @@ where
     }
 
     /// @emoji ♻️ Sole public reload API — replaces the former public `set_state`/`set_envelope` escape hatches.
-    pub fn reset(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
+    pub fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
         self.set_state(envelope, applied_edit_ids, redo_edit_ids);
         Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation() })
     }
 
-    pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+    pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
         self.set_state(envelope, applied_edit_ids, Vec::new());
     }
 
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
-    pub(crate) fn set_state(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) {
+    pub(crate) fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) {
         self.backbone = None;
         self.edit_sequence = envelope.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
         self.current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
@@ -2359,10 +2359,10 @@ where
         &self.conflicts
     }
 
-    pub fn dispatch(&mut self, command: DocumentCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
+    pub fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
         self.pump()?;
-        let skip_flush = matches!(command, DocumentCommand::IngestRemote { .. } | DocumentCommand::PruneDrafts);
-        let is_apply = matches!(command, DocumentCommand::Apply { .. });
+        let skip_flush = matches!(command, ArtifactCommand::IngestRemote { .. } | ArtifactCommand::PruneDrafts);
+        let is_apply = matches!(command, ArtifactCommand::Apply { .. });
         let before = self.applied_edit_ids.len();
         self.dispatch_inner(command)?;
         if !skip_flush {
@@ -2380,10 +2380,10 @@ where
         })
     }
 
-    fn dispatch_inner(&mut self, command: DocumentCommand<Mutation>) -> Result<(), VcsError> {
+    fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError> {
         match command {
-            DocumentCommand::Undo => self.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).map(|_| ()),
-            DocumentCommand::UndoWithPolicy { policy, semantic_command } => match policy {
+            ArtifactCommand::Undo => self.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).map(|_| ()),
+            ArtifactCommand::UndoWithPolicy { policy, semantic_command } => match policy {
                 UndoPolicy::ExactBaseOnly => {
                     let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
                     if !self.edit_is_local(&last) {
@@ -2420,7 +2420,7 @@ where
                     self.dispatch_inner(*command)
                 }
             },
-            DocumentCommand::Redo => {
+            ArtifactCommand::Redo => {
                 let next = self.redo_edit_ids.pop().ok_or(VcsError::NothingToRedo)?;
                 self.applied_edit_ids.push(next.clone());
                 // ⚡️ Fold the redone edit's forwards onto `current` in their own natural order — cheap
@@ -2438,7 +2438,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::CommitCheckpoint { message, authors } => {
+            ArtifactCommand::CommitCheckpoint { message, authors } => {
                 let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids);
                 if pending.is_empty() {
                     return Ok(());
@@ -2465,9 +2465,9 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::CreateAlternative { name } => {
+            ArtifactCommand::CreateAlternative { name } => {
                 if self.envelope.vcs.checkpoints.is_empty() {
-                    self.dispatch(DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
+                    self.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
                 }
                 let checkpoint_id = self.current_checkpoint_id.clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone())).ok_or(VcsError::NoCheckpoint)?;
                 let alt_id = mint_alternative_id(&name, &[checkpoint_id.clone()]);
@@ -2477,7 +2477,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::SwitchAlternative { alternative_id } => {
+            ArtifactCommand::SwitchAlternative { alternative_id } => {
                 let alternative = self.envelope.vcs.alternatives.iter().find(|alt| alt.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.clone()))?.clone();
                 let checkpoint_id = alternative.checkpoint_ids.last().ok_or(VcsError::NoCheckpoint)?.clone();
                 if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
@@ -2488,7 +2488,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+            ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
                 if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
                     return Err(VcsError::UnknownChange(checkpoint_id.clone()));
                 }
@@ -2497,7 +2497,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::Apply { mutations, description } => {
+            ArtifactCommand::Apply { mutations, description } => {
                 if mutations.is_empty() {
                     return Err(VcsError::EmptyApply);
                 }
@@ -2519,7 +2519,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentCommand::AmendLast { mutations, coalesce_key } => {
+            ArtifactCommand::AmendLast { mutations, coalesce_key } => {
                 if mutations.is_empty() {
                     return Err(VcsError::EmptyApply);
                 }
@@ -2563,11 +2563,11 @@ where
                     Ok(())
                 }
             }
-            DocumentCommand::IngestRemote { envelope } => {
+            ArtifactCommand::IngestRemote { envelope } => {
                 let _receipt = self.ingest_remote(envelope)?;
                 Ok(())
             }
-            DocumentCommand::PruneDrafts => {
+            ArtifactCommand::PruneDrafts => {
                 // Reserved for draft-lane stores ({@link DraftStore}): real prune lands with draft ops.
                 Ok(())
             }
@@ -2577,7 +2577,7 @@ where
     /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
     /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`.
     // TODO(OPERATIONS-TO-MUTATIONS Wave 1): prefer driving apply/inverse via
-    // `crate::os_engine::ArtifactEngine` once DocumentStore owns an engine; currently still calls Mutation::diff/inverse directly.
+    // `crate::os_engine::ArtifactEngine` once ArtifactStore owns an engine; currently still calls Mutation::diff/inverse directly.
     fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> (Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P) {
         let mut snapshot = pre_snapshot.clone();
         let mut forwards = Vec::with_capacity(mutations.len());
@@ -2625,14 +2625,14 @@ where
     where
         Mutation: OpBinary,
     {
-        let command = <DocumentCommand<Mutation> as OpBinary>::decode_op(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let command = <ArtifactCommand<Mutation> as OpBinary>::decode_op(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command)
     }
 
     /// @emoji 📸️ The whole-document snapshot as real `pack`+`spr` bytes — what `flush_outbound`
     /// sends over `BackboneMessage::Snapshot` and what any other caller needing a full-fidelity
     /// binary snapshot (never JSON) should call.
-    pub fn snapshot_pack(&self) -> Result<DocumentPackFiles, VcsError> {
+    pub fn snapshot_pack(&self) -> Result<ArtifactPackFiles, VcsError> {
         print_document_pack(&self.envelope)
     }
 
@@ -2673,7 +2673,7 @@ where
         self.backbone.take()
     }
 
-    pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+    pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> {
         self.envelope.backbone.as_ref()
     }
 
@@ -2722,7 +2722,7 @@ where
     }
 
     fn merge_remote_snapshot(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), VcsError> {
-        let remote: DocumentEnvelope<P, Mutation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?.envelope;
+        let remote: ArtifactEnvelope<P, Mutation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?.envelope;
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             self.edit_sequence = remote.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
@@ -2843,7 +2843,7 @@ where
         let result = if is_apply {
             match self.envelope.vcs.edits.last() {
                 Some(edit) => {
-                    let document_id = DocumentId(self.envelope.id.clone());
+                    let document_id = ArtifactId(self.envelope.id.clone());
                     let schema = SchemaId(self.envelope.schema.clone());
                     match crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema) {
                         Ok(op_envelopes) => {
@@ -2883,7 +2883,7 @@ where
     /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
     /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
     fn sync_cursor(&mut self) {
-        self.envelope.cursor = Some(DocumentCursor { applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() });
+        self.envelope.cursor = Some(ArtifactCursor { applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() });
     }
 
     fn bump(&mut self) {
@@ -2940,7 +2940,7 @@ pub fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr
         finished_at: None,
     })
 }
-//#endregion 🔖️DocumentStore
+//#endregion 🔖️ArtifactStore
 
 //#region 🔖️Backbone
 //#region 🔖️Backbone
@@ -3072,7 +3072,7 @@ impl OpBinary for BackboneMessage {
 //#endregion 🔖️OpCodec
 
 
-/// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
+/// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `ArtifactStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
 /// semio_hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
@@ -3082,7 +3082,7 @@ impl OpBinary for BackboneMessage {
 /// URI schemes are resolved by the host actor (`framework/sync`): `temp://` (in-memory),
 /// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS semio_hub).
 pub trait Backbone: Send + Sync {
-    fn descriptor(&self) -> DocumentBackboneRef;
+    fn descriptor(&self) -> ArtifactBackboneRef;
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
     fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError>;
 }
@@ -3219,7 +3219,7 @@ impl PortBackbone {
 }
 
 impl Backbone for PortBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
+    fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
@@ -3251,7 +3251,7 @@ impl MemoryBackbone {
 }
 
 impl Backbone for MemoryBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
+    fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
@@ -3296,7 +3296,7 @@ impl ChannelBackbone {
 }
 
 impl Backbone for ChannelBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
+    fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
@@ -3312,7 +3312,7 @@ impl Backbone for ChannelBackbone {
 }
 
 impl ChannelBackboneRemote {
-    pub fn descriptor(&self) -> DocumentBackboneRef {
+    pub fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
@@ -3353,7 +3353,7 @@ pub struct BlobRef {
 }
 
 /// @emoji 🗄️ Content-addressed blob persistence backing `MergeStrategyKind::ContentAddressedBlob` /
-/// `DocumentKind::ContentAddressedBlob` (`framework/core/rs` 🔖️MergeStrategy region). `put` is idempotent —
+/// `ArtifactKind::ContentAddressedBlob` (`framework/core/rs` 🔖️MergeStrategy region). `put` is idempotent —
 /// it dedupes by the Blake3 hash of the bytes ({@link framework_hash::hash_bytes}), so writing
 /// the same content twice never rewrites storage. Implementors decide the backing medium (sqlite here,
 /// a semio_hub HTTP route in a later ticket, an IndexedDB cache in the browser).
@@ -3367,7 +3367,7 @@ pub trait BlobStore: Send + Sync {
 
 //#region 🔖️Space
 //#region SpaceMember
-/// @emoji 🧑️‍🤝️‍🧑️ Object-safe façade over a `DocumentStore<P, Mutation>` so a space host can hold a
+/// @emoji 🧑️‍🤝️‍🧑️ Object-safe façade over a `ArtifactStore<P, Mutation>` so a space host can hold a
 /// heterogeneous registry of documents (`HashMap<String, Box<dyn SpaceMember>>`) without knowing
 /// each member's concrete `P`/`Mutation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
@@ -3388,15 +3388,15 @@ pub trait SpaceMember {
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄️ Downcast escape hatch: a space host UI (or a test) needs the concrete
-    /// `DocumentStore<P, Mutation>` back out of a `Box<dyn SpaceMember>` — e.g. to `Apply` a
+    /// `ArtifactStore<P, Mutation>` back out of a `Box<dyn SpaceMember>` — e.g. to `Apply` a
     /// technology-specific `Mutation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Mutation` pair, so this never fails for a genuine member.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-impl<P, Mutation> SpaceMember for DocumentStore<P, Mutation>
+impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + DocumentPack + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + 'static,
 {
     fn document_id(&self) -> &str {
@@ -3408,7 +3408,7 @@ where
     }
 
     fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
-        self.dispatch(DocumentCommand::CommitCheckpoint { message: Some(message), authors })?;
+        self.dispatch(ArtifactCommand::CommitCheckpoint { message: Some(message), authors })?;
         // `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
         // trait method — Rust prefers inherent methods over trait methods of the same name.
         self.current_checkpoint_id().map(|id| id.to_string()).ok_or(VcsError::NoCheckpoint)
@@ -3426,14 +3426,14 @@ where
         if !alternative_id.is_empty() {
             let is_alternative_tip = self.envelope().vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).map(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id)).unwrap_or(false);
             if is_alternative_tip {
-                return self.dispatch(DocumentCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }).map(|_| ());
+                return self.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }).map(|_| ());
             }
         }
-        self.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }).map(|_| ())
+        self.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }).map(|_| ())
     }
 
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
-        self.dispatch(DocumentCommand::CreateAlternative { name })?;
+        self.dispatch(ArtifactCommand::CreateAlternative { name })?;
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
@@ -3456,11 +3456,11 @@ where
     }
 
     fn undo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentCommand::Undo).map(|_| ())
+        self.dispatch(ArtifactCommand::Undo).map(|_| ())
     }
 
     fn redo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentCommand::Redo).map(|_| ())
+        self.dispatch(ArtifactCommand::Redo).map(|_| ())
     }
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
@@ -3511,7 +3511,7 @@ pub struct SpaceAlternative {
 pub const S_SPACE_HISTORY_SCHEMA: &str = "s.space.history";
 
 /// @emoji 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`) meta-document: itself
-/// an ordinary `DocumentVcs` document kind (dogfooded — no bespoke transport), holding the
+/// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -3640,16 +3640,16 @@ impl Mutation<SpaceHistorySnapshot> for SpaceHistoryMutation {
     }
 }
 
-// 🎯️ B2: `DocumentStore`'s shared impl block now requires `P: DocumentPack` + `Mutation: OpText
+// 🎯️ B2: `ArtifactStore`'s shared impl block now requires `P: ArtifactPack` + `Mutation: OpText
 // + OpBinary` for every instantiation (the pack+spr binary snapshot pipeline, needed by
 // `SpaceHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
 // cross a real wire once a backbone is attached, see `studio_vcs_host_meta_document_is_backbone_
 // attachable_and_detachable`). `SpaceCheckpoint`/`SpaceAlternative` embed foreign types
 // (`crate::os_vcs::Author`, `crate::os_spr::HybridLogicalTimestamp`) that cannot derive `crate::os_dsl::DslRecord`
 // (orphan rule; `dsl`'s own dependency graph would cycle back through `protocol`), so a full
-// `#[derive(DslDocument)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
+// `#[derive(DslArtifact)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
 // dedicated field-mirroring effort (tracked as a B9 follow-up, same as the `serde_json::Value`-
-// projected apps' analogous DSL-quality gap — see `impl DocumentPack for serde_json::Value`
+// projected apps' analogous DSL-quality gap — see `impl ArtifactPack for serde_json::Value`
 // above). BINARY face: real pack `Shape::Value` TLV bytes via `pack_rt::encode_json_value`
 // (compliant structured binary per this wave's scope ruling — NOT raw JSON text bytes, unlike
 // the deleted `serde_json::to_vec` hatch this replaces). TEXT face: JSON text, the same
@@ -3677,7 +3677,7 @@ impl OpBinary for SpaceHistoryMutation {
         from_dsl_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })
     }
 }
-impl DocumentDsl for SpaceHistorySnapshot {
+impl ArtifactDsl for SpaceHistorySnapshot {
     const EXTENSION: &'static str = "space-history";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
@@ -3686,7 +3686,7 @@ impl DocumentDsl for SpaceHistorySnapshot {
         serde_json::to_string(self).expect("SpaceHistorySnapshot serializes infallibly")
     }
 }
-impl DocumentPack for SpaceHistorySnapshot {
+impl ArtifactPack for SpaceHistorySnapshot {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let value = to_dsl_value(self).map_err(PackError::Schema)?;
         Ok(pack_rt::encode_pack_value(&value))
@@ -3704,7 +3704,7 @@ impl DocumentPack for SpaceHistorySnapshot {
 /// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
 /// it satisfies `SpaceMember`.
 pub struct SpaceHost {
-    meta: DocumentStore<SpaceHistorySnapshot, SpaceHistoryMutation>,
+    meta: ArtifactStore<SpaceHistorySnapshot, SpaceHistoryMutation>,
     members: HashMap<String, Box<dyn SpaceMember>>,
 }
 
@@ -3713,8 +3713,8 @@ pub struct SpaceHost {
 
 
 impl SpaceHost {
-    pub fn new(meta_envelope: DocumentEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Self {
-        Self { meta: DocumentStore::new(meta_envelope), members: HashMap::new() }
+    pub fn new(meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Self {
+        Self { meta: ArtifactStore::new(meta_envelope), members: HashMap::new() }
     }
 
     pub fn register_member(&mut self, member: Box<dyn SpaceMember>) {
@@ -3758,7 +3758,7 @@ impl SpaceHost {
     }
 
     /// @emoji 🔗️ Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
-    /// contract as any other `DocumentStore` — default is unattached, this is always an
+    /// contract as any other `ArtifactStore` — default is unattached, this is always an
     /// explicit call.
     pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
         self.meta.attach_backbone(backbone)
@@ -3769,7 +3769,7 @@ impl SpaceHost {
         self.meta.detach_backbone()
     }
 
-    pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+    pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> {
         self.meta.backbone_ref()
     }
 
@@ -3809,8 +3809,8 @@ impl SpaceHost {
         // id-based dedup silently absorbed the duplicate); now that `Operations` messages carry
         // per-OP ids (distinct from the edit's own id — see `flush_outbound`), the two flushes are
         // no longer accidentally deduplicable, so avoiding the redundant one is the real fix.
-        self.meta.dispatch_inner(DocumentCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint }], description: Some(message) })?;
-        self.meta.dispatch(DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
+        self.meta.dispatch_inner(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint }], description: Some(message) })?;
+        self.meta.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
         Ok(checkpoint_id)
     }
 
@@ -3823,7 +3823,7 @@ impl SpaceHost {
         space_alternative_payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
         let alternative_id = content_addressed_entity_id("space-alternative", &space_alternative_payload);
         let alternative = SpaceAlternative { id: alternative_id.clone(), name, checkpoint_ids };
-        self.meta.dispatch(DocumentCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative }], description: None })?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative }], description: None })?;
         Ok(alternative_id)
     }
 
@@ -3845,7 +3845,7 @@ impl SpaceHost {
         let snapshot = self.meta.snapshot()?;
         let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
-        self.meta.dispatch(DocumentCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None })?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None })?;
         self.checkout_space_checkpoint(&checkpoint_id)
     }
 
@@ -3893,16 +3893,16 @@ pub mod test_support {
     /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
-        P: Clone + Serialize + DeserializeOwned + DocumentPack + PartialEq + std::fmt::Debug,
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug,
         Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         let post = store.snapshot().expect("post snapshot");
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("undo snapshot"), initial, "undo did not restore initial snapshot");
-        store.dispatch(DocumentCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
         assert_eq!(store.snapshot().expect("redo snapshot"), post, "redo did not restore post snapshot");
         let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
         assert_eq!(replayed, post, "materialization from replay diverged from store snapshot");
@@ -3913,7 +3913,7 @@ pub mod test_support {
     /// call this from a `#[test]` over every `include_str!` fixture.
     pub fn assert_dsl_round_trip<P>(snapshot: &P)
     where
-        P: DocumentDsl + PartialEq + std::fmt::Debug,
+        P: ArtifactDsl + PartialEq + std::fmt::Debug,
     {
         let printed = snapshot.print_dsl();
         let parsed = P::parse_dsl(&printed).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
@@ -3940,10 +3940,10 @@ pub mod test_support {
     /// but starting from arbitrary fixture text instead of an already-canonical in-memory value.
     ///
     /// **Law 2 — canonicalize idempotence**: `canonicalize(x) := print_dsl(parse_dsl(x))`. For every
-    /// derive-generated `DocumentDsl` impl this IS `crate::os_dsl::schema::canonicalize(x, spec, opts)`
+    /// derive-generated `ArtifactDsl` impl this IS `crate::os_dsl::schema::canonicalize(x, spec, opts)`
     /// (`__rt::print_document_record`/`parse_document_record` route straight through
     /// `crate::os_dsl::schema::parse`/`print` in `JoinMode::Document`, the exact pair `canonicalize` composes)
-    /// — and it is the correct generalization for hand-rolled (Route A idiom) `DocumentDsl` impls
+    /// — and it is the correct generalization for hand-rolled (Route A idiom) `ArtifactDsl` impls
     /// that have no `RecordSpec` at all. `canonicalize(text) == printed_once`;
     /// `canonicalize(printed_once) == printed_twice`; idempotence is `printed_once == printed_twice`.
     ///
@@ -3951,7 +3951,7 @@ pub mod test_support {
     /// a caller sweeping many fixture files can collect every failure before reporting.
     pub fn check_dsl_fixture_text_laws<P>(text: &str) -> Result<(), String>
     where
-        P: DocumentDsl + PartialEq,
+        P: ArtifactDsl + PartialEq,
     {
         let first = P::parse_dsl(text).map_err(|error| format!("parse failed: {error}"))?;
         let printed_once = first.print_dsl();
@@ -3970,7 +3970,7 @@ pub mod test_support {
     /// equal snapshot — the pack sibling of `assert_dsl_round_trip`.
     pub fn assert_pack_round_trip<P>(snapshot: &P)
     where
-        P: DocumentPack + PartialEq + std::fmt::Debug,
+        P: ArtifactPack + PartialEq + std::fmt::Debug,
     {
         let bytes = snapshot.encode_pack();
         let decoded = P::decode_pack(&bytes).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
@@ -3979,10 +3979,10 @@ pub mod test_support {
 
     /// @emoji ⚖️ Asserts dsl and pack are two encodings of the SAME value: `decode_pack(
     /// encode_pack(p)) == parse_dsl(print_dsl(p)) == p` — the compile-time validation ground truth
-    /// for the whole pack rollout's central LAW (see `DocumentPack`'s doc comment).
+    /// for the whole pack rollout's central LAW (see `ArtifactPack`'s doc comment).
     pub fn assert_dsl_pack_equivalence<P>(snapshot: &P)
     where
-        P: DocumentDsl + DocumentPack + Clone + PartialEq + std::fmt::Debug,
+        P: ArtifactDsl + ArtifactPack + Clone + PartialEq + std::fmt::Debug,
     {
         let via_pack = P::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
         let via_dsl = P::parse_dsl(&snapshot.print_dsl()).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
@@ -4021,30 +4021,30 @@ pub mod test_support {
     }
 
     /// @emoji ⚖️ Asserts command text and command binary are two encodings of the SAME command:
-    /// `DocumentCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
+    /// `ArtifactCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
     /// binary encoding is deterministic. The compile-time validation ground truth for
-    /// `DocumentCommand`'s text/binary pair — the command-level mirror of
+    /// `ArtifactCommand`'s text/binary pair — the command-level mirror of
     /// `assert_op_text_binary_equivalence`.
-    pub fn assert_command_text_binary_equivalence<Op>(command: &DocumentCommand<Op>)
+    pub fn assert_command_text_binary_equivalence<Op>(command: &ArtifactCommand<Op>)
     where
         Op: OpText + OpBinary + Clone + PartialEq + std::fmt::Debug,
     {
         let printed = print_command(command).unwrap_or_else(|error| panic!("command print failed: {error}"));
-        let parsed: DocumentCommand<Op> = parse_command(&printed).unwrap_or_else(|error| panic!("command parse failed: {error}"));
+        let parsed: ArtifactCommand<Op> = parse_command(&printed).unwrap_or_else(|error| panic!("command parse failed: {error}"));
         assert_eq!(&parsed, command, "command text round trip diverged; printed:\n{printed}");
         let encoded = command.encode_op().unwrap_or_else(|error| panic!("command encode failed: {error}"));
         let encoded_again = command.encode_op().unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
         assert_eq!(encoded, encoded_again, "command binary encoding is not deterministic");
-        let decoded: DocumentCommand<Op> = DocumentCommand::<Op>::decode_op(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
+        let decoded: ArtifactCommand<Op> = ArtifactCommand::<Op>::decode_op(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 
     /// @emoji 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
     /// live snapshot the store already holds — the ground truth for {@link print_document_text}/
-    /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
-    pub fn assert_document_text_round_trip<P, Mutation>(store: &DocumentStore<P, Mutation>)
+    /// {@link parse_document_text} on any technology once it implements `ArtifactDsl` + `OpText`.
+    pub fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + OpText + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -4057,9 +4057,9 @@ pub mod test_support {
     /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
     /// additionally asserts the pack path's parsed snapshot agrees with the text path's — the two
     /// storage formats must never diverge on the same store.
-    pub fn assert_document_pack_round_trip<P, Mutation>(store: &DocumentStore<P, Mutation>)
+    pub fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -4095,7 +4095,7 @@ pub mod test_support {
     /// so would just re-run `mutation_envelope_from_edit`'s own logic against itself and always
     /// agree — see this function's `🧪️Tests` sibling for a deliberately lossy `Mutation` impl that
     /// trips law (2).
-    pub fn assert_command_envelope_round_trip<P, Mutation>(edit: &Edit<Mutation>, document_id: &DocumentId, schema: &SchemaId)
+    pub fn assert_command_envelope_round_trip<P, Mutation>(edit: &Edit<Mutation>, document_id: &ArtifactId, schema: &SchemaId)
     where
         P: Clone + PartialEq + std::fmt::Debug,
         Mutation: self::Mutation<P> + PartialEq + std::fmt::Debug + OpBinary,
@@ -4127,13 +4127,13 @@ pub mod test_support {
     }
 
     /// @emoji 🩺️ Asserts the store's incrementally-maintained live snapshot agrees with a
-    /// from-scratch full replay — the differential check for `DocumentStore`'s stateful `current`
+    /// from-scratch full replay — the differential check for `ArtifactStore`'s stateful `current`
     /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
     /// interleavings) in a tech's own tests to confirm the incremental fast paths never diverge from
     /// the replay ground truth.
-    pub fn assert_live_equals_replay<P, Mutation>(store: &DocumentStore<P, Mutation>)
+    pub fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -4148,15 +4148,15 @@ pub mod test_support {
 mod tests {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslDocument)]
-    #[dsl(extension = "demo")]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
+    #[dsl(id = "demo.doc", extension = "demo")]
     struct DemoSnapshot {
         n: i32,
     }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for DemoSnapshot {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6).
+impl ArtifactDsl for DemoSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
@@ -4166,33 +4166,33 @@ impl DocumentDsl for DemoSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as DocumentDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
         semio_format::wrap_text(&envelope, &body)
     }
 }
-/// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for DemoSnapshot {
+/// 📦️ Handcrafted ArtifactPack (P6).
+impl ArtifactPack for DemoSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as DocumentDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as DocumentDsl>::envelope_id(), envelope.envelope_id())));
+        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
-    // `impl crate::os_store::DocumentPack for DemoSnapshot` is now generated automatically by
-    // `#[derive(crate::os_dsl::DslDocument)]` above (see dsl/derive/rs/lib.rs's `🔖️DslDocument` region) —
-    // same seam as its `impl crate::os_store::DocumentDsl for DemoSnapshot` sibling.
+    // `impl crate::os_store::ArtifactPack for DemoSnapshot` is now generated automatically by
+    // `#[derive(crate::os_dsl::DslArtifact)]` above (see dsl/derive/rs/lib.rs's `🔖️DslArtifact` region) —
+    // same seam as its `impl crate::os_store::ArtifactDsl for DemoSnapshot` sibling.
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct DemoDiff {
@@ -4310,10 +4310,10 @@ impl OpBinary for DemoMutation {
 
     /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
     fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
-        let mut peer = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        peer.dispatch(DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("peer apply");
+        let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        peer.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("peer apply");
         let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
-        let document_id = DocumentId(peer.envelope().id.clone());
+        let document_id = ArtifactId(peer.envelope().id.clone());
         let schema = SchemaId(peer.envelope().schema.clone());
         let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         let mut envelope = envelopes.pop().expect("exactly one op envelope for a single-op edit");
@@ -4324,8 +4324,8 @@ impl OpBinary for DemoMutation {
     #[test]
     fn materialize_replays_forward_mutations() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
         assert_eq!(store.envelope().vcs.edits.len(), 1);
     }
@@ -4333,19 +4333,19 @@ impl OpBinary for DemoMutation {
     #[test]
     fn undo_redo_round_trip() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").n, 0);
-        store.dispatch(DocumentCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn apply_computes_backwards_from_pre_state() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let edit = &store.envelope().vcs.edits[0];
         assert_eq!(edit.inverse, vec![DemoMutation::SetN { n: 0 }]);
     }
@@ -4353,9 +4353,9 @@ impl OpBinary for DemoMutation {
     #[test]
     fn commit_checkpoint_wraps_edits_into_change() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
         assert_eq!(store.envelope().vcs.changes.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints[0].message, Some("init".into()));
@@ -4364,41 +4364,41 @@ impl OpBinary for DemoMutation {
     #[test]
     fn checkout_checkpoint_restores_applied_edits() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
         let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply2");
         assert_eq!(store.snapshot().expect("snapshot").n, 9);
-        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn alternatives_switch_restores_checkpoint_chain() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "branch-a".into() }).expect("create alternative");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).expect("create alternative");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
-        store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: alt_id }).expect("switch");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).expect("switch");
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn checkout_old_checkpoint_then_commit_creates_a_fork() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
         let c1 = store.envelope().vcs.checkpoints[0].id.clone();
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
-        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).expect("checkout c1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).expect("checkout c1");
         assert_eq!(store.current_checkpoint_id(), Some(c1.as_str()));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("fork".into()), authors: Vec::new() }).expect("commit fork");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("fork".into()), authors: Vec::new() }).expect("commit fork");
         let children: Vec<&Checkpoint> = store.envelope().vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(c1.as_str())).collect();
         assert_eq!(children.len(), 2, "checking out an old checkpoint before committing must fork, not extend the trunk");
     }
@@ -4406,12 +4406,12 @@ impl OpBinary for DemoMutation {
     #[test]
     fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() }).expect("create alternative");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).expect("commit on branch");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create alternative");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).expect("commit on branch");
         assert_eq!(store.envelope().vcs.alternatives[0].checkpoint_ids.len(), 2);
         assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
     }
@@ -4419,11 +4419,11 @@ impl OpBinary for DemoMutation {
     #[test]
     fn history_columns_orders_newest_first_and_labels_trunk_root() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
         let columns = store.history_columns();
         assert_eq!(columns.len(), 2);
         assert_eq!(columns[0].description, Some("c2".into()), "newest checkpoint must be first");
@@ -4437,23 +4437,23 @@ impl OpBinary for DemoMutation {
     #[test]
     fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
         let root = store.envelope().vcs.checkpoints[0].id.clone();
 
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
 
-        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
 
-        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root again");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).expect("commit main resumed");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root again");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).expect("commit main resumed");
 
         let columns = store.history_columns();
         assert_eq!(columns.len(), 4, "root + a1 + b1 + main-resumed");
@@ -4489,10 +4489,10 @@ impl OpBinary for DemoMutation {
     fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope {
         crate::os_spr::MutationEnvelope {
             mutation_id: MutationId("op-1".to_string()),
-            document_id: DocumentId("doc-1".to_string()),
+            document_id: ArtifactId("doc-1".to_string()),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::DocumentDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
+            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
             inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
             timestamp: HybridLogicalTimestamp::new(0, 0),
         }
@@ -4500,27 +4500,27 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn no_backbone_by_default() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
-        let store = DocumentStore::new(envelope);
+        let store = ArtifactStore::new(envelope);
         assert!(store.backbone_ref().is_none());
     }
 
     #[test]
     fn memory_backbone_pair_propagates_edits_bidirectionally() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope_a: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let envelope_b: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store_a = DocumentStore::new(envelope_a);
-        let mut store_b = DocumentStore::new(envelope_b);
+        let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store_a = ArtifactStore::new(envelope_a);
+        let mut store_b = ArtifactStore::new(envelope_b);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        store_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on a");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on a");
         store_b.tick().expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 1, "b receives a's edit");
 
-        store_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on b");
+        store_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on b");
         store_a.tick().expect("tick a");
         assert_eq!(store_a.snapshot().expect("snapshot a").n, 2, "a receives b's edit");
     }
@@ -4528,15 +4528,15 @@ impl OpBinary for DemoMutation {
     #[test]
     fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store_a = DocumentStore::new(envelope.clone());
-        let mut store_b = DocumentStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store_a = ArtifactStore::new(envelope.clone());
+        let mut store_b = ArtifactStore::new(envelope);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         store_a.detach_backbone();
         assert!(store_a.backbone_ref().is_none());
 
-        store_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply after detach still works on the in-memory graph");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply after detach still works on the in-memory graph");
         assert_eq!(store_a.snapshot().expect("snapshot a").n, 9);
         store_b.tick().expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 0, "detached edits never reach the peer");
@@ -4544,14 +4544,14 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut stale_json: serde_json::Value = serde_json::to_value(&envelope).expect("serialize envelope");
         stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
-        let stale_envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
+        let stale_envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
 
-        let mut store = DocumentStore::new(stale_envelope.clone());
+        let mut store = ArtifactStore::new(stale_envelope.clone());
         assert!(store.tick().expect("tick with no live backbone is a no-operation") == false, "no backbone was ever attached, so there is nothing to pump");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply works purely against the in-memory graph");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply works purely against the in-memory graph");
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
 
         store.reset(stale_envelope, Vec::new(), Vec::new()).expect("reset");
@@ -4560,11 +4560,11 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
-        let codec = DocumentCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
+        let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
         assert_eq!(codec.schema, "demo/v1");
-        assert_eq!(codec.extension, "demo");
+        assert_eq!(codec.extension, "demo.doc");
 
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 4 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 4 }, None);
         let text_files = print_document_text(&envelope).expect("print document text");
 
         let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
@@ -4573,7 +4573,7 @@ impl OpBinary for DemoMutation {
         let mirrored = (codec.print_mirror)(&pack_files.pack, &pack_files.spr).expect("codec print_mirror");
         assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
 
-        let document_id = DocumentId("demo".to_string());
+        let document_id = ArtifactId("demo".to_string());
         let schema = SchemaId("demo/v1".to_string());
         let edit = Edit {
             id: "edit-1".into(),
@@ -4601,14 +4601,14 @@ impl OpBinary for DemoMutation {
     #[test]
     fn attach_reconciles_a_pushed_snapshot() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let seeded: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut seed_store = DocumentStore::new(seeded);
-        seed_store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        let seeded: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut seed_store = ArtifactStore::new(seeded);
+        seed_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let seed_files = seed_store.snapshot_pack().expect("seed snapshot");
         remote.push(BackboneMessage::Snapshot { pack: seed_files.pack, spr: seed_files.spr }).expect("push snapshot");
 
-        let fresh: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(fresh);
+        let fresh: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(fresh);
         store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
         assert_eq!(store.snapshot().expect("snapshot").n, 5, "adopted the pushed snapshot's edit");
     }
@@ -4616,13 +4616,13 @@ impl OpBinary for DemoMutation {
     #[test]
     fn channel_backbone_round_trips_between_store_and_actor() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let attach_flush = remote.drain().expect("drain attach");
         assert!(attach_flush.iter().any(|message| matches!(message, BackboneMessage::Snapshot { .. })), "attach flushes a snapshot to the actor end: {attach_flush:?}");
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
         let outbound = remote.drain().expect("drain apply");
         assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a local apply is sent outbound as mutations: {outbound:?}");
 
@@ -4634,8 +4634,8 @@ impl OpBinary for DemoMutation {
     #[test]
     fn pump_acks_ingested_operations() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let _ = remote.drain().expect("drain attach snapshot");
 
@@ -4651,54 +4651,54 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn exact_base_only_undo_refuses_a_foreign_tail() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
-        store.dispatch(DocumentCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 }) }).expect("ingest foreign");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 }) }).expect("ingest foreign");
         assert_eq!(store.snapshot().expect("snapshot").n, 2, "foreign edit sits at the tail");
 
-        let error = store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).expect_err("undo must refuse a foreign tail");
+        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).expect_err("undo must refuse a foreign tail");
         assert!(matches!(error, VcsError::ForeignEdit(_)), "got {error:?}");
         assert_eq!(store.snapshot().expect("snapshot").n, 2, "the timeline is untouched after refusal");
     }
 
     #[test]
     fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
         let local_edit_id = store.applied_edit_ids()[0].clone();
         let foreign = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 });
         let foreign_id = foreign.mutation_id.0.clone();
-        store.dispatch(DocumentCommand::IngestRemote { envelope: foreign }).expect("ingest foreign");
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).expect("ingest foreign");
         assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
 
-        store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).expect("transform undo removes the local edit from mid-timeline");
+        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).expect("transform undo removes the local edit from mid-timeline");
         assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&foreign_id), "only the local edit is removed; the concurrent foreign edit stays applied");
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_edit_id), "the local edit is on the redo stack");
         assert_eq!(store.snapshot().expect("snapshot").n, 2, "snapshot re-materializes from the foreign edit alone");
 
-        store.dispatch(DocumentCommand::Redo).expect("redo brings the local edit back");
+        store.dispatch(ArtifactCommand::Redo).expect("redo brings the local edit back");
         assert_eq!(store.applied_edit_ids().len(), 2);
         assert_eq!(store.snapshot().expect("snapshot").n, 1, "redo re-applies the local edit at the tail");
     }
 
     #[test]
     fn compensating_undo_dispatches_semantic_command() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
-        let undo_apply = DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: Some("compensate".into()) };
-        store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).expect("compensating undo");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        let undo_apply = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: Some("compensate".into()) };
+        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).expect("compensating undo");
         assert_eq!(store.snapshot().expect("snapshot").n, 0);
     }
 
     #[test]
     fn edit_mutations_exposes_the_latest_edit() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
         assert!(store.edit_mutations().is_none(), "no edits yet");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
         assert_eq!(forwards, &[DemoMutation::SetN { n: 5 }]);
         assert_eq!(inverse, &[DemoMutation::SetN { n: 0 }], "inverse restores the pre-state");
@@ -4707,13 +4707,13 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn amend_last_absorbs_into_matching_coalesce_key() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("second amend");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("second amend");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
         assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "undo restores pre-gesture state in one step");
     }
 
@@ -4723,10 +4723,10 @@ impl OpBinary for DemoMutation {
         // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
         // same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
         // previous full-replay-every-time implementation, just without re-replaying history each time.
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
         for n in 1..=50 {
-            store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n }], coalesce_key: Some("drag".into()) }).expect("amend");
+            store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n }], coalesce_key: Some("drag".into()) }).expect("amend");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still a single coalesced edit");
         let edit = store.envelope().vcs.edits.last().expect("edit");
@@ -4734,7 +4734,7 @@ impl OpBinary for DemoMutation {
         assert_eq!(edit.inverse.len(), 50);
         assert_eq!(edit.mutation_meta.len(), 50);
         assert_eq!(store.snapshot().expect("snapshot").n, 50);
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "one undo reverts the whole 50-step coalesced gesture");
     }
 
@@ -4743,34 +4743,34 @@ impl OpBinary for DemoMutation {
         // 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
         // an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
         // valid across an undo immediately followed by a redo of the very same coalesced edit.
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
-        store.dispatch(DocumentCommand::Undo).expect("undo");
-        store.dispatch(DocumentCommand::Redo).expect("redo");
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after undo/redo");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after undo/redo");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
         assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(DocumentCommand::Undo).expect("undo again");
+        store.dispatch(ArtifactCommand::Undo).expect("undo again");
         assert_eq!(store.snapshot().expect("snapshot after undo").n, 0);
     }
 
     #[test]
     fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag-a".into()) }).expect("first drag");
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag-b".into()) }).expect("second drag");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag-a".into()) }).expect("first drag");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag-b".into()) }).expect("second drag");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "distinct gestures are separate edits");
     }
 
     #[test]
     fn amend_last_does_not_absorb_into_committed_edit() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("amend");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("commit");
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("amend");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("commit");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after commit");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "committed edits are never amended, even with a matching coalesce key");
     }
 
@@ -4799,7 +4799,7 @@ impl OpBinary for DemoMutation {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoSnapshot, DemoMutation>(&edit, &DocumentId("doc-command-envelope".into()), &SchemaId("demo/v1".into()));
+        test_support::assert_command_envelope_round_trip::<DemoSnapshot, DemoMutation>(&edit, &ArtifactId("doc-command-envelope".into()), &SchemaId("demo/v1".into()));
     }
 
     /// @emoji 🪤️ Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
@@ -4868,11 +4868,11 @@ impl OpBinary for DemoMutation {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoSnapshot, LossyMutation>(&edit, &DocumentId("doc-lossy".into()), &SchemaId("lossy/v1".into()));
+        test_support::assert_command_envelope_round_trip::<DemoSnapshot, LossyMutation>(&edit, &ArtifactId("doc-lossy".into()), &SchemaId("lossy/v1".into()));
     }
 
-    // `DemoSnapshot`'s `crate::os_store::DocumentDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
-    // generated by `#[derive(crate::os_dsl::DslDocument)]`/`#[derive(crate::os_dsl::DslOps)]` on the type definitions
+    // `DemoSnapshot`'s `crate::os_store::ArtifactDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
+    // generated by `#[derive(crate::os_dsl::DslArtifact)]`/`#[derive(crate::os_dsl::DslOps)]` on the type definitions
     // themselves (see `DemoSnapshot`/`DemoMutation` above) — the `dsl_schema` grammar replaces
     // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
 
@@ -4917,8 +4917,8 @@ impl OpBinary for DemoMutation {
     #[test]
     fn print_edit_lines_emits_one_indented_line_per_forward_op() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         let edit = store.envelope().vcs.edits.last().expect("edit");
         let printed = print_edit_lines(edit).expect("print edit lines");
         assert!(printed.starts_with("edit "), "got {printed:?}");
@@ -4928,16 +4928,16 @@ impl OpBinary for DemoMutation {
     #[test]
     fn document_text_round_trips_after_apply_and_checkpoint() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: Some("bump".into()) }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: Some("bump".into()) }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]
     fn parse_document_text_rejects_invalid_op_line_with_span() {
-        let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 started=\"1\"\n  not-an-op\n".to_string() };
+        let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 started=\"1\"\n  not-an-op\n".to_string() };
         let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert_eq!(error.span.line, 3);
     }
@@ -4949,10 +4949,10 @@ impl OpBinary for DemoMutation {
     #[test]
     fn stateful_current_matches_full_replay_across_interleaved_commands() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope);
 
         // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }, DemoMutation::SetN { n: 2 }], description: None }).expect("apply multi-op edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }, DemoMutation::SetN { n: 2 }], description: None }).expect("apply multi-op edit");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.snapshot().expect("snapshot").n, 2);
 
@@ -4960,27 +4960,27 @@ impl OpBinary for DemoMutation {
         // (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
         // second `AmendLast` shares that edit's key and merges into it — two edits total, the second
         // one carrying two coalesced increments (3 then 4).
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".into()) }).expect("amend 1");
-        store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("drag".into()) }).expect("amend 2");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".into()) }).expect("amend 1");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("drag".into()) }).expect("amend 2");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.snapshot().expect("snapshot").n, 4);
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
 
         // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
         // the initial snapshot — only the amend gesture's edit is undone here.
-        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(DocumentCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.snapshot().expect("snapshot").n, 4);
 
         // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
         // itself, but a following apply + a second, older undo still must agree with replay).
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply after checkpoint");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply after checkpoint");
         test_support::assert_live_equals_replay(&store);
-        store.dispatch(DocumentCommand::Undo).expect("undo after checkpoint");
+        store.dispatch(ArtifactCommand::Undo).expect("undo after checkpoint");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.snapshot().expect("snapshot").n, 4);
     }
@@ -5090,8 +5090,8 @@ impl OpBinary for TimestampedMutation {
     }
 
     /// @emoji 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
-    fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static>(host: &'a mut SpaceHost, document_id: &str) -> &'a mut DocumentStore<DemoSnapshot, Mutation> {
-        host.member_mut(document_id).expect("member registered").as_any_mut().downcast_mut::<DocumentStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
+    fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static>(host: &'a mut SpaceHost, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
+        host.member_mut(document_id).expect("member registered").as_any_mut().downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
     }
 
     #[test]
@@ -5101,14 +5101,14 @@ impl OpBinary for TimestampedMutation {
         // member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
         // `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
         // already-clean ones just need a prior checkpoint).
-        let mut manifest = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: 0 }, None));
-        manifest.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply manifest edit");
-        let mut collection_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: 0 }, None));
-        collection_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply collection a edit");
-        let mut collection_b = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: 0 }, None));
-        collection_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply collection b edit");
-        let mut artifact_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None));
-        artifact_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
+        let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: 0 }, None));
+        manifest.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply manifest edit");
+        let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: 0 }, None));
+        collection_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply collection a edit");
+        let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: 0 }, None));
+        collection_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply collection b edit");
+        let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None));
+        artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
 
         let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_space_documents(Box::new(manifest), vec![Box::new(collection_a), Box::new(collection_b)], vec![Box::new(artifact_a)]);
@@ -5128,12 +5128,12 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
-        let mut member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        member_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply a");
+        let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply a");
 
-        let mut member_b = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: 0 }, None));
-        member_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply b");
-        member_b.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
+        let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: 0 }, None));
+        member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply b");
+        member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
         let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
@@ -5155,17 +5155,17 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None);
+        let meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None);
         let mut host_a = SpaceHost::new(meta_envelope.clone());
         let mut host_b = SpaceHost::new(meta_envelope);
-        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentStore");
+        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other ArtifactStore");
 
         host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         assert!(host_a.backbone_ref().is_some());
 
-        let mut member = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        member.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on member, so it's dirty and can be committed");
+        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on member, so it's dirty and can be committed");
         host_a.register_member(Box::new(member));
         host_a.commit_space_checkpoint("studio init".into(), Vec::new()).expect("commit space checkpoint on a");
 
@@ -5181,14 +5181,14 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
         let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let space_checkpoint_1 = host.commit_space_checkpoint("first".into(), Vec::new()).expect("commit 1");
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
+        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         host.commit_space_checkpoint("second".into(), Vec::new()).expect("commit 2");
         assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "member reflects the second space checkpoint before checking out the first");
 
@@ -5198,16 +5198,16 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
         let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         host.commit_space_checkpoint("root".into(), Vec::new()).expect("commit root");
 
         let alt_id = host.create_space_alternative("branch-a".into()).expect("create alternative");
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2 (uncommitted at the studio level)");
+        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2 (uncommitted at the studio level)");
         assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "uncommitted edit is live before switching");
 
         host.switch_space_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
@@ -5216,11 +5216,11 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-        let mut member_early = DocumentStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: 0 }, None));
-        member_early.dispatch(DocumentCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 1, physical_ms: 1_000 }], description: None }).expect("apply early");
+        let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: 0 }, None));
+        member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 1, physical_ms: 1_000 }], description: None }).expect("apply early");
 
-        let mut member_late = DocumentStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None));
-        member_late.dispatch(DocumentCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
+        let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None));
+        member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
 
         let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_early));
@@ -5242,8 +5242,8 @@ impl OpBinary for TimestampedMutation {
         assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
 
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
         let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
         assert_eq!(replayed.n, 3, "materialize_document_snapshot is unaffected by the no-operation default reconcile hook");
         let (with_conflicts, conflicts) = store.snapshot_with_conflicts().expect("snapshot with conflicts");
@@ -5326,7 +5326,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn parse_document_text_rejects_a_header_line_missing_its_required_positional_id() {
-        let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "active\n".to_string() };
+        let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "active\n".to_string() };
         let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert!(error.message.contains("expected Text"), "got {error:?}");
         assert_eq!(error.span.line, 1);
@@ -5334,7 +5334,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn parse_document_text_rejects_an_unknown_header_line_keyword() {
-        let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string() };
+        let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string() };
         let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert!(error.message.contains("unknown operation line"), "got {error:?}");
         assert_eq!(error.span.line, 2);
@@ -5343,9 +5343,9 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: Some("said \"hi\" and used a \\ backslash".into()) }).expect("apply");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "branch \"a\"".into() }).expect("create alternative (auto-commits and activates it)");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: Some("said \"hi\" and used a \\ backslash".into()) }).expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }).expect("create alternative (auto-commits and activates it)");
         assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
         let files = print_document_text(store.envelope()).expect("print document text");
         assert!(files.ops.lines().any(|line| line.starts_with("active ")), "an active alternative must print an `active` header line: {}", files.ops);
@@ -5356,10 +5356,10 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        store.dispatch(DocumentCommand::Undo).expect("undo e1");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
+        store.dispatch(ArtifactCommand::Undo).expect("undo e1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
         // e1 (undone, in redo) precedes e2 (applied) in file order — exactly the interleaving a
         // single tail-edit marker cannot represent (see HistoryCursor's doc).
         assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
@@ -5375,12 +5375,12 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
         let post_e1 = store.snapshot().expect("post-e1 snapshot");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
         let post_e2 = store.snapshot().expect("post-e2 snapshot");
-        store.dispatch(DocumentCommand::Undo).expect("undo e2");
+        store.dispatch(ArtifactCommand::Undo).expect("undo e2");
         assert_eq!(store.snapshot().expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
         test_support::assert_live_equals_replay(&store);
 
@@ -5392,19 +5392,19 @@ impl OpBinary for TimestampedMutation {
         // Load: a FRESH store built only from persisted bytes — no access to the original `store`.
         let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
-        let mut reloaded = DocumentStore::new(parsed.envelope);
-        assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "DocumentStore::new must seed live state from the persisted cursor");
+        let mut reloaded = ArtifactStore::new(parsed.envelope);
+        assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "ArtifactStore::new must seed live state from the persisted cursor");
         assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
         test_support::assert_live_equals_replay(&reloaded);
 
         // Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
-        reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after reload");
+        reloaded.dispatch(ArtifactCommand::Redo).expect("redo e2 after reload");
         assert_eq!(reloaded.snapshot().expect("post-redo snapshot"), post_e2);
         test_support::assert_live_equals_replay(&reloaded);
 
         // Undo twice from here reaches the true initial state.
-        reloaded.dispatch(DocumentCommand::Undo).expect("undo e2 again");
-        reloaded.dispatch(DocumentCommand::Undo).expect("undo e1");
+        reloaded.dispatch(ArtifactCommand::Undo).expect("undo e2 again");
+        reloaded.dispatch(ArtifactCommand::Undo).expect("undo e1");
         assert_eq!(reloaded.snapshot().expect("final snapshot"), DemoSnapshot { n: 0 });
         test_support::assert_live_equals_replay(&reloaded);
     }
@@ -5414,88 +5414,88 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️CommandErrorPaths
     #[test]
     fn apply_with_no_mutations_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::Apply { mutations: Vec::new(), description: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), description: None }).unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
     #[test]
     fn amend_last_with_no_mutations_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
     #[test]
     fn undo_with_nothing_applied_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        assert_eq!(store.dispatch(DocumentCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        assert_eq!(store.dispatch(ArtifactCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
     }
 
     #[test]
     fn redo_with_nothing_undone_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        assert_eq!(store.dispatch(DocumentCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        assert_eq!(store.dispatch(ArtifactCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
     }
 
     #[test]
     fn checkout_of_an_unknown_checkpoint_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }).unwrap_err();
         assert_eq!(error, VcsError::UnknownChange("nope".into()));
     }
 
     #[test]
     fn switch_to_an_unknown_alternative_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: "nope".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }).unwrap_err();
         assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
     }
 
     #[test]
     fn switch_to_an_alternative_whose_pinned_checkpoint_is_missing_is_rejected() {
-        let mut envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         envelope.vcs.alternatives.push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] });
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: "alt-dangling".into() }).unwrap_err();
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "alt-dangling".into() }).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the alternative's pinned checkpoint id must actually exist");
     }
 
     #[test]
     fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let error = store.dispatch(DocumentCommand::CreateAlternative { name: "x".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let error = store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
     }
 
     #[test]
     fn compensating_undo_without_a_semantic_command_is_rejected() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        let error = store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }).unwrap_err();
         assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
     }
 
     #[test]
     fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).unwrap_err();
         assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
     }
 
     #[test]
     fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let command_text = print_command(&DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("print command");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let command_text = print_command(&ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("print command");
         store.dispatch_text(&command_text).expect("dispatch text");
         assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
@@ -5505,9 +5505,9 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        let command_bytes = DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }.encode_op().expect("encode command");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }.encode_op().expect("encode command");
         store.dispatch_binary(&command_bytes).expect("dispatch binary");
         assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
@@ -5519,20 +5519,20 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn command_text_binary_equivalence_holds_for_every_document_command_variant() {
-        let commands: Vec<DocumentCommand<DemoMutation>> = vec![
-            DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: Some("set n".to_string()) },
-            DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None },
-            DocumentCommand::Undo,
-            DocumentCommand::Redo,
-            DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None },
-            DocumentCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None },
-            DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: None })) },
-            DocumentCommand::CommitCheckpoint { message: Some("checkpoint".to_string()), authors: vec![Author { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }] },
-            DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() },
-            DocumentCommand::CreateAlternative { name: "branch".to_string() },
-            DocumentCommand::SwitchAlternative { alternative_id: "alt-1".to_string() },
-            DocumentCommand::CheckoutCheckpoint { checkpoint_id: "ck-1".to_string() },
-            DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".to_string()) },
+        let commands: Vec<ArtifactCommand<DemoMutation>> = vec![
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: Some("set n".to_string()) },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None },
+            ArtifactCommand::Undo,
+            ArtifactCommand::Redo,
+            ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None },
+            ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None },
+            ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: None })) },
+            ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".to_string()), authors: vec![Author { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }] },
+            ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() },
+            ArtifactCommand::CreateAlternative { name: "branch".to_string() },
+            ArtifactCommand::SwitchAlternative { alternative_id: "alt-1".to_string() },
+            ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "ck-1".to_string() },
+            ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".to_string()) },
         ];
         for command in &commands {
             test_support::assert_command_text_binary_equivalence(command);
@@ -5544,17 +5544,17 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️ReconcileAlternative
     #[test]
     fn reconcile_alternative_requires_an_existing_checkpoint() {
-        let mut envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint);
     }
 
     #[test]
     fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
         let base_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
 
         let mut without_message = store.envelope().clone();
@@ -5576,12 +5576,12 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
 
         let ids: Vec<&str> = store.envelope().vcs.checkpoints.iter().map(|checkpoint| checkpoint.id.as_str()).collect();
         assert_eq!(ids.len(), 2);
@@ -5591,21 +5591,21 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply root");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply root");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply a");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply a");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
         let a1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
-        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply b");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply b");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
         let b1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
         assert_eq!(merge_base(store.envelope(), &a1_id, &b1_id), Some(root_id.clone()), "a1 and b1 forked at root");
@@ -5615,10 +5615,10 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
         assert_eq!(merge_base(store.envelope(), &root_id, "unknown-checkpoint"), None, "an id absent from the checkpoint list shares no ancestry with anything");
@@ -5629,15 +5629,15 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️RemoteSnapshotMerge
     #[test]
     fn snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).expect("local commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).expect("local commit");
 
-        let mut remote_store = DocumentStore::new(store.envelope().clone());
+        let mut remote_store = ArtifactStore::new(store.envelope().clone());
         remote_store.reset(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new()).expect("reset remote");
-        remote_store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("remote apply");
-        remote_store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).expect("remote commit");
+        remote_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("remote apply");
+        remote_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).expect("remote commit");
 
         let (channel, remote_end) = ChannelBackbone::pair("chan");
         store.attach_backbone(Box::new(channel)).expect("attach");
@@ -5656,18 +5656,18 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️SpaceMemberCheckoutRouting
     #[test]
     fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
-        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentCommand::CreateAlternative { name: "feature".into() }).expect("create alternative (auto-commits since no checkpoint existed yet)");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature".into() }).expect("create alternative (auto-commits since no checkpoint existed yet)");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
 
         SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout at the tip routes through SwitchAlternative");
         assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
 
-        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
-        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2, advancing the alt's tip past `tip`");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2, advancing the alt's tip past `tip`");
 
         SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
         assert_eq!(store.snapshot().expect("snapshot").n, 1, "restored the old checkpoint's state");

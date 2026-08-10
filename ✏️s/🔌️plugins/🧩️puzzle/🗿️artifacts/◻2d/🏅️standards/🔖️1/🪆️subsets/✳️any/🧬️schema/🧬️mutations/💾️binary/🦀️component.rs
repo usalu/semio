@@ -1,5 +1,5 @@
 //! 📡️ Puzzle 2d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `Puzzle2dMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `Puzzle2dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
 //! puzzle-2d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
@@ -14,7 +14,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::puzzle2d::schema::mutations::text::Puzzle2dMutation;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use protocol::OpBinary;
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle2dMutation` to its binary command form.
 pub fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -27,8 +27,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolErr
 }
 
 //#region 🔖️Store
-pub type Puzzle2dEnvelope = DocumentEnvelope<Puzzle2dSnapshot, Puzzle2dMutation>;
-pub type Puzzle2dStore = DocumentStore<Puzzle2dSnapshot, Puzzle2dMutation>;
+pub type Puzzle2dEnvelope = ArtifactEnvelope<Puzzle2dSnapshot, Puzzle2dMutation>;
+pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -40,11 +40,11 @@ mod tests {
     fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle2d::engine::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
-        use store::{create_document_envelope, DocumentCommand};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![Puzzle2dMutation::SetNode {
                     index: 0,
                     node: Puzzle2dNode { id: "n1".into(), ..Default::default() },

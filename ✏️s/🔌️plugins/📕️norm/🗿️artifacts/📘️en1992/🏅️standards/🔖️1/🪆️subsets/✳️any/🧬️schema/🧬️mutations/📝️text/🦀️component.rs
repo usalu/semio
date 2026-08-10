@@ -1,4 +1,4 @@
-//! ⚡️ EN 1992 design of concrete structures — OpText/OpBinary via shared `SetDocumentMutation`.
+//! ⚡️ EN 1992 design of concrete structures — OpText/OpBinary via shared `SetArtifactMutation`.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -15,7 +15,7 @@ mod tests {
     use crate::artifacts::en1992::En1992Snapshot;
 
     #[test]
-    fn set_document_op_text_round_trips() {
+    fn set_artifact_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&En1992Mutation::SetSnapshot { snapshot: En1992Snapshot::default() });
     }
 }

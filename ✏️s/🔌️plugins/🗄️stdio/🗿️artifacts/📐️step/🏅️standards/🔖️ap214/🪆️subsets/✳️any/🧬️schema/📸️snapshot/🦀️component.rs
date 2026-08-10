@@ -187,7 +187,7 @@ pub fn step_brep_to_text(mesh: &BrepMesh) -> String {
 }
 
 
-impl store::DocumentDsl for StepSnapshot {
+impl store::ArtifactDsl for StepSnapshot {
     const EXTENSION: &'static str = "step";
     fn envelope_id() -> &'static str { "stdio.step" }
 
@@ -204,7 +204,7 @@ impl store::DocumentDsl for StepSnapshot {
     fn print_dsl(&self) -> String {
         let body = step_brep_to_text(&self.brep);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -212,12 +212,12 @@ impl store::DocumentDsl for StepSnapshot {
     }
 }
 
-impl store::DocumentPack for StepSnapshot {
+impl store::ArtifactPack for StepSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = step_brep_to_text(&self.brep).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -226,10 +226,10 @@ impl store::DocumentPack for StepSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }

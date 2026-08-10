@@ -5,7 +5,7 @@
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{DenseParams, DenseResolution, FeatureDetector, FeatureParams, GeoParams, IngestParams, MatchParams, MatcherKind, MeshParams, MotionParams, RemodelSnapshot, RobustLossKind, SfmParams};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetIngestParams
@@ -21,7 +21,7 @@ pub mod set_ingest_params {
         pub min_sharpness: f32,
     }
 
-    pub fn handle(payload: &SetIngestParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetIngestParams {
             params: IngestParams { frame_sample_stride: payload.frame_sample_stride, max_frames: payload.max_frames, downscale_long_edge_px: payload.downscale_long_edge_px, min_sharpness: payload.min_sharpness },
         }]))
@@ -42,7 +42,7 @@ pub mod set_feature_params {
         pub edge_threshold: f32,
     }
 
-    pub fn handle(payload: &SetFeatureParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetFeatureParams {
             params: FeatureParams {
                 detector: match payload.detector.as_str() {
@@ -74,7 +74,7 @@ pub mod set_match_params {
         pub loop_closure: bool,
     }
 
-    pub fn handle(payload: &SetMatchParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMatchParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMatchParams {
             params: MatchParams {
                 matcher: if payload.matcher == "kd-tree" { MatcherKind::KdTree } else { MatcherKind::BruteForce },
@@ -104,7 +104,7 @@ pub mod set_sfm_params {
         pub huber_delta_px: f32,
     }
 
-    pub fn handle(payload: &SetSfmParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetSfmParams {
             params: SfmParams {
                 ransac_iterations: payload.ransac_iterations,
@@ -137,7 +137,7 @@ pub mod set_dense_params {
         pub max_points: u32,
     }
 
-    pub fn handle(payload: &SetDenseParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetDenseParams {
             params: DenseParams {
                 resolution: match payload.resolution.as_str() {
@@ -173,7 +173,7 @@ pub mod set_mesh_params {
         pub self_intersection_check: bool,
     }
 
-    pub fn handle(payload: &SetMeshParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMeshParams {
             params: MeshParams {
                 tsdf_voxel_size_mm: payload.tsdf_voxel_size_mm,
@@ -205,7 +205,7 @@ pub mod set_motion_params {
         pub min_track_length_frames: u32,
     }
 
-    pub fn handle(payload: &SetMotionParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMotionParams {
             params: MotionParams { enabled: payload.enabled, max_tracks: payload.max_tracks, track_window_px: payload.track_window_px, min_track_quality: payload.min_track_quality, min_track_length_frames: payload.min_track_length_frames },
         }]))
@@ -233,7 +233,7 @@ pub mod set_geo_params {
         pub ortho_max_px: u32,
     }
 
-    pub fn handle(payload: &SetGeoParams, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetGeoParams {
             params: GeoParams {
                 enabled: payload.enabled,

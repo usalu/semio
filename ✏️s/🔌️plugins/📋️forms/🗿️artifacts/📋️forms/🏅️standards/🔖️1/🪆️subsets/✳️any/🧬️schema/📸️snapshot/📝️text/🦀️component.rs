@@ -1,6 +1,6 @@
 //! 📜️ Forms artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for FormsSnapshot` lives in `📸️snapshot/🧬️schema`. This component adds the thin
+//! `store::ArtifactDsl for FormsSnapshot` lives in `📸️snapshot/🧬️schema`. This component adds the thin
 //! artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example fixtures and their
 //! round-trip laws.
 
@@ -93,12 +93,12 @@ condition {
 
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
-    <FormsSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `FormsSnapshot` back to `.forms` DSL text.
 pub fn print_dsl(document: &FormsSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

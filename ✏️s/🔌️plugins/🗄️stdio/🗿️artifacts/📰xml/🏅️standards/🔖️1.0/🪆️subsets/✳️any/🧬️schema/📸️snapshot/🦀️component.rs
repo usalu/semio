@@ -266,8 +266,8 @@ fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
 }
 //#endregion 🔖️XmlTextCodec
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for XmlSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for XmlSnapshot {
     const EXTENSION: &'static str = "xml";
     fn envelope_id() -> &'static str { "stdio.xml" }
 
@@ -284,7 +284,7 @@ impl store::DocumentDsl for XmlSnapshot {
     fn print_dsl(&self) -> String {
         let body = xml_document_to_text(&self.doc);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -292,12 +292,12 @@ impl store::DocumentDsl for XmlSnapshot {
     }
 }
 
-impl store::DocumentPack for XmlSnapshot {
+impl store::ArtifactPack for XmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = serde_json::to_vec(&self.doc).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -306,10 +306,10 @@ impl store::DocumentPack for XmlSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -318,4 +318,4 @@ impl store::DocumentPack for XmlSnapshot {
         Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

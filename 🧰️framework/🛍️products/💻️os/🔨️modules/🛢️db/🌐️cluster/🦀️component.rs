@@ -7,11 +7,11 @@
 //! built on top of — a consistent-hash shard map, lease-backed ownership with real epoch failover
 //! (built directly on `db_storage::LeaseStorage`/`EpochFence`, which already own the
 //! fencing primitive), tail-command follower replication (built on `db_sync`'s existing
-//! `DocumentSyncState`/`BootstrapPlan` machinery), quorum-durability ack tracking, and read/preview
+//! `ArtifactSyncState`/`BootstrapPlan` machinery), quorum-durability ack tracking, and read/preview
 //! routing. `ReplicationOutcome::SnapshotTransferred` is a deliberate extension seam: this crate
 //! transports raw snapshot bytes to a follower's `SnapshotStorage` (the "segment/snapshot
 //! replication" the contract asks for) but does NOT decode/materialize them into live document
-//! state — that is `db_snapshot`/`db_document`'s responsibility, and neither exists yet this wave.
+//! state — that is `db_snapshot`/`db_artifact`'s responsibility, and neither exists yet this wave.
 //! The follower's WAL-derived frontier is honestly left un-advanced in that case rather than faked.
 //!
 //! 🎯️ Design choice (no `blake3` dependency): the shard-map ring only needs a well-distributed,
@@ -109,7 +109,7 @@ impl ShardMap {
 
     /// @emoji 🎯️ The node owning `document`: the first ring position at or after `document`'s hash,
     /// wrapping to the ring's lowest position past the maximum key. `None` iff the ring is empty.
-    pub fn owner(&self, document: &DocumentId) -> Option<NodeId> {
+    pub fn owner(&self, document: &ArtifactId) -> Option<NodeId> {
         if self.ring.is_empty() {
             return None;
         }
@@ -187,7 +187,7 @@ pub enum ReplicationOutcome {
     /// @emoji 📸️ The follower fell behind the leader's retained WAL floor; `generation`'s raw
     /// snapshot bytes were copied verbatim to the follower's `SnapshotStorage`. See the module
     /// doc's "extension seam" note: this does NOT advance the follower's WAL-derived frontier —
-    /// materializing the snapshot into live state is `db_snapshot`/`db_document`'s job.
+    /// materializing the snapshot into live state is `db_snapshot`/`db_artifact`'s job.
     SnapshotTransferred { generation: u64, pack_hash: [u8; 32] },
 }
 
@@ -197,7 +197,7 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: DocumentId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
     let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone())?;
     let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone())?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
@@ -208,7 +208,7 @@ pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_
         db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
         db_sync::BootstrapPlan::Tail { envelopes } => {
             let count = envelopes.len();
-            let (mut wal, _report) = db_wal::DocumentWal::open(follower.wal(), document.clone(), policy, now_ms)?;
+            let (mut wal, _report) = db_wal::ArtifactWal::open(follower.wal(), document.clone(), policy, now_ms)?;
             for envelope in &envelopes {
                 let bytes = db_sync::encode_command_envelope(envelope);
                 wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms)?;
@@ -372,9 +372,9 @@ pub enum ClusterEvent {
     /// writes for the shard immediately.
     OwnershipLost { shard: String, fence: EpochFence },
     /// @emoji ✅️ A follower finished catching up to a given frontier.
-    ReplicationCaughtUp { document: DocumentId, frontier: Frontier },
+    ReplicationCaughtUp { document: ArtifactId, frontier: Frontier },
     /// @emoji 🤝️ A quorum-durability threshold was just reached for a frontier.
-    QuorumReached { document: DocumentId, frontier: Frontier, acked: usize },
+    QuorumReached { document: ArtifactId, frontier: Frontier, acked: usize },
 }
 
 impl ClusterEvent {
@@ -407,7 +407,7 @@ mod tests {
         map.add_node(&NodeId::from("node-a"));
         map.add_node(&NodeId::from("node-b"));
         map.add_node(&NodeId::from("node-c"));
-        let doc: DocumentId = "doc-42".into();
+        let doc: ArtifactId = "doc-42".into();
         assert_eq!(map.owner(&doc), map.owner(&doc));
         assert!(map.owner(&doc).is_some());
     }
@@ -426,7 +426,7 @@ mod tests {
         map.add_node(&b);
         map.add_node(&c);
 
-        let docs: Vec<DocumentId> = (0..200).map(|i| DocumentId(format!("doc-{i}"))).collect();
+        let docs: Vec<ArtifactId> = (0..200).map(|i| ArtifactId(format!("doc-{i}"))).collect();
         let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
 
         map.remove_node(&b);
@@ -449,7 +449,7 @@ mod tests {
         map.add_node(&NodeId::from("node-b"));
         map.add_node(&NodeId::from("node-c"));
 
-        let docs: Vec<DocumentId> = (0..1000).map(|i| DocumentId(format!("doc-{i}"))).collect();
+        let docs: Vec<ArtifactId> = (0..1000).map(|i| ArtifactId(format!("doc-{i}"))).collect();
         let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
 
         map.add_node(&NodeId::from("node-d"));
@@ -507,17 +507,17 @@ mod tests {
     fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
-            document_id: protocol::DocumentId("doc-1".to_string()),
+            document_id: protocol::ArtifactId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
 
-    fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &DocumentId, count: u64) {
-        let mut wal = db_wal::DocumentWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+    fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &ArtifactId, count: u64) {
+        let mut wal = db_wal::ArtifactWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i);
             let bytes = db_sync::encode_command_envelope(&envelope);
@@ -529,7 +529,7 @@ mod tests {
     fn replicate_document_applies_missing_tail_commands_to_a_fresh_follower() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4);
 
         let outcome = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
@@ -551,7 +551,7 @@ mod tests {
     fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2);
 
         let first = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
@@ -565,12 +565,12 @@ mod tests {
     fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: DocumentId = "doc-1".into();
+        let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 5);
 
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         {
-            let (mut wal, _report) = db_wal::DocumentWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000).unwrap();
+            let (mut wal, _report) = db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000).unwrap();
             wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000).unwrap();
         }
         db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes").unwrap();

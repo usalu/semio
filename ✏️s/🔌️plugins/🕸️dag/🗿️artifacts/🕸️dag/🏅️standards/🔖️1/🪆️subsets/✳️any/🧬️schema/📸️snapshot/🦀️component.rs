@@ -199,7 +199,7 @@ pub(crate) fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
 
 /// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
 /// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
 #[dsl(extension = "dag")]
 #[dsl(layout = "lines")]
 pub(crate) struct DagSnapshotDsl {
@@ -218,7 +218,7 @@ pub(crate) fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
 }
 
 
-impl store::DocumentDsl for DagSnapshotDsl {
+impl store::ArtifactDsl for DagSnapshotDsl {
     const EXTENSION: &'static str = "dag";
     fn envelope_id() -> &'static str {
         "dag.dag"
@@ -238,7 +238,7 @@ impl store::DocumentDsl for DagSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -247,11 +247,11 @@ impl store::DocumentDsl for DagSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for DagSnapshotDsl {
+impl store::ArtifactPack for DagSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -260,10 +260,10 @@ impl store::DocumentPack for DagSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -275,35 +275,35 @@ impl store::DocumentPack for DagSnapshotDsl {
     }
 }
 
-impl store::DocumentDsl for DagSnapshot {
+impl store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
     fn envelope_id() -> &'static str {
         "dag.dag"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <DagSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <DagSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         let mut snapshot = dag_snapshot_from_dsl(parsed);
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        <DagSnapshotDsl as store::DocumentDsl>::print_dsl(&dag_snapshot_to_dsl(self))
+        <DagSnapshotDsl as store::ArtifactDsl>::print_dsl(&dag_snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for DagSnapshot {
+impl store::ArtifactPack for DagSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <DagSnapshotDsl as store::DocumentPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
+        <DagSnapshotDsl as store::ArtifactPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <DagSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <DagSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         let mut snapshot = dag_snapshot_from_dsl(parsed);
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
 }
 
-//#region 🔖️DocumentCodecs
+//#region 🔖️ArtifactCodecs
 impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
     fn from(value: DagSnapshot) -> Self {
         Self { schema: value.schema, nodes: value.nodes, edges: value.edges }
@@ -322,4 +322,4 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
     }
 }
 
-//#endregion 🔖️DocumentCodecs
+//#endregion 🔖️ArtifactCodecs

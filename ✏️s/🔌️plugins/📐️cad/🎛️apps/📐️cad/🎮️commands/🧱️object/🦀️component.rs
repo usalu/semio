@@ -4,7 +4,7 @@ use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{command_value_json, ids_or_selection, make_object_for_typology, patch_objects_mutations, runtime_of, snapshot_of};
 use crate::artifacts::cad::engine::next_cad_id;
@@ -23,7 +23,7 @@ pub mod add_object {
         pub typology: Option<String>,
     }
 
-    pub fn handle(payload: &AddObject, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &AddObject, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let typology = payload.typology.as_deref().unwrap_or("spatial.shape.primitive.box");
@@ -50,7 +50,7 @@ pub mod patch_object {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchObject, doc: &DocumentView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchObject, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
         let delta_json = payload.delta.map(|entry| json!(entry));
         Ok(Emit::mutations(patch_objects_mutations(doc.snapshot, std::slice::from_ref(&payload.object_id), &payload.field, value_json.as_ref(), delta_json.as_ref())))
@@ -71,7 +71,7 @@ pub mod patch_selection {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchSelection, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchSelection, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let runtime = runtime_of(cfg);
         let ids = ids_or_selection(&payload.object_ids, runtime.selected_object_ids.as_slice());
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
@@ -91,7 +91,7 @@ pub mod delete_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DeleteObject, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &DeleteObject, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         if let Some(pane) = cad_find_object_pane(document, &payload.object_id) {
@@ -115,7 +115,7 @@ pub mod duplicate_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DuplicateObject, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &DuplicateObject, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let duplicate_target = cad_all_objects(document).find(|(object, _)| object.id == payload.object_id).map(|(object, pane)| (object.clone(), pane));

@@ -1,9 +1,9 @@
 //! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*`
 //! shells out to `cargo run -p semio-framework-os-run --release -- <same args>`. This binary owns argv
 //! parsing and studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in
-//! the library. Non-destructive (W5 Lane A): every invocation produces/updates a `RunDocument` under
+//! the library. Non-destructive (W5 Lane A): every invocation produces/updates a `RunArtifact` under
 //! `runs/<RUN_ID>.run.pack|.spr` (sealed on success, sealed `Failed` if the run itself errored) — it
-//! never mutates a node's source `artifacts/<document_ref>`/`artifacts/<config_ref>` bytes.
+//! never mutates a node's source `artifacts/<artifact_ref>`/`artifacts/<config_ref>` bytes.
 
 use semio_framework_os_run::{plan, register_builtin_converters, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -73,7 +73,7 @@ fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = Strin
 
 /// 🆔️ Single canonical run slot per bundle for this wave — see `SpaceBundle`'s own doc comment on
 /// `runs/<run id>.run.pack`. A real multi-run history/listing is later-wave `space::DraftCatalog`
-/// integration work; every invocation of this CLI updates/overwrites the SAME `RunDocument`.
+/// integration work; every invocation of this CLI updates/overwrites the SAME `RunArtifact`.
 const RUN_ID: &str = "default";
 
 struct Args {
@@ -131,15 +131,15 @@ fn main() {
     }
 }
 
-/// 🔒️ Replays `sink.operations` through a fresh `store::DocumentStore` (the same "build an envelope,
+/// 🔒️ Replays `sink.operations` through a fresh `store::ArtifactStore` (the same "build an envelope,
 /// `Apply`, `snapshot_pack`" pattern every other document in this codebase persists through) and
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = store::create_document_envelope::<workflow::RunDocument, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
-    let mut document_store = store::DocumentStore::new(envelope);
+    let envelope = store::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
+    let mut document_store = store::ArtifactStore::new(envelope);
     if !sink.operations.is_empty() {
-        document_store.dispatch(store::DocumentCommand::Apply { mutations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
+        document_store.dispatch(store::ArtifactCommand::Apply { mutations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
     }
     let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
@@ -175,7 +175,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let mut documents: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     let mut configs: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     for node in &graph.nodes {
-        documents.insert(node.document_ref.clone(), bundle.read_document(&node.document_ref)?);
+        documents.insert(node.artifact_ref.clone(), bundle.read_artifact(&node.artifact_ref)?);
         configs.insert(node.config_ref.clone(), bundle.read_config(&node.config_ref)?);
     }
 
@@ -189,7 +189,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: store::ParsedDocumentText<workflow::RunDocument, workflow::RunMutation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
+            let parsed: store::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };

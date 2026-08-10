@@ -3,7 +3,7 @@ protocol en1992.snapshot
 version 1
 schema stdio.json
 start frame
-framing magic 0x8953f83f7d340d0a
+framing magic 0x894e19920e0a1a0a
 header fixed 32
 field format_major u16
 field format_minor u16

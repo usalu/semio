@@ -1,4 +1,4 @@
-//! 🖥️ Process 3d play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🖥️ Process 3d play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the workpiece
@@ -10,7 +10,7 @@
 //! 🧪️ B1: `Process3dPlayApp` is a unit struct — every former `Process3dRuntime` field (selection, hover,
 //! face pick, selection method, engagement input, camera, sun) lives in `config::Process3dConfig`,
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
-//! `Process3dCommand` channel via `DocumentApp::handle`.
+//! `Process3dCommand` channel via `ArtifactApp::handle`.
 
 use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
@@ -23,13 +23,13 @@ use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
     MediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -137,11 +137,11 @@ use world::{world_face_drag_end, world_pick, world_pointer_down};
 
 //#region 🔖️Process3dPlayApp
 /// 🧪️ B1: unit struct — every former `Process3dRuntime` field now lives in `config::Process3dConfig`
-/// (see `DocumentApp::Config`), written through `config::Process3dConfigMutation`s.
+/// (see `ArtifactApp::Config`), written through `config::Process3dConfigMutation`s.
 #[derive(Default)]
 pub struct Process3dPlayApp;
 
-impl DocumentApp for Process3dPlayApp {
+impl ArtifactApp for Process3dPlayApp {
     type Snapshot = Process3dSnapshot;
     type Mutation = Process3dMutation;
     type Config = Process3dConfig;
@@ -169,7 +169,7 @@ impl DocumentApp for Process3dPlayApp {
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "brep:out" => match crate::artifacts::process3d::engine::export_process3d_model(doc.snapshot, "step") {
                 Some(export) => {
@@ -197,7 +197,7 @@ impl DocumentApp for Process3dPlayApp {
     /// 📥️ `geometry:in` (best-effort STEP-text import) plus the inherited `document:in` default (base64
     /// pack via `whole_document_operation`, replicated inline — overriding `import_media` shadows the
     /// trait's provided body for every port).
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -221,7 +221,7 @@ impl DocumentApp for Process3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Process3dSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <Process3dSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -238,7 +238,7 @@ impl DocumentApp for Process3dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Process3dCommand, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -248,7 +248,7 @@ impl DocumentApp for Process3dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
         crate::artifacts::process3d::engine::sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
@@ -262,11 +262,11 @@ impl DocumentApp for Process3dPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 }
@@ -276,7 +276,7 @@ impl DocumentApp for Process3dPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline. `WindowKindDefinition.options.measures` stays empty: measures are config-derived per
-/// frame by `DocumentApp::window_measures`, never frozen into the manifest.
+/// frame by `ArtifactApp::window_measures`, never frozen into the manifest.
 pub fn create_process3d_app() -> App {
     App::from_builder(
         App::builder(PROCESS_3D_PLAY_APP_ID, LocalizedLabel::native("Process 3D", "Process 3D"))
@@ -404,9 +404,9 @@ pub fn create_process3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Process3dApp = VcsDocumentApp<Process3dPlayApp>;
+    pub type Process3dApp = VcsArtifactApp<Process3dPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
@@ -849,7 +849,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Brep);
@@ -867,7 +867,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
     }
 
@@ -876,7 +876,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
         assert!(matches!(Process3dPlayApp::import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
     }

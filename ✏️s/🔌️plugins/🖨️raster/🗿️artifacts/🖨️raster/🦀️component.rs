@@ -17,7 +17,7 @@ pub fn default_true() -> bool {
 
 /// 🎞️ Non-destructive raster document: a nested layer tree (pixel/group/adjustment) plus embedded
 /// image assets. This is the authoritative projection shared by the wasm compositor bridge and the
-/// `raster-plugin` `DocumentApp`. Ephemeral tool/brush/selection/camera state lives in the app's
+/// `raster-plugin` `ArtifactApp`. Ephemeral tool/brush/selection/camera state lives in the app's
 /// `RasterConfig`, never here.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

@@ -1,6 +1,6 @@
 //! 💾 Durability class, frontier sync, and epoch fencing.
 
-use crate::db_ids::{ActorId, DbError, DocumentId};
+use crate::db_ids::{ActorId, DbError, ArtifactId};
 use pack::ContentHash;
 
 //#region 🔖️Durability
@@ -52,10 +52,10 @@ impl Ord for DurabilityClass {
 /// @emoji 🧭️ A document's sync-relevant position: how far its WAL/commit sequence has advanced,
 /// its commit chain's current tip hash, and the fencing epoch it was produced under. Mirrors the
 /// `db` facade's frozen `Frontier{document, head_seq, commit_seq, chain_hash, epoch}` shape
-/// exactly (see module doc for the `DocumentId` conversion rationale).
+/// exactly (see module doc for the `ArtifactId` conversion rationale).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Frontier {
-    pub document: DocumentId,
+    pub document: ArtifactId,
     pub head_seq: u64,
     pub commit_seq: u64,
     pub chain_hash: [u8; 32],
@@ -64,7 +64,7 @@ pub struct Frontier {
 
 impl Frontier {
     /// @emoji 🌱️ The frontier of a freshly created, empty document.
-    pub fn genesis(document: DocumentId) -> Frontier {
+    pub fn genesis(document: ArtifactId) -> Frontier {
         Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 }
     }
 
@@ -90,7 +90,7 @@ impl Frontier {
 /// missing-command transfer does a replica need".
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FrontierDelta {
-    pub document: DocumentId,
+    pub document: ArtifactId,
     pub from_head_seq: u64,
     pub to_head_seq: u64,
     pub commands: u64,
@@ -163,7 +163,7 @@ impl ResumeToken {
         for (i, slot) in chain_hash.iter_mut().enumerate() {
             *slot = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16).map_err(|_| malformed())?;
         }
-        Ok(Frontier { document: DocumentId(document), head_seq, commit_seq, chain_hash, epoch })
+        Ok(Frontier { document: ArtifactId(document), head_seq, commit_seq, chain_hash, epoch })
     }
 
     /// @emoji 🔍️ Borrows the token's wire form, e.g. for embedding in a `protocol_wire::Hello`.

@@ -239,7 +239,7 @@ pub struct RuleQueryResult {
 mod tests {
     use super::*;
     use crate::artifacts::jack::dsl::NAKAGIN_EXAMPLE_TEXT;
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {
         let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();

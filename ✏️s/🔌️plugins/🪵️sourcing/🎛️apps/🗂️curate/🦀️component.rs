@@ -1,4 +1,4 @@
-//! 🛒️ Sourcing curate app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🛒️ Sourcing curate app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -14,11 +14,11 @@ use crate::apps::curate::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, UiNode,
 };
 use store::EngineHandles;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
@@ -42,7 +42,7 @@ semio_framework_plugin::app_commands! {
     /// they are genuinely different vocabularies, and `setLocale`/`locale` is the row that proves it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum SourcingCurateCommand for CurateSnapshot, SourcingMutation, SourcingCurateConfig, SourcingCurateConfigMutation {
-        "setDocument" as "document-json" => set_document_json::SetDocumentJson,
+        "setDocument" as "document-json" => set_artifact_json::SetArtifactJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "stockFromCatalogue" as "stock-from-catalogue" => stock_from_catalogue::StockFromCatalogue,
         "curateAdd" as "curate-add" => curate_add::CurateAdd,
@@ -66,7 +66,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::apps::curate::commands::curation::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
 use crate::apps::curate::commands::contribution::set_contributions;
-use crate::apps::curate::commands::document::{set_active_example, set_document_json, stock_from_catalogue};
+use crate::apps::curate::commands::document::{set_active_example, set_artifact_json, stock_from_catalogue};
 use crate::apps::curate::commands::filter::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
 use crate::apps::curate::commands::locale::set_locale;
 use crate::apps::curate::commands::selection::{select_row, world_select};
@@ -78,7 +78,7 @@ use crate::apps::curate::commands::selection::{select_row, world_select};
 #[derive(Default)]
 pub struct SourcingCurateApp;
 
-impl DocumentApp for SourcingCurateApp {
+impl ArtifactApp for SourcingCurateApp {
     type Snapshot = CurateSnapshot;
     type Mutation = SourcingMutation;
     type Config = SourcingCurateConfig;
@@ -104,7 +104,7 @@ impl DocumentApp for SourcingCurateApp {
     /// 🎞️ `catalog:out` (see `crate::artifacts::curate::engine::sourcing_catalog_fragment`) plus the
     /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
@@ -130,11 +130,11 @@ impl DocumentApp for SourcingCurateApp {
         command.command_id()
     }
 
-    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
         crate::artifacts::curate::engine::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
@@ -158,7 +158,7 @@ fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinit
 }
 
 /// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_mutations`, so (unlike
-/// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsDocumentApp`'s
+/// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsArtifactApp`'s
 /// kind-discipline check actually enforce "must not emit document operations".
 fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
@@ -210,7 +210,7 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind_def(grid::definition())
             .default_layout(curate::layout())
             // 🔧️ Curation counts/stock edits are persisted in `CurateSnapshot`, so each arm emits a
-            // whole-document `SetDocument` operation and is declared as a Mutation, never a View.
+            // whole-document `SetArtifact` operation and is declared as a Mutation, never a View.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
             .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
@@ -239,7 +239,7 @@ pub fn create_sourcing_curate_app() -> App {
             )
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via
             // `SourcingCurateCommand`'s `OpBinary` codec directly (`setLocale` deliberately left
-            // undeclared above, mirroring `flow_ui`: `VcsDocumentApp`'s kind-discipline check only runs
+            // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(crate::artifacts::curate::engine::sourcing_curate_io()),
     )
@@ -257,9 +257,9 @@ pub fn create_sourcing_curate_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as new_app_impl, new_app_with_registry as new_app_with_registry_impl};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type SourcingApp = VcsDocumentApp<SourcingCurateApp>;
+    pub type SourcingApp = VcsArtifactApp<SourcingCurateApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> SourcingApp {
@@ -389,7 +389,7 @@ mod tests {
     /// pre-migration wire baseline captured into this ticket's `wire-baseline-before.txt`.
     fn every_command() -> Vec<SourcingCurateCommand> {
         vec![
-            SourcingCurateCommand::SetDocumentJson(set_document_json::SetDocumentJson { json: "{}".into() }),
+            SourcingCurateCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: "{}".into() }),
             SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-stock".into() }),
             SourcingCurateCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}),
             SourcingCurateCommand::CurateAdd(curate_add::CurateAdd { object_id: "beam-glulam-gl24h".into() }),

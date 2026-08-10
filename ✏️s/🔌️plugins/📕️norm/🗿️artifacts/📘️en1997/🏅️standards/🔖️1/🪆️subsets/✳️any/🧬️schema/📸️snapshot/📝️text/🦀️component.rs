@@ -17,12 +17,12 @@ pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../..
 
 /// 📖️ Parses `.en1997` DSL text into a `En1997Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, store::TextError> {
-    <En1997Snapshot as store::DocumentDsl>::parse_dsl(text)
+    <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1997Snapshot` back to `.en1997` DSL text.
 pub fn print_dsl(document: &En1997Snapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

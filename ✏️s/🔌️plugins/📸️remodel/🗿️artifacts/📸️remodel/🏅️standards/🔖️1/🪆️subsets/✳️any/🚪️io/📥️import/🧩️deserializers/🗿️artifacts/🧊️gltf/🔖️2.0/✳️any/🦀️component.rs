@@ -6,12 +6,12 @@ pub fn register() {}
 
 pub fn deserialize(from: &GltfSnapshot) -> Result<RemodelSnapshot, store::TextError> {
     let _ = STDIO_GLTF_DOCUMENT_SCHEMA;
-    let bytes = <GltfSnapshot as store::DocumentPack>::encode_pack(from);
+    let bytes = <GltfSnapshot as store::ArtifactPack>::encode_pack(from);
     deserialize_bytes(&bytes)
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RemodelSnapshot, store::TextError> {
-    <RemodelSnapshot as store::DocumentPack>::decode_pack(bytes).or_else(|_| {
-        <RemodelSnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
+    <RemodelSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
+        <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
     })
 }

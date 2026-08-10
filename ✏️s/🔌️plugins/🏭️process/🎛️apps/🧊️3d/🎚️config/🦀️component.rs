@@ -5,7 +5,7 @@
 //! B1: absorbs every field that used to live in the old UI crate's `Process3dRuntime` app-struct
 //! `RefCell` (selection, hover, face pick, selection method, engagement input, camera, sun) plus the two
 //! `ViewModel` fields process3d actually read (`active_utility_id`/`locale`) — session-only view state
-//! now round-trips through the config `DocumentStore` exactly like document content, with a real
+//! now round-trips through the config `ArtifactStore` exactly like document content, with a real
 //! `backwards` per [`Process3dConfigMutation`], mirroring the `shooting_engine::ShootingConfig` pilot.
 //! The camera (was `Process3dCamera`) and sun (was `WorldSunConfig`) are flattened into scalar fields
 //! rather than embedded as DSL blocks — neither type derives `dsl::DslRecord`, and `WorldSunConfig` is
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 pub const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "process3dcfg")]
 #[dsl(id = "process3d.config")]
@@ -56,9 +56,9 @@ pub struct Process3dConfig {
     pub contributions_json: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for Process3dConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for Process3dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -78,7 +78,7 @@ impl store::DocumentDsl for Process3dConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -87,12 +87,12 @@ impl store::DocumentDsl for Process3dConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for Process3dConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for Process3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -101,10 +101,10 @@ impl store::DocumentPack for Process3dConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -116,7 +116,7 @@ impl store::DocumentPack for Process3dConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 fn default_contributions_json() -> String {
@@ -165,7 +165,7 @@ store::impl_whole_record_config!(Process3dConfig);
 /// variant was ~5x every other row's size) — `Box` is `#[fundamental]` in `std`, so implementing a
 /// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
 /// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
-/// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslDocument`), mirroring `cad`'s
+/// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslArtifact`), mirroring `cad`'s
 /// identical `Box<CadSnapshot>` binding.
 impl dsl::DslField for Box<Process3dConfig> {
     fn shape() -> dsl::Shape {
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn process3d_config_dsl_and_pack_round_trip() {
-        use store::DocumentPack;
+        use store::ArtifactPack;
         let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(3), sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         let bytes = config.encode_pack();

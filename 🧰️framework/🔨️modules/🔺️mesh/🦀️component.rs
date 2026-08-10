@@ -1515,7 +1515,7 @@ impl CommandGrammar {
 //#endregion 🔖️CommandGrammar
 
 //#region Media
-/// 🎞️ The value that actually flows over a workflow wire, produced by `DocumentApp::export_media` and consumed by `DocumentApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
+/// 🎞️ The value that actually flows over a workflow wire, produced by `ArtifactApp::export_media` and consumed by `ArtifactApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1721,7 +1721,7 @@ impl std::fmt::Display for IoError {
 impl std::error::Error for IoError {}
 
 /// ↔️ Codec between a neutral document and on-disk bytes.
-pub trait DocumentCodec<T>: Send + Sync {
+pub trait ArtifactCodec<T>: Send + Sync {
     fn format(&self) -> MediaFormat;
     fn export(&self, doc: &T) -> Result<Vec<u8>, IoError>;
     fn import(&self, bytes: &[u8]) -> Result<T, IoError>;
@@ -2954,11 +2954,11 @@ pub fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
 //#endregion DwgBridges
 //#endregion Dwg
 
-//#region DocumentCodecs
+//#region ArtifactCodecs
 //#region TextCsvJson
 /// 📄 UTF-8 text (.txt).
 pub struct TxtCodec;
-impl DocumentCodec<TextDoc> for TxtCodec {
+impl ArtifactCodec<TextDoc> for TxtCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Txt }
     fn export(&self, doc: &TextDoc) -> Result<Vec<u8>, IoError> { Ok(doc.body.as_bytes().to_vec()) }
     fn import(&self, bytes: &[u8]) -> Result<TextDoc, IoError> {
@@ -2968,7 +2968,7 @@ impl DocumentCodec<TextDoc> for TxtCodec {
 
 /// 📝️ Markdown (.md).
 pub struct MdCodec;
-impl DocumentCodec<TextDoc> for MdCodec {
+impl ArtifactCodec<TextDoc> for MdCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Md }
     fn export(&self, doc: &TextDoc) -> Result<Vec<u8>, IoError> { TxtCodec.export(doc) }
     fn import(&self, bytes: &[u8]) -> Result<TextDoc, IoError> { TxtCodec.import(bytes) }
@@ -2976,7 +2976,7 @@ impl DocumentCodec<TextDoc> for MdCodec {
 
 /// 🔣️ JSON value (.json).
 pub struct JsonCodec;
-impl DocumentCodec<serde_json::Value> for JsonCodec {
+impl ArtifactCodec<serde_json::Value> for JsonCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Json }
     fn export(&self, doc: &serde_json::Value) -> Result<Vec<u8>, IoError> {
         serde_json::to_vec_pretty(doc).map_err(|e| IoError::Payload(e.to_string()))
@@ -2988,7 +2988,7 @@ impl DocumentCodec<serde_json::Value> for JsonCodec {
 
 /// 📊️ CSV table (.csv).
 pub struct CsvCodec;
-impl DocumentCodec<TableDoc> for CsvCodec {
+impl ArtifactCodec<TableDoc> for CsvCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Csv }
     fn export(&self, doc: &TableDoc) -> Result<Vec<u8>, IoError> {
         let mut out = String::new();
@@ -3066,7 +3066,7 @@ fn decode_raw_rgba(bytes: &[u8]) -> Result<RasterImage, IoError> {
 
 /// 🖼️ Windows BMP (BI_RGB, 32-bit).
 pub struct BmpCodec;
-impl DocumentCodec<RasterImage> for BmpCodec {
+impl ArtifactCodec<RasterImage> for BmpCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Bmp }
     fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> {
         let w = doc.width as i32;
@@ -3135,7 +3135,7 @@ impl DocumentCodec<RasterImage> for BmpCodec {
 macro_rules! raw_rgba_codec {
     ($name:ident, $fmt:ident) => {
         pub struct $name;
-        impl DocumentCodec<RasterImage> for $name {
+        impl ArtifactCodec<RasterImage> for $name {
             fn format(&self) -> MediaFormat { MediaFormat::$fmt }
             fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> { Ok(encode_raw_rgba(doc)) }
             fn import(&self, bytes: &[u8]) -> Result<RasterImage, IoError> { decode_raw_rgba(bytes) }
@@ -3151,7 +3151,7 @@ raw_rgba_codec!(TiffCodec, Tiff);
 //#region PageTableArchive
 /// 📄️ PDF codec (one text page per PageDoc page).
 pub struct PdfCodec;
-impl DocumentCodec<PageDoc> for PdfCodec {
+impl ArtifactCodec<PageDoc> for PdfCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Pdf }
     fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
         let text = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\\n");
@@ -3273,7 +3273,7 @@ fn read_store_zip(bytes: &[u8]) -> Result<Vec<(String, Vec<u8>)>, IoError> {
 
 /// 🎒️ ZIP archive.
 pub struct ZipCodec;
-impl DocumentCodec<Archive> for ZipCodec {
+impl ArtifactCodec<Archive> for ZipCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Zip }
     fn export(&self, doc: &Archive) -> Result<Vec<u8>, IoError> {
         let entries: Vec<_> = doc.entries.iter().map(|e| (e.path.clone(), e.bytes.clone())).collect();
@@ -3287,7 +3287,7 @@ impl DocumentCodec<Archive> for ZipCodec {
 
 /// 💬️ BCF is a ZIP with `bcf/markup.bcf` text.
 pub struct BcfCodec;
-impl DocumentCodec<Archive> for BcfCodec {
+impl ArtifactCodec<Archive> for BcfCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Bcf }
     fn export(&self, doc: &Archive) -> Result<Vec<u8>, IoError> { ZipCodec.export(doc) }
     fn import(&self, bytes: &[u8]) -> Result<Archive, IoError> { ZipCodec.import(bytes) }
@@ -3317,7 +3317,7 @@ fn ooxml_read_body(bytes: &[u8]) -> Result<String, IoError> {
 
 /// 📜️ DOCX (OOXML package).
 pub struct DocxCodec;
-impl DocumentCodec<PageDoc> for DocxCodec {
+impl ArtifactCodec<PageDoc> for DocxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Docx }
     fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
         let body = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\n");
@@ -3330,7 +3330,7 @@ impl DocumentCodec<PageDoc> for DocxCodec {
 
 /// 🎞️ PPTX (OOXML package).
 pub struct PptxCodec;
-impl DocumentCodec<PageDoc> for PptxCodec {
+impl ArtifactCodec<PageDoc> for PptxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Pptx }
     fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
         let body = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\n");
@@ -3343,7 +3343,7 @@ impl DocumentCodec<PageDoc> for PptxCodec {
 
 /// 📕️ XLSX (OOXML package carrying CSV body).
 pub struct XlsxCodec;
-impl DocumentCodec<TableDoc> for XlsxCodec {
+impl ArtifactCodec<TableDoc> for XlsxCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Xlsx }
     fn export(&self, doc: &TableDoc) -> Result<Vec<u8>, IoError> {
         let csv = String::from_utf8(CsvCodec.export(doc)?).map_err(|e| IoError::Payload(e.to_string()))?;
@@ -3359,7 +3359,7 @@ impl DocumentCodec<TableDoc> for XlsxCodec {
 //#region MeshExtraCodecs
 /// ☁️ ASCII PLY mesh.
 pub struct PlyCodec;
-impl DocumentCodec<MeshData> for PlyCodec {
+impl ArtifactCodec<MeshData> for PlyCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Ply }
     fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
         let mut out = String::new();
@@ -3414,7 +3414,7 @@ impl DocumentCodec<MeshData> for PlyCodec {
 
 /// ☁️ Minimal LAS 1.2 point cloud (XYZ only).
 pub struct LasCodec;
-impl DocumentCodec<MeshData> for LasCodec {
+impl ArtifactCodec<MeshData> for LasCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Las }
     fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
         let n = (doc.positions.len() / 3) as u32;
@@ -3469,7 +3469,7 @@ impl DocumentCodec<MeshData> for LasCodec {
 
 /// 🧊️ glTF JSON (positions + indices only).
 pub struct GltfCodec;
-impl DocumentCodec<MeshData> for GltfCodec {
+impl ArtifactCodec<MeshData> for GltfCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Gltf }
     fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
         let value = serde_json::json!({
@@ -3496,7 +3496,7 @@ impl DocumentCodec<MeshData> for GltfCodec {
 
 /// 🖊️ Minimal DXF (LINE entities from mesh edges as polylines of positions).
 pub struct DxfCodec;
-impl DocumentCodec<DwgDrawing> for DxfCodec {
+impl ArtifactCodec<DwgDrawing> for DxfCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Dxf }
     fn export(&self, doc: &DwgDrawing) -> Result<Vec<u8>, IoError> {
         let mut out = String::from("0\nSECTION\n2\nENTITIES\n");
@@ -3547,7 +3547,7 @@ impl DocumentCodec<DwgDrawing> for DxfCodec {
 
 /// 🏗️ IFC STEP text carrying mesh JSON via IFCPROPERTYSINGLEVALUE.
 pub struct IfcCodec;
-impl DocumentCodec<MeshData> for IfcCodec {
+impl ArtifactCodec<MeshData> for IfcCodec {
     fn format(&self) -> MediaFormat { MediaFormat::Ifc }
     fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
         let payload = serde_json::to_string(doc).map_err(|e| IoError::Payload(e.to_string()))?;
@@ -3567,7 +3567,7 @@ impl DocumentCodec<MeshData> for IfcCodec {
     }
 }
 //#endregion MeshExtraCodecs
-//#endregion DocumentCodecs
+//#endregion ArtifactCodecs
 
 #[cfg(test)]
 mod tests {

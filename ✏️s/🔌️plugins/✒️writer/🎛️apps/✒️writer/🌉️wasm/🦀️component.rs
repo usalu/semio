@@ -11,28 +11,28 @@ pub type WriterSession = EditorSession;
 
 #[cfg(target_arch = "wasm32")]
 mod document_vcs {
-    //#region 🔖️DocumentVcs
+    //#region 🔖️ArtifactVcs
     use std::cell::RefCell;
 
     use wasm_bindgen::prelude::*;
 
-    use store::{DocumentEnvelope, DocumentStore};
+    use store::{ArtifactEnvelope, ArtifactStore};
 
     use crate::artifacts::writer::op::WriterMutation;
     use crate::artifacts::writer::WriterSnapshot;
 
-    type WriterEnvelope = DocumentEnvelope<WriterSnapshot, WriterMutation>;
-    type WriterStore = DocumentStore<WriterSnapshot, WriterMutation>;
+    type WriterEnvelope = ArtifactEnvelope<WriterSnapshot, WriterMutation>;
+    type WriterStore = ArtifactStore<WriterSnapshot, WriterMutation>;
 
     #[wasm_bindgen]
-    pub struct WriterDocumentVcs {
+    pub struct WriterArtifactVcs {
         store: RefCell<WriterStore>,
     }
 
     #[wasm_bindgen]
-    impl WriterDocumentVcs {
+    impl WriterArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: &str) -> Result<WriterDocumentVcs, JsValue> {
+        pub fn new(envelope_json: &str) -> Result<WriterArtifactVcs, JsValue> {
             let envelope: WriterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(WriterStore::new(envelope)) })
         }
@@ -62,7 +62,7 @@ mod document_vcs {
             self.store.borrow().generation() as u32
         }
     }
-    //#endregion 🔖️DocumentVcs
+    //#endregion 🔖️ArtifactVcs
 }
 
 #[cfg(target_arch = "wasm32")]

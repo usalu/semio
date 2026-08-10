@@ -1,6 +1,6 @@
 //! 📤️ Export Fem2dSnapshot as .glb.
 
-use semio_framework_plugin::{DocumentCodec, IoError, JsonCodec, MediaFormat};
+use semio_framework_plugin::{ArtifactCodec, IoError, JsonCodec, MediaFormat};
 
 //#region 🔖️Export
 pub fn export(snapshot: &crate::artifacts::fem2d::Fem2dSnapshot) -> Result<Vec<u8>, IoError> {

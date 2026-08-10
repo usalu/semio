@@ -78,7 +78,7 @@ pub fn empty_tiff_snapshot() -> TiffSnapshot { TiffSnapshot::default() }
 pub fn register() {
     crate::artifacts::tiff::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::tiff::schema::tiff_artifact_schema_descriptor());
-    store::register_document_codec(store::DocumentCodec::of::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA));
 }
 
 pub struct TiffEngine { artifact_state: TiffArtifact, snapshot_state: TiffSnapshot }

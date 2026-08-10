@@ -1,10 +1,10 @@
 //! 🌉️ Raster play app — the `wasm-bindgen` VCS bridge: a JS-facing surface distinct from the WASM
 //! Component Model plugin ABI the rest of this crate speaks. Only compiled for `target_arch = "wasm32"`
-//! (was: the plugin-root `📦️glue.rs`'s `RasterDocumentVcs` in the old bundle crate).
+//! (was: the plugin-root `📦️glue.rs`'s `RasterArtifactVcs` in the old bundle crate).
 
 #[cfg(target_arch = "wasm32")]
 mod document_vcs {
-    //#region 🔖️DocumentVcs
+    //#region 🔖️ArtifactVcs
     use std::cell::RefCell;
 
     use wasm_bindgen::prelude::*;
@@ -12,14 +12,14 @@ mod document_vcs {
     use crate::artifacts::raster::op::{RasterEnvelope, RasterStore};
 
     #[wasm_bindgen]
-    pub struct RasterDocumentVcs {
+    pub struct RasterArtifactVcs {
         store: RefCell<RasterStore>,
     }
 
     #[wasm_bindgen]
-    impl RasterDocumentVcs {
+    impl RasterArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: &str) -> Result<RasterDocumentVcs, JsValue> {
+        pub fn new(envelope_json: &str) -> Result<RasterArtifactVcs, JsValue> {
             let envelope: RasterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(RasterStore::new(envelope)) })
         }
@@ -49,7 +49,7 @@ mod document_vcs {
             self.store.borrow().generation() as u32
         }
     }
-    //#endregion 🔖️DocumentVcs
+    //#endregion 🔖️ArtifactVcs
 }
 
 #[cfg(target_arch = "wasm32")]

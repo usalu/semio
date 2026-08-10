@@ -331,8 +331,8 @@ import {
   type HostEffect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -518,8 +518,8 @@ import {
   type SectionProbe,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
-  type DocumentActorMsg,
-  type DocumentSyncStatus,
+  type ArtifactActorMsg,
+  type ArtifactSyncStatus,
   type FrameworkSyncUtilityLeaf,
   decodeBackboneMessage,
   encodeBackboneMessage,
@@ -722,10 +722,10 @@ import {
   type ShellRoute,
   parseShellRoute,
   parseSpaceShellPath,
-  appDocumentLabel,
-  resolveAppDocument,
-  resolveDocumentByAppId,
-  appWindowDocumentLabel,
+  appBreadcrumb,
+  resolveAppBreadcrumb,
+  resolveArtifactByAppId,
+  appWindowLabel,
   studioPanelFocusingSpawned,
   viewStateWithSpacePanel,
   retitleWindowLayoutNode,
@@ -787,7 +787,7 @@ import {
   buildUiRefreshRequest,
   applyUiRefreshResponseToCache,
 } from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
-export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appDocumentLabel, resolveAppDocument, resolveDocumentByAppId, appWindowDocumentLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache };
+export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache };
 //#endregion ShellHelpers
 
 //#region Boot

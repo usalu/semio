@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
 use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -28,7 +28,7 @@ fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural
     let generation_preview_text = selected_generation(&state).map(|selected| evaluate_generation_preview(&projection.fixture, &selected.values));
     let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
     Emit {
-        document_mutations: operations.into_iter().map(Procedural3dMutation::Generation).collect(),
+        artifact_mutations: operations.into_iter().map(Procedural3dMutation::Generation).collect(),
         config_mutations: vec![Procedural3dConfigMutation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }],
         coalesce_key,
         ..Default::default()
@@ -44,7 +44,7 @@ pub mod add_generation {
     #[dsl(keyword = "add-generation")]
     pub struct AddGeneration {}
 
-    pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(handle_generation("addGeneration", None, doc.snapshot, cfg.snapshot))
     }
 }
@@ -59,7 +59,7 @@ pub mod remove_generation {
     pub struct RemoveGeneration {
         pub id: String}
 
-    pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc.snapshot, cfg.snapshot))
     }
 }
@@ -75,7 +75,7 @@ pub mod rename_generation {
         pub id: String,
         pub name: String}
 
-    pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.snapshot, cfg.snapshot))
     }
 }
@@ -92,7 +92,7 @@ pub mod update_generation_values {
         pub question_id: String,
         pub value: dsl::DslValue}
 
-    pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
         Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.snapshot, cfg.snapshot))
     }
@@ -108,7 +108,7 @@ pub mod select_generation {
     pub struct SelectGeneration {
         pub id: String}
 
-    pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let mut state = doc.snapshot.generation.clone();
         state.selected_generation_id = cfg.snapshot.selected_generation_id.clone();

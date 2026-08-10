@@ -1,6 +1,6 @@
 //! 📦️ Forms artifact — binary document surface + laws (constitutional: pack).
 //!
-//! `store::DocumentPack for FormsSnapshot` is implemented directly in the shared `playbook` kernel crate; see
+//! `store::ArtifactPack for FormsSnapshot` is implemented directly in the shared `playbook` kernel crate; see
 //! `🗿️artifacts/📋️forms/🦀️component.rs` for why. This component only adds the thin artifact-facing
 //! `encode`/`decode` wrappers plus the pack↔dsl equivalence law and the command-envelope round-trip law.
 
@@ -17,12 +17,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `FormsSnapshot` to its binary pack form.
 pub fn encode(document: &FormsSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `FormsSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<FormsSnapshot, PackError> {
-    <FormsSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <FormsSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -63,15 +63,15 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::forms::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let document = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] };
-        let mut store: DocumentStore<FormsSnapshot, FormMutation> = DocumentStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None));
+        let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None));
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![FormMutation::AddStep { step, index: None }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::AddStep { step, index: None }], description: None }).expect("apply");
         let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

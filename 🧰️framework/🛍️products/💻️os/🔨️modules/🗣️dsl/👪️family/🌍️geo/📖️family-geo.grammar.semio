@@ -8,4 +8,4 @@ point-tuple = FLOAT FLOAT FLOAT?
 crs = "crs" IDENT | "CRS" "=" IDENT
 bbox = "bbox" FLOAT FLOAT FLOAT FLOAT | "bbox" "=" bbox-literal
 bbox-literal = FLOAT FLOAT FLOAT FLOAT
-geo-field = "lat" "=" (FLOAT | INT) | "lon" "=" (FLOAT | INT) | "alt" "=" (FLOAT | INT) | "crs" "=" IDENT
+geo-field = "lat" "=" {FLOAT | INT} | "lon" "=" {FLOAT | INT} | "alt" "=" {FLOAT | INT} | "crs" "=" IDENT

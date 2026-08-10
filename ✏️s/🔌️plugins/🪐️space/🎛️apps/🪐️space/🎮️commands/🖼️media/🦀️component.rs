@@ -3,7 +3,7 @@
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::apps::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowSnapshot, WorkflowMutation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde_json::{json, Value};
 
 //#region 🔖️ExportMedia
@@ -18,7 +18,7 @@ pub mod export_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ExportMedia, doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let projection = doc.snapshot;
         match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
             Some(node) => {
@@ -50,7 +50,7 @@ pub mod import_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let format_kind = semio_framework::normalize_stdio_format_kind(&payload.format).unwrap_or(payload.format.as_str());
         let accept = semio_framework_os::media_accept_filter_kinds(&[format_kind]);
         let accept = if accept.is_empty() { format!(".{format_kind}") } else { accept };
@@ -74,7 +74,7 @@ pub mod import_media_payload {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportMediaPayload, doc: &DocumentView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let mut config_mutations = Vec::new();
         if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.as_ref(), config.pending_import_format.as_ref()) {
@@ -148,7 +148,7 @@ mod tests {
 
         let pending_config = apply_config(&config, &import.config_mutations);
         let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).expect("handle");
-        assert!(payload.document_mutations.is_empty());
+        assert!(payload.artifact_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

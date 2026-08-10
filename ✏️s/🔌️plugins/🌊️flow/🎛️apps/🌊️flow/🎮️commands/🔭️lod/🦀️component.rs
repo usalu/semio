@@ -4,7 +4,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::{dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetLodMode
@@ -18,7 +18,7 @@ pub mod set_lod_mode {
 
     /// 🎚️ Unknown lod ids are rejected outright (rather than clamped) — the select control only ever
     /// offers `FLOW_LOD_MODE_AUTOMATIC` plus the real `DagDrawLod` ids.
-    pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         if payload.value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(&payload.value).is_some() {
             Ok(Emit::config(vec![FlowConfigMutation::SetLodMode { value: payload.value.clone() }]))
         } else {
@@ -37,7 +37,7 @@ pub mod set_proximity_distance {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetProximityDistance, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetProximityDistance, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetProximityDistance { value: payload.value.max(0.0) }]))
     }
 }

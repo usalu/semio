@@ -2,7 +2,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.writer` document. It still round-trips through a real
-//! `DocumentStore` (with a real `backwards`), so selection/hover/camera/editor-settings edits are VCS'd
+//! `ArtifactStore` (with a real `backwards`), so selection/hover/camera/editor-settings edits are VCS'd
 //! exactly like document content. `WriterEditorSelection`/`WriterEditorSettings` were carried by the old
 //! `⚙️engine` crate's `WriterConfig` before this migration — they move here alongside it, since neither
 //! survives into the document either.
@@ -12,13 +12,13 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};
-/// 🧮️ B1: writer's real `DocumentApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
+/// 🧮️ B1: writer's real `ArtifactApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
 /// field (selection, editor selection, format/lint signals, revision, editor settings, AST hover,
 /// engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc comment) plus
 /// `locale`, the one `ViewModel` field the writer UI actually reads (`resolve_labels`/`is_de_locale`
 /// — see `crate::apps::writer::WriterPlayApp::render`), mirroring `shooting_engine::ShootingConfig`'s
 /// B1 shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "writer.config")]
 #[dsl(layout = "lines")]
@@ -50,9 +50,9 @@ pub struct WriterConfig {
     pub locale: String,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for WriterConfig {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for WriterConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -72,7 +72,7 @@ impl store::DocumentDsl for WriterConfig {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -81,12 +81,12 @@ impl store::DocumentDsl for WriterConfig {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for WriterConfig {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for WriterConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -95,10 +95,10 @@ impl store::DocumentPack for WriterConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -110,7 +110,7 @@ impl store::DocumentPack for WriterConfig {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 impl Default for WriterConfig {
@@ -317,8 +317,8 @@ mod tests {
     #[test]
     fn writer_config_pack_round_trips() {
         let config = WriterConfig { locale: "de-DE".into(), engagement_input: "format".into(), ..WriterConfig::default() };
-        let bytes = store::DocumentPack::encode_pack(&config);
-        let decoded = <WriterConfig as store::DocumentPack>::decode_pack(&bytes).expect("decode writer config pack");
+        let bytes = store::ArtifactPack::encode_pack(&config);
+        let decoded = <WriterConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode writer config pack");
         assert_eq!(decoded, config);
     }
 }

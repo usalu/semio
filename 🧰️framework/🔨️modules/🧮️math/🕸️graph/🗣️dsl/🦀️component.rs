@@ -2177,7 +2177,7 @@ mod tests {
     #[test]
     fn run_dag_fixture_query() {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::DocumentDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.fixture",
@@ -2319,7 +2319,7 @@ mod tests {
     #[test]
     fn run_port_filtered_query() {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::DocumentDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.fixture",

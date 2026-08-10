@@ -27,8 +27,8 @@ impl Default for TxtSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for TxtSnapshot {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for TxtSnapshot {
     const EXTENSION: &'static str = "txt";
     fn envelope_id() -> &'static str { "stdio.txt" }
 
@@ -41,7 +41,7 @@ impl store::DocumentDsl for TxtSnapshot {
     }
     fn print_dsl(&self) -> String {
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         ).expect("valid envelope_id");
@@ -49,13 +49,13 @@ impl store::DocumentDsl for TxtSnapshot {
     }
 }
 
-impl store::DocumentPack for TxtSnapshot {
+impl store::ArtifactPack for TxtSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let raw = self.text.as_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -65,10 +65,10 @@ impl store::DocumentPack for TxtSnapshot {
 
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -77,4 +77,4 @@ impl store::DocumentPack for TxtSnapshot {
         Ok(Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

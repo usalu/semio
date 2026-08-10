@@ -5,7 +5,7 @@ pub mod select_register {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -14,7 +14,7 @@ pub mod select_register {
         pub register_id: String,
     }
 
-    pub fn handle(payload: &SelectRegister, _doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectRegister, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let mut next = cfg.snapshot.clone();
         next.active_register = payload.register_id.clone();
         next.selected_ids.clear();
@@ -28,7 +28,7 @@ pub mod add_register_item {
     use crate::artifacts::program::engine::template::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -39,7 +39,7 @@ pub mod add_register_item {
         pub template_id: Option<String>,
     }
 
-    pub fn handle(payload: &AddRegisterItem, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &AddRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         if let Some(template_id) = &payload.template_id {
             let template_id = EntityId(template_id.clone());
@@ -54,7 +54,7 @@ pub mod add_register_item {
         let mut next = cfg.snapshot.clone();
         next.active_register = payload.register_id.clone();
         next.selected_ids = vec![id.to_string()];
-        Ok(Emit { document_mutations: vec![operation], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![operation], config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -63,7 +63,7 @@ pub mod remove_register_item {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -73,7 +73,7 @@ pub mod remove_register_item {
         pub entity_id: String,
     }
 
-    pub fn handle(payload: &RemoveRegisterItem, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let entity_id = EntityId(payload.entity_id.clone());
         let mut next = cfg.snapshot.clone();
@@ -87,7 +87,7 @@ pub mod remove_register_item {
                 operations.push(ProgramMutation::ClearAdjacency { id: adjacency.header.id.clone() });
             }
         }
-        Ok(Emit { document_mutations: operations, config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -96,7 +96,7 @@ pub mod patch_register_item {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
 
@@ -108,7 +108,7 @@ pub mod patch_register_item {
         pub patch_json: String,
     }
 
-    pub fn handle(payload: &PatchRegisterItem, _doc: &DocumentView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchRegisterItem, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(patch) = serde_json::from_str::<Value>(&payload.patch_json) else {
             return Ok(Emit::default());
         };

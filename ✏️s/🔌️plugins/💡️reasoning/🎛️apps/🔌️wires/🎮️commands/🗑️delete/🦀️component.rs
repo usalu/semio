@@ -4,7 +4,7 @@ use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::{fixture_edges, find_board_node};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️DeleteSelection
@@ -15,7 +15,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let mut operations = Vec::new();
@@ -27,7 +27,7 @@ pub mod delete_selection {
             }
         }
         let config_mutations = if operations.is_empty() { Vec::new() } else { vec![WiresConfigMutation::SetSelection { ids: Vec::new() }] };
-        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteSelection

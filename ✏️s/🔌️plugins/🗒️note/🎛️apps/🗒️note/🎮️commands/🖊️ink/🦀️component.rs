@@ -5,7 +5,7 @@ use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteSnapshot, NoteImageAsset};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::Deserialize;
 
 //#region 🔖️CanvasEvents
@@ -87,7 +87,7 @@ pub mod ink_apply_events {
         pub select_ids: Option<Vec<String>>,
     }
 
-    pub fn handle(payload: &InkApplyEvents, doc: &DocumentView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let document = doc.snapshot;
         let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
         let mut config_mutations = Vec::new();
@@ -116,7 +116,7 @@ pub mod ink_apply_events {
                 _ => None,
             }
         };
-        Ok(Emit { document_mutations: operations, config_mutations, coalesce_key, ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, config_mutations, coalesce_key, ..Default::default() })
     }
 }
 //#endregion 🔖️InkApplyEvents

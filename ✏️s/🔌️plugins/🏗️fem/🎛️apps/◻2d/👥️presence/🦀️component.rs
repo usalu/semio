@@ -2,7 +2,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Fem2dPresence has no shareable live fields beyond config: selection is transient command payload,
@@ -18,7 +18,7 @@ impl protocol::MutationDiff<Fem2dPresence> for Fem2dPresence {
     fn absorb(&mut self, _other: Self) {}
 }
 
-impl store::DocumentDsl for Fem2dPresence {
+impl store::ArtifactDsl for Fem2dPresence {
     const EXTENSION: &'static str = "fem2d.presence";
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         if text.trim().is_empty() {
@@ -31,7 +31,7 @@ impl store::DocumentDsl for Fem2dPresence {
     }
 }
 
-impl DocumentPack for Fem2dPresence {
+impl ArtifactPack for Fem2dPresence {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }

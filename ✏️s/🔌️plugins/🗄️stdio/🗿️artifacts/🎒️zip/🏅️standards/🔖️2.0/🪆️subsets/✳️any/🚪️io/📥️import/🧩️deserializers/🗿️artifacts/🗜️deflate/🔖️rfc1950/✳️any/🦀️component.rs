@@ -19,6 +19,6 @@ pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackErr
 
 /// Decode deflate pack then parse.
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ZipSnapshot, store::PackError> {
-    deserialize(&<DeflateSnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    deserialize(&<DeflateSnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

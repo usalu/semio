@@ -1,4 +1,4 @@
-//! 🎲️ Procedural2d play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🎲️ Procedural2d play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -18,7 +18,7 @@ use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -85,7 +85,7 @@ use widget::{add_widget, remove_widget};
 #[derive(Default)]
 pub struct Procedural2dPlayApp;
 
-impl DocumentApp for Procedural2dPlayApp {
+impl ArtifactApp for Procedural2dPlayApp {
     type Snapshot = Procedural2dSnapshot;
     type Mutation = Procedural2dMutation;
     type Config = Procedural2dConfig;
@@ -176,14 +176,14 @@ impl DocumentApp for Procedural2dPlayApp {
             )))}
     }
 
-    fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
-    fn pending_effects(doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
         with_process_flow_eval_session(|session| {
             let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
@@ -194,7 +194,7 @@ impl DocumentApp for Procedural2dPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
@@ -213,7 +213,7 @@ impl DocumentApp for Procedural2dPlayApp {
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
     /// toggle, generation authoring, and generation selection each fold into their own taxonomy group;
     /// the delete-selection item stays a direct destructive item last.
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let config = cfg.snapshot;
@@ -230,7 +230,7 @@ impl DocumentApp for Procedural2dPlayApp {
 
     /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
     /// `Structured{schema: Self::DOCUMENT_SCHEMA, json: base64}` — plus `"drawing:out"`.
-    fn export_media(port: &str, doc: &DocumentView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
                 let eval_json = crate::artifacts::procedural2d::engine::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
@@ -238,7 +238,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
+                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
                     payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) }})
@@ -248,7 +248,7 @@ impl DocumentApp for Procedural2dPlayApp {
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
     /// `InputSlider` widgets' `value` field, leaving unmatched keys/widget kinds untouched.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural2dSnapshot>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
         if port != "params:in" {
             return Err(semio_framework_plugin::MediaError::NotImplemented);
         }
@@ -344,9 +344,9 @@ pub fn create_procedural2d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Procedural2dApp = VcsDocumentApp<Procedural2dPlayApp>;
+    pub type Procedural2dApp = VcsArtifactApp<Procedural2dPlayApp>;
 
     pub fn app() -> Procedural2dApp {
         crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
@@ -594,7 +594,7 @@ mod tests {
 
     #[test]
     fn media_ports_declare_params_in_and_drawing_out() {
-        let ports = <Procedural2dPlayApp as DocumentApp>::media_ports();
+        let ports = <Procedural2dPlayApp as ArtifactApp>::media_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         let params_in = ports.iter().find(|port| port.id == "params:in").expect("params:in declared");

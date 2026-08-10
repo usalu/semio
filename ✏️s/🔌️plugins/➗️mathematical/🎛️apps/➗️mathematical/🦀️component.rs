@@ -1,16 +1,16 @@
-//! 🧮️ Mathematical play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
+//! 🧮️ Mathematical play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch. B1: the pure-trait pilot for this plugin — `MathematicalPlayApp` is a unit
 //! struct; the former `MathPlayRuntime` app-struct `RefCell` (the node-graph viewport camera) now lives in
 //! `crate::apps::mathematical::config::MathematicalConfig`, written via `MathematicalConfigMutation`s (real `backwards`,
 //! no ad hoc inverse tracking); every action dispatches through the single typed `MathematicalCommand` channel via
-//! `DocumentApp::handle`.
+//! `ArtifactApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🎚️config/🦀️component.rs`, shared compute in the artifact's `⚙️engine`.
 //! This file is a routing table: `handle` → `MathematicalCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::mathematical::commands::document::set_document;
+use crate::apps::mathematical::commands::document::set_artifact;
 use crate::apps::mathematical::commands::geometry::set_points;
 use crate::apps::mathematical::commands::graph::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::apps::mathematical::commands::locale::set_locale;
@@ -21,10 +21,10 @@ use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_windo
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalSnapshot, MATH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ui_text, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    ui_text, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const MATH_APP_ID: &str = "mathematical-play";
@@ -41,7 +41,7 @@ semio_framework_plugin::app_commands! {
     /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
     pub enum MathematicalCommand for MathematicalSnapshot, MathematicalMutation, MathematicalConfig, MathematicalConfigMutation {
-        "setDocument" as "set-document" => set_document::SetDocument,
+        "setDocument" as "set-artifact" => set_artifact::SetArtifact,
         "setAlgorithm" as "set-algorithm" => set_algorithm::SetAlgorithm,
         "setDirected" as "set-directed" => set_directed::SetDirected,
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
@@ -54,12 +54,12 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️MathematicalPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
-/// `crate::apps::mathematical::config::MathematicalConfig` (see `DocumentApp::Config`), written through
+/// `crate::apps::mathematical::config::MathematicalConfig` (see `ArtifactApp::Config`), written through
 /// `MathematicalConfigMutation`s.
 #[derive(Default)]
 pub struct MathematicalPlayApp;
 
-impl DocumentApp for MathematicalPlayApp {
+impl ArtifactApp for MathematicalPlayApp {
     type Snapshot = MathematicalSnapshot;
     type Mutation = MathematicalMutation;
     type Config = MathematicalConfig;
@@ -89,15 +89,15 @@ impl DocumentApp for MathematicalPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &MathematicalCommand, doc: &DocumentView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🎞️ `"result:out"` exports the active algorithm's per-node overlay (topo order/connected
     /// components/SCC group/BFS distance — the port recipe's `computation.mathematical`-kinded output);
-    /// `"document:out"` replicates `DocumentApp::export_media`'s default whole-document-pack behavior
+    /// `"document:out"` replicates `ArtifactApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
-    fn export_media(port: &str, doc: &DocumentView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let overlay = crate::artifacts::mathematical::engine::algorithm_overlay(&doc.snapshot.graph);
@@ -113,7 +113,7 @@ impl DocumentApp for MathematicalPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
         match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.snapshot.graph, &cfg.snapshot.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.snapshot.geometry),
@@ -175,9 +175,9 @@ pub fn create_mathematical_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type MathApp = VcsDocumentApp<MathematicalPlayApp>;
+    pub type MathApp = VcsArtifactApp<MathematicalPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn math_app() -> MathApp {
@@ -243,7 +243,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<MathematicalCommand> {
         vec![
-            MathematicalCommand::SetDocument(set_document::SetDocument { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()), geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
+            MathematicalCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()), geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
             MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
             MathematicalCommand::SetDirected(set_directed::SetDirected { directed: true }),
             MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),

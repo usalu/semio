@@ -63,7 +63,7 @@ pub enum ProgramMutation {
     Validations(CollectionMutation<EntityId, ValidationRecord, ValidationRecordPatch>),
     Performance(CollectionMutation<EntityId, PerformanceCriterion, PerformanceCriterionPatch>),
     Quality(CollectionMutation<EntityId, QualityRecord, QualityRecordPatch>),
-    Documents(CollectionMutation<EntityId, DocumentRecord, DocumentRecordPatch>),
+    Documents(CollectionMutation<EntityId, ArtifactRecord, ArtifactRecordPatch>),
     Changes(CollectionMutation<EntityId, ChangeRecord, ChangeRecordPatch>),
     Collaboration(CollectionMutation<EntityId, CollaborationRecord, CollaborationRecordPatch>),
     Analyses(CollectionMutation<EntityId, AnalysisRecord, AnalysisRecordPatch>),
@@ -743,7 +743,7 @@ mod tests {
             linked_risk_ids: Vec::new(),
             expiration_date: None,
             status_notes: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let operation = ProgramMutation::Assumptions(CollectionMutation::Add { index: 0, item });
         apply_program_mutation(&mut program, &operation);
@@ -941,7 +941,7 @@ mod tests {
             reporting_frequency: None,
             penalties: Vec::new(),
             corrective_actions: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let operation = ProgramMutation::ComplianceRecords(CollectionMutation::Add { index: 0, item });
         apply_program_mutation(&mut program, &operation);
@@ -1075,7 +1075,7 @@ mod tests {
             risk_impact: Vec::new(),
             approval_status: ValidationStatus::Pending,
             meeting_ref: None,
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let operation = ProgramMutation::Decisions(CollectionMutation::Add { index: 0, item });
         apply_program_mutation(&mut program, &operation);
@@ -1122,8 +1122,8 @@ mod tests {
     #[test]
     fn dispatches_documents_add_and_invert() {
         let mut program = empty_plugin();
-        let item = DocumentRecord {
-            header: EntityHeader::new(EntityId::new_serial("documentrecord18", "DocumentRecord 18"), "DocumentRecord 18"),
+        let item = ArtifactRecord {
+            header: EntityHeader::new(EntityId::new_serial("documentrecord18", "ArtifactRecord 18"), "ArtifactRecord 18"),
             document_type: String::new(),
             title: String::new(),
             version: String::new(),
@@ -1581,7 +1581,7 @@ mod tests {
             minutes: None,
             action_items: Vec::new(),
             decisions_made: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
             follow_up_date: None,
             recording_ref: None,
             quorum_met: false,

@@ -11,12 +11,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &En1992Snapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1992Snapshot, PackError> {
-    <En1992Snapshot as store::DocumentPack>::decode_pack(bytes)
+    <En1992Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]

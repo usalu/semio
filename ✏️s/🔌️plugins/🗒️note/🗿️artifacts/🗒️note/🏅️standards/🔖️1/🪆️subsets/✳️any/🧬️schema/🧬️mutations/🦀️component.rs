@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for a `NoteSnapshot`. Every content change flows through one of these so
-/// the `DocumentStore` records a true inverse (`backwards`). Scalar setters carry the field's own
+/// the `ArtifactStore` records a true inverse (`backwards`). Scalar setters carry the field's own
 /// `Option` shape (backwards is a plain prior-value read); block edits use a whole-tree `SetBlocks`
 /// snapshot (the recursive reid/clone tree makes per-node operations far messier than a snapshot); asset
 /// and full-document loads have dedicated variants.

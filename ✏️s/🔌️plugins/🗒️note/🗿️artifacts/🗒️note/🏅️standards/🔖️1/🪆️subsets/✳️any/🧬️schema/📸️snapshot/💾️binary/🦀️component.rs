@@ -12,12 +12,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 /// 📦️ Encodes a `NoteSnapshot` to its binary pack form.
 pub fn encode(document: &NoteSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `NoteSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
-    <NoteSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <NoteSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -94,15 +94,15 @@ mod tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::note::schema::mutations::text::NoteMutation;
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let initial = crate::artifacts::note::schema::snapshot::text::parse_dsl(crate::artifacts::note::schema::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
-        let mut store = DocumentStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { mutations: vec![NoteMutation::SetGridVisible { visible: Some(false) }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![NoteMutation::SetGridVisible { visible: Some(false) }], description: None }).expect("apply");
         let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

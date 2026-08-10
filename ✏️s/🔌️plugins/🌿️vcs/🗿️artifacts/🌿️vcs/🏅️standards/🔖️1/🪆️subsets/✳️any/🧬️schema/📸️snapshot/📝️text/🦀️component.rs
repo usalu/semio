@@ -16,12 +16,12 @@ pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../
 
 /// 📖️ Parses `.vcsdemo` DSL text into a `VcsSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<VcsSnapshot, store::TextError> {
-    <VcsSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <VcsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `VcsSnapshot` back to `.vcsdemo` DSL text.
 pub fn print_dsl(projection: &VcsSnapshot) -> String {
-    store::DocumentDsl::print_dsl(projection)
+    store::ArtifactDsl::print_dsl(projection)
 }
 
 //#region 🧪️Tests

@@ -15,7 +15,7 @@ use flow::{
     FlowEvalSession, FlowHost,
 };
 use crate::playbook::{handle_generation_action, selected_generation};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -61,7 +61,7 @@ pub mod add_generation {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct AddGeneration {}
 
-    pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(handle_generation("addGeneration", None, doc.snapshot, cfg.snapshot, session))
     }
 }
@@ -76,7 +76,7 @@ pub mod remove_generation {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc.snapshot, cfg.snapshot, session))
     }
 }
@@ -91,7 +91,7 @@ pub mod select_generation {
         pub id: String,
     }
 
-    pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(handle_generation("selectGeneration", Some(&json!({ "id": payload.id })), doc.snapshot, cfg.snapshot, session))
     }
 }
@@ -107,7 +107,7 @@ pub mod rename_generation {
         pub name: String,
     }
 
-    pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.snapshot, cfg.snapshot, session))
     }
 }
@@ -124,7 +124,7 @@ pub mod update_generation_values {
         pub value: dsl::DslValue,
     }
 
-    pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let value_json: Value = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
         Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.snapshot, cfg.snapshot, session))
     }
@@ -140,7 +140,7 @@ mod tests {
     use crate::apps::flow::FlowCommand;
 
     #[test]
-    fn adding_a_generation_populates_the_form_and_emits_no_document_mutations() {
+    fn adding_a_generation_populates_the_form_and_emits_no_artifact_mutations() {
         let mut app = flow_app();
         assert!(render(&mut app, form::FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"), "the form starts empty");
         let result = dispatch(&mut app, FlowCommand::AddGeneration(add_generation::AddGeneration {}));

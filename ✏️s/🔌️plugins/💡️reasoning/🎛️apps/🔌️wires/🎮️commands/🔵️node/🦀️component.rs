@@ -4,7 +4,7 @@ use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::fixture_nodes;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -18,7 +18,7 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
         let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
@@ -33,7 +33,7 @@ pub mod add_node {
             "handles": []
         }))
         .expect("node serializes");
-        Ok(Emit { document_mutations: vec![WiresMutation::AddNode { node }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![WiresMutation::AddNode { node }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddNode

@@ -1,4 +1,4 @@
-//! 👯️ Puzzle 5d play app — the plugin's unified 2d+3d play app: its `DocumentApp` impl
+//! 👯️ Puzzle 5d play app — the plugin's unified 2d+3d play app: its `ArtifactApp` impl
 //! (dispatch-only), the structural-twin document model its command/panel/window nodes mutate and
 //! render, the shared scene/engine/brush helpers those nodes reach for, and the manifest that
 //! stitches them together.
@@ -6,7 +6,7 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/{◻2d,🧊️3d}`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle5dPlaySnapshot` newtype over a bare
+//! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle5dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` document (see `crate::artifacts::puzzle5d::op`'s `🔖️ValueBridge`), not the
 //! typed `Puzzle5dSnapshot` — the `Puzzle5dDocument` model below is this app's own structural twin
 //! of it, and each action emits the granular typed operation delta
@@ -24,7 +24,7 @@ use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DraftView, NoDraft, NoDraftMutation, DocumentView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, ArtifactApp, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, SelectionSet, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,7 @@ pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_examp
 pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT, "capsule-dream"));
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle5dSnapshot as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
+    let projection = <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
@@ -264,7 +264,7 @@ pub fn puzzle5d_operations_from_document_change(before: &Value, after_document: 
 /// `window_ids`/`load_window`/`save_window` machinery — each kind's sole instance id is the kind id
 /// itself. Kept as a named helper (rather than inlining `vec![kind_id.to_string()]`) purely so
 /// `window_engagements`/`window_measures` read the same "one entry per live window instance" shape
-/// `DocumentApp`'s doc comment describes, and so a future genuine multi-instance need has one seam to extend.
+/// `ArtifactApp`'s doc comment describes, and so a future genuine multi-instance need has one seam to extend.
 pub fn window_instance_ids(kind_id: &str) -> Vec<String> {
     vec![kind_id.to_string()]
 }
@@ -509,7 +509,7 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
 
 //#region 🔖️Scene
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle5dDocument`
-/// json) with the app's view state. Never persisted — the `VcsDocumentApp` store owns the document
+/// json) with the app's view state. Never persisted — the `VcsArtifactApp` store owns the document
 /// and the wrapping store owns the VCS-tracked `Puzzle5dConfig` — but rebuilt per call so the
 /// board/world/engagement helpers keep their `&scene` signatures.
 #[derive(Clone)]
@@ -1097,7 +1097,7 @@ fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<crate::artifacts::puzzl
 /// `zoomToSelection` stay top-level verbs; the hide/lock toggles (bespoke rows — their label/icon flip
 /// on selection state, so they can't resolve from a single static `ActionDefinition`) fold into a
 /// `settings` group; `deleteSelection` (bespoke label carrying the selection-count phrase) stays the
-/// trailing destructive row. `organize_context_menu`, run automatically at the `VcsDocumentApp::context_menu`
+/// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
 /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
 fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
@@ -1287,13 +1287,13 @@ pub struct Puzzle5dActionCtx<'a> {
 //#region 🔖️PlayApp
 /// 🧩️ B1: Puzzle-5d play app. Owns the precompute engine and the registered-mesh cache — both
 /// per-call scratch, never VCS-tracked; the persisted document (bare `Puzzle5dDocument` json) lives in
-/// the wrapping `VcsDocumentApp`'s document store, and the ephemeral view state lives in the wrapping
+/// the wrapping `VcsArtifactApp`'s document store, and the ephemeral view state lives in the wrapping
 /// store's real, VCS-tracked `Puzzle5dConfig` artifact (see `🦀️config.rs`) — every read comes from
 /// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`.
 /// Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
 /// Undo/redo/checkpoints are handled by the wrapper.
 thread_local! {
-    /// 🧠 Long-lived play session — `DocumentApp` methods are associated fns (no `&self`),
+    /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
     /// so the precompute session lives here until `EngineHandles` carries it.
     static PUZZLE5D_PLAY_SESSION: RefCell<Puzzle5dPlayApp> = RefCell::new(Puzzle5dPlayApp::default());
 }
@@ -1469,11 +1469,11 @@ impl Puzzle5dPlayApp {
         }
     }
 
-    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `DocumentApp::handle` with
+    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let before = doc.snapshot.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
@@ -1507,7 +1507,7 @@ impl Puzzle5dPlayApp {
         // 🧮️ B1: only a REAL config change becomes a `Puzzle5dConfigMutation` — `PartialEq` (derived)
         // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
         let config_mutations = if &scene.runtime != config { vec![Puzzle5dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
-        Emit { document_mutations: operations, config_mutations, coalesce_key, effects, ..Default::default() }
+        Emit { artifact_mutations: operations, config_mutations, coalesce_key, effects, ..Default::default() }
     }
 }
 
@@ -1573,7 +1573,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     }
 }
 
-impl DocumentApp for Puzzle5dPlayApp {
+impl ArtifactApp for Puzzle5dPlayApp {
     const APP_ID: &'static str = PUZZLE5D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
     type Snapshot = Puzzle5dPlaySnapshot;
@@ -1596,7 +1596,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let selection = &cfg.snapshot.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
@@ -1614,12 +1614,12 @@ impl DocumentApp for Puzzle5dPlayApp {
         })
     }
 
-    /// @emoji ✂️ B1: `DocumentApp::cut_operations`'s signature carries no config output channel (it
+    /// @emoji ✂️ B1: `ArtifactApp::cut_operations`'s signature carries no config output channel (it
     /// returns a bare `Vec<Self::Mutation>`, not an `Emit`), so this can only emit the document
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    fn cut_operations( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
+    fn cut_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
         let before = doc.snapshot.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
@@ -1637,11 +1637,11 @@ impl DocumentApp for Puzzle5dPlayApp {
         puzzle5d_operations_from_document_change(&before, &after)
     }
 
-    /// @emoji 📋️ B1: `DocumentApp::paste_operations` carries no `ConfigView` at all (only `doc`/
+    /// @emoji 📋️ B1: `ArtifactApp::paste_operations` carries no `ConfigView` at all (only `doc`/
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
-    fn paste_operations( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
+    fn paste_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
         let expected = Self::clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
@@ -1666,7 +1666,7 @@ impl DocumentApp for Puzzle5dPlayApp {
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Puzzle5dCommand, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
         with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot)))
     }
 
@@ -1711,7 +1711,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// fan-in from several producers), then bridges the before/after document through
     /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
     /// this never mutates anything directly, only real, undoable operations.
-    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media( port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -1795,7 +1795,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render( body_key: &str, doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
+    fn render( body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
         with_puzzle5d_app(|app| {
                     let config = cfg.snapshot;
                     let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
@@ -1813,7 +1813,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             })
     }
 
-    fn window_engagements( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle5d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -1831,7 +1831,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             .collect()
     }
 
-    fn window_measures( doc: &DocumentView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+    fn window_measures( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
         with_puzzle5d_app(|app| {
                     let config = cfg.snapshot;
                     let labels = puzzle5d_labels(config);
@@ -1855,7 +1855,7 @@ impl DocumentApp for Puzzle5dPlayApp {
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle5dPlaySnapshot>,
+        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
@@ -2019,9 +2019,9 @@ pub fn register_puzzle5d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Puzzle5dApp = VcsDocumentApp<Puzzle5dPlayApp>;
+    pub type Puzzle5dApp = VcsArtifactApp<Puzzle5dPlayApp>;
 
     pub fn meta(actor: &str) -> ActionMeta {
         testkit::meta(actor)
@@ -2037,7 +2037,7 @@ pub(crate) mod testkit {
         testkit::new_app_with_registry::<Puzzle5dPlayApp>(create_puzzle5d_app)
     }
 
-    /// 🧪️ B1: test-only replacement for the deleted `VcsDocumentApp::handle_action` app-dispatch path
+    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle5dCommand` from the same
     /// `(action, args, window_id)` triple every pre-migration test already passed.
@@ -2193,20 +2193,20 @@ mod tests {
     /// `Puzzle5dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s. Deliberately
     /// dispatches through a standalone typed `Puzzle5dStore` — NOT through `Puzzle5dPlayApp`/
     /// `Puzzle5dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
-    /// `DocumentApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dSnapshot>`
+    /// `ArtifactApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dSnapshot>`
     /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, EngineHandles};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -2538,7 +2538,7 @@ mod tests {
         let app = Puzzle5dPlayApp::default();
         let projection = Puzzle5dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
 
         let fragment = json!({
             "schema": "manifest",
@@ -2557,10 +2557,10 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
         let emit = Puzzle5dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-        assert!(!emit.document_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
+        assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
         let mut next_projection = projection.0.clone();
-        for operation in &emit.document_mutations {
+        for operation in &emit.artifact_mutations {
             next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection);
         }
 
@@ -2600,9 +2600,9 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle5dPlaySnapshot(current.clone());
-            let doc = DocumentView { snapshot: &doc_projection, history: &history };
+            let doc = ArtifactView { snapshot: &doc_projection, history: &history };
             let emit = Puzzle5dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-            for operation in &emit.document_mutations {
+            for operation in &emit.artifact_mutations {
                 current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);
             }
         }

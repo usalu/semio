@@ -3,7 +3,7 @@
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
-use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetCursor
@@ -16,7 +16,7 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub fn handle(payload: &SetCursor, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let resolved = payload.value.map(|n| (n as usize).min(fixture.steps.len()));
         Ok(Emit::mutations(vec![Process3dMutation::SetCursor { resolved_up_to: resolved }]))
@@ -34,7 +34,7 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub fn handle(payload: &StepCursor, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;
@@ -51,7 +51,7 @@ pub mod step_cursor_back {
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
-    pub fn handle(_payload: &StepCursorBack, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &StepCursorBack, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;
@@ -68,7 +68,7 @@ pub mod step_cursor_forward {
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 
-    pub fn handle(_payload: &StepCursorForward, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &StepCursorForward, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;

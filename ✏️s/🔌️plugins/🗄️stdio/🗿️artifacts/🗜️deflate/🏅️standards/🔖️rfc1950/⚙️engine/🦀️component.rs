@@ -395,7 +395,7 @@ pub fn register() {
     crate::artifacts::deflate::composer::register();
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<DeflateSnapshot, DeflateMutation>(
+    store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(
         STDIO_DEFLATE_DOCUMENT_SCHEMA,
     ));
 }
@@ -495,8 +495,8 @@ mod tests {
             schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
             bytes: zz.clone(),
         };
-        let pack = store::DocumentPack::encode_pack(&snap);
-        let decoded = <DeflateSnapshot as store::DocumentPack>::decode_pack(&pack).expect("decode");
+        let pack = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.bytes, zz);
         assert_eq!(zlib_decompress(&decoded.bytes).unwrap(), payload);
     }

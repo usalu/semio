@@ -6,25 +6,25 @@
 //! inputs, document, and config are all unchanged since the last (sealed) run. Every node's frame
 //! script is `Hello → LoadConfig → LoadDocument → MediaIn* → (MediaOut+MediaFingerprint)* →
 //! ReadDocument → ReadConfig` (see `SpaceRunner::compute_node`); documents/configs are addressed by
-//! their node's own `document_ref`/`config_ref` string, never by a separate instance id.
+//! their node's own `artifact_ref`/`config_ref` string, never by a separate instance id.
 //!
 //! 🔒️ W5 Lane A ("non-destructive `SpaceRunner` rework"): a run is READONLY over its source. The
 //! `documents`/`configs` maps `SpaceRunner::run` reads are NEVER written back — `ReadDocument`/
 //! `ReadConfig`'s mutated bytes (whatever `MediaIn` importing changed) land in a `RunSink` instead
 //! (`🔖️RunContext` below), keyed by node id, a deliberately different key space than the source
-//! `document_ref`/`config_ref` maps so a caller cannot accidentally alias a run-owned path onto a
+//! `artifact_ref`/`config_ref` maps so a caller cannot accidentally alias a run-owned path onto a
 //! source artifact path the way the old destructive path did (pre-rework: `bin.rs` wrote a node's
-//! mutated document/config bytes straight back over `artifacts/<document_ref>`/`artifacts/<config_ref>`
+//! mutated document/config bytes straight back over `artifacts/<artifact_ref>`/`artifacts/<config_ref>`
 //! — the very same paths `SpaceRunner::run` had just read them from). "Pinned" source access for this
 //! wave means simply "whatever the source currently is, read-only, at the moment `run` reads it" — a
 //! real checkpoint-id-pinned snapshot is later-wave `space::DraftCatalog`/collection-artifact
 //! integration work (see `SpaceBundle`'s own doc on `workflow_node_for_app`'s still-path-stem
-//! `document_ref`/`config_ref`).
+//! `artifact_ref`/`config_ref`).
 //!
-//! 🗄️ Memoization is now keyed off the PRIOR SEALED run's own `workflow::RunDocument.node_records`
+//! 🗄️ Memoization is now keyed off the PRIOR SEALED run's own `workflow::RunArtifact.node_records`
 //! (`prior_node_records`, read-only), not a side-channel `run/state.json` file — that file and its
 //! `RunState`/`NodeRunRecord` types are deleted (there were two parallel memoization mechanisms before
-//! this rework; now there is exactly one). A first run (no prior sealed `RunDocument`) computes every
+//! this rework; now there is exactly one). A first run (no prior sealed `RunArtifact`) computes every
 //! node fresh.
 
 //#region 🔖️Types
@@ -374,32 +374,32 @@ pub fn convert_media(contract: &MediaContract, media: Media) -> Result<Media, Ru
 //#region 🔖️RunContext
 /// ✍️ Write-only sink for everything one `SpaceRunner::run` call produces — the ONLY thing allowed to
 /// persist bytes for a node's post-import document/config state or accumulate the run's own
-/// `workflow::RunDocument`. Never reads the source `documents`/`configs` maps `run()` takes, and
+/// `workflow::RunArtifact`. Never reads the source `documents`/`configs` maps `run()` takes, and
 /// `run()` never writes through anything OTHER than this — the structural half of "non-destructive":
-/// `node_documents`/`node_configs` are keyed by node id, a distinct key space from the source
-/// `document_ref`/`config_ref` strings, so a caller (e.g. `bin.rs`) cannot alias a run-owned write
+/// `node_artifacts`/`node_configs` are keyed by node id, a distinct key space from the source
+/// `artifact_ref`/`config_ref` strings, so a caller (e.g. `bin.rs`) cannot alias a run-owned write
 /// path onto a source artifact path by construction.
 ///
-/// 🔒️ `record` is the ONLY way this crate ever mutates a `workflow::RunDocument` — it always goes
+/// 🔒️ `record` is the ONLY way this crate ever mutates a `workflow::RunArtifact` — it always goes
 /// through `workflow::apply_run_operation_checked` (never the raw `workflow::apply_run_operation`),
 /// so an operation emitted after `Seal` is rejected here with `RunError::Sealed`, not silently
 /// applied. `SpaceRunner::run` calls `record` for every `NodeStarted`/`NodeFinished`; callers own
 /// `Start` (before `run`) and `Seal` (after), since those two carry run-identity/collection-ref fields
 /// `SpaceRunner` itself has no business knowing about.
 pub struct RunSink {
-    pub document: workflow::RunDocument,
+    pub document: workflow::RunArtifact,
     /// 🧾️ Every operation `record` has successfully applied, in order — `bin.rs` replays this exact
-    /// sequence through a real `store::DocumentStore` to produce persistable pack+spr bytes for
+    /// sequence through a real `store::ArtifactStore` to produce persistable pack+spr bytes for
     /// `SpaceBundle::write_run_document` (the same "build an envelope, `Apply`, `snapshot_pack`"
     /// pattern every other document in this codebase persists through).
     pub mutations: Vec<RunMutation>,
-    pub node_documents: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
+    pub node_artifacts: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
     pub node_configs: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
 }
 
 impl RunSink {
-    pub fn new(document: workflow::RunDocument) -> Self {
-        Self { document, mutations: Vec::new(), node_documents: BTreeMap::new(), node_configs: BTreeMap::new() }
+    pub fn new(document: workflow::RunArtifact) -> Self {
+        Self { document, mutations: Vec::new(), node_artifacts: BTreeMap::new(), node_configs: BTreeMap::new() }
     }
 
     pub fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
@@ -408,8 +408,8 @@ impl RunSink {
         Ok(())
     }
 
-    pub fn write_node_document(&mut self, node_id: &str, pack: Vec<u8>, spr: Vec<u8>) {
-        self.node_documents.insert(node_id.to_string(), (pack, spr));
+    pub fn write_node_artifact(&mut self, node_id: &str, pack: Vec<u8>, spr: Vec<u8>) {
+        self.node_artifacts.insert(node_id.to_string(), (pack, spr));
     }
 
     pub fn write_node_config(&mut self, node_id: &str, pack: Vec<u8>, spr: Vec<u8>) {
@@ -451,7 +451,7 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 //#region 🔖️SpaceBundle
 /// 📁️ The canonical on-disk shape of a space (`## Design rulings` -> `On-disk space layout` in
 /// `.claude/plans/the-final-goal-for-jolly-spindle.md`, rewritten here for W4's storage-layout task —
-/// superseding the pre-W4 flat `space.os.pack`/`<document_ref>.pack` layout, whose filenames were
+/// superseding the pre-W4 flat `space.os.pack`/`<artifact_ref>.pack` layout, whose filenames were
 /// stale leftovers from the dissolved `OsDocument`):
 /// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
 ///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
@@ -467,18 +467,18 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 ///   "id IS the address" convention `space::artifact_backbone_uri(space_id, artifact_id)` uses one
 ///   level up (a bundle has no separate `space_id` of its own — the bundle root already IS one space,
 ///   so there is nothing to reuse `artifact_backbone_uri` itself for beyond this shared convention;
-///   see `artifact_pack_path`/`artifact_spr_path`). A workflow node's `document_ref`/`config_ref`
-///   (`workflow::workflow_node_for_app`, e.g. `"documents/<node id>"`/`"config/<node id>"`) is passed
+///   see `artifact_pack_path`/`artifact_spr_path`). A workflow node's `artifact_ref`/`config_ref`
+///   (`workflow::workflow_node_for_app`, e.g. `"artifacts/<node id>"`/`"config/<node id>"`) is passed
 ///   straight through as `artifact_id` — two distinct artifact ids per node, so they never collide
 ///   under `artifacts/`, and nothing on the `workflow` crate side of this addressing scheme needs to
-///   change to fit it (`document_pack_path`/`config_pack_path` below are thin `artifact_pack_path`
+///   change to fit it (`artifact_pack_path`/`config_pack_path` below are thin `artifact_pack_path`
 ///   aliases kept for callers' existing names),
 /// - `blobs/` — content-addressed, space-level (backing a `MediaPayload::Binary` value's bytes — see
 ///   `FileBlobStore`; unchanged from the pre-W4 layout, already canonical),
 /// - `cache/media/` — cross-run shared media-fingerprint cache (renamed from `run/media/`),
-/// - `runs/<run id>.run.pack|.spr` — the `workflow::RunDocument` VCS envelope itself (W5 Lane A);
+/// - `runs/<run id>.run.pack|.spr` — the `workflow::RunArtifact` VCS envelope itself (W5 Lane A);
 ///   `runs/<run id>/nodes/<node id>.document.pack|.spr`/`.config.pack|.spr` — that run's OWN mirrored
-///   copy of each node's post-import document/config bytes (`run_node_document_pack_path`/
+///   copy of each node's post-import document/config bytes (`run_node_artifact_pack_path`/
 ///   `run_node_config_pack_path` below) — deliberately NOT under `artifacts/`: a run never writes
 ///   through the same path a node's SOURCE document/config was read from (see this crate's module doc,
 ///   "non-destructive rework" — this replaces the old `run/state.json`-backed `RunState`, deleted by
@@ -497,11 +497,11 @@ impl SpaceBundle {
         Self { root: root.into() }
     }
 
-    pub fn space_document_pack_path(&self) -> PathBuf {
+    pub fn space_artifact_pack_path(&self) -> PathBuf {
         self.root.join("space.space.pack")
     }
 
-    pub fn space_document_spr_path(&self) -> PathBuf {
+    pub fn space_artifact_spr_path(&self) -> PathBuf {
         self.root.join("space.space.spr")
     }
 
@@ -516,7 +516,7 @@ impl SpaceBundle {
 
     /// 🗂️ Canonical artifact path: `artifacts/<artifact_id>.pack` — see this region's own doc comment
     /// for why `artifact_id` is passed straight through unmodified (it may itself contain `/`, e.g. a
-    /// workflow node's `document_ref`/`config_ref`) rather than requiring a flat basename.
+    /// workflow node's `artifact_ref`/`config_ref`) rather than requiring a flat basename.
     pub fn artifact_pack_path(&self, artifact_id: &str) -> PathBuf {
         self.root.join("artifacts").join(format!("{artifact_id}.pack"))
     }
@@ -525,18 +525,18 @@ impl SpaceBundle {
         self.root.join("artifacts").join(format!("{artifact_id}.spr"))
     }
 
-    /// 🔖️ `document_ref` is itself already a valid `artifact_id` (see this region's doc comment) —
-    /// this is a thin, name-preserving alias so existing callers (`read_document`/`write_document`)
+    /// 🔖️ `artifact_ref` is itself already a valid `artifact_id` (see this region's doc comment) —
+    /// this is a thin, name-preserving alias so existing callers (`read_artifact`/`write_artifact`)
     /// don't need to change.
-    pub fn document_pack_path(&self, document_ref: &str) -> PathBuf {
-        self.artifact_pack_path(document_ref)
+    pub fn artifact_pack_path(&self, artifact_ref: &str) -> PathBuf {
+        self.artifact_pack_path(artifact_ref)
     }
 
-    pub fn document_spr_path(&self, document_ref: &str) -> PathBuf {
-        self.artifact_spr_path(document_ref)
+    pub fn artifact_spr_path(&self, artifact_ref: &str) -> PathBuf {
+        self.artifact_spr_path(artifact_ref)
     }
 
-    /// 🔖️ Config counterpart of `document_pack_path` — same alias-over-`artifact_pack_path`
+    /// 🔖️ Config counterpart of `artifact_pack_path` — same alias-over-`artifact_pack_path`
     /// convention (a node's `config_ref` is already e.g. `config/<node id>`).
     pub fn config_pack_path(&self, config_ref: &str) -> PathBuf {
         self.artifact_pack_path(config_ref)
@@ -547,21 +547,21 @@ impl SpaceBundle {
     }
 
     /// 🗂️ Canonical run-document path: `runs/<run id>.run.pack`.
-    pub fn run_document_pack_path(&self, run_id: &str) -> PathBuf {
+    pub fn run_artifact_pack_path(&self, run_id: &str) -> PathBuf {
         self.root.join("runs").join(format!("{run_id}.run.pack"))
     }
 
-    pub fn run_document_spr_path(&self, run_id: &str) -> PathBuf {
+    pub fn run_artifact_spr_path(&self, run_id: &str) -> PathBuf {
         self.root.join("runs").join(format!("{run_id}.run.spr"))
     }
 
     /// 🗂️ Canonical run-owned node-document path: `runs/<run id>/nodes/<node id>.document.pack` — see
     /// this region's own doc comment for why this is a distinct tree from `artifacts/`.
-    pub fn run_node_document_pack_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+    pub fn run_node_artifact_pack_path(&self, run_id: &str, node_id: &str) -> PathBuf {
         self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.document.pack"))
     }
 
-    pub fn run_node_document_spr_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+    pub fn run_node_artifact_spr_path(&self, run_id: &str, node_id: &str) -> PathBuf {
         self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.document.spr"))
     }
 
@@ -581,12 +581,12 @@ impl SpaceBundle {
         self.root.join("blobs")
     }
 
-    /// @emoji 📦️ Reads the studio's pack+spr bytes, matching `read_document`/`read_config`'s "empty
+    /// @emoji 📦️ Reads the studio's pack+spr bytes, matching `read_artifact`/`read_config`'s "empty
     /// spr if never persisted" convention (a bare pack with no history is a valid fresh studio).
     pub fn read_space_document(&self) -> Result<(Vec<u8>, Vec<u8>), RunError> {
-        let pack_path = self.space_document_pack_path();
+        let pack_path = self.space_artifact_pack_path();
         let pack = std::fs::read(&pack_path).map_err(|source| RunError::Io { path: pack_path, source })?;
-        let spr_path = self.space_document_spr_path();
+        let spr_path = self.space_artifact_spr_path();
         let spr = match std::fs::read(&spr_path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -596,23 +596,23 @@ impl SpaceBundle {
     }
 
     pub fn write_space_document(&self, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
-        let pack_path = self.space_document_pack_path();
+        let pack_path = self.space_artifact_pack_path();
         if let Some(parent) = pack_path.parent() {
             std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
         }
         std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
-        std::fs::write(self.space_document_spr_path(), spr).map_err(|source| RunError::Io { path: self.space_document_spr_path(), source })
+        std::fs::write(self.space_artifact_spr_path(), spr).map_err(|source| RunError::Io { path: self.space_artifact_spr_path(), source })
     }
 
     /// @emoji 📦️ Reads one node's document pack+spr bytes, `(Vec::new(), Vec::new())` if never persisted.
-    pub fn read_document(&self, document_ref: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
-        let pack_path = self.document_pack_path(document_ref);
+    pub fn read_artifact(&self, artifact_ref: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
+        let pack_path = self.artifact_pack_path(artifact_ref);
         let pack = match std::fs::read(&pack_path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok((Vec::new(), Vec::new())),
             Err(source) => return Err(RunError::Io { path: pack_path, source }),
         };
-        let spr_path = self.document_spr_path(document_ref);
+        let spr_path = self.artifact_spr_path(artifact_ref);
         let spr = match std::fs::read(&spr_path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -621,16 +621,16 @@ impl SpaceBundle {
         Ok((pack, spr))
     }
 
-    pub fn write_document(&self, document_ref: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
-        let pack_path = self.document_pack_path(document_ref);
+    pub fn write_artifact(&self, artifact_ref: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
+        let pack_path = self.artifact_pack_path(artifact_ref);
         if let Some(parent) = pack_path.parent() {
             std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
         }
         std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
-        std::fs::write(self.document_spr_path(document_ref), spr).map_err(|source| RunError::Io { path: self.document_spr_path(document_ref), source })
+        std::fs::write(self.artifact_spr_path(artifact_ref), spr).map_err(|source| RunError::Io { path: self.artifact_spr_path(artifact_ref), source })
     }
 
-    /// @emoji 📦️ Reads one node's config pack+spr bytes — mirrors `read_document` exactly (same
+    /// @emoji 📦️ Reads one node's config pack+spr bytes — mirrors `read_artifact` exactly (same
     /// "never persisted" fallback, same error shape).
     pub fn read_config(&self, config_ref: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.config_pack_path(config_ref);
@@ -648,7 +648,7 @@ impl SpaceBundle {
         Ok((pack, spr))
     }
 
-    /// @emoji 📦️ Writes one node's config pack+spr bytes — mirrors `write_document` exactly
+    /// @emoji 📦️ Writes one node's config pack+spr bytes — mirrors `write_artifact` exactly
     /// (directory-created-if-missing, same error shape).
     pub fn write_config(&self, config_ref: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
         let pack_path = self.config_pack_path(config_ref);
@@ -659,10 +659,10 @@ impl SpaceBundle {
         std::fs::write(self.config_spr_path(config_ref), spr).map_err(|source| RunError::Io { path: self.config_spr_path(config_ref), source })
     }
 
-    /// @emoji 📦️ Reads one collection's pack+spr bytes — mirrors `read_document`'s "never persisted"
+    /// @emoji 📦️ Reads one collection's pack+spr bytes — mirrors `read_artifact`'s "never persisted"
     /// fallback exactly. 🚧️ Not yet called from this crate's own runner/CLI flow (collections aren't
     /// wired into `SpaceRunner` until a later wave) — this is the reserved canonical path a future
-    /// caller writes/reads through, kept symmetric with `read_document`/`write_document` on purpose.
+    /// caller writes/reads through, kept symmetric with `read_artifact`/`write_artifact` on purpose.
     pub fn read_collection(&self, collection_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.collection_pack_path(collection_id);
         let pack = match std::fs::read(&pack_path) {
@@ -688,16 +688,16 @@ impl SpaceBundle {
         std::fs::write(self.collection_spr_path(collection_id), spr).map_err(|source| RunError::Io { path: self.collection_spr_path(collection_id), source })
     }
 
-    /// @emoji 📦️ Reads a run's own `workflow::RunDocument` pack+spr bytes, `(Vec::new(), Vec::new())`
-    /// if never persisted (no prior run of this id) — mirrors `read_document`'s fallback exactly.
+    /// @emoji 📦️ Reads a run's own `workflow::RunArtifact` pack+spr bytes, `(Vec::new(), Vec::new())`
+    /// if never persisted (no prior run of this id) — mirrors `read_artifact`'s fallback exactly.
     pub fn read_run_document(&self, run_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
-        let pack_path = self.run_document_pack_path(run_id);
+        let pack_path = self.run_artifact_pack_path(run_id);
         let pack = match std::fs::read(&pack_path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok((Vec::new(), Vec::new())),
             Err(source) => return Err(RunError::Io { path: pack_path, source }),
         };
-        let spr_path = self.run_document_spr_path(run_id);
+        let spr_path = self.run_artifact_spr_path(run_id);
         let spr = match std::fs::read(&spr_path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -707,25 +707,25 @@ impl SpaceBundle {
     }
 
     pub fn write_run_document(&self, run_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
-        let pack_path = self.run_document_pack_path(run_id);
+        let pack_path = self.run_artifact_pack_path(run_id);
         if let Some(parent) = pack_path.parent() {
             std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
         }
         std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
-        std::fs::write(self.run_document_spr_path(run_id), spr).map_err(|source| RunError::Io { path: self.run_document_spr_path(run_id), source })
+        std::fs::write(self.run_artifact_spr_path(run_id), spr).map_err(|source| RunError::Io { path: self.run_artifact_spr_path(run_id), source })
     }
 
-    /// @emoji 📦️ Persists every `RunSink::node_documents`/`node_configs` entry from one completed run
+    /// @emoji 📦️ Persists every `RunSink::node_artifacts`/`node_configs` entry from one completed run
     /// under `runs/<run id>/nodes/` — the only place this crate ever writes a node's post-import
-    /// document/config bytes to disk (never back over `artifacts/<document_ref>`/`artifacts/<config_ref>`).
+    /// document/config bytes to disk (never back over `artifacts/<artifact_ref>`/`artifacts/<config_ref>`).
     pub fn write_run_nodes(&self, run_id: &str, sink: &RunSink) -> Result<(), RunError> {
-        for (node_id, (pack, spr)) in &sink.node_documents {
-            let pack_path = self.run_node_document_pack_path(run_id, node_id);
+        for (node_id, (pack, spr)) in &sink.node_artifacts {
+            let pack_path = self.run_node_artifact_pack_path(run_id, node_id);
             if let Some(parent) = pack_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
             }
             std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
-            std::fs::write(self.run_node_document_spr_path(run_id, node_id), spr).map_err(|source| RunError::Io { path: self.run_node_document_spr_path(run_id, node_id), source })?;
+            std::fs::write(self.run_node_artifact_spr_path(run_id, node_id), spr).map_err(|source| RunError::Io { path: self.run_node_artifact_spr_path(run_id, node_id), source })?;
         }
         for (node_id, (pack, spr)) in &sink.node_configs {
             let pack_path = self.run_node_config_pack_path(run_id, node_id);
@@ -844,9 +844,9 @@ pub struct RunReport {
 
 /// 🩺️ Computes which nodes `SpaceRunner::run` would recompute, without instantiating a single host
 /// — the `--dry` plan. Reuses exactly the dirty check `run` applies, so the plan can never drift from
-/// what an actual run would do. `documents`/`configs` map a node's `document_ref`/`config_ref` string
+/// what an actual run would do. `documents`/`configs` map a node's `artifact_ref`/`config_ref` string
 /// to its current `(pack, spr)` artifact bytes — missing/absent means "never persisted".
-/// `prior_node_records` is the PRIOR SEALED `workflow::RunDocument.node_records`, keyed by node id
+/// `prior_node_records` is the PRIOR SEALED `workflow::RunArtifact.node_records`, keyed by node id
 /// (empty for a first-ever run — every node then plans as recomputed).
 pub fn plan(
     graph: &Workflow,
@@ -866,7 +866,7 @@ pub fn plan(
     let mut report = RunReport::default();
     for node_id in &order {
         let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
-        let document = documents.get(&node.document_ref).cloned().unwrap_or_default();
+        let document = documents.get(&node.artifact_ref).cloned().unwrap_or_default();
         let config = configs.get(&node.config_ref).cloned().unwrap_or_default();
         let (document_fingerprint, config_fingerprint) = node_fingerprints(node_id, &document.1, &config.1, parameter_bindings, parameter_values);
         let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
@@ -971,8 +971,8 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             output_seqs.push((port.id.clone(), media_out_seq, fingerprint_seq));
         }
 
-        let read_document_seq = next_seq();
-        commands.push(AppCommand::ReadDocument { seq: read_document_seq });
+        let read_artifact_seq = next_seq();
+        commands.push(AppCommand::ReadDocument { seq: read_artifact_seq });
 
         let read_config_seq = next_seq();
         commands.push(AppCommand::ReadConfig { seq: read_config_seq });
@@ -1013,7 +1013,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             outputs.insert(port_id.clone(), (media, fingerprint));
         }
 
-        let mutated_document = match reply_to(read_document_seq)? {
+        let mutated_document = match reply_to(read_artifact_seq)? {
             AppFrame::Document { pack, spr, .. } => (pack.clone(), spr.clone()),
             AppFrame::Error { fault, .. } => return Err(RunError::Host(format!("`{}` failed to read its document ({})", node.app_id, app_frame_fault_summary(fault)))),
             other => return Err(RunError::Host(format!("`{}` sent an unexpected frame reading its document: {other:?}", node.app_id))),
@@ -1065,7 +1065,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 
         for node_id in &order {
             let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
-            let document = documents.get(&node.document_ref).cloned().unwrap_or_default();
+            let document = documents.get(&node.artifact_ref).cloned().unwrap_or_default();
             let config = configs.get(&node.config_ref).cloned().unwrap_or_default();
             let (document_fingerprint, config_fingerprint) = node_fingerprints(node_id, &document.1, &config.1, parameter_bindings, parameter_values);
 
@@ -1114,7 +1114,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                         // rather than written anywhere, matching "run never writes over source" even in
                         // this fallback path.
                         let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
-                        let source_document = documents.get(&source_node.document_ref).cloned().unwrap_or_default();
+                        let source_document = documents.get(&source_node.artifact_ref).cloned().unwrap_or_default();
                         let source_config = configs.get(&source_node.config_ref).cloned().unwrap_or_default();
                         let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new())?;
                         let (media, _fresh_fingerprint) = source_outputs.get(&edge.source_port_id).cloned().ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
@@ -1133,7 +1133,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             // 🔒️ THE non-destructive rework's write side: mutated document/config bytes go into `sink`'s
             // run-owned area (keyed by node id), never back into `documents`/`configs` — those stay
             // read-only source maps for the whole call.
-            sink.write_node_document(node_id, mutated_document.0, mutated_document.1);
+            sink.write_node_artifact(node_id, mutated_document.0, mutated_document.1);
             sink.write_node_config(node_id, mutated_config.0, mutated_config.1);
 
             let mut output_fingerprints = Vec::new();
@@ -1341,7 +1341,7 @@ mod tests {
             app_id: format!("app-{id}"),
             label: id.into(),
             yields: String::new(),
-            document_ref: format!("documents/{id}"),
+            artifact_ref: format!("artifacts/{id}"),
             config_ref: format!("config/{id}"),
             x: 0.0,
             y: 0.0,
@@ -1361,7 +1361,7 @@ mod tests {
     }
 
     fn empty_documents(graph: &Workflow) -> BTreeMap<String, (Vec<u8>, Vec<u8>)> {
-        graph.nodes.iter().map(|node| (node.document_ref.clone(), (Vec::new(), Vec::new()))).collect()
+        graph.nodes.iter().map(|node| (node.artifact_ref.clone(), (Vec::new(), Vec::new()))).collect()
     }
 
     fn empty_configs(graph: &Workflow) -> BTreeMap<String, (Vec<u8>, Vec<u8>)> {
@@ -1386,9 +1386,9 @@ mod tests {
         sink
     }
 
-    /// 🧪️ `workflow::RunDocument.node_records`, keyed by node id — the shape `SpaceRunner::run`'s
+    /// 🧪️ `workflow::RunArtifact.node_records`, keyed by node id — the shape `SpaceRunner::run`'s
     /// `prior_node_records` parameter takes, built from a (test-)sealed prior run's document.
-    fn prior_node_records_from(document: &workflow::RunDocument) -> BTreeMap<String, RunNodeRecord> {
+    fn prior_node_records_from(document: &workflow::RunArtifact) -> BTreeMap<String, RunNodeRecord> {
         document.node_records.iter().map(|record| (record.node_id.clone(), record.clone())).collect()
     }
 
@@ -1453,7 +1453,7 @@ mod tests {
         // (`spr`), not the pack, is what must dirty the node. `documents` (the first run's SOURCE map)
         // is untouched by `run()` itself — this test edits its OWN local copy to simulate a live UI edit
         // landing on the source between runs.
-        documents_2.insert("documents/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
+        documents_2.insert("artifacts/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
         let prior = prior_node_records_from(&sink_1.document);
         let mut sink_2 = fresh_sink();
         let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run");

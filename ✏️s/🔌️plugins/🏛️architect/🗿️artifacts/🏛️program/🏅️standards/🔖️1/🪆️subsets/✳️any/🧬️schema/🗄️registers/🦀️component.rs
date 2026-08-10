@@ -4946,7 +4946,7 @@ pub struct Decision {
     pub risk_impact: Vec<String>,
     pub approval_status: ValidationStatus,
     pub meeting_ref: Option<EntityId>,
-    pub document_refs: Vec<EntityId>,
+    pub artifact_refs: Vec<EntityId>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -4978,7 +4978,7 @@ pub struct DecisionPatch {
     pub risk_impact: Option<Vec<String>>,
     pub approval_status: Option<ValidationStatus>,
     pub meeting_ref: Option<EntityId>,
-    pub document_refs: Option<Vec<EntityId>>,
+    pub artifact_refs: Option<Vec<EntityId>>,
 }
 
 impl_identified_header!(Decision);
@@ -5013,7 +5013,7 @@ impl_patchable!(
         [risk_impact] => risk_impact,
         [approval_status] => approval_status,
         [meeting_ref] => meeting_ref,
-        [document_refs] => document_refs,
+        [artifact_refs] => artifact_refs,
     }
 );
 // #endregion
@@ -5306,10 +5306,10 @@ impl_patchable!(
 );
 // #endregion
 
-// #region 🔖️DocumentRecord
+// #region 🔖️ArtifactRecord
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentRecord {
+pub struct ArtifactRecord {
     #[serde(flatten)]
     pub header: EntityHeader,
     pub document_type: String,
@@ -5335,7 +5335,7 @@ pub struct DocumentRecord {
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentRecordPatch {
+pub struct ArtifactRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
     pub status: Option<LifecycleStatus>,
@@ -5365,11 +5365,11 @@ pub struct DocumentRecordPatch {
     pub source_system: Option<String>,
 }
 
-impl_identified_header!(DocumentRecord);
+impl_identified_header!(ArtifactRecord);
 
 impl_patchable!(
-    DocumentRecord,
-    DocumentRecordPatch,
+    ArtifactRecord,
+    ArtifactRecordPatch,
     {
         [header.name] => name,
         [header.description] => description,
@@ -6657,7 +6657,7 @@ pub struct Assumption {
     pub linked_risk_ids: Vec<EntityId>,
     pub expiration_date: Option<String>,
     pub status_notes: Vec<TaggedNote>,
-    pub document_refs: Vec<String>,
+    pub artifact_refs: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -6689,7 +6689,7 @@ pub struct AssumptionPatch {
     pub linked_risk_ids: Option<Vec<EntityId>>,
     pub expiration_date: Option<String>,
     pub status_notes: Option<Vec<TaggedNote>>,
-    pub document_refs: Option<Vec<String>>,
+    pub artifact_refs: Option<Vec<String>>,
 }
 
 impl_identified_header!(Assumption);
@@ -6724,7 +6724,7 @@ impl_patchable!(
         [linked_risk_ids] => linked_risk_ids,
         [expiration_date] => expiration_date,
         [status_notes] => status_notes,
-        [document_refs] => document_refs,
+        [artifact_refs] => artifact_refs,
     }
 );
 // #endregion
@@ -6857,7 +6857,7 @@ pub struct ComplianceRecord {
     pub reporting_frequency: Option<String>,
     pub penalties: Vec<String>,
     pub corrective_actions: Vec<String>,
-    pub document_refs: Vec<String>,
+    pub artifact_refs: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -6891,7 +6891,7 @@ pub struct ComplianceRecordPatch {
     pub reporting_frequency: Option<String>,
     pub penalties: Option<Vec<String>>,
     pub corrective_actions: Option<Vec<String>>,
-    pub document_refs: Option<Vec<String>>,
+    pub artifact_refs: Option<Vec<String>>,
 }
 
 impl_identified_header!(ComplianceRecord);
@@ -6928,7 +6928,7 @@ impl_patchable!(
         [reporting_frequency] => reporting_frequency,
         [penalties] => penalties,
         [corrective_actions] => corrective_actions,
-        [document_refs] => document_refs,
+        [artifact_refs] => artifact_refs,
     }
 );
 // #endregion
@@ -7045,7 +7045,7 @@ pub struct MeetingRecord {
     pub minutes: Option<TextField>,
     pub action_items: Vec<String>,
     pub decisions_made: Vec<EntityId>,
-    pub document_refs: Vec<String>,
+    pub artifact_refs: Vec<String>,
     pub follow_up_date: Option<String>,
     pub recording_ref: Option<String>,
     pub quorum_met: bool,
@@ -7078,7 +7078,7 @@ pub struct MeetingRecordPatch {
     pub minutes: Option<TextField>,
     pub action_items: Option<Vec<String>>,
     pub decisions_made: Option<Vec<EntityId>>,
-    pub document_refs: Option<Vec<String>>,
+    pub artifact_refs: Option<Vec<String>>,
     pub follow_up_date: Option<String>,
     pub recording_ref: Option<String>,
     pub quorum_met: Option<bool>,
@@ -7114,7 +7114,7 @@ impl_patchable!(
         [minutes] => minutes,
         [action_items] => action_items,
         [decisions_made] => decisions_made,
-        [document_refs] => document_refs,
+        [artifact_refs] => artifact_refs,
         [follow_up_date] => follow_up_date,
         [recording_ref] => recording_ref,
         [quorum_met] => quorum_met,
@@ -9997,7 +9997,7 @@ mod tests {
             risk_impact: Vec::new(),
             approval_status: ValidationStatus::Pending,
             meeting_ref: Some(EntityId::new_serial("base42", "base42")),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let original = item.clone();
         let patch = DecisionPatch {
@@ -10027,7 +10027,7 @@ mod tests {
             risk_impact: Some(vec!["patched-42".to_string()]),
             approval_status: Some(ValidationStatus::Passed),
             meeting_ref: Some(EntityId::new_serial("new42", "new42")),
-            document_refs: Some(vec![EntityId::new_serial("new42", "new42")]),
+            artifact_refs: Some(vec![EntityId::new_serial("new42", "new42")]),
         };
         item.apply_patch(&patch);
         let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
@@ -10225,8 +10225,8 @@ mod tests {
 
     #[test]
     fn document_record_patch_round_trips() {
-        let mut item = DocumentRecord {
-            header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("documentrecord", "Base DocumentRecord"), "Base DocumentRecord") },
+        let mut item = ArtifactRecord {
+            header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("documentrecord", "Base ArtifactRecord"), "Base ArtifactRecord") },
             document_type: String::new(),
             title: String::new(),
             version: String::new(),
@@ -10248,8 +10248,8 @@ mod tests {
             source_system: Some(String::new()),
         };
         let original = item.clone();
-        let patch = DocumentRecordPatch {
-            name: Some("Patched DocumentRecord".to_string()),
+        let patch = ArtifactRecordPatch {
+            name: Some("Patched ArtifactRecord".to_string()),
             description: Some(TextField::plain("desc")),
             status: Some(LifecycleStatus::Approved),
             priority: Some(Priority::Mandatory),
@@ -10280,7 +10280,7 @@ mod tests {
         item.apply_patch(&patch);
         let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
         assert_ne!(item, original);
-        assert_eq!(item.header.name, "Patched DocumentRecord");
+        assert_eq!(item.header.name, "Patched ArtifactRecord");
         item.apply_patch(&inverse);
         assert_eq!(item, original);
     }
@@ -11101,7 +11101,7 @@ mod tests {
             linked_risk_ids: Vec::new(),
             expiration_date: Some(String::new()),
             status_notes: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let original = item.clone();
         let patch = AssumptionPatch {
@@ -11131,7 +11131,7 @@ mod tests {
             linked_risk_ids: Some(vec![EntityId::new_serial("new60", "new60")]),
             expiration_date: Some("patched-60".to_string()),
             status_notes: Some(vec![TaggedNote { tag: "new60".into(), text: "new-note60".into() }]),
-            document_refs: Some(vec!["patched-60".to_string()]),
+            artifact_refs: Some(vec!["patched-60".to_string()]),
         };
         item.apply_patch(&patch);
         let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
@@ -11231,7 +11231,7 @@ mod tests {
             reporting_frequency: Some(String::new()),
             penalties: Vec::new(),
             corrective_actions: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         };
         let original = item.clone();
         let patch = ComplianceRecordPatch {
@@ -11263,7 +11263,7 @@ mod tests {
             reporting_frequency: Some("patched-62".to_string()),
             penalties: Some(vec!["patched-62".to_string()]),
             corrective_actions: Some(vec!["patched-62".to_string()]),
-            document_refs: Some(vec!["patched-62".to_string()]),
+            artifact_refs: Some(vec!["patched-62".to_string()]),
         };
         item.apply_patch(&patch);
         let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
@@ -11349,7 +11349,7 @@ mod tests {
             minutes: Some(TextField::default()),
             action_items: Vec::new(),
             decisions_made: Vec::new(),
-            document_refs: Vec::new(),
+            artifact_refs: Vec::new(),
             follow_up_date: Some(String::new()),
             recording_ref: Some(String::new()),
             quorum_met: false,
@@ -11380,7 +11380,7 @@ mod tests {
             minutes: Some(TextField::plain("patched-64")),
             action_items: Some(vec!["patched-64".to_string()]),
             decisions_made: Some(vec![EntityId::new_serial("new64", "new64")]),
-            document_refs: Some(vec!["patched-64".to_string()]),
+            artifact_refs: Some(vec!["patched-64".to_string()]),
             follow_up_date: Some("patched-64".to_string()),
             recording_ref: Some("patched-64".to_string()),
             quorum_met: Some(true),

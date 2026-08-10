@@ -11,8 +11,8 @@
 //! `db::wal`, `db::snapshot`, `db::conflict`, `db::cluster`, `db::observe`, `db::document`,
 //! `db::actor`, `db::core`, …) — the facade's own re-exports, verified complete against `db/rs/
 //! lib.rs`. This crate's `Cargo.toml` accordingly depends on nothing but `db` itself plus two
-//! siblings that are NOT `db_*` crates: `protocol` (every frozen `Database`/`DocumentHandle` entry
-//! point is typed against `protocol::DocumentId`/`MutationEnvelope`/…, which the facade exposes
+//! siblings that are NOT `db_*` crates: `protocol` (every frozen `Database`/`ArtifactHandle` entry
+//! point is typed against `protocol::ArtifactId`/`MutationEnvelope`/…, which the facade exposes
 //! without re-exporting a path to) and `pack` (`SnapshotManager::verify`'s `VerificationLevel` is
 //! pack's own type, snapshots being pack files). No `db_storage`/`db_wal`/`db_snapshot`/… path
 //! dependency of its own — `wal-inspect`/`snapshot-inspect`/`replay`/`repair` still need
@@ -20,8 +20,8 @@
 //! that lists WAL segments or snapshot generations), reached the same facade-path way.
 //!
 //! 🎯️ Every subcommand is real, including `migrate` and `profile`: `migrate` appends a genuine
-//! `WAL_MIGRATION` record via `db::wal::DocumentWal` (force-flushed durably); `profile` submits `N`
-//! real commands sequentially through `DocumentHandle::submit` and reports wall-clock throughput —
+//! `WAL_MIGRATION` record via `db::wal::ArtifactWal` (force-flushed durably); `profile` submits `N`
+//! real commands sequentially through `ArtifactHandle::submit` and reports wall-clock throughput —
 //! both self-contained (bootstrap their own document/WAL if it doesn't exist yet), needing nothing
 //! from `db_testkit` (a separate, non-`db`-facade sibling crate this one deliberately does not
 //! depend on, to keep the "facade only" dependency footprint honest). `conflict-simulate` runs the
@@ -103,7 +103,7 @@ fn now_ms() -> u64 {
 }
 
 /// 🧾️ A best-effort human display of a query result's raw value bytes — UTF-8 text verbatim (the
-/// common case: `db_document`'s path-value convention stores JSON-encoded scalars, which decode as
+/// common case: `db_artifact`'s path-value convention stores JSON-encoded scalars, which decode as
 /// text), or a byte count for anything that doesn't decode, never a panic.
 fn describe_value_bytes(bytes: &[u8]) -> String {
     match std::str::from_utf8(bytes) {
@@ -135,7 +135,7 @@ fn health_state_label(state: &db::observe::HealthState) -> String {
 fn print_health(health: &db::DbHealth) {
     println!("== health ==");
     println!("  overall: {}", health_state_label(&health.report.overall));
-    println!("  open_documents: {}", health.open_documents);
+    println!("  open_artifacts: {}", health.open_artifacts);
     for (name, state) in &health.report.components {
         println!("  - {name}: {}", health_state_label(state));
     }
@@ -183,8 +183,8 @@ fn print_engine_frontier(frontier: &db::Frontier) {
 }
 
 /// 📄️ `db doc <root> <document-id> [--profile ...]` — opens `document` through a real
-/// `DocumentHandle` (recovering it from its WAL if not already open) and prints its current
-/// frontier plus a tail of its committed history (real: `DocumentHandle::history` replays the WAL
+/// `ArtifactHandle` (recovering it from its WAL if not already open) and prints its current
+/// frontier plus a tail of its committed history (real: `ArtifactHandle::history` replays the WAL
 /// directly per `db_engine`'s own module doc).
 fn cmd_doc(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest);
@@ -201,7 +201,7 @@ fn cmd_doc(rest: &[String]) -> i32 {
         Ok(database) => database,
         Err(err) => return fail("open", err),
     };
-    let document_id = protocol::DocumentId(id.clone());
+    let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id) {
         Ok(handle) => handle,
         Err(err) => return fail("document", err),
@@ -302,7 +302,7 @@ fn cmd_wal_inspect(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::DocumentId(id.clone());
+    let document = db::core::ArtifactId(id.clone());
 
     let segments = match storage.list_segments(&document) {
         Ok(segments) => segments,
@@ -356,7 +356,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::DocumentId(id.clone());
+    let document = db::core::ArtifactId(id.clone());
 
     let generations = match storage.list_generations(&document) {
         Ok(generations) => generations,
@@ -416,7 +416,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 //#region 🔖️Verify
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
-fn verify_document(storage: &db::storage::FsStorage, document: &db::core::DocumentId) -> Result<String, db::DbError> {
+fn verify_document(storage: &db::storage::FsStorage, document: &db::core::ArtifactId) -> Result<String, db::DbError> {
     let records = db::wal::replay_document(storage, document)?;
     let manager = db::snapshot::SnapshotManager::new(storage);
     match manager.load_latest(document)? {
@@ -466,7 +466,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
     };
     let mut failures = 0usize;
     for id in &ids {
-        let document = db::core::DocumentId(id.clone());
+        let document = db::core::ArtifactId(id.clone());
         match verify_document(&storage, &document) {
             Ok(summary) => println!("OK   {id}: {summary}"),
             Err(err) => {
@@ -486,7 +486,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
 //#region 🔖️Query
 /// 🔎️ `db query <root> <document-id> <path> [more-paths...] [--profile ...]` — resolves one or
 /// more paths against `document`'s live (`Consistency::Canonical`) state through a real
-/// `DocumentHandle::query`.
+/// `ArtifactHandle::query`.
 fn cmd_query(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest);
     if positional.len() < 3 {
@@ -503,7 +503,7 @@ fn cmd_query(rest: &[String]) -> i32 {
         Ok(database) => database,
         Err(err) => return fail("open", err),
     };
-    let document_id = protocol::DocumentId(id.clone());
+    let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id) {
         Ok(handle) => handle,
         Err(err) => return fail("document", err),
@@ -536,7 +536,7 @@ fn cmd_query(rest: &[String]) -> i32 {
 //#region 🔖️Replay
 /// 🔁️ `db replay <root> <document-id>` — a raw, actor-bypassing `db::wal::replay_document` pass:
 /// record-kind counts plus the frontier reconstructed from the last `WAL_FRONTIER` record. Distinct
-/// from `doc`, which goes through a live `DocumentAuthority` — this is the lower-level diagnostic
+/// from `doc`, which goes through a live `ArtifactAuthority` — this is the lower-level diagnostic
 /// twin, useful precisely when the actor path itself is in question.
 fn cmd_replay(rest: &[String]) -> i32 {
     let (positional, _flags) = parse_args(rest);
@@ -549,7 +549,7 @@ fn cmd_replay(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::DocumentId(id.clone());
+    let document = db::core::ArtifactId(id.clone());
     let records = match db::wal::replay_document(&storage, &document) {
         Ok(records) => records,
         Err(err) => return fail("replay", err),
@@ -584,7 +584,7 @@ fn cmd_replay(rest: &[String]) -> i32 {
 //#endregion 🔖️Replay
 
 //#region 🔖️Repair
-/// 🩹️ `db repair <root> <document-id>` — the real repair primitive: `db::wal::DocumentWal::open`
+/// 🩹️ `db repair <root> <document-id>` — the real repair primitive: `db::wal::ArtifactWal::open`
 /// already discards a torn active-segment tail and rewrites it from the trusted prefix (see its own
 /// doc's "forced by `protocol::SprWriter`'s API" design-choice note) — this subcommand simply drives
 /// that recovery path and reports what it found. Idempotent on an already-clean WAL.
@@ -599,8 +599,8 @@ fn cmd_repair(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::DocumentId(id.clone());
-    match db::wal::DocumentWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
+    let document = db::core::ArtifactId(id.clone());
+    match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
         Ok((_wal, report)) => {
             println!("== repair: {id} ==");
             println!("  segments_seen: {}", report.segments_seen);
@@ -638,7 +638,7 @@ fn cmd_compact(rest: &[String]) -> i32 {
         Ok(database) => database,
         Err(err) => return fail("open", err),
     };
-    let document_id = protocol::DocumentId(id.clone());
+    let document_id = protocol::ArtifactId(id.clone());
 
     let outcome = match database.compact_document(&document_id, &holder, consolidate) {
         Ok(report) => {
@@ -810,7 +810,7 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open follower", err),
     };
-    let document = db::core::DocumentId(id.clone());
+    let document = db::core::ArtifactId(id.clone());
 
     match db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
         Ok(db::cluster::ReplicationOutcome::UpToDate { frontier }) => {
@@ -838,7 +838,7 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
 //#region 🔖️Migrate
 /// 🚚️ `db migrate <root> <document-id> <name> [--payload TEXT]` — appends a real `WAL_MIGRATION`
 /// record (`name` on its own line, then an optional `--payload` text body) via a real
-/// `db::wal::DocumentWal`, force-flushed durably (`DurabilityClass::Fsync`). `DocumentWal::open`
+/// `db::wal::ArtifactWal`, force-flushed durably (`DurabilityClass::Fsync`). `ArtifactWal::open`
 /// auto-creates a fresh WAL if `document` has none yet (see its own doc's "Creates a fresh WAL...
 /// if `document` has no segments yet" note), so this also works as a bootstrap path for a document
 /// that was never `create_document`d through the actor API.
@@ -856,9 +856,9 @@ fn cmd_migrate(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::DocumentId(id.clone());
+    let document = db::core::ArtifactId(id.clone());
     let now = now_ms();
-    let (mut wal, _report) = match db::wal::DocumentWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now) {
+    let (mut wal, _report) = match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now) {
         Ok(pair) => pair,
         Err(err) => return fail("open wal", err),
     };
@@ -883,7 +883,7 @@ fn cmd_migrate(rest: &[String]) -> i32 {
 //#region 🔖️Profile
 /// ⏱️ `db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N]
 /// [--profile test|dev|prod]` — submits `N` (default 100) trivial single-path `set`-shaped commands
-/// sequentially through the real submit pipeline (`DocumentHandle::submit`, actor-mediated, WAL
+/// sequentially through the real submit pipeline (`ArtifactHandle::submit`, actor-mediated, WAL
 /// group-commit and all) and reports wall-clock throughput/latency. Opens `document` if it already
 /// exists, else creates it first — self-contained, no separate seeding step required. Deliberately
 /// hand-timed with `std::time::Instant` rather than pulling in `db_testkit`'s `WorkloadGen`/
@@ -924,10 +924,10 @@ fn cmd_profile(rest: &[String]) -> i32 {
         Ok(database) => database,
         Err(err) => return fail("open", err),
     };
-    let document_id = protocol::DocumentId(id.clone());
+    let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id) {
         Ok(handle) => handle,
-        Err(_) => match database.create_document(db::DocumentSpec::new(document_id.clone())) {
+        Err(_) => match database.create_document(db::ArtifactSpec::new(document_id.clone())) {
             Ok(handle) => handle,
             Err(err) => return fail("create", err),
         },
@@ -944,7 +944,7 @@ fn cmd_profile(rest: &[String]) -> i32 {
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
         };
@@ -1042,24 +1042,24 @@ mod tests {
         dir
     }
 
-    fn test_envelope(id: &str, document: &protocol::DocumentId) -> protocol::MutationEnvelope {
+    fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: protocol::ActorId("tester".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
 
     /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
-    /// `Database::create_document`/`DocumentHandle::submit` round trip, then cleanly shuts down.
+    /// `Database::create_document`/`ArtifactHandle::submit` round trip, then cleanly shuts down.
     fn seed_document(root: &Path) {
         let database = db::Database::open_at(root, db::Profile::Test).unwrap();
-        let document = protocol::DocumentId("doc-1".to_string());
-        let handle = database.create_document(db::DocumentSpec::new(document.clone())).unwrap();
+        let document = protocol::ArtifactId("doc-1".to_string());
+        let handle = database.create_document(db::ArtifactSpec::new(document.clone())).unwrap();
         let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document)]).unwrap();
         db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync })).unwrap().unwrap();
         database.shutdown(std::time::Duration::from_secs(1)).unwrap();

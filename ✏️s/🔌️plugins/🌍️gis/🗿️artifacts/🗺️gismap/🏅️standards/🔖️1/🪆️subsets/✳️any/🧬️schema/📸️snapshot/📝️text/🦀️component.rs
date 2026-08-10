@@ -15,12 +15,12 @@ pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
-    <GisMapSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisMapSnapshot` back to `.gismap` DSL text.
 pub fn print_dsl(document: &GisMapSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

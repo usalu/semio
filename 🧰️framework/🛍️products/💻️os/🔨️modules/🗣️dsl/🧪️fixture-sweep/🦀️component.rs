@@ -1,6 +1,6 @@
 //! 🧭️ Repo-wide DSL fixture-law sweep (W6, final wave of the DSL-notation program). Walks every
 //! real shipped `📚️examples/**` fixture file across every plugin/app that derives
-//! `crate::os_store::DocumentDsl` (via `#[derive(crate::os_dsl::Dsl...)]`, `dsl_derive`'s generated impls, or a
+//! `crate::os_store::ArtifactDsl` (via `#[derive(crate::os_dsl::Dsl...)]`, `dsl_derive`'s generated impls, or a
 //! hand-rolled Route-A idiom bridge) and proves both engine laws directly against the fixture
 //! TEXT — the thing that actually ships, not a separately hand-built in-memory example a per-app
 //! test might have drifted from:
@@ -9,13 +9,13 @@
 //!    recovers an equal value.
 //! 2. **canonicalize idempotence**: `canonicalize(x) := print_dsl(parse_dsl(x))` is idempotent —
 //!    `canonicalize(canonicalize(x)) == canonicalize(x)`. Equivalent to
-//!    `crate::os_dsl::schema::canonicalize(x, spec, opts)` for every derive-generated `DocumentDsl` impl (see
+//!    `crate::os_dsl::schema::canonicalize(x, spec, opts)` for every derive-generated `ArtifactDsl` impl (see
 //!    `crate::os_store::test_support::check_dsl_fixture_text_laws`'s doc comment for why), and the correct
 //!    generalization for hand-rolled Route-A idioms that have no `RecordSpec` at all.
 //!
 //! Test-only crate (everything lives under `#[cfg(test)]`): depends on every app's thin
 //! `🔨️modules/🗣️dsl` (or core) crate purely as a `[dev-dependencies]` fan-in so this ONE `cargo
-//! test`/`nx` target can reach every real `DocumentDsl` type without any of those app crates
+//! test`/`nx` target can reach every real `ArtifactDsl` type without any of those app crates
 //! depending back on this one — never a real dependency of anything. Registered by extension
 //! (`P::EXTENSION`), not by directory, so a fixture is checked wherever in the repo it actually
 //! lives (plugin-root `📚️examples/`, artifact/app `📚️examples/<slug>/🖼️assets/`, or a
@@ -94,65 +94,65 @@ mod tests {
 
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
-            ("writer", <WriterSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
-            ("mathematical", <MathematicalSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
-            ("procedural_2d", <Procedural2dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
-            ("procedural_3d", <Procedural3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
-            ("flow_app", <FlowFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
+            ("writer", <WriterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
+            ("mathematical", <MathematicalSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
+            ("procedural_2d", <Procedural2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
+            ("procedural_3d", <Procedural3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
+            ("flow_app", <FlowFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
             ("gis2d", "gis.gismap", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
             ("gis3d", "gis.gisterrain", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
-            ("vcs_app", <VcsSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),
-            ("present", <PresentDeck as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
-            ("shooting", <ShootingFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
-            ("sequence", <SequenceFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
-            ("fem2d", <Fem2dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
-            ("fem3d", <Fem3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
-            ("process_3d", <Process3dDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
-            ("lowpoly", <LowpolySnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolySnapshot>),
-            ("reasoning_wires", <MindmapWiresDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
-            ("layout", <LayoutDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
-            ("cad_document", <CadSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadSnapshot>),
-            ("iso16757", <Iso16757Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
-            ("vdi3805", <Vdi3805Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
-            ("din4108", <Din4108Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
-            ("din16798", <Din16798Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),
-            ("en1990", <En1990Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1990Document>),
-            ("en1991", <En1991Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1991Document>),
-            ("en1992", <En1992Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1992Document>),
-            ("en1993", <En1993Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1993Document>),
-            ("en1994", <En1994Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1994Document>),
-            ("en1995", <En1995Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1995Document>),
-            ("en1996", <En1996Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1996Document>),
-            ("en1997", <En1997Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1997Document>),
-            ("en1998", <En1998Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1998Document>),
-            ("en1999", <En1999Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1999Document>),
-            ("din18599", <Din18599Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
-            ("playbook", <PlaybookSpec as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
-            ("imperative", <ImperativeDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelSnapshot>),
-            ("rewrite", <RewriteRuleModel as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
-            ("trinity_ram", <GraphFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
-            ("dag_app", <DagSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),
-            ("draw", <DrawDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
-            ("raster", <RasterSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),
-            ("note_app", <NoteDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
-            ("puzzle_2d", <Puzzle2dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),
-            ("puzzle_5d", <Puzzle5dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dSnapshot>),
-            ("puzzle_3d", <Puzzle3dSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dSnapshot>),
-            ("block_2d", <Block2dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
-            ("block_5d", <Block5dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
-            ("block_3d", <Block3dDefinition as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
-            ("home", <SHomeDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
-            ("semio_framework_os", <WorkflowSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
-            ("sourcing", <CurateDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
+            ("vcs_app", <VcsSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),
+            ("present", <PresentDeck as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
+            ("shooting", <ShootingFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
+            ("sequence", <SequenceFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
+            ("fem2d", <Fem2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
+            ("fem3d", <Fem3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
+            ("process_3d", <Process3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
+            ("lowpoly", <LowpolySnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolySnapshot>),
+            ("reasoning_wires", <MindmapWiresDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
+            ("layout", <LayoutDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
+            ("cad_document", <CadSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadSnapshot>),
+            ("iso16757", <Iso16757Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
+            ("vdi3805", <Vdi3805Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
+            ("din4108", <Din4108Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
+            ("din16798", <Din16798Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),
+            ("en1990", <En1990Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1990Document>),
+            ("en1991", <En1991Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1991Document>),
+            ("en1992", <En1992Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1992Document>),
+            ("en1993", <En1993Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1993Document>),
+            ("en1994", <En1994Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1994Document>),
+            ("en1995", <En1995Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1995Document>),
+            ("en1996", <En1996Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1996Document>),
+            ("en1997", <En1997Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1997Document>),
+            ("en1998", <En1998Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1998Document>),
+            ("en1999", <En1999Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1999Document>),
+            ("din18599", <Din18599Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
+            ("playbook", <PlaybookSpec as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
+            ("imperative", <ImperativeDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
+            ("remodel", <RemodelSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelSnapshot>),
+            ("rewrite", <RewriteRuleModel as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
+            ("trinity_ram", <GraphFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
+            ("dag_app", <DagSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),
+            ("draw", <DrawDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
+            ("raster", <RasterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),
+            ("note_app", <NoteDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
+            ("puzzle_2d", <Puzzle2dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),
+            ("puzzle_5d", <Puzzle5dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dSnapshot>),
+            ("puzzle_3d", <Puzzle3dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dSnapshot>),
+            ("block_2d", <Block2dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
+            ("block_5d", <Block5dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
+            ("block_3d", <Block3dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
+            ("home", <SHomeDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
+            ("semio_framework_os", <WorkflowSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
+            ("sourcing", <CurateDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
             // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
             // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so
-            // `<FormSpec as crate::os_store::DocumentDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —
+            // `<FormSpec as crate::os_store::ArtifactDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —
             // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
             // care about the grammar's field shape, never the extension string.
             ("forms", "forms", crate::os_store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
-            ("space", <SpaceSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),
-            ("space", <CollectionSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),
+            ("space", <SpaceSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),
+            ("space", <CollectionSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),
         ]
     }
     //#endregion 🔖️Registry
@@ -309,7 +309,7 @@ mod tests {
             let key = envelope.envelope_id();
             let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == key).collect();
             if matching.is_empty() {
-                unmapped.push(format!("{} (envelope {key} — no registered DocumentDsl)", file.display()));
+                unmapped.push(format!("{} (envelope {key} — no registered ArtifactDsl)", file.display()));
                 continue;
             }
             let text = std::str::from_utf8(&bytes).unwrap_or_else(|_| panic!("{} is not valid utf-8", file.display()));
@@ -323,7 +323,7 @@ mod tests {
 
         eprintln!("[dsl-fixture-sweep] {} example dir(s), {} .semio fixture file(s) found, {} law-check(s) run across {} registered app kind(s), {} unmapped fixture(s)", dirs.len(), fixture_files.len(), walked, registry.len(), unmapped.len());
         if !unmapped.is_empty() {
-            eprintln!("[dsl-fixture-sweep] unmapped fixtures (no registered DocumentDsl app matches this extension — not counted as a failure):");
+            eprintln!("[dsl-fixture-sweep] unmapped fixtures (no registered ArtifactDsl app matches this extension — not counted as a failure):");
             for entry in &unmapped {
                 eprintln!("  {entry}");
             }
@@ -629,11 +629,11 @@ mod m5_handcrafted_grammar_conformance {
     use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
     use crate::os_store::semio_format::split_text_preamble;
 
-    fn dsl_body_from_fixture(text: &str) -> &str {
+    fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
-            split_text_preamble(text).map(|(_, body)| body).unwrap_or(text)
+            split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
         } else {
-            text
+            text.to_string()
         }
     }
 
@@ -648,10 +648,15 @@ mod m5_handcrafted_grammar_conformance {
         assert_eq!(grammar.dialect, SemioDialect::Grammar, "{pilot}: expected grammar dialect");
         let recognizer = Recognizer::compile(&grammar);
         let body = dsl_body_from_fixture(fixture_semio);
-        assert!(
-            recognizer.recognize(body).unwrap_or_else(|error| panic!("{pilot}: recognize failed: {error:?}")),
-            "{pilot}: grammar must recognize shipped fixture DSL body"
-        );
+        let ok = recognizer.recognize(&body).unwrap_or_else(|error| panic!("{pilot}: recognize failed: {error:?}"));
+        if !ok {
+            eprintln!("[DEBUG] {pilot}: body to recognize:\n{body}");
+            if let Ok(raw) = crate::os_dsl::lex(&body, &crate::os_dsl::Limits::default(), false) {
+                let tokens: Vec<_> = raw.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != crate::os_dsl::TokenKind::Eof).collect();
+                eprintln!("[DEBUG] {pilot}: lexed {} non-trivia tokens: {:?}", tokens.len(), tokens.iter().map(|t| (t.kind.clone(), t.text.clone())).collect::<Vec<_>>());
+            }
+        }
+        assert!(ok, "{pilot}: grammar must recognize shipped fixture DSL body");
     }
 
     fn run_pilot(artifact_rel: &str, grammar: &str, pilot: &str) {
@@ -665,7 +670,7 @@ mod m5_handcrafted_grammar_conformance {
     #[test]
     fn lowpoly_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/📖️component.grammar.semio"
+            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio"
         );
         run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", GRAMMAR, "lowpoly");
     }
@@ -673,35 +678,35 @@ mod m5_handcrafted_grammar_conformance {
     #[test]
     fn dag_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", GRAMMAR, "dag");
     }
 
     #[test]
     fn cad_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", GRAMMAR, "cad");
     }
 
     #[test]
     fn en1992_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", GRAMMAR, "en1992");
     }
 
     #[test]
     fn note_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note", GRAMMAR, "note");
     }
 
     #[test]
     fn fem2d_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d", GRAMMAR, "fem2d");
     }
 }
@@ -760,7 +765,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_lowpoly_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", ".pack.semio", PROTOCOL, "lowpoly.pack");
     }
@@ -768,7 +773,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_dag_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".pack.semio", PROTOCOL, "dag.pack");
     }
@@ -776,7 +781,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_dag_spr_bytes_verify_against_spr_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📡️spr/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".spr.semio", PROTOCOL, "dag.spr");
     }
@@ -784,7 +789,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_cad_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", ".pack.semio", PROTOCOL, "cad.pack");
     }
@@ -792,7 +797,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_en1992_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", ".pack.semio", PROTOCOL, "en1992.pack");
     }
@@ -800,7 +805,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_note_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note", ".pack.semio", PROTOCOL, "note.pack");
     }
@@ -808,7 +813,7 @@ mod m5_handcrafted_protocol_conformance {
     #[test]
     fn handcrafted_fem2d_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📸️snapshot/🎒️pack/📡️component.protocol.semio"
+            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio"
         );
         run_pilot("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d", ".pack.semio", PROTOCOL, "fem2d.pack");
     }
@@ -836,10 +841,10 @@ mod m5_cross_artifact_rejection {
     #[test]
     fn lowpoly_recognizer_rejects_dag_sample() {
         const LOWPOLY_GRAMMAR: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/📖️component.grammar.semio"
+            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio"
         );
         const DAG_GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         let Some(lowpoly_fixture) = pilot_resolve::read_example_text("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", ".dsl.semio") else {
             eprintln!("[DEBUG] soft-skip lowpoly.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)");
             return;
@@ -885,11 +890,11 @@ mod m5_production_coverage {
     use crate::os_dsl::{parse_grammar, Recognizer};
     use crate::os_store::semio_format::split_text_preamble;
 
-    fn dsl_body_from_fixture(text: &str) -> &str {
+    fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
-            split_text_preamble(text).map(|(_, body)| body).unwrap_or(text)
+            split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
         } else {
-            text
+            text.to_string()
         }
     }
 
@@ -903,7 +908,7 @@ mod m5_production_coverage {
         let recognizer = Recognizer::compile(&grammar);
         let body = dsl_body_from_fixture(fixture_semio);
         let uncovered = recognizer
-            .uncovered_productions(body)
+            .uncovered_productions(&body)
             .unwrap_or_else(|error| panic!("{pilot}: uncovered_productions: {error:?}"));
         if !uncovered.is_empty() {
             eprintln!(
@@ -914,7 +919,7 @@ mod m5_production_coverage {
         }
         // Soft assertion for now: recognition must succeed; uncovered list is advisory until P4/P7.
         assert!(
-            recognizer.recognize(body).unwrap_or_else(|error| panic!("{pilot}: recognize: {error:?}")),
+            recognizer.recognize(&body).unwrap_or_else(|error| panic!("{pilot}: recognize: {error:?}")),
             "{pilot}: fixture must still recognize while coverage is tracked"
         );
     }
@@ -930,7 +935,7 @@ mod m5_production_coverage {
     #[test]
     fn lowpoly_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/📖️component.grammar.semio"
+            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio"
         );
         run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", GRAMMAR, "lowpoly");
     }
@@ -938,21 +943,21 @@ mod m5_production_coverage {
     #[test]
     fn dag_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", GRAMMAR, "dag");
     }
 
     #[test]
     fn cad_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", GRAMMAR, "cad");
     }
 
     #[test]
     fn en1992_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
-            include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/📖️component.grammar.semio");
+            include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio");
         run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", GRAMMAR, "en1992");
     }
 }

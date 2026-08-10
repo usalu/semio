@@ -1,4 +1,4 @@
-//! 🎛️ Puzzle 5d play app — its `DocumentApp::Config`: every piece of view state the app owns but the
+//! 🎛️ Puzzle 5d play app — its `ArtifactApp::Config`: every piece of view state the app owns but the
 //! document must never carry (the two projections' cameras, selection, hover, brush/fill scratch,
 //! distribution weights, per-window engagement input and active utility, sun, locale/terminology),
 //! plus the whole-snapshot `ConfigMutation` that patches it.
@@ -178,7 +178,7 @@ impl Default for Puzzle5dConfig {
     }
 }
 
-/// 🧮️ B1: puzzle5d's real `DocumentApp::Config` — `Puzzle5dRuntime` itself doubles as the config
+/// 🧮️ B1: puzzle5d's real `ArtifactApp::Config` — `Puzzle5dRuntime` itself doubles as the config
 /// record (an alias, not a new type), mirroring `Puzzle3dConfig`'s identical recipe, so every helper
 /// taking `&Puzzle5dRuntime`/`&mut Puzzle5dRuntime` keeps working unchanged; every read comes from
 /// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`
@@ -186,7 +186,7 @@ impl Default for Puzzle5dConfig {
 /// 🏷️ Alias kept for call sites that still name the runtime.
 pub type Puzzle5dRuntime = Puzzle5dConfig;
 
-impl store::DocumentDsl for Puzzle5dConfig {
+impl store::ArtifactDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -198,7 +198,7 @@ impl store::DocumentDsl for Puzzle5dConfig {
     }
 }
 
-impl store::DocumentPack for Puzzle5dConfig {
+impl store::ArtifactPack for Puzzle5dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }

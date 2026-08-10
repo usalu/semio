@@ -20,7 +20,7 @@ pub const ZOOM_SCALE: f64 = 0.68;
 /// 🧱️ Stitched into the app manifest by `crate::apps::puzzle2d::create_puzzle2d_app`. Unlike cad,
 /// puzzle2d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
 /// and brush chrome before the first `refreshUi` tick; every later frame comes from
-/// `DocumentApp::window_measures`.
+/// `ArtifactApp::window_measures`.
 pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
@@ -32,7 +32,7 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
         params_schema: None,
-        document_snapshot_schema: None,
+        artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

@@ -10,7 +10,7 @@
 import { type ReactElement } from "react";
 import { Button, Input, Popover, PopoverAnchor, PopoverContent, useLabel } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type UtilityNode } from "@semio-tech/framework";
-import { type DocumentSyncStatus, type FrameworkSyncUtilityLeaf, buildFileBackboneUri, buildFolderBackboneUri, buildRemoteBackboneUri } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf, buildFileBackboneUri, buildFolderBackboneUri, buildRemoteBackboneUri } from "@semio-tech/framework-os";
 import { type SyncCardKind } from "../Shell/🟦️component.tsx";
 import { UtilityTree, groupUtilityNodesByCategory } from "../UtilityTree/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -22,7 +22,7 @@ type SyncAttachCardProps = {
   readonly cardKind: SyncCardKind | null;
   readonly draftPath: string;
   readonly syncUtilities: readonly FrameworkSyncUtilityLeaf[];
-  readonly status: DocumentSyncStatus | null;
+  readonly status: ArtifactSyncStatus | null;
   readonly onAction: (action: ActionDescriptor) => void;
   readonly onDraftPathChange: (value: string) => void;
   readonly onClose: () => void;
@@ -30,9 +30,9 @@ type SyncAttachCardProps = {
   readonly onDetach: () => void;
 };
 
-/** 🚦️ Minimal status label for a `DocumentSyncStatus` — matches this file's small-badge-text style
+/** 🚦️ Minimal status label for an `ArtifactSyncStatus` — matches this file's small-badge-text style
  * (see the `activeUri` line right below it), not a new component system. */
-function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
+function syncStatusLabel(status: ArtifactSyncStatus | null): string | null {
   if (!status) return null;
   const remote =
     status.remote.kind === "live" ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}` : status.remote.kind === "connecting" ? "connecting…" : status.remote.kind === "backoff" ? "reconnecting…" : "offline";

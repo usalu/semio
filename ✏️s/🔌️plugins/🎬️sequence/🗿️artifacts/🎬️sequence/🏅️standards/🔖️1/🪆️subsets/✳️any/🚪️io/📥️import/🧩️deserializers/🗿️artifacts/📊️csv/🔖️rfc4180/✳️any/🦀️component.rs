@@ -11,6 +11,6 @@ pub fn deserialize(from: &CsvSnapshot) -> Result<SequenceSnapshot, store::TextEr
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<SequenceSnapshot, store::TextError> {
-    <SequenceSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes)
         .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }

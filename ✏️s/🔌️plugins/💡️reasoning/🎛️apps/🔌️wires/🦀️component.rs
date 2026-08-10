@@ -1,4 +1,4 @@
-//! 🖥️ Wires play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Wires play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
@@ -10,7 +10,7 @@
 //! B1: `ReasoningWiresPlayApp` is a unit struct — every former `WiresPlayRuntime` field (selection,
 //! in-flight drag) lives in `crate::apps::wires::config::WiresConfig`, written via
 //! `crate::apps::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
-//! every action dispatches through the single typed `WiresCommand` channel via `DocumentApp::handle`.
+//! every action dispatches through the single typed `WiresCommand` channel via `ArtifactApp::handle`.
 
 use crate::apps::wires::commands::delete::delete_selection;
 use crate::apps::wires::commands::example::{set_active_example, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
@@ -25,7 +25,7 @@ use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -74,7 +74,7 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct ReasoningWiresPlayApp;
 
-impl DocumentApp for ReasoningWiresPlayApp {
+impl ArtifactApp for ReasoningWiresPlayApp {
     type Snapshot = WiresSnapshot;
     type Mutation = WiresMutation;
     type Config = WiresConfig;
@@ -99,11 +99,11 @@ impl DocumentApp for ReasoningWiresPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WiresCommand, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &WiresCommand, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
@@ -162,9 +162,9 @@ pub fn create_wires_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as new_test_app};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type WiresApp = VcsDocumentApp<ReasoningWiresPlayApp>;
+    pub type WiresApp = VcsArtifactApp<ReasoningWiresPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> WiresApp {

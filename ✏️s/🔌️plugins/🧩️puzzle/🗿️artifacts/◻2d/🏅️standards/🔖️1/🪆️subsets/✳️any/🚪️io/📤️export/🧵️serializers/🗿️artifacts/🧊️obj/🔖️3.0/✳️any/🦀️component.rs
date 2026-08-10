@@ -1,6 +1,6 @@
 //! 📤️ Export Puzzle2dSnapshot as .obj.
 
-use semio_framework_plugin::{DocumentCodec, IoError, JsonCodec, MediaFormat};
+use semio_framework_plugin::{ArtifactCodec, IoError, JsonCodec, MediaFormat};
 
 //#region 🔖️Export
 pub fn export(snapshot: &crate::artifacts::puzzle2d::Puzzle2dSnapshot) -> Result<Vec<u8>, IoError> {

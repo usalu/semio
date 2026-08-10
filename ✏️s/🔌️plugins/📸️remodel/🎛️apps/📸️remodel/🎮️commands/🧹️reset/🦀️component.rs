@@ -3,7 +3,7 @@
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
-use semio_framework_plugin::{mesh_from_kind, ConfigView, DocumentView, Emit, Fault, MeshData};
+use semio_framework_plugin::{mesh_from_kind, ConfigView, ArtifactView, Emit, Fault, MeshData};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Results
@@ -26,7 +26,7 @@ pub mod reset_placeholder_mesh {
     #[dsl(keyword = "reset-placeholder-mesh")]
     pub struct ResetPlaceholderMesh {}
 
-    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(placeholder_result()) }]))
     }
 }
@@ -40,7 +40,7 @@ pub mod clear_sparse {
     #[dsl(keyword = "clear-sparse")]
     pub struct ClearSparse {}
 
-    pub fn handle(_payload: &ClearSparse, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearSparse, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetSparse { sparse: None }]))
     }
 }
@@ -54,7 +54,7 @@ pub mod clear_dense {
     #[dsl(keyword = "clear-dense")]
     pub struct ClearDense {}
 
-    pub fn handle(_payload: &ClearDense, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearDense, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetDense { dense: None }]))
     }
 }
@@ -68,7 +68,7 @@ pub mod clear_mesh_result {
     #[dsl(keyword = "clear-mesh-result")]
     pub struct ClearMeshResult {}
 
-    pub fn handle(_payload: &ClearMeshResult, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) }]))
     }
 }
@@ -82,7 +82,7 @@ pub mod clear_tracks {
     #[dsl(keyword = "clear-tracks")]
     pub struct ClearTracks {}
 
-    pub fn handle(_payload: &ClearTracks, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearTracks, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetTracks { tracks: Vec::new() }]))
     }
 }
@@ -96,7 +96,7 @@ pub mod clear_geo_products {
     #[dsl(keyword = "clear-geo-products")]
     pub struct ClearGeoProducts {}
 
-    pub fn handle(_payload: &ClearGeoProducts, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearGeoProducts, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetGeoProducts { geo: None }]))
     }
 }
@@ -111,7 +111,7 @@ pub mod clear_result {
     pub struct ClearResult {}
 
     /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
-    pub fn handle(_payload: &ClearResult, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![
             RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) },
             RemodelMutation::SetSparse { sparse: None },

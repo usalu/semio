@@ -18,12 +18,12 @@ pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 
 /// 📖️ Parses `.block3d` DSL text into a `Block3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block3dSnapshot, store::TextError> {
-    <Block3dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Block3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block3dSnapshot` back to `.block3d` DSL text.
 pub fn print_dsl(document: &Block3dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

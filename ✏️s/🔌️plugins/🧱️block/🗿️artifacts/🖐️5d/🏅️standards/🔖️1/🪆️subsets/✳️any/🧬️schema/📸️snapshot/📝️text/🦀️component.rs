@@ -18,12 +18,12 @@ pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../..
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, store::TextError> {
-    <Block5dSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block5dSnapshot` back to `.block5d` DSL text.
 pub fn print_dsl(document: &Block5dSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

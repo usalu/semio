@@ -15,7 +15,7 @@
 //! `spr` derive impls) is owned by the FRAMEWORK kernel crate `playbook`
 //! (`semio-framework-os-kernel-playbook`, untouched by this migration) — the same domain `📋️forms`
 //! builds on. This plugin owns only its own document schema id, `ArtifactKindSpec`, `PlaybookConfig`/
-//! `PlaybookConfigMutation`/`PlaybookCommand`, and the `PlaybookPlayApp` `DocumentApp` impl.
+//! `PlaybookConfigMutation`/`PlaybookCommand`, and the `PlaybookPlayApp` `ArtifactApp` impl.
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -26,7 +26,7 @@ extern crate flow;
 pub use flow::playbook;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault>`, the exact signature
-// `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
+// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
 // error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
 // artefact of decomposition.

@@ -134,11 +134,11 @@ import {
   worldToScreen,
   type InkDocument,
   type InkStrokeItem,
-  appDocumentLabel,
-  appWindowDocumentLabel,
+  appBreadcrumb,
+  appWindowLabel,
   adaptPluginHandle,
   applyUiRefreshResponseToCache,
-  resolveAppDocument,
+  resolveAppBreadcrumb,
   buildUtilityRibbonSegments,
   buildActiveUtilityByWindowId,
   buildUiRefreshRequest,
@@ -867,7 +867,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     { id: "overview", bodyKey: "puzzle2d.play.overview" },
     { id: "detail", bodyKey: "puzzle2d.play.detail" },
   ];
-  const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.document" }, bodyKey: "puzzle2d.play.layers" }];
+  const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.artifact" }, bodyKey: "puzzle2d.play.layers" }];
 
   it("buildActiveUtilityByWindowId omits null utilities for batched refresh", () => {
     expect(buildActiveUtilityByWindowId({ top: "transform", perspective: null, brush: "brush" })).toEqual({ top: "transform", brush: "brush" });
@@ -901,7 +901,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
-    expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
+    expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.artifact"]);
     expect(request?.engagements).toBeDefined();
     expect(request?.measures).toBeDefined();
     expect(request?.labels).toBeDefined();
@@ -1108,27 +1108,27 @@ describe("framework renderer types", () => {
     const app = {
       id: "puzzle3d-play",
       label: "Puzzle 3D",
-      document: ["semio", "puzzle", "3d"],
-      terminologyDocuments: { reuse: ["Entwerfen mit Bestand", "Aggregator"] },
+      breadcrumb: ["semio", "puzzle", "3d"],
+      terminologyBreadcrumbs: { reuse: ["Entwerfen mit Bestand", "Aggregator"] },
       controllerId: "puzzle3d-play",
       modes: [],
       windowKinds: [],
       panelTabs: [],
       keybindings: [],
     };
-    expect(appDocumentLabel(app.document)).toBe("semio · puzzle · 3d");
-    expect(appWindowDocumentLabel(app, "native", "Flow")).toBe("Flow");
-    expect(appWindowDocumentLabel(app, "native", "Preview")).toBe("Preview");
-    expect(appWindowDocumentLabel(app, "native", "")).toBe("Puzzle 3D");
-    expect(appWindowDocumentLabel(app, "reuse", "")).toBe("Aggregator");
-    expect(resolveAppDocument(app, "native")).toEqual(["semio", "puzzle", "3d"]);
-    expect(resolveAppDocument(app, "reuse")).toEqual(["Entwerfen mit Bestand", "Aggregator"]);
-    expect(appDocumentLabel(resolveAppDocument(app, "reuse"))).toBe("Entwerfen mit Bestand · Aggregator");
+    expect(appBreadcrumb(app.breadcrumb)).toBe("semio · puzzle · 3d");
+    expect(appWindowLabel(app, "native", "Flow")).toBe("Flow");
+    expect(appWindowLabel(app, "native", "Preview")).toBe("Preview");
+    expect(appWindowLabel(app, "native", "")).toBe("Puzzle 3D");
+    expect(appWindowLabel(app, "reuse", "")).toBe("Aggregator");
+    expect(resolveAppBreadcrumb(app, "native")).toEqual(["semio", "puzzle", "3d"]);
+    expect(resolveAppBreadcrumb(app, "reuse")).toEqual(["Entwerfen mit Bestand", "Aggregator"]);
+    expect(appBreadcrumb(resolveAppBreadcrumb(app, "reuse"))).toBe("Entwerfen mit Bestand · Aggregator");
   });
 
   it("flattens a recursive panelTabs tree to its leaves, depth-first", () => {
     const tabs = [
-      { id: "framework.panel.document", label: "Document", group: "workbench", bodyKey: "doc" },
+      { id: "framework.panel.artifact", label: "Artifact", group: "workbench", bodyKey: "doc" },
       {
         id: "framework.panel.catalogue",
         label: "Catalogue",
@@ -1140,7 +1140,7 @@ describe("framework renderer types", () => {
       },
     ];
     const leaves = flattenPanelTabLeaves(tabs);
-    expect(leaves.map((tab) => tab.id)).toEqual(["framework.panel.document", "framework.panel.catalogue.words", "framework.panel.catalogue.headings"]);
+    expect(leaves.map((tab) => tab.id)).toEqual(["framework.panel.artifact", "framework.panel.catalogue.words", "framework.panel.catalogue.headings"]);
     expect(leaves.every((tab) => Boolean(tab.bodyKey))).toBe(true);
   });
 
@@ -3172,7 +3172,7 @@ describe("spawned window chrome", () => {
   const app = {
     id: "cad-play",
     label: "CAD",
-    document: ["semio", "cad"],
+    breadcrumb: ["semio", "cad"],
     controllerId: "cad-play",
     defaultModeId: "edit",
     modes: [
@@ -3762,10 +3762,10 @@ describe("s workflow flow routing", () => {
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", async () => {
     const panel = {
       activePanelTab: "s-play-catalogue",
-      programs: [{ pluginId: "draw", workflowStepId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
+      programs: [{ pluginId: "draw", workflowStepId: "draw", appId: "draw", label: "Draw", breadcrumb: ["draw"], yields: "2d.drawing" }],
       spawnedApps: [] as const,
     };
-    const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
+    const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", breadcrumb: ["draw"] };
     const focused = studioPanelFocusingSpawned(panel, spawned);
     expect(focused.activeSpawnedId).toBe("app-draw-1");
     expect(focused.spawnedApps).toEqual([spawned]);
@@ -4243,7 +4243,7 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
     const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
     expect(commandCategories(resolved)).toEqual([
       { id: "appearance", label: "Appearance" },
-      { id: "document", label: "Document" },
+      { id: "document", label: "Artifact" },
       { id: "view", label: "View" },
     ]);
   });

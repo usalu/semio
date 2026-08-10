@@ -38,8 +38,8 @@ mod tests {
     #[test]
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.din16798/v1", "din16798", Din16798Snapshot::default(), None);
-        let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Din16798Mutation::SetSnapshot { snapshot: Din16798Snapshot::default() }], description: None }).expect("apply");
+        let mut store = store::ArtifactStore::new(envelope);
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Din16798Mutation::SetSnapshot { snapshot: Din16798Snapshot::default() }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

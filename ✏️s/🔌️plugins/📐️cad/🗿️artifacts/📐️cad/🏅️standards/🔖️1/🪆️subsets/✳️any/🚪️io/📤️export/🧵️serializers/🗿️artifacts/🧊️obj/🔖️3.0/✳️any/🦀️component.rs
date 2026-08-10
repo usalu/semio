@@ -26,6 +26,6 @@ pub fn serialize(from: &CadSnapshot) -> Result<ObjSnapshot, store::PackError> {
 }
 
 pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
-    Ok(<CadSnapshot as store::DocumentDsl>::print_dsl(from))
+    Ok(<CadSnapshot as store::ArtifactDsl>::print_dsl(from))
 }
 //#endregion Serialize

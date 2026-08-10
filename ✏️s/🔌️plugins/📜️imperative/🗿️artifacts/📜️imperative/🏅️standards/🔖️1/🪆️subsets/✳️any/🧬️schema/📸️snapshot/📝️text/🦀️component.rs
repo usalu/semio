@@ -145,12 +145,12 @@ pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../�
 
 /// 📖️ Parses `.imperative` DSL text into an `ImperativeSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
-    <ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `ImperativeSnapshot` back to `.imperative` DSL text.
 pub fn print_dsl(document: &ImperativeSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 //#endregion 🔖️Api
 
@@ -216,19 +216,19 @@ mod tests {
     #[test]
     fn dsl_rejects_unterminated_string() {
         let text = r#"imperative schema="unterminated"#;
-        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_wrong_leading_keyword() {
         let text = r#"notimperative schema="x""#;
-        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_invalid_number_literal() {
         let text = r#"imperative schema="imperative.document" seed={ n=1.2.3 }"#;
-        assert!(<ImperativeSnapshot as store::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }
     //#endregion DSL text round trips and error paths
 }

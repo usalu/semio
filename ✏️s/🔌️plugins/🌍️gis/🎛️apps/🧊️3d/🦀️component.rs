@@ -1,4 +1,4 @@
-//! ⛰️ GIS 3D play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! ⛰️ GIS 3D play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the World3d
@@ -14,11 +14,11 @@ use crate::artifacts::gisterrain::engine::{default_terrain_document, gis3d_io, g
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::{mesh_artifact_kind, GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ui_text, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    ui_text, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
@@ -51,7 +51,7 @@ use view::set_camera;
 #[derive(Default)]
 pub struct Gis3dPlayApp;
 
-impl DocumentApp for Gis3dPlayApp {
+impl ArtifactApp for Gis3dPlayApp {
     type Snapshot = GisTerrainSnapshot;
     type Mutation = GisTerrainMutation;
     type Config = Gis3dConfig;
@@ -83,7 +83,7 @@ impl DocumentApp for Gis3dPlayApp {
     /// 🎞️ `scene:out` (see `crate::artifacts::gisterrain::engine::gis3d_scene_media`) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
             "document:out" => {
@@ -99,7 +99,7 @@ impl DocumentApp for Gis3dPlayApp {
     /// `GisTerrainSnapshot::imported_features_json` (rendered as an extra pin layer, see the
     /// 🏔️terrain window) plus the inherited `document:in` default (replicated inline for the same
     /// reason as `export_media`).
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -112,7 +112,7 @@ impl DocumentApp for Gis3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <GisTerrainSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <GisTerrainSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -162,7 +162,7 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(command: &Gis3dCommand, doc: &DocumentView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -172,7 +172,7 @@ impl DocumentApp for Gis3dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -217,9 +217,9 @@ pub fn create_gis3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Gis3dApp = VcsDocumentApp<Gis3dPlayApp>;
+    pub type Gis3dApp = VcsArtifactApp<Gis3dPlayApp>;
 
     pub fn app() -> Gis3dApp {
         new_app::<Gis3dPlayApp>()
@@ -243,7 +243,7 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use semio_framework_plugin::DocumentApp;
+    use semio_framework_plugin::ArtifactApp;
     use super::*;
     use crate::apps::gis3d::testkit::{app, app_with_registry, dispatch, render};
     use serde_json::json;
@@ -359,7 +359,7 @@ mod tests {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "3d.mesh");
@@ -371,11 +371,11 @@ mod tests {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &document, history: &history };
+        let doc = ArtifactView { snapshot: &document, history: &history };
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
         let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
-        assert_eq!(emit.document_mutations, vec![GisTerrainMutation::SetImportedFeatures { features_json: incoming }]);
+        assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::SetImportedFeatures { features_json: incoming }]);
     }
 
     #[test]

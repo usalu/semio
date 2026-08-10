@@ -1,7 +1,7 @@
 //! ⚡️ DIN V 18599 app — operation type + laws (constitutional: op).
 //!
 //! 📌️ DIN V 18599 has no bespoke operation enum: every session mutation is a whole-document
-//! replace, so `Mutation` is a re-export of `norm_core`'s generic `SetDocumentMutation<Din18599Snapshot>`,
+//! replace, so `Mutation` is a re-export of `norm_core`'s generic `SetArtifactMutation<Din18599Snapshot>`,
 //! which already carries its own `Mutation`/`OpText`/`OpBinary` impls — nothing to implement here.
 
 

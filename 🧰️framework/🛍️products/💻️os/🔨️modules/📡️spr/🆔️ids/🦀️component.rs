@@ -17,12 +17,12 @@ pub struct ActorId(pub String);
 /// @emoji 📄️ A stable identifier for one document.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
-pub struct DocumentId(pub String);
+pub struct ArtifactId(pub String);
 
 /// @emoji 🔢️ A monotone document version counter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
-pub struct DocumentVersion(pub u64);
+pub struct ArtifactVersion(pub u64);
 
 /// @emoji 🧬️ A stable identifier for one document/operation schema.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

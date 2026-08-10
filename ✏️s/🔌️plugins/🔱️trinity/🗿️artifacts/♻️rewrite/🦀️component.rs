@@ -72,7 +72,7 @@ pub use super::snapshot::schema::RewriteSnapshot;
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 //#endregion 🔖️Types
 
-// 📜️ `RewriteSnapshot`/`RewriteRuleMutation` derive their `store::DocumentDsl`/`protocol::OpText`
+// 📜️ `RewriteSnapshot`/`RewriteRuleMutation` derive their `store::ArtifactDsl`/`protocol::OpText`
 // impls directly (see `#[derive(dsl::DslRecord)]` above and `#[derive(dsl::DslEnum)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `JackSnapshot`).

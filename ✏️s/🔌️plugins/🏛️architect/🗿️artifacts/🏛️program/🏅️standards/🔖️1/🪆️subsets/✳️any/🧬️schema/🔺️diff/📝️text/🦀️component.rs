@@ -2104,13 +2104,13 @@ pub fn diff_quality(mutation: &CollectionMutation<EntityId, QualityRecord, Quali
 }
 
 /// 🏗️ Field delta for `documents` collection mutation.
-pub fn diff_documents(mutation: &CollectionMutation<EntityId, DocumentRecord, DocumentRecordPatch>, base: &[DocumentRecord]) -> ProgramDiff {
+pub fn diff_documents(mutation: &CollectionMutation<EntityId, ArtifactRecord, ArtifactRecordPatch>, base: &[ArtifactRecord]) -> ProgramDiff {
     let (added, removed, patched, reordered) = collection_delta_from_mutation(mutation, base);
     ProgramDiff {
-        documents: Some(ProgramDocumentsDelta {
+        documents: Some(ProgramArtifactsDelta {
             added,
             removed,
-            patched: patched.into_iter().map(|(id, patch)| ProgramDocumentsPatchEntry { id, patch }).collect(),
+            patched: patched.into_iter().map(|(id, patch)| ProgramArtifactsPatchEntry { id, patch }).collect(),
             reordered,
         }),
         ..ProgramDiff::default()

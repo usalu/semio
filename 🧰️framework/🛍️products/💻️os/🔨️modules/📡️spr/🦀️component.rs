@@ -19,7 +19,7 @@ pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, 
 pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
 
 pub use crate::os_spr::causal::{
-    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, DocumentDiff,
+    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff,
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome,
 };
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
@@ -27,7 +27,7 @@ pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, mutation_descriptor, register_mutation_descriptor, CollectionDiff, CollectionMutation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
     OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
 };
-pub use crate::os_spr::wire::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+pub use crate::os_spr::wire::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;
 pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
 //#endregion 🔖️Reexports
@@ -209,7 +209,7 @@ mod tests {
         let hlt = HybridLogicalTimestamp::new(1, 1000);
         assert_eq!(hlt.physical_ms, 1000);
         let _ = ActorId("actor-1".to_string());
-        let _ = DocumentId("doc-1".to_string());
+        let _ = ArtifactId("doc-1".to_string());
     }
     //#endregion 🔖️Reexports
 

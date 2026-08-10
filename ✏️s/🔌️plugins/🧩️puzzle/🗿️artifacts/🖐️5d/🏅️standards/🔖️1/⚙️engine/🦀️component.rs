@@ -173,14 +173,14 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️WasmBridge
-/// 🔤️ Parses `.puzzle5d` DSL text (`Puzzle5dSnapshot`'s `dsl::DslDocument` grammar) into the same
+/// 🔤️ Parses `.puzzle5d` DSL text (`Puzzle5dSnapshot`'s `dsl::DslArtifact` grammar) into the same
 /// camelCase JSON shape callers previously got from a hand-authored `*.5d.json` fixture — lets
 /// non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the
 /// DSL grammar.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen::prelude::wasm_bindgen(js_name = puzzle5dParseDslJson)]
 pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, wasm_bindgen::JsValue> {
-    use store::DocumentDsl;
+    use store::ArtifactDsl;
     let projection = Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))
 }

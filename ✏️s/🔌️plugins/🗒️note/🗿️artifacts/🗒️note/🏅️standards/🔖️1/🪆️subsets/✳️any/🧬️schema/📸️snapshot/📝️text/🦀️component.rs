@@ -14,12 +14,12 @@ pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../�
 
 /// 📖️ Parses `.note` DSL text into a `NoteSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, store::TextError> {
-    <NoteSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <NoteSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `NoteSnapshot` back to `.note` DSL text.
 pub fn print_dsl(document: &NoteSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

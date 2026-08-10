@@ -371,10 +371,16 @@ Overhaul and complete everything.
 The goal is to have a an artifact system where artifacts can evolve, adhere to existing specifications and are fully integrated into the os system (apps can reuse the builder/analyzer/composer of other plugins).
 Everything must be thought together (schema, standards, subsets, version control, multi-user, etc)
 You must use existing files for testing (recreate them by using the anaylzer and then the builder).
-Some violations:
+Here a list of examples (copy them over to the artifact example assets folder):
+- ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/📄️bachelor-thesis-ueli-saluz.pdf
+- temp/architectural_example.dwg
+- 🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️dancing.gif
+- 🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️base.glb
+
+Some more violations:
 e.g. gltf and glb are not different artifact, just different serialization of the same artifact.
 e.g. most test are not real tests for testing artifacts internals but just stubs such as ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🧪️tests/🦀️test.rs
-e.g. the builders must be specific to where they are such as ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs which should be usable to build a full 1.1. svg artifact.
+e.g. the builders must be specific to where they are such as ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs which should be usable to build a full 1.1. svg artifact
 
 ---
 

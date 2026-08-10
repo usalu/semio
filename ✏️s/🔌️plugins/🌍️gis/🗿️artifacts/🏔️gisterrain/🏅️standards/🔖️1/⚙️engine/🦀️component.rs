@@ -19,7 +19,7 @@ pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
 /// exaggeration=...` header (see `crate::artifacts::gisterrain::GisTerrainSnapshot`'s
 /// derive-generated `.gisterrain` DSL).
 pub fn default_terrain_document() -> GisTerrainSnapshot {
-    <GisTerrainSnapshot as store::DocumentDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
+    <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -27,7 +27,7 @@ pub fn default_terrain_document() -> GisTerrainSnapshot {
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
 /// read-only pins/project-origin data rendered alongside the document; the `gisterrain
 /// exaggeration=...` header line those same files start with is instead read by
-/// `GisTerrainSnapshot`'s own derive-generated `DocumentDsl`, since exaggeration is undoable document
+/// `GisTerrainSnapshot`'s own derive-generated `ArtifactDsl`, since exaggeration is undoable document
 /// state.
 mod terrain_fixture_text {
     use super::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};

@@ -1,7 +1,7 @@
 //! 📜️ Wires artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! The `.wires` textual DSL and op-text grammar are declared, not hand-rolled — see
-//! `impl store::DocumentDsl for WiresSnapshot` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
+//! `impl store::ArtifactDsl for WiresSnapshot` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
 //! `#[derive(dsl::DslEnum)]` on `WiresMutation` (in `crate::artifacts::wires::op`).
 //! `WiresSnapshot` itself keeps `wires_fixture`/`board_fixture` as opaque `dsl::DslValue` (the
 //! `op`/`ui`/`engine` code addresses board nodes/edges and wires relationships generically by id for
@@ -34,12 +34,12 @@ pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../..
 
 /// 📖️ Parses `.wires` DSL text into a `WiresSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WiresSnapshot, store::TextError> {
-    <WiresSnapshot as store::DocumentDsl>::parse_dsl(text)
+    <WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `WiresSnapshot` back to `.wires` DSL text.
 pub fn print_dsl(document: &WiresSnapshot) -> String {
-    store::DocumentDsl::print_dsl(document)
+    store::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

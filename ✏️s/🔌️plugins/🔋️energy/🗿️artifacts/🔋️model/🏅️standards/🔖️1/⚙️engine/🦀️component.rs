@@ -34,7 +34,7 @@ pub fn register() {
 
     register_artifact_schema();
     register_pilot_languages();
-    store::register_document_codec(store::DocumentCodec::of::<
+    store::register_document_codec(store::ArtifactCodec::of::<
         EnergyModelSnapshot,
         EnergyModelMutation,
     >(ENERGY_MODEL_DOCUMENT_SCHEMA));

@@ -9,7 +9,7 @@ use crate::artifacts::gisterrain::diff::{diff_exaggeration, diff_imported_featur
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
+use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
 /// 🗺️ Typed, invertible terrain operation.
@@ -49,8 +49,8 @@ impl Mutation<GisTerrainSnapshot> for GisTerrainMutation {
     }
 }
 
-pub type GisTerrainEnvelope = DocumentEnvelope<GisTerrainSnapshot, GisTerrainMutation>;
-pub type GisTerrainStore = DocumentStore<GisTerrainSnapshot, GisTerrainMutation>;
+pub type GisTerrainEnvelope = ArtifactEnvelope<GisTerrainSnapshot, GisTerrainMutation>;
+pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>;
 //#endregion 🔹Operation
 
 //#region 🔹Tests

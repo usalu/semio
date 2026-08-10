@@ -17,6 +17,6 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<ZipSnapshot, store::PackErro
 
 /// Decode a Binary pack then parse ZIP.
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ZipSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

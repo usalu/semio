@@ -84,7 +84,7 @@ pub mod db_cluster;
 pub mod db_sync;
 
 #[path = "../../📄️document/🦀️component.rs"]
-pub mod db_document;
+pub mod db_artifact;
 
 #[path = "../../🔍️query/🦀️component.rs"]
 pub mod db_query;

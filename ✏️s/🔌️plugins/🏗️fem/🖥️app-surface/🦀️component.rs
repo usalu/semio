@@ -69,7 +69,7 @@ pub fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
 /// 👁️ Ephemeral (non-document) view state selecting what the results window shows — which
 /// `fem2d_solve_all`/`fem3d_solve_all` case-or-combination id (`source_id`) and which `DisplayMode`.
 /// Mutated by the `setResultDisplay` VIEW action (`ActionEmit::default()`, no operations — never recorded in
-/// history) and lives directly on the app struct, per `DocumentApp::handle_action`'s `&mut self`.
+/// history) and lives directly on the app struct, per `ArtifactApp::handle_action`'s `&mut self`.
 #[derive(Clone, Debug, Default)]
 pub struct ResultDisplay {
     pub source_id: Option<String>,

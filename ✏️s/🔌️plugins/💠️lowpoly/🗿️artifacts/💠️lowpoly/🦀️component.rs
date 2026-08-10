@@ -164,7 +164,7 @@ pub struct LowpolyObjectPatch {
     pub transform: Option<LowpolyTransform>,
     // 🧬️ Unlike `LowpolyObject::mesh_json` (see its doc comment for the confirmed engine-gap reason
     // it stays plain), `#[dsl(lang = "json")]` IS safe here: `LowpolyObjectPatch` only derives
-    // `dsl::DslRecord` (never `DslDocument`) and is only ever printed through `DslOps::print_op`,
+    // `dsl::DslRecord` (never `DslArtifact`) and is only ever printed through `DslOps::print_op`,
     // which always uses `JoinMode::Inline` — `Shape::Embed` renders as an ordinary escaped quoted
     // string in Inline mode (never a fence), so the Document-mode list-nesting fence-glue bug this
     // record never reaches simply doesn't apply. Confirmed via the existing `op_text_round_trip_*`

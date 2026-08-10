@@ -21,6 +21,6 @@ pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError
 
 /// Encode as deflate pack bytes.
 pub fn serialize_bytes(from: &ZipSnapshot) -> Result<Vec<u8>, store::PackError> {
-    store::DocumentPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
+    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

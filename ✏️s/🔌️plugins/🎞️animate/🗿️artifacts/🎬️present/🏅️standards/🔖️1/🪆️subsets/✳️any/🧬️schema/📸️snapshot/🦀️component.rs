@@ -65,8 +65,8 @@ pub(crate) fn present_snapshot_from_dsl(dsl_snapshot: PresentSnapshotDsl) -> Pre
 }
 //#endregion 🔖️DslMirror
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for PresentSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for PresentSnapshotDsl {
     const EXTENSION: &'static str = "present";
     fn envelope_id() -> &'static str {
         PRESENT_DOCUMENT_SCHEMA
@@ -86,7 +86,7 @@ impl store::DocumentDsl for PresentSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -95,11 +95,11 @@ impl store::DocumentDsl for PresentSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for PresentSnapshotDsl {
+impl store::ArtifactPack for PresentSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -108,10 +108,10 @@ impl store::DocumentPack for PresentSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -123,27 +123,27 @@ impl store::DocumentPack for PresentSnapshotDsl {
     }
 }
 
-impl store::DocumentDsl for PresentSnapshot {
+impl store::ArtifactDsl for PresentSnapshot {
     const EXTENSION: &'static str = "present";
     fn envelope_id() -> &'static str {
         PRESENT_DOCUMENT_SCHEMA
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <PresentSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <PresentSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         Ok(present_snapshot_from_dsl(parsed))
     }
     fn print_dsl(&self) -> String {
-        <PresentSnapshotDsl as store::DocumentDsl>::print_dsl(&present_snapshot_to_dsl(self))
+        <PresentSnapshotDsl as store::ArtifactDsl>::print_dsl(&present_snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for PresentSnapshot {
+impl store::ArtifactPack for PresentSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <PresentSnapshotDsl as store::DocumentPack>::encode_pack_with(&present_snapshot_to_dsl(self), options)
+        <PresentSnapshotDsl as store::ArtifactPack>::encode_pack_with(&present_snapshot_to_dsl(self), options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <PresentSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <PresentSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         Ok(present_snapshot_from_dsl(parsed))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

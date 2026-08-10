@@ -11,7 +11,7 @@ pub use crate::artifacts::program::registers::*;
 pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 
 #[cfg(test)]
-use store::DocumentDsl;
+use store::ArtifactDsl;
 
 /// @emoji 📜️ Persisted architect program document schema identifier.
 pub use crate::artifacts::program::schema::mutations::ProgramMutation;
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(decoded.adjacencies.len(), 1);
     }
 
-    // #region 🔖️DslDocument
+    // #region 🔖️DslArtifact
     #[test]
     fn empty_plugin_dsl_round_trips() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
@@ -387,5 +387,5 @@ mod tests {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&parsed);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&parsed);
     }
-    // #endregion 🔖️DslDocument
+    // #endregion 🔖️DslArtifact
 }

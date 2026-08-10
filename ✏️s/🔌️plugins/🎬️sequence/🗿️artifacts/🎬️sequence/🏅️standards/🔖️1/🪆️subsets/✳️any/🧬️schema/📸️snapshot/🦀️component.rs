@@ -90,8 +90,8 @@ pub(crate) fn sequence_snapshot_from_dsl(dsl_snapshot: SequenceSnapshotDsl) -> R
 }
 //#endregion 🔖️DslMirror
 
-//#region 🔖️HandcraftedDocumentCodecs
-impl store::DocumentDsl for SequenceSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for SequenceSnapshotDsl {
     const EXTENSION: &'static str = "sequence";
     fn envelope_id() -> &'static str {
         "sequence.sequence"
@@ -111,7 +111,7 @@ impl store::DocumentDsl for SequenceSnapshotDsl {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -120,11 +120,11 @@ impl store::DocumentDsl for SequenceSnapshotDsl {
     }
 }
 
-impl store::DocumentPack for SequenceSnapshotDsl {
+impl store::ArtifactPack for SequenceSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -133,10 +133,10 @@ impl store::DocumentPack for SequenceSnapshotDsl {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -148,27 +148,27 @@ impl store::DocumentPack for SequenceSnapshotDsl {
     }
 }
 
-impl store::DocumentDsl for SequenceSnapshot {
+impl store::ArtifactDsl for SequenceSnapshot {
     const EXTENSION: &'static str = "sequence";
     fn envelope_id() -> &'static str {
         "sequence.sequence"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <SequenceSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <SequenceSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         sequence_snapshot_from_dsl(parsed).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        <SequenceSnapshotDsl as store::DocumentDsl>::print_dsl(&sequence_snapshot_to_dsl(self))
+        <SequenceSnapshotDsl as store::ArtifactDsl>::print_dsl(&sequence_snapshot_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for SequenceSnapshot {
+impl store::ArtifactPack for SequenceSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <SequenceSnapshotDsl as store::DocumentPack>::encode_pack_with(&sequence_snapshot_to_dsl(self), options)
+        <SequenceSnapshotDsl as store::ArtifactPack>::encode_pack_with(&sequence_snapshot_to_dsl(self), options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <SequenceSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <SequenceSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         sequence_snapshot_from_dsl(parsed).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️HandcraftedArtifactCodecs

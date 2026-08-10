@@ -29,7 +29,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::ProtocolError>
 mod tests {
     use super::*;
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
-    use store::{create_document_envelope, DocumentCommand};
+    use store::{create_document_envelope, ArtifactCommand};
 
     fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dSnapshot {
         crate::artifacts::fem2d::Fem2dSnapshot {
@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn fem2d_document_text_round_trips_through_the_store() {
         let mut store = crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem2dMutation::SetSnapshot { snapshot: simply_supported_beam_doc() }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Fem2dMutation::SetSnapshot { snapshot: simply_supported_beam_doc() }], description: None }).expect("apply");
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
         semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
     }

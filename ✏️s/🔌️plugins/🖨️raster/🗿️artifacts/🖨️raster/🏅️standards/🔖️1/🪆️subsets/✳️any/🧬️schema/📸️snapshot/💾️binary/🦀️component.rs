@@ -13,12 +13,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `RasterSnapshot` to its binary pack form.
 pub fn encode(document: &RasterSnapshot) -> Vec<u8> {
-    store::DocumentPack::encode_pack(document)
+    store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `RasterSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
-    <RasterSnapshot as store::DocumentPack>::decode_pack(bytes)
+    <RasterSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -103,13 +103,13 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::engine::empty_raster_document(), None);
-        let mut store = DocumentStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope);
         store
-            .dispatch(DocumentCommand::Apply {
+            .dispatch(ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::AddLayer {
                     parent_id: None,
                     index: 0,
@@ -130,7 +130,7 @@ mod tests {
             })
             .expect("apply");
         let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

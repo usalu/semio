@@ -10,7 +10,7 @@ use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct PresentDocumentVcs {
+pub struct PresentArtifactVcs {
     store: RefCell<PresentStore>,
 }
 
@@ -26,9 +26,9 @@ pub fn materialize_present_projection_json_wasm(envelope_json: &str) -> Result<S
 }
 
 #[wasm_bindgen]
-impl PresentDocumentVcs {
+impl PresentArtifactVcs {
     #[wasm_bindgen(constructor)]
-    pub fn new(envelope_json: Option<String>) -> Result<PresentDocumentVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<PresentArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;

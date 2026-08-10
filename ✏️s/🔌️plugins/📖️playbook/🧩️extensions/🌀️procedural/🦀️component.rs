@@ -7,7 +7,7 @@ use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
-    Contribution, DocumentApp, DocumentView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
+    Contribution, ArtifactApp, ArtifactView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -29,7 +29,7 @@ const SOLID_MEDIA_FORMATS: [&str; 4] = ["step", "obj", "stl", "glb"];
 const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
 // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-// handcrafted DSL (`store::DocumentDsl`) that this module (which parses the content as a raw
+// handcrafted DSL (`store::ArtifactDsl`) that this module (which parses the content as a raw
 // `FlowFixture`, not a `Procedural3dDocument`) doesn't read — inlined the same flow-fixture JSON
 // this module actually needs, decoupled from procedural's document format.
 const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
@@ -85,7 +85,7 @@ fn resolve_labels<L: AppLabels>() -> &'static L {
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "procmodule")]
 struct ModuleRenderPayload {
@@ -95,7 +95,7 @@ struct ModuleRenderPayload {
     /// set is driven entirely by whichever `Widget::InputSlider`/`Widget::Neuron` ids the referenced
     /// `fixture_slug`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
-    /// fixed schema spans all fixtures, so a typed `dsl::DslDocument` derive doesn't apply here.
+    /// fixed schema spans all fixtures, so a typed `dsl::DslArtifact` derive doesn't apply here.
     #[serde(default = "default_params_field")]
     #[dsl(value)]
     params: dsl::DslValue,
@@ -109,9 +109,9 @@ struct ModuleRenderPayload {
     interactive: bool,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::DocumentDsl for ModuleRenderPayload {
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for ModuleRenderPayload {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         "playbook.procedural"
@@ -131,7 +131,7 @@ impl store::DocumentDsl for ModuleRenderPayload {
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
         )
@@ -140,12 +140,12 @@ impl store::DocumentDsl for ModuleRenderPayload {
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::DocumentPack for ModuleRenderPayload {
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for ModuleRenderPayload {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
+            <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
@@ -154,10 +154,10 @@ impl store::DocumentPack for ModuleRenderPayload {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
+                <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
@@ -169,7 +169,7 @@ impl store::DocumentPack for ModuleRenderPayload {
     }
 }
 
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️ArtifactCodec
 
 
 fn default_params_field() -> dsl::DslValue {
@@ -177,7 +177,7 @@ fn default_params_field() -> dsl::DslValue {
 }
 
 /// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
-/// as `DocumentApp::initial_snapshot`; live slot renders override it with the forms-supplied payload.
+/// as `ArtifactApp::initial_snapshot`; live slot renders override it with the forms-supplied payload.
 fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
@@ -704,7 +704,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
 //#endregion 🔖️Params
 
 //#region 🔖️Command
-/// 🎯️ B1: this module's `DocumentApp::Command` — the SOLE dispatch surface for the solid
+/// 🎯️ B1: this module's `ArtifactApp::Command` — the SOLE dispatch surface for the solid
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 enum Command {
@@ -729,7 +729,7 @@ impl protocol::OpBinary for Command {
 #[derive(Default)]
 struct ModuleApp;
 
-impl DocumentApp for ModuleApp {
+impl ArtifactApp for ModuleApp {
     type Snapshot = ModuleRenderPayload;
     type Mutation = ModulePayloadMutation;
     type Config = semio_framework_plugin::NoConfig;
@@ -772,7 +772,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn handle(command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Command, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.snapshot.clone();
@@ -787,7 +787,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
@@ -862,14 +862,14 @@ semio_framework_plugin::extension_exports!(module_extension_bundle);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsArtifactApp};
 
     fn meta() -> ActionMeta {
         ActionMeta { actor: "local".into(), instance_id: 1 }
     }
 
-    fn new_app() -> VcsDocumentApp<ModuleApp> {
-        VcsDocumentApp::new(ModuleApp)
+    fn new_app() -> VcsArtifactApp<ModuleApp> {
+        VcsArtifactApp::new(ModuleApp)
     }
 
     fn payload_json(params: Value) -> String {
@@ -971,7 +971,7 @@ mod tests {
         let export = definition.actions.iter().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
         assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsDocumentApp::with_registry(ModuleApp, registry);
+        let mut app = VcsArtifactApp::with_registry(ModuleApp, registry);
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload operation still applies and stashes a result.
         app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).expect("export");
@@ -1024,19 +1024,19 @@ mod tests {
     /// `ModulePayloadMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside
     /// this file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Dispatches through a standalone
-    /// `store::DocumentStore` directly (this app has no separate dsl/pack/protocol crate split, so
+    /// `store::ArtifactStore` directly (this app has no separate dsl/pack/protocol crate split, so
     /// there is no existing whole-store test to extend).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: DocumentStore<ModuleRenderPayload, ModulePayloadMutation> = DocumentStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
+        let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> = ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
         let mut payload = default_payload();
         payload.interactive = false;
-        store.dispatch(DocumentCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");
         let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslAndOpText

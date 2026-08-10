@@ -11,7 +11,7 @@ pub fn deserialize(from: &PptxSnapshot) -> Result<PresentSnapshot, store::TextEr
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PresentSnapshot, store::TextError> {
-    let wire = <PptxSnapshot as store::DocumentPack>::decode_pack(bytes)
+    let wire = <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)
         .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     deserialize(&wire)
 }

@@ -229,13 +229,13 @@ mod tests {
     #[test]
     fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
-        let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
+        let mut doc_store = store::ArtifactStore::new(envelope);
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
         ::store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    fn create_document_envelope_for_test() -> store::DocumentEnvelope<JackSnapshot, TrinityGraphMutation> {
+    fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
         create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
     }
     use store::create_document_envelope;
@@ -318,14 +318,14 @@ mod tests {
 
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{DocumentId, Edit, SchemaId};
+        use protocol::{ArtifactId, Edit, SchemaId};
         use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;
 
         let mut store = TrinityGraphStore::new(create_document_envelope_for_test());
         crate::artifacts::jack::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }]).unwrap_or(());
         if let Some(edit) = store.envelope().vcs.edits.last() {
             let edit: &Edit<TrinityGraphMutation> = edit;
-            ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+            ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
         }
     }
 }

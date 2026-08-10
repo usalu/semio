@@ -1,4 +1,4 @@
-//! 🧊️ Puzzle 3d play app — the plugin's 3d play app: its `DocumentApp` impl (dispatch-only), the
+//! 🧊️ Puzzle 3d play app — the plugin's 3d play app: its `ArtifactApp` impl (dispatch-only), the
 //! structural-twin fixture document model its command/panel/window nodes mutate and render, the
 //! attraction resolver that keeps every attracted object's pose derived from its attracting root,
 //! and the manifest that stitches those nodes together.
@@ -6,7 +6,7 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/🧊️main`. This file dispatches and stitches.
 //!
-//! 🌉️ `DocumentApp::Snapshot` is the `Puzzle3dPlaySnapshot` newtype over a bare
+//! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle3dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle3d::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle3dSnapshot` — the `Puzzle3dFixture` model below is this app's own structural twin of it,
 //! and each action emits the granular typed operation delta
@@ -29,7 +29,7 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, App, AppIo, ConfigView, DialogDefinition,
-    DocumentApp, DraftView, NoDraft, NoDraftMutation, DocumentView, Emit, Fault, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec,
+    ArtifactApp, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec,
     MediaType, PortMultiplicity, SelectionSet, ToolRef, UiNode, UiTreeSectionNode, WindowEngagement, WindowMeasure, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,7 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// the export handlers' plain-function-pointer signature.
 pub static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `DocumentApp::Snapshot`) stays a
+/// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `ArtifactApp::Snapshot`) stays a
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dSnapshot`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
@@ -75,7 +75,7 @@ pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| par
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle3dSnapshot as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
+    let projection = <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
@@ -223,7 +223,7 @@ pub struct Puzzle3dFixture {
 }
 
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle3dFixture`
-/// json) with the app's ephemeral view state. Never persisted — the `VcsDocumentApp` store owns the
+/// json) with the app's ephemeral view state. Never persisted — the `VcsArtifactApp` store owns the
 /// fixture and `Puzzle3dConfig` owns the runtime — but rebuilt per call so the panel/world/engagement
 /// helpers keep one `&Puzzle3dScene` signature.
 #[derive(Clone)]
@@ -1866,7 +1866,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels
 
 //#region 🔖️PlayApp
 /// 🧩️ Puzzle-3d play app. Owns the precompute engine and the gumball scratch session; the persisted
-/// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsDocumentApp`'s operation store and
+/// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsArtifactApp`'s operation store and
 /// the view state in `Puzzle3dConfig`. Each action rehydrates the engine from the projection, mutates
 /// a transient [`Puzzle3dScene`], then emits the granular operation delta.
 ///
@@ -1874,7 +1874,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels
 /// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
 /// operations; `transformEnd` commits the base→scratch fixture delta once.
 thread_local! {
-    /// 🧠 Long-lived play session — `DocumentApp` methods are associated fns (no `&self`),
+    /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
     /// so the precompute/gumball scratch lives here until `EngineHandles` carries it.
     static PUZZLE3D_PLAY_SESSION: std::cell::RefCell<Puzzle3dPlayApp> = std::cell::RefCell::new(Puzzle3dPlayApp::default());
 }
@@ -2037,11 +2037,11 @@ impl Puzzle3dPlayApp {
         scene_from_projection(projection, runtime_for_window, &active_utility)
     }
 
-    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `DocumentApp::handle` with
+    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle3dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle3dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, config: &Puzzle3dConfig) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, config: &Puzzle3dConfig) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
         // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
@@ -2130,7 +2130,7 @@ impl Puzzle3dPlayApp {
         // makes this cheap, and keeps a pure read-only action (e.g. a re-materialize/re-save of an
         // already-idle window's options) from creating a no-op undo entry.
         let config_mutations = if &scene.runtime != config { vec![Puzzle3dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
-        Emit { document_mutations: operations, config_mutations, coalesce_key, effects, ui_scope, ..Default::default() }
+        Emit { artifact_mutations: operations, config_mutations, coalesce_key, effects, ui_scope, ..Default::default() }
     }
 }
 
@@ -2211,7 +2211,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
     }
 }
 
-impl DocumentApp for Puzzle3dPlayApp {
+impl ArtifactApp for Puzzle3dPlayApp {
     const APP_ID: &'static str = PUZZLE3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
     type Snapshot = Puzzle3dPlaySnapshot;
@@ -2247,7 +2247,7 @@ impl DocumentApp for Puzzle3dPlayApp {
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle3dCommand`.
-    fn handle(command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Puzzle3dCommand, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
         with_puzzle3d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot)))
     }
 
@@ -2279,7 +2279,7 @@ impl DocumentApp for Puzzle3dPlayApp {
     /// deterministic/order-independent — safe for `multiplicity: Many` fan-in) via the same
     /// `puzzle3d_operations_from_fixture_change` delta bridge every other fixture-mutating action
     /// already uses, so this never mutates anything directly — only real, undoable operations.
-    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media( port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -2313,7 +2313,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render( body_key: &str, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> UiNode  {
+    fn render( body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> UiNode  {
         with_puzzle3d_app(|app| {
                     let (base_body_key, window_id_from_key) = body_key.split_once(':').map(|(b, w)| (b, Some(w))).unwrap_or((body_key, None));
                     let config = cfg.snapshot;
@@ -2345,7 +2345,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             })
     }
 
-    fn window_engagements( doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement>  {
+    fn window_engagements( doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement>  {
         with_puzzle3d_app(|app| {
                     let config = cfg.snapshot;
                     let labels = puzzle3d_labels(config);
@@ -2361,7 +2361,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             })
     }
 
-    fn window_measures( doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+    fn window_measures( doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
         with_puzzle3d_app(|app| {
                     let config = cfg.snapshot;
                     let labels = puzzle3d_labels(config);
@@ -2375,7 +2375,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             })
     }
 
-    fn tool_measures( doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+    fn tool_measures( doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
         with_puzzle3d_app(|app| {
                     let config = cfg.snapshot;
                     let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
@@ -2387,7 +2387,7 @@ impl DocumentApp for Puzzle3dPlayApp {
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle3dPlaySnapshot>,
+        doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle3dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
@@ -2701,9 +2701,9 @@ pub fn register_puzzle3d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type Puzzle3dApp = VcsDocumentApp<Puzzle3dPlayApp>;
+    pub type Puzzle3dApp = VcsArtifactApp<Puzzle3dPlayApp>;
 
     pub fn meta(actor: &str) -> ActionMeta {
         testkit::meta(actor)
@@ -2719,7 +2719,7 @@ pub(crate) mod testkit {
         testkit::new_app_with_registry::<Puzzle3dPlayApp>(create_puzzle3d_app)
     }
 
-    /// 🧪️ B1: test-only replacement for the deleted `VcsDocumentApp::handle_action` app-dispatch path
+    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
@@ -2737,7 +2737,7 @@ pub(crate) mod testkit {
     }
 
     /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
-    /// how a split pane asks for its own materialized options (see `DocumentApp::render`).
+    /// how a split pane asks for its own materialized options (see `ArtifactApp::render`).
     pub fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
         render_body(app, &format!("{}:{window_id}", main::BODY_KEY))
     }
@@ -2882,7 +2882,7 @@ pub(crate) mod testkit {
     }
     //#endregion 🔖️MeasureProbes
 
-    /// 🖱️ `context_menu()` through the `VcsDocumentApp` funnel (already-organized rows).
+    /// 🖱️ `context_menu()` through the `VcsArtifactApp` funnel (already-organized rows).
     pub fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{ContextMenuRequest, UiMenuRef};
         let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
@@ -2977,14 +2977,14 @@ mod tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
-        use protocol::{DocumentId, Edit, SchemaId};
-        use store::{create_document_envelope, DocumentCommand};
+        use protocol::{ArtifactId, Edit, SchemaId};
+        use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
         let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
         let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -3502,7 +3502,7 @@ mod tests {
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection` moved off the document —
     /// they are View-kind and must never emit VCS operations, no matter what they mutate.
     #[test]
-    fn camera_actions_are_view_actions_that_emit_no_document_mutations() {
+    fn camera_actions_are_view_actions_that_emit_no_artifact_mutations() {
         let app_definition = create_puzzle3d_app();
         for action_id in ["setCamera", "setProjection", "setProjectionParam", "focusSelection"] {
             let def = app_definition.definition.actions.iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
@@ -3601,7 +3601,7 @@ mod tests {
         let inner = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let document = DocumentView { snapshot: &projection, history: &history };
+        let document = ArtifactView { snapshot: &projection, history: &history };
         let mut config = Puzzle3dConfig::default();
         let activate = inner.handle_action_impl(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None, &document, &config);
         for op in &activate.config_mutations {
@@ -4164,7 +4164,7 @@ mod tests {
 
     //#region 🔖️WorldSelection
     #[test]
-    fn world_select_emits_no_document_mutations() {
+    fn world_select_emits_no_artifact_mutations() {
         let mut app = app();
         let before = projection_of(&app);
         let object_id = first_object_id(&app);
@@ -4391,7 +4391,7 @@ mod tests {
     //#region 🔖️GesturePreview
     /// 🔬️ CW7 preview-law seam: `Puzzle3dPlayApp::gesture_preview` reads `transform_base`/
     /// `transform_scratch` only, never a `Puzzle3dMutation` — exercised directly against
-    /// `Puzzle3dPlayApp` (bypassing the `VcsDocumentApp` wrapper, which has no accessor into the
+    /// `Puzzle3dPlayApp` (bypassing the `VcsArtifactApp` wrapper, which has no accessor into the
     /// inner app) since `transform_drag_tick` is the natural per-tick gesture handler.
     #[test]
     fn gesture_preview_is_none_without_an_active_transform_drag() {
@@ -4409,20 +4409,20 @@ mod tests {
         let config = Puzzle3dConfig::default();
 
         let tick_a = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection, &config);
-        assert!(tick_a.document_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        assert!(tick_a.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (key, seq_after_a, payload_a) = app.gesture_preview().expect("a live gumball drag is previewable");
         assert_eq!(key, "gesture:transform");
         let value_a: Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
         assert!(!value_a["operations"].as_array().expect("operations array").is_empty(), "the delta anchored to the drag-start snapshot must reflect the first tick");
 
         let tick_b = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), &projection, &config);
-        assert!(tick_b.document_mutations.is_empty());
+        assert!(tick_b.artifact_mutations.is_empty());
         let (_, seq_after_b, payload_b) = app.gesture_preview().expect("still live mid-drag");
         assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
         assert_ne!(payload_a, payload_b, "the base-anchored delta accumulates both ticks, not just the latest one");
 
         let end = app.commit_transform(&projection, &config);
-        assert_eq!(end.document_mutations.len(), 1, "the whole drag commits as exactly one real operation");
+        assert_eq!(end.artifact_mutations.len(), 1, "the whole drag commits as exactly one real operation");
         assert!(app.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
     }
 
@@ -4453,7 +4453,7 @@ mod tests {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { snapshot: &projection, history: &history };
+        let doc = ArtifactView { snapshot: &projection, history: &history };
 
         let fragment = json!({
             "schema": "manifest",
@@ -4472,10 +4472,10 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
         let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-        assert!(!emit.document_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
+        assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
         let mut next_projection = projection.0.clone();
-        for operation in &emit.document_mutations {
+        for operation in &emit.artifact_mutations {
             next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection);
         }
 
@@ -4512,9 +4512,9 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle3dPlaySnapshot(current.clone());
-            let doc = DocumentView { snapshot: &doc_projection, history: &history };
+            let doc = ArtifactView { snapshot: &doc_projection, history: &history };
             let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-            for operation in &emit.document_mutations {
+            for operation in &emit.artifact_mutations {
                 current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);
             }
         }

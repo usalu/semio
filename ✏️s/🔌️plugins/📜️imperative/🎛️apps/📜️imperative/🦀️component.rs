@@ -1,4 +1,4 @@
-//! 🖥️ Imperative play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! 🖥️ Imperative play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
@@ -16,10 +16,10 @@ use crate::apps::imperative::terminology::imperative_labels;
 use crate::artifacts::imperative::engine::{default_snapshot, imperative_io};
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeSnapshot, IMPERATIVE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
-use store::DocumentPack;
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -69,11 +69,11 @@ use crate::apps::imperative::commands::view::{run, set_locale, set_selection};
 
 //#region 🔖️ImperativePlayApp
 /// 🧪️ B1: unit struct — the former `ImperativePlayRuntime`/`self.runtime` field now lives in
-/// `ImperativeConfig` (see `DocumentApp::Config`), written via `ImperativeConfigMutation`s.
+/// `ImperativeConfig` (see `ArtifactApp::Config`), written via `ImperativeConfigMutation`s.
 #[derive(Default)]
 pub struct ImperativePlayApp;
 
-impl DocumentApp for ImperativePlayApp {
+impl ArtifactApp for ImperativePlayApp {
     type Snapshot = ImperativeSnapshot;
     type Mutation = ImperativeMutation;
     type Config = ImperativeConfig;
@@ -102,14 +102,14 @@ impl DocumentApp for ImperativePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
-    /// `computation.imperative`-kinded output); `"document:out"` replicates `DocumentApp::export_media`'s
+    /// `computation.imperative`-kinded output); `"document:out"` replicates `ArtifactApp::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
-    fn export_media(port: &str, doc: &DocumentView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let host = crate::artifacts::imperative::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
@@ -126,7 +126,7 @@ impl DocumentApp for ImperativePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
         let document = doc.snapshot;
         let config = cfg.snapshot;
@@ -204,9 +204,9 @@ pub fn create_imperative_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-    pub type ImperativeApp = VcsDocumentApp<ImperativePlayApp>;
+    pub type ImperativeApp = VcsArtifactApp<ImperativePlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn imperative_app() -> ImperativeApp {
@@ -346,7 +346,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn add_step_materializes_kind_default_and_run_emits_no_document_mutations() {
+    fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
         let mut app = imperative_app_with_registry();
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
