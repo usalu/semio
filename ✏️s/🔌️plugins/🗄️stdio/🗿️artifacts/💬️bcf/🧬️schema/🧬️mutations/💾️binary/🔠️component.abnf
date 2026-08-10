@@ -1,3 +1,0 @@
-; abnf stdio.bcf mutations
-document = payload
-payload = *OCTET

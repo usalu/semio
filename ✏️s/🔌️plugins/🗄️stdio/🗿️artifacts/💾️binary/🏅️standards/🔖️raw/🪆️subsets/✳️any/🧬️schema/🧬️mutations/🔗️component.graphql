@@ -1,0 +1,5 @@
+# 🧬️ BinaryMutation
+type BinaryMutation {
+  schema: String! @state(class: PERSISTENT)
+  bytes: String! @state(class: PERSISTENT)
+}

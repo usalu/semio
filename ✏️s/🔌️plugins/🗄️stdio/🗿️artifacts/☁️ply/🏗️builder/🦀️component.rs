@@ -1,42 +1,21 @@
-//! 🏗️ PlyBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ PlyBuilder (final, artifact-level) — delegates to the 1.0 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::ply::{PlyDiff, PlyMutation, PlySnapshot};
+use crate::artifacts::ply::standards::v1_0::builder::PlyBuilder as PlyRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.ply` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct PlyBuilder {
-    snapshot: PlySnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct PlyBuilder(PlyRawBuilder);
 
 impl ArtifactBuilder for PlyBuilder {
     type Snapshot = PlySnapshot;
     type Mutation = PlyMutation;
     type Diff = PlyDiff;
-    fn empty() -> Self {
-        Self { snapshot: PlySnapshot::default(), diagnostics: Vec::new() }
-    }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
-    }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<PlySnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<PlySnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::ply::schema::mutations::apply_ply_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(PlyRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(PlyRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(PlyRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(PlyRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }
-//#endregion 🔖️Builder

@@ -21,93 +21,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/💾️binary/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_raw {
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/💾️binary/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/💾️binary/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_raw::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_raw::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_raw::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/💾️binary/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/💾️binary/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/💾️binary/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/💾️binary/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/💾️binary/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/💾️binary/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/💾️binary/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -124,93 +176,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📄txt/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📄txt/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_utf_8 {
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📄txt/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📄txt/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_utf_8::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_utf_8::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_utf_8::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📄txt/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📄txt/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📄txt/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📄txt/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📄txt/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📄txt/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📄txt/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -227,93 +331,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🔣️json/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_rfc8259 {
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🔣️json/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🔣️json/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_rfc8259::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_rfc8259::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_rfc8259::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🔣️json/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🔣️json/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🔣️json/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🔣️json/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🔣️json/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🔣️json/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🔣️json/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -330,93 +486,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📰xml/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📰xml/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_0 {
+                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📰xml/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📰xml/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📰xml/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📰xml/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📰xml/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📰xml/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📰xml/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📰xml/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📰xml/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -433,93 +641,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📊️csv/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_rfc4180 {
+                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📊️csv/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📊️csv/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_rfc4180::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_rfc4180::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_rfc4180::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📊️csv/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📊️csv/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📊️csv/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📊️csv/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📊️csv/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📊️csv/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📊️csv/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -536,93 +796,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📝️md/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📝️md/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_commonmark {
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📝️md/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📝️md/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_commonmark::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_commonmark::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_commonmark::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📝️md/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📝️md/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📝️md/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📝️md/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📝️md/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📝️md/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📝️md/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -639,93 +951,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🗜️deflate/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_rfc1950 {
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🗜️deflate/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🗜️deflate/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_rfc1950::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_rfc1950::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_rfc1950::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🗜️deflate/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🗜️deflate/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🗜️deflate/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🗜️deflate/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🗜️deflate/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🗜️deflate/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🗜️deflate/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -742,105 +1106,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎒️zip/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v2_0 {
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🎒️zip/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🎒️zip/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v2_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v2_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v2_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🎒️zip/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🎒️zip/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🎒️zip/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🎒️zip/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/🎒️zip/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🎒️zip/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/🎒️zip/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🎒️zip/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🎒️zip/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -863,93 +1291,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📐️step/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📐️step/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ap214 {
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📐️step/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📐️step/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ap214::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ap214::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ap214::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📐️step/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📐️step/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📐️step/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📐️step/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/📐️step/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📐️step/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📐️step/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -965,93 +1469,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🏗️ifc/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v4 {
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🏗️ifc/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🏗️ifc/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v4::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v4::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v4::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🏗️ifc/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🏗️ifc/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🏗️ifc/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🏗️ifc/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🏗️ifc/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🏗️ifc/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🏗️ifc/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1067,93 +1647,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/☁️las/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/☁️las/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_0 {
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/☁️las/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/☁️las/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/☁️las/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/☁️las/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/☁️las/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/☁️las/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/☁️las/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/☁️las/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/☁️las/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1169,93 +1801,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🧊️gltf/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v2_0 {
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🧊️gltf/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🧊️gltf/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v2_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v2_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v2_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🧊️gltf/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️gltf/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🧊️gltf/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🧊️gltf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🧊️gltf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🧊️gltf/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🧊️gltf/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1271,93 +1955,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🧊️obj/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v3_0 {
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🧊️obj/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🧊️obj/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v3_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v3_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v3_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🧊️obj/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️obj/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🧊️obj/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🧊️obj/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🧊️obj/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🧊️obj/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🧊️obj/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1373,93 +2109,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/☁️ply/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_0 {
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/☁️ply/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/☁️ply/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/☁️ply/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/☁️ply/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/☁️ply/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/☁️ply/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/☁️ply/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/☁️ply/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/☁️ply/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1475,93 +2263,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🖊️dxf/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_r12 {
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖊️dxf/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🖊️dxf/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_r12::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_r12::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_r12::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🖊️dxf/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🖊️dxf/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🖊️dxf/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🖊️dxf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🖊️dxf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🖊️dxf/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🖊️dxf/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1577,105 +2417,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🟪️stl/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ascii {
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🟪️stl/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🟪️stl/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ascii::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ascii::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ascii::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🟪️stl/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🟪️stl/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🟪️stl/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🟪️stl/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🟪️stl/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🟪️stl/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod txt {
-                            #[path = "../../🗿️artifacts/🟪️stl/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🟪️stl/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🟪️stl/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1691,93 +2595,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎨️svg/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_1 {
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🎨️svg/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🎨️svg/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_1::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_1::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_1::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🎨️svg/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🎨️svg/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🎨️svg/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/🎨️svg/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/🎨️svg/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🎨️svg/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🎨️svg/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1793,93 +2749,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🖼️bmp/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_v3 {
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖼️bmp/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🖼️bmp/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_v3::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_v3::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_v3::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🖼️bmp/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🖼️bmp/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🖼️bmp/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖼️bmp/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖼️bmp/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🖼️bmp/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🖼️bmp/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1895,93 +2903,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🖊️dwg/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ac1018 {
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖊️dwg/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🖊️dwg/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ac1018::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ac1018::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ac1018::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🖊️dwg/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🖊️dwg/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖊️dwg/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🖊️dwg/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🖊️dwg/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -1997,105 +3057,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📷️png/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📷️png/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_2 {
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📷️png/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📷️png/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_2::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_2::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_2::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📷️png/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📷️png/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📷️png/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📷️png/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/📷️png/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📷️png/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/📷️png/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📷️png/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📷️png/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2119,105 +3243,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📄️pdf/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1_4 {
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📄️pdf/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod deflate {
+                                            #[path = "."]
+                                            pub mod v_rfc1950 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📄️pdf/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1_4::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1_4::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1_4::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📄️pdf/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📄️pdf/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📄️pdf/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📄️pdf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/📄️pdf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📄️pdf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod deflate {
-                            #[path = "../../🗿️artifacts/📄️pdf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📄️pdf/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📄️pdf/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2241,93 +3429,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📷️jpg/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_jfif_1_01 {
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📷️jpg/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📷️jpg/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_jfif_1_01::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_jfif_1_01::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_jfif_1_01::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📷️jpg/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📷️jpg/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📷️jpg/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📷️jpg/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/📷️jpg/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📷️jpg/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📷️jpg/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2345,93 +3585,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎞️gif/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v87a {
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🎞️gif/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🎞️gif/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v87a::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v87a::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v87a::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🎞️gif/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🎞️gif/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🎞️gif/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🎞️gif/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🎞️gif/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🎞️gif/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🎞️gif/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2449,93 +3741,145 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🖼️tiff/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v6_0 {
+                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖼️tiff/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🖼️tiff/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v6_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v6_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v6_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🖼️tiff/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🖼️tiff/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🖼️tiff/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖼️tiff/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🖼️tiff/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🖼️tiff/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🖼️tiff/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2553,105 +3897,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📜️docx/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ecma_376 {
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📜️docx/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📜️docx/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ecma_376::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📜️docx/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📜️docx/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📜️docx/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/📜️docx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/📜️docx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/📜️docx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/📜️docx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📜️docx/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📜️docx/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2675,105 +4083,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🎞️pptx/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ecma_376 {
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🎞️pptx/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🎞️pptx/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ecma_376::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🎞️pptx/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🎞️pptx/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🎞️pptx/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/🎞️pptx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/🎞️pptx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/🎞️pptx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/🎞️pptx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🎞️pptx/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🎞️pptx/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2797,105 +4269,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📕️xlsx/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v_ecma_376 {
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/📕️xlsx/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📕️xlsx/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v_ecma_376::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/📕️xlsx/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/📕️xlsx/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/📕️xlsx/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/📕️xlsx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/📕️xlsx/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/📕️xlsx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/📕️xlsx/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/📕️xlsx/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/📕️xlsx/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -2919,105 +4455,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/💬️bcf/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v2_1 {
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/💬️bcf/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xml {
+                                            #[path = "."]
+                                            pub mod v1_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/💬️bcf/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v2_1::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v2_1::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v2_1::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/💬️bcf/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/💬️bcf/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/💬️bcf/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/💬️bcf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/💬️bcf/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod zip {
-                            #[path = "../../🗿️artifacts/💬️bcf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod xml {
-                            #[path = "../../🗿️artifacts/💬️bcf/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/💬️bcf/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/💬️bcf/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -3041,105 +4641,169 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🧊️glb/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v2_0 {
+                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🧊️glb/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🧊️glb/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🧊️glb/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v2_0::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v2_0::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v2_0::subsets::any::io::*;
+        }
+
         #[path = "../../🗿️artifacts/🧊️glb/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️glb/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🧊️glb/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🧊️glb/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🧊️glb/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod binary {
-                            #[path = "../../🗿️artifacts/🧊️glb/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🧊️glb/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-        }
+        #[path = "../../🗿️artifacts/🧊️glb/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🧊️glb/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
         pub mod examples {
             #[path = "."]

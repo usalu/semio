@@ -13,6 +13,9 @@ pub mod action_bus;
 #[path = "../../🔨️modules/🔺️mesh/🦀️component.rs"]
 pub mod mesh;
 
+#[path = "../../🔨️modules/🚪️io/🦀️component.rs"]
+pub mod io;
+
 #[path = "../../🔨️modules/🖥️platform/🦀️component.rs"]
 pub mod platform;
 
@@ -32,7 +35,8 @@ pub use mesh::{
     dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
-    MediaFormat, IoError, DocumentCodec, RasterImage, PageDoc, PageDocPage, TableDoc, TextDoc, Archive, ArchiveEntry,
+    MediaFormat, StdioFormatEntry, STDIO_FORMAT_CATALOG, normalize_stdio_format_kind, stdio_format_entry, stdio_format_kind_id, stdio_accept_filter, stdio_mimes_csv,
+    IoError, DocumentCodec, RasterImage, PageDoc, PageDocPage, TableDoc, TextDoc, Archive, ArchiveEntry,
     TxtCodec, MdCodec, JsonCodec, CsvCodec, BmpCodec, PngCodec, JpgCodec, GifCodec, TiffCodec,
     PdfCodec, DocxCodec, PptxCodec, XlsxCodec, ZipCodec, BcfCodec, PlyCodec, LasCodec, GltfCodec, DxfCodec, IfcCodec,
     OsMediaCapability, ArtifactKindSpec,
@@ -42,6 +46,13 @@ pub use mesh::{
     AppIo, ArtifactPresentation,
     ConfigFieldShape, ConfigFieldSpec, ConfigSpec,
     CommandFieldSpec, CommandVariantSpec, CommandGrammar,
+};
+pub use io::{
+    StandardId, SubsetId, Dialect,
+    AnalyzeSource, Confidence as IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
+    IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
+    IoDirection, IoKey, IoResolveError,
+    register_composer_entries, resolve as io_resolve, dialects_for as io_dialects_for,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use manifest::*;

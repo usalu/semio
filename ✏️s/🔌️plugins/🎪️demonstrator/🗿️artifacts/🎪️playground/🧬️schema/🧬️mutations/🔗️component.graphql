@@ -1,0 +1,5 @@
+# 🧬️ Playground mutation schema — persistent fields only.
+
+type PlaygroundMutation {
+  schema: String! @state(class: PERSISTENT)
+}

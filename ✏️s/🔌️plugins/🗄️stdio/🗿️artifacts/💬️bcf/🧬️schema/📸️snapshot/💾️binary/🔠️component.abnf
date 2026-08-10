@@ -1,3 +1,0 @@
-; abnf stdio.bcf snapshot
-document = payload
-payload = *OCTET

@@ -1,0 +1,69 @@
+syntax = "proto3";
+package semio.s.norm.en1991.mutation;
+
+message En1991Mutation {
+  // @state persistent
+  double area_m2 = 1;
+  // @state persistent
+  string category = 2;
+  // @state persistent
+  string annex = 3;
+  // @state persistent
+  string self_weight_material = 4;
+  // @state persistent
+  double self_weight_thickness_m = 5;
+  // @state persistent
+  double assumed_g_k_kn_m2 = 6;
+  // @state persistent
+  string fire_curve = 7;
+  // @state persistent
+  double fire_resistance_min = 8;
+  // @state persistent
+  double fire_member_capacity_c = 9;
+  // @state persistent
+  uint32 snow_zone = 10;
+  // @state persistent
+  double snow_altitude_m = 11;
+  // @state persistent
+  double en_s_k_kn_m2 = 12;
+  // @state persistent
+  uint32 wind_zone = 13;
+  // @state persistent
+  double en_v_b_m_s = 14;
+  // @state persistent
+  double delta_t_k = 15;
+  // @state persistent
+  string construction_activity = 16;
+  // @state persistent
+  double accidental_mass_t = 17;
+  // @state persistent
+  double accidental_speed_km_h = 18;
+  // @state persistent
+  uint32 bridge_lane = 19;
+  // @state persistent
+  double bridge_span_m = 20;
+  // @state persistent
+  double bridge_lane_width_m = 21;
+  // @state persistent
+  double bridge_moment_resistance_knm = 22;
+  // @state persistent
+  string crane_class = 23;
+  // @state persistent
+  string hoist_class = 24;
+  // @state persistent
+  double hoisting_speed_m_s = 25;
+  // @state persistent
+  double silo_bulk_density_kn_m3 = 26;
+  // @state persistent
+  double silo_height_m = 27;
+  // @state persistent
+  double silo_hydraulic_radius_m = 28;
+  // @state persistent
+  double silo_mu = 29;
+  // @state persistent
+  double silo_k = 30;
+  // @state persistent
+  double c_s = 31;
+  // @state persistent
+  double c_d = 32;
+}

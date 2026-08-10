@@ -1,6 +1,0 @@
-dialect grammar stdio.pdf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.pdf' NL
-body = payload NL?
-payload = *OCTET

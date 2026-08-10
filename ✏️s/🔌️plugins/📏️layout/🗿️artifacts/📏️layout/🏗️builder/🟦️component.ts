@@ -1,2 +1,6 @@
-/** LayoutBuilder */
-export interface LayoutBuilder { build(): { schema: string }; }
+/** 🏗️ LayoutBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.layout",
+  standard: "1",
+  subset: "*",
+} as const;

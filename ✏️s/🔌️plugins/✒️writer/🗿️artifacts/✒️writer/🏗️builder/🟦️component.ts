@@ -1,2 +1,6 @@
-/** WriterBuilder */
-export interface WriterBuilder { build(): { schema: string }; }
+/** 🏗️ WriterBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.writer",
+  standard: "1",
+  subset: "*",
+} as const;

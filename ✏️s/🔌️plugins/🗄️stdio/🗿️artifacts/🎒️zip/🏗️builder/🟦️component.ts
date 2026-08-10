@@ -1,2 +1,6 @@
-/** 🏗️ ZipBuilder facade (local until SDK W3). */
-export interface ZipBuilder { build(): { schema: string }; }
+/** 🏗️ ZipBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.zip",
+  standard: "2.0",
+  subset: "*",
+} as const;

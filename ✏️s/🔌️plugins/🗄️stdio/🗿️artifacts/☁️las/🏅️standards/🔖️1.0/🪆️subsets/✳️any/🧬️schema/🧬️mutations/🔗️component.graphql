@@ -1,0 +1,5 @@
+# 🧬️ LasMutation
+type LasMutation {
+  schema: String! @state(class: PERSISTENT)
+  PLACEHOLDER_BYTES_COLON String! @state(class: PERSISTENT)
+}

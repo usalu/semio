@@ -30,330 +30,389 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/🖨️raster/🦀️component.rs"]
         mod component;
         pub use component::*;
+
         #[path = "."]
-        pub mod schema {
-            #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod standards {
             #[path = "."]
-            pub mod snapshot {
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/📸️snapshot/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod diff {
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🔺️diff/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
-                pub mod binary;
-            }
-            #[path = "."]
-            pub mod mutations {
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                pub mod text;
-                #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
-                pub mod binary;
+            pub mod v1 {
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
+                pub mod composer;
                 #[path = "."]
-                pub mod move_layer {
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/↔️move-layer/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/↔️move-layer/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/↔️move-layer/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
-                }
-                #[path = "."]
-                pub mod add_layer {
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➕add-layer/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➕add-layer/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➕add-layer/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
-                }
-                #[path = "."]
-                pub mod remove_layer {
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➖remove-layer/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➖remove-layer/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/➖remove-layer/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
-                }
-                #[path = "."]
-                pub mod set_snapshot {
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
-                }
-                #[path = "."]
-                pub mod patch_layer {
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🩹patch-layer/🦠️mutation/🦀️component.rs"]
-                    pub mod mutation;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🩹patch-layer/🔺️diff/🦀️component.rs"]
-                    pub mod diff;
-                    #[path = "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🩹patch-layer/↩️inverse/🦀️component.rs"]
-                    pub mod inverse;
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                pub use text::*;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod move_layer {
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-layer/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-layer/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-layer/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod add_layer {
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-layer/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-layer/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-layer/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod remove_layer {
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-layer/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-layer/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-layer/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod patch_layer {
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹patch-layer/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹patch-layer/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹patch-layer/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod gif {
+                                            #[path = "."]
+                                            pub mod v87a {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️87a/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod svg {
+                                            #[path = "."]
+                                            pub mod v1_1 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod pdf {
+                                            #[path = "."]
+                                            pub mod v1_4 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod jpg {
+                                            #[path = "."]
+                                            pub mod v_jfif_1_01 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️jpg/🔖️jfif-1.01/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod png {
+                                            #[path = "."]
+                                            pub mod v1_2 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod dwg {
+                                            #[path = "."]
+                                            pub mod v_ac1018 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod bmp {
+                                            #[path = "."]
+                                            pub mod v_v3 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod tiff {
+                                            #[path = "."]
+                                            pub mod v6_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod gif {
+                                            #[path = "."]
+                                            pub mod v87a {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️87a/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod svg {
+                                            #[path = "."]
+                                            pub mod v1_1 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod pdf {
+                                            #[path = "."]
+                                            pub mod v1_4 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod jpg {
+                                            #[path = "."]
+                                            pub mod v_jfif_1_01 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🔖️jfif-1.01/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod png {
+                                            #[path = "."]
+                                            pub mod v1_2 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod dwg {
+                                            #[path = "."]
+                                            pub mod v_ac1018 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod bmp {
+                                            #[path = "."]
+                                            pub mod v_v3 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod tiff {
+                                            #[path = "."]
+                                            pub mod v6_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::raster::schema::mutations::text::*; pub use crate::artifacts::raster::schema::mutations::{apply_raster_mutation, RasterMutation}; }
-        pub mod dsl { pub use crate::artifacts::raster::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::raster::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::raster::schema::diff::text::*; pub use crate::artifacts::raster::schema::diff::*; pub mod schema { pub use crate::artifacts::raster::schema::diff::*; } pub mod text { pub use crate::artifacts::raster::schema::diff::text::*; } }
-        pub mod mutations { pub use crate::artifacts::raster::schema::mutations::*; }
-        pub mod snapshot { pub mod schema { pub use crate::artifacts::raster::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::raster::schema::snapshot::binary::*; } }
+
+        // ---- Shims: keep pre-migration module paths resolving for external callers ----
+        pub mod schema {
+            pub use super::standards::v1::subsets::any::schema::*;
+        }
+        pub mod engine {
+            pub use super::standards::v1::engine::*;
+        }
+        pub mod io {
+            pub use super::standards::v1::subsets::any::io::*;
+        }
+        pub mod op { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::text::*; pub use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation, RasterMutation}; }
+        pub mod dsl { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::diff::text::*; pub use crate::artifacts::raster::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::raster::standards::v1::subsets::any::schema::snapshot::binary::*; } }
+
         #[path = "../../🗿️artifacts/🖨️raster/🏗️builder/🦀️component.rs"]
         pub mod builder;
-        #[path = "../../🗿️artifacts/🖨️raster/🪓️decomposer/🦀️component.rs"]
-        pub mod decomposer;
+        #[path = "../../🗿️artifacts/🖨️raster/🧐️analyzer/🦀️component.rs"]
+        pub mod analyzer;
+        #[path = "../../🗿️artifacts/🖨️raster/🎹️composer/🦀️component.rs"]
+        pub mod composer;
+
         #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod examples {
             #[path = "."]
-            pub mod import {
-                #[path = "."]
-                pub mod deserializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod bmp {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️bmp/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod dwg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod gif {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod jpg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️jpg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod pdf {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod png {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod svg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod tiff {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️tiff/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod export {
-                #[path = "."]
-                pub mod serializers {
-                    #[path = "."]
-                    pub mod artifacts {
-                        #[path = "."]
-                        pub mod bmp {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod dwg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod gif {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod jpg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod json {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod pdf {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod png {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod svg {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod tiff {
-                            #[path = "../../🗿️artifacts/🖨️raster/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🦀️component.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod bmp {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::bmp::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::bmp::*;
-                }
-            }
-            #[path = "."]
-            pub mod dwg {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::dwg::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::dwg::*;
-                }
-            }
-            #[path = "."]
-            pub mod gif {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::gif::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::gif::*;
-                }
-            }
-            #[path = "."]
-            pub mod jpg {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::jpg::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::jpg::*;
-                }
-            }
-            #[path = "."]
-            pub mod json {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::json::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::json::*;
-                }
-            }
-            #[path = "."]
-            pub mod pdf {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::pdf::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::pdf::*;
-                }
-            }
-            #[path = "."]
-            pub mod png {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::png::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::png::*;
-                }
-            }
-            #[path = "."]
-            pub mod svg {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::svg::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::svg::*;
-                }
-            }
-            #[path = "."]
-            pub mod tiff {
-                #[path = "."]
-                pub mod export {
-                    pub use crate::artifacts::raster::io::export::serializers::artifacts::tiff::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    pub use crate::artifacts::raster::io::import::deserializers::artifacts::tiff::*;
-                }
+            pub mod demo {
+                #[path = "../../🗿️artifacts/🖨️raster/📚️examples/🎬️demo/🦀️component.rs"]
+                mod component;
+                pub use component::*;
             }
         }
-        #[path = "../../🗿️artifacts/🖨️raster/⚙️engine/🦀️component.rs"]
-        pub mod engine;
     }
 }
 

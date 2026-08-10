@@ -1,0 +1,42 @@
+[
+  {
+    "crate": "semio-s-plugin-stdio",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-s-plugin-note",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-s-plugin-cad",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-framework",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-framework-os",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-s-plugin-space",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-s-plugin-puzzle",
+    "exit": 0,
+    "ok": true
+  },
+  {
+    "crate": "semio-s-plugin-block",
+    "exit": 0,
+    "ok": true
+  }
+]

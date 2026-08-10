@@ -1,2 +1,6 @@
-/** 🏗️ PlyBuilder facade (local until SDK W3). */
-export interface PlyBuilder { build(): { schema: string }; }
+/** 🏗️ PlyBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.ply",
+  standard: "1.0",
+  subset: "*",
+} as const;

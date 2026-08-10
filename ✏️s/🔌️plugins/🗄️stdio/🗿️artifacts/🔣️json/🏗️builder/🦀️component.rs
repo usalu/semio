@@ -1,42 +1,21 @@
-//! 🏗️ JsonBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ JsonBuilder (final, artifact-level) — delegates to the rfc8259 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::json::{JsonDiff, JsonMutation, JsonSnapshot};
+use crate::artifacts::json::standards::v_rfc8259::builder::JsonBuilder as JsonRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.json` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct JsonBuilder {
-    snapshot: JsonSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct JsonBuilder(JsonRawBuilder);
 
 impl ArtifactBuilder for JsonBuilder {
     type Snapshot = JsonSnapshot;
     type Mutation = JsonMutation;
     type Diff = JsonDiff;
-    fn empty() -> Self {
-        Self { snapshot: JsonSnapshot::default(), diagnostics: Vec::new() }
-    }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
-    }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<JsonSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<JsonSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(JsonRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(JsonRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(JsonRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(JsonRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }
-//#endregion 🔖️Builder

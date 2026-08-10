@@ -1,0 +1,8 @@
+type GlbEntry {
+  name: String!
+  data: [Int!]!
+}
+type GlbMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [GlbEntry!]! @state(class: PERSISTENT)
+}

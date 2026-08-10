@@ -1,0 +1,93 @@
+syntax = "proto3";
+package semio.s.shooting.shooting.mutation;
+
+// 🧬️ Shooting mutation schema — persistent fields only.
+
+message ShootingMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  repeated ShootingAsset assets = 2;
+  // @state persistent
+  repeated ShootingSavedCamera saved_cameras = 3;
+  // @state persistent
+  ShootingSceneLighting scene = 4;
+  // @state persistent
+  repeated ShootingShot shots = 5;
+  // @state persistent
+  string active_shot_id = 6;
+  // @state persistent
+  string active_asset_id = 7;
+}
+
+message ShootingCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+  double fov = 4;
+  repeated double up = 5;
+  optional string projection = 6;
+}
+
+message ShootingSavedCamera {
+  string id = 1;
+  string label = 2;
+  ShootingCamera camera = 3;
+}
+
+message ShootingAsset {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+  string format = 4;
+  repeated double origin = 5;
+  repeated double orientation = 6;
+  repeated double scale = 7;
+}
+
+message ShootingShot {
+  string id = 1;
+  string label = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  string format = 5;
+  string shape = 6;
+  optional string background = 7;
+  optional string camera_id = 8;
+}
+
+message ShootingSun {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message ShootingAmbient {
+  double intensity = 1;
+  string color = 2;
+}
+
+message ShootingShadow {
+  bool enabled = 1;
+  double opacity = 2;
+  double softness = 3;
+}
+
+message ShootingMaterial {
+  string color = 1;
+  double metalness = 2;
+  double roughness = 3;
+  string emissive = 4;
+  double emissive_intensity = 5;
+}
+
+message ShootingSceneLighting {
+  string background = 1;
+  ShootingSun sun = 2;
+  ShootingAmbient ambient = 3;
+  ShootingShadow shadow = 4;
+  ShootingMaterial material = 5;
+  optional string emblem_base64 = 6;
+}

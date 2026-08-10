@@ -1,2 +1,6 @@
-/** RasterBuilder */
-export interface RasterBuilder { build(): { schema: string }; }
+/** 🏗️ RasterBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.raster",
+  standard: "1",
+  subset: "*",
+} as const;

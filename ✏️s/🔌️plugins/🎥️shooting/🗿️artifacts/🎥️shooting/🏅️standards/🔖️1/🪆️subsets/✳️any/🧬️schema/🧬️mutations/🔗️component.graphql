@@ -1,0 +1,83 @@
+# 🧬️ Shooting mutation schema — persistent fields only.
+
+type ShootingMutation {
+  schema: String! @state(class: PERSISTENT)
+  assets: [ShootingAsset!]! @state(class: PERSISTENT)
+  savedCameras: [ShootingSavedCamera!]! @state(class: PERSISTENT)
+  scene: ShootingSceneLighting! @state(class: PERSISTENT)
+  shots: [ShootingShot!]! @state(class: PERSISTENT)
+  activeShotId: String! @state(class: PERSISTENT)
+  activeAssetId: String! @state(class: PERSISTENT)
+}
+
+type ShootingCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  up: [Float!]
+  projection: String
+}
+
+type ShootingSavedCamera {
+  id: String!
+  label: String!
+  camera: ShootingCamera!
+}
+
+type ShootingAsset {
+  id: String!
+  name: String!
+  url: String!
+  format: String!
+  origin: [Float!]!
+  orientation: [Float!]
+  scale: [Float!]
+}
+
+type ShootingShot {
+  id: String!
+  label: String!
+  width: Int!
+  height: Int!
+  format: String!
+  shape: String!
+  background: String
+  cameraId: String
+}
+
+type ShootingSun {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type ShootingAmbient {
+  intensity: Float!
+  color: String!
+}
+
+type ShootingShadow {
+  enabled: Boolean!
+  opacity: Float!
+  softness: Float!
+}
+
+type ShootingMaterial {
+  color: String!
+  metalness: Float!
+  roughness: Float!
+  emissive: String!
+  emissiveIntensity: Float!
+}
+
+type ShootingSceneLighting {
+  background: String!
+  sun: ShootingSun!
+  ambient: ShootingAmbient!
+  shadow: ShootingShadow!
+  material: ShootingMaterial!
+  emblemBase64: String
+}

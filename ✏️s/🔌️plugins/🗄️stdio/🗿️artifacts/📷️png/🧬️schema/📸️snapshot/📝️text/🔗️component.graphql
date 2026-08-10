@@ -1,3 +1,0 @@
-# stdio.png snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }

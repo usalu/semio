@@ -1,0 +1,8 @@
+type TiffEntry {
+  name: String!
+  data: [Int!]!
+}
+type TiffMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [TiffEntry!]! @state(class: PERSISTENT)
+}

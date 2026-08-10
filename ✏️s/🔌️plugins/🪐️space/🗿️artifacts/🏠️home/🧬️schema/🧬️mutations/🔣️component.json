@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/space/home/mutation.json",
+  "title": "SHomeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "catalogGeneration"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "catalogGeneration": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0,
+      "x-semio-state": "persistent"
+    }
+  }
+}

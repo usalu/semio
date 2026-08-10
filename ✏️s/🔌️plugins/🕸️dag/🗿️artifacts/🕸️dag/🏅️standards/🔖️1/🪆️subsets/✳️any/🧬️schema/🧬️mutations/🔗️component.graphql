@@ -1,0 +1,8 @@
+# 📸️ DAG mutation schema.
+type DagMutation {
+  schema: String! @state(class: PERSISTENT)
+  nodes: [DagNodeSpec!]! @state(class: PERSISTENT)
+  edges: [DagFixtureEdge!]! @state(class: PERSISTENT)
+}
+type DagNodeSpec { id: String! }
+type DagFixtureEdge { id: String! source: String! target: String! }

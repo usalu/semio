@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_png.diff;
-message PngDiff {
-  string schema = 1;
-  string bytes_wire = 2;
-}

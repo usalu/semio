@@ -1,2 +1,6 @@
-/** 🏗️ DxfBuilder facade (local until SDK W3). */
-export interface DxfBuilder { build(): { schema: string }; }
+/** 🏗️ DxfBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.dxf",
+  standard: "r12",
+  subset: "*",
+} as const;

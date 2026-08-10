@@ -1,2 +1,6 @@
-/** DagBuilder */
-export interface DagBuilder { build(): { schema: string }; }
+/** 🏗️ DagBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.dag",
+  standard: "1",
+  subset: "*",
+} as const;

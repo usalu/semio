@@ -1,2 +1,6 @@
-/** 🏗️ XlsxBuilder facade (local until SDK W3). */
-export interface XlsxBuilder { build(): { schema: string }; }
+/** 🏗️ XlsxBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.xlsx",
+  standard: "ecma-376",
+  subset: "*",
+} as const;

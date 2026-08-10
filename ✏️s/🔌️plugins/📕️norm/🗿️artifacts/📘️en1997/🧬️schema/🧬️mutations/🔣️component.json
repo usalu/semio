@@ -1,0 +1,139 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1997/mutation.json",
+  "title": "En1997Mutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vEdKn",
+    "hEdKn",
+    "footingAreaM2",
+    "phiDeg",
+    "cKpa",
+    "gammaKnM3",
+    "bM",
+    "dFM",
+    "eSMpa",
+    "nu",
+    "designApproach",
+    "annex",
+    "settlementLimitMm",
+    "nPileEdKn",
+    "alphaS",
+    "pileDM",
+    "qSKpa",
+    "pileLM",
+    "qBKpa",
+    "pileBaseAreaM2",
+    "pileNProfiles",
+    "zInvestigatedM"
+  ],
+  "properties": {
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "footingAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "phiDeg": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cKpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "gammaKnM3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "dFM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "eSMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nu": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "designApproach": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "settlementLimitMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nPileEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "alphaS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileDM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "qSKpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileLM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "qBKpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileBaseAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileNProfiles": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "zInvestigatedM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    }
+  }
+}

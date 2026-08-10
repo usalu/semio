@@ -1,0 +1,5 @@
+# 🧬️ IfcMutation
+type IfcMutation {
+  schema: String! @state(class: PERSISTENT)
+  PLACEHOLDER_TEXT_COLON String! @state(class: PERSISTENT)
+}

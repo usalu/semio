@@ -1,0 +1,12 @@
+# 🧬️ Wires mutation schema — every field with its state class.
+
+scalar DslValue
+
+type WiresMutation {
+  wiresFixture: DslValue! @state(class: PERSISTENT)
+  boardFixture: DslValue! @state(class: PERSISTENT)
+}
+
+type WiresStringList {
+  values: [String!]!
+}

@@ -1,13 +1,13 @@
 {
-  "id": "26/08/10/STDIO-ARTIFACTS-AND-IO",
   "title": "Stdio Artifacts and Io",
   "status": "open",
-  "goal": "AI-OPTIMIZED-REPO",
-  "due": "2026-08-17",
-  "client": "cursor-chat",
-  "llm": "cursor-grok-4.5-high",
   "description": "Replace ad-hoc MediaFormat IO with a zero-app stdio plugin whose artifacts are the well-known file types. Absorb dsl/pack/op/spr/diff/mutations into nested schema/{snapshot,diff,mutations}/{text,binary}. Add required builder and decomposer facets. Rewrite import/export as artifact-to-artifact serializers/deserializers. Hand-roll all codecs to real fidelity. Enforce via taxonomy twins and seven new policy rules.",
-  "summary": "",
-  "files": [],
-  "note": "Opened without repo MCP (server not loaded in session); folder created to match ticket_open layout. Associated with AI-OPTIMIZED-REPO (same parent as ARTIFACT-IO-FACETS)."
+  "summary": "Delivered zero-app stdio plugin (29 artifacts), nested schema text/binary, builder/decomposer, 285 curated IO pairs, seven policy rules + launch gates, host/mimes rewire across W0–W7. W8 aggregate: cargo test -p semio-s-plugin-stdio 71/71; spot cargo check green; launch.json fresh; stdio policy rules 0/0/0/249/0/0/0 (schema-representation remainder on plugin trees only); plugin-registry check crash fixed, remaining findings documented. Closed locally (repo MCP unavailable). Post-close: filled 249 missing mutations schemaFormats leaves (graphql/json/proto) → schema-representation 0.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2539"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪c0729c652a754da290e9d93f3085b46f"
+  ]
 }

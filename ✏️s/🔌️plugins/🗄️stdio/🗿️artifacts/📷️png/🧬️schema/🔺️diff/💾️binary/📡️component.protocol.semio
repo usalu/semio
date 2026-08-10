@@ -1,3 +1,0 @@
-dialect protocol stdio.png.diff
-magic = %x00
-payload = *OCTET

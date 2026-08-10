@@ -1,0 +1,6 @@
+# 🧬️ S Home mutation schema — persistent fields only.
+
+type SHomeMutation {
+  schema: String! @state(class: PERSISTENT)
+  catalogGeneration: Long! @state(class: PERSISTENT)
+}

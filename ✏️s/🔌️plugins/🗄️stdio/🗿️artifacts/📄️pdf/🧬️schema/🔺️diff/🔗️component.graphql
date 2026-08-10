@@ -1,5 +1,0 @@
-# 🧬️ PdfDiff
-type PdfDiff {
-  schema: String
-  bytes: String
-}

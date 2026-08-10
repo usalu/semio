@@ -1,0 +1,118 @@
+{
+  "$id": "https://semio.tech/schema/s/note/note/mutation.json",
+  "title": "NoteMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "blocks",
+    "assets"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NoteBlockNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "gridSpacing": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "gridSubdivisions": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "gridOpacity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "snapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "snapGridSpacing": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pencilWidth": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "eraserRadius": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/NoteImageAsset"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "NoteBlockNode": {
+      "title": "NoteBlockNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "NoteImageAsset": {
+      "title": "NoteImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "data"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

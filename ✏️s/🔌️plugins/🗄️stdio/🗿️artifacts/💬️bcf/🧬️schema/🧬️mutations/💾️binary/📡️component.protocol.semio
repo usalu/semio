@@ -1,3 +1,0 @@
-dialect protocol stdio.bcf.mutations
-magic = %x00
-payload = *OCTET

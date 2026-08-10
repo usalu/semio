@@ -1,3 +1,0 @@
-; abnf stdio.pdf diff
-document = payload
-payload = *OCTET

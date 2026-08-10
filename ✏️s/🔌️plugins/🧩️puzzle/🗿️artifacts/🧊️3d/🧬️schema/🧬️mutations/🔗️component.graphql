@@ -1,0 +1,132 @@
+# 🧬️ Puzzle3d mutation schema — persistent fields only.
+
+type Puzzle3dMutation {
+  schema: String! @state(class: PERSISTENT)
+  domain: String! @state(class: PERSISTENT)
+  meta: Puzzle3dMeta! @state(class: PERSISTENT)
+  objects: [Puzzle3dObject!]! @state(class: PERSISTENT)
+  attractions: [Puzzle3dAttraction!]! @state(class: PERSISTENT)
+  targetVolumes: [Puzzle3dTargetVolume!]! @state(class: PERSISTENT)
+  references: [Puzzle3dReference!]! @state(class: PERSISTENT)
+}
+
+
+
+enum Puzzle3dObjectAnchor {
+  Fixed
+  Derived
+}
+
+enum Puzzle3dCompatSpecificity {
+  General
+  Object
+  Attraction
+  Vortex
+  Cable
+}
+
+type Puzzle3dAttraction {
+  id: String!
+  attracting: String!
+  attracted: String!
+  gap: Float!
+  shift: Float!
+  rise: Float!
+  rotation: Float!
+  turn: Float!
+  tilt: Float!
+  x: Float!
+  y: Float!
+}
+
+type Puzzle3dObject {
+  id: String!
+  label: String
+  objectKind: String
+  anchor: Puzzle3dObjectAnchor!
+  origin: [Float!]!
+  orientation: [Float!]
+  meshUrl: String
+  vortices: [Puzzle3dVortex!]!
+  hidden: Boolean!
+  locked: Boolean!
+}
+
+type Puzzle3dVortex {
+  id: String!
+  vortexKind: String
+  label: String
+  position: [Float!]!
+  direction: [Float!]
+  radius: Float
+  hidden: Boolean!
+  locked: Boolean!
+}
+
+type Puzzle3dRepresentation {
+  id: String!
+  name: String!
+  url: String!
+  mime: String!
+  tags: [String!]!
+  lod: String
+  description: String!
+}
+
+type Puzzle3dCatalogVortexTemplate {
+  id: String!
+  name: String!
+  label: String!
+  description: String!
+  icon: String!
+  vortexKind: String
+  point: [Float!]!
+  direction: [Float!]!
+  t: Float
+  mandatory: Boolean
+  radius: Float
+}
+
+type Puzzle3dCatalogObjectKind {
+  id: String!
+  name: String!
+  label: String!
+  description: String!
+  icon: String!
+  image: String!
+  unit: String!
+  abstract: Boolean!
+  baseKinds: [String!]!
+  representations: [Puzzle3dRepresentation!]!
+  vortices: [Puzzle3dCatalogVortexTemplate!]!
+}
+
+type Puzzle3dCatalogVortexKind {
+  id: String!
+  code: String
+  label: String
+  order: Int
+  compatibleWith: [String!]!
+  description: String!
+  icon: String!
+  color: String!
+  defaultCableKind: String!
+}
+
+type Puzzle3dKindCompatibility {
+  source: String!
+  target: String!
+  bidirectional: Boolean!
+  important: Boolean!
+  specificity: Puzzle3dCompatSpecificity!
+}
+
+type Puzzle3dMeta {
+  kindCatalogs: Puzzle3dKindCatalogs
+  kindCompatibility: [Puzzle3dKindCompatibility!]!
+}
+
+type Puzzle3dKindCatalogs {
+  objects: [Puzzle3dCatalogObjectKind!]!
+  vortices: [Puzzle3dCatalogVortexKind!]!
+}

@@ -1,0 +1,95 @@
+# 🧬️ Puzzle5d mutation schema — persistent fields only.
+
+type Puzzle5dMutation {
+  schema: String! @state(class: PERSISTENT)
+  domain: String! @state(class: PERSISTENT)
+  label: String @state(class: PERSISTENT)
+  meta: Puzzle5dMeta! @state(class: PERSISTENT)
+  kindCatalogs: Puzzle5dKindCatalogs @state(class: PERSISTENT)
+  kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: PERSISTENT)
+  parts: [Puzzle5dPart!]! @state(class: PERSISTENT)
+  fasteners: [Puzzle5dFastener!]! @state(class: PERSISTENT)
+}
+
+
+
+enum Puzzle5dPartAnchor { FIXED DERIVED }
+enum Puzzle5dCompatSpecificity { GENERAL PART FASTENER GRIP ROPE }
+
+type Puzzle5dAttribute { id: String key: String value: String definition: String }
+type Puzzle5dAuthor { id: String name: String email: String role: String rank: Int }
+type Puzzle5dRepresentation { id: String name: String url: String mime: String tags: [String!] lod: String description: String }
+type Puzzle5dGripTemplate {
+  id: String
+  name: String
+  label: String
+  description: String
+  icon: String
+  gripKind: String
+  point: [Float!]
+  direction: [Float!]
+  t: Float
+  mandatory: Boolean
+  radius: Float
+}
+type Puzzle5dCatalogPartKind {
+  id: String!
+  name: String
+  label: String
+  description: String
+  icon: String
+  image: String
+  unit: String
+  abstract: Boolean
+  baseKinds: [String!]
+  representations: [Puzzle5dRepresentation!]
+  grips: [Puzzle5dGripTemplate!]
+  attributes: [Puzzle5dAttribute!]
+  authors: [Puzzle5dAuthor!]
+}
+type Puzzle5dCatalogGripKind {
+  id: String!
+  code: String
+  label: String
+  order: Int
+  compatibleWith: [String!]
+  description: String
+  icon: String
+  color: String
+  defaultRopeKind: String
+}
+type Puzzle5dCatalogFastenerKind { id: String! name: String label: String }
+type Puzzle5dCatalogRopeKind { id: String! name: String label: String defaultFastenerKind: String }
+type Puzzle5dKindCatalogs {
+  parts: [Puzzle5dCatalogPartKind!]
+  grips: [Puzzle5dCatalogGripKind!]
+  fasteners: [Puzzle5dCatalogFastenerKind!]
+  ropes: [Puzzle5dCatalogRopeKind!]
+}
+type Puzzle5dKindCompatibility {
+  source: String!
+  target: String!
+  bidirectional: Boolean
+  important: Boolean
+  specificity: Puzzle5dCompatSpecificity
+}
+type Puzzle5dMeta { description: String }
+type Puzzle5dPart {
+  id: String!
+  partKind: String
+  anchor: Puzzle5dPartAnchor
+}
+type Puzzle5dFastener {
+  id: String!
+  source: String!
+  target: String!
+  fastenerKind: String
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  x: Float
+  y: Float
+}

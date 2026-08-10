@@ -1,0 +1,19 @@
+{
+  "canonical_path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fassets/\ud83d\udcc3\ufe0flist/\ud83d\udccb\ufe0fmimes.csv",
+  "canonical_exists": true,
+  "canonical_rows": 29,
+  "canonical_sha256": "a423c3451ea092d393fa7fbbeb42f624aeb227bd142853e35da7ff209286ebb0",
+  "canonical_header": "MIME,Extension,Name,FullName,Neutral,Dir,Kind",
+  "deleted_ui_duplicate_path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddb1\ufe0fui/\ud83d\uddbc\ufe0fassets/\ud83d\udcc3\ufe0flist/\ud83d\udccb\ufe0fmimes.csv",
+  "deleted_ui_duplicate_exists": false,
+  "framework_mimes_hits": [
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fassets/\ud83d\udcc3\ufe0flist/\ud83d\udccb\ufe0fmimes.csv"
+  ],
+  "cargo": {
+    "EXIT_FRAMEWORK": 0,
+    "EXIT_PLUGIN": 0,
+    "EXIT_OS_DEFAULT": 0,
+    "EXIT_OS_FULL": 0,
+    "EXIT_SPACE": 0
+  }
+}

@@ -1,2 +1,6 @@
-/** 🏗️ TxtBuilder facade (local until SDK W3). */
-export interface TxtBuilder { build(): { schema: string }; }
+/** 🏗️ TxtBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.txt",
+  standard: "utf-8",
+  subset: "*",
+} as const;

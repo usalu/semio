@@ -1,0 +1,41 @@
+syntax = "proto3";
+package semio.s.cad.cad.mutation;
+
+// 🧬️ CadMutation schema.
+
+message CadMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string id = 2;
+  // @state persistent
+  repeated CadObject objects = 3;
+  // @state persistent
+  repeated CadObject building_objects = 4;
+  // @state persistent
+  repeated CadObject energy_objects = 5;
+  // @state persistent
+  repeated CadObject structure_classic_objects = 6;
+  // @state persistent
+  map<string, CadReferenceList> references_by_model_definition_id = 7;
+  // @state persistent
+  repeated CadNode nodes = 8;
+  // @state persistent
+  optional CadGeometry shape_geometry = 9;
+  // @state persistent
+  optional CadGeometry building_geometry = 10;
+  // @state persistent
+  optional CadGeometry energy_geometry = 11;
+  // @state persistent
+  optional CadGeometry structure_classic_geometry = 12;
+  // @state persistent
+  string active_model_definition_id = 13;
+}
+
+message CadObject { string id = 1; }
+message CadNode { string id = 1; }
+message CadReferenceList { repeated string values = 1; }
+message CadGeometry { string anchors_json = 1; }
+message CadCamera { double zoom = 1; }
+message CadComponentSelection { string mode = 1; }
+message CadDislocateOptions { bool move_enabled = 1; bool rotate_enabled = 2; }

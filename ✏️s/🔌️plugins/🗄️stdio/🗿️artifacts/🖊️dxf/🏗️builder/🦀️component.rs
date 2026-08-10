@@ -1,42 +1,21 @@
-//! 🏗️ DxfBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ DxfBuilder (final, artifact-level) — delegates to the r12 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::dxf::{DxfDiff, DxfMutation, DxfSnapshot};
+use crate::artifacts::dxf::standards::v_r12::builder::DxfBuilder as DxfRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.dxf` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct DxfBuilder {
-    snapshot: DxfSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct DxfBuilder(DxfRawBuilder);
 
 impl ArtifactBuilder for DxfBuilder {
     type Snapshot = DxfSnapshot;
     type Mutation = DxfMutation;
     type Diff = DxfDiff;
-    fn empty() -> Self {
-        Self { snapshot: DxfSnapshot::default(), diagnostics: Vec::new() }
-    }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
-    }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<DxfSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<DxfSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::dxf::schema::mutations::apply_dxf_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(DxfRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(DxfRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(DxfRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(DxfRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }
-//#endregion 🔖️Builder

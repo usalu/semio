@@ -1,0 +1,32 @@
+{
+  "counts_ssot": {
+    "stdio_artifacts": 29,
+    "domain_artifacts": 54,
+    "curated_io_pairs": 285
+  },
+  "stdio_roster_n": 29,
+  "stdio_on_disk": 29,
+  "stdio_complete_facets": 29,
+  "stdio_incomplete": [],
+  "stdio_missing_dirs": [],
+  "dag_edges": 37,
+  "dag_all_reach_binary": true,
+  "domain_artifacts": 54,
+  "builder_present": 54,
+  "decomposer_present": 54,
+  "io_pairs_expected_import": 285,
+  "io_pairs_present_import": 285,
+  "io_pairs_expected_export": 285,
+  "io_pairs_present_export": 285,
+  "io_pairs_missing_n": 0,
+  "io_pairs_missing_sample": [],
+  "policy_stdio_rule_breaches": {
+    "stdio-artifacts/stdio-catalog": 0,
+    "stdio-artifacts/artifact-builder": 0,
+    "stdio-artifacts/artifact-decomposer": 0,
+    "stdio-artifacts/schema-representation": 249,
+    "stdio-artifacts/io-serializer-matrix": 0,
+    "stdio-artifacts/io-terminality": 0,
+    "stdio-artifacts/codec-fidelity": 0
+  }
+}

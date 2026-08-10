@@ -1,6 +1,0 @@
-/** 📑️ GlbDecomposer facade (local until SDK W3). */
-export interface Decomposition<T> {
-  parts: T;
-  confidence: 'high' | 'medium' | 'low';
-  diagnostics: unknown[];
-}

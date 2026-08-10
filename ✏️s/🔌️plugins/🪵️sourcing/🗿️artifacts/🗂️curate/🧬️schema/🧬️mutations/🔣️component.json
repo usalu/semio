@@ -1,0 +1,210 @@
+{
+  "$id": "https://semio.tech/schema/s/sourcing/curate/mutation.json",
+  "title": "CurateMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "curated"
+  ],
+  "properties": {
+    "stock": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObjectKind"
+      },
+      "x-semio-state": "persistent"
+    },
+    "curated": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CuratedItem"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "GeometryRecipe": {
+      "title": "GeometryRecipe",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "height",
+            "depth"
+          ],
+          "properties": {
+            "kind": {
+              "const": "box"
+            },
+            "width": {
+              "type": "number",
+              "format": "double"
+            },
+            "height": {
+              "type": "number",
+              "format": "double"
+            },
+            "depth": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "height",
+            "depth",
+            "profile"
+          ],
+          "properties": {
+            "kind": {
+              "const": "frame"
+            },
+            "width": {
+              "type": "number",
+              "format": "double"
+            },
+            "height": {
+              "type": "number",
+              "format": "double"
+            },
+            "depth": {
+              "type": "number",
+              "format": "double"
+            },
+            "profile": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "depth",
+            "thickness"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slab"
+            },
+            "width": {
+              "type": "number",
+              "format": "double"
+            },
+            "depth": {
+              "type": "number",
+              "format": "double"
+            },
+            "thickness": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "positions",
+            "normals",
+            "indices"
+          ],
+          "properties": {
+            "kind": {
+              "const": "mesh"
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "normals": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "indices": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ObjectKind": {
+      "title": "ObjectKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "moduleId",
+        "typologyPath",
+        "availability",
+        "geometry"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "moduleId": {
+          "type": "string"
+        },
+        "typologyPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "availability": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRecipe"
+        }
+      }
+    },
+    "CuratedItem": {
+      "title": "CuratedItem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectId",
+        "count"
+      ],
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      }
+    }
+  }
+}

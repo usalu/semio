@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+message SequenceMutation {
+  string schema = 1; // @state persistent
+  repeated SequenceStep steps = 2; // @state persistent
+  repeated SequenceEdge edges = 3; // @state persistent
+}
+message SequenceStep { string id = 1; string kind = 2; string params_json = 3; double x = 4; double y = 5; optional SlotRef slot = 6; bool collapsed = 7; }
+message SequenceEdge { string id = 1; string from = 2; string to = 3; }
+message SlotRef { string owner = 1; string name = 2; }

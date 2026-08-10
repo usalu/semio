@@ -1,3 +1,0 @@
-(* ebnf stdio.png mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.png', newline ;

@@ -1,2 +1,6 @@
-/** CadBuilder facade. */
-export interface CadBuilder { build(): { schema: string }; }
+/** 🏗️ CadBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.cad",
+  standard: "1",
+  subset: "*",
+} as const;

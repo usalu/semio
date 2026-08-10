@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ JsonBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.json",
+  standard: "rfc8259",
+  subset: "*",
+} as const;

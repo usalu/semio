@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.mutation;
+
+// 🧬️ GIS terrain mutation schema — persistent fields only.
+
+message GisTerrainMutation {
+  // @state persistent
+  double exaggeration = 1;
+  // @state persistent
+  string imported_features_json = 2;
+}

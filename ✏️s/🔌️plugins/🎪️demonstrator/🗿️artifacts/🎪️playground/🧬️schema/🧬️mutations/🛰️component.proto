@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.demonstrator.playground.mutation;
+
+// 🧬️ Playground mutation schema — persistent fields only.
+
+message PlaygroundMutation {
+  // @state persistent
+  string schema = 1;
+}

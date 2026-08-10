@@ -2601,3 +2601,32 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪️Tests
+
+//#region StdioFormatKinds
+/** 🗄️ Normalize `stdio.dwg` / `dwg` to short stdio format kind id. */
+export function normalizeStdioFormatKind(value: string): string {
+  const trimmed = value.trim();
+  const short = trimmed.startsWith("stdio.") ? trimmed.slice("stdio.".length) : trimmed;
+  switch (short) {
+    case "jpeg":
+      return "jpg";
+    case "tif":
+      return "tiff";
+    case "stp":
+      return "step";
+    case "markdown":
+      return "md";
+    default:
+      return short;
+  }
+}
+
+/** 🗂️ File-picker accept filter from stdio format kind ids. */
+export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): string {
+  return formatArtifactKinds
+    .map((kind) => normalizeStdioFormatKind(kind))
+    .filter(Boolean)
+    .map((kind) => `.${kind}`)
+    .join(",");
+}
+//#endregion StdioFormatKinds

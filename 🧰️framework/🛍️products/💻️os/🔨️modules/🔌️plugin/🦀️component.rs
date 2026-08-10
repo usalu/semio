@@ -300,38 +300,85 @@ pub mod app {
     pub use semio_framework::{MediaWireFormat, MediaFormat};
     //#endregion 🔖️MediaPort
 
-    //#region 🔖️ArtifactIo
+    //#region 🔖️Dialect
     /// ⚠️ IO error alias from the framework media stack.
     pub use semio_framework::IoError;
 
-    /// 🗂️ One declared import/export format on an artifact's `🚪️io` facet.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub struct IoFormatSpec {
-        pub format: MediaFormat,
-        pub import: bool,
-        pub export: bool,
+    /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
+    /// 2). Defined in `semio_framework` (alongside `MediaFormat`) so plugins and the OS product
+    /// share one definition without an inverted dependency; re-exported here verbatim.
+    pub use semio_framework::{
+        StandardId, SubsetId, Dialect,
+        AnalyzeSource, IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
+        IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
+        IoDirection, IoKey, IoResolveError,
+        register_composer_entries, io_resolve, io_dialects_for,
+    };
+
+    /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
+    /// struct per `🚪️io/📤️export/🧵️serializers/…` leaf.
+    pub trait ArtifactSerializer {
+        type From;
+        type Into;
+        const FROM: Dialect;
+        const INTO: Dialect;
+        fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
     }
 
-    /// 📥️ Bytes → snapshot for one MediaFormat.
-    pub trait ArtifactImport {
+    /// 🧩️ Directed snapshot conversion from a foreign dialect into this dialect. One unit struct
+    /// per `🚪️io/📥️import/🧩️deserializers/…` leaf.
+    pub trait ArtifactDeserializer {
+        type From;
+        type Into;
+        const FROM: Dialect;
+        const INTO: Dialect;
+        fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
+    }
+
+    /// 🎹️ Subset-level composer: analyze foreign/native sources, build one snapshot in `WRITES`.
+    /// Standard- and artifact-level (final) composers aggregate `ComposerEntry` rows value-level
+    /// (see `ComposerEntry::of` convention on the framework side) rather than via this trait.
+    pub trait ArtifactComposer: Sized {
         type Snapshot;
-        const FORMAT: MediaFormat;
-        fn import(bytes: &[u8]) -> Result<Self::Snapshot, IoError>;
+        const WRITES: Dialect;
+        fn reads() -> &'static [Dialect];
+        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError>;
     }
 
-    /// 📤️ Snapshot → bytes for one MediaFormat.
-    pub trait ArtifactExport {
-        type Snapshot;
-        const FORMAT: MediaFormat;
-        fn export(snapshot: &Self::Snapshot) -> Result<Vec<u8>, IoError>;
+    /// 🎹️ Erases a typed `ArtifactComposer` into a `ComposerEntry` row for `register_composer_entries`.
+    /// Lives here (not in `semio_framework_io`) because it needs the `ArtifactComposer` trait, which
+    /// the lower-layer io module can't see. Erasure round-trips the snapshot through the same
+    /// `store::DocumentPack` binary codec `ArtifactBuilder::from_binary` already uses.
+    pub fn composer_entry_of<C: ArtifactComposer>() -> ComposerEntry
+    where
+        C::Snapshot: store::DocumentPack,
+    {
+        fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        where
+            C::Snapshot: store::DocumentPack,
+        {
+            let typed_sources: Vec<ComposeSource> = sources
+                .iter()
+                .map(|s| ComposeSource {
+                    dialect: s.dialect,
+                    payload: match &s.payload {
+                        IoPayload::Text(t) => AnalyzeSource::Text(t.as_str()),
+                        IoPayload::Binary(b) => AnalyzeSource::Binary(b.as_slice()),
+                    },
+                })
+                .collect();
+            let composed = C::compose(&typed_sources)?;
+            let bytes = store::DocumentPack::encode_pack(&composed.snapshot);
+            Ok(ComposedArtifact {
+                dialect: C::WRITES,
+                payload: IoPayload::Binary(bytes),
+                diagnostics: composed.diagnostics,
+                confidence: composed.confidence,
+            })
+        }
+        ComposerEntry { writes: C::WRITES, reads: C::reads(), compose: erased_compose::<C> }
     }
-
-    /// 🚪️ Per-artifact IO facet: declares formats and registers OS handlers.
-    pub trait ArtifactIo {
-        fn formats() -> &'static [IoFormatSpec];
-        fn register();
-    }
-    //#endregion 🔖️ArtifactIo
+    //#endregion 🔖️Dialect
 
     //#region 🔖️ArtifactBuilder
     /// 🏗️ Incremental artifact materializer — snapshot/text/binary in, soft `Diagnostic`s out.
@@ -376,6 +423,19 @@ pub mod app {
         type Snapshot;
         type Parts;
         fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+    }
+
+    /// 🧐️ Standards/subsets successor to `ArtifactDecomposer` (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO
+    /// phase 2): read-only analysis that also reports which `Dialect` it recognized, so aggregate
+    /// composers can route a payload to the right standard (e.g. GIF87a vs GIF89a, `%PDF-1.x`).
+    /// New artifacts implement this directly; migrated artifacts keep `ArtifactDecomposer` until
+    /// their own migration wave swaps it -- both traits coexist until the global W16 strict flip.
+    pub trait ArtifactAnalyzer: Sized {
+        type Parts;
+        const DIALECT: Dialect;
+        /// 👃️ Cheap recognizability probe -- no allocation, no full parse.
+        fn sniff(source: &AnalyzeSource) -> IoConfidence;
+        fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
     }
     //#endregion 🔖️ArtifactBuilder
 
@@ -9145,8 +9205,8 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactExport, ArtifactImport, ArtifactIo, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView,
-    IoFormatSpec, KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView,
+    KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp,
     WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};

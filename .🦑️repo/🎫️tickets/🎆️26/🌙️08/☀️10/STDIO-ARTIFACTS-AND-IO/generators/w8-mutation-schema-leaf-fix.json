@@ -1,0 +1,27 @@
+{
+  "dirs": 83,
+  "copied_adapted_from_snapshot": 249,
+  "synthesized": 0,
+  "report_sample": [
+    {
+      "dir": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2712\ufe0fwriter/\ud83d\uddff\ufe0fartifacts/\u2712\ufe0fwriter/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations",
+      "has_snap_leaves": true
+    },
+    {
+      "dir": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fmathematical/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations",
+      "has_snap_leaves": true
+    },
+    {
+      "dir": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf00\ufe0fprocedural/\ud83d\uddff\ufe0fartifacts/\ud83c\udf00\ufe0fprocedural2d/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations",
+      "has_snap_leaves": true
+    },
+    {
+      "dir": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf00\ufe0fprocedural/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0fprocedural3d/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations",
+      "has_snap_leaves": true
+    },
+    {
+      "dir": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0a\ufe0fflow/\ud83d\uddff\ufe0fartifacts/\ud83c\udf0a\ufe0fflow/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations",
+      "has_snap_leaves": true
+    }
+  ]
+}

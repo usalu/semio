@@ -1,0 +1,8 @@
+type GifEntry {
+  name: String!
+  data: [Int!]!
+}
+type GifMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [GifEntry!]! @state(class: PERSISTENT)
+}

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package semio.s.norm.iso16757.mutation;
+
+message Iso16757Mutation {
+  // @state persistent
+  string catalogue = 1;
+  // @state persistent
+  string dictionary = 2;
+  // @state persistent
+  string geometry = 3;
+  // @state persistent
+  string selection = 4;
+  // @state persistent
+  string part_number_rule = 5;
+  // @state persistent
+  map<string, string> part_number_inputs = 6;
+  // @state persistent
+  string script_limits = 7;
+  // @state persistent
+  string exchange_process = 8;
+}

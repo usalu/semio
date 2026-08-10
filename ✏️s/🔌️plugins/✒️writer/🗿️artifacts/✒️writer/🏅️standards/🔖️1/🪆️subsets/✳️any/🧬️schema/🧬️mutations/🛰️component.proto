@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.writer.writer;
+
+message WriterMutation {
+  string schema = 1;
+  string id = 2;
+  string language_id = 3;
+  string uri = 4;
+  string text = 5;
+}

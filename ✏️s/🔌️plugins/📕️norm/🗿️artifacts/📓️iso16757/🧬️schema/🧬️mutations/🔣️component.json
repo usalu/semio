@@ -1,0 +1,53 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/iso16757/mutation.json",
+  "title": "Iso16757Mutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "catalogue",
+    "dictionary",
+    "geometry",
+    "selection",
+    "partNumberRule",
+    "partNumberInputs",
+    "scriptLimits",
+    "exchangeProcess"
+  ],
+  "properties": {
+    "catalogue": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "dictionary": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "geometry": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "selection": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "partNumberRule": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "partNumberInputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "scriptLimits": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "exchangeProcess": {
+      "type": "object",
+      "x-semio-state": "persistent"
+    }
+  }
+}

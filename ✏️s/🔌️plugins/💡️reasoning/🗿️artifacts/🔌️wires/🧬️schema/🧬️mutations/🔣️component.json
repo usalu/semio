@@ -1,0 +1,40 @@
+{
+  "$id": "https://semio.tech/schema/s/reasoning/wires/mutation.json",
+  "title": "WiresMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wiresFixture",
+    "boardFixture"
+  ],
+  "properties": {
+    "wiresFixture": {
+      "title": "DslValue",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "boardFixture": {
+      "title": "DslValue",
+      "type": "object",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "WiresStringList": {
+      "title": "WiresStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

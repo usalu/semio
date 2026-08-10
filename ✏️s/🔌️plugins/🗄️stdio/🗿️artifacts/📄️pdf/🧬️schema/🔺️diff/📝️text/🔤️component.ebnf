@@ -1,3 +1,0 @@
-(* ebnf stdio.pdf diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.pdf', newline ;

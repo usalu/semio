@@ -1,0 +1,195 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1991/mutation.json",
+  "title": "En1991Mutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "areaM2",
+    "category",
+    "annex",
+    "selfWeightMaterial",
+    "selfWeightThicknessM",
+    "assumedGKKnM2",
+    "fireCurve",
+    "fireResistanceMin",
+    "fireMemberCapacityC",
+    "snowZone",
+    "snowAltitudeM",
+    "enSKKnM2",
+    "windZone",
+    "enVBMS",
+    "deltaTK",
+    "constructionActivity",
+    "accidentalMassT",
+    "accidentalSpeedKmH",
+    "bridgeLane",
+    "bridgeSpanM",
+    "bridgeLaneWidthM",
+    "bridgeMomentResistanceKnm",
+    "craneClass",
+    "hoistClass",
+    "hoistingSpeedMS",
+    "siloBulkDensityKnM3",
+    "siloHeightM",
+    "siloHydraulicRadiusM",
+    "siloMu",
+    "siloK",
+    "cS",
+    "cD"
+  ],
+  "properties": {
+    "areaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "category": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selfWeightMaterial": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selfWeightThicknessM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "assumedGKKnM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireCurve": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "fireResistanceMin": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireMemberCapacityC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "snowZone": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "snowAltitudeM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "enSKKnM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "windZone": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "enVBMS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "deltaTK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "constructionActivity": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "accidentalMassT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "accidentalSpeedKmH": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeLane": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "bridgeSpanM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeLaneWidthM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeMomentResistanceKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "craneClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "hoistClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "hoistingSpeedMS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloBulkDensityKnM3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloHeightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloHydraulicRadiusM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloMu": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cD": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    }
+  }
+}

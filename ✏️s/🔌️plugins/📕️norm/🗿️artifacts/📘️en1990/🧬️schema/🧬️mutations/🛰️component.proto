@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.s.norm.en1990.mutation;
+
+message En1990Mutation {
+  // @state persistent
+  double g_k = 1;
+  // @state persistent
+  repeated En1990QkEntry q_k = 2;
+  // @state persistent
+  double resistance_kn = 3;
+  // @state persistent
+  uint32 consequence_class = 4;
+  // @state persistent
+  string annex = 5;
+  // @state persistent
+  double seismic_a_ed_kn = 6;
+}
+
+message En1990QkEntry {
+  string category = 1;
+  double value = 2;
+}

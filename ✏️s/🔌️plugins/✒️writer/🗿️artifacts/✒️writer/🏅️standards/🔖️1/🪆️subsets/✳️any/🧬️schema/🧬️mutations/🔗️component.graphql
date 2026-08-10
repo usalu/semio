@@ -1,0 +1,9 @@
+# 🧬️ Writer mutation schema.
+
+type WriterMutation {
+  schema: String!
+  id: String!
+  languageId: String!
+  uri: String!
+  text: String!
+}

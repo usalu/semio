@@ -1,0 +1,14 @@
+# 🧬️ Fem3d mutation schema — persistent fields only.
+
+type Fem3dMutation {
+  nodes: [FemNode!]! @state(class: PERSISTENT)
+  elements: [FemElement!]! @state(class: PERSISTENT)
+  materials: [FemMaterial!]! @state(class: PERSISTENT)
+  sections: [FemSection!]! @state(class: PERSISTENT)
+  solids: [FemSolid!]! @state(class: PERSISTENT)
+  supports: [FemSupport!]! @state(class: PERSISTENT)
+  loadCases: [FemLoadCase!]! @state(class: PERSISTENT)
+  combinations: [FemCombination!]! @state(class: PERSISTENT)
+  analysis: FemAnalysisSettings! @state(class: PERSISTENT)
+}
+

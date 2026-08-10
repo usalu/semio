@@ -1,2 +1,6 @@
-/** 🏗️ GifBuilder facade (local until SDK W3). */
-export interface GifBuilder { build(): { schema: string }; }
+/** 🏗️ GifBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.gif",
+  standard: "87a",
+  subset: "*",
+} as const;

@@ -1,8 +1,0 @@
-type PngEntry {
-  name: String!
-  data: [Int!]!
-}
-type PngArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [PngEntry!]! @state(class: PERSISTENT)
-}

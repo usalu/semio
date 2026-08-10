@@ -1,6 +1,0 @@
-dialect grammar stdio.bcf.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.bcf' NL
-body = payload NL?
-payload = *OCTET

@@ -1,3 +1,0 @@
-dialect protocol stdio.png.snapshot
-magic = %x00
-payload = *OCTET

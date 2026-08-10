@@ -1,6 +1,0 @@
-dialect grammar stdio.png.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.png' NL
-body = payload NL?
-payload = *OCTET

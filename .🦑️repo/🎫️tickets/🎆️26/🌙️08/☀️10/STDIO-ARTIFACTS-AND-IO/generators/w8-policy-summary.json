@@ -1,0 +1,83 @@
+{
+  "exit": 1,
+  "total_breaches": 9007,
+  "stdio_rule_counts": {
+    "stdio-artifacts/stdio-catalog": 0,
+    "stdio-artifacts/artifact-builder": 0,
+    "stdio-artifacts/artifact-decomposer": 0,
+    "stdio-artifacts/schema-representation": 249,
+    "stdio-artifacts/io-serializer-matrix": 0,
+    "stdio-artifacts/io-terminality": 0,
+    "stdio-artifacts/codec-fidelity": 0
+  },
+  "stdio_rule_total": 249,
+  "schema_representation_by_area": {
+    "domain": 162,
+    "stdio": 87
+  },
+  "schema_representation_w1w7_owned": 0,
+  "fix_applied": false,
+  "fix_rationale": "Only schema-representation is non-zero (249). All scopes are plugin artifact schema trees (W4/W5/W6), not W1/W7 surfaces. Other six stdio rules are 0.",
+  "top_kinds": [
+    [
+      "handcrafted-grammar/spec-distinctness",
+      6787
+    ],
+    [
+      "taxonomy/emoji-prefix",
+      449
+    ],
+    [
+      "artifact-schema/field-parity",
+      365
+    ],
+    [
+      "stdio-artifacts/schema-representation",
+      249
+    ],
+    [
+      "taxonomy/dead-example-leaf",
+      240
+    ],
+    [
+      "artifact-schema/facet-completeness",
+      166
+    ],
+    [
+      "dsl-migration/diff-completeness",
+      157
+    ],
+    [
+      "handcrafted-grammar/empty-example",
+      98
+    ],
+    [
+      "protocol-migration/command-envelope-completeness",
+      93
+    ],
+    [
+      "mutation-migration/triad-completeness",
+      83
+    ],
+    [
+      "handcrafted-grammar/declared-use",
+      68
+    ],
+    [
+      "app-plugin/app-coupling",
+      60
+    ],
+    [
+      "pack-migration/completeness",
+      48
+    ],
+    [
+      "os-state-authority/item-scope-global",
+      38
+    ],
+    [
+      "taxonomy/semio-examples",
+      31
+    ]
+  ]
+}

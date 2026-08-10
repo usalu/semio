@@ -1,2 +1,6 @@
-/** 🏗️ BmpBuilder facade (local until SDK W3). */
-export interface BmpBuilder { build(): { schema: string }; }
+/** 🏗️ BmpBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.bmp",
+  standard: "v3",
+  subset: "*",
+} as const;

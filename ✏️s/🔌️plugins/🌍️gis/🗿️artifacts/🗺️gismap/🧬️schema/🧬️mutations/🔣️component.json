@@ -1,0 +1,54 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gismap/mutation.json",
+  "title": "GisMapMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions",
+    "routes",
+    "regions"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "GisMapFeature": {
+      "title": "GisMapFeature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

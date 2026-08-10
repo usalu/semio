@@ -1,3 +1,0 @@
-; abnf stdio.png diff
-document = payload
-payload = *OCTET

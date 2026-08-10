@@ -1,2 +1,6 @@
-/** 🏗️ DwgBuilder facade (local until SDK W3). */
-export interface DwgBuilder { build(): { schema: string }; }
+/** 🏗️ DwgBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.dwg",
+  standard: "ac1018",
+  subset: "*",
+} as const;

@@ -1,2 +1,6 @@
-/** 🏗️ StlBuilder facade (local until SDK W3). */
-export interface StlBuilder { build(): { schema: string }; }
+/** 🏗️ StlBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.stl",
+  standard: "ascii",
+  subset: "*",
+} as const;

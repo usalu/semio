@@ -2515,7 +2515,7 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
-    use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, media_accept_filter, MediaFormat};
+    use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, media_accept_filter, media_accept_filter_kinds, MediaFormat};
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
     use semio_framework::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
@@ -2944,6 +2944,19 @@ pub mod workflow {
         if !source.schema.is_empty() && source.schema == target.schema {
             return Some(MediaWireFormat::Document { schema: source.schema.clone() });
         }
+        if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
+            for kind in &source.export_stdio_kinds {
+                let short = semio_framework::normalize_stdio_format_kind(kind).unwrap_or(kind.as_str());
+                let hit = target.import_stdio_kinds.iter().any(|other| {
+                    semio_framework::normalize_stdio_format_kind(other).unwrap_or(other.as_str()) == short
+                });
+                if hit {
+                    if let Some(format) = MediaFormat::parse(short) {
+                        return Some(MediaWireFormat::Binary { format });
+                    }
+                }
+            }
+        }
         source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format: *format })
     }
 
@@ -3272,25 +3285,37 @@ pub mod workflow {
 
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw format bytes (base64 when binary).
-        pub fn from_format_bytes(bytes: Vec<u8>, format: MediaFormat, file_stem: &str) -> Result<Self, String> {
-            let binary = format.is_binary();
-            let data = if binary {
+        /// 📤️ Build an export result from raw bytes + stdio format kind id.
+        pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
+            let entry = semio_framework::stdio_format_entry(format_artifact_kind)
+                .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let data = if entry.is_binary {
                 base64::engine::general_purpose::STANDARD.encode(&bytes)
             } else {
                 String::from_utf8(bytes).map_err(|error| error.to_string())?
             };
             Ok(Self {
                 data,
-                mime_type: format.mime_type().into(),
-                file_name: format!("{file_stem}.{}", format.as_str()),
-                encoding: if binary { Some("base64".into()) } else { None },
+                mime_type: entry.mime.into(),
+                file_name: format!("{file_stem}{}", entry.extension),
+                encoding: if entry.is_binary { Some("base64".into()) } else { None },
             })
+        }
+
+        pub fn from_format_bytes(bytes: Vec<u8>, format: MediaFormat, file_stem: &str) -> Result<Self, String> {
+            Self::from_format_kind_bytes(bytes, format.as_str(), file_stem)
         }
     }
 
-    /// 🗂️ Build a file-picker `accept` filter from declared MediaFormats.
+    /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
+    pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> String {
+        semio_framework::stdio_accept_filter(format_artifact_kinds)
+    }
+
+    /// 🗂️ Build a file-picker `accept` filter from declared MediaFormats (thin adapter).
     pub fn media_accept_filter(formats: &[MediaFormat]) -> String {
-        formats.iter().map(|format| format!(".{}", format.as_str())).collect::<Vec<_>>().join(",")
+        let kinds: Vec<&str> = formats.iter().map(|format| format.as_str()).collect();
+        media_accept_filter_kinds(&kinds)
     }
 
     type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
@@ -3393,10 +3418,23 @@ pub mod workflow {
         }
     }
 
-    pub fn export_os_app_instance_media(node: &WorkflowNode, source_document: &Value, format: MediaFormat) -> Result<OsMediaExportResult, String> {
+    /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
+    pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
+        let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let handler = handlers.get(&os_media_export_key(&node.yields, &format)).ok_or_else(|| format!("no export handler for {}:{}", node.yields, format.as_str()))?;
+        let handler = handlers
+            .get(&os_media_handler_key(&node.yields, short))
+            .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
+            .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(source_document)
+    }
+
+    pub fn export_os_app_instance_media(node: &WorkflowNode, source_document: &Value, format: MediaFormat) -> Result<OsMediaExportResult, String> {
+        export_os_app_instance_media_kind(node, source_document, format.as_str())
+    }
+
+    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Option<&'static str> {
+        semio_framework::stdio_format_entry(format_artifact_kind).map(|row| row.short_id)
     }
 
     pub fn os_media_export_extension_for_format(format: &MediaFormat) -> &'static str {
@@ -3446,11 +3484,20 @@ pub mod workflow {
         }
     }
 
+    /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
+    pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
+        let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
+        let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let handler = handlers
+            .get(&os_media_handler_key(&node.yields, short))
+            .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
+            .ok_or_else(|| format!("no import handler for {}:{}", node.yields, format_artifact_kind))?;
+        handler(data)
+    }
+
     /// @emoji 📥️ Imports raw bytes for an app instance's resource kind, returning the new inline source document.
     pub fn import_os_app_instance_media(node: &WorkflowNode, data: &[u8], format: MediaFormat) -> Result<Value, String> {
-        let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let handler = handlers.get(&os_media_export_key(&node.yields, &format)).ok_or_else(|| format!("no import handler for {}:{}", node.yields, format.as_str()))?;
-        handler(data)
+        import_os_app_instance_media_kind(node, data, format.as_str())
     }
     //#endregion 🔖️MediaRegistry
 
@@ -3841,6 +3888,21 @@ pub mod wasm_exports {
         let fixture = <WorkflowFixture as store::DocumentDsl>::parse_dsl(text).map_err(|error| JsValue::from_str(&error.message))?;
         serde_wasm_bindgen::to_value(&fixture).map_err(|error| JsValue::from_str(&error.to_string()))
     }
+
+    /// 🗂️ File-picker accept filter from stdio format kind ids (WASM bridge).
+    #[wasm_bindgen(js_name = mediaAcceptFilterKinds)]
+    pub fn wasm_media_accept_filter_kinds(format_artifact_kinds: JsValue) -> Result<String, JsValue> {
+        let kinds: Vec<String> = serde_wasm_bindgen::from_value(format_artifact_kinds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let refs: Vec<&str> = kinds.iter().map(|s| s.as_str()).collect();
+        Ok(semio_framework::stdio_accept_filter(&refs))
+    }
+
+    /// 🏷️ Normalize `stdio.dwg` / `dwg` to short stdio format kind id (WASM bridge).
+    #[wasm_bindgen(js_name = normalizeStdioFormatKind)]
+    pub fn wasm_normalize_stdio_format_kind(value: &str) -> String {
+        semio_framework::normalize_stdio_format_kind(value).unwrap_or(value).to_string()
+    }
+
     // #endregion wasm_exports
 }
 
@@ -3876,6 +3938,12 @@ pub mod registry {
         pub schema: String,
         pub export_formats: Vec<MediaFormat>,
         pub import_formats: Vec<MediaFormat>,
+        /// 🗄️ Stdio export target kind ids (`stdio.json` / short `json`).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub export_stdio_kinds: Vec<String>,
+        /// 🗄️ Stdio import source kind ids.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub import_stdio_kinds: Vec<String>,
     }
 
     /// 🗂️ One registered resource kind's full catalog entry — the descriptor plus the media capability
@@ -3898,6 +3966,8 @@ pub mod registry {
                 schema: spec.schema.clone(),
                 export_formats: spec.export_formats.clone(),
                 import_formats: spec.import_formats.clone(),
+                export_stdio_kinds: spec.export_stdio_kinds.iter().map(|row| (*row).to_string()).collect(),
+                import_stdio_kinds: spec.import_stdio_kinds.iter().map(|row| (*row).to_string()).collect(),
             },
             media_capability: spec.media_capability,
         }
@@ -3921,6 +3991,8 @@ pub mod registry {
                     schema: "parameter.value".into(),
                     export_formats: Vec::new(),
                     import_formats: Vec::new(),
+                    export_stdio_kinds: Vec::new(),
+                    import_stdio_kinds: Vec::new(),
                 },
                 media_capability: OsMediaCapability::MeshOnly,
             },
@@ -3941,6 +4013,8 @@ pub mod registry {
                     schema: workflow::S_WORKFLOW_SCHEMA.into(),
                     export_formats: Vec::new(),
                     import_formats: Vec::new(),
+                    export_stdio_kinds: Vec::new(),
+                    import_stdio_kinds: Vec::new(),
                 },
                 media_capability: OsMediaCapability::MeshOnly,
             },
@@ -3958,6 +4032,8 @@ pub mod registry {
                     schema: space::S_SPACE_SCHEMA.into(),
                     export_formats: Vec::new(),
                     import_formats: Vec::new(),
+                    export_stdio_kinds: Vec::new(),
+                    import_stdio_kinds: Vec::new(),
                 },
                 media_capability: OsMediaCapability::MeshOnly,
             },
@@ -3975,6 +4051,8 @@ pub mod registry {
                     schema: space::S_COLLECTION_SCHEMA.into(),
                     export_formats: Vec::new(),
                     import_formats: Vec::new(),
+                    export_stdio_kinds: Vec::new(),
+                    import_stdio_kinds: Vec::new(),
                 },
                 media_capability: OsMediaCapability::MeshOnly,
             },
@@ -4028,6 +4106,8 @@ pub mod registry {
             schema: kind.into(),
             export_formats: Vec::new(),
             import_formats: Vec::new(),
+            export_stdio_kinds: Vec::new(),
+            import_stdio_kinds: Vec::new(),
         })
     }
 
@@ -4361,10 +4441,10 @@ pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 pub use crate::workflow_kernel::{
     apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-    export_os_app_instance_media, import_os_app_instance_media, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
+    export_os_app_instance_media, export_os_app_instance_media_kind, import_os_app_instance_media, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
     os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, register_os_media_export_handler, register_os_media_import_handler, required_media_formats, MediaDirection,
     sync_workflow_parameter_ports, validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsMediaExportResult, media_accept_filter, MediaFormat, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
+    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsMediaExportResult, media_accept_filter, media_accept_filter_kinds, MediaFormat, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
     WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };

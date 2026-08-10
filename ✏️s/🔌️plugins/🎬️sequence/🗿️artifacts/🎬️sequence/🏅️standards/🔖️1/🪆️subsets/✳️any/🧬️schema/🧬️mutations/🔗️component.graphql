@@ -1,0 +1,10 @@
+# 🧬️ Sequence mutation schema — persistent fields only.
+type SequenceMutation {
+  schema: String! @state(class: PERSISTENT)
+  steps: [SequenceStep!]! @state(class: PERSISTENT)
+  edges: [SequenceEdge!]! @state(class: PERSISTENT)
+}
+type SequenceStep { id: String! kind: String! params: JSON! x: Float! y: Float! slot: SlotRef collapsed: Boolean! }
+type SequenceEdge { id: String! from: String! to: String! }
+type SlotRef { owner: String! name: String! }
+scalar JSON

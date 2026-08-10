@@ -1,0 +1,4 @@
+{
+  "_comment": "W13b/W14 fan-out claim ledger. g8_claims.py claim|release|check <plugin> operates on this file. Empty until fan-out begins.",
+  "claims": []
+}

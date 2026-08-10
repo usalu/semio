@@ -1,0 +1,8 @@
+type ZipEntry {
+  name: String!
+  data: [Int!]!
+}
+type ZipMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [ZipEntry!]! @state(class: PERSISTENT)
+}

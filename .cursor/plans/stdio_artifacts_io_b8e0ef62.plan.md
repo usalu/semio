@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: w7-integration
     content: "W7: Rewire Space Studio media commands, host effects, file-picker accept filters, the WASM bridge, and TS barrel exports; derive mimes.csv from stdio artifacts and delete the stale UI duplicate"
-    status: in_progress
+    status: completed
   - id: w8-gate
     content: "W8: Run the aggregate gate (policy, registry check and generate, cargo test across all plugin crates, launch.json freshness, conformance matrix) and close the ticket"
-    status: pending
+    status: completed
 isProject: false
 ---
 

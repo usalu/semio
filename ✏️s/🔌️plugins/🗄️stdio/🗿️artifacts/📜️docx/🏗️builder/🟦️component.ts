@@ -1,2 +1,6 @@
-/** 🏗️ DocxBuilder facade (local until SDK W3). */
-export interface DocxBuilder { build(): { schema: string }; }
+/** 🏗️ DocxBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.docx",
+  standard: "ecma-376",
+  subset: "*",
+} as const;

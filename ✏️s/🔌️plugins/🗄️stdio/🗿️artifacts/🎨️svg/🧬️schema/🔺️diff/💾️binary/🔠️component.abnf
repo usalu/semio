@@ -1,3 +1,0 @@
-; abnf stdio.svg diff
-document = payload
-payload = *OCTET

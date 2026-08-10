@@ -1,2 +1,6 @@
-/** FormsBuilder */
-export interface FormsBuilder { build(): { schema: string }; }
+/** 🏗️ FormsBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.forms",
+  standard: "1",
+  subset: "*",
+} as const;

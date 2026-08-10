@@ -1,0 +1,9 @@
+{
+  "canonical": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fassets/\ud83d\udcc3\ufe0flist/\ud83d\udccb\ufe0fmimes.csv",
+  "deleted_duplicate": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddb1\ufe0fui/\ud83d\uddbc\ufe0fassets/\ud83d\udcc3\ufe0flist/\ud83d\udccb\ufe0fmimes.csv",
+  "deleted_existed_before": true,
+  "deleted_sha256_before": "54db8857dc11197ea3e7c2c67f7b8fb0e31115e91709228c71b4a55eb534069e",
+  "canonical_sha256_after": "a423c3451ea092d393fa7fbbeb42f624aeb227bd142853e35da7ff209286ebb0",
+  "canonical_rows": 29,
+  "ui_exists_after": false
+}

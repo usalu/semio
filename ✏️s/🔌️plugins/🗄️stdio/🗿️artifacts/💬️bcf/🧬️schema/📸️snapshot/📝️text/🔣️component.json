@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.bcf/snapshot/text.json",
-  "title": "BcfSnapshotText",
-  "type": "object"
-}

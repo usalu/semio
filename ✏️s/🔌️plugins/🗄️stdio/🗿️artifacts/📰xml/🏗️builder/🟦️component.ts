@@ -1,2 +1,6 @@
-/** 🏗️ XmlBuilder facade (local until SDK W3). */
-export interface XmlBuilder { build(): { schema: string }; }
+/** 🏗️ XmlBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.xml",
+  standard: "1.0",
+  subset: "*",
+} as const;

@@ -1,2 +1,6 @@
-/** 🏗️ DeflateBuilder facade (local until SDK W3). */
-export interface DeflateBuilder { build(): { schema: string }; }
+/** 🏗️ DeflateBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.deflate",
+  standard: "rfc1950",
+  subset: "*",
+} as const;

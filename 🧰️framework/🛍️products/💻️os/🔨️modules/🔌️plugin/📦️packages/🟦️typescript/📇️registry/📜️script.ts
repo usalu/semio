@@ -1196,7 +1196,17 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS, ...TAXONOMY_SNAPSHOT_CHILD_DIRS, ...TAXONOMY_DIFF_CHILD_DIRS, ...TAXONOMY_IO_FORMAT_CHILD_DIRS]);
+  const taxonomyIoChildDirs = Object.values(TAXONOMY_IO_DIRECTION_CHILD_DIRS).flatMap((v) =>
+    Array.isArray(v) ? v : [String(v)],
+  );
+  const taxonomyLeafParents = new Set<string>([
+    ...TAXONOMY_ARTIFACT_COMPONENTS,
+    ...TAXONOMY_WINDOW_CHILDREN,
+    ...TAXONOMY_MUTATION_CHILD_DIRS,
+    ...TAXONOMY_SCHEMA_CHILD_DIRS,
+    ...TAXONOMY_REPRESENTATION_DIRS,
+    ...taxonomyIoChildDirs,
+  ]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;

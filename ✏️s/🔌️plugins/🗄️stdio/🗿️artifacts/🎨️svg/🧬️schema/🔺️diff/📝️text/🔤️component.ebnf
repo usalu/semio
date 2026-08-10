@@ -1,3 +1,0 @@
-(* ebnf stdio.svg diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.svg', newline ;

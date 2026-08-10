@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/mutation.json",
+  "title": "GisTerrainMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exaggeration",
+    "importedFeaturesJson"
+  ],
+  "properties": {
+    "exaggeration": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "importedFeaturesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    }
+  }
+}

@@ -1,2 +1,6 @@
-/** 🏗️ PptxBuilder facade (local until SDK W3). */
-export interface PptxBuilder { build(): { schema: string }; }
+/** 🏗️ PptxBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.pptx",
+  standard: "ecma-376",
+  subset: "*",
+} as const;

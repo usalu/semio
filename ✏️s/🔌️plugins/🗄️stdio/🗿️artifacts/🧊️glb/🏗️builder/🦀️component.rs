@@ -1,42 +1,21 @@
-//! 🏗️ GlbBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ GlbBuilder (final, artifact-level) — delegates to the 2.0 standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::glb::{GlbDiff, GlbMutation, GlbSnapshot};
+use crate::artifacts::glb::standards::v2_0::builder::GlbBuilder as GlbRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.glb` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct GlbBuilder {
-    snapshot: GlbSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct GlbBuilder(GlbRawBuilder);
 
 impl ArtifactBuilder for GlbBuilder {
     type Snapshot = GlbSnapshot;
     type Mutation = GlbMutation;
     type Diff = GlbDiff;
-    fn empty() -> Self {
-        Self { snapshot: GlbSnapshot::default(), diagnostics: Vec::new() }
-    }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
-    }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<GlbSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<GlbSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::glb::schema::mutations::apply_glb_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <GlbDiff as protocol::MutationDiff<GlbSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(GlbRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(GlbRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(GlbRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(GlbRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }
-//#endregion 🔖️Builder

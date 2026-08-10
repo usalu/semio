@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.s.gis.gismap.mutation;
+
+// 🧬️ GIS map mutation schema — persistent fields only.
+
+message GisMapMutation {
+  // @state persistent
+  repeated GisMapFeature positions = 1;
+  // @state persistent
+  repeated GisMapFeature routes = 2;
+  // @state persistent
+  repeated GisMapFeature regions = 3;
+}
+
+message GisMapFeature {
+  string id = 1;
+  string data_json = 2;
+}

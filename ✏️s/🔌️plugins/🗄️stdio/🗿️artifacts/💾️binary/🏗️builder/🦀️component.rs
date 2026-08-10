@@ -1,42 +1,37 @@
-//! 🏗️ BinaryBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ BinaryBuilder (final, artifact-level) — delegates to the raw standard, which delegates to
+//! its ✳️any subset. Real materialization logic lives at the subset level; this facade is what
+//! every other artifact's io leaves and the OS reach for when it doesn't care which standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::binary::{BinaryDiff, BinaryMutation, BinarySnapshot};
+use crate::artifacts::binary::standards::v_raw::builder::BinaryBuilder as BinaryRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.binary` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct BinaryBuilder {
-    snapshot: BinarySnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct BinaryBuilder(BinaryRawBuilder);
 
 impl ArtifactBuilder for BinaryBuilder {
     type Snapshot = BinarySnapshot;
     type Mutation = BinaryMutation;
     type Diff = BinaryDiff;
     fn empty() -> Self {
-        Self { snapshot: BinarySnapshot::default(), diagnostics: Vec::new() }
+        Self(BinaryRawBuilder::empty())
     }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
+        Self(BinaryRawBuilder::from_snapshot(snapshot))
     }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<BinarySnapshot as store::DocumentDsl>::parse_dsl(text)?))
+        Ok(Self(BinaryRawBuilder::from_text(text)?))
     }
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<BinarySnapshot as store::DocumentPack>::decode_pack(bytes)?))
+        Ok(Self(BinaryRawBuilder::from_binary(bytes)?))
     }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::binary::schema::mutations::apply_binary_mutation(&mut self.snapshot, &mutation);
-        self
+    fn mutate(self, mutation: Self::Mutation) -> Self {
+        Self(self.0.mutate(mutation))
     }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot);
-        self
+    fn absorb(self, diff: Self::Diff) -> Self {
+        Self(self.0.absorb(diff))
     }
     fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        self.0.build()
     }
 }
-//#endregion 🔖️Builder

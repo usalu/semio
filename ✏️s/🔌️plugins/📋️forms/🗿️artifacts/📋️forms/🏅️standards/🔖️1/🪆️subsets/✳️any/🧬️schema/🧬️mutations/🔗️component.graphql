@@ -1,0 +1,5 @@
+# 🧬️ JsonMutation
+type JsonMutation {
+  schema: String! @state(class: PERSISTENT)
+  value: String! @state(class: PERSISTENT)
+}

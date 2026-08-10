@@ -377,6 +377,9 @@ Artifacts must be versionable independantely.
 
 The current import export architecture is extremely adhoc.
 Make sure that every single artifact can be implemented independantly for different standards and subsets.
+When making changes across our own artifacts, dont bump standard. We are still at v1 and use no subsets yet.
+Use the * subset for everything.
+The builder, analyzer, composers need to be composable and in the end every artifact exports one final one each with support for different standards and subsets all at once (e.g. composer can read different standards, different subsets and write a new artifact for a specific new standard and subset)
 
 ```
 s
@@ -384,77 +387,109 @@ s
     stdio
       artifacts
         <artifact> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
-          <standard> # e.g. 1.6 for pdf, 2x3 for ifc, AP225 for STEP, etc,
-            <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-              snapshot
-                …
-              diff
-                …
-              mutations
-                …
-              builder # only for creating new artifacts
-                …
-              analyzer # read-only for existing artifacts - former decomposer
-                …
-              composer # combining builder and analyzer
-                …
-              io
-                import
-                  deserializers
-                    artifacts
-                      <artifact> # e.g. json for gltf, binary for glb, etc
-                        <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
-                          <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-                            component.rs
-                            component.ts
-                            …
-                          component.rs
-                          component.ts
-                          …
-                        component.rs
-                        component.ts
-                        …
-                      component.rs
-                      component.ts
-                      …
-                    component.rs
-                    component.ts
-                    …
-                  component.rs
-                  component.ts
-                  …
-                export
-                  serializers
-                    artifacts
-                      <artifact> # e.g. json for gltf, binary for glb, etc
-                        <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
-                          <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-                            component.rs
-                            component.ts
-                            …
-                          component.rs
-                          component.ts
-                          …
-                        component.rs
-                        component.ts
-                        …
-                      component.rs
-                      component.ts
-                      …
-                    component.rs
-                    component.ts
-                    …
-                  component.rs
-                  component.ts
-                  …
-              component.rs
-              component.ts
-              …
+          builder # only for creating new artifacts
             component.rs
             component.ts
             …
-          component.rs
-          component.ts
+          analyzer # read-only for existing artifacts - former decomposer
+            component.rs
+            component.ts
+            …
+          composer # combining builder and analyzer
+            component.rs
+            component.ts
+            …
+          standards
+            <standard> # e.g. 1.6 for pdf, 2x3 for ifc, AP225 for STEP, etc,
+              builder # only for creating new artifacts
+                component.rs
+                component.ts
+                …
+              analyzer # read-only for existing artifacts - former decomposer
+                component.rs
+                component.ts
+                …
+              composer # combining builder and analyzer
+                component.rs
+                component.ts
+                …
+              subsets
+                <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                  snapshot
+                    …
+                  diff
+                    …
+                  mutations
+                    …
+                  builder # only for creating new artifacts
+                    component.rs
+                    component.ts
+                    …
+                  analyzer # read-only for existing artifacts - former decomposer
+                    component.rs
+                    component.ts
+                    …
+                  composer # combining builder and analyzer
+                    component.rs
+                    component.ts
+                    …
+                  io
+                    import
+                      deserializers
+                        artifacts
+                          <artifact> # e.g. json for gltf, binary for glb, etc
+                            <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                                component.rs
+                                component.ts
+                                …
+                              component.rs
+                              component.ts
+                              …
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
+                        component.rs
+                        component.ts
+                        …
+                      component.rs
+                      component.ts
+                      …
+                    export
+                      serializers
+                        artifacts
+                          <artifact> # e.g. json for gltf, binary for glb, etc
+                            <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                                component.rs
+                                component.ts
+                                …
+                              component.rs
+                              component.ts
+                              …
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
+                        component.rs
+                        component.ts
+                        …
+                      component.rs
+                      component.ts
+                      …
+                  component.rs
+                  component.ts
+                  …
+                component.rs
+                component.ts
+                …
+            component.rs
+            component.ts
           …
         component.rs
         component.ts

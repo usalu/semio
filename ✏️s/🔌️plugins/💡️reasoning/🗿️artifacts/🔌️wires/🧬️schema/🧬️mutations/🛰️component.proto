@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation;
+
+// 🧬️ Wires mutation schema.
+
+message WiresMutation {
+  // @state persistent
+  DslValue wires_fixture = 1;
+  // @state persistent
+  DslValue board_fixture = 2;
+}
+
+message WiresStringList {
+  repeated string values = 1;
+}
+
+message DslValue {}

@@ -806,8 +806,7 @@ fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
 //#endregion Stl
 
 //#region MediaFormat
-/// 🗂️ Closed media format catalog — kept in parity with `🖼️assets/📜️list/📋️mimes.csv` by
-/// `artifact-io/catalog-parity`. Neutral models: MeshData, Brep, DwgDrawing, RasterImage, PageDoc,
+/// 🗂️ Closed media format catalog — kept in parity with `🖼️assets/📃️list/📋️mimes.csv` (derived from `STDIO_FORMAT_CATALOG`). Neutral models: MeshData, Brep, DwgDrawing, RasterImage, PageDoc,
 /// TableDoc, TextDoc, Archive, Value. Lives in mesh (not os) so exporters and OS registration share
 /// one definition without an inverted dependency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -996,11 +995,152 @@ impl MediaFormat {
             "zip" => Some(Self::Zip),
             "bcf" => Some(Self::Bcf),
             "json" => Some(Self::Json),
-            _ => None,
+            other => normalize_stdio_format_kind(other).and_then(|short| match short {
+                "glb" => Some(Self::Glb),
+                "gltf" => Some(Self::Gltf),
+                "stl" => Some(Self::Stl),
+                "obj" => Some(Self::Obj),
+                "ply" => Some(Self::Ply),
+                "las" => Some(Self::Las),
+                "step" => Some(Self::Step),
+                "ifc" => Some(Self::Ifc),
+                "dwg" => Some(Self::Dwg),
+                "dxf" => Some(Self::Dxf),
+                "svg" => Some(Self::Svg),
+                "png" => Some(Self::Png),
+                "jpg" => Some(Self::Jpg),
+                "gif" => Some(Self::Gif),
+                "bmp" => Some(Self::Bmp),
+                "tiff" => Some(Self::Tiff),
+                "pdf" => Some(Self::Pdf),
+                "docx" => Some(Self::Docx),
+                "pptx" => Some(Self::Pptx),
+                "csv" => Some(Self::Csv),
+                "xlsx" => Some(Self::Xlsx),
+                "md" => Some(Self::Md),
+                "txt" => Some(Self::Txt),
+                "zip" => Some(Self::Zip),
+                "bcf" => Some(Self::Bcf),
+                "json" => Some(Self::Json),
+                _ => None,
+            }),
         }
+    }
+
+    /// 🗄️ Stdio kind id for this legacy enum variant (`stdio.dwg`).
+    pub fn stdio_kind_id(&self) -> &'static str {
+        stdio_format_kind_id(self.as_str()).unwrap_or(self.as_str())
     }
 }
 //#endregion MediaFormat
+
+//#region StdioFormatCatalog
+/// 🗄️ One stdio format artifact — kind id, mime, extension, and folder slug.
+/// Canonical peer of `🖼️assets/📃️list/📋️mimes.csv` (derived from this table).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct StdioFormatEntry {
+    pub id: &'static str,
+    pub short_id: &'static str,
+    pub mime: &'static str,
+    pub extension: &'static str,
+    pub name: &'static str,
+    pub full_name: &'static str,
+    pub neutral: &'static str,
+    pub dir_name: &'static str,
+    pub is_binary: bool,
+}
+
+/// 🗄️ Closed stdio format catalog (29 artifacts) — SSOT for accept filters / mimes.csv.
+pub const STDIO_FORMAT_CATALOG: &[StdioFormatEntry] = &[
+    StdioFormatEntry { id: "stdio.binary", short_id: "binary", mime: "application/octet-stream", extension: ".bin", name: "Binary", full_name: "Raw Binary Bytes", neutral: "Bytes", dir_name: "💾️binary", is_binary: true },
+    StdioFormatEntry { id: "stdio.txt", short_id: "txt", mime: "text/plain", extension: ".txt", name: "Text", full_name: "Plain Text", neutral: "TextDoc", dir_name: "📄txt", is_binary: false },
+    StdioFormatEntry { id: "stdio.xml", short_id: "xml", mime: "application/xml", extension: ".xml", name: "XML", full_name: "Extensible Markup Language", neutral: "XmlDoc", dir_name: "📰xml", is_binary: false },
+    StdioFormatEntry { id: "stdio.deflate", short_id: "deflate", mime: "application/zlib", extension: ".zz", name: "Deflate", full_name: "Zlib Deflate Stream", neutral: "DeflateStream", dir_name: "🗜️deflate", is_binary: true },
+    StdioFormatEntry { id: "stdio.zip", short_id: "zip", mime: "application/zip", extension: ".zip", name: "ZIP", full_name: "Zip Archive", neutral: "Archive", dir_name: "🎒️zip", is_binary: true },
+    StdioFormatEntry { id: "stdio.json", short_id: "json", mime: "application/json", extension: ".json", name: "JSON", full_name: "JavaScript Object Notation", neutral: "Value", dir_name: "🔣️json", is_binary: false },
+    StdioFormatEntry { id: "stdio.csv", short_id: "csv", mime: "text/csv", extension: ".csv", name: "CSV", full_name: "Comma-Separated Values", neutral: "TableDoc", dir_name: "📊️csv", is_binary: false },
+    StdioFormatEntry { id: "stdio.md", short_id: "md", mime: "text/markdown", extension: ".md", name: "Markdown", full_name: "Markdown Text", neutral: "TextDoc", dir_name: "📝️md", is_binary: false },
+    StdioFormatEntry { id: "stdio.glb", short_id: "glb", mime: "model/gltf-binary", extension: ".glb", name: "GLB", full_name: "GL Transmission Format Binary", neutral: "MeshData", dir_name: "🧊️glb", is_binary: true },
+    StdioFormatEntry { id: "stdio.gltf", short_id: "gltf", mime: "model/gltf+json", extension: ".gltf", name: "GLTF", full_name: "GL Transmission Format JSON", neutral: "MeshData", dir_name: "🧊️gltf", is_binary: false },
+    StdioFormatEntry { id: "stdio.obj", short_id: "obj", mime: "model/obj", extension: ".obj", name: "OBJ", full_name: "Wavefront Object", neutral: "MeshData", dir_name: "🧊️obj", is_binary: false },
+    StdioFormatEntry { id: "stdio.stl", short_id: "stl", mime: "model/stl", extension: ".stl", name: "STL", full_name: "Stereolithography", neutral: "MeshData", dir_name: "🟪️stl", is_binary: true },
+    StdioFormatEntry { id: "stdio.ply", short_id: "ply", mime: "model/ply", extension: ".ply", name: "PLY", full_name: "Polygon File Format", neutral: "MeshData", dir_name: "☁️ply", is_binary: false },
+    StdioFormatEntry { id: "stdio.las", short_id: "las", mime: "application/vnd.las", extension: ".las", name: "LAS", full_name: "ASPRS LAS Point Cloud", neutral: "MeshData", dir_name: "☁️las", is_binary: true },
+    StdioFormatEntry { id: "stdio.step", short_id: "step", mime: "model/step", extension: ".step", name: "STEP", full_name: "ISO 10303 STEP", neutral: "Brep", dir_name: "📐️step", is_binary: false },
+    StdioFormatEntry { id: "stdio.ifc", short_id: "ifc", mime: "application/x-ifc", extension: ".ifc", name: "IFC", full_name: "Industry Foundation Classes", neutral: "Brep", dir_name: "🏗️ifc", is_binary: true },
+    StdioFormatEntry { id: "stdio.dwg", short_id: "dwg", mime: "image/vnd.dwg", extension: ".dwg", name: "DWG", full_name: "Drawing", neutral: "DwgDrawing", dir_name: "🖊️dwg", is_binary: true },
+    StdioFormatEntry { id: "stdio.dxf", short_id: "dxf", mime: "image/vnd.dxf", extension: ".dxf", name: "DXF", full_name: "Drawing Exchange Format", neutral: "DwgDrawing", dir_name: "🖊️dxf", is_binary: false },
+    StdioFormatEntry { id: "stdio.svg", short_id: "svg", mime: "image/svg+xml", extension: ".svg", name: "SVG", full_name: "Scalable Vector Graphics", neutral: "DwgDrawing", dir_name: "🎨️svg", is_binary: false },
+    StdioFormatEntry { id: "stdio.png", short_id: "png", mime: "image/png", extension: ".png", name: "PNG", full_name: "Portable Network Graphics", neutral: "RasterImage", dir_name: "📷️png", is_binary: true },
+    StdioFormatEntry { id: "stdio.jpg", short_id: "jpg", mime: "image/jpeg", extension: ".jpg", name: "JPEG", full_name: "Joint Photographic Experts Group", neutral: "RasterImage", dir_name: "📷️jpg", is_binary: true },
+    StdioFormatEntry { id: "stdio.gif", short_id: "gif", mime: "image/gif", extension: ".gif", name: "GIF", full_name: "Graphics Interchange Format", neutral: "RasterImage", dir_name: "🎞️gif", is_binary: true },
+    StdioFormatEntry { id: "stdio.bmp", short_id: "bmp", mime: "image/bmp", extension: ".bmp", name: "BMP", full_name: "Bitmap", neutral: "RasterImage", dir_name: "🖼️bmp", is_binary: true },
+    StdioFormatEntry { id: "stdio.tiff", short_id: "tiff", mime: "image/tiff", extension: ".tiff", name: "TIFF", full_name: "Tagged Image File Format", neutral: "RasterImage", dir_name: "🖼️tiff", is_binary: true },
+    StdioFormatEntry { id: "stdio.pdf", short_id: "pdf", mime: "application/pdf", extension: ".pdf", name: "PDF", full_name: "Portable Document Format", neutral: "PageDoc", dir_name: "📄️pdf", is_binary: true },
+    StdioFormatEntry { id: "stdio.docx", short_id: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", extension: ".docx", name: "DOCX", full_name: "Office Open XML Word", neutral: "PageDoc", dir_name: "📜️docx", is_binary: true },
+    StdioFormatEntry { id: "stdio.pptx", short_id: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation", extension: ".pptx", name: "PPTX", full_name: "Office Open XML PowerPoint", neutral: "PageDoc", dir_name: "🎞️pptx", is_binary: true },
+    StdioFormatEntry { id: "stdio.xlsx", short_id: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", extension: ".xlsx", name: "XLSX", full_name: "Office Open XML Excel", neutral: "TableDoc", dir_name: "📕️xlsx", is_binary: true },
+    StdioFormatEntry { id: "stdio.bcf", short_id: "bcf", mime: "application/vnd.bcf+xml", extension: ".bcf", name: "BCF", full_name: "BIM Collaboration Format", neutral: "Archive", dir_name: "💬️bcf", is_binary: true },
+];
+
+/// 🏷️ Strip optional `stdio.` prefix and aliases into a catalog short id.
+pub fn normalize_stdio_format_kind(value: &str) -> Option<&'static str> {
+    let trimmed = value.trim();
+    let short = trimmed.strip_prefix("stdio.").unwrap_or(trimmed);
+    let short = match short {
+        "jpeg" => "jpg",
+        "tif" => "tiff",
+        "stp" => "step",
+        "markdown" => "md",
+        other => other,
+    };
+    STDIO_FORMAT_CATALOG.iter().find(|row| row.short_id == short).map(|row| row.short_id)
+}
+
+/// 🗂️ Resolve `dwg` / `stdio.dwg` to the catalog entry.
+pub fn stdio_format_entry(value: &str) -> Option<&'static StdioFormatEntry> {
+    let short = normalize_stdio_format_kind(value)?;
+    STDIO_FORMAT_CATALOG.iter().find(|row| row.short_id == short)
+}
+
+/// 🏷️ Full stdio kind id (`stdio.dwg`) for a short or full kind string.
+pub fn stdio_format_kind_id(value: &str) -> Option<&'static str> {
+    stdio_format_entry(value).map(|row| row.id)
+}
+
+/// 🗂️ File-picker `accept` filter from stdio format kind ids (short or `stdio.*`).
+pub fn stdio_accept_filter(format_artifact_kinds: &[&str]) -> String {
+    format_artifact_kinds
+        .iter()
+        .filter_map(|kind| stdio_format_entry(kind))
+        .map(|row| row.extension)
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// 📋️ Serialize the catalog as the canonical `📋️mimes.csv` body (header + rows).
+pub fn stdio_mimes_csv() -> String {
+    let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
+    for row in STDIO_FORMAT_CATALOG {
+        out.push_str(row.mime);
+        out.push(',');
+        out.push_str(row.extension);
+        out.push(',');
+        out.push_str(row.name);
+        out.push(',');
+        out.push_str(row.full_name);
+        out.push(',');
+        out.push_str(row.neutral);
+        out.push(',');
+        out.push_str(row.dir_name);
+        out.push(',');
+        out.push_str(row.id);
+        out.push('\n');
+    }
+    out
+}
+//#endregion StdioFormatCatalog
+
 
 //#region ArtifactKind
 /// 🧬️ Which geometry backend a resource kind's media exporters/importers target — the manifest-level

@@ -1,2 +1,6 @@
-/** 🏗️ PngBuilder facade (local until SDK W3). */
-export interface PngBuilder { build(): { schema: string }; }
+/** 🏗️ PngBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.png",
+  standard: "1.2",
+  subset: "*",
+} as const;

@@ -1,0 +1,6 @@
+# 🧬️ EnergyModel mutation schema.
+
+type EnergyModelMutation {
+  schema: String!
+  modelJson: String!
+}

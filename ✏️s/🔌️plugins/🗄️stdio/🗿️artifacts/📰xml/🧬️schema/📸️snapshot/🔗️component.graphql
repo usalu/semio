@@ -1,2 +1,0 @@
-# schema facet
- type Placeholder { doc: String! }

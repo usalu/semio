@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.pdf/mutations/text.json",
-  "title": "PdfMutationsText",
-  "type": "object"
-}

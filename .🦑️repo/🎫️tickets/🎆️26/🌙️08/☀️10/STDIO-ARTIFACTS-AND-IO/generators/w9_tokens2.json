@@ -1,0 +1,29 @@
+{
+  "_comment": "W9 SSOT: new VS16-exact emoji tokens for the standards/subsets restructure. Copy-paste only, never hand-type. Codepoints verified collision-free against the full repo dir listing on 2026-08-10.",
+  "analyzer": "🧐️analyzer",
+  "composer": "🎹️composer",
+  "standards": "🏅️standards",
+  "subsets": "🪆️subsets",
+  "standard_prefix": "🔖️",
+  "subset_any_dir": "✳️any",
+  "subset_any_id": "*",
+  "_reused_from_w0_w8_tokens": {
+    "builder": "🏗️builder",
+    "decomposer_old": "🪓️decomposer",
+    "text": "📝️text",
+    "binary": "💾️binary",
+    "deserializers": "🧩️deserializers",
+    "serializers": "🧵️serializers",
+    "stdio_plugin": "🗄️stdio",
+    "schema": "🧬️schema",
+    "snapshot": "📸️snapshot",
+    "diff": "🔺️diff",
+    "mutations": "🧬️mutations",
+    "engine": "⚙️engine",
+    "io": "🚪️io",
+    "import": "📥️import",
+    "export": "📤️export",
+    "examples": "📚️examples",
+    "artifacts": "🗿️artifacts"
+  }
+}

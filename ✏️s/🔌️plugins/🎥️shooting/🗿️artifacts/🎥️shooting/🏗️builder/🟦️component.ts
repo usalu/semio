@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ ShootingBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.shooting",
+  standard: "1",
+  subset: "*",
+} as const;

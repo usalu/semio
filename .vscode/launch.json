@@ -3051,6 +3051,50 @@
       }
     },
     {
+      "name": "⚖️gate🏅️standards-coverage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyStandardsCoverageBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.7
+      }
+    },
+    {
+      "name": "⚖️gate🧐️artifact-analyzer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactAnalyzerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.8
+      }
+    },
+    {
+      "name": "⚖️gate🎹️artifact-composer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactComposerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.9
+      }
+    },
+    {
+      "name": "⚖️gate🏗️artifact-builder-migrated",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactBuilderMigratedBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.95
+      }
+    },
+    {
       "name": "🎥️render🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",

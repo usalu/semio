@@ -1,2 +1,6 @@
-/** 🏗️ GlbBuilder facade (local until SDK W3). */
-export interface GlbBuilder { build(): { schema: string }; }
+/** 🏗️ GlbBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.glb",
+  standard: "2.0",
+  subset: "*",
+} as const;

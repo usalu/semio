@@ -1,3 +1,0 @@
-(* ebnf stdio.bcf diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.bcf', newline ;

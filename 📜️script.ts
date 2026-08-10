@@ -6972,6 +6972,12 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
       });
       continue;
     }
+    if (policyArtifactIsMigrated(repoRoot, artRel)) {
+      // Migrated: the flat schema/engine/io/builder/decomposer facets are gone by design --
+      // policyStandardsCoverageBreaches (+ the Builder/Analyzer/Composer migrated rules) own
+      // the deep check under 🏅️standards/ now.
+      continue;
+    }
     for (const facet of requiredFacets) {
       const facetRel = `${artRel}/${facet}`;
       if (existsSync(join(repoRoot, facetRel))) continue;
@@ -6989,10 +6995,19 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** ⚖️Every plugin artifact exposes 🏗️builder with rs+ts implementing ArtifactBuilder. */
+/** 🏅 True once an artifact has grown a 🏅️standards/ child -- see 🏅️PolicyRuleStandardsSubsets below.
+ * The seven original rules skip migrated artifacts entirely; the new standards/subsets rules own them. */
+function policyArtifactIsMigrated(repoRoot: string, artRel: string): boolean {
+  const taxonomy = loadTaxonomy();
+  const standardsDirName = (taxonomy as any).standardsDirName ?? POLICY_STANDARDS_DIR;
+  return existsSync(join(repoRoot, `${artRel}/${standardsDirName}`));
+}
+
+/** ⚖️Every not-yet-migrated plugin artifact exposes 🏗️builder with rs+ts implementing ArtifactBuilder. */
 export function policyArtifactBuilderBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    if (policyArtifactIsMigrated(repoRoot, artRel)) continue;
     breaches.push(
       ...policyStdioFacetRsTsBreaches(
         repoRoot,
@@ -7006,10 +7021,11 @@ export function policyArtifactBuilderBreaches(repoRoot: string): BreachRecord[] 
   return breaches;
 }
 
-/** ⚖️Every plugin artifact exposes 🪓️decomposer with rs+ts implementing ArtifactDecomposer. */
+/** ⚖️Every not-yet-migrated plugin artifact exposes 🪓️decomposer with rs+ts implementing ArtifactDecomposer. */
 export function policyArtifactDecomposerBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    if (policyArtifactIsMigrated(repoRoot, artRel)) continue;
     breaches.push(
       ...policyStdioFacetRsTsBreaches(
         repoRoot,
@@ -7022,6 +7038,219 @@ export function policyArtifactDecomposerBreaches(repoRoot: string): BreachRecord
   }
   return breaches;
 }
+
+//#region 🏅️PolicyRuleStandardsSubsets
+/**
+ * 🏅 W9+ (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase 2): dual-shape vocabulary.
+ * An artifact is "migrated" once it has a 🏅️standards/ child; unmigrated artifacts
+ * are validated exclusively by the seven rules above and never touched here. This
+ * keeps the whole sweep additive: these rules are vacuous ([]) until the first
+ * artifact actually grows a 🏅️standards/ dir.
+ */
+const POLICY_STANDARDS_DIR = "🏅️standards";
+const POLICY_SUBSETS_DIR = "🪆️subsets";
+const POLICY_FACET_ANALYZER = "🧐️analyzer";
+const POLICY_FACET_COMPOSER = "🎹️composer";
+
+type PolicyArtifactDialect = {
+  artRel: string;
+  standardRel: string;
+  standardSlug: string;
+  subsetRel: string;
+  subsetId: string;
+};
+
+/** 🏅 One row per (migrated artifact, standard, subset) triple; empty until any artifact migrates. */
+function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[] {
+  const out: PolicyArtifactDialect[] = [];
+  const taxonomy = loadTaxonomy();
+  const standardsDirName = (taxonomy as any).standardsDirName ?? POLICY_STANDARDS_DIR;
+  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
+  const standardPrefix = (taxonomy as any).standardDirPrefix ?? "🔖️";
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    const standardsRel = `${artRel}/${standardsDirName}`;
+    if (!existsSync(join(repoRoot, standardsRel))) continue;
+    for (const std of policyReaddirSafe(repoRoot, standardsRel)) {
+      if (!std.isDirectory || !std.name.startsWith(standardPrefix)) continue;
+      const standardRel = `${standardsRel}/${std.name}`;
+      const standardSlug = std.name.slice(standardPrefix.length);
+      const subsetsRel = `${standardRel}/${subsetsDirName}`;
+      if (!existsSync(join(repoRoot, subsetsRel))) continue;
+      for (const sub of policyReaddirSafe(repoRoot, subsetsRel)) {
+        if (!sub.isDirectory) continue;
+        out.push({
+          artRel,
+          standardRel,
+          standardSlug,
+          subsetRel: `${subsetsRel}/${sub.name}`,
+          subsetId: sub.name,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/** ⚖️Every migrated standard/subset dir carries its required builder+analyzer+composer(+engine/schema/io) children. */
+export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const taxonomy = loadTaxonomy();
+  const standardChildDirs = ((taxonomy as any).standardChildDirs as string[] | undefined) ?? [];
+  const subsetChildDirs = ((taxonomy as any).subsetChildDirs as string[] | undefined) ?? [];
+  const slugPattern = new RegExp((taxonomy as any).standardSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    if (!slugPattern.test(dialect.standardSlug)) {
+      breaches.push({
+        id: `standards-slug-${dialect.standardRel}`,
+        summary: `"${dialect.standardRel}" standard slug "${dialect.standardSlug}" does not match ${slugPattern}`,
+        kind: "stdio-artifacts/standards-coverage",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Standard directory slugs are normalized lowercase identifiers (🔖️2.0, 🔖️ap214, 🔖️1, …).",
+        solution: `Rename ${dialect.standardRel} to match the slug pattern.`,
+      });
+    }
+    for (const child of standardChildDirs) {
+      if (child === POLICY_SUBSETS_DIR) continue;
+      if (existsSync(join(repoRoot, `${dialect.standardRel}/${child}`))) continue;
+      breaches.push({
+        id: `standards-standard-child-${dialect.standardRel}-${child}`,
+        summary: `"${dialect.standardRel}" is missing required child ${child}/`,
+        kind: "stdio-artifacts/standards-coverage",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Every standard carries builder/analyzer/composer/engine/subsets per 🔣️taxonomy.json standardChildDirs.",
+        solution: `Add ${dialect.standardRel}/${child}/.`,
+      });
+    }
+    for (const child of subsetChildDirs) {
+      if (existsSync(join(repoRoot, `${dialect.subsetRel}/${child}`))) continue;
+      breaches.push({
+        id: `standards-subset-child-${dialect.subsetRel}-${child}`,
+        summary: `"${dialect.subsetRel}" is missing required child ${child}/`,
+        kind: "stdio-artifacts/standards-coverage",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Every subset carries schema/builder/analyzer/composer/io per 🔣️taxonomy.json subsetChildDirs.",
+        solution: `Add ${dialect.subsetRel}/${child}/.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** ⚖️Every migrated artifact exposes 🏗️builder (artifact/standard/subset level) with rs+ts implementing ArtifactBuilder. */
+export function policyArtifactBuilderMigratedBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
+  for (const artRel of migratedArtifacts) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${artRel}/${POLICY_STDIO_FACET_BUILDER}`,
+        artRel,
+        "stdio-artifacts/builder",
+        "ArtifactBuilder",
+      ),
+    );
+  }
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.standardRel}/${POLICY_STDIO_FACET_BUILDER}`,
+        dialect.artRel,
+        "stdio-artifacts/builder",
+        "ArtifactBuilder",
+      ),
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.subsetRel}/${POLICY_STDIO_FACET_BUILDER}`,
+        dialect.artRel,
+        "stdio-artifacts/builder",
+        "ArtifactBuilder",
+      ),
+    );
+  }
+  return breaches;
+}
+
+/** ⚖️Every migrated artifact exposes 🧐️analyzer (artifact/standard/subset level) with rs+ts implementing ArtifactAnalyzer. */
+export function policyArtifactAnalyzerBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
+  for (const artRel of migratedArtifacts) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${artRel}/${POLICY_FACET_ANALYZER}`,
+        artRel,
+        "stdio-artifacts/analyzer",
+        "ArtifactAnalyzer",
+      ),
+    );
+  }
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.standardRel}/${POLICY_FACET_ANALYZER}`,
+        dialect.artRel,
+        "stdio-artifacts/analyzer",
+        "ArtifactAnalyzer",
+      ),
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.subsetRel}/${POLICY_FACET_ANALYZER}`,
+        dialect.artRel,
+        "stdio-artifacts/analyzer",
+        "ArtifactAnalyzer",
+      ),
+    );
+  }
+  return breaches;
+}
+
+/** ⚖️Every migrated artifact exposes 🎹️composer at all three levels: the subset level implements the
+ * ArtifactComposer trait directly (the real, typed unit); artifact/standard levels aggregate subset
+ * entries value-level (ComposerEntry rows), by design -- see the ticket's normative design doc §2.4 --
+ * so they're checked for that aggregation shape (ComposerEntry) rather than the trait name. */
+export function policyArtifactComposerBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const AGGREGATION_MARKER = "ComposerEntry";
+  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
+  for (const artRel of migratedArtifacts) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${artRel}/${POLICY_FACET_COMPOSER}`,
+        artRel,
+        "stdio-artifacts/composer",
+        AGGREGATION_MARKER,
+      ),
+    );
+  }
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    breaches.push(
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.standardRel}/${POLICY_FACET_COMPOSER}`,
+        dialect.artRel,
+        "stdio-artifacts/composer",
+        AGGREGATION_MARKER,
+      ),
+      ...policyStdioFacetRsTsBreaches(
+        repoRoot,
+        `${dialect.subsetRel}/${POLICY_FACET_COMPOSER}`,
+        dialect.artRel,
+        "stdio-artifacts/composer",
+        "ArtifactComposer",
+      ),
+    );
+  }
+  return breaches;
+}
+//#endregion 🏅️PolicyRuleStandardsSubsets
 
 function policySchemaRepresentationLeavesFor(repDir: string): readonly string[] {
   if (repDir === POLICY_STDIO_FACET_TEXT) return POLICY_STDIO_TEXT_SPEC_LEAVES;
@@ -7053,7 +7282,19 @@ function policySchemaFormatLeafBreaches(
   return breaches;
 }
 
-/** ⚖️Schema tree under 🧬️schema with representation text/binary spec leaves (ticket STDIO-ARTIFACTS-AND-IO). */
+/** 🏅 One (scope, schema-root) pair per artifact: the flat artifact-root root for an unmigrated
+ * artifact, or one subset-relative root per (standard, subset) dialect for a migrated one. */
+function policyArtifactSchemaRoots(repoRoot: string, artRel: string, schemaFacet: string): { scope: string; schemaRoot: string }[] {
+  if (!policyArtifactIsMigrated(repoRoot, artRel)) {
+    return [{ scope: artRel, schemaRoot: `${artRel}/${schemaFacet}` }];
+  }
+  return policyListArtifactDialectDirs(repoRoot)
+    .filter((d) => d.artRel === artRel)
+    .map((d) => ({ scope: artRel, schemaRoot: `${d.subsetRel}/${schemaFacet}` }));
+}
+
+/** ⚖️Schema tree under 🧬️schema with representation text/binary spec leaves (ticket STDIO-ARTIFACTS-AND-IO).
+ * Migrated artifacts are checked at their 🏅️standards/🔖️.../🪆️subsets/✳️.../🧬️schema location instead. */
 export function policySchemaRepresentationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const taxonomy = loadTaxonomy();
@@ -7061,7 +7302,7 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
   const representationDirs = policyStdioRepresentationDirs(taxonomy);
   const schemaFacet = "🧬️schema";
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const schemaRoot = `${artRel}/${schemaFacet}`;
+   for (const { schemaRoot } of policyArtifactSchemaRoots(repoRoot, artRel, schemaFacet)) {
     if (!existsSync(join(repoRoot, schemaRoot))) {
       breaches.push({
         id: `stdio-schema-root-${artRel}`,
@@ -7119,6 +7360,7 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
         }
       }
     }
+   }
   }
   return breaches;
 }
@@ -7132,6 +7374,12 @@ export function policyIoSerializerMatrixBreaches(repoRoot: string): BreachRecord
   const artifactsDir = policyStdioArtifactsDirName();
   for (const owner of table.owners ?? []) {
     const scope = owner.path;
+    if (policyArtifactIsMigrated(repoRoot, scope)) {
+      // Migrated owner: its io leaves moved under 🏅️standards/.../🚪️io/ with target-qualified
+      // (standard, subset) leaf paths -- a dedicated migrated io-matrix rule lands with the
+      // domain fan-out (W14); until then this flat-path rule simply doesn't apply to it.
+      continue;
+    }
     const ioRoot = `${scope}/🚪️io`;
     if (!existsSync(join(repoRoot, ioRoot))) {
       breaches.push({
@@ -7313,7 +7561,9 @@ export function policyCodecFidelityBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** ⚖️Aggregates stdio-artifact policy scanners (catalog, builder, decomposer, schema, io matrix, DAG, codecs). */
+/** ⚖️Aggregates stdio-artifact policy scanners (catalog, builder, decomposer, schema, io matrix, DAG, codecs,
+ * plus the standards/subsets migrated-side rules -- each pair is shape-partitioned: an artifact is checked
+ * by exactly one side of every pair, never both, per policyArtifactIsMigrated). */
 export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policyStdioCatalogBreaches(repoRoot),
@@ -7323,6 +7573,10 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyIoSerializerMatrixBreaches(repoRoot),
     ...policyIoTerminalityBreaches(repoRoot),
     ...policyCodecFidelityBreaches(repoRoot),
+    ...policyStandardsCoverageBreaches(repoRoot),
+    ...policyArtifactBuilderMigratedBreaches(repoRoot),
+    ...policyArtifactAnalyzerBreaches(repoRoot),
+    ...policyArtifactComposerBreaches(repoRoot),
   ];
 }
 

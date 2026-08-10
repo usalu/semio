@@ -1,37 +1,21 @@
-//! ProgramBuilder
+//! 🏗️ ProgramBuilder (final, artifact-level) — delegates to the 1 standard.
+
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::program::schema::diff::ProgramDiff;
-use crate::artifacts::program::schema::mutations::ProgramMutation;
-use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
+use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::artifacts::program::standards::v1::builder::ProgramBuilder as ProgramRawBuilder;
 
 #[derive(Clone, Debug, Default)]
-pub struct ProgramBuilder {
-    snapshot: ProgramSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct ProgramBuilder(ProgramRawBuilder);
 
 impl ArtifactBuilder for ProgramBuilder {
     type Snapshot = ProgramSnapshot;
     type Mutation = ProgramMutation;
     type Diff = ProgramDiff;
-    fn empty() -> Self { Self { snapshot: ProgramSnapshot::default(), diagnostics: Vec::new() } }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<ProgramSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<ProgramSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        let d = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
-        self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <ProgramDiff as protocol::MutationDiff<ProgramSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(ProgramRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(ProgramRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(ProgramRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(ProgramRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }

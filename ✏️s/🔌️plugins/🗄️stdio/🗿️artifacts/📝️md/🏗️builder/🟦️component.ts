@@ -1,2 +1,6 @@
-/** 🏗️ MdBuilder facade (local until SDK W3). */
-export interface MdBuilder { build(): { schema: string }; }
+/** 🏗️ MdBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.md",
+  standard: "commonmark",
+  subset: "*",
+} as const;

@@ -1,0 +1,39 @@
+{
+  "seed_size": 94376,
+  "launch_size": 109772,
+  "seed_mtime": 1786362694.3364122,
+  "launch_mtime": 1786371113.5008314,
+  "gates": {
+    "stdio-catalog": {
+      "seed": true,
+      "launch": true
+    },
+    "artifact-builder": {
+      "seed": true,
+      "launch": true
+    },
+    "artifact-decomposer": {
+      "seed": true,
+      "launch": true
+    },
+    "schema-representation": {
+      "seed": true,
+      "launch": true
+    },
+    "io-serializer-matrix": {
+      "seed": true,
+      "launch": true
+    },
+    "io-terminality": {
+      "seed": true,
+      "launch": true
+    },
+    "codec-fidelity": {
+      "seed": true,
+      "launch": true
+    }
+  },
+  "missing_in_launch": [],
+  "fresh": true,
+  "note": "generate already regenerated launch.json during W8"
+}

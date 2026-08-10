@@ -1,2 +1,6 @@
-/** 🏗️ JsonBuilder facade (local until SDK W3). */
-export interface JsonBuilder { build(): { schema: string }; }
+/** 🏗️ LowpolyBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.lowpoly",
+  standard: "1",
+  subset: "*",
+} as const;

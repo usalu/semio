@@ -1,2 +1,6 @@
-/** 🏗️ StepBuilder facade (local until SDK W3). */
-export interface StepBuilder { build(): { schema: string }; }
+/** 🏗️ StepBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.step",
+  standard: "ap214",
+  subset: "*",
+} as const;

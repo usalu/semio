@@ -1,42 +1,21 @@
-//! 🏗️ GifBuilder — local ArtifactBuilder until SDK Wave 3.
+//! 🏗️ GifBuilder (final, artifact-level) — delegates to the 87a standard.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::gif::{GifDiff, GifMutation, GifSnapshot};
+use crate::artifacts::gif::standards::v87a::builder::GifBuilder as GifRawBuilder;
 
-//#region 🔖️Builder
-/// 🏗️ Builds a `stdio.gif` snapshot.
 #[derive(Clone, Debug, Default)]
-pub struct GifBuilder {
-    snapshot: GifSnapshot,
-    diagnostics: Vec<dsl::Diagnostic>,
-}
+pub struct GifBuilder(GifRawBuilder);
 
 impl ArtifactBuilder for GifBuilder {
     type Snapshot = GifSnapshot;
     type Mutation = GifMutation;
     type Diff = GifDiff;
-    fn empty() -> Self {
-        Self { snapshot: GifSnapshot::default(), diagnostics: Vec::new() }
-    }
-    fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-        Self { snapshot, diagnostics: Vec::new() }
-    }
-    fn from_text(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_snapshot(<GifSnapshot as store::DocumentDsl>::parse_dsl(text)?))
-    }
-    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-        Ok(Self::from_snapshot(<GifSnapshot as store::DocumentPack>::decode_pack(bytes)?))
-    }
-    fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        crate::artifacts::gif::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
-        self
-    }
-    fn absorb(mut self, diff: Self::Diff) -> Self {
-        self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot);
-        self
-    }
-    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-        if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-    }
+    fn empty() -> Self { Self(GifRawBuilder::empty()) }
+    fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(GifRawBuilder::from_snapshot(snapshot)) }
+    fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(GifRawBuilder::from_text(text)?)) }
+    fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(GifRawBuilder::from_binary(bytes)?)) }
+    fn mutate(self, mutation: Self::Mutation) -> Self { Self(self.0.mutate(mutation)) }
+    fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+    fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { self.0.build() }
 }
-//#endregion 🔖️Builder

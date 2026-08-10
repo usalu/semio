@@ -1,3 +1,0 @@
-dialect protocol stdio.svg.diff
-magic = %x00
-payload = *OCTET

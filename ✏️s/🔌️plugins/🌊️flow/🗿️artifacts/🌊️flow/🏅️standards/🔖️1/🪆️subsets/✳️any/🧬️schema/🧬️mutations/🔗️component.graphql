@@ -1,0 +1,35 @@
+# 🧬️ Flow mutation schema — persistent fields only.
+
+type FlowMutation {
+  schema: String! @state(class: PERSISTENT)
+  camera: CameraJson! @state(class: PERSISTENT)
+  widgets: [Widget!]! @state(class: PERSISTENT)
+  synapses: [SynapseSpec!]! @state(class: PERSISTENT)
+  layout: [WidgetLayoutEntry!]! @state(class: PERSISTENT)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+
+type WidgetLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+
+scalar Widget

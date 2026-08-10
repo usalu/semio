@@ -1,0 +1,195 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.mutation;
+
+// 🧬️ Puzzle2d mutation schema — persistent fields only.
+
+message Puzzle2dMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  Puzzle2dCamera camera = 2;
+  // @state persistent
+  repeated Puzzle2dNode nodes = 3;
+  // @state persistent
+  repeated Puzzle2dEdge edges = 4;
+  // @state persistent
+  Puzzle2dMeta meta = 5;
+}
+
+
+enum Puzzle2dNodeAnchor {
+  PUZZLE2D_NODE_ANCHOR_FIXED = 0;
+  PUZZLE2D_NODE_ANCHOR_DERIVED = 1;
+}
+
+message Puzzle2dCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message Puzzle2dHandle {
+  string id = 1;
+  optional string handle_kind = 2;
+  double angle = 3;
+  optional double radius = 4;
+  optional string color = 5;
+  optional string icon_kind = 6;
+  optional double scale = 7;
+  optional bool visible = 8;
+  optional bool locked = 9;
+}
+
+message Puzzle2dNode {
+  string id = 1;
+  optional string node_kind = 2;
+  optional string shape = 3;
+  double x = 4;
+  double y = 5;
+  optional double radius = 6;
+  optional double width = 7;
+  optional double height = 8;
+  optional string text = 9;
+  optional string icon_kind = 10;
+  optional bool root = 11;
+  optional double scale = 12;
+  optional bool visible = 13;
+  optional bool locked = 14;
+  Puzzle2dNodeAnchor anchor = 15;
+  repeated Puzzle2dHandle handles = 16;
+}
+
+message Puzzle2dEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+  optional string edge_kind = 4;
+  double gap = 5;
+  double shift = 6;
+  double rise = 7;
+  double rotation = 8;
+  double turn = 9;
+  double tilt = 10;
+  double x = 11;
+  double y = 12;
+  optional string source_tip = 13;
+  optional string target_tip = 14;
+  optional bool visible = 15;
+  optional bool locked = 16;
+}
+
+enum Puzzle2dCompatSpecificity {
+  PUZZLE2D_COMPAT_SPECIFICITY_GENERAL = 0;
+  PUZZLE2D_COMPAT_SPECIFICITY_NODE = 1;
+  PUZZLE2D_COMPAT_SPECIFICITY_EDGE = 2;
+  PUZZLE2D_COMPAT_SPECIFICITY_HANDLE = 3;
+  PUZZLE2D_COMPAT_SPECIFICITY_WIRE = 4;
+  PUZZLE2D_COMPAT_SPECIFICITY_VORTEX = 5;
+}
+
+message Puzzle2dKindCompatibility {
+  string source = 1;
+  string target = 2;
+  bool bidirectional = 3;
+  bool important = 4;
+  Puzzle2dCompatSpecificity specificity = 5;
+}
+
+message Puzzle2dAttribute {
+  string id = 1;
+  string key = 2;
+  string value = 3;
+  optional string definition = 4;
+}
+
+message Puzzle2dAuthor {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  optional string role = 4;
+  optional int32 rank = 5;
+}
+
+message Puzzle2dRepresentation {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+  string mime = 4;
+  repeated string tags = 5;
+  optional string lod = 6;
+  string description = 7;
+}
+
+message Puzzle2dHandleTemplate {
+  string id = 1;
+  string name = 2;
+  string label = 3;
+  string description = 4;
+  string icon = 5;
+  optional string handle_kind = 6;
+  double angle = 7;
+  optional double t = 8;
+  optional bool mandatory = 9;
+  optional double radius = 10;
+}
+
+message Puzzle2dCatalogNodeKind {
+  string id = 1;
+  string name = 2;
+  string label = 3;
+  string description = 4;
+  string icon = 5;
+  string image = 6;
+  string unit = 7;
+  bool abstract = 8;
+  repeated string base_kinds = 9;
+  repeated Puzzle2dRepresentation representations = 10;
+  repeated Puzzle2dHandleTemplate handles = 11;
+  repeated Puzzle2dAttribute attributes = 12;
+  repeated Puzzle2dAuthor authors = 13;
+}
+
+message Puzzle2dCatalogHandleKind {
+  string id = 1;
+  optional string code = 2;
+  optional string label = 3;
+  optional int32 order = 4;
+  repeated string compatible_with = 5;
+  string description = 6;
+  string icon = 7;
+  string color = 8;
+  string default_wire_kind = 9;
+}
+
+message Puzzle2dCatalogEdgeKind {
+  string id = 1;
+  string name = 2;
+  string label = 3;
+  string description = 4;
+  string icon = 5;
+  string color = 6;
+}
+
+message Puzzle2dCatalogWireKind {
+  string id = 1;
+  string name = 2;
+  string label = 3;
+  string description = 4;
+  string icon = 5;
+  string color = 6;
+  string default_edge_kind = 7;
+}
+
+message Puzzle2dKindCatalogs {
+  repeated Puzzle2dCatalogNodeKind nodes = 1;
+  repeated Puzzle2dCatalogHandleKind handles = 2;
+  repeated Puzzle2dCatalogEdgeKind edges = 3;
+  repeated Puzzle2dCatalogWireKind wires = 4;
+}
+
+message Puzzle2dMeta {
+  optional string manifest_id = 1;
+  repeated Puzzle2dKindCompatibility kind_compatibility = 2;
+  optional Puzzle2dKindCatalogs kind_catalogs = 3;
+}
+

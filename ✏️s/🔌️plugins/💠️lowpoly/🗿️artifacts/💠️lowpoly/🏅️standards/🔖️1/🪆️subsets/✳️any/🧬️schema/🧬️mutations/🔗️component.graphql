@@ -1,0 +1,43 @@
+# 🧬️ Lowpoly mutation schema — persistent fields only.
+
+type LowpolyMutation {
+  schema: String! @state(class: PERSISTENT)
+  objects: [LowpolyObject!]! @state(class: PERSISTENT)
+}
+
+type LowpolySelectionTargets {
+  mesh: Boolean!
+  vertex: Boolean!
+  edge: Boolean!
+  face: Boolean!
+}
+
+type LowpolySelection {
+  targets: LowpolySelectionTargets!
+  keys: [String!]!
+  mode: String!
+  ids: [Int!]!
+}
+
+type LowpolyTransform {
+  position: [Float!]!
+  rotation: [Float!]!
+  scale: [Float!]!
+}
+
+type LowpolyPaintLayer {
+  name: String!
+  visible: Boolean!
+  opacity: Float!
+  blendMode: String!
+  pixels: String!
+}
+
+type LowpolyObject {
+  id: String!
+  name: String!
+  transform: LowpolyTransform!
+  smoothShading: Boolean!
+  meshJson: String!
+  paintLayers: [LowpolyPaintLayer!]!
+}

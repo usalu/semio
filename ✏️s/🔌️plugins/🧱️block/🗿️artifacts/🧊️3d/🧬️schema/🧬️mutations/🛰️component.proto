@@ -1,0 +1,71 @@
+syntax = "proto3";
+package semio.s.block.block3d.mutation;
+
+// 🧬️ Block3d mutation schema — persistent fields only.
+
+message Block3dMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  BlockKindIdentity object_kind = 2;
+  // @state persistent
+  repeated BlockRepresentation representations = 3;
+  // @state persistent
+  repeated Block3dVortexKind vortex_kinds = 4;
+  // @state persistent
+  repeated Block3dVortexTemplate vortices = 5;
+  // @state persistent
+  repeated BlockCompatibilityRule compatibility = 6;
+  // @state persistent
+  repeated BlockAttribute attributes = 7;
+  // @state persistent
+  repeated BlockAuthor authors = 8;
+  // @state persistent
+  BlockCamera3d camera3d = 9;
+  // @state persistent
+  BlockMeta meta = 10;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message BlockRepresentation {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexKind {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera3d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}
+
+message Block3dWindowView {
+  bool _placeholder = 1;
+}
+
+message Block3dBrushPreview {
+  bool _placeholder = 1;
+}

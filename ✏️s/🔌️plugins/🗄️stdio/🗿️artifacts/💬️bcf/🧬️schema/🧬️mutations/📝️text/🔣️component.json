@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.bcf/mutations/text.json",
-  "title": "BcfMutationsText",
-  "type": "object"
-}

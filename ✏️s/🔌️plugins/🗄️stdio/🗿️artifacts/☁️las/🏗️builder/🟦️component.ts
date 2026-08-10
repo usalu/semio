@@ -1,2 +1,6 @@
-/** 🏗️ LasBuilder facade (local until SDK W3). */
-export interface LasBuilder { build(): { schema: string }; }
+/** 🏗️ LasBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.las",
+  standard: "1.0",
+  subset: "*",
+} as const;

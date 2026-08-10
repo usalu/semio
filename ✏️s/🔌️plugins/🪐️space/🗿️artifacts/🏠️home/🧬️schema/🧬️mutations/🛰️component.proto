@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s.space.home.mutation;
+
+// 🧬️ S Home mutation schema — persistent fields only.
+
+message SHomeMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  uint64 catalog_generation = 2;
+}

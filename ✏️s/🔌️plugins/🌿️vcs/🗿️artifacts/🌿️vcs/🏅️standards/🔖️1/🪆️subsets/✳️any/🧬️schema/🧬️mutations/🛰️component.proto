@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.mutation;
+
+// 🧬️ VCS mutation schema — persistent fields only.
+
+message VcsMutation {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string title = 2;
+  // @state persistent
+  int64 counter = 3;
+  // @state persistent
+  string notes = 4;
+  // @state persistent
+  string status = 5;
+  // @state persistent
+  repeated string tags = 6;
+}

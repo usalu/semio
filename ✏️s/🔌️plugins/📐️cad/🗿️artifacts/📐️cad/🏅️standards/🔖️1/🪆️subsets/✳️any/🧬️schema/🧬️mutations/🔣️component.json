@@ -1,0 +1,256 @@
+{
+  "$id": "https://semio.tech/schema/s/cad/cad/mutation.json",
+  "title": "CadMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "objects",
+    "buildingObjects",
+    "energyObjects",
+    "structureClassicObjects",
+    "referencesByModelDefinitionId",
+    "nodes",
+    "activeModelDefinitionId"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "buildingObjects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "energyObjects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "structureClassicObjects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "referencesByModelDefinitionId": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/CadReferenceList"
+      },
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "shapeGeometry": {
+      "$ref": "#/$defs/CadGeometry",
+      "x-semio-state": "persistent"
+    },
+    "buildingGeometry": {
+      "$ref": "#/$defs/CadGeometry",
+      "x-semio-state": "persistent"
+    },
+    "energyGeometry": {
+      "$ref": "#/$defs/CadGeometry",
+      "x-semio-state": "persistent"
+    },
+    "structureClassicGeometry": {
+      "$ref": "#/$defs/CadGeometry",
+      "x-semio-state": "persistent"
+    },
+    "activeModelDefinitionId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "CadObject": {
+      "title": "CadObject",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CadNode": {
+      "title": "CadNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CadReferenceList": {
+      "title": "CadReferenceList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "CadGeometry": {
+      "title": "CadGeometry",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {}
+    },
+    "CadCamera": {
+      "title": "CadCamera",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {}
+    },
+    "CadComponentSelection": {
+      "title": "CadComponentSelection",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {}
+    },
+    "CadDislocateOptions": {
+      "title": "CadDislocateOptions",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moveEnabled",
+        "rotateEnabled"
+      ],
+      "properties": {
+        "moveEnabled": {
+          "type": "boolean"
+        },
+        "rotateEnabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CadStringList": {
+      "title": "CadStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CadObjectsDelta": {
+      "title": "CadObjectsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadObject"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CadNodesDelta": {
+      "title": "CadNodesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadNode"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

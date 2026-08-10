@@ -1,2 +1,6 @@
-/** 🏗️ JpgBuilder facade (local until SDK W3). */
-export interface JpgBuilder { build(): { schema: string }; }
+/** 🏗️ JpgBuilder (final) meta. */
+export const meta = {
+  artifactKind: "s.stdio.jpg",
+  standard: "jfif-1.01",
+  subset: "*",
+} as const;
