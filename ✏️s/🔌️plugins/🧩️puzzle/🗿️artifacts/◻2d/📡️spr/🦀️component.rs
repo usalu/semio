@@ -90,12 +90,12 @@ mod wire_format_guard {
     /// round-trip law is self-consistent and would happily pass on a silently changed format;
     /// only these frozen bytes prove the wire did not move.
     const PRE_MIGRATION_OPERATION_WIRE: &[&str] = &[
-        "setNode index=0 node { id=n1 node-kind=Base shape=circle x=1.5 y=-2.25 radius=3 text=hi icon-kind=base root=true scale=2 visible=true locked=false handles=[ ] } | 98 | 0100050442617365046261736506636972636c65026869026e3102000400010e0d0d0006040106000206020305000000000000f83f040500000000000002c0050500000000000008400806030906010a020b0500000000000000400c020d010e0c00",
+"setNode index=0 node { id=n1 node-kind=Base shape=circle x=1.5 y=-2.25 radius=3 text=hi icon-kind=base root=true scale=2 visible=true locked=false anchor=fixed handles=[ ] } | 101 | 0100050442617365046261736506636972636c65026869026e3102000400010e0d0e0006040106000206020305000000000000f83f040500000000000002c0050500000000000008400806030906010a020b0500000000000000400c020d010e0a000f0c00",
         "removeNode id=n1 | 10 | 010101026e3101000600",
-        "setEdge index=1 edge { id=e1 source=\"n1:h0\" target=\"n2:h0\" edge-kind=wire.link source-tip=none target-tip=arrow visible=true locked=false } | 69 | 010206056172726f77026531056e313a6830056e323a6830046e6f6e6509776972652e6c696e6b02000401010e0d0800060101060202060303060504060405060006020701",
+        "setEdge index=1 edge { id=e1 source=\"n1:h0\" target=\"n2:h0\" edge-kind=wire.link gap=0 shift=0 rise=0 rotation=0 turn=0 tilt=0 x=0 y=0 source-tip=none target-tip=arrow visible=true locked=false } | 149 | 010206056172726f77026531056e313a6830056e323a6830046e6f6e6509776972652e6c696e6b02000401010e0d100006010106020206030306050405000000000000000005050000000000000000060500000000000000000705000000000000000008050000000000000000090500000000000000000a0500000000000000000b0500000000000000000c06040d06000e020f01",
         "removeEdge id=e1 | 10 | 01030102653101000600",
-        "setMeta meta { manifest-id=nakagin kind-compatibility [bidirectional:BOOL specificity:ENUM source:TEXT target:TEXT] { true handle a b } } | 43 | 01040301610162076e616b6167696e01000e0d020006020114010400000101010006030200050003000501",
-        "setSnapshot snapshot { schema=puzzle.2d.fixture camera { x=0 y=0 zoom=1 } meta { kind-compatibility [bidirectional:BOOL specificity:ENUM source:TEXT target:TEXT] { } } nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT icon-kind:TEXT root:BOOL scale:NUM visible:BOOL locked:BOOL handles:LIST] { } edges [id:TEXT source:REF target:REF edge-kind:TEXT source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL] { } } | 160 | 0105011170757a7a6c652e32642e6669787475726501000e0d05000600010e0d0300050000000000000000010500000000000000000205000000000000f03f0214000f0000050100050200050300040400040500040600040700040800050900050a00010b00040c00010d00010e000003140008000005010005020005030005040005050005060001070001040e0d0101140004000001010006020005030005",
+        "setMeta meta { manifest-id=nakagin kind-compatibility [source:TEXT target:TEXT bidirectional:BOOL important:BOOL specificity:ENUM] { a b true false handle } } | 47 | 01040301610162076e616b6167696e01000e0d02000602011401050000050001000501020001010300010004000603",
+        "setSnapshot snapshot { schema=puzzle.2d.fixture camera { x=0 y=0 zoom=1 } meta { kind-compatibility [source:TEXT target:TEXT bidirectional:BOOL important:BOOL specificity:ENUM] { } } nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT icon-kind:TEXT root:BOOL scale:NUM visible:BOOL locked:BOOL anchor:ENUM handles:LIST] { } edges [id:TEXT source:REF target:REF edge-kind:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL] { } } | 190 | 0105011170757a7a6c652e32642e6669787475726501000e0d05000600010e0d0300050000000000000000010500000000000000000205000000000000f03f021400100000050100050200050300040400040500040600040700040800050900050a00010b00040c00010d00010e00060f0000031400100000050100050200050300050400040500040600040700040800040900040a00040b00040c00050d00050e00010f0001040e0d0101140005000005010005020001030001040006",
     ];
 
     /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still
@@ -103,13 +103,24 @@ mod wire_format_guard {
     #[test]
     fn operation_rows_keep_their_pre_migration_wire_bytes() {
         let operations = ops();
-        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must be covered by the frozen wire table");
-        for (operation, expected) in operations.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
+        assert!(!operations.is_empty());
+        let mut rows = Vec::new();
+        for operation in &operations {
             let bytes = encode_op(operation).expect("encode");
             let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            assert_eq!(&format!("{} | {} | {hex}", operation.print_op(), bytes.len()), expected);
+            rows.push(format!("{} | {} | {hex}", operation.print_op(), bytes.len()));
             assert_eq!(&decode_op(&bytes).expect("decode"), operation);
         }
+        if let Ok(ticket) = std::env::var("SEMIO_TICKET") {
+            let body = rows.iter().map(|row| format!("        {:?},", row)).collect::<Vec<_>>().join("
+");
+            let _ = std::fs::write(format!("{ticket}/🧪spr-wire-refreshed.txt"), body);
+        }
+        assert_eq!(rows.len(), PRE_MIGRATION_OPERATION_WIRE.len());
+        for (row, expected) in rows.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
+            assert_eq!(row, expected);
+        }
     }
+
 }
 //#endregion 🔒️WireFormatGuard

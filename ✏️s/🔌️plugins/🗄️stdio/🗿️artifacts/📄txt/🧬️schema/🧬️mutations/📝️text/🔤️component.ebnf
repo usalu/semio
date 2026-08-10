@@ -1,0 +1,3 @@
+(* ebnf stdio.txt mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.txt', newline ;

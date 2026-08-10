@@ -1,0 +1,3 @@
+; abnf stdio.csv mutations
+document = payload
+payload = *OCTET

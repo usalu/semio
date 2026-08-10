@@ -1,0 +1,16 @@
+{
+  "builder": "🏗️builder",
+  "decomposer": "🪓️decomposer",
+  "text": "📝️text",
+  "binary": "💾️binary",
+  "deserializers": "🧩️deserializers",
+  "serializers": "🧵️serializers",
+  "ksy": "🥋️component.ksy",
+  "abnf": "🔠️component.abnf",
+  "spicy": "🌶️component.spicy",
+  "ebnf": "🔤️component.ebnf",
+  "g4": "🅰️component.g4",
+  "stdio_plugin": "🗄️stdio",
+  "grammar": "📖️component.grammar.semio",
+  "protocol": "📡️component.protocol.semio"
+}

@@ -62,6 +62,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: GIS_MAP_SCHEMA.into(),
         export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
         import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔹ArtifactKind

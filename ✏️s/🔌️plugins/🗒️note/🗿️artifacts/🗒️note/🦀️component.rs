@@ -20,6 +20,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "note.document".into(),
         export_formats: crate::artifacts::note::io::format_specs().iter().filter(|s| s.export).map(|s| s.format).collect(),
         import_formats: crate::artifacts::note::io::format_specs().iter().filter(|s| s.import).map(|s| s.format).collect(),
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

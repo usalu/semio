@@ -1,2 +1,0 @@
-CORE=/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs
-DRAW=/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs

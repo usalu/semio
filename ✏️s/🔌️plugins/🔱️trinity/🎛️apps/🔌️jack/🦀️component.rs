@@ -435,7 +435,9 @@ pub fn create_trinity_jack_app() -> App {
                 schema: "trinity.graph".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("trinity")
             .mode("explore", LocalizedLabel::native("Explore", "Erkunden"), "focus")
             .default_mode_id("explore")

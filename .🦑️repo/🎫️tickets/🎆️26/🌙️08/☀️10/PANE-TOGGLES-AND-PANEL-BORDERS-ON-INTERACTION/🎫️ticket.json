@@ -1,0 +1,10 @@
+{
+  "title": "Pane Toggles And Panel Borders On Interaction",
+  "emoji": "👻️",
+  "status": "open",
+  "description": "Ensure pane toggles (and folded panel/pane chrome toggles) disappear during window interactions (e.g. group rectangle selection) and ensure panel silhouette borders hide completely during ghost sessions.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "ab1fdfae-0dac-45e2-9b43-416b2034e03b"
+  ]
+}

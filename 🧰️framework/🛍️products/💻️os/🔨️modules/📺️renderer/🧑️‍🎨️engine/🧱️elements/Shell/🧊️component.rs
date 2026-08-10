@@ -4477,7 +4477,7 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     if tab.id() == FRAMEWORK_SETTINGS_GENERAL_TAB_ID {
         return "settings-2";
     }
-    // 🎨️🎛️ Same icon choices as React's `createFrameworkSettingsPanelTabs`/`buildCommandCategoryTabs`
+    // 🎨️🎛️ Same icon choices as React's `createFrameworkSettingsPanelTab`/`buildCommandCategoryTabs`
     // (`shellTabIcon("paintbrush")` / `COMMAND_CATEGORY_ICON = shellTabIcon("wrench")`).
     if tab.id() == FRAMEWORK_SETTINGS_THEME_TAB_ID {
         return "paintbrush";
@@ -5472,7 +5472,7 @@ mod command_registry_tests {
             capabilities: vec![],
             contributions: vec![],
             commands: vec![CommandDefinition::new_catalog("plugin.doThing", LocalizedLabel::data("Do Thing"), CommandScope::Plugin, "plugin")],
-        };
+         artifact_kinds: vec![] };
         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
         let sources: Vec<(&str, CommandSource)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.source.clone())).collect();
         assert_eq!(sources, vec![("os.setLocale", CommandSource::Os), ("plugin.doThing", CommandSource::Plugin), ("app.export", CommandSource::App), ("mode.focus", CommandSource::Mode("default".into())),]);
@@ -7314,7 +7314,7 @@ impl ShellState {
                     body_key: Some(String::new()),
                     children: Vec::new(),
                 }];
-                // 🔒️ Byte-identical to React's `createFrameworkSettingsPanelTabs` (`ui/js/react/
+                // 🔒️ Byte-identical to React's `createFrameworkSettingsPanelTab` (`ui/js/react/
                 // index.tsx:9526-9528`): a locked theme drops the whole Theme tab, not just its editor.
                 if shell_pref_locks().theme_id.is_none() {
                     tabs.push(PanelTabDefinition {

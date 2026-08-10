@@ -813,6 +813,7 @@ fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
+/// ⚠️ DEPRECATED for new stdio IO — prefer `ArtifactKindSpec::{export,import}_stdio_kinds` string kind ids. Kept temporarily so domain plugins keep compiling mid-migration.
 pub enum MediaFormat {
     Glb,
     Gltf,
@@ -1036,6 +1037,12 @@ pub struct ArtifactKindSpec {
     pub schema: String,
     pub export_formats: Vec<MediaFormat>,
     pub import_formats: Vec<MediaFormat>,
+    /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty", skip_deserializing)]
+    pub export_stdio_kinds: Vec<&'static str>,
+    /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty", skip_deserializing)]
+    pub import_stdio_kinds: Vec<&'static str>,
 }
 //#endregion ArtifactKind
 

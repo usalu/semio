@@ -288,28 +288,56 @@ where
     true
 }
 
+fn canonicalize_puzzle2d_fixture_collections(value: &Value) -> Value {
+    let mut next = value.clone();
+    let Some(object) = next.as_object_mut() else {
+        return next;
+    };
+    for key in ["nodes", "edges"] {
+        let Some(entries) = object.get_mut(key).and_then(Value::as_array_mut) else {
+            continue;
+        };
+        for entry in entries.iter_mut() {
+            let rewritten = if key == "nodes" {
+                serde_json::from_value::<Puzzle2dNode>(entry.clone()).ok().and_then(|node| serde_json::to_value(node).ok())
+            } else {
+                serde_json::from_value::<Puzzle2dEdge>(entry.clone()).ok().and_then(|edge| serde_json::to_value(edge).ok())
+            };
+            if let Some(rewritten) = rewritten {
+                *entry = rewritten;
+            }
+        }
+    }
+    next
+}
+
 /// 🧮️ Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; meta becomes
-/// `SetMeta`. Falls back to a single `SetSnapshot` whenever the granular replay would not reproduce
-/// `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level keys,
-/// schema changes) — so the emitted operations are always exact while staying granular for the
-/// common edits. The camera is deliberately not a known key: it is session-only
-/// `Puzzle2dPlayRuntime` state (see `setCamera`'s `ActionKind::View`), never persisted on the
-/// document, so a fixture must never carry a top-level `"camera"` key at all.
+/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays are canonicalized through the typed
+/// `Puzzle2dNode`/`Puzzle2dEdge` shape first so sparse fixture writes (missing `anchor`, connection
+/// defaults, …) still emit `SetNode`/`SetEdge` instead of falling back to a clobbering `SetSnapshot`.
+/// Node/edge arrays then diff per element id; meta becomes `SetMeta`. Falls back to a single
+/// `SetSnapshot` whenever the granular replay would not reproduce `after` exactly (reorders,
+/// id-less entries, malformed entries, unrecognized top-level keys, schema changes) — so the
+/// emitted operations are always exact while staying granular for the common edits. The camera is
+/// deliberately not a known key: it is session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s
+/// `ActionKind::View`), never persisted on the document, so a fixture must never carry a top-level
+/// `"camera"` key at all.
 pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dMutation> {
+    let before = canonicalize_puzzle2d_fixture_collections(before);
+    let after = canonicalize_puzzle2d_fixture_collections(after);
     if before == after {
         return Vec::new();
     }
     let fallback = |after: &Value| vec![Puzzle2dMutation::SetSnapshot { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
-        return fallback(after);
+        return fallback(&after);
     };
     const KNOWN_KEYS: [&str; 4] = ["schema", "nodes", "edges", "meta"];
     if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
-        return fallback(after);
+        return fallback(&after);
     }
     if before_object.get("schema") != after_object.get("schema") {
-        return fallback(after);
+        return fallback(&after);
     }
     let mut operations = Vec::new();
     let before_nodes = before_object.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
@@ -318,7 +346,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         let mut set = Vec::new();
         let mut removed = Vec::new();
         if !puzzle2d_collect_value_collection_delta::<Puzzle2dNode>(before_nodes, after_nodes, &mut set, &mut removed) {
-            return fallback(after);
+            return fallback(&after);
         }
         operations.extend(removed.into_iter().map(|id| Puzzle2dMutation::RemoveNode { id }));
         operations.extend(set.into_iter().map(|(index, node)| Puzzle2dMutation::SetNode { index, node }));
@@ -329,7 +357,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         let mut set = Vec::new();
         let mut removed = Vec::new();
         if !puzzle2d_collect_value_collection_delta::<Puzzle2dEdge>(before_edges, after_edges, &mut set, &mut removed) {
-            return fallback(after);
+            return fallback(&after);
         }
         operations.extend(removed.into_iter().map(|id| Puzzle2dMutation::RemoveEdge { id }));
         operations.extend(set.into_iter().map(|(index, edge)| Puzzle2dMutation::SetEdge { index, edge }));
@@ -340,7 +368,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         let meta = match after_meta {
             Some(value) => match serde_json::from_value::<Puzzle2dMeta>(value.clone()) {
                 Ok(meta) => meta,
-                Err(_) => return fallback(after),
+                Err(_) => return fallback(&after),
             },
             None => Puzzle2dMeta::default(),
         };
@@ -350,10 +378,10 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     for operation in &operations {
         apply_puzzle2d_operation_to_value(&mut replay, operation);
     }
-    if &replay == after {
+    if replay == after {
         operations
     } else {
-        fallback(after)
+        fallback(&after)
     }
 }
 //#endregion 🔖️ValueBridge
@@ -432,11 +460,11 @@ mod tests {
 
     #[test]
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
-        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
+        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         // Move n2, add n3, remove n1 — a disjoint mix of granular edits. The camera is deliberately
         // absent here: it is session-only `Puzzle2dConfig` state (see `setCamera`'s
         // `ActionKind::View`), never a document field the delta operations need to diff.
-        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
+        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
         let operations = puzzle2d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetNode { .. })));
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetSnapshot { .. })), "granular delta must not fall back to whole-document replace here");
@@ -454,6 +482,19 @@ mod tests {
         }
         assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
     }
+
+    #[test]
+    fn sparse_node_without_anchor_still_emits_set_node() {
+        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] });
+        let after = json!({
+            "schema": PUZZLE_2D_SCHEMA,
+            "nodes": [{ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }],
+            "edges": []
+        });
+        let operations = puzzle2d_document_delta_operations(&before, &after);
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetNode { .. })), "sparse add must stay granular");
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::SetSnapshot { .. })), "missing anchor must not force SetSnapshot");
+    }
 }
 //#endregion 🧪️Tests
 
@@ -465,3 +506,4 @@ pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puz
 pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
     mutation.inverse(projection)
 }
+

@@ -1115,14 +1115,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1181,14 +1181,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![]  artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -1222,7 +1222,7 @@ pub mod host {
                     contributions: vec![contribution.clone()],
                     examples: vec![],
                     commands: vec![],
-                },
+                 artifact_kinds: vec![] },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert_eq!(host.contributions().len(), 1);
@@ -1238,7 +1238,7 @@ pub mod host {
                     contributions: vec![],
                     examples: vec![],
                     commands: vec![],
-                },
+                 artifact_kinds: vec![] },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());

@@ -72,7 +72,9 @@ mod tests {
             schema: "test.contract.2d.schema".into(),
             export_formats: vec![MediaFormat::Svg],
             import_formats: vec![MediaFormat::Svg],
-        });
+                export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    });
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.3d".into(),
             name: "Test 3D".into(),
@@ -84,7 +86,9 @@ mod tests {
             schema: "test.contract.3d.schema".into(),
             export_formats: vec![MediaFormat::Glb],
             import_formats: vec![MediaFormat::Glb],
-        });
+                export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    });
         let mut projection = demo_space_projection();
         let src_out = crate::apps::space::testkit::test_port("contract-src", "out", MediaPortDirection::Out, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "test.contract.2d");
         let dst_in = crate::apps::space::testkit::test_port("contract-dst", "in", MediaPortDirection::In, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, "test.contract.3d");
@@ -114,7 +118,9 @@ mod tests {
             schema: "test.contract.doc.schema".into(),
             export_formats: vec![],
             import_formats: vec![],
-        });
+                export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    });
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.doc-b".into(),
             name: "Test Doc B".into(),
@@ -126,7 +132,9 @@ mod tests {
             schema: "test.contract.doc.schema".into(),
             export_formats: vec![],
             import_formats: vec![],
-        });
+                export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    });
         let mut projection = demo_space_projection();
         let src_out = crate::apps::space::testkit::test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a");
         let dst_in = crate::apps::space::testkit::test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b");

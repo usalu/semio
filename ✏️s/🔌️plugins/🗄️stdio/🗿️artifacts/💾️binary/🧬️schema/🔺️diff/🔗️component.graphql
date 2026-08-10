@@ -1,0 +1,5 @@
+# 🧬️ BinaryDiff
+type BinaryDiff {
+  schema: String
+  bytes: String
+}

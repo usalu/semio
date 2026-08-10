@@ -1,0 +1,6 @@
+dialect grammar stdio.binary.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.binary' NL
+body = payload NL?
+payload = *OCTET

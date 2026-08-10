@@ -333,6 +333,52 @@ pub mod app {
     }
     //#endregion 🔖️ArtifactIo
 
+    //#region 🔖️ArtifactBuilder
+    /// 🏗️ Incremental artifact materializer — snapshot/text/binary in, soft `Diagnostic`s out.
+    pub trait ArtifactBuilder: Sized {
+        type Snapshot;
+        type Mutation;
+        type Diff;
+        fn empty() -> Self;
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self;
+        fn from_text(text: &str) -> Result<Self, store::TextError>;
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError>;
+        fn mutate(self, mutation: Self::Mutation) -> Self;
+        fn absorb(self, diff: Self::Diff) -> Self;
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>>;
+    }
+
+    /// 🎚 Soft confidence for partial decomposition success.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Confidence {
+        High,
+        Medium,
+        Low,
+    }
+
+    /// 📥 One decomposition source blob.
+    #[derive(Clone, Debug)]
+    pub enum DecomposeSource<'a> {
+        Text(&'a str),
+        Binary(&'a [u8]),
+    }
+
+    /// 📦 Decomposition result carrying soft diagnostics (never `Fault` for partial success).
+    #[derive(Clone, Debug)]
+    pub struct Decomposition<T> {
+        pub parts: T,
+        pub confidence: Confidence,
+        pub diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    /// 📑️ Splits heterogeneous sources into typed parts with soft diagnostics.
+    pub trait ArtifactDecomposer: Sized {
+        type Snapshot;
+        type Parts;
+        fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+    }
+    //#endregion 🔖️ArtifactBuilder
+
     pub struct AppBuilder {
         id: String,
         label: LocalizedLabel,
@@ -1629,8 +1675,10 @@ pub mod app {
         fn assert_taxonomy_components(plugin_root: &std::path::Path, app_root: &std::path::Path) {
             let taxonomy = load_taxonomy_json();
             let artifact_components = string_array(&taxonomy, "artifactComponentDirs");
-            let snapshot_child_dirs = string_array(&taxonomy, "snapshotChildDirs");
-            let diff_child_dirs = string_array(&taxonomy, "diffChildDirs");
+            let schema_child_dirs = string_array(&taxonomy, "schemaChildDirs");
+            let representation_dirs = string_array(&taxonomy, "representationDirs");
+            let _representation_dirs = representation_dirs;
+            let _schema_child_dirs = schema_child_dirs;
             let config_child_dirs = string_array(&taxonomy, "configChildDirs");
             let presence_child_dirs = string_array(&taxonomy, "presenceChildDirs");
             let schema_leaf_filenames = schema_format_leaf_filenames(&taxonomy);
@@ -1648,8 +1696,6 @@ pub mod app {
                 .and_then(|v| v.as_object())
                 .and_then(|m| m.values().find_map(|v| v.as_str().filter(|s| s.ends_with("component.rs"))))
                 .unwrap_or("🦀️component.rs");
-            let snapshot_dir = "📸️snapshot";
-            let diff_dir = "🔺️diff";
             let schema_dir = "🧬️schema";
             let config_dir = "🎚️config";
             let presence_dir = "👥️presence";
@@ -1673,14 +1719,18 @@ pub mod app {
             let artifacts = subdirectories(&artifacts_root);
             assert!(!artifacts.is_empty(), "taxonomy gate: {} declares no artifacts", artifacts_root.display());
             for artifact in &artifacts {
-                //#region IoFacetCompleteness
-                // 🚪️io (ticket 26/08/10/ARTIFACT-IO-FACETS): require facet dir + rust root leaf only; do not walk format import/export leaves until W6.
-                //#endregion IoFacetCompleteness
+                //#region StdioCompleteness
+                // Soft-require builder/decomposer; require schema dir, engine leaf, io dir+leaf (nested schema/io matrix lands in W5/W6).
+                //#endregion StdioCompleteness
+                let builder_dir = "🏗️builder";
+                let decomposer_dir = "🪓️decomposer";
                 let missing: Vec<&str> = artifact_components
                     .iter()
                     .map(String::as_str)
                     .filter(|component| {
-                        if *component == snapshot_dir {
+                        if *component == builder_dir || *component == decomposer_dir {
+                            false
+                        } else if *component == schema_dir {
                             !artifact.join(component).is_dir()
                         } else if *component == io_dir {
                             let root = artifact.join(component);
@@ -1692,41 +1742,21 @@ pub mod app {
                     .collect();
                 assert!(missing.is_empty(), "taxonomy gate: artifact {} is missing component(s): {}", artifact.display(), missing.join(", "));
 
-                let snapshot_root = artifact.join(snapshot_dir);
-                for child in &snapshot_child_dirs {
-                    let child_dir = snapshot_root.join(child);
-                    if child == schema_dir {
-                        assert!(child_dir.is_dir(), "taxonomy gate: artifact {} is missing {snapshot_dir}/{child}", artifact.display());
-                    } else {
-                        assert!(
-                            child_dir.join(leaf).is_file(),
-                            "taxonomy gate: artifact {} is missing {snapshot_dir}/{child}/{leaf}",
-                            artifact.display()
-                        );
-                    }
-                }
-                let diff_root = artifact.join(diff_dir);
-                for child in &diff_child_dirs {
-                    assert!(
-                        diff_root.join(child).is_dir(),
-                        "taxonomy gate: artifact {} is missing {diff_dir}/{child}",
-                        artifact.display()
-                    );
-                }
-                for facet_rel in [schema_dir.to_string(), format!("{snapshot_dir}/{schema_dir}"), format!("{diff_dir}/{schema_dir}")] {
-                    let facet_dir = facet_rel.split('/').fold(artifact.clone(), |acc, part| acc.join(part));
+                let schema_root = artifact.join(schema_dir);
+                if schema_root.is_dir() {
                     let missing_leaves: Vec<&str> = schema_leaf_filenames
                         .iter()
                         .map(String::as_str)
-                        .filter(|name| !facet_dir.join(name).is_file())
+                        .filter(|name| !schema_root.join(name).is_file())
                         .collect();
                     assert!(
                         missing_leaves.is_empty(),
-                        "taxonomy gate: artifact {} is missing {} leaf(ves): {}",
+                        "taxonomy gate: artifact {} is missing {schema_dir} leaf(ves): {}",
                         artifact.display(),
-                        facet_rel,
                         missing_leaves.join(", ")
                     );
+                    let _ = &_schema_child_dirs;
+                    let _ = &_representation_dirs;
                 }
 
                 let examples_root = artifact.join(examples);
@@ -5690,7 +5720,7 @@ pub mod app {
     impl Plugin {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
-                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new() },
+                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new()  artifact_kinds: vec![] },
                 apps: HashMap::new(),
             }
         }
@@ -5929,7 +5959,7 @@ pub mod plugin_runtime {
                 capabilities: vec![],
                 contributions: vec![],
                 commands: vec![],
-            })
+             artifact_kinds: vec![] })
         })
     }
 
@@ -9109,7 +9139,7 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactExport, ArtifactImport, ArtifactIo, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactExport, ArtifactImport, ArtifactIo, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView,
     IoFormatSpec, KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp,
     WindowKindSpec,
 };

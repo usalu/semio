@@ -1,0 +1,3 @@
+(* ebnf stdio.binary snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.binary', newline ;

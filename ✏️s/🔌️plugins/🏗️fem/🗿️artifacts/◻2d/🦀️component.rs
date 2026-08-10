@@ -236,6 +236,8 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "computation.fem2d".into(),
         export_formats: vec![],
         import_formats: vec![],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 // #endregion 🔖️ArtifactKind

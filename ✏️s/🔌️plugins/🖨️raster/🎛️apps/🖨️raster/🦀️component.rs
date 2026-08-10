@@ -262,7 +262,9 @@ pub fn create_raster_app() -> App {
                 schema: "2d.image".into(),
                 export_formats: vec![MediaFormat::Png],
                 import_formats: vec![MediaFormat::Png],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("raster")
             .mode_def(edit::definition())
             .default_mode_id(edit::RASTER_PLAY_MODE_EDIT)

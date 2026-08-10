@@ -378,7 +378,21 @@ import {
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
-import { createFrameworkDisplayPanelTabs, createFrameworkExtensionsPanelTabs, createFrameworkPluginsPanelTabs, createFrameworkSettingsPanelTabs, type DisplayHostApi, type ExtensionsHostApi, type ExtensionsPanelEntry, PluginRecoveryPanel, type PluginsHostApi, type PluginsPanelEntry, type SettingsHostApi, ShellRouteNotFoundPage, useNamedLayoutHost } from "../ChromePanels/🟦️component.tsx";
+import {
+  createFrameworkDisplayPanelTabs,
+  createFrameworkMarketplacePanelTab,
+  createFrameworkSettingsPanelTab,
+  FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
+  FRAMEWORK_SETTINGS_PANEL_ID,
+  type DisplayHostApi,
+  type MarketplaceExtensionEntry,
+  type MarketplaceHostApi,
+  type MarketplacePluginEntry,
+  PluginRecoveryPanel,
+  type SettingsHostApi,
+  ShellRouteNotFoundPage,
+  useNamedLayoutHost,
+} from "../ChromePanels/🟦️component.tsx";
 import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 
@@ -3573,7 +3587,7 @@ function FrameworkOsShellInner({
       const path = (event as CustomEvent<{ readonly path?: string }>).detail?.path;
       if (path) setKeybindingCaptureControlId(path);
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: true });
-      dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: ["framework.settings.keybindings"] });
+      dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID] });
     };
     window.addEventListener("navigate-to-hotkey", onNavigateToHotkey);
     return () => window.removeEventListener("navigate-to-hotkey", onNavigateToHotkey);
@@ -3699,38 +3713,26 @@ function FrameworkOsShellInner({
   settingsHostRef.current = settingsHost;
 
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
-  const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
+  const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current), [settingsHost]);
 
-  const pluginsHostRef = useRef<PluginsHostApi | null>(null);
-  const pluginsHost: PluginsHostApi = useMemo(
+  const marketplaceHostRef = useRef<MarketplaceHostApi | null>(null);
+  const marketplaceHost: MarketplaceHostApi = useMemo(
     () => ({
       plugins: registry
         .filter((entry) => !extensionIdSet.has(entry.pluginId))
-        .map((entry): PluginsPanelEntry => {
-        const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
-        return {
-          pluginId: entry.pluginId,
-          label: loadedEntry?.manifest.label ?? entry.pluginId,
-          version: loadedEntry?.manifest.version,
-          status: pluginStatusById[entry.pluginId] ?? "available",
-          sourceId: pluginSource.id,
-          canUninstall: entry.pluginId !== primaryPluginId && session?.pluginId !== entry.pluginId,
-        };
-      }),
-      install: (pluginId) => void installPlugin(pluginId),
-      uninstall: (pluginId) => void uninstallPlugin(pluginId),
-      reload: (pluginId) => void reloadPlugin(pluginId),
-    }),
-    [registry, loadedPlugins, pluginStatusById, pluginSource, primaryPluginId, session?.pluginId, installPlugin, uninstallPlugin, reloadPlugin, extensionIdSet],
-  );
-  pluginsHostRef.current = pluginsHost;
-  const frameworkPluginsTabs = useMemo(() => createFrameworkPluginsPanelTabs(() => pluginsHostRef.current), [pluginsHost]);
-
-  const extensionsHostRef = useRef<ExtensionsHostApi | null>(null);
-  const extensionsHost: ExtensionsHostApi = useMemo(
-    () => ({
+        .map((entry): MarketplacePluginEntry => {
+          const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
+          return {
+            pluginId: entry.pluginId,
+            label: loadedEntry?.manifest.label ?? entry.pluginId,
+            version: loadedEntry?.manifest.version,
+            status: pluginStatusById[entry.pluginId] ?? "available",
+            sourceId: pluginSource.id,
+            canUninstall: entry.pluginId !== primaryPluginId && session?.pluginId !== entry.pluginId,
+          };
+        }),
       extensions: (() => {
-        const byId = new Map<string, ExtensionsPanelEntry>();
+        const byId = new Map<string, MarketplaceExtensionEntry>();
         for (const target of EXTENSION_TARGETS) {
           const ledger = extensionLedger.find((entry) => entry.extensionId === target.pluginId);
           const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === target.pluginId);
@@ -3757,15 +3759,34 @@ function FrameworkOsShellInner({
         }
         return [...byId.values()];
       })(),
-      installFromUrl: (sourceUri) => void installExtension(sourceUri),
-      installFromFile: (file) => void installExtensionFromFile(file),
-      uninstall: (extensionId) => void uninstallExtension(extensionId),
-      setEnabled: (extensionId, enabled) => void setExtensionEnabled(extensionId, enabled),
+      installPlugin: (pluginId) => void installPlugin(pluginId),
+      uninstallPlugin: (pluginId) => void uninstallPlugin(pluginId),
+      reloadPlugin: (pluginId) => void reloadPlugin(pluginId),
+      installExtensionFromUrl: (sourceUri) => void installExtension(sourceUri),
+      installExtensionFromFile: (file) => void installExtensionFromFile(file),
+      uninstallExtension: (extensionId) => void uninstallExtension(extensionId),
+      setExtensionEnabled: (extensionId, enabled) => void setExtensionEnabled(extensionId, enabled),
     }),
-    [extensionTargetById, extensionLedger, loadedPlugins, pluginStatusById, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled],
+    [
+      registry,
+      extensionIdSet,
+      extensionLedger,
+      loadedPlugins,
+      pluginStatusById,
+      pluginSource.id,
+      primaryPluginId,
+      session?.pluginId,
+      installPlugin,
+      uninstallPlugin,
+      reloadPlugin,
+      installExtension,
+      installExtensionFromFile,
+      uninstallExtension,
+      setExtensionEnabled,
+    ],
   );
-  extensionsHostRef.current = extensionsHost;
-  const frameworkExtensionsTabs = useMemo(() => createFrameworkExtensionsPanelTabs(() => extensionsHostRef.current), [extensionsHost]);
+  marketplaceHostRef.current = marketplaceHost;
+  const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost]);
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
@@ -3875,8 +3896,6 @@ function FrameworkOsShellInner({
     if (!session) return [];
     return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
   }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
-
-  const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
   //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
   // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
@@ -4074,9 +4093,8 @@ function FrameworkOsShellInner({
 
   //#region 🧭️DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
-    // 🧭️ Top-left (Workbench: Document/Catalogue), top-right (Details: Inspection/Parameters) and bottom-right
-    // (Settings: Theme/Settings) render their tabs flat, one level up from where they used to sit — the
-    // category-branch wrapper tab is gone, so each leaf is a top-level toggle instead of two clicks deep.
+    // 🧭️ Top-left (Workbench: Document/Catalogue) and top-right (Details: Inspection/Parameters) stay flat.
+    // Bottom-right exposes one Settings branch whose children are internal tabs, plus one Marketplace leaf.
     const topLeft: PanelTabNode[] = [...workbenchLeftTabs];
     const bottomLeft: PanelTabNode[] = [];
     if (frameworkDisplayTabs.length > 0) {
@@ -4084,20 +4102,19 @@ function FrameworkOsShellInner({
     }
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
     const topRight: PanelTabNode[] = [...detailsRightTabs];
-    const bottomRight: PanelTabNode[] = [...settingsRightTabs, ...frameworkPluginsTabs, ...frameworkExtensionsTabs];
+    const bottomRight: PanelTabNode[] = [frameworkSettingsTab, frameworkMarketplaceTab];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
     // window-level either; both live only on this shared mode-scoped anchor.
-    // 🎛️ Command categories stay nested under one expandable Command branch (unlike flat Theme/Settings
-    // footer toggles) so the folded bottom-middle chrome shows a single Command toggle, not every
-    // category leaf inlined along the footer.
+    // 🎛️ Command categories stay nested under one expandable Command branch so the folded bottom-middle
+    // chrome shows a single Command toggle, not every category leaf inlined along the footer.
     const bottomMiddle: PanelTabNode[] = [
       ...(toolTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_TOOL_ID, icon: categoryTabIcon(toolTabs, "hammer"), name: shellLabel("ui.panelToggle.tool"), order: 0, children: toolTabs }] : []),
       ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
     ];
     return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
-  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkExtensionsTabs, frameworkPluginsTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSettingsTab, frameworkSyncTab, frameworkUtilitiesHistoryTab, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -4443,18 +4460,17 @@ function FrameworkOsShellInner({
     if (lastDetailsOverrideTabIdRef.current === detailsOverrideTabId) return;
     lastDetailsOverrideTabIdRef.current = detailsOverrideTabId;
     if (detailsOverrideAnchor === studioOverrideAnchor) return;
-    // 🧭️ Settings tabs render flat now (no category branch to check against) — skip the override if the
-    // anchor's active leaf already belongs to Settings, so browsing Theme/Settings there doesn't get stomped.
+    // 🧭️ Skip the override while the Settings branch is active, so browsing Theme/Hotkeys is never stomped.
     if (mobile) {
-      if (settingsRightTabs.some((tab) => tab.id === mobilePanelPath[0])) return;
+      if (mobilePanelPath[0] === FRAMEWORK_SETTINGS_PANEL_ID) return;
       const resolved = findPanelTabPath(mobilePanelTabs, detailsOverrideTabId);
       if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
       return;
     }
-    if (settingsRightTabs.some((tab) => tab.id === panels[detailsOverrideAnchor].path[0])) return;
+    if (panels[detailsOverrideAnchor].path[0] === FRAMEWORK_SETTINGS_PANEL_ID) return;
     const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
-  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs, mobile, mobilePanelTabs, mobilePanelPath]);
+  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
   //#endregion 🧭️DockAssembly
 
   const mobilePanel = useMemo(() => {

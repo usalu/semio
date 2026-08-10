@@ -1,0 +1,14 @@
+{
+  "title": "Settings Tabs And Plugin Marketplace",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Restructure the UI so Theme and Hotkeys are tabs within Settings rather than independent panel toggles. Bundle Plugins and Extensions into a Marketplace tab, and integrate extensions into their owning plugin entries because extensions are part of plugins. Update existing implementation and tests, then verify relevant Nx targets and runtime behavior.",
+  "summary": "Consolidated Theme and Hotkeys as Settings tabs, bundled Plugins and Extensions into Marketplace, and nested extensions beneath their owning plugins. Targeted renderer tests and lint pass; runtime interaction is documented as blocked by the shared Vite esbuild overlay.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2537"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪f7a200a3c37f4b67bb9e89543a6b10ea"
+  ]
+}

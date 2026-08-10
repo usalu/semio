@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.csv/snapshot/text.csv",
+  "title": "CsvSnapshotText",
+  "type": "object"
+}

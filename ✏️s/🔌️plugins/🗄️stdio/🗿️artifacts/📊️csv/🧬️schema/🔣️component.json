@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.csv/artifact.csv",
+  "title": "CsvArtifact",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

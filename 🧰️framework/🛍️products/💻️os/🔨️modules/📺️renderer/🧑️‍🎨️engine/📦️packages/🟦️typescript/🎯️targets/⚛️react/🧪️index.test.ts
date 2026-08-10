@@ -217,9 +217,11 @@ import {
   runRequestMediaFrames,
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
-  createFrameworkPluginsPanelTabs,
-  type PluginsHostApi,
-  type PluginsPanelEntry,
+  createFrameworkSettingsPanelTab,
+  createFrameworkMarketplacePanelTab,
+  type MarketplaceExtensionEntry,
+  type MarketplaceHostApi,
+  type MarketplacePluginEntry,
   type PluginPanelStatus,
   type PluginManifest,
   type PluginWasmHandle,
@@ -4899,42 +4901,71 @@ describe("Display Windows tab — projection drag templates", () => {
   });
 });
 
-describe("createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock)", () => {
-  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly loading?: boolean };
-  type PluginsTreeSections = { readonly sections: readonly { readonly id: string; readonly label?: string; readonly items?: readonly LabeledTreeItem[] }[] };
-  type LeafWithTrees = { readonly trees: readonly { readonly tree: { readonly resolveTree: () => PluginsTreeSections } }[] };
+describe("createFrameworkSettingsPanelTab", () => {
+  it("exposes one Settings toggle whose children are General, Theme, and Hotkeys tabs", () => {
+    const settings = createFrameworkSettingsPanelTab(() => null);
+    expect(settings.kind).toBe("branch");
+    if (settings.kind !== "branch") throw new Error("Settings must be a branch");
+    expect(settings.id).toBe("framework.settings");
+    expect(settings.children.map((child) => child.id)).toEqual(["framework.settings.general", "framework.settings.theme", "framework.settings.keybindings"]);
+    expect(settings.children.map((child) => child.name)).toEqual(["General", "Theme", "Hotkeys"]);
+  });
+});
 
-  function pluginsTreeSections(host: PluginsHostApi | null) {
-    const tabs = createFrameworkPluginsPanelTabs(() => host);
-    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
-    return pluginsTab.trees[0]!.tree.resolveTree().sections;
+describe("createFrameworkMarketplacePanelTab", () => {
+  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly loading?: boolean; readonly items?: readonly LabeledTreeItem[]; readonly control?: ReactElement };
+  type MarketplaceTreeSections = { readonly sections: readonly { readonly id: string; readonly label?: string; readonly items?: readonly LabeledTreeItem[] }[] };
+  type LeafWithTrees = { readonly trees: readonly { readonly tree: { readonly resolveTree: () => MarketplaceTreeSections } }[] };
+
+  function marketplaceTreeSections(host: MarketplaceHostApi | null) {
+    const marketplaceTab = createFrameworkMarketplacePanelTab(() => host) as unknown as LeafWithTrees;
+    return marketplaceTab.trees[0]!.tree.resolveTree().sections;
   }
 
   it("shows an unavailable placeholder when no host is mounted yet", () => {
-    const sections = pluginsTreeSections(null);
+    const sections = marketplaceTreeSections(null);
     expect(sections).toHaveLength(1);
     expect(sections[0]!.items?.[0]?.id).toBe("unavailable");
   });
 
-  const entry = (pluginId: string, status: PluginPanelStatus, canUninstall: boolean): PluginsPanelEntry => ({ pluginId, label: pluginId, version: "1", status, sourceId: "dev", canUninstall });
+  const plugin = (pluginId: string, status: PluginPanelStatus, canUninstall: boolean): MarketplacePluginEntry => ({ pluginId, label: pluginId, version: "1", status, sourceId: "dev", canUninstall });
+  const extension = (extensionId: string, extendsHost: string, enabled = true): MarketplaceExtensionEntry => ({ extensionId, label: extensionId, version: "1", extendsHost, enabled, status: "loaded" });
+  const host = (overrides: Partial<MarketplaceHostApi> = {}): MarketplaceHostApi => ({
+    plugins: [],
+    extensions: [],
+    installPlugin: () => {},
+    uninstallPlugin: () => {},
+    reloadPlugin: () => {},
+    installExtensionFromUrl: () => {},
+    installExtensionFromFile: () => {},
+    uninstallExtension: () => {},
+    setExtensionEnabled: () => {},
+    ...overrides,
+  });
 
   it("groups plugins into one section per source, sorted by pluginId within a source", () => {
-    const host: PluginsHostApi = { plugins: [entry("s", "loaded", false), entry("note", "loaded", true)], install: () => {}, uninstall: () => {}, reload: () => {} };
-    const sections = pluginsTreeSections(host);
-    expect(sections).toHaveLength(1);
-    expect(sections[0]!.id).toBe("framework.settings.plugins.source.dev");
-    expect(sections[0]!.items?.map((item) => item.id)).toEqual(["framework.settings.plugins.note", "framework.settings.plugins.s"]);
+    const sections = marketplaceTreeSections(host({ plugins: [plugin("s", "loaded", false), plugin("note", "loaded", true)] }));
+    expect(sections.map((section) => section.id)).toEqual(["framework.marketplace.extensions.install", "framework.marketplace.source.dev"]);
+    expect(sections[1]!.items?.map((item) => item.id)).toEqual(["framework.marketplace.plugin.note", "framework.marketplace.plugin.s"]);
+  });
+
+  it("integrates extensions as children of their owning plugin", () => {
+    const sections = marketplaceTreeSections(
+      host({
+        plugins: [plugin("flow", "loaded", true), plugin("s", "loaded", false)],
+        extensions: [extension("flow.brep", "flow"), extension("flow.math", "flow", false)],
+      }),
+    );
+    const flow = sections[1]!.items?.find((item) => item.id === "framework.marketplace.plugin.flow");
+    expect(flow?.items?.map((item) => item.id)).toEqual(["framework.marketplace.plugin.flow.extension.flow.brep", "framework.marketplace.plugin.flow.extension.flow.math"]);
+    expect(sections.some((section) => section.id.includes("extensions.host"))).toBe(false);
   });
 
   it("marks installing/reloading rows as loading, and every status is reflected in the row label", () => {
-    const host: PluginsHostApi = {
-      plugins: [entry("a", "available", true), entry("b", "installing", true), entry("c", "loaded", true), entry("d", "failed", true), entry("e", "reloading", true)],
-      install: () => {},
-      uninstall: () => {},
-      reload: () => {},
-    };
-    const items = pluginsTreeSections(host)[0]!.items!;
-    const byId = (pluginId: string) => items.find((item) => item.id === `framework.settings.plugins.${pluginId}`)!;
+    const items = marketplaceTreeSections(
+      host({ plugins: [plugin("a", "available", true), plugin("b", "installing", true), plugin("c", "loaded", true), plugin("d", "failed", true), plugin("e", "reloading", true)] }),
+    )[1]!.items!;
+    const byId = (pluginId: string) => items.find((item) => item.id === `framework.marketplace.plugin.${pluginId}`)!;
     expect(byId("a").loading).toBe(false);
     expect(byId("b").loading).toBe(true);
     expect(byId("c").loading).toBe(false);
@@ -4949,16 +4980,14 @@ describe("createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock)", ()
 
   it("routes install/uninstall/reload clicks for one row back through the host without touching others", () => {
     const calls: string[] = [];
-    const host: PluginsHostApi = {
-      plugins: [entry("note", "loaded", true)],
-      install: (pluginId) => calls.push(`install:${pluginId}`),
-      uninstall: (pluginId) => calls.push(`uninstall:${pluginId}`),
-      reload: (pluginId) => calls.push(`reload:${pluginId}`),
-    };
-    const tabs = createFrameworkPluginsPanelTabs(() => host);
-    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
-    const sections = pluginsTab.trees[0]!.tree.resolveTree();
-    const noteItem = (sections.sections[0]!.items as unknown as { readonly control: ReactElement }[])[0]!;
+    const sections = marketplaceTreeSections(
+      host({
+        plugins: [plugin("note", "loaded", true)],
+        uninstallPlugin: (pluginId) => calls.push(`uninstall:${pluginId}`),
+        reloadPlugin: (pluginId) => calls.push(`reload:${pluginId}`),
+      }),
+    );
+    const noteItem = sections[1]!.items![0]!;
     const { getByText } = render(createElement("div", null, noteItem.control));
     fireEvent.click(getByText("Reload"));
     fireEvent.click(getByText("Uninstall"));
@@ -4967,11 +4996,8 @@ describe("createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock)", ()
   });
 
   it("disables uninstall for the host/primary plugin and the active session's plugin (canUninstall: false)", () => {
-    const host: PluginsHostApi = { plugins: [entry("s", "loaded", false)], install: () => {}, uninstall: () => {}, reload: () => {} };
-    const tabs = createFrameworkPluginsPanelTabs(() => host);
-    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
-    const sections = pluginsTab.trees[0]!.tree.resolveTree();
-    const sItem = (sections.sections[0]!.items as unknown as { readonly control: ReactElement }[])[0]!;
+    const sections = marketplaceTreeSections(host({ plugins: [plugin("s", "loaded", false)] }));
+    const sItem = sections[1]!.items![0]!;
     const { getByText } = render(createElement("div", null, sItem.control));
     expect((getByText("Uninstall").closest("button") as HTMLButtonElement).disabled).toBe(true);
     cleanup();
@@ -5281,4 +5307,3 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
     expect(resolveManifestLabel(def.chapters[0].title, "reuse", "de")).toBe("Introduction");
   });
 });
-

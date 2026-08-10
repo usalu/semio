@@ -292,7 +292,9 @@ pub fn create_process3d_app() -> App {
                 schema: "process.3d".into(),
                 export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
                 import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("hammer")
             .mode_def(edit::definition())
             .default_mode_id(edit::PROCESS3D_MODE_EDIT)

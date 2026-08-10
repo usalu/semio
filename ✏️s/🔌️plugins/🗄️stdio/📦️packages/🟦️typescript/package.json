@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio-tech/stdio-js",
+  "version": "0.1.0",
+  "description": "Stdio plugin TS barrel",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/stdio-js:test"
+  },
+  "exports": {
+    ".": "./📦️index.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

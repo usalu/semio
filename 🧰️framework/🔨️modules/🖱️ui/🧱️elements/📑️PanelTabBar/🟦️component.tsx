@@ -490,8 +490,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const tabDragActive = Boolean(dock?.dragTabId);
   const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
   const unitDragActive = usePanelTreeUnitDragActive();
-  // 👻️ Navbar/footer chrome toggles and folded panel root rows stay visible during canvas ghost; only open panel tab strips dim.
-  const ghostDim = showActiveColor;
+  // 👻️ All panel tab strips and toggles dim during interaction ghost sessions per window interaction contract.
+  const ghostDim = true;
 
   return (
     <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>

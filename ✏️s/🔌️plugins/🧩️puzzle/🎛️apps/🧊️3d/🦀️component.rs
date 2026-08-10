@@ -268,6 +268,28 @@ pub fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &P
 /// with the same `"id"`, else appends. Deterministic/order-independent in the resulting SET of ids (a
 /// `multiplicity: Many` port may fan in from several producers across several `import_media` calls);
 /// when two producers disagree on one id's content, the most-recently-applied wins.
+fn puzzle3d_normalize_object_kind_row(mut row: Value) -> Value {
+    let mesh_url = row.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
+    let has_rep = row
+        .get("representations")
+        .and_then(Value::as_array)
+        .map(|rows| rows.iter().any(|rep| rep.get("url").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some()))
+        .unwrap_or(false);
+    let id = row.get("id").and_then(Value::as_str).unwrap_or("kind").to_string();
+    if let Some(url) = mesh_url {
+        if let Some(object) = row.as_object_mut() {
+            if !has_rep {
+                object.insert(
+                    "representations".into(),
+                    json!([{ "id": format!("{id}:rep0"), "name": "default", "url": url, "mime": "", "description": "", "tags": [] }]),
+                );
+            }
+            object.remove("meshUrl");
+        }
+    }
+    row
+}
+
 fn puzzle3d_upsert_catalog_rows(catalogs: &mut Value, section: &str, incoming: Option<&Value>) {
     let Some(incoming_rows) = incoming.and_then(Value::as_array) else {
         return;
@@ -280,12 +302,13 @@ fn puzzle3d_upsert_catalog_rows(catalogs: &mut Value, section: &str, incoming: O
         return;
     };
     for row in incoming_rows {
+        let row = if section == "objects" { puzzle3d_normalize_object_kind_row(row.clone()) } else { row.clone() };
         let Some(id) = row.get("id").and_then(Value::as_str) else {
             continue;
         };
         match existing.iter().position(|entry| entry.get("id").and_then(Value::as_str) == Some(id)) {
-            Some(index) => existing[index] = row.clone(),
-            None => existing.push(row.clone()),
+            Some(index) => existing[index] = row,
+            None => existing.push(row),
         }
     }
 }
@@ -3821,7 +3844,7 @@ mod tests {
 
     #[test]
     fn puzzle3d_distribution_lists_global_vortices_and_joints_sum_to_one() {
-        let fixture = default_fixture();
+        let fixture = nakagin_fixture();
         let object_ids = puzzle3d_kind_ids(&fixture, "objects");
         let vortex_ids = puzzle3d_kind_ids(&fixture, "vortices");
         assert!(object_ids.len() >= 2, "default fixture needs multiple object kinds");
@@ -3869,7 +3892,7 @@ mod tests {
     fn zero_object_kind_weight_disables_joint_vortex_sliders() {
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let session = Puzzle3dPrecomputeSession::new();
-        let fixture = default_fixture();
+        let fixture = nakagin_fixture();
         let object_ids = puzzle3d_kind_ids(&fixture, "objects");
         assert!(!object_ids.is_empty(), "default fixture must expose object kinds");
         let zeroed_id = object_ids[0].clone();
@@ -4454,7 +4477,7 @@ mod tests {
         let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
         assert!(objects.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")), "the imported object kind must appear in meta.kind_catalogs.objects");
         let capsule = objects.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).unwrap();
-        assert_eq!(capsule.get("meshUrl").and_then(Value::as_str), Some("/mesh/capsule.glb"));
+        assert_eq!(capsule.pointer("/representations/0/url").and_then(Value::as_str), Some("/mesh/capsule.glb"));
         assert_eq!(capsule.pointer("/vortices/0/vortexKind").and_then(Value::as_str), Some("door"), "the per-object vortex template keeps its vortexKind after normalization");
 
         let vortices = next_projection.pointer("/meta/kindCatalogs/vortices").and_then(Value::as_array).expect("vortices catalog present");

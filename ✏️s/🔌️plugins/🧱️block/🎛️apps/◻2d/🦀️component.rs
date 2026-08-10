@@ -179,7 +179,9 @@ pub fn create_block2d_app() -> App {
                 schema: KIT_CATALOG_ARTIFACT_ID.into(),
                 export_formats: vec![],
                 import_formats: vec![],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("layout-grid")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK2D_PLAY_MODE_EDIT)

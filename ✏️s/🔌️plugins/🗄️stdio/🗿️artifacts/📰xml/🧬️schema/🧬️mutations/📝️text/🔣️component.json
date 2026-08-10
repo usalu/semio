@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.xml/mutations/text.xml",
+  "title": "XmlMutationsText",
+  "type": "object"
+}

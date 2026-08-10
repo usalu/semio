@@ -486,8 +486,14 @@ pub mod artifacts {
             mod component;
             pub use component::*;
 
-            #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/📐️geometry/🦀️component.rs"]
-            pub mod geometry;
+            #[path = "."]
+            pub mod geometry {
+                #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/📐️geometry/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/📐️geometry/🎛flatten/🦀️component.rs"]
+                pub mod flatten;
+            }
             #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/🖌️brush/🦀️component.rs"]
             pub mod brush;
             #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/🪣️fill/🦀️component.rs"]

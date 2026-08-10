@@ -337,7 +337,9 @@ pub fn create_forms_app() -> App {
                 schema: "form.dictionary".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("forms")
             .mode_def(blueprint::definition())
             .default_mode_id(blueprint::FORMS_PLAY_MODE_BLUEPRINT)

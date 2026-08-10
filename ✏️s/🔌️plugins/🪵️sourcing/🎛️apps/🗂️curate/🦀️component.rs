@@ -181,7 +181,9 @@ pub fn create_sourcing_curate_app() -> App {
                 schema: "catalogue.kinds".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             // 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: the `catalog:out` port's declared kind —
             // harmless duplicate `ArtifactKindSpec` across producers (see `s/plugin/block`'s `3d` app,
             // which declares the SAME `kit.catalog` shape independently).
@@ -196,7 +198,9 @@ pub fn create_sourcing_curate_app() -> App {
                 schema: "kit.catalog".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .icon_id("library")
             .mode_def(curate::definition())
             .default_mode_id(curate::SOURCING_CURATE_MODE_CURATE)

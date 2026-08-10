@@ -242,7 +242,9 @@ pub fn create_layout_app() -> App {
                 schema: "layout.layout".into(),
                 export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
                 import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
-            })
+                    export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    })
             .document(["semio", "layout"])
             .icon_id("layout")
             .mode_def(edit::definition())

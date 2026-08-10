@@ -1,0 +1,104 @@
+2d handle count 1
+
+==== 2d handle at 43693
+fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+        let config = cfg.snapshot;
+        let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
+        let before = doc.snapshot.0.clone();
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        let mut scene = Self::scene_for(before.clone(), config, window_id);
+        // 🐚️ DocumentApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
+        // each call. The previous last_synced_fixture cache lived on &self and cannot return.
+        let host = RefCell::new(BoardHost::default());
+        {
+            let mut host_mut = host.borrow_mut();
+            sync_host_fixture_content(&mut host_mut, &scene);
+            // 🧹️ `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
+            // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
+            // change. Discard that parse-induced noise now so `apply_host_events` below only sees
+            // events genuinely produced by *this* action's own engine calls.
+            let _ = host_mut.drain_events_json();
+            sync_host_runtime_state(&mut host_mut, &scene);
+        }
+        let mut effects: Vec<HostEffect> = Vec::new();
+        // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
+        // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
+        let mut ui_scope = UiDirtyScope::Full;
+        {
+            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
+            match action {
+                "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
+                "selectAll" => selection_commands::select_all(ctx),
+                "clearSelection" => selection_commands::clear_selection(ctx),
+                "selectSameKind" => selection_commands::select_same_kind(ctx),
+                "deleteSelection" => selection_commands::delete_selection(ctx),
+                "duplicateSelection" => selection_commands::duplicate_selection(ctx),
+                "setSelectionFlag" => selection_commands::set_selection_flag(ctx, args),
+                "setSelectionMethod" => selection_commands::set_selection_method(ctx, args),
+                "addNode" => node::add_node(ctx, args),
+                "patchInspectorNodes" => node::patch_inspector(ctx, args),
+                "redrawHandles" => node::redraw_handles(ctx),
+                "forceLayout" | "reorganize" => node::force_layout(ctx),
+                "setCamera" => camera::set_camera(ctx, args),
+                "focusSelection" => camera::focus_selection(ctx),
+                "setActiveExample" => example::set_active_example(ctx, args),
+                SET_ACTIVE_UTILITY_ACTION_ID => utility::set_active_utility(ctx, args),
+                "engagementInput" => engagement::engagement_input(ctx, args),
+                "engagementSubmit" => engagement::engagement_submit(ctx, args),
+                "engagementAbort" => engagement::engagement_abort(ctx, args),
+                "engagementControlSelect" => engagement::engagem
+----
+3d handle count 1
+
+==== 3d handle at 115218
+fn handle(command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
+        with_puzzle3d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot)))
+    }
+
+    /// 🔌️ Declares puzzle3d's typed media I/O surface — the implicit document ports plus the flagship
+    /// `kit:in` seam: an input port accepting `Kit×Type` media tagged `kit.catalog`, fanning IN from
+    /// potentially many producers (`multiplicity: Many`).
+    fn io() -> Option<AppIo> {
+        Some(
+            AppIo::from_document(
+                "puzzle.3d",
+                MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
+                semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
+            )
+            .with_ports(vec![MediaPortSpec {
+                id: "kit:in".into(),
+                label: "Kit Catalog".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                kind_id: Some("kit.catalog".into()),
+                required: false,
+                multiplicity: PortMultiplicity::Many,
+            }]),
+        )
+    }
+
+    /// 🎞️ `kit:in` seam: normalizes an incoming `kit.catalog` fragment (`objectKinds`/`vortexKinds`/
+    /// `cableKinds`/`attractionKinds`/`kindCompatibility`) into puzzle3d's own `meta.kind_catalogs`
+    /// vocabulary (`objects`/`vortices`/`cables`/`attractions`) and upserts it (keyed by row `id`,
+    /// deterministic/order-independent — safe for `multiplicity: Many` fan-in) via the same
+    /// `puzzle3d_operations_from_fixture_change` delta bridge every other fixture-mutating action
+    /// already uses, so this never mutates anything directly — only real, undoable operations.
+    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle3dPlaySnapshot>) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, MediaError> {
+        if port != "kit:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "kit:in only accepts a Structured (JSON) payload".into()));
+        };
+        let fragment: Value = serde_json::from_str(json.as_str()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let mut fixture: Puzzle3dFixture = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+
+        let mut catalogs = fixture.meta.kind_catalogs.clone().unwrap_or_else(|| json!({ "objects": [], "vortices": [], "cables": [], "attractions": [] }));
+        puzzle3d_upsert_catalog_rows(&mut catalogs, "objects", fragment.get("objectKinds"));
+        puzzle3d_upsert_catalog_rows(&mut catalogs, "vortices", fragment.get("vortexKinds"));
+        puzzle3d_upsert_catalog_rows(&mut catalogs, "cables", fragment.get("cableKinds"));
+        puzzle3d_upsert_catalog_rows(&mut catalogs, "attractions", fragment.get("attractionKinds"));
+        fixture.meta.kind_catalogs = Some(catalogs);
+
+  
+----

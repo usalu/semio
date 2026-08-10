@@ -1,0 +1,5 @@
+# 🧬️ TxtSnapshot
+type TxtSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  text: String! @state(class: PERSISTENT)
+}

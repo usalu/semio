@@ -3930,7 +3930,6 @@ dependencies = [
  "percent-encoding",
  "referencing",
  "regex-syntax",
- "reqwest",
  "serde",
  "serde_json",
  "uuid-simd",
@@ -6025,9 +6024,7 @@ checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
  "base64 0.22.1",
  "bytes",
- "futures-channel",
  "futures-core",
- "futures-util",
  "http",
  "http-body",
  "http-body-util",
@@ -7848,6 +7845,18 @@ dependencies = [
  "semio-framework-schema",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

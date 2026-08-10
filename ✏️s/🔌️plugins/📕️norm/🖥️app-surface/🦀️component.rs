@@ -115,6 +115,8 @@ pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
         schema: format!("norm.{variant}.document"),
         export_formats: vec![],
         import_formats: vec![],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 

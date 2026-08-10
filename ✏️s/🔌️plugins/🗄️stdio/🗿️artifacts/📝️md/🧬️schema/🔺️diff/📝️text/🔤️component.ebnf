@@ -1,0 +1,3 @@
+(* ebnf stdio.md diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.md', newline ;

@@ -1,0 +1,1932 @@
+{
+  "stdio_roster": {
+    "binary": {
+      "dir": "💾️binary",
+      "mime": "application/octet-stream",
+      "ext": ".bin",
+      "depends": [],
+      "neutral": "Bytes"
+    },
+    "txt": {
+      "dir": "📄txt",
+      "mime": "text/plain",
+      "ext": ".txt",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "TextDoc"
+    },
+    "xml": {
+      "dir": "📰xml",
+      "mime": "application/xml",
+      "ext": ".xml",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "XmlDoc"
+    },
+    "deflate": {
+      "dir": "🗜️deflate",
+      "mime": "application/zlib",
+      "ext": ".zz",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "DeflateStream"
+    },
+    "zip": {
+      "dir": "🎒️zip",
+      "mime": "application/zip",
+      "ext": ".zip",
+      "depends": [
+        "binary",
+        "deflate"
+      ],
+      "neutral": "Archive"
+    },
+    "json": {
+      "dir": "🔣️json",
+      "mime": "application/json",
+      "ext": ".json",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "Value"
+    },
+    "csv": {
+      "dir": "📊️csv",
+      "mime": "text/csv",
+      "ext": ".csv",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "TableDoc"
+    },
+    "md": {
+      "dir": "📝️md",
+      "mime": "text/markdown",
+      "ext": ".md",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "TextDoc"
+    },
+    "glb": {
+      "dir": "🧊️glb",
+      "mime": "model/gltf-binary",
+      "ext": ".glb",
+      "depends": [
+        "binary",
+        "gltf"
+      ],
+      "neutral": "MeshData"
+    },
+    "gltf": {
+      "dir": "🧊️gltf",
+      "mime": "model/gltf+json",
+      "ext": ".gltf",
+      "depends": [
+        "json"
+      ],
+      "neutral": "MeshData"
+    },
+    "obj": {
+      "dir": "🧊️obj",
+      "mime": "model/obj",
+      "ext": ".obj",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "MeshData"
+    },
+    "stl": {
+      "dir": "🟪️stl",
+      "mime": "model/stl",
+      "ext": ".stl",
+      "depends": [
+        "txt",
+        "binary"
+      ],
+      "neutral": "MeshData"
+    },
+    "ply": {
+      "dir": "☁️ply",
+      "mime": "model/ply",
+      "ext": ".ply",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "MeshData"
+    },
+    "las": {
+      "dir": "☁️las",
+      "mime": "application/vnd.las",
+      "ext": ".las",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "MeshData"
+    },
+    "step": {
+      "dir": "📐️step",
+      "mime": "model/step",
+      "ext": ".step",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "Brep"
+    },
+    "ifc": {
+      "dir": "🏗️ifc",
+      "mime": "application/x-ifc",
+      "ext": ".ifc",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "Brep"
+    },
+    "dwg": {
+      "dir": "🖊️dwg",
+      "mime": "image/vnd.dwg",
+      "ext": ".dwg",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "DwgDrawing"
+    },
+    "dxf": {
+      "dir": "🖊️dxf",
+      "mime": "image/vnd.dxf",
+      "ext": ".dxf",
+      "depends": [
+        "txt"
+      ],
+      "neutral": "DwgDrawing"
+    },
+    "svg": {
+      "dir": "🎨️svg",
+      "mime": "image/svg+xml",
+      "ext": ".svg",
+      "depends": [
+        "xml"
+      ],
+      "neutral": "DwgDrawing"
+    },
+    "png": {
+      "dir": "📷️png",
+      "mime": "image/png",
+      "ext": ".png",
+      "depends": [
+        "binary",
+        "deflate"
+      ],
+      "neutral": "RasterImage"
+    },
+    "jpg": {
+      "dir": "📷️jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "RasterImage"
+    },
+    "gif": {
+      "dir": "🎞️gif",
+      "mime": "image/gif",
+      "ext": ".gif",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "RasterImage"
+    },
+    "bmp": {
+      "dir": "🖼️bmp",
+      "mime": "image/bmp",
+      "ext": ".bmp",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "RasterImage"
+    },
+    "tiff": {
+      "dir": "🖼️tiff",
+      "mime": "image/tiff",
+      "ext": ".tiff",
+      "depends": [
+        "binary"
+      ],
+      "neutral": "RasterImage"
+    },
+    "pdf": {
+      "dir": "📄️pdf",
+      "mime": "application/pdf",
+      "ext": ".pdf",
+      "depends": [
+        "binary",
+        "deflate"
+      ],
+      "neutral": "PageDoc"
+    },
+    "docx": {
+      "dir": "📜️docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "ext": ".docx",
+      "depends": [
+        "zip",
+        "xml"
+      ],
+      "neutral": "PageDoc"
+    },
+    "pptx": {
+      "dir": "🎞️pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "ext": ".pptx",
+      "depends": [
+        "zip",
+        "xml"
+      ],
+      "neutral": "PageDoc"
+    },
+    "xlsx": {
+      "dir": "📕️xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "ext": ".xlsx",
+      "depends": [
+        "zip",
+        "xml"
+      ],
+      "neutral": "TableDoc"
+    },
+    "bcf": {
+      "dir": "💬️bcf",
+      "mime": "application/vnd.bcf+xml",
+      "ext": ".bcf",
+      "depends": [
+        "zip",
+        "xml"
+      ],
+      "neutral": "Archive"
+    }
+  },
+  "stdio_dag_edges": [
+    {
+      "from": "txt",
+      "to": "binary"
+    },
+    {
+      "from": "xml",
+      "to": "txt"
+    },
+    {
+      "from": "deflate",
+      "to": "binary"
+    },
+    {
+      "from": "zip",
+      "to": "binary"
+    },
+    {
+      "from": "zip",
+      "to": "deflate"
+    },
+    {
+      "from": "json",
+      "to": "txt"
+    },
+    {
+      "from": "csv",
+      "to": "txt"
+    },
+    {
+      "from": "md",
+      "to": "txt"
+    },
+    {
+      "from": "glb",
+      "to": "binary"
+    },
+    {
+      "from": "glb",
+      "to": "gltf"
+    },
+    {
+      "from": "gltf",
+      "to": "json"
+    },
+    {
+      "from": "obj",
+      "to": "txt"
+    },
+    {
+      "from": "stl",
+      "to": "txt"
+    },
+    {
+      "from": "stl",
+      "to": "binary"
+    },
+    {
+      "from": "ply",
+      "to": "txt"
+    },
+    {
+      "from": "las",
+      "to": "binary"
+    },
+    {
+      "from": "step",
+      "to": "txt"
+    },
+    {
+      "from": "ifc",
+      "to": "txt"
+    },
+    {
+      "from": "dwg",
+      "to": "binary"
+    },
+    {
+      "from": "dxf",
+      "to": "txt"
+    },
+    {
+      "from": "svg",
+      "to": "xml"
+    },
+    {
+      "from": "png",
+      "to": "binary"
+    },
+    {
+      "from": "png",
+      "to": "deflate"
+    },
+    {
+      "from": "jpg",
+      "to": "binary"
+    },
+    {
+      "from": "gif",
+      "to": "binary"
+    },
+    {
+      "from": "bmp",
+      "to": "binary"
+    },
+    {
+      "from": "tiff",
+      "to": "binary"
+    },
+    {
+      "from": "pdf",
+      "to": "binary"
+    },
+    {
+      "from": "pdf",
+      "to": "deflate"
+    },
+    {
+      "from": "docx",
+      "to": "zip"
+    },
+    {
+      "from": "docx",
+      "to": "xml"
+    },
+    {
+      "from": "pptx",
+      "to": "zip"
+    },
+    {
+      "from": "pptx",
+      "to": "xml"
+    },
+    {
+      "from": "xlsx",
+      "to": "zip"
+    },
+    {
+      "from": "xlsx",
+      "to": "xml"
+    },
+    {
+      "from": "bcf",
+      "to": "zip"
+    },
+    {
+      "from": "bcf",
+      "to": "xml"
+    }
+  ],
+  "owners": [
+    {
+      "plugin": "✒️writer",
+      "artifact": "✒️writer",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer",
+      "kind_id": "text.document",
+      "stdio_artifacts": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "import": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "export": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ]
+    },
+    {
+      "plugin": "➗️mathematical",
+      "artifact": "➗️mathematical",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+      "kind_id": "a",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "🌀️procedural",
+      "artifact": "🌀️procedural2d",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+      "kind_id": "2d.procedural",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🌀️procedural",
+      "artifact": "🧊️procedural3d",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+      "kind_id": "3d.procedural",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "🌊️flow",
+      "artifact": "🌊️flow",
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+      "kind_id": "computation.flow",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "🌍️gis",
+      "artifact": "🏔️gisterrain",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+      "kind_id": "3d.mesh",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "🌍️gis",
+      "artifact": "🗺️gismap",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+      "kind_id": "2d.map",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🌿️vcs",
+      "artifact": "🌿️vcs",
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+      "kind_id": "vcs.document",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🎞️animate",
+      "artifact": "🎬️present",
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+      "kind_id": "2d.🎬️present",
+      "stdio_artifacts": [
+        "json",
+        "md",
+        "pdf",
+        "png",
+        "pptx",
+        "svg"
+      ],
+      "import": [
+        "json",
+        "md",
+        "pdf",
+        "png",
+        "pptx",
+        "svg"
+      ],
+      "export": [
+        "json",
+        "md",
+        "pdf",
+        "png",
+        "pptx",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🎥️shooting",
+      "artifact": "🎥️shooting",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+      "kind_id": "2d.shooting",
+      "stdio_artifacts": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "import": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "export": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ]
+    },
+    {
+      "plugin": "🎪️demonstrator",
+      "artifact": "🎪️playground",
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
+      "kind_id": "playground.document",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🎬️sequence",
+      "artifact": "🎬️sequence",
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+      "kind_id": "computation.sequence",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "🏗️fem",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
+      "kind_id": "computation.fem2d",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "🏗️fem",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+      "kind_id": "computation.fem3d",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "🏛️architect",
+      "artifact": "🏛️program",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+      "kind_id": "data.🏛️program",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🏭️process",
+      "artifact": "🧊️process3d",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+      "kind_id": "saw",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "💠️lowpoly",
+      "artifact": "💠️lowpoly",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly",
+      "kind_id": "3d.lowpoly",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "💡️reasoning",
+      "artifact": "🔌️wires",
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+      "kind_id": "graph.wires",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "📋️forms",
+      "artifact": "📋️forms",
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+      "kind_id": "form.dictionary",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📏️layout",
+      "artifact": "📏️layout",
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+      "kind_id": "2d.layout",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "📐️cad",
+      "artifact": "📐️cad",
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
+      "kind_id": "cad",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "ifc",
+        "json",
+        "obj",
+        "png",
+        "step",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📓️iso16757",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+      "kind_id": "box",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📔️vdi3805",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+      "kind_id": "part-02-corr-2022-12",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📕️din4108",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+      "kind_id": "data.📕️din4108",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📗️din16798",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+      "kind_id": "data.📗️din16798",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1990",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+      "kind_id": "data.📘️en1990",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1991",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+      "kind_id": "data.📘️en1991",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1992",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992",
+      "kind_id": "data.📘️en1992",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1993",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+      "kind_id": "data.📘️en1993",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1994",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+      "kind_id": "data.📘️en1994",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1995",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+      "kind_id": "data.📘️en1995",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1996",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+      "kind_id": "data.📘️en1996",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1997",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+      "kind_id": "data.📘️en1997",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1998",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+      "kind_id": "data.📘️en1998",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📘️en1999",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+      "kind_id": "data.📘️en1999",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📕️norm",
+      "artifact": "📙️din18599",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+      "kind_id": "data.📙️din18599",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "📖️playbook",
+      "artifact": "📖️playbook",
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+      "kind_id": "text.playbook",
+      "stdio_artifacts": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "import": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "export": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ]
+    },
+    {
+      "plugin": "📜️imperative",
+      "artifact": "📜️imperative",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+      "kind_id": "computation.imperative",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md"
+      ]
+    },
+    {
+      "plugin": "📸️remodel",
+      "artifact": "📸️remodel",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+      "kind_id": "3d.remodel",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "🔋️energy",
+      "artifact": "🔋️model",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+      "kind_id": "data.🔋️model",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🔱️trinity",
+      "artifact": "♻️rewrite",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+      "kind_id": "text.♻️rewrite",
+      "stdio_artifacts": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "import": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ],
+      "export": [
+        "docx",
+        "json",
+        "md",
+        "pdf",
+        "txt"
+      ]
+    },
+    {
+      "plugin": "🔱️trinity",
+      "artifact": "🔌️jack",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+      "kind_id": "graph.trinity",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🕸️dag",
+      "artifact": "🕸️dag",
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
+      "kind_id": "graph.dag",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "md",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🖍️draw",
+      "artifact": "🖍️draw",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+      "kind_id": "2d.drawing",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🖨️raster",
+      "artifact": "🖨️raster",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+      "kind_id": "2d.raster",
+      "stdio_artifacts": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "import": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ],
+      "export": [
+        "bmp",
+        "dwg",
+        "gif",
+        "jpg",
+        "json",
+        "pdf",
+        "png",
+        "svg",
+        "tiff"
+      ]
+    },
+    {
+      "plugin": "🗒️note",
+      "artifact": "🗒️note",
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
+      "kind_id": "2d.note",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+      "kind_id": "2d.puzzle",
+      "stdio_artifacts": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "import": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ],
+      "export": [
+        "dwg",
+        "dxf",
+        "json",
+        "pdf",
+        "png",
+        "svg"
+      ]
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "🖐️5d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+      "kind_id": "5d.puzzle",
+      "stdio_artifacts": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "import": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "export": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🧩️puzzle",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+      "kind_id": "3d.puzzle",
+      "stdio_artifacts": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "import": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ],
+      "export": [
+        "dwg",
+        "glb",
+        "gltf",
+        "json",
+        "las",
+        "obj",
+        "ply",
+        "png",
+        "stl"
+      ]
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "◻2d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+      "kind_id": "2d.block",
+      "stdio_artifacts": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "import": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "export": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "🖐️5d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+      "kind_id": "5d.block",
+      "stdio_artifacts": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "import": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "export": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🧱️block",
+      "artifact": "🧊️3d",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+      "kind_id": "3d.block",
+      "stdio_artifacts": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "import": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "export": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🪐️space",
+      "artifact": "🏠️home",
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+      "kind_id": "space.shome",
+      "stdio_artifacts": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "import": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ],
+      "export": [
+        "csv",
+        "json",
+        "xlsx",
+        "zip"
+      ]
+    },
+    {
+      "plugin": "🪵️sourcing",
+      "artifact": "🗂️curate",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+      "kind_id": "catalogue.sourcing",
+      "stdio_artifacts": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "import": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ],
+      "export": [
+        "glb",
+        "json",
+        "obj",
+        "png",
+        "stl",
+        "zip"
+      ]
+    }
+  ],
+  "counts": {
+    "stdio_artifacts": 29,
+    "domain_artifacts": 54,
+    "curated_io_pairs": 285
+  }
+}

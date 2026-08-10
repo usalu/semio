@@ -1,0 +1,5 @@
+# 🧬️ MdDiff
+type MdDiff {
+  schema: String
+  PLACEHOLDER_VALUE_COLON String
+}

@@ -388,6 +388,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "draw.document".into(),
         export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
         import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

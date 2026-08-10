@@ -1,0 +1,3 @@
+(* ebnf stdio.csv diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.csv', newline ;

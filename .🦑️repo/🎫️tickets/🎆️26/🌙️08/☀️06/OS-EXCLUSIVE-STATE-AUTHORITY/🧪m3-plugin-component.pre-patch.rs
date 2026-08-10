@@ -4847,7 +4847,7 @@ pub mod app {
     impl PluginBundle {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
-                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new() },
+                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new()  artifact_kinds: vec![] },
                 apps: HashMap::new(),
             }
         }
@@ -5095,7 +5095,7 @@ pub mod plugin_runtime {
                 capabilities: vec![],
                 contributions: vec![],
                 commands: vec![],
-            })
+             artifact_kinds: vec![] })
         })
     }
 

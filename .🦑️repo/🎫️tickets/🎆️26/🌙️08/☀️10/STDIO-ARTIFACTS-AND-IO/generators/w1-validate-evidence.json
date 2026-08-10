@@ -1,0 +1,34 @@
+{
+  "exit": 0,
+  "stdout": "PROBLEMS []\nCOUNT 0\nOK 🧬️schema/📸️snapshot/📝️text got true expect true\nOK 🧬️schema/🧬️mutations/🏗️foo/🦠️mutation got true expect true\nOK 🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🏗️txt got true expect true\nOK 🏗️builder got true expect true\nOK not-a-facet got false expect false\nVALIDATE_TAXONOMY_OK\n",
+  "stderr": "",
+  "checks": [
+    [
+      "🧬️schema/📸️snapshot/📝️text",
+      true
+    ],
+    [
+      "🧬️schema/🧬️mutations/🏗️foo/🦠️mutation",
+      true
+    ],
+    [
+      "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🏗️txt",
+      true
+    ],
+    [
+      "🏗️builder",
+      true
+    ],
+    [
+      "not-a-facet",
+      false
+    ]
+  ],
+  "taxonomy_components": [
+    "🧬️schema",
+    "⚙️engine",
+    "🚪️io",
+    "🏗️builder",
+    "🪓️decomposer"
+  ]
+}

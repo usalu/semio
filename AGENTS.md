@@ -37,11 +37,14 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
       - You MUST manually fix all assets, fixtures, etc all at once.
 - You MUST use repo mcp for repo-specific infrastructure.
   - You MUST work inside a ticket.
+    - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
+      - You MUST create a markdown file inside the ticket folder for every research or summary you do.
+        - You MUST NOT return the research or summary in the chat as message.
+          - You MUST refer to the markdown file inside the ticket folder in the chat for results.
   - You MUST NOT use search tool because it is broken.
   - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
-  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🦑️repo/🎫️tickets/YY/MM/DD/TICKETSLUG`.
-  - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
+  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
   - You MUST NOT delete all temporary files, logs, scripts, … inside the ticket folder after you are done.
   - You MUST NOT create any additional folders or files outside the ticket folder.
   - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
@@ -55,16 +58,13 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - A title MUST be titleized (e.g. "Some Title on Something") and MUST NOT be a slug or MUST NOT be all caps.
   - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
-- You MUST NOT mix technologies (`./compose`, `./puzzle`, `./mit-bestand`, …) if NOT explicitly asked.
-  - You MUST NOT leak fixtures or other technologies into the code outside of testing.
-  - You MUST fix a bug at the root and that might be inside another technology.
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.
   - You MUST NOT say that a feature is working when you didn't confirm runtime behaviour with console logs.
   - You MUST add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - You MUST only ask when in planning mode. Otherwise you MUST be opinionated and take the most appropriate choice directly.
 - You MUST NOT stop halfway and ask if you should continue.
-- You MUST be thorough.
+- You MUST be extremely thorough.
 - You MUST only write consice code.
   - You MUST NOT comment inside definitions.
   - You SHOULD add links to related resources in native docstring format.

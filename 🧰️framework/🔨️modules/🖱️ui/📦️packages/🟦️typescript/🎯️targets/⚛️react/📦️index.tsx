@@ -2885,7 +2885,7 @@ export const uiChromeTranslationBundles = {
             language: { label: { normal: "Language", beginner: "Language" } },
             terminology: { label: { normal: "Terminology", beginner: "Terminology" } },
             theme: { label: { normal: "Theme", beginner: "Theme" } },
-            keybindings: { label: { normal: "Keybindings", beginner: "Keybindings" } },
+            keybindings: { label: { normal: "Hotkeys", beginner: "Hotkeys" } },
           },
           appearance: {
             light: { label: { normal: "Light", beginner: "Light" } },
@@ -7120,13 +7120,13 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   void epoch;
 
   if (!metrics) {
-    return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
+    return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" data-dim="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
   const path = windowSilhouettePath(metrics);
   const paint = windowSilhouetteBorderPaint(resolvedKind);
   if (resolvedKind === "celebrated") {
     return (
-      <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+      <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-dim="" className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
         <defs>
           <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
             <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
@@ -7140,7 +7140,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
     );
   }
   return (
-    <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+    <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-dim="" className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
       <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
     </svg>
   );
@@ -7207,7 +7207,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       return wrapLevel(
         <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
           <WindowChromeSilhouetteBorder stack={stackEl} active={active} borderKind={borderKind} />
-          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
         </div>,
@@ -8698,7 +8698,7 @@ export const Pane: React.FC<PaneProps> = ({
         data-folded={effectiveFolded ? "true" : undefined}
         data-expanded={expanded ? "true" : undefined}
         data-dragging={dragging ? "true" : undefined}
-        {...(dimWhenOpen && !effectiveFolded ? { "data-dim": true } : {})}
+        {...(dimWhenOpen ? { "data-dim": true } : {})}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         onPointerDown={stopPointerPropagation}
         onPointerMove={stopPointerPropagation}
@@ -17416,7 +17416,7 @@ if (treeVitest) {
       fireEvent.pointerUp(document);
     });
 
-    it("GhostProvider keeps folded navbar/footer PanelChromeTabBar toggles visible while canvas ghost dims open panels including borders", async () => {
+    it("GhostProvider dims navbar/footer PanelChromeTabBar toggles and open panels including borders on interaction", async () => {
       const { fireEvent, render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
@@ -17440,17 +17440,18 @@ if (treeVitest) {
       expect(panel).toBeTruthy();
       expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
       expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(panel.querySelector('[data-window-silhouette-border]')?.hasAttribute("data-dim")).toBe(true);
 
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
       fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
 
       expect(panel.getAttribute("data-ghost")).toBe("true");
       expect(foldedChromeBar.hasAttribute("data-ghost")).toBe(false);
-      expect(foldedChromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(false);
+      expect(foldedChromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(true);
       fireEvent.pointerUp(document);
     });
 
-    it("GhostProvider dims open pane fill, border, chrome, and body while folded pane toggles stay undimmed", async () => {
+    it("GhostProvider dims open and folded pane toggles, borders, chrome, and body on interaction", async () => {
       const { fireEvent, render } = await import("@testing-library/react");
       const { container } = render(
         <GhostProvider>
@@ -17471,7 +17472,8 @@ if (treeVitest) {
       const folded = Array.from(panes).find((pane) => !pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
       expect(open.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
       expect(open.querySelector('[data-slot="pane-body"]')?.hasAttribute("data-dim")).toBe(true);
-      expect(folded.querySelector('[data-slot="window-chrome-chip-cap"]')?.hasAttribute("data-dim")).toBe(false);
+      expect(folded.querySelector('[data-slot="window-chrome-chip-cap"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(folded.hasAttribute("data-dim")).toBe(true);
 
       const canvas = container.querySelector("#canvas") as HTMLElement;
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
@@ -19709,7 +19711,7 @@ if (treeVitest) {
       expect(panelMarkup).toMatch(/panel-tabs[^>]*z-40/);
       const paneMarkup = renderToStaticMarkup(
         <PaneHost>
-          <Pane id="hover-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")}>
+          <Pane id="hover-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")} folded={false}>
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -19778,7 +19780,7 @@ if (treeVitest) {
 
       const { container: paneContainer } = render(
         <PaneHost>
-          <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} onFoldToggle={onFoldToggle}>
+          <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} folded={false} onFoldToggle={onFoldToggle}>
             <div>Pane body</div>
           </Pane>
         </PaneHost>,

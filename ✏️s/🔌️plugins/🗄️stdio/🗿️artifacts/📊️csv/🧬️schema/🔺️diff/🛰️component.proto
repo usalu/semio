@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_csv.diff;
+message CsvDiff {
+  string schema = 1;
+  string value_wire = 2;
+}

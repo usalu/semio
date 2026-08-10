@@ -1,0 +1,6 @@
+dialect grammar stdio.xml.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.xml' NL
+body = payload NL?
+payload = *OCTET

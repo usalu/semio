@@ -514,8 +514,8 @@ mod tests {
 
     #[test]
     fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
-        let before = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
-        let after = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+        let before = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o1", "anchor": "fixed", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "anchor": "fixed", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+        let after = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o2", "anchor": "fixed", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "anchor": "fixed", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
         let operations = puzzle3d_document_delta_operations(&before, &after);
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::SetSnapshot { .. })));
         let mut forward = before.clone();
@@ -539,17 +539,17 @@ mod tests {
         let before = serde_json::json!({
             "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "attractions": [],
             "objects": [
-                { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
-                { "id": "updated", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
-                { "id": "removed", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "unchanged", "anchor": "fixed", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "updated", "anchor": "fixed", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "removed", "anchor": "fixed", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
             ],
         });
         let after = serde_json::json!({
             "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "attractions": [],
             "objects": [
-                { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
-                { "id": "updated", "origin": [1.0, 5.0, 0.0], "vortices": [], "hidden": false, "locked": false },
-                { "id": "added", "origin": [3.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "unchanged", "anchor": "fixed", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "updated", "anchor": "fixed", "origin": [1.0, 5.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "added", "anchor": "fixed", "origin": [3.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
             ],
         });
         let operations = puzzle3d_document_delta_operations(&before, &after);

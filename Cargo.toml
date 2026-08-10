@@ -95,6 +95,7 @@ members = [
     "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
 ]
 

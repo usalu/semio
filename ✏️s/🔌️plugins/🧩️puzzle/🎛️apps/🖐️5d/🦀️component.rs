@@ -1195,6 +1195,7 @@ macro_rules! puzzle5d_command_variants {
 puzzle5d_command_variants! {
     SetFixtureJson = "setFixtureJson",
     SetActiveExample = "setActiveExample",
+            ImportComposeKit = "importComposeKit",
     AddNode = "addNode",
     AddPartKind = "addPartKind",
     AddBrushPart = "addBrushPart",
@@ -2565,11 +2566,11 @@ mod tests {
 
         let parts = next_projection.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
         let capsule = parts.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).expect("the imported part kind must appear in kindCatalogs.parts");
-        assert_eq!(capsule.get("meshUrl").and_then(Value::as_str), Some("/mesh/capsule.glb"));
+        assert_eq!(capsule.pointer("/representations/0/url").and_then(Value::as_str), Some("/mesh/capsule.glb"));
         assert_eq!(capsule.pointer("/grips/0/gripKind").and_then(Value::as_str), Some("door"), "the per-part grip template keeps its gripKind after normalization");
-        assert_eq!(capsule.pointer("/grips/0/3d/position").and_then(Value::as_array), Some(&vec![json!(0.0), json!(0.0), json!(0.0)]));
-        assert_eq!(capsule.pointer("/grips/0/3d/direction").and_then(Value::as_array), Some(&vec![json!(0.0), json!(1.0), json!(0.0)]));
-        assert_eq!(capsule.pointer("/grips/0/3d/radius").and_then(Value::as_f64), Some(0.3));
+        assert_eq!(capsule.pointer("/grips/0/point").and_then(Value::as_array), Some(&vec![json!(0.0), json!(0.0), json!(0.0)]));
+        assert_eq!(capsule.pointer("/grips/0/direction").and_then(Value::as_array), Some(&vec![json!(0.0), json!(1.0), json!(0.0)]));
+        assert_eq!(capsule.pointer("/grips/0/radius").and_then(Value::as_f64), Some(0.3));
 
         let grips = next_projection.pointer("/kindCatalogs/grips").and_then(Value::as_array).expect("grips catalog present");
         let door = grips.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("door")).expect("the imported grip kind must appear in kindCatalogs.grips");

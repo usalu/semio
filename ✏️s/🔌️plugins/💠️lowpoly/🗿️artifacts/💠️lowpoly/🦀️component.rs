@@ -248,6 +248,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "lowpoly.fixture".into(),
         export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
         import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 
@@ -266,6 +268,8 @@ pub fn mesh_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "mesh.reference".into(),
         export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
         import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

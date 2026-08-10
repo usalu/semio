@@ -29,6 +29,8 @@ pub fn mesh_artifact_kind() -> ArtifactKindSpec {
         schema: "mesh.reference".into(),
         export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl],
         import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔹ArtifactKind

@@ -1563,14 +1563,80 @@
       }
     },
     {
-      "name": "⚖️gate🚪️artifact-io",
+      "name": "⚖️gate🗄️stdio-catalog",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactIoBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyStdioCatalogBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 410
+      }
+    },
+    {
+      "name": "⚖️gate🏗️artifact-builder",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactBuilderBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.1
+      }
+    },
+    {
+      "name": "⚖️gate🪓️artifact-decomposer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactDecomposerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2
+      }
+    },
+    {
+      "name": "⚖️gate🧬️schema-representation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policySchemaRepresentationBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.3
+      }
+    },
+    {
+      "name": "⚖️gate🚪️io-serializer-matrix",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyIoSerializerMatrixBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.4
+      }
+    },
+    {
+      "name": "⚖️gate🗄️io-terminality",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyIoTerminalityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.5
+      }
+    },
+    {
+      "name": "⚖️gate💾codec-fidelity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyCodecFidelityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.6
       }
     },
     {

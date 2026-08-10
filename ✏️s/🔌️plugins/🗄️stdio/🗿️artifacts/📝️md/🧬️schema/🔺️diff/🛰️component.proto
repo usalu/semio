@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_md.diff;
+message MdDiff {
+  string schema = 1;
+  string value_wire = 2;
+}

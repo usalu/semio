@@ -37,7 +37,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
         schema: "procedural.2d".into(),
         export_formats: vec![],
-        import_formats: vec![]}
+        import_formats: vec![]        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
 }
 //#endregion 🔖️ArtifactKind
 

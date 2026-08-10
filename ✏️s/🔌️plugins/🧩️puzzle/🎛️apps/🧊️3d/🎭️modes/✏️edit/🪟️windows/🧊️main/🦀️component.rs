@@ -205,7 +205,11 @@ fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Optio
     };
     for entry in entries {
         if entry.get("id").and_then(|value| value.as_str()) == Some(kind_id) {
-            return fields.iter().find_map(|field| entry.get(*field).and_then(|value| value.as_str())).unwrap_or(fallback).to_string();
+            return fields
+                .iter()
+                .find_map(|field| entry.get(*field).and_then(|value| value.as_str()).filter(|text| !text.is_empty()))
+                .unwrap_or(fallback)
+                .to_string();
         }
     }
     fallback.into()

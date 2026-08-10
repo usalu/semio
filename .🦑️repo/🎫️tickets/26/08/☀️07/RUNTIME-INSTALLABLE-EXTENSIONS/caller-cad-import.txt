@@ -1,8 +1,0 @@
-FILE /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/📥️geometry-import/🦀️component.rs
-266:     tessellate_geometry_handle(kernel, handle_id, kind)
-276:     tessellate_geometry_handle(kernel, &handle_id, &kind)
-279: pub fn tessellate_geometry_handle(kernel: &mut dyn BrepKernel, handle_id: &str, kind: &str) -> Option<MeshData> {
-464:         let mesh = tessellate_geometry_handle(&mut kernel, imported[0].solid_handle.as_ref().expect("handle"), "solid").expect("mesh");
-484:         let mesh = tessellate_geometry_handle(&mut kernel, handle_id, "surface").expect("surface mesh");
-500:         let mesh = tessellate_geometry_handle(&mut kernel, slab.solid_handle.as_ref().expect("handle"), "surface").expect("surface mesh");
-516:         let mesh = tessellate_geometry_handle(&mut kernel, handle, "curve").expect("curve mesh");

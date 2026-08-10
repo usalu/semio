@@ -1,0 +1,92 @@
+//! 🧬️ BinarySnapshot schema — persistent fields + real codecs.
+
+use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted `stdio.binary` snapshot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.stdio.binary")]
+pub struct BinarySnapshot {
+    #[state(persistent)]
+    pub schema: String,
+    #[state(persistent)]
+    #[serde(default)]
+    pub bytes: Vec<u8>,
+}
+
+impl Default for BinarySnapshot {
+    fn default() -> Self {
+        Self {
+            schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
+            bytes: Vec::new(),
+        }
+    }
+}
+//#endregion 🔖️Snapshot
+
+//#region 🔖️HandcraftedDocumentCodecs
+impl store::DocumentDsl for BinarySnapshot {
+    const EXTENSION: &'static str = "bin";
+    fn envelope_id() -> &'static str { "stdio.binary" }
+
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
+        if hex.len() % 2 != 0 {
+            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
+        }
+        let mut bytes = Vec::with_capacity(hex.len() / 2);
+        let mut i = 0usize;
+        while i < hex.len() {
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| {
+                store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
+            })?;
+            bytes.push(byte);
+            i += 2;
+        }
+        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
+    }
+    fn print_dsl(&self) -> String {
+        let body: String = self.bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        ).expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for BinarySnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let _ = options;
+
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &self.bytes))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let _ = options;
+        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: inner })
+    }
+}
+//#endregion 🔖️HandcraftedDocumentCodecs

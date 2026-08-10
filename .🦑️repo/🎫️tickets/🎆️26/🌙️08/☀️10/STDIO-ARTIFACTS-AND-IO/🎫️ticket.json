@@ -1,0 +1,13 @@
+{
+  "id": "26/08/10/STDIO-ARTIFACTS-AND-IO",
+  "title": "Stdio Artifacts and Io",
+  "status": "open",
+  "goal": "AI-OPTIMIZED-REPO",
+  "due": "2026-08-17",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Replace ad-hoc MediaFormat IO with a zero-app stdio plugin whose artifacts are the well-known file types. Absorb dsl/pack/op/spr/diff/mutations into nested schema/{snapshot,diff,mutations}/{text,binary}. Add required builder and decomposer facets. Rewrite import/export as artifact-to-artifact serializers/deserializers. Hand-roll all codecs to real fidelity. Enforce via taxonomy twins and seven new policy rules.",
+  "summary": "",
+  "files": [],
+  "note": "Opened without repo MCP (server not loaded in session); folder created to match ticket_open layout. Associated with AI-OPTIMIZED-REPO (same parent as ARTIFACT-IO-FACETS)."
+}

@@ -505,6 +505,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.3d".into(),
         export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
         import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 
@@ -523,6 +525,8 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "kit.catalog".into(),
         export_formats: vec![],
         import_formats: vec![],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

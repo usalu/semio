@@ -521,6 +521,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.5d".into(),
         export_formats: vec![],
         import_formats: vec![],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -1,0 +1,5 @@
+# 🧬️ XmlDiff
+type XmlDiff {
+  schema: String
+  PLACEHOLDER_VALUE_COLON String
+}

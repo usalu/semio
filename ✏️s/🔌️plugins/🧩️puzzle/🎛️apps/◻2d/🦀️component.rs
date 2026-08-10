@@ -224,6 +224,7 @@ pub fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option
         "x": x,
         "y": y,
         "text": id,
+        "anchor": "fixed",
         "handles": []
     });
     if shape == "rectangle" {

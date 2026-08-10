@@ -1,0 +1,3 @@
+(* ebnf stdio.txt snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.txt', newline ;

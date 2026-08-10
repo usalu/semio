@@ -1,0 +1,5 @@
+# 🧬️ JsonArtifact
+type JsonArtifact {
+  schema: String! @state(class: PERSISTENT)
+  value: String! @state(class: PERSISTENT)
+}

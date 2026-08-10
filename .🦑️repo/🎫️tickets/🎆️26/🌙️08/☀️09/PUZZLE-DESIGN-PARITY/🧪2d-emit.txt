@@ -1,0 +1,180 @@
+fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+        let config = cfg.snapshot;
+        let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
+        let before = doc.snapshot.0.clone();
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        let mut scene = Self::scene_for(before.clone(), config, window_id);
+        // 🐚️ DocumentApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
+        // each call. The previous last_synced_fixture cache lived on &self and cannot return.
+        let host = RefCell::new(BoardHost::default());
+        {
+            let mut host_mut = host.borrow_mut();
+            sync_host_fixture_content(&mut host_mut, &scene);
+            // 🧹️ `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
+            // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
+            // change. Discard that parse-induced noise now so `apply_host_events` below only sees
+            // events genuinely produced by *this* action's own engine calls.
+            let _ = host_mut.drain_events_json();
+            sync_host_runtime_state(&mut host_mut, &scene);
+        }
+        let mut effects: Vec<HostEffect> = Vec::new();
+        // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
+        // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
+        let mut ui_scope = UiDirtyScope::Full;
+        {
+            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
+            match action {
+                "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
+                "selectAll" => selection_commands::select_all(ctx),
+                "clearSelection" => selection_commands::clear_selection(ctx),
+                "selectSameKind" => selection_commands::select_same_kind(ctx),
+                "deleteSelection" => selection_commands::delete_selection(ctx),
+                "duplicateSelection" => selection_commands::duplicate_selection(ctx),
+                "setSelectionFlag" => selection_commands::set_selection_flag(ctx, args),
+                "setSelectionMethod" => selection_commands::set_selection_method(ctx, args),
+                "addNode" => node::add_node(ctx, args),
+                "patchInspectorNodes" => node::patch_inspector(ctx, args),
+                "redrawHandles" => node::redraw_handles(ctx),
+                "forceLayout" | "reorganize" => node::force_layout(ctx),
+                "setCamera" => camera::set_camera(ctx, args),
+                "focusSelection" => camera::focus_selection(ctx),
+                "setActiveExample" => example::set_active_example(ctx, args),
+                SET_ACTIVE_UTILITY_ACTION_ID => utility::set_active_utility(ctx, args),
+                "engagementInput" => engagement::engagement_input(ctx, args),
+                "engagementSubmit" => engagement::engagement_submit(ctx, args),
+                "engagementAbort" => engagement::engagement_abort(ctx, args),
+                "engagementControlSelect" => engagement::engagement_control_select(ctx, args),
+                "setLodModeForPane" => lod::set_lod_mode_for_pane(ctx, args),
+                "lodScaleJson" => lod::lod_scale_json(ctx),
+                "setGridSnapEnabled" => grid::set_grid_snap_enabled(ctx, args),
+                "setGridFactor" => grid::set_grid_factor(ctx, args),
+                "setBrushKindWeights" => brush::set_brush_kind_weights(ctx, args),
+                "setBrushNodeSize" => brush::set_brush_node_size(ctx, args),
+                "setSuggestionOffset" => brush::set_suggestion_offset(ctx, args),
+                "brushCycleCandidate" => brush::cycle_candidate(ctx, args),
+                "brushSetCandidateIndex" => brush::set_candidate_index(ctx, args),
+                "brushOpenSlot" => brush::open_slot(ctx, args),
+                "brushCommitSlot" => brush::commit_slot(ctx),
+                "brushCancelSlot" => brush::cancel_slot(ctx),
+                "setFillCount" => brush::set_fill_count(ctx, args),
+                "brushFillSessionBegin" => brush::fill_session_begin(ctx, args),
+                "brushFillSessionStep" => brush::fill_session_step(ctx, args),
+                "brushFillSessionClear" => brush::fill_session_clear(ctx),
+                "applyBoardEvents" => board::apply_board_events(ctx, args),
+                "setLocale" => locale::set_locale(ctx, args),
+                "setTerminology" => locale::set_terminology(ctx, args),
+                _ => {}
+            }
+        }
+        apply_host_events(&mut host.borrow_mut(), &mut scene);
+        let operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
+        // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
+        // actual document mutation (would silently desync remote clients' UI from the committed operation).
+        if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
+            ui_scope = UiDirtyScope::Full;
+        }
+        // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
+        // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
+        let config_mutations = if &scene.runtime != config { vec![Puzzle2dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
+        // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but it
+        // is now a View-kind action that never touches the document.
+        Ok(Emit { document_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() })
+    }
+
+    /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
+    /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
+    fn io() -> Option<AppIo> {
+        Some(
+            AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() })
+                .with_ports(vec![
+                    MediaPortSpec {
+                        id: "kit:in".into(),
+                        label: "Kit Catalog".into(),
+                        direction: MediaPortDirection::In,
+                        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                        kind_id: Some("kit.catalog".into()),
+                        required: false,
+                        multiplicity: PortMultiplicity::Many,
+                    },
+                    MediaPortSpec {
+                        id: "design:out".into(),
+                        label: "Puzzle Design".into(),
+                        direction: MediaPortDirection::Out,
+                        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
+                        kind_id: Some("2d.puzzle".into()),
+                        required: false,
+                        multiplicity: PortMultiplicity::Many,
+                    },
+                ]),
+        )
+    }
+
+    /// 🚧️ `kit:in` is declared (see `io()`) so a future producer/consumer pairing is possible, but
+    /// puzzle2d's own "kind catalogs" (node/handle kind weights, keyed by this app's own node/handle
+    /// kind vocabulary) are structurally UNRELATED to `kit.catalog`'s shape (block3d's object/vortex-kind
+    /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
+    /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
+    /// this always reports `NotImplemented` — no normalization is attempted.
+    fn import_media(_port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
+        Err(MediaError::NotImplemented)
+    }
+
+    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
+        let config = cfg.snapshot;
+        let document_json = doc.snapshot.0.to_string();
+        // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
+        // off the real targeted pane instead of an ambiguous stand-in.
+        let pane = match body_key {
+            overview::BODY_KEY => Some(overview::WINDOW_KIND_ID),
+            detail::BODY_KEY => Some(detail::WIND
+
+KEY operations_from_fixture -1
+
+KEY puzzle2d_operations -1
+
+KEY Emit:: -1
+
+KEY fn scene_for 42236
+fn scene_for(fixture: serde_json::Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        Puzzle2dScene {
+            fixture,
+            runtime: config.clone(),
+            active_utility,
+        }
+    }
+}
+
+impl DocumentApp for Puzzle2dPlayApp {
+    const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+    type Snapshot = Puzzle2dPlaySnapshot;
+    type Mutation = Puzzle2dMutation;
+    type Config = Puzzle2dConfig;
+    type ConfigMutation = Puzzle2dConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = Puzzle2dPresence;
+    type PresenceMutation = Puzzle2dPresenceMutation;
+    type Command = Puzzle2dCommand;
+
+    fn initial_snapshot() -> Puzzle2dPlaySnapshot {
+        Puzzle2dPlaySnapshot(serde_json::to_value(default_empty_fixture()).unwrap_or(serde_json::Value::Null))
+    }
+
+    /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
+    fn command_id(command: &Puzzle2dCommand) -> &'static str {
+        command.action_id()
+    }
+
+    /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
+    /// the host's own events and turn the mutated scene into the granular operation delta plus a
+    /// config snapshot. No behaviour lives in this match.
+    fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+        let config = cfg.snapshot;
+        let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
+        let before = doc.snapshot.0.clone();
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        let mut sc
+
+KEY diff_fixture -1

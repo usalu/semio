@@ -375,20 +375,101 @@ Artifacts must be versionable independantely.
 
 ---
 
+The exporter and importers are still extremely adhoc.
 Every artifact must be importable and exportable to existing file types.
+Existing file types are now also just artifacts. A existing wkt such as gltf uses other artifacts (json for .gltf, binary for .glb) for io.
+Bundle all well known files types into a stdio plugin that has no apps and only defines artifacts.
+All artifacts must have a builder and a decomposer which is the main utility that is usable by other plugins.
+
 
 ```
-<artifact>
-  io
-    <format>
-      import
-        component.rs
-        component.ts
-        …
-      export
-        component.rs
-        component.ts
-    …
+s
+  plugins
+    stdio
+      artifacts
+        <artifact> # e.g. gltf, pdf, png, etc
+          schema # definition of the document model for the format
+            snapshot
+              text
+                component.grammar.semio
+                component.ebnf
+                component.g4
+                component.graphql
+                component.json
+                component.proto
+                component.rs
+                component.ts
+                …
+              binary
+                component.protocol.semio
+                component.abnf
+                component.ksy
+                component.spicy
+                component.rs
+                component.ts
+                …
+            diff
+              text
+                component.grammar.semio
+                component.ebnf
+                component.g4
+                component.rs
+                component.ts
+                …
+              binary
+                component.protocol.semio
+                component.abnf
+                component.ksy
+                component.spicy
+                component.rs
+                component.ts
+                …
+            mutations
+              <mutation>
+                diff
+                  component.rs
+                  component.ts
+                  …
+                inverse
+                  component.rs
+                  component.ts
+                  …
+                mutation
+                  component.rs
+                  component.ts
+                  …
+                …
+              …
+            …
+          builder # utility helper to build the artifact (acepts mutations, diffs, different representations such as text, binary, etc)
+            component.rs
+            component.ts
+            …
+          decomposer # utility helper to decompose an artifact (from multiple sources, with only partial information, wrong or missing data, etc)
+            component.rs
+            component.ts
+            …
+          io
+            import
+              deserializers
+                artifacts
+                  <artifact> # e.g. json for gltf, binary for glb, etc
+                    component.rs
+                    component.ts
+              …
+              component.rs
+              component.ts
+              …
+            export
+              serializers
+                artifacts
+                  <artifact> # e.g. json for gltf, binary for glb, etc
+                    component.rs
+                    component.ts
+              component.rs
+              component.ts
+              …
+          …
 ```
 
 ---

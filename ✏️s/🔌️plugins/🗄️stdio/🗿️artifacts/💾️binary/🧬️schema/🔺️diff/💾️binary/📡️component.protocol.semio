@@ -1,0 +1,3 @@
+dialect protocol stdio.binary.diff
+magic = %x00
+payload = *OCTET

@@ -1,0 +1,6 @@
+dialect grammar stdio.md.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.md' NL
+body = payload NL?
+payload = *OCTET

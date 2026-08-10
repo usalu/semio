@@ -19874,7 +19874,7 @@ mod command_registry_tests {
             capabilities: vec![],
             contributions: vec![],
             commands: vec![CommandDefinition::new("plugin.doThing", "Do Thing", CommandScope::Plugin, "plugin")],
-        };
+         artifact_kinds: vec![] };
         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
         let sources: Vec<(&str, CommandSource)> = resolved
             .iter()

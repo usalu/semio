@@ -1,0 +1,5 @@
+# 🧬️ XmlArtifact
+type XmlArtifact {
+  schema: String! @state(class: PERSISTENT)
+  PLACEHOLDER_VALUE_COLON String! @state(class: PERSISTENT)
+}

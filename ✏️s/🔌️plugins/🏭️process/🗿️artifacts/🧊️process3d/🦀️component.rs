@@ -514,6 +514,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PROCESS_3D_SCHEMA.into(),
         export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
         import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

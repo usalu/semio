@@ -21,6 +21,7 @@ pub struct PluginBuilder<State> {
     capabilities: Vec<CapabilityRequirement>,
     contributions: Vec<Contribution>,
     commands: Vec<CommandDefinition>,
+    artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
     _state: PhantomData<State>,
@@ -37,6 +38,7 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: Vec::new(),
             contributions: Vec::new(),
             commands: Vec::new(),
+            artifact_kinds: Vec::new(),
             apps: HashMap::new(),
             app_defs: Vec::new(),
             _state: PhantomData,
@@ -53,6 +55,7 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: self.capabilities,
             contributions: self.contributions,
             commands: self.commands,
+            artifact_kinds: self.artifact_kinds,
             apps: self.apps,
             app_defs: self.app_defs,
             _state: PhantomData,
@@ -71,6 +74,7 @@ impl PluginBuilder<NeedsVersion> {
             capabilities: self.capabilities,
             contributions: self.contributions,
             commands: self.commands,
+            artifact_kinds: self.artifact_kinds,
             apps: self.apps,
             app_defs: self.app_defs,
             _state: PhantomData,
@@ -120,6 +124,12 @@ impl PluginBuilder<Ready> {
         self
     }
 
+    /// 🗂️ Declares one plugin-level artifact kind for library (zero-app) plugins. Repeatable.
+    pub fn artifact_kind(mut self, spec: semio_framework::ArtifactKindSpec) -> Self {
+        self.artifact_kinds.push(spec);
+        self
+    }
+
     /// 🧬️ Registers a typed document app factory.
     pub fn document_app<A: DocumentApp>(mut self, app: App) -> Self {
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
@@ -157,6 +167,9 @@ impl PluginBuilder<Ready> {
         }
         for command in self.commands {
             plugin = plugin.plugin_command(command);
+        }
+        for kind in self.artifact_kinds {
+            plugin = plugin.artifact_kind(kind);
         }
         for (app, factory) in self.app_defs {
             plugin = plugin.register_app_factory(app, factory);

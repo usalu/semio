@@ -1,0 +1,5 @@
+# 🧬️ CsvDiff
+type CsvDiff {
+  schema: String
+  PLACEHOLDER_VALUE_COLON String
+}

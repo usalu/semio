@@ -28,6 +28,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "remodel.scene".into(),
         export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png],
         import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

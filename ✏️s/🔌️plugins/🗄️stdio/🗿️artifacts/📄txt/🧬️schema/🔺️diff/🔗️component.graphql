@@ -1,0 +1,5 @@
+# 🧬️ TxtDiff
+type TxtDiff {
+  schema: String
+  text: String
+}

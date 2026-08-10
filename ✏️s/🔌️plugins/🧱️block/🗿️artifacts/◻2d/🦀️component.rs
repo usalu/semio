@@ -73,6 +73,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_2D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

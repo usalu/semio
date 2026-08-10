@@ -1,0 +1,3 @@
+dialect protocol stdio.binary.snapshot
+magic = %x00
+payload = *OCTET

@@ -20,11 +20,15 @@ pub fn import(bytes: &[u8]) -> Result<crate::artifacts::puzzle3d::Puzzle3dSnapsh
 }
 
 pub fn register() {
-    let kind = "3d.block";
-    let format = MediaFormat::Json;
-    semio_framework_os::register_os_media_import_handler(kind, format, move |bytes| {
-        let snapshot = import(bytes).map_err(|e| e.to_string())?;
-        serde_json::to_value(snapshot).map_err(|e| e.to_string())
-    });
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+
+        let kind = "3d.block";
+        let format = MediaFormat::Json;
+        semio_framework_os::register_os_media_import_handler(kind, format, move |bytes| {
+            let snapshot = import(bytes).map_err(|e| e.to_string())?;
+            serde_json::to_value(snapshot).map_err(|e| e.to_string())
+        });
+    }
 }
 //#endregion 🔖️Import

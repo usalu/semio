@@ -70,7 +70,21 @@ fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
 
 fn object_kind_item(entry: &Value) -> UiTreeItemNode {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
-    let mesh_url = entry.get("meshUrl").and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(str::to_string);
+    let mesh_url = entry
+        .get("meshUrl")
+        .and_then(|value| value.as_str())
+        .filter(|url| !url.is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            entry
+                .get("representations")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|rep| rep.get("url").and_then(Value::as_str))
+                .find(|url| !url.is_empty())
+                .map(str::to_string)
+        });
     let draggable = mesh_url.is_some();
     UiTreeItemNode {
         presence: UiPresence::default(),

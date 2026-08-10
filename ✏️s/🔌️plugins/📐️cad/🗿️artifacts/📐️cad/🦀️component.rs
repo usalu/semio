@@ -384,6 +384,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "cad.scene".into(),
         export_formats: crate::artifacts::cad::io::format_specs().iter().filter(|s| s.export).map(|s| s.format).collect(),
         import_formats: crate::artifacts::cad::io::format_specs().iter().filter(|s| s.import).map(|s| s.format).collect(),
+            export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind

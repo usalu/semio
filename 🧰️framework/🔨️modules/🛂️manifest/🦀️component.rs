@@ -2811,6 +2811,9 @@ pub struct PluginManifest {
     /// 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,
+    /// 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub artifact_kinds: Vec<ArtifactKindSpec>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

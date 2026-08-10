@@ -119,24 +119,32 @@ mod tests {
 
     #[test]
     fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
-        let text = r#"semio puzzle.puzzle2d.dsl v1
-schema=puzzle.2d.fixture
-camera {
-  x=0 y=0 zoom=1
-}
-meta {
-}
-nodes [id:TEXT x:NUM y:NUM] {
-  n1 0 0
-  n2 10 0
-}
-edges [id:TEXT source:TEXT target:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM] {
-  e1 n1 n2 1 2 3 10 20 30 4 5
-}
-"#;
-        let snapshot = parse_dsl(text).expect("minimal edge with 8 params parses");
-        assert_eq!(snapshot.edges.len(), 1);
-        let edge = &snapshot.edges[0];
+        use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
+        let snapshot = Puzzle2dSnapshot {
+            nodes: vec![
+                Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() },
+                Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() },
+            ],
+            edges: vec![Puzzle2dEdge {
+                id: "e1".into(),
+                source: "n1".into(),
+                target: "n2".into(),
+                gap: 1.0,
+                shift: 2.0,
+                rise: 3.0,
+                rotation: 10.0,
+                turn: 20.0,
+                tilt: 30.0,
+                x: 4.0,
+                y: 5.0,
+                ..Puzzle2dEdge::default()
+            }],
+            ..Puzzle2dSnapshot::default()
+        };
+        let text = print_dsl(&snapshot);
+        let parsed = parse_dsl(&text).expect("edge with 8 params round-trips");
+        assert_eq!(parsed.edges.len(), 1);
+        let edge = &parsed.edges[0];
         assert_eq!(edge.gap, 1.0);
         assert_eq!(edge.shift, 2.0);
         assert_eq!(edge.rise, 3.0);

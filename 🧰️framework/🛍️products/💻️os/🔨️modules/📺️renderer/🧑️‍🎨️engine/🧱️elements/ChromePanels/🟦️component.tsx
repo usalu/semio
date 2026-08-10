@@ -2,8 +2,7 @@
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ChromePanels/component.tsx
 /** @emoji 🖼️ `ChromePanels` — the framework-owned settings-panel tree builders for the OS shell's
  * chrome: the Display panel (window-kind palette + named-layout tree), the Settings panel (general/
- * driver/theme/keybindings trees), the Plugins panel (install/reload/uninstall tree), and the
- * Extensions panel (install-from-URL / enable / uninstall, grouped by host), plus the small
+ * driver/theme/hotkeys tabs), and the Marketplace panel (plugins with their nested extensions), plus the small
  * standalone route-not-found and plugin-recovery affordances they share the chrome namespace with.
  * Each panel's `*HostApi` type is the read/write surface `ShellHost` implements to drive it.
  */
@@ -68,9 +67,10 @@ export type DisplayHostApi = {
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID = "framework.display.layout";
-const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
-const FRAMEWORK_SETTINGS_THEME_TAB_ID = "framework.settings.theme";
-const FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID = "framework.settings.keybindings";
+export const FRAMEWORK_SETTINGS_PANEL_ID = "framework.settings";
+export const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
+export const FRAMEWORK_SETTINGS_THEME_TAB_ID = "framework.settings.theme";
+export const FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID = "framework.settings.keybindings";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -854,13 +854,13 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null): PanelTabNode[] {
-  return [
+export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null): PanelTabNode {
+  const children: PanelTabNode[] = [
     singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
       icon: shellTabIcon("framework.settings.general"),
-      name: shellLabel("ui.panelToggle.settings"),
-      order: -98,
+      name: shellLabel("ui.settings.tab.general"),
+      order: 0,
       tree: {
         resolveTree: () => {
           const host = getHost();
@@ -868,20 +868,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
         },
       },
     }),
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
-      icon: shellTabIcon("keyboard"),
-      name: shellLabel("ui.settings.tab.keybindings"),
-      order: -97.5,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildSettingsKeybindingsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-        },
-      },
-    }),
-    // 🔒️ A locked theme means no theme editing/saving either — drop the whole tab (the footer's chrome tab
-    // bar renders `settingsRightTabs` directly, so its toggle disappears for free).
+    // 🔒️ A locked theme means no theme editing or saving, so the Settings branch omits that child tab.
     ...(getHost()?.locks.themeId
       ? []
       : [
@@ -889,7 +876,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
             id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
             icon: shellTabIcon("paintbrush"),
             name: shellLabel("ui.settings.tab.theme"),
-            order: -97,
+            order: 1,
             tree: {
               resolveTree: () => {
                 const host = getHost();
@@ -898,7 +885,27 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
             },
           }),
         ]),
+    singleTreeLeaf({
+      id: FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
+      icon: shellTabIcon("keyboard"),
+      name: shellLabel("ui.settings.tab.keybindings"),
+      order: 2,
+      tree: {
+        resolveTree: () => {
+          const host = getHost();
+          return host ? buildSettingsKeybindingsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+        },
+      },
+    }),
   ];
+  return {
+    kind: "branch",
+    id: FRAMEWORK_SETTINGS_PANEL_ID,
+    icon: shellTabIcon("settings"),
+    name: shellLabel("ui.panelToggle.settings"),
+    order: 0,
+    children,
+  };
 }
 
 export function useNamedLayoutHost(options: {
@@ -938,7 +945,7 @@ export function useNamedLayoutHost(options: {
 }
 //#endregion SettingsPanel
 
-//#region PluginsPanel
+//#region MarketplacePanel
 /** @emoji 🧭️ Canvas fallback when studio history resolves to an unknown route. */
 export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string; readonly onHome: () => void }) {
   return (
@@ -974,10 +981,10 @@ export function PluginRecoveryPanel({
   );
 }
 
-/** 🔌️ One registry entry as the plugin panel wants to render it — `sourceId` and `canUninstall` come
+/** 🔌️ One registry entry as the marketplace wants to render it — `sourceId` and `canUninstall` come
  * straight from the shell's `PluginSource`/primary-plugin bookkeeping; `label`/`version` fall back to
  * the bare pluginId when a plugin hasn't loaded far enough to have a manifest yet (`"available"`). */
-export type PluginsPanelEntry = {
+export type MarketplacePluginEntry = {
   readonly pluginId: string;
   readonly label: string;
   readonly version?: string;
@@ -986,14 +993,29 @@ export type PluginsPanelEntry = {
   readonly canUninstall: boolean;
 };
 
-export type PluginsHostApi = {
-  readonly plugins: readonly PluginsPanelEntry[];
-  readonly install: (pluginId: string) => void;
-  readonly uninstall: (pluginId: string) => void;
-  readonly reload: (pluginId: string) => void;
+/** 🧩️ One extension nested beneath the plugin identified by `extendsHost`. */
+export type MarketplaceExtensionEntry = {
+  readonly extensionId: string;
+  readonly label: string;
+  readonly version?: string;
+  readonly extendsHost: string;
+  readonly enabled: boolean;
+  readonly status: PluginPanelStatus;
 };
 
-const FRAMEWORK_SETTINGS_PLUGINS_TAB_ID = "framework.settings.plugins";
+export type MarketplaceHostApi = {
+  readonly plugins: readonly MarketplacePluginEntry[];
+  readonly extensions: readonly MarketplaceExtensionEntry[];
+  readonly installPlugin: (pluginId: string) => void;
+  readonly uninstallPlugin: (pluginId: string) => void;
+  readonly reloadPlugin: (pluginId: string) => void;
+  readonly installExtensionFromUrl: (sourceUri: string) => void;
+  readonly installExtensionFromFile: (file: File) => void;
+  readonly uninstallExtension: (extensionId: string) => void;
+  readonly setExtensionEnabled: (extensionId: string, enabled: boolean) => void;
+};
+
+export const FRAMEWORK_MARKETPLACE_TAB_ID = "framework.marketplace";
 
 function pluginStatusLabel(status: PluginPanelStatus): UiLabel {
   if (status === "available") return shellLabel("ui.plugins.status.available");
@@ -1003,190 +1025,158 @@ function pluginStatusLabel(status: PluginPanelStatus): UiLabel {
   return shellLabel("ui.plugins.status.reloading");
 }
 
-function buildPluginsTree(host: PluginsHostApi): TreePanelConfig {
-  const bySource = new Map<string, PluginsPanelEntry[]>();
+function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: MarketplaceHostApi): TreeDataItem {
+  return {
+    id: `framework.marketplace.plugin.${entry.extendsHost}.extension.${entry.extensionId}`,
+    label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? uiDataLabel("enabled") : uiDataLabel("disabled")}`,
+    loading: entry.status === "installing" || entry.status === "reloading",
+    control: (
+      <div className="flex items-center gap-1">
+        <Button
+          id={`framework.marketplace.extension.${entry.extensionId}.enable`}
+          size="sm"
+          text={entry.enabled ? uiDataLabel("Disable") : uiDataLabel("Enable")}
+          disabled={entry.status !== "loaded" && entry.status !== "available"}
+          onClick={() => host.setExtensionEnabled(entry.extensionId, !entry.enabled)}
+        />
+        <Button
+          id={`framework.marketplace.extension.${entry.extensionId}.uninstall`}
+          size="sm"
+          text={uiDataLabel("Uninstall")}
+          disabled={entry.status === "installing" || entry.status === "reloading"}
+          onClick={() => host.uninstallExtension(entry.extensionId)}
+        />
+      </div>
+    ),
+  };
+}
+
+function marketplacePluginItem(entry: MarketplacePluginEntry, extensions: readonly MarketplaceExtensionEntry[], host: MarketplaceHostApi): TreeDataItem {
+  return {
+    id: `framework.marketplace.plugin.${entry.pluginId}`,
+    label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${pluginStatusLabel(entry.status)}`,
+    loading: entry.status === "installing" || entry.status === "reloading",
+    defaultOpen: extensions.length > 0,
+    ...(extensions.length > 0 ? { items: extensions.map((extension) => marketplaceExtensionItem(extension, host)) } : {}),
+    control:
+      entry.status === "available" || entry.status === "failed" ? (
+        <Button id={`framework.marketplace.plugin.${entry.pluginId}.install`} size="sm" text={shellLabel("ui.plugins.action.install")} onClick={() => host.installPlugin(entry.pluginId)} />
+      ) : (
+        <div className="flex items-center gap-1">
+          <Button
+            id={`framework.marketplace.plugin.${entry.pluginId}.reload`}
+            size="sm"
+            text={shellLabel("ui.plugins.action.reload")}
+            disabled={entry.status !== "loaded"}
+            onClick={() => host.reloadPlugin(entry.pluginId)}
+          />
+          <Button
+            id={`framework.marketplace.plugin.${entry.pluginId}.uninstall`}
+            size="sm"
+            text={shellLabel("ui.plugins.action.uninstall")}
+            disabled={!entry.canUninstall || entry.status !== "loaded"}
+            onClick={() => host.uninstallPlugin(entry.pluginId)}
+          />
+        </div>
+      ),
+  };
+}
+
+function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
+  const extensionsByHost = new Map<string, MarketplaceExtensionEntry[]>();
+  for (const entry of host.extensions) {
+    const list = extensionsByHost.get(entry.extendsHost) ?? [];
+    list.push(entry);
+    extensionsByHost.set(entry.extendsHost, list);
+  }
+  for (const entries of extensionsByHost.values()) entries.sort((left, right) => left.extensionId.localeCompare(right.extensionId));
+
+  const bySource = new Map<string, MarketplacePluginEntry[]>();
   for (const entry of host.plugins) {
     const list = bySource.get(entry.sourceId) ?? [];
     list.push(entry);
     bySource.set(entry.sourceId, list);
   }
-  const sections: TreeDataSection[] = [...bySource.entries()].map(([sourceId, entries]) => ({
-    id: `framework.settings.plugins.source.${sourceId}`,
-    label: `${shellLabel("ui.plugins.source")}: ${sourceId}`,
-    defaultOpen: true,
-    items: [...entries]
-      .sort((a, b) => a.pluginId.localeCompare(b.pluginId))
-      .map((entry) => ({
-        id: `framework.settings.plugins.${entry.pluginId}`,
-        label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${pluginStatusLabel(entry.status)}`,
-        loading: entry.status === "installing" || entry.status === "reloading",
-        control:
-          entry.status === "available" || entry.status === "failed" ? (
-            <Button id={`framework.settings.plugins.${entry.pluginId}.install`} size="sm" text={shellLabel("ui.plugins.action.install")} onClick={() => host.install(entry.pluginId)} />
-          ) : (
-            <div className="flex items-center gap-1">
-              <Button
-                id={`framework.settings.plugins.${entry.pluginId}.reload`}
-                size="sm"
-                text={shellLabel("ui.plugins.action.reload")}
-                disabled={entry.status !== "loaded"}
-                onClick={() => host.reload(entry.pluginId)}
-              />
-              <Button
-                id={`framework.settings.plugins.${entry.pluginId}.uninstall`}
-                size="sm"
-                text={shellLabel("ui.plugins.action.uninstall")}
-                disabled={!entry.canUninstall || entry.status !== "loaded"}
-                onClick={() => host.uninstall(entry.pluginId)}
-              />
-            </div>
-          ),
-      })),
-  }));
-  return sections.length > 0 ? { sections } : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.plugins.unavailable") }] }] };
-}
-
-export function createFrameworkPluginsPanelTabs(getHost: () => PluginsHostApi | null): PanelTabNode[] {
-  return [
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_PLUGINS_TAB_ID,
-      icon: shellTabIcon("plug"),
-      name: shellLabel("ui.panelToggle.plugins"),
-      order: -96,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildPluginsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.plugins.unavailable") }] }] };
-        },
-      },
-    }),
-  ];
-}
-//#endregion PluginsPanel
-
-//#region ExtensionsPanel
-/** 🧩️ One extension as the extensions settings panel wants to render it — grouped by the host
- * plugin id it `extends` (or `"unscoped"` when the catalog row has no host). */
-export type ExtensionsPanelEntry = {
-  readonly extensionId: string;
-  readonly label: string;
-  readonly version?: string;
-  readonly extendsHost: string;
-  readonly enabled: boolean;
-  readonly status: PluginPanelStatus;
-};
-
-export type ExtensionsHostApi = {
-  readonly extensions: readonly ExtensionsPanelEntry[];
-  readonly installFromUrl: (sourceUri: string) => void;
-  readonly installFromFile: (file: File) => void;
-  readonly uninstall: (extensionId: string) => void;
-  readonly setEnabled: (extensionId: string, enabled: boolean) => void;
-};
-
-const FRAMEWORK_SETTINGS_EXTENSIONS_TAB_ID = "framework.settings.extensions";
-
-function buildExtensionsTree(host: ExtensionsHostApi): TreePanelConfig {
-  const byHost = new Map<string, ExtensionsPanelEntry[]>();
-  for (const entry of host.extensions) {
-    const list = byHost.get(entry.extendsHost) ?? [];
-    list.push(entry);
-    byHost.set(entry.extendsHost, list);
-  }
+  const listedPluginIds = new Set(host.plugins.map((entry) => entry.pluginId));
   const sections: TreeDataSection[] = [
     {
-      id: "framework.settings.extensions.install",
-      label: uiDataLabel("Install"),
+      id: "framework.marketplace.extensions.install",
+      label: uiDataLabel("Install extension"),
       defaultOpen: true,
       items: [
         {
-          id: "framework.settings.extensions.install.url",
+          id: "framework.marketplace.extensions.install.url",
           label: uiDataLabel("From URL"),
           control: (
             <Button
-              id="framework.settings.extensions.install.url"
+              id="framework.marketplace.extensions.install.url"
               size="sm"
               text={uiDataLabel("Install from URL")}
               onClick={() => {
                 const sourceUri = typeof window !== "undefined" ? window.prompt("Extension package URL") : null;
-                if (sourceUri?.trim()) host.installFromUrl(sourceUri.trim());
+                if (sourceUri?.trim()) host.installExtensionFromUrl(sourceUri.trim());
               }}
             />
           ),
         },
         {
-          id: "framework.settings.extensions.install.file",
+          id: "framework.marketplace.extensions.install.file",
           label: uiDataLabel("From file"),
           control: (
             <label className="inline-flex cursor-pointer">
               <input
-                id="framework.settings.extensions.install.file"
+                id="framework.marketplace.extensions.install.file"
                 type="file"
                 accept=".sxt,.semio,application/octet-stream"
                 className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  if (file) host.installFromFile(file);
+                  if (file) host.installExtensionFromFile(file);
                   event.target.value = "";
                 }}
               />
-              <Button id="framework.settings.extensions.install.file.trigger" size="sm" text={uiDataLabel("Install from file")} />
+              <Button id="framework.marketplace.extensions.install.file.trigger" size="sm" text={uiDataLabel("Install from file")} />
             </label>
           ),
         },
       ],
     },
-    ...[...byHost.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([hostId, entries]) => ({
-        id: `framework.settings.extensions.host.${hostId}`,
-        label: `${uiDataLabel("Extends")}: ${hostId}`,
+    ...[...bySource.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([sourceId, entries]) => ({
+        id: `framework.marketplace.source.${sourceId}`,
+        label: `${shellLabel("ui.plugins.source")}: ${sourceId}`,
         defaultOpen: true,
         items: [...entries]
-          .sort((a, b) => a.extensionId.localeCompare(b.extensionId))
-          .map((entry) => ({
-            id: `framework.settings.extensions.${entry.extensionId}`,
-            label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? uiDataLabel("enabled") : uiDataLabel("disabled")}`,
-            loading: entry.status === "installing" || entry.status === "reloading",
-            control: (
-              <div className="flex items-center gap-1">
-                <Button
-                  id={`framework.settings.extensions.${entry.extensionId}.enable`}
-                  size="sm"
-                  text={entry.enabled ? uiDataLabel("Disable") : uiDataLabel("Enable")}
-                  disabled={entry.status !== "loaded" && entry.status !== "available"}
-                  onClick={() => host.setEnabled(entry.extensionId, !entry.enabled)}
-                />
-                <Button
-                  id={`framework.settings.extensions.${entry.extensionId}.uninstall`}
-                  size="sm"
-                  text={uiDataLabel("Uninstall")}
-                  disabled={entry.status === "installing" || entry.status === "reloading"}
-                  onClick={() => host.uninstall(entry.extensionId)}
-                />
-              </div>
-            ),
-          })),
+          .sort((left, right) => left.pluginId.localeCompare(right.pluginId))
+          .map((entry) => marketplacePluginItem(entry, extensionsByHost.get(entry.pluginId) ?? [], host)),
+      })),
+    ...[...extensionsByHost.entries()]
+      .filter(([hostId]) => !listedPluginIds.has(hostId))
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([hostId, extensions]) => ({
+        id: `framework.marketplace.missing-host.${hostId}`,
+        label: hostId,
+        defaultOpen: true,
+        items: extensions.map((extension) => marketplaceExtensionItem(extension, host)),
       })),
   ];
   return { sections };
 }
 
-export function createFrameworkExtensionsPanelTabs(getHost: () => ExtensionsHostApi | null): PanelTabNode[] {
-  return [
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_EXTENSIONS_TAB_ID,
-      icon: shellTabIcon("plug"),
-      name: uiDataLabel("Extensions"),
-      order: -95,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildExtensionsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: uiDataLabel("Extensions unavailable") }] }] };
-        },
+export function createFrameworkMarketplacePanelTab(getHost: () => MarketplaceHostApi | null): PanelTabNode {
+  return singleTreeLeaf({
+    id: FRAMEWORK_MARKETPLACE_TAB_ID,
+    icon: shellTabIcon("store"),
+    name: uiDataLabel("Marketplace"),
+    order: 1,
+    tree: {
+      resolveTree: () => {
+        const host = getHost();
+        return host ? buildMarketplaceTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: uiDataLabel("Marketplace unavailable") }] }] };
       },
-    }),
-  ];
+    },
+  });
 }
-//#endregion ExtensionsPanel
+//#endregion MarketplacePanel
 //#endregion 🔖️os-chrome-panels

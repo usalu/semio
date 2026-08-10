@@ -1,0 +1,3 @@
+; abnf stdio.csv diff
+document = payload
+payload = *OCTET

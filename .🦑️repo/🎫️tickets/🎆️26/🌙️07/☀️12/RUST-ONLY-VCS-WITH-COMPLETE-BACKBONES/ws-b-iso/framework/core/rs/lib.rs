@@ -6098,7 +6098,7 @@ pub struct PluginManifest {
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<Contribution>,
-}
+ artifact_kinds: vec![] }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]

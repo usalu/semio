@@ -1,28 +1,22 @@
 # STATUS — Puzzle Design Parity
 
-## Wave 0 — DONE
-Ticket + normative spec + flatten excerpt.
+## E2E runtime — DONE
+- `jsonschema` WASM: `default-features = false` in framework schema crate
+- Puzzle wasip2 IO register bodies cfg-gated off host-only `semio_framework_os`
+- Flatten module wired in puzzle `glue.rs`
+- Dev servers: 6012 (2d), 6013 (3d), 6014 (5d) serve `semio_s_plugin_puzzle.js` as `text/javascript`
+- Fixture/DSL/catalog/kit/SPR fixes from design-parity waves landed
 
-## Wave 1 — DONE
-2d/3d/5d schema surgery; compose bridge deleted.
+## Final sync bug — FIXED
+- Sparse fixture node writes (missing `anchor` / connection defaults) made
+  `puzzle2d_document_delta_operations` fall back to `SetSnapshot`, which clobbered
+  concurrent peer edits over the backbone (LWW).
+- Fix: canonicalize nodes/edges through typed `Puzzle2dNode`/`Puzzle2dEdge` before
+  diffing; `add_node_to_fixture` writes `"anchor": "fixed"`.
+- Regression: `sparse_node_without_anchor_still_emits_set_node`
+- `cargo test -p semio-s-plugin-puzzle --lib` → **414 passed / 0 failed**
 
-## Wave 2 — DONE
-3d flatten port + 5d wrapper + 2d fastened layout.
-
-## Wave 3 — DONE
-Fastener commands, inspection (anchor + 8 params + x/y), app twin, patch plurals.
-
-## Wave 4 — DONE
-Capsule Dream example (2880/2864) Fixed-seeded from Flat; empty kind catalogs; op/pack/spr nonempty.
-
-## Wave 5 — DONE
-Golden centers + origins at 1e-4. Flatten Fixed-first + Fixed-neighbor keep. Compose cases gated (see 🧪wave5-parity-report.md).
-
-## Wave 6 — DONE
-- G1 sketchpad: u/v→x/y, Fixed/Derived anchors (ticket helper green; package vitest pre-blocked).
-- G2 storybook: CapsuleDream on 2d/3d/5d + connection-param debug panels.
-- G3 react: `@semio-tech/puzzle-5d-react` with compose5d/flatten; package test green.
-- G4: package.json + launch.seed capsule-dream entries (ports 6015/6115).
-
-## Wave 7 — DONE
-Capsule-dream + flatten unit tests green (8/8). Launch seed + registry generate refreshed. Full `verify` still fails on pre-existing plugin-registry path/engine-ts gaps (unrelated to this ticket). Ticket closed.
+## Apps
+- `bun run dev:puzzle:2d` → :6012
+- `bun run dev:puzzle:3d` → :6013
+- `bun run dev:puzzle:5d` → :6014
