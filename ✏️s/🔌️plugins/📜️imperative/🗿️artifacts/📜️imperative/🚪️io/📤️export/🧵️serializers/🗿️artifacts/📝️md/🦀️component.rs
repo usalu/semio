@@ -12,5 +12,5 @@ pub fn serialize(snapshot: &ImperativeSnapshot) -> Result<MdSnapshot, store::Tex
 }
 
 pub fn serialize_bytes(snapshot: &ImperativeSnapshot) -> Result<Vec<u8>, store::TextError> {
-    <MdSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?)
+    Ok(<MdSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }

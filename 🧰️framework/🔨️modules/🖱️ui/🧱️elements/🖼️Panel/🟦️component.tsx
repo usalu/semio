@@ -281,7 +281,7 @@ export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane
               <PanelTreeUnitHeader anchor={anchor} tabId={tabId} unit={unit} index={index} unitDragActive={unitDragActive} />
             ) : null}
             <Tree
-              className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
+              className={cn("min-w-0 w-full overflow-x-hidden", config.className)}
               defaultSelectedIds={config.defaultSelectedIds}
               dragAndDropController={config.dragAndDropController}
               emptyState={config.emptyState}
@@ -514,7 +514,7 @@ const Panel: React.FC<PanelProps> = ({
                 body={
                   <div data-slot="panel-body-stack" className={cn("flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
-                    <Scrollable className="relative flex-1 min-h-0">
+                    <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
                       {activeTabTrees && activeNode ? (
                         <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                       ) : null}

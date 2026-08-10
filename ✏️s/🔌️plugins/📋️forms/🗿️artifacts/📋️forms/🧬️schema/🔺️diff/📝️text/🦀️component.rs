@@ -1,5 +1,8 @@
 //! 🔺️ Forms artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::forms::schema::diff::{
+    FormsDiff, FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta, FormsStringList,
+};
 use crate::artifacts::forms::schema::FormsArtifact;
 use crate::artifacts::forms::{FormStep, FormsSnapshot};
 use protocol::MutationDiff;

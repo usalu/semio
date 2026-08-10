@@ -2,9 +2,16 @@
 //! exactly one `NodeKind`: its identity, rim presentation, and the `HandleKind` templates placed on
 //! that rim.
 
+
+pub use crate::artifacts::block2d::schema::snapshot::Block2dSnapshot;
+pub use crate::artifacts::block2d::schema::mutations::Block2dMutation;
+pub use crate::artifacts::block2d::schema::diff::Block2dDiff;
+
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
+
+
 
 pub const BLOCK_2D_SCHEMA: &str = "block.2d";
 
@@ -53,7 +60,6 @@ pub struct Block2dHandleTemplate {
 }
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::block2d::snapshot::schema::Block2dSnapshot;
 //#endregion 🔖️Snapshot
 
 // #endregion 🔖️Document
@@ -73,8 +79,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_2D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

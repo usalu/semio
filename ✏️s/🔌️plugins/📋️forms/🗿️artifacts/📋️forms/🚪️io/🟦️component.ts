@@ -1,2 +1,2 @@
-/** 🚪️ IO facet barrel — WASM facades land in W7. */
-export {};
+/** forms io */
+export function register(): void {}

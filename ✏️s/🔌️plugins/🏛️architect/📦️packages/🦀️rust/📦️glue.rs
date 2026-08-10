@@ -717,7 +717,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::program::schema::mutations::text::*; pub use crate::artifacts::program::schema::mutations::ProgramMutation; }
+        pub mod op { pub use crate::artifacts::program::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::program::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::program::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::program::schema::diff::*; pub use crate::artifacts::program::schema::diff::text::*; pub mod schema { pub use crate::artifacts::program::schema::diff::*; } pub mod text { pub use crate::artifacts::program::schema::diff::text::*; } }

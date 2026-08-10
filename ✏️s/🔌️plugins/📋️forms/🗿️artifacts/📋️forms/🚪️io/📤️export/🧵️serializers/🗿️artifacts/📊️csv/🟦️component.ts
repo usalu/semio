@@ -1,1 +1,2 @@
-export {};
+/** forms export csv */
+export function register(): void {}

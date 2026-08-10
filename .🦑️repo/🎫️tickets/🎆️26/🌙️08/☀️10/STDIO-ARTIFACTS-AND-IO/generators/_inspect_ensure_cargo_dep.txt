@@ -1,0 +1,12 @@
+def ensure_cargo_dep(plugin_path: Path) -> None:
+    cargo = plugin_path / "📦️packages/🦀️rust/Cargo.toml"
+    t = cargo.read_text(encoding="utf-8")
+    if "semio-s-plugin-stdio" not in t:
+        t = t.replace(
+            "[dependencies]\n",
+            '[dependencies]\nsemio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }\n',
+            1,
+        )
+        cargo.write_text(t, encoding="utf-8")
+
+

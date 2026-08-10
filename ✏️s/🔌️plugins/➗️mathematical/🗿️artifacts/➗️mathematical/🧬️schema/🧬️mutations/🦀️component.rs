@@ -1,7 +1,7 @@
 //! 🧬️ Mathematical artifact — document mutation dispatch.
 
 use crate::artifacts::mathematical::schema::diff::text::{diff_set_geometry, diff_set_graph, diff_set_snapshot};
-use crate::artifacts::mathematical::schema::diff::text::MathematicalDiff;
+use crate::artifacts::mathematical::MathematicalDiff;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};

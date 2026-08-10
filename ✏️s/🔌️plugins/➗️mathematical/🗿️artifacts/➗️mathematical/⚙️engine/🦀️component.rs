@@ -320,7 +320,7 @@ impl protocol::ArtifactEngine for MathematicalEngine {
     type Artifact = crate::artifacts::mathematical::schema::MathematicalArtifact;
     type Snapshot = MathematicalSnapshot;
     type Mutation = crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
-    type Diff = crate::artifacts::mathematical::schema::diff::text::MathematicalDiff;
+    type Diff = crate::artifacts::mathematical::MathematicalDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

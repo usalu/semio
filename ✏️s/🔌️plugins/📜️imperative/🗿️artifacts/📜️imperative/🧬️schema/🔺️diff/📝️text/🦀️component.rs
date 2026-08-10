@@ -13,6 +13,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+use crate::artifacts::imperative::schema::diff::*;
+
 
 //#region 🔖️Apply
 fn apply_steps_delta(items: &[Step], delta: &ImperativeStepsDelta) -> Vec<Step> {

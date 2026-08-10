@@ -11,5 +11,6 @@ pub fn deserialize(from: &CsvSnapshot) -> Result<WiresSnapshot, store::TextError
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<WiresSnapshot, store::TextError> {
-    deserialize(&<CsvSnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    <WiresSnapshot as store::DocumentPack>::decode_pack(bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }

@@ -1,10 +1,11 @@
 //! 🧬️ layout artifact — document mutation dispatch.
 
 
-use crate::artifacts::layout::diff::{
+use crate::artifacts::layout::schema::diff::text::{
     diff_set_snapshot, links_delta_from_collection_mutation, pages_delta_from_collection_mutation,
-    pages_replace_delta, stories_delta_from_collection_mutation, LayoutDiff,
+    pages_replace_delta, stories_delta_from_collection_mutation,
 };
+use crate::artifacts::layout::schema::diff::LayoutDiff;
 use crate::artifacts::layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, LayoutSnapshot, Page, PagePatch, TextStory, TextStoryPatch};
 use protocol::{apply_collection_mutation, inverse_collection_mutation, CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};

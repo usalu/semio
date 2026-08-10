@@ -4,7 +4,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
-pub use crate::artifacts::curate::schema::mutations::CurateMutation;
+pub use crate::artifacts::curate::schema::mutations::SourcingMutation;
 
 pub use crate::artifacts::curate::schema::diff::CurateDiff;
 

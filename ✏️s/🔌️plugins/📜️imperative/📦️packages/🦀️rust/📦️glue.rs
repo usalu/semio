@@ -77,7 +77,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::imperative::schema::mutations::text::*; pub use crate::artifacts::imperative::schema::mutations::ImperativeMutation; }
+        pub mod op { pub use crate::artifacts::imperative::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::imperative::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::imperative::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::imperative::schema::diff::*; pub use crate::artifacts::imperative::schema::diff::text::*; pub mod schema { pub use crate::artifacts::imperative::schema::diff::*; } pub mod text { pub use crate::artifacts::imperative::schema::diff::text::*; } }

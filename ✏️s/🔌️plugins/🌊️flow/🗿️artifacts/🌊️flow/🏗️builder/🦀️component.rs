@@ -21,7 +21,7 @@ impl ArtifactBuilder for FlowBuilder {
         Ok(Self::from_snapshot(<FlowSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_flow_mutation(&mut self.snapshot, &mutation);
+        crate::artifacts::flow::schema::mutations::apply_flow_mutation(&mut self.snapshot, &mutation);
         self
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

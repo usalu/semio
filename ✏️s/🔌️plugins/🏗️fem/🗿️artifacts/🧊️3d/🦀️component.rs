@@ -1,8 +1,15 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
+
+pub use crate::artifacts::fem3d::schema::snapshot::Fem3dSnapshot;
+pub use crate::artifacts::fem3d::schema::mutations::Fem3dMutation;
+pub use crate::artifacts::fem3d::schema::diff::Fem3dDiff;
+
 use crate::model::Dof;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
@@ -227,7 +234,6 @@ impl Default for FemCamera {
 }
 
 /// 📸️ `Fem3dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
-pub use crate::artifacts::fem3d::snapshot::schema::Fem3dSnapshot;
 pub use crate::artifacts::fem3d::schema::Fem3dArtifact;
 
 // #endregion 🔖️Document
@@ -250,8 +256,8 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "computation.fem3d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
 // #endregion 🔖️ArtifactKind

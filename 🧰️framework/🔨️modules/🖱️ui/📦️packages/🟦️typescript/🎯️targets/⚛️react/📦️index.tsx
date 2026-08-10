@@ -14017,13 +14017,19 @@ if (import.meta.vitest) {
       const { container: topContainer } = render(<Panel anchor="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       const topMarkup = topContainer.querySelector('[data-slot="panel-content"]')!.innerHTML;
       expect(topMarkup.indexOf("Section A")).toBeLessThan(topMarkup.indexOf("Section B"));
+      expect(topContainer.querySelector('[data-slot="scroll-area-viewport"]')?.classList.contains("justify-end")).toBe(false);
 
       const { container: bottomContainer } = render(<Panel anchor="bottom-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       const bottomMarkup = bottomContainer.querySelector('[data-slot="panel-content"]')!.innerHTML;
       expect(bottomMarkup.indexOf("Section B")).toBeLessThan(bottomMarkup.indexOf("Section A"));
       const bottomTree = bottomContainer.querySelector('[data-slot="tree"]');
+      const bottomViewport = bottomContainer.querySelector('[data-slot="scroll-area-viewport"]');
       expect(bottomTree?.getAttribute("dir")).toBe("auto");
       expect(bottomTree?.getAttribute("role")).toBe("tree");
+      expect(bottomTree?.classList.contains("overflow-y-auto")).toBe(false);
+      expect(bottomViewport?.classList.contains("min-h-full")).toBe(true);
+      expect(bottomViewport?.classList.contains("flex-col")).toBe(true);
+      expect(bottomViewport?.classList.contains("justify-end")).toBe(true);
     });
 
     it("keeps right-anchored panel tree rows left-to-right inside mirrored panel chrome", () => {

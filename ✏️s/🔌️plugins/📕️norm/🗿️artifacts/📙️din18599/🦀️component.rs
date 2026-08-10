@@ -1,5 +1,10 @@
 //! ⚡️ DIN V 18599 app — document entities (constitutional: general).
 
+
+pub use crate::artifacts::din18599::schema::snapshot::Din18599Snapshot;
+pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
+pub use crate::artifacts::din18599::schema::diff::Din18599Diff;
+
 use crate::document::ClimateZoneDe;
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +55,6 @@ impl MonthlyClimate {
 // `crate::artifacts::din18599::engine::reference_residential` directly for a live-computed reference building.
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::din18599::snapshot::schema::Din18599Snapshot;
 
 pub type BalancingInputs = Din18599Snapshot;
 //#endregion 🔖️Types

@@ -1,18 +1,17 @@
 //! remodel <- glb
-use crate::artifacts::remodel::WatertightReportSnapshot;
+use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
 use semio_s_plugin_stdio::artifacts::glb::{GlbSnapshot, STDIO_GLB_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn deserialize(from: &GlbSnapshot) -> Result<WatertightReportSnapshot, store::TextError> {
+pub fn deserialize(from: &GlbSnapshot) -> Result<RemodelSnapshot, store::TextError> {
     let _ = STDIO_GLB_DOCUMENT_SCHEMA;
-    let bytes = semio_s_plugin_stdio::artifacts::glb::engine::encode_glb(from)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    <WatertightReportSnapshot as store::DocumentPack>::decode_pack(&bytes)
-        .or_else(|_| <WatertightReportSnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(&bytes)))
+    let bytes = <GlbSnapshot as store::DocumentPack>::encode_pack(from);
+    deserialize_bytes(&bytes)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<WatertightReportSnapshot, store::TextError> {
-    deserialize(&semio_s_plugin_stdio::artifacts::glb::engine::decode_glb(bytes)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?)
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<RemodelSnapshot, store::TextError> {
+    <RemodelSnapshot as store::DocumentPack>::decode_pack(bytes).or_else(|_| {
+        <RemodelSnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
+    })
 }

@@ -1,0 +1,19 @@
+{
+  "semio-s-plugin-procedural": false,
+  "semio-s-plugin-gis": false,
+  "semio-s-plugin-fem": false,
+  "semio-s-plugin-norm": false,
+  "semio-s-plugin-energy": false,
+  "semio-s-plugin-trinity": false,
+  "semio-s-plugin-puzzle": false,
+  "semio-s-plugin-block": false,
+  "semio-s-plugin-remodel": false,
+  "semio-s-plugin-demonstrator": false,
+  "semio-s-plugin-animate": false,
+  "semio-s-plugin-shooting": false,
+  "semio-s-plugin-architect": false,
+  "semio-s-plugin-process": false,
+  "semio-s-plugin-lowpoly": false,
+  "semio-s-plugin-space": false,
+  "semio-s-plugin-sourcing": false
+}

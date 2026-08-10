@@ -1,7 +1,7 @@
 //! CurateBuilder
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::curate::schema::diff::CurateDiff;
-use crate::artifacts::curate::schema::mutations::CurateMutation;
+use crate::artifacts::curate::schema::mutations::SourcingMutation;
 use crate::artifacts::curate::schema::snapshot::CurateSnapshot;
 
 #[derive(Clone, Debug, Default)]
@@ -12,7 +12,7 @@ pub struct CurateBuilder {
 
 impl ArtifactBuilder for CurateBuilder {
     type Snapshot = CurateSnapshot;
-    type Mutation = CurateMutation;
+    type Mutation = SourcingMutation;
     type Diff = CurateDiff;
     fn empty() -> Self { Self { snapshot: CurateSnapshot::default(), diagnostics: Vec::new() } }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
@@ -23,7 +23,7 @@ impl ArtifactBuilder for CurateBuilder {
         Ok(Self::from_snapshot(<CurateSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        let d = <CurateMutation as protocol::Mutation<CurateSnapshot>>::diff(&mutation, &self.snapshot);
+        let d = <SourcingMutation as protocol::Mutation<CurateSnapshot>>::diff(&mutation, &self.snapshot);
         self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
         self
     }

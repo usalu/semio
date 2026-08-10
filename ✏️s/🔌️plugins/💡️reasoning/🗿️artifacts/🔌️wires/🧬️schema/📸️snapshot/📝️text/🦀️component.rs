@@ -30,7 +30,7 @@ use crate::artifacts::wires::WiresSnapshot;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every
 /// "metabolism" example call site (`setActiveExample`, `.example` manifest registration, tests).
-pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.wires` DSL text into a `WiresSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WiresSnapshot, store::TextError> {

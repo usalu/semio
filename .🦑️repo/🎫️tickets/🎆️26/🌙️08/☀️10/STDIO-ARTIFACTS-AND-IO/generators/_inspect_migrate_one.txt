@@ -1,0 +1,19 @@
+def migrate_one(entry: dict) -> dict:
+    row = owner_row(entry["plugin"], entry["artifact"])
+    art = ROOT / row["path"]
+    plugin_path = art.parent.parent
+    slugs = row.get("import") or row.get("stdio_artifacts") or []
+    absorb(art)
+    scaffold_leaves(art)
+    snap, mut, diff, schema_const = sniff_types(art, entry["rust_mod"])
+    write_builder(art, entry["rust_mod"], snap, mut, diff)
+    write_io(art, entry["rust_mod"], snap, schema_const, slugs)
+    fix_schema_includes(art)
+    patch_glue(plugin_path, entry["artifact"], entry["rust_mod"], slugs, entry.get("extras") or [], art)
+    patch_ts_barrel(plugin_path, entry["artifact"], entry["rust_mod"])
+    ensure_cargo_dep(plugin_path)
+    patch_artifact_kind(art, slugs)
+    errs = verify_tree(art)
+    return {"plugin": entry["plugin"], "artifact": entry["artifact"], "crate": entry["crate"], "errors": errs, "slugs": slugs}
+
+

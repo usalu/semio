@@ -1,0 +1,36 @@
+def fix_schema_includes(art: Path) -> None:
+    schema_rs = art / "🧬️schema/🦀️component.rs"
+    if not schema_rs.exists():
+        return
+    t = schema_rs.read_text(encoding="utf-8")
+    snap = art / "🧬️schema/📸️snapshot"
+    diff = art / "🧬️schema/🔺️diff"
+    t2 = re.sub(
+        r'include_str!\("\.\./[^"]*snapshot[^"]*schema/([^"]+)"\)',
+        lambda m: f'include_str!("📸️snapshot/{m.group(1)}")',
+        t,
+    )
+    t2 = re.sub(
+        r'include_str!\("\.\./[^"]*diff[^"]*schema/([^"]+)"\)',
+        lambda m: f'include_str!("🔺️diff/{m.group(1)}")',
+        t2,
+    )
+    if t2 != t:
+        schema_rs.write_text(t2, encoding="utf-8")
+    text_rs = snap / TEXT / "🦀️component.rs"
+    if text_rs.exists():
+        tt = text_rs.read_text(encoding="utf-8")
+        ex = art / "📚️examples"
+        if ex.exists():
+            for dsl in ex.rglob("*example.dsl*"):
+                rel = Path(os_relpath(art, dsl))
+                tt2 = re.sub(
+                    r'include_str!\("([^"]*example\.dsl[^"]*)"\)',
+                    f'include_str!("{rel.as_posix()}")',
+                    tt,
+                )
+                if tt2 != tt:
+                    text_rs.write_text(tt2, encoding="utf-8")
+                break
+
+

@@ -12,7 +12,9 @@ pub use crate::playbook::{
 };
 
 pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
-pub use crate::artifacts::forms::snapshot::schema::FormsSnapshot;
+pub use crate::artifacts::forms::schema::snapshot::FormsSnapshot;
+pub use crate::artifacts::forms::schema::diff::FormsDiff;
+pub use crate::artifacts::forms::schema::mutations::FormMutation;
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

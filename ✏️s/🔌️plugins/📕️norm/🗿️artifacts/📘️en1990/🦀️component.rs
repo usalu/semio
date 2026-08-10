@@ -1,8 +1,12 @@
 //! ⚖️ EN 1990 basis of structural design — document entities (constitutional: general).
 
+
+pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
+pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
+pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
+pub use crate::artifacts::en1990::schema::diff::En1990Diff;
+
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::en1990::snapshot::schema::En1990Snapshot;
-pub use crate::artifacts::en1990::snapshot::schema::En1990QkEntry;
 
 //#region 🔖️Types
 //#endregion 🔖️Types

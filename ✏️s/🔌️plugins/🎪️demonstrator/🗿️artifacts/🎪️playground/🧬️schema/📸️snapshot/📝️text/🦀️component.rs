@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::playground::PlaygroundSnapshot;
 
 /// 📄️ The `demo` example checkpoint.
-pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses playground DSL text into a `PlaygroundSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, store::TextError> {

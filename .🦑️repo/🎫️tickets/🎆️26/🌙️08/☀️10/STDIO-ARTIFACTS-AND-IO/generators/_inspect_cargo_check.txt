@@ -1,0 +1,12 @@
+def cargo_check(crate: str) -> tuple[bool, str]:
+    log = TICKET / f"🧪w6-batch1c-{crate}.log"
+    r = subprocess.run(
+        ["cargo", "check", "-p", crate],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    log.write_text(r.stdout + r.stderr, encoding="utf-8")
+    return r.returncode == 0, r.stdout.splitlines()[-3:] if r.stdout else []
+
+

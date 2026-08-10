@@ -2,9 +2,9 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::home::schema::mutations::HomeMutation;
+pub use crate::artifacts::home::schema::mutations::SHomeMutation;
 
-pub use crate::artifacts::home::schema::diff::HomeDiff;
+pub use crate::artifacts::home::schema::diff::SHomeDiff;
 
 pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
 pub use crate::artifacts::home::schema::SHomeArtifact;

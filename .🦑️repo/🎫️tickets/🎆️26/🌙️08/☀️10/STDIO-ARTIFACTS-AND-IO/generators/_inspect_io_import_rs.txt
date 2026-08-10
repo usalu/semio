@@ -1,0 +1,104 @@
+def io_import_rs(rust_mod: str, snap: str, schema_const: str, slug: str) -> str:
+    mid = slug.replace("-", "_")
+    stdio_mod = slug if slug[0].isalpha() else slug
+    stdio_snap = pascal(slug) + "Snapshot"
+    stdio_schema = f"STDIO_{slug.upper()}_DOCUMENT_SCHEMA"
+    err = "store::TextError::new"
+    if slug == "json":
+        return f"""//! {rust_mod} <- json
+use crate::artifacts::{rust_mod}::{{{snap}, {schema_const}}};
+use semio_s_plugin_stdio::artifacts::json::{{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA}};
+
+pub fn register() {{}}
+
+pub fn deserialize(from: &JsonSnapshot) -> Result<{snap}, store::TextError> {{
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let out: {snap} = serde_json::from_value(from.value.clone())
+        .map_err(|e| {err}(format!("{rust_mod}<-json: {{e}}"), dsl::TextSpan::at(1, 1)))?;
+    Ok(out)
+}}
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
+    let text = std::str::from_utf8(bytes).map_err(|e| {err}(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value: serde_json::Value = serde_json::from_str(text)
+        .map_err(|e| {err}(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    deserialize(&JsonSnapshot {{ schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }})
+}}
+"""
+    if slug == "csv":
+        return f"""//! {rust_mod} <- csv
+use crate::artifacts::{rust_mod}::schema::snapshot::{snap};
+use semio_s_plugin_stdio::artifacts::csv::{{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA}};
+
+pub fn register() {{}}
+
+pub fn deserialize(from: &CsvSnapshot) -> Result<{snap}, store::TextError> {{
+    let _ = STDIO_CSV_DOCUMENT_SCHEMA;
+    let value = serde_json::json!({{ "headers": from.headers, "rows": from.rows }});
+    serde_json::from_value(value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+}}
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
+    <{snap} as store::DocumentPack>::decode_pack(bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+}}
+"""
+    if slug == "md":
+        return f"""//! {rust_mod} <- md
+use crate::artifacts::{rust_mod}::schema::snapshot::{snap};
+use semio_s_plugin_stdio::artifacts::md::{{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA}};
+
+pub fn register() {{}}
+
+pub fn deserialize(from: &MdSnapshot) -> Result<{snap}, store::TextError> {{
+    let _ = STDIO_MD_DOCUMENT_SCHEMA;
+    <{snap} as store::DocumentDsl>::parse_dsl(&from.body)
+}}
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
+    let md = <MdSnapshot as store::DocumentPack>::decode_pack(bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    deserialize(&md)
+}}
+"""
+    if slug in TEXT_FORMATS:
+        return f"""//! {rust_mod} <- {slug}
+use crate::artifacts::{rust_mod}::{snap};
+use semio_s_plugin_stdio::artifacts::{slug}::{{{stdio_snap}, {stdio_schema}}};
+
+pub fn register() {{}}
+
+pub fn deserialize(from: &{stdio_snap}) -> Result<{snap}, store::TextError> {{
+    let _ = {stdio_schema};
+    let bytes = semio_s_plugin_stdio::artifacts::{slug}::engine::encode_{slug}(from)
+        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
+    <{snap} as store::DocumentPack>::decode_pack(&bytes)
+        .or_else(|_| <{snap} as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(&bytes)))
+}}
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
+    deserialize(&semio_s_plugin_stdio::artifacts::{slug}::engine::decode_{slug}(bytes)
+        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?)
+}}
+"""
+    return f"""//! {rust_mod} <- {slug}
+use crate::artifacts::{rust_mod}::{snap};
+use semio_s_plugin_stdio::artifacts::{slug}::{{{stdio_snap}, {stdio_schema}}};
+
+pub fn register() {{}}
+
+pub fn deserialize(from: &{stdio_snap}) -> Result<{snap}, store::TextError> {{
+    let _ = {stdio_schema};
+    let bytes = semio_s_plugin_stdio::artifacts::{slug}::engine::encode_{slug}(from)
+        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
+    <{snap} as store::DocumentPack>::decode_pack(&bytes)
+        .or_else(|_| <{snap} as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(&bytes)))
+}}
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
+    deserialize(&semio_s_plugin_stdio::artifacts::{slug}::engine::decode_{slug}(bytes)
+        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?)
+}}
+"""
+
+

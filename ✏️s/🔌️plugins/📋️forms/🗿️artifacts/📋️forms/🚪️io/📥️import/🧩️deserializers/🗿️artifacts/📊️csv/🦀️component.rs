@@ -1,11 +1,11 @@
-//! forms <- csv
-use crate::artifacts::forms::engine::{empty_forms_snapshot, create_form_id};
+//! Deserialize forms via stdio.csv.
 use crate::artifacts::forms::FormsSnapshot;
+use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+
 pub fn register() {}
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<FormsSnapshot, String> {
-    let _ = bytes;
-    let mut snap = empty_forms_snapshot();
-    snap.id = create_form_id("csv-import", b"csv");
-    snap.title = Some(format!("Imported csv"));
-    Ok(snap)
+
+pub fn deserialize(from: &CsvSnapshot) -> Result<FormsSnapshot, store::TextError> {
+    let _ = STDIO_CSV_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("forms<-csv: {e}"), dsl::TextSpan::at(1, 1)))
 }

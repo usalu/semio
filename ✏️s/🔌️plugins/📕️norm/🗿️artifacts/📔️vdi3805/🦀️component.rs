@@ -1,5 +1,10 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
+
+pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
+pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
+pub use crate::artifacts::vdi3805::schema::diff::Vdi3805Diff;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use crate::document::{NormError, QuantityKind};
@@ -263,7 +268,9 @@ pub struct EditionId {
 }
 
 impl EditionId {
-    pub const fn new(year: u16, month: u8) -> Self {
+
+
+pub const fn new(year: u16, month: u8) -> Self {
         Self { year, month }
     }
 
@@ -1032,7 +1039,6 @@ impl Diagnostic {
 
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::vdi3805::snapshot::schema::Vdi3805Snapshot;
 // #region Session
 /// 📅️ Edition profile selection for multi-profile sheets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]

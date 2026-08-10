@@ -1,6 +1,10 @@
-//! forms -> csv
+//! Serialize forms to stdio.csv.
 use crate::artifacts::forms::FormsSnapshot;
+use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+
 pub fn register() {}
-pub fn serialize_bytes(snapshot: &FormsSnapshot) -> Result<Vec<u8>, String> {
-    Ok(<FormsSnapshot as store::DocumentDsl>::render_dsl(snapshot).into_bytes())
+
+pub fn serialize(from: &FormsSnapshot) -> Result<CsvSnapshot, store::PackError> {
+    serde_json::from_value(serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?)
+        .map_err(|e| store::PackError::Schema(e.to_string()))
 }

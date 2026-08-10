@@ -212,7 +212,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::draw::schema::mutations::{apply_draw_edit_mutation, draw_op_for_layer_field, DrawMutation}; }
+        pub mod op { pub use crate::artifacts::draw::schema::mutations::text::*; pub use crate::artifacts::draw::schema::mutations::{apply_draw_edit_mutation, draw_op_for_layer_field, DrawMutation}; }
         pub mod dsl { pub use crate::artifacts::draw::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::draw::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::draw::schema::diff::text::*; pub use crate::artifacts::draw::schema::diff::*; pub mod schema { pub use crate::artifacts::draw::schema::diff::*; } pub mod text { pub use crate::artifacts::draw::schema::diff::text::*; } }

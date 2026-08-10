@@ -1,0 +1,13 @@
+def mutate_body(rust_mod: str, mut: str, snap: str, diff: str) -> str:
+    mut_path = f"crate::artifacts::{rust_mod}::schema::mutations"
+    for line in [
+        f"pub fn apply_{rust_mod}_mutation",
+        f"apply_{rust_mod}_mutation",
+        f"{mut_path}::apply_{rust_mod}_mutation",
+    ]:
+        pass
+    art_mut = Path(ROOT / "✏️s/🔌️plugins")  # dummy
+    return f"""        let d = <{mut} as protocol::Mutation<{snap}>>::diff(&mutation, &self.snapshot);
+        self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);"""
+
+

@@ -5,13 +5,11 @@ use semio_s_plugin_stdio::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SC
 pub fn register() {}
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::TextError> {
-    let bytes = <ProgramSnapshot as store::DocumentPack>::encode_pack(snapshot)
-        .or_else(|_| Ok(<ProgramSnapshot as store::DocumentDsl>::print_dsl(snapshot).into_bytes()))?;
-    semio_s_plugin_stdio::artifacts::xlsx::engine::decode_xlsx(&bytes)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    let _ = STDIO_XLSX_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("program->xlsx: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    semio_s_plugin_stdio::artifacts::xlsx::engine::encode_xlsx(&serialize(snapshot)?)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    Ok(<XlsxSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }

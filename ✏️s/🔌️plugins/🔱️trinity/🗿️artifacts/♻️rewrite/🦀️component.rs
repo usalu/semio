@@ -1,5 +1,9 @@
 //! ♻️ `trinity.rewrite.rule` artifact — document entities (constitutional: general).
 
+
+pub use crate::artifacts::rewrite::schema::mutations::RewriteRuleMutation;
+pub use crate::artifacts::rewrite::schema::diff::RewriteDiff;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use crate::artifacts::jack::PropertyValue;
@@ -63,6 +67,8 @@ impl From<LayoutPoint> for (f64, f64) {
 /// 📸️ Persisted rewrite snapshot — defined in `snapshot::schema`.
 pub use super::snapshot::schema::RewriteSnapshot;
 
+
+
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 //#endregion 🔖️Types
 
@@ -85,8 +91,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: REWRITE_RULE_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"],
+        import_stdio_kinds: vec!["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"],
     }
 }
 //#endregion 🔖️ArtifactKind

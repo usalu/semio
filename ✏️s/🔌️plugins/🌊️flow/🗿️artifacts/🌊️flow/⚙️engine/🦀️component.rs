@@ -346,7 +346,7 @@ impl protocol::ArtifactEngine for FlowEngine {
     type Artifact = crate::artifacts::flow::schema::FlowArtifact;
     type Snapshot = crate::artifacts::flow::FlowSnapshot;
     type Mutation = crate::artifacts::flow::schema::mutations::FlowMutation;
-    type Diff = crate::artifacts::flow::schema::diff::text::FlowDiff;
+    type Diff = crate::artifacts::flow::FlowDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

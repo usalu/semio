@@ -14,6 +14,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+use crate::artifacts::wires::schema::diff::*;
+
 
 //#region 🔖️BoardOps
 pub fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Option<&DslValue>, remove_node_id: Option<&str>, patch_node: Option<(&str, &BTreeMap<String, DslValue>)>, add_edge: Option<(&DslValue, &DslValue)>, remove_edge_id: Option<&str>) {

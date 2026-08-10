@@ -29,7 +29,21 @@ Vite's mesh middleware found no file and called `next()`. The SPA fallback then 
 - Correct the root in Puzzle, Block, Shooting, and Demonstrator manifests so every consumer of the shared Concrete Forest GLBs stays consistent.
 - Extend plugin-registry validation to reject missing `static-dir` roots, `mesh-collection` roots, and mesh placeholders before catalogs and launch files are accepted.
 - Regenerate the derived playground catalog and launch configuration.
+- Restore Puzzle 3D's transitional host-to-command bridge for every real declared action, including `setActiveExample` and `registerBrushMesh`; remove the unused `setJackQuery` declaration because it had no implementation or caller.
+- Pass the materialization context into release WASM optimization so production builds can resolve their workspace tools.
+- Run the Vite production build through Bun and propagate its exit status instead of invoking TypeScript through Node's strip-only loader and silently accepting failures.
 
 ## Verification
 
-Pending.
+- `bun nx run @semio-tech/ui-styling:test`: 25/25 tests passed, including all three mesh-collection middleware cases.
+- Dev GLB request: `200`, `Content-Type: model/gltf-binary`, 86,112 bytes, and `glTF` magic bytes instead of the HTML shell.
+- Dev browser run at `http://127.0.0.1:6213/`: Concrete Forest rendered in both Top and Perspective; switching to Nakagin Capsule Tower remained alert-free after five seconds. No `setActiveExample` or `registerBrushMesh` rejection remained.
+- `SEMIO_WASM_OPT=0 bun nx run @semio-tech/framework-os-dev:build --excludeTaskDependencies -- puzzle3d`: passed; Vite transformed 2,751 modules and emitted the release bundle.
+- Production preview at `http://127.0.0.1:6313/`: opened Concrete Forest with Top and Perspective present, switched to Nakagin Capsule Tower, and remained alert-free after five seconds. Logs contained no error-level entries; only existing debug warnings for shell-owned `setContributions` and `setAppRegistrations` pushes.
+- `SEMIO_TEST_BUDGET_MS=120000 bun nx run @semio-tech/puzzle-plugin:test-quick`: the first expanded run exposed the unused, unbridged `setJackQuery` declaration and that declaration was removed. The retry could not complete because a concurrent task deleted `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs` while Cargo was compiling; Cargo stopped on that missing, unrelated Puzzle 2D source.
+
+## Repository-Level Constraints
+
+- The aggregate `@semio-tech/framework-os-dev:build` dependency graph is independently blocked before Puzzle by Storybook's unresolved `@semio-tech/coda-desktop/renderer`; the direct Puzzle target with dependencies excluded passes.
+- `bun nx run @semio-tech/plugin-registry:check` reaches an unrelated pre-existing registry-script failure: `TAXONOMY_SNAPSHOT_CHILD_DIRS is not defined`.
+- The repo MCP is unavailable in this session, so the existing broad ticket could not be closed through `ticket_close`; it also still covers other apps.

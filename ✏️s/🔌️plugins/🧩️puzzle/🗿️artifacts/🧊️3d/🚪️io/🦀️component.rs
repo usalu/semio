@@ -1,43 +1,27 @@
-//! 🚪️ 🧊️3d IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Glb, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Obj, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Png, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Stl, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Zip, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ puzzle3d artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::glb::export::register();
-        super::glb::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::obj::export::register();
-        super::obj::import::register();
-        super::png::export::register();
-        super::png::import::register();
-        super::stl::export::register();
-        super::stl::import::register();
-        super::zip::export::register();
-        super::zip::import::register();
-    }
-}
-
+//! puzzle3d IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::dwg::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::glb::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::gltf::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::las::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::obj::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::ply::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::png::register();
+    crate::artifacts::puzzle3d::io::import::deserializers::artifacts::stl::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::dwg::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::glb::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::gltf::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::json::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::las::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::obj::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::ply::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::png::register();
+    crate::artifacts::puzzle3d::io::export::serializers::artifacts::stl::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"]
+}

@@ -2544,6 +2544,7 @@ pub mod media_export_raster {
         pub encoding: Option<String>,
     }
 
+    #[cfg(not(feature = "os-host-full"))]
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw format bytes (base64 when binary).
         pub fn from_format_bytes(bytes: Vec<u8>, format: MediaFormat, file_stem: &str) -> Result<Self, String> {

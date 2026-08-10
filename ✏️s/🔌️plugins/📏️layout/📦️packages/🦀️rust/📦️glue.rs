@@ -128,10 +128,10 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::layout::schema::mutations::{apply_layout_mutation, LayoutMutation}; }
+        pub mod op { pub use crate::artifacts::layout::schema::mutations::text::*; pub use crate::artifacts::layout::schema::mutations::{apply_layout_mutation, LayoutMutation}; }
         pub mod dsl { pub use crate::artifacts::layout::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::layout::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::layout::schema::diff::*; pub mod schema { pub use crate::artifacts::layout::schema::diff::*; } pub mod text { pub use crate::artifacts::layout::schema::diff::text::*; } }
+        pub mod diff { pub use crate::artifacts::layout::schema::diff::text::*; pub use crate::artifacts::layout::schema::diff::*; pub mod schema { pub use crate::artifacts::layout::schema::diff::*; } pub mod text { pub use crate::artifacts::layout::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::layout::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::layout::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::layout::schema::snapshot::binary::*; } }
         #[path = "../../🗿️artifacts/📏️layout/🏗️builder/🦀️component.rs"]
@@ -300,8 +300,14 @@ pub mod artifacts {
                 }
             }
         }
-        #[path = "../../🗿️artifacts/📏️layout/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🗿️artifacts/📏️layout/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/📏️layout/⚙️engine/🎬️scene/🦀️component.rs"]
+            pub mod scene;
+        }
     }
 }
 

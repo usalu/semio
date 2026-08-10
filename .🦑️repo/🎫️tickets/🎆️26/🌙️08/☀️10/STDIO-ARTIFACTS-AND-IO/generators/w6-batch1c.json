@@ -8,7 +8,7 @@
   {"plugin": "🏛️architect", "artifact": "🏛️program", "rust_mod": "program", "crate": "semio-s-plugin-architect", "extras": ["kernel", "registers"]},
   {"plugin": "🏭️process", "artifact": "🧊️process3d", "rust_mod": "process3d", "crate": "semio-s-plugin-process", "extras": []},
   {"plugin": "💠️lowpoly", "artifact": "💠️lowpoly", "rust_mod": "lowpoly", "crate": "semio-s-plugin-lowpoly", "extras": []},
-  {"plugin": "💡️reasoning", "artifact": "🔌️wires", "rust_mod": "wires", "crate": "semio-s-plugin-reasoning", "extras": []},
+  {"plugin": "💡️reasoning", "artifact": "🔌️wires", "rust_mod": "wires", "crate": "semio-s-plugin-reasoning-mindmap", "extras": []},
   {"plugin": "🪐️space", "artifact": "🏠️home", "rust_mod": "home", "crate": "semio-s-plugin-space", "extras": []},
   {"plugin": "🪵️sourcing", "artifact": "🗂️curate", "rust_mod": "curate", "crate": "semio-s-plugin-sourcing", "extras": []}
 ]

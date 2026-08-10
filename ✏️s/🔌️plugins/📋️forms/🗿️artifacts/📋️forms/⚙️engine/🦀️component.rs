@@ -65,8 +65,8 @@ pub fn register_pilot_languages() {
         id: "forms.forms.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::forms::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::forms::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("forms.forms.diff"),
@@ -365,7 +365,7 @@ impl protocol::ArtifactEngine for FormsEngine {
     type Artifact = crate::artifacts::forms::schema::FormsArtifact;
     type Snapshot = FormsSnapshot;
     type Mutation = FormMutation;
-    type Diff = crate::artifacts::forms::diff::FormsDiff;
+    type Diff = crate::artifacts::forms::schema::diff::FormsDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

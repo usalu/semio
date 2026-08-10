@@ -80,7 +80,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::curate::schema::mutations::text::*; pub use crate::artifacts::curate::schema::mutations::CurateMutation; }
+        pub mod op { pub use crate::artifacts::curate::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::curate::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::curate::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::curate::schema::diff::*; pub use crate::artifacts::curate::schema::diff::text::*; pub mod schema { pub use crate::artifacts::curate::schema::diff::*; } pub mod text { pub use crate::artifacts::curate::schema::diff::text::*; } }

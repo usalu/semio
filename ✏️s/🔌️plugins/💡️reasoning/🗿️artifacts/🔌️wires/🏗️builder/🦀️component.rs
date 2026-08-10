@@ -4,7 +4,7 @@ use crate::artifacts::wires::schema::diff::WiresDiff;
 use crate::artifacts::wires::schema::mutations::WiresMutation;
 use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct WiresBuilder {
     snapshot: WiresSnapshot,
     diagnostics: Vec<dsl::Diagnostic>,
@@ -14,7 +14,7 @@ impl ArtifactBuilder for WiresBuilder {
     type Snapshot = WiresSnapshot;
     type Mutation = WiresMutation;
     type Diff = WiresDiff;
-    fn empty() -> Self { Self { snapshot: WiresSnapshot::default(), diagnostics: Vec::new() } }
+    fn empty() -> Self { Self { snapshot: crate::artifacts::wires::empty_wires_snapshot(), diagnostics: Vec::new() } }
     fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
     fn from_text(text: &str) -> Result<Self, store::TextError> {
         Ok(Self::from_snapshot(<WiresSnapshot as store::DocumentDsl>::parse_dsl(text)?))

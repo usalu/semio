@@ -1,7 +1,7 @@
 //! 🧬️ Forms artifact — document mutation dispatch enum.
 
-use crate::artifacts::forms::diff::diff_from_mutation;
-use crate::artifacts::forms::diff::FormsDiff;
+use crate::artifacts::forms::schema::diff::text::diff_from_mutation;
+use crate::artifacts::forms::schema::diff::FormsDiff;
 use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FormStep};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};

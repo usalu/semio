@@ -6,6 +6,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+use crate::artifacts::program::schema::diff::*;
+
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;

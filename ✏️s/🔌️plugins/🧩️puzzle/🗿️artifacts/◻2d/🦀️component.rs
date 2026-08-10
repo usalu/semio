@@ -3,7 +3,14 @@
 //! `artifact_kind()` spec the play app's manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`,
 //! `🎒️pack`, `📡️spr`, `⚙️engine`.
 
+
+pub use crate::artifacts::puzzle2d::schema::snapshot::Puzzle2dSnapshot;
+pub use crate::artifacts::puzzle2d::schema::mutations::Puzzle2dMutation;
+pub use crate::artifacts::puzzle2d::schema::diff::Puzzle2dDiff;
+
 use serde::{Deserialize, Serialize};
+
+
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
@@ -403,7 +410,6 @@ pub struct Puzzle2dMeta {
 //#endregion 🔖️Document
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::puzzle2d::snapshot::schema::Puzzle2dSnapshot;
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ArtifactKind
@@ -419,10 +425,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Design },
         schema: "puzzle.2d".into(),
-        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
 //#endregion 🔖️ArtifactKind

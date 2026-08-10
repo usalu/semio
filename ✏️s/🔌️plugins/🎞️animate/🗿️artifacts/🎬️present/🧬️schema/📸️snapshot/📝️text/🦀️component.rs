@@ -13,7 +13,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// 📄️ The handcrafted `.present` DSL-text fixture — a multi-tile deck exercising every field
 /// (including the optional `source-aspect`), embedded at compile time as the permanent proof that
 /// the checked-in fixture still parses and round trips.
-pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.present` DSL text into a `PresentSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PresentSnapshot, store::TextError> {

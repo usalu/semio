@@ -4,9 +4,16 @@
 //! fields — see `s/plugin/puzzle/app/5d/dsl/rs/lib.rs:62` for the known pack table-column bug this
 //! dodges).
 
+
+pub use crate::artifacts::block5d::schema::snapshot::Block5dSnapshot;
+pub use crate::artifacts::block5d::schema::mutations::Block5dMutation;
+pub use crate::artifacts::block5d::schema::diff::Block5dDiff;
+
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
+
+
 
 pub const BLOCK_5D_SCHEMA: &str = "block.5d";
 
@@ -76,7 +83,6 @@ pub struct Block5dGripTemplate {
 }
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::block5d::snapshot::schema::Block5dSnapshot;
 //#endregion 🔖️Snapshot
 
 // #endregion 🔖️Document
@@ -96,8 +102,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_5D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -1,18 +1,17 @@
 //! shooting <- jpg
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
 use semio_s_plugin_stdio::artifacts::jpg::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
 pub fn deserialize(from: &JpgSnapshot) -> Result<ShootingSnapshot, store::TextError> {
     let _ = STDIO_JPG_DOCUMENT_SCHEMA;
-    let bytes = semio_s_plugin_stdio::artifacts::jpg::engine::encode_jpg(from)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    <ShootingSnapshot as store::DocumentPack>::decode_pack(&bytes)
-        .or_else(|_| <ShootingSnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(&bytes)))
+    let bytes = <JpgSnapshot as store::DocumentPack>::encode_pack(from);
+    deserialize_bytes(&bytes)
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ShootingSnapshot, store::TextError> {
-    deserialize(&semio_s_plugin_stdio::artifacts::jpg::engine::decode_jpg(bytes)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?)
+    <ShootingSnapshot as store::DocumentPack>::decode_pack(bytes).or_else(|_| {
+        <ShootingSnapshot as store::DocumentDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
+    })
 }

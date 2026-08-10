@@ -10,12 +10,13 @@ pub use crate::playbook::{
     PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS,
     PLAYBOOK_DOCUMENT_SCHEMA,
 };
-pub use crate::artifacts::playbook::diff::{
+pub use crate::artifacts::playbook::schema::diff::{
     PlaybookBlockPatch, PlaybookBlockPatchEntry, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch,
     PlaybookStepPatchEntry, PlaybookStepsDelta, PlaybookStringList,
 };
 pub use crate::artifacts::playbook::schema::PlaybookArtifact;
-pub use crate::artifacts::playbook::snapshot::schema::PlaybookSnapshot;
+pub use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
+pub use crate::artifacts::playbook::schema::mutations::PlaybookMutation;
 
 pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
 

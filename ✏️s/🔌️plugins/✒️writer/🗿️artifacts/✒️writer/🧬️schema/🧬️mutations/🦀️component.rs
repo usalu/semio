@@ -1,7 +1,7 @@
 //! 🧬️ Writer artifact — document mutation dispatch enum.
 
 use crate::artifacts::writer::schema::diff::text::{diff_set_snapshot, diff_set_text};
-use crate::artifacts::writer::schema::diff::text::WriterDiff;
+use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};

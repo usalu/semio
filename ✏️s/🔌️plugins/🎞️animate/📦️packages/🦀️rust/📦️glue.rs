@@ -101,7 +101,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::present::schema::mutations::text::*; pub use crate::artifacts::present::schema::mutations::PresentMutation; }
+        pub mod op { pub use crate::artifacts::present::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::present::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::present::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::present::schema::diff::*; pub use crate::artifacts::present::schema::diff::text::*; pub mod schema { pub use crate::artifacts::present::schema::diff::*; } pub mod text { pub use crate::artifacts::present::schema::diff::text::*; } }
@@ -287,13 +287,47 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
             pub mod camera;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
-            pub mod video;
+            pub mod animate_video;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎬️scene/🦀️component.rs"]
             pub mod scene;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/📐️geometry/🦀️component.rs"]
             pub mod geometry;
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🔤️text/🦀️component.rs"]
             pub mod text;
+            pub mod animate {
+                pub mod animation {
+                    pub use super::super::animation::animation::*;
+                    pub use super::super::animation::animations_catalog::*;
+                }
+                pub mod rate { pub use super::super::rate::rate::*; }
+                pub mod updater { pub use super::super::rate::updater::*; }
+                pub mod scene { pub use super::super::scene::scene::*; }
+                pub mod section { pub use super::super::scene::section::*; }
+                pub mod sobject { pub use super::super::scene::sobject::*; }
+                pub mod geometry {
+                    pub use super::super::geometry::geometry::*;
+                    pub use super::super::geometry::three_d::*;
+                    pub use super::super::geometry::axes::*;
+                }
+                pub mod camera {
+                    pub use super::super::camera::camera::*;
+                    pub use super::super::camera::matrix::*;
+                }
+                pub mod color { pub use super::super::text::color::*; }
+                pub mod text { pub use super::super::text::text::*; }
+                pub mod config {
+                    pub use super::super::config::config::*;
+                    pub use super::super::config::hash::*;
+                    pub use super::super::config::graph::*;
+                }
+                pub use super::config::config::{AnimateConfig, QualityPreset};
+                pub use super::scene::section::{Section, SectionList};
+                pub use super::camera::camera::Camera;
+                pub use super::scene::sobject::{Sobject, VSobject};
+                pub use super::text::color::Color;
+                pub use super::scene::scene::{BasicStage, Scene, SceneFrame, preview_scene_loop};
+                pub use super::animation::animation::{compile_animations, interpolate_at, Animation, Wait};
+            }
         }
     }
 }

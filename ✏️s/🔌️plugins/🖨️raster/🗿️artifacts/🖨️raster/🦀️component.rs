@@ -174,7 +174,6 @@ pub struct RasterImageAsset {
 }
 
 /// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::raster::snapshot::schema::RasterSnapshot;
 //#endregion 🔖️Types
 
 //#region 🔖️Operations
@@ -198,6 +197,10 @@ pub struct RasterLayerPatch {
     pub adjustment_kind: Option<String>,
 }
 //#endregion 🔖️Operations
+
+pub use crate::artifacts::raster::schema::snapshot::RasterSnapshot;
+pub use crate::artifacts::raster::schema::diff::RasterDiff;
+pub use crate::artifacts::raster::schema::mutations::RasterMutation;
 
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.raster` artifact kind — lifted out of `create_raster_app`'s `.artifact_kind(…)` call so

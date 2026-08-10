@@ -1,0 +1,634 @@
+# W6 Heavy Report
+
+Ticket: `26/08/10/STDIO-ARTIFACTS-AND-IO`
+
+Multi-artifact plugins migrated to stdio shape; all 8 crates `cargo check` green.
+
+## Cargo summary
+
+- `semio-s-plugin-procedural`: ✅ green — `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+- `semio-s-plugin-gis`: ✅ green — `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+- `semio-s-plugin-fem`: ✅ green — `    Finished `dev` profile [unoptimized] target(s) in 0.32s`
+- `semio-s-plugin-norm`: ✅ green — `    Finished `dev` profile [unoptimized] target(s) in 0.24s`
+- `semio-s-plugin-energy`: ✅ green — `    Finished `dev` profile [unoptimized] target(s) in 0.22s`
+- `semio-s-plugin-trinity`: ✅ green — `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+- `semio-s-plugin-puzzle`: ✅ green — `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+- `semio-s-plugin-block`: ✅ green — `    Finished `dev` profile [unoptimized] target(s) in 0.22s`
+
+## `semio-s-plugin-procedural`
+
+- **cargo check `-p semio-s-plugin-procedural`**: ✅ green
+  - last line: `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+  - log: `🧪w6-heavy-semio-s-plugin-procedural.log`
+- **Artifact** `🌀️procedural / 🌀️procedural2d` (`procedural2d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `dxf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `pdf` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `svg` import/export: `True` / `True`
+- **Artifact** `🌀️procedural / 🧊️procedural3d` (`procedural3d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `glb` import/export: `True` / `True`
+    - io `gltf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `las` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `ply` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+
+## `semio-s-plugin-gis`
+
+- **cargo check `-p semio-s-plugin-gis`**: ✅ green
+  - last line: `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+  - log: `🧪w6-heavy-semio-s-plugin-gis.log`
+- **Artifact** `🌍️gis / 🏔️gisterrain` (`gisterrain`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `glb` import/export: `True` / `True`
+    - io `gltf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `las` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `ply` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+- **Artifact** `🌍️gis / 🗺️gismap` (`gismap`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `dxf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `pdf` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `svg` import/export: `True` / `True`
+
+## `semio-s-plugin-fem`
+
+- **cargo check `-p semio-s-plugin-fem`**: ✅ green
+  - last line: `    Finished `dev` profile [unoptimized] target(s) in 0.32s`
+  - log: `🧪w6-heavy-semio-s-plugin-fem.log`
+- **Artifact** `🏗️fem / ◻2d` (`fem2d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `md` import/export: `True` / `True`
+- **Artifact** `🏗️fem / 🧊️3d` (`fem3d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `md` import/export: `True` / `True`
+
+## `semio-s-plugin-norm`
+
+- **cargo check `-p semio-s-plugin-norm`**: ✅ green
+  - last line: `    Finished `dev` profile [unoptimized] target(s) in 0.24s`
+  - log: `🧪w6-heavy-semio-s-plugin-norm.log`
+- **Artifact** `📕️norm / 📓️iso16757` (`iso16757`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📔️vdi3805` (`vdi3805`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📕️din4108` (`din4108`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📗️din16798` (`din16798`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1990` (`en1990`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1991` (`en1991`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1992` (`en1992`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1993` (`en1993`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1994` (`en1994`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1995` (`en1995`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1996` (`en1996`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1997` (`en1997`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1998` (`en1998`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📘️en1999` (`en1999`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `📕️norm / 📙️din18599` (`din18599`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+
+## `semio-s-plugin-energy`
+
+- **cargo check `-p semio-s-plugin-energy`**: ✅ green
+  - last line: `    Finished `dev` profile [unoptimized] target(s) in 0.22s`
+  - log: `🧪w6-heavy-semio-s-plugin-energy.log`
+- **Artifact** `🔋️energy / 🔋️model` (`model`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `xlsx` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+
+## `semio-s-plugin-trinity`
+
+- **cargo check `-p semio-s-plugin-trinity`**: ✅ green
+  - last line: `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+  - log: `🧪w6-heavy-semio-s-plugin-trinity.log`
+- **Artifact** `🔱️trinity / ♻️rewrite` (`rewrite`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `docx` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `md` import/export: `True` / `True`
+    - io `pdf` import/export: `True` / `True`
+    - io `txt` import/export: `True` / `True`
+- **Artifact** `🔱️trinity / 🔌️jack` (`jack`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `csv` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `md` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `svg` import/export: `True` / `True`
+
+## `semio-s-plugin-puzzle`
+
+- **cargo check `-p semio-s-plugin-puzzle`**: ✅ green
+  - last line: `note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7``
+  - log: `🧪w6-heavy-semio-s-plugin-puzzle.log`
+- **Artifact** `🧩️puzzle / ◻2d` (`puzzle2d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `dxf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `pdf` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `svg` import/export: `True` / `True`
+- **Artifact** `🧩️puzzle / 🖐️5d` (`puzzle5d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `glb` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `🧩️puzzle / 🧊️3d` (`puzzle3d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `dwg` import/export: `True` / `True`
+    - io `glb` import/export: `True` / `True`
+    - io `gltf` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `las` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `ply` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+
+## `semio-s-plugin-block`
+
+- **cargo check `-p semio-s-plugin-block`**: ✅ green
+  - last line: `    Finished `dev` profile [unoptimized] target(s) in 0.22s`
+  - log: `🧪w6-heavy-semio-s-plugin-block.log`
+- **Artifact** `🧱️block / ◻2d` (`block2d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `glb` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `🧱️block / 🖐️5d` (`block5d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `glb` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+- **Artifact** `🧱️block / 🧊️3d` (`block3d`)
+  - Path.exists verification:
+    - `🏗️builder`: `True`
+    - `🪓️decomposer`: `True`
+    - `🧬️schema/📸️snapshot/📝️text`: `True`
+    - `🧬️schema/📸️snapshot/💾️binary`: `True`
+    - `🚪️io/📥️import/🧩️deserializers/🗿️artifacts`: `True`
+    - `🚪️io/📤️export/🧵️serializers/🗿️artifacts`: `True`
+    - old `🗣️dsl` gone: `True` (`False`)
+    - old `📸️snapshot` gone: `True` (`False`)
+    - old `🔺️diff` gone: `True` (`False`)
+    - old `🔧️op` gone: `True` (`False`)
+    - old `📡️spr` gone: `True` (`False`)
+    - old root `🧬️mutations` gone: `True` (`False`)
+    - io `glb` import/export: `True` / `True`
+    - io `json` import/export: `True` / `True`
+    - io `obj` import/export: `True` / `True`
+    - io `png` import/export: `True` / `True`
+    - io `stl` import/export: `True` / `True`
+    - io `zip` import/export: `True` / `True`
+

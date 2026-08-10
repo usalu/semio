@@ -1,10 +1,17 @@
 //! 🗺️ GIS map artifact — the document entity the 2d app edits (constitutional: general).
 
+
+pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
+pub use crate::artifacts::gismap::schema::mutations::GisMapMutation;
+pub use crate::artifacts::gismap::schema::diff::GisMapDiff;
+
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Constants
+
+
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
 //#endregion 🔹Constants
 
@@ -45,7 +52,6 @@ impl Patchable<MapFeaturePatch> for MapFeature {
 }
 
 /// 📸️ Persisted GIS map snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
-pub use crate::artifacts::gismap::snapshot::schema::GisMapSnapshot;
 //#endregion 🔹Types
 
 //#region 🔹ArtifactKind
@@ -60,10 +66,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         schema: GIS_MAP_SCHEMA.into(),
-        export_formats: vec![MediaFormat::Svg, MediaFormat::Png],
-        import_formats: vec![MediaFormat::Svg, MediaFormat::Png],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
 //#endregion 🔹ArtifactKind

@@ -106,7 +106,7 @@ impl protocol::ArtifactEngine for DagEngine {
     type Artifact = crate::artifacts::dag::schema::DagArtifact;
     type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
-    type Diff = crate::artifacts::dag::schema::diff::text::DagDiff;
+    type Diff = crate::artifacts::dag::DagDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

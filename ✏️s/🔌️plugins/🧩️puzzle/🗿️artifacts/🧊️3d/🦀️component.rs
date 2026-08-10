@@ -4,6 +4,11 @@
 //! shared `Puzzle3dError`, and the `artifact_kind()` spec the play app's manifest binds. Sibling
 //! nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
 
+
+pub use crate::artifacts::puzzle3d::schema::snapshot::Puzzle3dSnapshot;
+pub use crate::artifacts::puzzle3d::schema::mutations::Puzzle3dMutation;
+pub use crate::artifacts::puzzle3d::schema::diff::Puzzle3dDiff;
+
 use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
@@ -18,6 +23,8 @@ pub enum Puzzle3dError {
     FillSessionUnavailable,
 }
 //#endregion ⚠️ Errors
+
+
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
@@ -487,7 +494,6 @@ pub struct Puzzle3dMeta {
 }
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::puzzle3d::snapshot::schema::Puzzle3dSnapshot;
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ArtifactKind
@@ -503,10 +509,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Design },
         schema: "puzzle.3d".into(),
-        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
 
@@ -525,8 +531,8 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "kit.catalog".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
 //#endregion 🔖️ArtifactKind

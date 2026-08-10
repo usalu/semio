@@ -81,7 +81,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::playground::schema::mutations::text::*; pub use crate::artifacts::playground::schema::mutations::PlaygroundMutation; }
+        pub mod op { pub use crate::artifacts::playground::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::playground::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::playground::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::playground::schema::diff::*; pub use crate::artifacts::playground::schema::diff::text::*; pub mod schema { pub use crate::artifacts::playground::schema::diff::*; } pub mod text { pub use crate::artifacts::playground::schema::diff::text::*; } }

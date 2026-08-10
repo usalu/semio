@@ -25,10 +25,10 @@ todos:
     status: completed
   - id: w6-fanout
     content: "W6: 32 parallel per-plugin agents migrate the remaining 52 artifacts: move facets into the schema tree, handcraft all text and binary spec leaves, write builder and decomposer, rewrite io, patch glue and TS barrels, delete old facets"
-    status: in_progress
+    status: completed
   - id: w7-integration
     content: "W7: Rewire Space Studio media commands, host effects, file-picker accept filters, the WASM bridge, and TS barrel exports; derive mimes.csv from stdio artifacts and delete the stale UI duplicate"
-    status: pending
+    status: in_progress
   - id: w8-gate
     content: "W8: Run the aggregate gate (policy, registry check and generate, cargo test across all plugin crates, launch.json freshness, conformance matrix) and close the ticket"
     status: pending

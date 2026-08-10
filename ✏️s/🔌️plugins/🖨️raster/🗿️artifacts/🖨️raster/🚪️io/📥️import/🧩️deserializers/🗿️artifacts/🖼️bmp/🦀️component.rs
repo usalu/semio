@@ -5,7 +5,7 @@ pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let _ = bytes;
     let mut snap = empty_raster_snapshot();
-    snap.id = create_raster_id("bmp-import", b"bmp");
+    snap.id = create_raster_id("bmp-import");
     snap.title = Some(format!("Imported bmp"));
     Ok(snap)
 }

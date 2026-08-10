@@ -984,7 +984,7 @@ impl protocol::ArtifactEngine for WriterEngine {
     type Artifact = crate::artifacts::writer::schema::WriterArtifact;
     type Snapshot = WriterSnapshot;
     type Mutation = crate::artifacts::writer::schema::mutations::WriterMutation;
-    type Diff = crate::artifacts::writer::schema::diff::text::WriterDiff;
+    type Diff = crate::artifacts::writer::WriterDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

@@ -1,9 +1,0 @@
-dialect grammar
-grammar en1992.op
-extension en1992
-use family-sheet
-start mutation
-
-mutation = set-document-op
-set-document-op = "set-document" TEXT
-reference-sheet = clause-ref qty trace

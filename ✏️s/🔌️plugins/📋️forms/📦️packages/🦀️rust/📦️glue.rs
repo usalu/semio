@@ -146,7 +146,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::forms::schema::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation}; }
+        pub mod op { pub use crate::artifacts::forms::schema::mutations::text::*; pub use crate::artifacts::forms::schema::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation}; }
         pub mod dsl { pub use crate::artifacts::forms::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::forms::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::forms::schema::diff::*; pub mod schema { pub use crate::artifacts::forms::schema::diff::*; } pub mod text { pub use crate::artifacts::forms::schema::diff::text::*; } }

@@ -1,10 +1,14 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playbook::schema::PlaybookArtifact;
-use crate::artifacts::playbook::{
-    PlaybookBlock, PlaybookBlockPatch, PlaybookBlockPatchEntry, PlaybookBlocksDelta, PlaybookSnapshot, PlaybookStep,
-    PlaybookStepPatch, PlaybookStepPatchEntry, PlaybookStepsDelta,
+use crate::artifacts::playbook::schema::diff::{
+    PlaybookBlockPatch, PlaybookBlockPatchEntry, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch,
+    PlaybookStepPatchEntry, PlaybookStepsDelta, PlaybookStringList,
 };
+use crate::artifacts::playbook::schema::PlaybookArtifact;
+use crate::artifacts::playbook::schema::mutations::PlaybookMutation;
+use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
+use crate::playbook::PlaybookBlock;
+use crate::playbook::PlaybookStep;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -192,7 +196,7 @@ pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
 }
 
 /// 🎯️ Builds a sparse diff from a kernel `PlaybookMutation` against `base`.
-pub fn playbook_diff_from_mutation(mutation: &crate::artifacts::playbook::mutations::PlaybookMutation, base: &PlaybookSnapshot) -> PlaybookDiff {
+pub fn playbook_diff_from_mutation(mutation: &PlaybookMutation, base: &PlaybookSnapshot) -> PlaybookDiff {
     use crate::artifacts::playbook::mutations::PlaybookMutation;
     match mutation {
         PlaybookMutation::AddStep { step, .. } => PlaybookDiff {

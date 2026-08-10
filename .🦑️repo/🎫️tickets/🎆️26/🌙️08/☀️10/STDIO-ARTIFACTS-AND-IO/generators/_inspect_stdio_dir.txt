@@ -1,0 +1,4 @@
+def stdio_dir(slug: str) -> str:
+    return ROSTER[slug]["dir"]
+
+

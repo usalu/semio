@@ -2466,7 +2466,6 @@ pub fn create_puzzle3d_app() -> App {
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .action_with(ActionDefinition::new_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
-            .view_action("setJackQuery", LocalizedLabel::native("Set Jack Query", "Abfrage festlegen"))
             .view_action("worldSelect", LocalizedLabel::native("World Select", "In der Welt auswählen"))
             .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
             .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
@@ -3121,7 +3120,6 @@ mod tests {
             SET_ACTIVE_TOOL_ACTION_ID,
             "recordTutorial",
             "startIntroduction",
-            "setJackQuery",
             "undo",
             "redo",
             "checkpoint",

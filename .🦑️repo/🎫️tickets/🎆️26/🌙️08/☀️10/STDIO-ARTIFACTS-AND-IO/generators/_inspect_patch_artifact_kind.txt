@@ -1,0 +1,24 @@
+def patch_artifact_kind(art: Path, slugs: list[str]) -> None:
+    p = art / "🦀️component.rs"
+    t = p.read_text(encoding="utf-8")
+    t = re.sub(r",\s*MediaFormat::\w+", "", t)
+    t = re.sub(r"MediaFormat,?\s*", "", t)
+    t = re.sub(r"DocumentCodec,?\s*", "", t)
+    t = re.sub(r"JsonCodec,?\s*", "", t)
+    t = re.sub(r"IoFormatSpec[^;]*;", "", t)
+    kinds = ", ".join(f'"stdio.{s}"' for s in slugs)
+    t = re.sub(
+        r"export_stdio_kinds:\s*vec!\[[^\]]*\]",
+        f"export_stdio_kinds: vec![{kinds}]",
+        t,
+    )
+    t = re.sub(
+        r"import_stdio_kinds:\s*vec!\[[^\]]*\]",
+        f"import_stdio_kinds: vec![{kinds}]",
+        t,
+    )
+    t = re.sub(r"export_formats:\s*vec!\[[^\]]*\]", "export_formats: vec![]", t)
+    t = re.sub(r"import_formats:\s*vec!\[[^\]]*\]", "import_formats: vec![]", t)
+    p.write_text(t, encoding="utf-8")
+
+

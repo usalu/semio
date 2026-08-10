@@ -1,5 +1,5 @@
 //! Diff fragment yielded by `SetSnapshot`.
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
+use crate::artifacts::flow::FlowDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Diff

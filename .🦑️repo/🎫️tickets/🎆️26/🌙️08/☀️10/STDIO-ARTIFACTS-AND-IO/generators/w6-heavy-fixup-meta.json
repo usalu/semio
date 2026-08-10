@@ -1,0 +1,182 @@
+[
+  {
+    "rust_mod": "procedural2d",
+    "snap": "Procedural2dSnapshot",
+    "mut": "Procedural2dMutation",
+    "diff": "Procedural2dDiff"
+  },
+  {
+    "rust_mod": "procedural3d",
+    "snap": "Procedural3dSnapshot",
+    "mut": "Procedural3dMutation",
+    "diff": "Procedural3dDiff"
+  },
+  {
+    "rust_mod": "gisterrain",
+    "snap": "GisTerrainSnapshot",
+    "mut": "GisTerrainMutation",
+    "diff": "GisTerrainDiff"
+  },
+  {
+    "rust_mod": "gismap",
+    "snap": "GisMapSnapshot",
+    "mut": "GisMapMutation",
+    "diff": "GisMapDiff"
+  },
+  {
+    "rust_mod": "fem2d",
+    "snap": "Fem2dSnapshot",
+    "mut": "Fem2dMutation",
+    "diff": "Fem2dDiff"
+  },
+  {
+    "rust_mod": "fem3d",
+    "snap": "Fem3dSnapshot",
+    "mut": "Fem3dMutation",
+    "diff": "Fem3dDiff"
+  },
+  {
+    "rust_mod": "iso16757",
+    "snap": "Iso16757Snapshot",
+    "mut": "Iso16757Mutation",
+    "diff": "Iso16757Diff"
+  },
+  {
+    "rust_mod": "vdi3805",
+    "snap": "Vdi3805Snapshot",
+    "mut": "Vdi3805Mutation",
+    "diff": "Vdi3805Diff"
+  },
+  {
+    "rust_mod": "din4108",
+    "snap": "Din4108Snapshot",
+    "mut": "Din4108Mutation",
+    "diff": "Din4108Diff"
+  },
+  {
+    "rust_mod": "din16798",
+    "snap": "Din16798Snapshot",
+    "mut": "Din16798Mutation",
+    "diff": "Din16798Diff"
+  },
+  {
+    "rust_mod": "en1990",
+    "snap": "En1990Snapshot",
+    "mut": "En1990Mutation",
+    "diff": "En1990Diff"
+  },
+  {
+    "rust_mod": "en1991",
+    "snap": "En1991Snapshot",
+    "mut": "En1991Mutation",
+    "diff": "En1991Diff"
+  },
+  {
+    "rust_mod": "en1992",
+    "snap": "En1992Snapshot",
+    "mut": "En1992Mutation",
+    "diff": "En1992Diff"
+  },
+  {
+    "rust_mod": "en1993",
+    "snap": "En1993Snapshot",
+    "mut": "En1993Mutation",
+    "diff": "En1993Diff"
+  },
+  {
+    "rust_mod": "en1994",
+    "snap": "En1994Snapshot",
+    "mut": "En1994Mutation",
+    "diff": "En1994Diff"
+  },
+  {
+    "rust_mod": "en1995",
+    "snap": "En1995Snapshot",
+    "mut": "En1995Mutation",
+    "diff": "En1995Diff"
+  },
+  {
+    "rust_mod": "en1996",
+    "snap": "En1996Snapshot",
+    "mut": "En1996Mutation",
+    "diff": "En1996Diff"
+  },
+  {
+    "rust_mod": "en1997",
+    "snap": "En1997Snapshot",
+    "mut": "En1997Mutation",
+    "diff": "En1997Diff"
+  },
+  {
+    "rust_mod": "en1998",
+    "snap": "En1998Snapshot",
+    "mut": "En1998Mutation",
+    "diff": "En1998Diff"
+  },
+  {
+    "rust_mod": "en1999",
+    "snap": "En1999Snapshot",
+    "mut": "En1999Mutation",
+    "diff": "En1999Diff"
+  },
+  {
+    "rust_mod": "din18599",
+    "snap": "Din18599Snapshot",
+    "mut": "Din18599Mutation",
+    "diff": "Din18599Diff"
+  },
+  {
+    "rust_mod": "model",
+    "snap": "EnergyModelSnapshot",
+    "mut": "EnergyModelMutation",
+    "diff": "EnergyModelDiff"
+  },
+  {
+    "rust_mod": "rewrite",
+    "snap": "RewriteSnapshot",
+    "mut": "RewriteRuleMutation",
+    "diff": "RewriteDiff"
+  },
+  {
+    "rust_mod": "jack",
+    "snap": "JackSnapshot",
+    "mut": "TrinityGraphMutation",
+    "diff": "JackDiff"
+  },
+  {
+    "rust_mod": "puzzle2d",
+    "snap": "Puzzle2dSnapshot",
+    "mut": "Puzzle2dMutation",
+    "diff": "Puzzle2dDiff"
+  },
+  {
+    "rust_mod": "puzzle5d",
+    "snap": "Puzzle5dSnapshot",
+    "mut": "Puzzle5dMutation",
+    "diff": "Puzzle5dDiff"
+  },
+  {
+    "rust_mod": "puzzle3d",
+    "snap": "Puzzle3dSnapshot",
+    "mut": "Puzzle3dMutation",
+    "diff": "Puzzle3dDiff"
+  },
+  {
+    "rust_mod": "block2d",
+    "snap": "Block2dSnapshot",
+    "mut": "Block2dMutation",
+    "diff": "Block2dDiff"
+  },
+  {
+    "rust_mod": "block5d",
+    "snap": "Block5dSnapshot",
+    "mut": "Block5dMutation",
+    "diff": "Block5dDiff"
+  },
+  {
+    "rust_mod": "block3d",
+    "snap": "Block3dSnapshot",
+    "mut": "Block3dMutation",
+    "diff": "Block3dDiff"
+  }
+]

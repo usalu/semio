@@ -1,5 +1,10 @@
 //! 🌡️ DIN 4108 app — document entities (constitutional: general).
 
+
+pub use crate::artifacts::din4108::schema::snapshot::Din4108Snapshot;
+pub use crate::artifacts::din4108::schema::mutations::Din4108Mutation;
+pub use crate::artifacts::din4108::schema::diff::Din4108Diff;
+
 use crate::document::ClimateZoneDe;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +22,6 @@ pub struct LayerDocument {
 
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::din4108::snapshot::schema::Din4108Snapshot;
 //#endregion 🔖️Types
 
 // `)` so the

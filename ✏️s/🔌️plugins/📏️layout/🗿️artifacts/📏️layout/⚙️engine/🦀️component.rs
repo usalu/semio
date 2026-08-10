@@ -71,8 +71,8 @@ pub fn register_pilot_languages() {
         id: "layout.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::layout::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::layout::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("layout.diff"),
@@ -542,7 +542,7 @@ impl protocol::ArtifactEngine for LayoutArtifactEngine {
     type Artifact = crate::artifacts::layout::schema::LayoutArtifact;
     type Snapshot = crate::artifacts::layout::LayoutSnapshot;
     type Mutation = crate::artifacts::layout::mutations::LayoutMutation;
-    type Diff = crate::artifacts::layout::diff::LayoutDiff;
+    type Diff = crate::artifacts::layout::schema::diff::LayoutDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

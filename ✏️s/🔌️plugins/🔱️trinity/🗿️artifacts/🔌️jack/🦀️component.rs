@@ -1,5 +1,9 @@
 //! 🔺️ `trinity.graph` artifact — in-memory directed property port graph with compile-time manifest.
 
+
+pub use crate::artifacts::jack::schema::mutations::TrinityGraphMutation;
+pub use crate::artifacts::jack::schema::diff::JackDiff;
+
 use math::graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -136,7 +140,9 @@ impl Default for Camera {
 pub use super::snapshot::schema::JackSnapshot;
 
 impl JackSnapshot {
-    pub const SCHEMA: &'static str = "trinity.graph";
+
+
+pub const SCHEMA: &'static str = "trinity.graph";
 
     pub fn validate_schema(&self) -> Result<(), TrinityRamError> {
         if self.schema != Self::SCHEMA {
@@ -423,8 +429,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "trinity.graph".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
     }
 }
 // #endregion 🔖️Runtime

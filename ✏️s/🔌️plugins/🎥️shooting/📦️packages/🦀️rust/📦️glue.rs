@@ -164,10 +164,11 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::shooting::schema::mutations::text::*; pub use crate::artifacts::shooting::schema::mutations::ShootingMutation; }
+        pub mod op { pub use crate::artifacts::shooting::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::shooting::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::shooting::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::shooting::schema::diff::*; pub use crate::artifacts::shooting::schema::diff::text::*; pub mod schema { pub use crate::artifacts::shooting::schema::diff::*; } pub mod text { pub use crate::artifacts::shooting::schema::diff::text::*; } }
+        pub mod pack { pub use crate::artifacts::shooting::schema::snapshot::binary::*; }
         pub mod mutations { pub use crate::artifacts::shooting::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::shooting::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::shooting::schema::snapshot::binary::*; } }
         #[path = "../../🗿️artifacts/🎥️shooting/🏗️builder/🦀️component.rs"]

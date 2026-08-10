@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 //#endregion 🔖️Constants
 
-pub use crate::artifacts::layout::snapshot::schema::LayoutSnapshot;
 
 //#region 🔖️DropPreview
 /// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
@@ -316,6 +315,10 @@ pub struct GridSettings {
 }
 
 //#endregion 🔖️Types
+
+pub use crate::artifacts::layout::schema::snapshot::LayoutSnapshot;
+pub use crate::artifacts::layout::schema::diff::LayoutDiff;
+pub use crate::artifacts::layout::schema::mutations::LayoutMutation;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by

@@ -115,7 +115,7 @@ impl protocol::ArtifactEngine for VcsDemoEngine {
     type Artifact = crate::artifacts::vcs::schema::VcsArtifact;
     type Snapshot = VcsSnapshot;
     type Mutation = crate::artifacts::vcs::schema::mutations::VcsDemoMutation;
-    type Diff = crate::artifacts::vcs::schema::diff::text::VcsDiff;
+    type Diff = crate::artifacts::vcs::VcsDiff;
 
     fn artifact(&self) -> &Self::Artifact {
         &self.artifact

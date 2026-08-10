@@ -143,7 +143,7 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::sequence::schema::mutations::text::*; pub use crate::artifacts::sequence::schema::mutations::SequenceMutation; }
+        pub mod op { pub use crate::artifacts::sequence::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::sequence::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::sequence::schema::mutations::binary::*; }
         pub mod diff { pub use crate::artifacts::sequence::schema::diff::*; pub use crate::artifacts::sequence::schema::diff::text::*; pub mod schema { pub use crate::artifacts::sequence::schema::diff::*; } pub mod text { pub use crate::artifacts::sequence::schema::diff::text::*; } }

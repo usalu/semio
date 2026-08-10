@@ -1,16 +1,21 @@
-//! GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
+// GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
+pub use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
+pub use crate::artifacts::gisterrain::schema::diff::GisTerrainDiff;
+
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
 
 //#region 🔹Constants
 /// VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the only
 /// editable/undoable property is vertical exaggeration (a genuinely useful terrain control).
+
+
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 //#endregion 🔹Constants
 
 //#region 🔹Types
 /// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
-pub use crate::artifacts::gisterrain::snapshot::schema::GisTerrainSnapshot;
 //#endregion 🔹Types
 
 //#region 🔹ArtifactKind
@@ -27,10 +32,10 @@ pub fn mesh_artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         schema: "mesh.reference".into(),
-        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl],
-        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
 //#endregion 🔹ArtifactKind

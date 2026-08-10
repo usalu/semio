@@ -12,5 +12,5 @@ pub fn serialize(snapshot: &WiresSnapshot) -> Result<CsvSnapshot, store::TextErr
 }
 
 pub fn serialize_bytes(snapshot: &WiresSnapshot) -> Result<Vec<u8>, store::TextError> {
-    <CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?)
+    Ok(<CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }

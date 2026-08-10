@@ -1,8 +1,9 @@
 {
   "title": "Anchor Upward Growing UI Trees",
   "emoji": "🐛️",
-  "status": "open",
+  "status": "closed",
   "description": "When UI trees in bottom-anchored panels grow from bottom to top, expanding a tree item must push content upward while leaving the panel bottom fixed.",
+  "summary": "Anchored bottom-panel tree content to the block end of its single scroll viewport, removed per-tree nested vertical scrolling, exposed viewport layout classes on Scrollable, and extended the existing bottom-panel regression. The focused regression passes; package typecheck remains blocked by unrelated shared-worktree errors and the local Storybook story frame did not become available for visual verification.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2538"
   },

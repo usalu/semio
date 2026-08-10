@@ -20,7 +20,7 @@ use crate::artifacts::program::ProgramSnapshot;
 /// `.example("sample", ...)` still registers `sample_plugin()` serialized to JSON at runtime
 /// (a separate, pre-existing concern) — this constant exists so a static `.architect` fixture
 /// is available on disk for DSL-notation round-trip testing.
-pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
 pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {

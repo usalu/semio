@@ -26,366 +26,555 @@ extern crate semio_framework_os_kernel as vcs;
 #[path = "."]
 pub mod artifacts {
     #[path = "."]
-    pub mod gismap {
-        #[path = "../../🗿️artifacts/🗺️gismap/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
-        #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs"]
-        pub mod op;
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
-            }
-        }
-
-        #[path = "../../🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🗺️gismap/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🗺️gismap/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-        #[path = "../../🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs"]
-        pub mod spr;
-        #[path = "."]
-        pub mod io {
-            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod dwg {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod dxf {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🖊️dxf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🖊️dxf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod json {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod pdf {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📄️pdf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📄️pdf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod png {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📷️png/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📷️png/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-            #[path = "."]
-            pub mod svg {
-                #[path = "."]
-                pub mod export {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🎨️svg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod import {
-                    #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🎨️svg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-        }
-        #[path = "../../🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs"]
-        pub mod engine;
-    }
-
-    #[path = "."]
     pub mod gisterrain {
         #[path = "../../🗿️artifacts/🏔️gisterrain/🦀️component.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🦀️component.rs"]
-        pub mod schema;
-
+        pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
+        pub use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
+        pub use crate::artifacts::gisterrain::schema::diff::GisTerrainDiff;
         #[path = "."]
-        pub mod diff {
-            #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs"]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🦀️component.rs"]
             mod component;
             pub use component::*;
-
-            #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            pub use schema::*;
-        }
-        #[path = "../../🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs"]
-        pub mod op;
-        #[path = "."]
-        pub mod mutations {
-            #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🦀️component.rs"]
-            mod component;
-            pub use component::*;
-
             #[path = "."]
-            pub mod set_exaggeration {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
-
             #[path = "."]
-            pub mod set_imported_features {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
             }
-
             #[path = "."]
-            pub mod set_snapshot {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
-                pub mod mutation;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
-                pub mod diff;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
-                pub mod inverse;
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_exaggeration {
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-exaggeration/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-exaggeration/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-exaggeration/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_imported_features {
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-imported-features/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-imported-features/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/🎛set-imported-features/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
             }
         }
-
-        #[path = "../../🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs"]
-        pub mod dsl;
-        #[path = "."]
-        pub mod snapshot {
-            #[path = "../../🗿️artifacts/🏔️gisterrain/📸️snapshot/🧬️schema/🦀️component.rs"]
-            pub mod schema;
-            #[path = "../../🗿️artifacts/🏔️gisterrain/📸️snapshot/🎒️pack/🦀️component.rs"]
-            pub mod pack;
-        }
-        #[path = "../../🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs"]
-        pub mod spr;
+        pub mod op { pub use crate::artifacts::gisterrain::schema::mutations::text::*; }
+        pub mod dsl { pub use crate::artifacts::gisterrain::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::gisterrain::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::gisterrain::schema::diff::*; pub use crate::artifacts::gisterrain::schema::diff::text::*; pub mod schema { pub use crate::artifacts::gisterrain::schema::diff::*; } pub mod text { pub use crate::artifacts::gisterrain::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::gisterrain::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::gisterrain::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::gisterrain::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🏔️gisterrain/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🏔️gisterrain/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
         #[path = "."]
         pub mod io {
             #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🦀️component.rs"]
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod glb {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️glb/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod gltf {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod las {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️las/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod obj {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod ply {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️ply/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod stl {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod glb {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️glb/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod gltf {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod las {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️las/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod obj {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod ply {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️ply/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod stl {
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🟪️stl/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
             pub mod dwg {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🖊️dwg/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::dwg::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🖊️dwg/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::dwg::*;
                 }
             }
             #[path = "."]
             pub mod glb {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️glb/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::glb::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️glb/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::glb::*;
                 }
             }
             #[path = "."]
             pub mod gltf {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️gltf/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::gltf::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️gltf/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::gltf::*;
                 }
             }
             #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🔣️json/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::json::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🔣️json/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::json::*;
                 }
             }
             #[path = "."]
             pub mod las {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/☁️las/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::las::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/☁️las/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::las::*;
                 }
             }
             #[path = "."]
             pub mod obj {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️obj/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::obj::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🧊️obj/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::obj::*;
                 }
             }
             #[path = "."]
             pub mod ply {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/☁️ply/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::ply::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/☁️ply/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::ply::*;
                 }
             }
             #[path = "."]
             pub mod png {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📷️png/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::png::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/📷️png/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::png::*;
                 }
             }
             #[path = "."]
             pub mod stl {
                 #[path = "."]
                 pub mod export {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🟪️stl/📤️export/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::export::serializers::artifacts::stl::*;
                 }
                 #[path = "."]
                 pub mod import {
-                    #[path = "../../🗿️artifacts/🏔️gisterrain/🚪️io/🟪️stl/📥️import/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use crate::artifacts::gisterrain::io::import::deserializers::artifacts::stl::*;
                 }
             }
         }
-        #[path = "../../🗿️artifacts/🏔️gisterrain/⚙️engine/🦀️component.rs"]
-        pub mod engine;
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🗿️artifacts/🏔️gisterrain/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+        }
+    }
+    #[path = "."]
+    pub mod gismap {
+        #[path = "../../🗿️artifacts/🗺️gismap/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+        pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
+        pub use crate::artifacts::gismap::schema::mutations::GisMapMutation;
+        pub use crate::artifacts::gismap::schema::diff::GisMapDiff;
+        #[path = "."]
+        pub mod schema {
+            #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod snapshot {
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/📸️snapshot/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod diff {
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🔺️diff/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                pub mod binary;
+            }
+            #[path = "."]
+            pub mod mutations {
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                pub mod text;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                pub mod binary;
+                #[path = "."]
+                pub mod set_snapshot {
+                    #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                    pub mod mutation;
+                    #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                    pub mod diff;
+                    #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                    pub mod inverse;
+                }
+            }
+        }
+        pub mod op { pub use crate::artifacts::gismap::schema::mutations::text::*; }
+        pub mod dsl { pub use crate::artifacts::gismap::schema::snapshot::text::*; }
+        pub mod spr { pub use crate::artifacts::gismap::schema::mutations::binary::*; }
+        pub mod diff { pub use crate::artifacts::gismap::schema::diff::*; pub use crate::artifacts::gismap::schema::diff::text::*; pub mod schema { pub use crate::artifacts::gismap::schema::diff::*; } pub mod text { pub use crate::artifacts::gismap::schema::diff::text::*; } }
+        pub mod mutations { pub use crate::artifacts::gismap::schema::mutations::*; }
+        pub mod snapshot { pub mod schema { pub use crate::artifacts::gismap::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::gismap::schema::snapshot::binary::*; } }
+        #[path = "../../🗿️artifacts/🗺️gismap/🏗️builder/🦀️component.rs"]
+        pub mod builder;
+        #[path = "../../🗿️artifacts/🗺️gismap/🪓️decomposer/🦀️component.rs"]
+        pub mod decomposer;
+        #[path = "."]
+        pub mod io {
+            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod import {
+                #[path = "."]
+                pub mod deserializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dxf {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dxf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod export {
+                #[path = "."]
+                pub mod serializers {
+                    #[path = "."]
+                    pub mod artifacts {
+                        #[path = "."]
+                        pub mod dwg {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod dxf {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod json {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod pdf {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod png {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod svg {
+                            #[path = "../../🗿️artifacts/🗺️gismap/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::dwg::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::dwg::*;
+                }
+            }
+            #[path = "."]
+            pub mod dxf {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::dxf::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::dxf::*;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::json::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::json::*;
+                }
+            }
+            #[path = "."]
+            pub mod pdf {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::pdf::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::pdf::*;
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::png::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::png::*;
+                }
+            }
+            #[path = "."]
+            pub mod svg {
+                #[path = "."]
+                pub mod export {
+                    pub use crate::artifacts::gismap::io::export::serializers::artifacts::svg::*;
+                }
+                #[path = "."]
+                pub mod import {
+                    pub use crate::artifacts::gismap::io::import::deserializers::artifacts::svg::*;
+                }
+            }
+        }
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+        }
     }
 }
 //#endregion 🗿️Artifacts

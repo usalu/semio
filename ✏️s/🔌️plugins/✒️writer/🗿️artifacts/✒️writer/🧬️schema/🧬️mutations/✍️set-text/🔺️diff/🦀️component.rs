@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `SetText`.
-use crate::artifacts::writer::schema::diff::text::WriterDiff;
+use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::MutationDiff;
@@ -17,7 +17,10 @@ impl SetTextDiff {
     }
 
     pub fn into_writer_diff(self) -> WriterDiff {
-        WriterDiff { text: self.mutation.and_then(|m| match m { WriterMutation::SetText { text } => Some(text), _ => None }), document: None }
+        match self.mutation {
+            Some(WriterMutation::SetText { text }) => crate::artifacts::writer::schema::diff::text::diff_set_text(&text),
+            _ => WriterDiff::default(),
+        }
     }
 }
 

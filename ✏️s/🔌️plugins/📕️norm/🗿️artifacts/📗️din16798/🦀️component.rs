@@ -1,12 +1,16 @@
 //! 🌬️ DIN EN 16798 app — document entities (constitutional: general).
 
+
+pub use crate::artifacts::din16798::schema::snapshot::Din16798Snapshot;
+pub use crate::artifacts::din16798::schema::mutations::Din16798Mutation;
+pub use crate::artifacts::din16798::schema::diff::Din16798Diff;
+
 use crate::document::AnnexChoice;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::din16798::snapshot::schema::Din16798Snapshot;
 //#endregion 🔖️Types
 
 // `)` so the

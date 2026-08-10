@@ -1,7 +1,14 @@
 //! 📐️ FEM 2D artifact — document entities (constitutional: general).
 
+
+pub use crate::artifacts::fem2d::schema::snapshot::Fem2dSnapshot;
+pub use crate::artifacts::fem2d::schema::mutations::Fem2dMutation;
+pub use crate::artifacts::fem2d::schema::diff::Fem2dDiff;
+
 use crate::model::Dof;
 use serde::{Deserialize, Serialize};
+
+
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
@@ -212,7 +219,6 @@ impl Default for FemCamera {
 }
 
 /// 📸️ `Fem2dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
-pub use crate::artifacts::fem2d::snapshot::schema::Fem2dSnapshot;
 pub use crate::artifacts::fem2d::schema::Fem2dArtifact;
 
 // #endregion 🔖️Document
@@ -236,8 +242,8 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "computation.fem2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
 // #endregion 🔖️ArtifactKind

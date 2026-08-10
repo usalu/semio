@@ -1,0 +1,39 @@
+def patch_glue(cfg: dict):
+    emoji = cfg["emoji"]
+    mod = cfg["mod"]
+    glue = plugin_root(emoji) / "📦️packages/🦀️rust/📦️glue.rs"
+    art = art_path(emoji)
+    text = glue.read_text(encoding="utf-8")
+    start = text.find("//#region 🗿️Artifacts")
+    end = text.find("//#endregion 🗿️Artifacts")
+    region = build_glue_region(cfg, art)
+    glue.write_text(text[:start] + region + text[end:], encoding="utf-8")
+    cargo = plugin_root(emoji) / "📦️packages/🦀️rust/Cargo.toml"
+    c = cargo.read_text(encoding="utf-8")
+    if "semio-s-plugin-stdio" not in c:
+        c = c.replace(
+            "[dependencies]\n",
+            "[dependencies]\nsemio-s-plugin-stdio = { path = \"../../../🗄️stdio/📦️packages/🦀️rust\", package = \"semio-s-plugin-stdio\" }\n",
+            1,
+        )
+        cargo.write_text(c, encoding="utf-8")
+    ts_leaf = "🟦️component.ts"
+    ts_lines = [
+        f"/** {mod} facet WASM facades */",
+        f"export * as {mod}_schema from \"../../🗿️artifacts/{emoji}/🧬️schema/{ts_leaf}\";",
+        f"export * as {mod}_snapshot from \"../../🗿️artifacts/{emoji}/🧬️schema/📸️snapshot/{ts_leaf}\";",
+        f"export * as {mod}_snapshot_text from \"../../🗿️artifacts/{emoji}/🧬️schema/📸️snapshot/{TEXT}/{ts_leaf}\";",
+        f"export * as {mod}_snapshot_binary from \"../../🗿️artifacts/{emoji}/🧬️schema/📸️snapshot/{BIN}/{ts_leaf}\";",
+        f"export * as {mod}_diff from \"../../🗿️artifacts/{emoji}/🧬️schema/🔺️diff/{ts_leaf}\";",
+        f"export * as {mod}_diff_text from \"../../🗿️artifacts/{emoji}/🧬️schema/🔺️diff/{TEXT}/{ts_leaf}\";",
+        f"export * as {mod}_diff_binary from \"../../🗿️artifacts/{emoji}/🧬️schema/🔺️diff/{BIN}/{ts_leaf}\";",
+        f"export * as {mod}_mutations from \"../../🗿️artifacts/{emoji}/🧬️schema/🧬️mutations/{ts_leaf}\";",
+        f"export * as {mod}_mutations_text from \"../../🗿️artifacts/{emoji}/🧬️schema/🧬️mutations/{TEXT}/{ts_leaf}\";",
+        f"export * as {mod}_mutations_binary from \"../../🗿️artifacts/{emoji}/🧬️schema/🧬️mutations/{BIN}/{ts_leaf}\";",
+        f"export * as {mod}_io from \"../../🗿️artifacts/{emoji}/🚪️io/{ts_leaf}\";",
+        f"export * as {mod}_builder from \"../../🗿️artifacts/{emoji}/{BUILDER}/{ts_leaf}\";",
+        f"export * as {mod}_decomposer from \"../../🗿️artifacts/{emoji}/{DECOMPOSER}/{ts_leaf}\";",
+    ]
+    (plugin_root(emoji) / "📦️packages/🟦️typescript/📦️index.ts").write_text("\n".join(ts_lines) + "\n", encoding="utf-8")
+
+

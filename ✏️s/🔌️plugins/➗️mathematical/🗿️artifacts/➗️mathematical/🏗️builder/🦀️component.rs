@@ -21,7 +21,7 @@ impl ArtifactBuilder for MathematicalBuilder {
         Ok(Self::from_snapshot(<MathematicalSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_mathematical_mutation(&mut self.snapshot, &mutation);
+        crate::artifacts::mathematical::schema::mutations::apply_mathematical_mutation(&mut self.snapshot, &mutation);
         self
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

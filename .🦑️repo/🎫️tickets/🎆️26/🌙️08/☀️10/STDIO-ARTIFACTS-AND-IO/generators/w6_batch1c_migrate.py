@@ -86,16 +86,31 @@ def pascal(slug: str) -> str:
 
 
 def sniff_types(art: Path, rust_mod: str) -> tuple[str, str, str, str]:
-    root = art / "🦀️component.rs"
-    text = root.read_text(encoding="utf-8") if root.exists() else ""
-    m = re.search(r"pub struct (\w+Snapshot)", text)
-    snap = m.group(1) if m else pascal(rust_mod) + "Snapshot"
-    m = re.search(r"pub struct (\w+Mutation)", text)
-    mut = m.group(1) if m else pascal(rust_mod) + "Mutation"
-    m = re.search(r"pub struct (\w+Diff)", text)
-    diff = m.group(1) if m else pascal(rust_mod) + "Diff"
-    m = re.search(r"pub const (\w+_DOCUMENT_SCHEMA)", text)
-    schema = m.group(1) if m else f"{rust_mod.upper()}_DOCUMENT_SCHEMA"
+    parts = []
+    for rel in [
+        "🧬️schema/📸️snapshot/🦀️component.rs",
+        f"🧬️schema/📸️snapshot/{TEXT}/🦀️component.rs",
+        "🧬️schema/🧬️mutations/🦀️component.rs",
+        "🧬️schema/🔺️diff/🦀️component.rs",
+        f"🧬️schema/🔺️diff/{TEXT}/🦀️component.rs",
+        "🦀️component.rs",
+    ]:
+        p = art / rel
+        if p.exists():
+            parts.append(p.read_text(encoding="utf-8", errors="ignore"))
+    text = "\n".join(parts)
+
+    def grab(patterns, default):
+        for pat in patterns:
+            m = re.search(pat, text)
+            if m:
+                return m.group(1)
+        return default
+
+    snap = grab([r"pub struct (\w+Snapshot)", r"pub use [^;]*::(\w+Snapshot)"], pascal(rust_mod) + "Snapshot")
+    mut = grab([r"pub (?:struct|enum) (\w+Mutation)", r"pub use [^;]*::(\w+Mutation)"], snap.replace("Snapshot", "Mutation"))
+    diff = grab([r"pub (?:struct|enum) (\w+Diff)", r"pub use [^;]*::(\w+Diff)"], snap.replace("Snapshot", "Diff"))
+    schema = grab([r"pub const (\w+_DOCUMENT_SCHEMA)"], f"{rust_mod.upper()}_DOCUMENT_SCHEMA")
     return snap, mut, diff, schema
 
 
@@ -246,7 +261,8 @@ pub fn deserialize(from: &CsvSnapshot) -> Result<{snap}, store::TextError> {{
 }}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
-    deserialize(&<CsvSnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    <{snap} as store::DocumentPack>::decode_pack(bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }}
 """
     if slug == "md":
@@ -262,7 +278,9 @@ pub fn deserialize(from: &MdSnapshot) -> Result<{snap}, store::TextError> {{
 }}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<{snap}, store::TextError> {{
-    deserialize(&<MdSnapshot as store::DocumentPack>::decode_pack(bytes)?)
+    let md = <MdSnapshot as store::DocumentPack>::decode_pack(bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    deserialize(&md)
 }}
 """
     if slug in TEXT_FORMATS:
@@ -342,7 +360,7 @@ pub fn serialize(snapshot: &{snap}) -> Result<CsvSnapshot, store::TextError> {{
 }}
 
 pub fn serialize_bytes(snapshot: &{snap}) -> Result<Vec<u8>, store::TextError> {{
-    <CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?)
+    Ok(<CsvSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }}
 """
     if slug == "md":
@@ -360,7 +378,7 @@ pub fn serialize(snapshot: &{snap}) -> Result<MdSnapshot, store::TextError> {{
 }}
 
 pub fn serialize_bytes(snapshot: &{snap}) -> Result<Vec<u8>, store::TextError> {{
-    <MdSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?)
+    Ok(<MdSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }}
 """
     return f"""//! {rust_mod} -> {slug}
@@ -518,7 +536,7 @@ def glue_artifact_block(
         L("                }")
     L("            }")
     L("        }")
-    L(f'        pub mod op {{ pub use crate::artifacts::{rust_mod}::schema::mutations::text::*; pub use crate::artifacts::{rust_mod}::schema::mutations::{pascal(rust_mod)}Mutation; }}')
+    L(f'        pub mod op {{ pub use crate::artifacts::{rust_mod}::schema::mutations::text::*; }}')
     L(f'        pub mod dsl {{ pub use crate::artifacts::{rust_mod}::schema::snapshot::text::*; }}')
     L(f'        pub mod spr {{ pub use crate::artifacts::{rust_mod}::schema::mutations::binary::*; }}')
     L(f'        pub mod diff {{ pub use crate::artifacts::{rust_mod}::schema::diff::*; pub use crate::artifacts::{rust_mod}::schema::diff::text::*; pub mod schema {{ pub use crate::artifacts::{rust_mod}::schema::diff::*; }} pub mod text {{ pub use crate::artifacts::{rust_mod}::schema::diff::text::*; }} }}')

@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `SetSnapshot`.
-use crate::artifacts::writer::schema::diff::text::WriterDiff;
+use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::MutationDiff;

@@ -1,11 +1,17 @@
 //! 📏️ Procedural2d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
+
+pub use crate::artifacts::procedural2d::schema::snapshot::Procedural2dSnapshot;
+pub use crate::artifacts::procedural2d::schema::mutations::Procedural2dMutation;
+pub use crate::artifacts::procedural2d::schema::diff::Procedural2dDiff;
+
 use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
+
+
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
 
-pub use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
 
 //#region 🔖️Helpers
 /// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
@@ -37,8 +43,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
         schema: "procedural.2d".into(),
         export_formats: vec![],
-        import_formats: vec![]        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
 //#endregion 🔖️ArtifactKind

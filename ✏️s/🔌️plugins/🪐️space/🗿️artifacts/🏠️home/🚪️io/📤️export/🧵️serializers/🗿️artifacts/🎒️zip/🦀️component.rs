@@ -1,17 +1,15 @@
 //! home -> zip
-use crate::artifacts::home::HomeSnapshot;
+use crate::artifacts::home::SHomeSnapshot;
 use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &HomeSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let bytes = <HomeSnapshot as store::DocumentPack>::encode_pack(snapshot)
-        .or_else(|_| Ok(<HomeSnapshot as store::DocumentDsl>::print_dsl(snapshot).into_bytes()))?;
-    semio_s_plugin_stdio::artifacts::zip::engine::decode_zip(&bytes)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize(snapshot: &SHomeSnapshot) -> Result<ZipSnapshot, store::TextError> {
+    let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("home->zip: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
-pub fn serialize_bytes(snapshot: &HomeSnapshot) -> Result<Vec<u8>, store::TextError> {
-    semio_s_plugin_stdio::artifacts::zip::engine::encode_zip(&serialize(snapshot)?)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {
+    Ok(<ZipSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }

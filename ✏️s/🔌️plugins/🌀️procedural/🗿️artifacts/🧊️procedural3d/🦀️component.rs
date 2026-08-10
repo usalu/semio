@@ -1,11 +1,17 @@
 //! 📐️ Procedural3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
+
+pub use crate::artifacts::procedural3d::schema::snapshot::Procedural3dSnapshot;
+pub use crate::artifacts::procedural3d::schema::mutations::Procedural3dMutation;
+pub use crate::artifacts::procedural3d::schema::diff::Procedural3dDiff;
+
 use flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, MediaFormat};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+
+
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
-pub use crate::artifacts::procedural3d::snapshot::schema::Procedural3dSnapshot;
 
 //#region 🔖️Helpers
 /// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
@@ -36,9 +42,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
         schema: "procedural.3d".into(),
-        export_formats: vec![MediaFormat::Obj, MediaFormat::Glb, MediaFormat::Stl],
-        import_formats: vec![MediaFormat::Obj, MediaFormat::Glb, MediaFormat::Stl]        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        import_stdio_kinds: vec!["stdio.dwg", "stdio.glb", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -1,6 +1,6 @@
 //! 🔺️ Writer artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::writer::schema::diff::text::schema::{
+use crate::artifacts::writer::schema::diff::{
     WriterDiff, WriterStringList, WriterTextDelta, WriterTextRangeEdit,
 };
 use crate::artifacts::writer::schema::WriterArtifact;

@@ -1,5 +1,10 @@
 //! En1991 — document entities (constitutional: general).
 
+
+pub use crate::artifacts::en1991::schema::snapshot::En1991Snapshot;
+pub use crate::artifacts::en1991::schema::mutations::En1991Mutation;
+pub use crate::artifacts::en1991::schema::diff::En1991Diff;
+
 use crate::document::AnnexChoice;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +22,6 @@ pub mod part_1_2 {
 }
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::en1991::snapshot::schema::En1991Snapshot;
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

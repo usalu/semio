@@ -1,43 +1,21 @@
-//! 🚪️ ◻2d IO facet — declared MediaFormat table + OS handler registration.
-
-use semio_framework_plugin::{ArtifactIo, IoFormatSpec, MediaFormat};
-
-//#region 🔖️Formats
-pub fn format_specs() -> &'static [IoFormatSpec] {
-    &[
-        IoFormatSpec { format: MediaFormat::Glb, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Json, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Obj, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Png, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Stl, import: true, export: true },
-        IoFormatSpec { format: MediaFormat::Zip, import: true, export: true }
-    ]
-}
-//#endregion 🔖️Formats
-
-//#region 🔖️ArtifactIo
-/// 🚪️ block2d artifact IO registration surface.
-pub struct Io;
-
-impl ArtifactIo for Io {
-    fn formats() -> &'static [IoFormatSpec] { format_specs() }
-    fn register() {
-        super::glb::export::register();
-        super::glb::import::register();
-        super::json::export::register();
-        super::json::import::register();
-        super::obj::export::register();
-        super::obj::import::register();
-        super::png::export::register();
-        super::png::import::register();
-        super::stl::export::register();
-        super::stl::import::register();
-        super::zip::export::register();
-        super::zip::import::register();
-    }
-}
-
+//! block2d IO stdio matrix
 pub fn register() {
-    <Io as ArtifactIo>::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::glb::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::json::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::obj::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::png::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::stl::register();
+    crate::artifacts::block2d::io::import::deserializers::artifacts::zip::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::glb::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::json::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::obj::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::png::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::stl::register();
+    crate::artifacts::block2d::io::export::serializers::artifacts::zip::register();
 }
-//#endregion 🔖️ArtifactIo
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"]
+}

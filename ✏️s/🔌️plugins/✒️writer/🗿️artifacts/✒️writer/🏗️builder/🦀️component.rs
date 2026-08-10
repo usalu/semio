@@ -21,7 +21,7 @@ impl ArtifactBuilder for WriterBuilder {
         Ok(Self::from_snapshot(<WriterSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_writer_mutation(&mut self.snapshot, &mutation);
+        crate::artifacts::writer::schema::mutations::apply_writer_mutation(&mut self.snapshot, &mutation);
         self
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

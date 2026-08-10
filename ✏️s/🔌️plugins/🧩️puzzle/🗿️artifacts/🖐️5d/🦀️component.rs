@@ -4,6 +4,11 @@
 //! the 3d artifact's own precompute-session error, and the `artifact_kind()` spec the play app's
 //! manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
 
+
+pub use crate::artifacts::puzzle5d::schema::snapshot::Puzzle5dSnapshot;
+pub use crate::artifacts::puzzle5d::schema::mutations::Puzzle5dMutation;
+pub use crate::artifacts::puzzle5d::schema::diff::Puzzle5dDiff;
+
 use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
@@ -14,6 +19,8 @@ pub enum Puzzle5dError {
     Puzzle3d(#[from] crate::artifacts::puzzle3d::Puzzle3dError),
 }
 //#endregion ⚠️ Errors
+
+
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
@@ -503,7 +510,6 @@ pub type Puzzle5dCatalogPart = Puzzle5dCatalogPartKind;
 pub type Puzzle5dCatalogGrip = Puzzle5dCatalogGripKind;
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::puzzle5d::snapshot::schema::Puzzle5dSnapshot;
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ArtifactKind
@@ -521,8 +527,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.5d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

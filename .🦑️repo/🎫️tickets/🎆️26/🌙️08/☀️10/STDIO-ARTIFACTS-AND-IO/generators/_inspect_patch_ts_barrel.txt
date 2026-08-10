@@ -1,0 +1,22 @@
+def patch_ts_barrel(plugin_path: Path, artifact: str, rust_mod: str) -> None:
+    barrel = plugin_path / "📦️packages/🟦️typescript/📦️index.ts"
+    if not barrel.exists():
+        return
+    ts = barrel.read_text(encoding="utf-8")
+    prefix = f"{rust_mod}_"
+    lines = [
+        ln
+        for ln in ts.splitlines()
+        if not ln.strip().startswith(f"export * as {prefix}")
+        and f"/🗿️artifacts/{artifact}/" not in ln
+    ]
+    a = f"../../🗿️artifacts/{artifact}"
+    add = [
+        f'export * as {prefix}schema from "{a}/🧬️schema/🟦️component.ts";',
+        f'export * as {prefix}builder from "{a}/{BUILDER}/🟦️component.ts";',
+        f'export * as {prefix}decomposer from "{a}/{DECOMPOSER}/🟦️component.ts";',
+        f'export * as {prefix}io from "{a}/🚪️io/🟦️component.ts";',
+    ]
+    barrel.write_text("\n".join(lines + add) + "\n", encoding="utf-8")
+
+

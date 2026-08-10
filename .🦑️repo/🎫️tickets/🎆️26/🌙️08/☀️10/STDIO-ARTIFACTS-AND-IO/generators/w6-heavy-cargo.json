@@ -1,0 +1,34 @@
+{
+  "semio-s-plugin-procedural": {
+    "ok": true,
+    "last": "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7`"
+  },
+  "semio-s-plugin-gis": {
+    "ok": true,
+    "last": "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7`"
+  },
+  "semio-s-plugin-fem": {
+    "ok": true,
+    "last": "    Finished `dev` profile [unoptimized] target(s) in 0.32s"
+  },
+  "semio-s-plugin-norm": {
+    "ok": true,
+    "last": "    Finished `dev` profile [unoptimized] target(s) in 0.24s"
+  },
+  "semio-s-plugin-energy": {
+    "ok": true,
+    "last": "    Finished `dev` profile [unoptimized] target(s) in 0.22s"
+  },
+  "semio-s-plugin-trinity": {
+    "ok": true,
+    "last": "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7`"
+  },
+  "semio-s-plugin-puzzle": {
+    "ok": true,
+    "last": "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7`"
+  },
+  "semio-s-plugin-block": {
+    "ok": true,
+    "last": "    Finished `dev` profile [unoptimized] target(s) in 0.22s"
+  }
+}

@@ -1,6 +1,6 @@
 //! 🔺️ Mathematical artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::mathematical::schema::diff::text::schema::MathematicalDiff;
+use crate::artifacts::mathematical::schema::diff::MathematicalDiff;
 use crate::artifacts::mathematical::schema::MathematicalArtifact;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot};
 use protocol::MutationDiff;

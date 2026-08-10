@@ -13,6 +13,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+use crate::artifacts::curate::schema::diff::*;
+
 
 //#region 🔖️Apply
 pub fn apply_stock_delta(stock: &[ObjectKind], delta: &CurateStockDelta) -> Vec<ObjectKind> {

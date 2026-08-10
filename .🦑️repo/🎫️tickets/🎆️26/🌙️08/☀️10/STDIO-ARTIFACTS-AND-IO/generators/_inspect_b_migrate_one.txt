@@ -1,0 +1,17 @@
+def migrate_one(emoji: str):
+    cfg = CFG[emoji]
+    art = art_path(emoji)
+    row = owner_row(emoji)
+    formats = row["stdio_artifacts"]
+    print(f"migrate {emoji}")
+    absorb(art)
+    scaffold_builder(cfg, art)
+    scaffold_decomposer(cfg, art)
+    patch_root_reexports(cfg, art)
+    write_codecs(cfg, art, formats)
+    write_io_register(cfg, art, formats)
+    patch_glue(cfg)
+    errs = verify_old(art)
+    print(f"  old facets: {errs}")
+
+

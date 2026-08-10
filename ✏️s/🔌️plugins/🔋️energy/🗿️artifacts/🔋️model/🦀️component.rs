@@ -1,13 +1,17 @@
 //! 🎪 Energy model artifact — headless BEM document surface over `crate::Model`.
 
+
+pub use crate::artifacts::model::schema::snapshot::EnergyModelSnapshot;
+pub use crate::artifacts::model::schema::mutations::EnergyModelMutation;
+pub use crate::artifacts::model::schema::diff::EnergyModelDiff;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::model::snapshot::schema::EnergyModelSnapshot;
 pub use crate::artifacts::model::schema::EnergyModelArtifact;
-pub use crate::artifacts::model::diff::EnergyModelDiff;
-pub use crate::artifacts::model::mutations::EnergyModelMutation;
 
 /// @emoji 🔖️ Document schema / DSL envelope id.
+
+
 pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
 /// @emoji 🧬️ Artifact schema descriptor id.
@@ -27,8 +31,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -1,8 +1,0 @@
-dialect grammar
-grammar energy.model.diff
-extension energy
-start diff
-
-artifact-mark = "energy.model-diff"
-diff = artifact-mark field*
-field = "schema" "=" TEXT | "modelJson" "=" TEXT | "resultsJson" "=" TEXT

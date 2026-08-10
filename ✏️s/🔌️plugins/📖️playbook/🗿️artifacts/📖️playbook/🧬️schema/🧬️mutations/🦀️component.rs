@@ -5,7 +5,7 @@ pub use crate::playbook::{
     PlaybookMutation,
 };
 
-use crate::artifacts::playbook::diff::playbook_diff_from_mutation;
+use crate::artifacts::playbook::schema::diff::text::playbook_diff_from_mutation;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 use protocol::{Mutation, MutationDiff};
 

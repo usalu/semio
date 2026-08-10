@@ -2,9 +2,16 @@
 //! exactly one `ObjectKind`: its identity, representations (meshes at LOD/tags — the semio_compose_rs
 //! `type` app's successor), and the `VortexKind` templates placed on its rim.
 
+
+pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
+pub use crate::artifacts::block3d::schema::mutations::Block3dMutation;
+pub use crate::artifacts::block3d::schema::diff::Block3dDiff;
+
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
+
+
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 
@@ -88,7 +95,6 @@ pub struct Block3dBrushPreview {
 //#endregion 🔖️WindowView
 
 //#region 🔖️Snapshot
-pub use crate::artifacts::block3d::snapshot::schema::Block3dSnapshot;
 //#endregion 🔖️Snapshot
 
 // #endregion 🔖️Document
@@ -108,8 +114,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+            export_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.glb", "stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind

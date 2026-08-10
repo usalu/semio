@@ -1,5 +1,10 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
+
+pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
+pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
+pub use crate::artifacts::iso16757::schema::diff::Iso16757Diff;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use serde::{Deserialize, Serialize};
@@ -61,7 +66,9 @@ pub struct DimensionSignature {
 }
 
 impl DimensionSignature {
-    pub const DIMENSIONLESS: Self = Self { length: 0, mass: 0, time: 0, temperature: 0 };
+
+
+pub const DIMENSIONLESS: Self = Self { length: 0, mass: 0, time: 0, temperature: 0 };
     pub const LENGTH: Self = Self { length: 1, mass: 0, time: 0, temperature: 0 };
     pub const LENGTH_3: Self = Self { length: 3, mass: 0, time: 0, temperature: 0 };
 
@@ -795,7 +802,6 @@ pub mod part_5 {
 }
 // #endregion Part5
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::iso16757::snapshot::schema::Iso16757Snapshot;
 
 
 // #region Session

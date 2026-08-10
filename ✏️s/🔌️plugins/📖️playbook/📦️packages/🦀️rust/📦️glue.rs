@@ -157,10 +157,10 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::playbook::schema::mutations::{apply_playbook_mutation, PlaybookMutation}; }
+        pub mod op { pub use crate::artifacts::playbook::schema::mutations::text::*; pub use crate::artifacts::playbook::schema::mutations::{apply_playbook_mutation, PlaybookMutation}; }
         pub mod dsl { pub use crate::artifacts::playbook::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::playbook::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::playbook::schema::diff::*; pub mod schema { pub use crate::artifacts::playbook::schema::diff::*; } pub mod text { pub use crate::artifacts::playbook::schema::diff::text::*; } }
+        pub mod diff { pub use crate::artifacts::playbook::schema::diff::text::*; pub use crate::artifacts::playbook::schema::diff::*; pub mod schema { pub use crate::artifacts::playbook::schema::diff::*; } pub mod text { pub use crate::artifacts::playbook::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::playbook::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::playbook::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::playbook::schema::snapshot::binary::*; } }
         #[path = "../../🗿️artifacts/📖️playbook/🏗️builder/🦀️component.rs"]

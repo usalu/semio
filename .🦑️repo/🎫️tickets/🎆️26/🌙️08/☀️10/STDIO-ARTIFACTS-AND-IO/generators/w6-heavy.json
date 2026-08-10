@@ -1,0 +1,451 @@
+[
+  {
+    "plugin": "🌀️procedural",
+    "artifact": "🌀️procedural2d",
+    "rust_mod": "procedural2d",
+    "crate": "semio-s-plugin-procedural",
+    "stdio": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+    "extras": []
+  },
+  {
+    "plugin": "🌀️procedural",
+    "artifact": "🧊️procedural3d",
+    "rust_mod": "procedural3d",
+    "crate": "semio-s-plugin-procedural",
+    "stdio": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+    "extras": []
+  },
+  {
+    "plugin": "🌍️gis",
+    "artifact": "🏔️gisterrain",
+    "rust_mod": "gisterrain",
+    "crate": "semio-s-plugin-gis",
+    "stdio": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+    "extras": []
+  },
+  {
+    "plugin": "🌍️gis",
+    "artifact": "🗺️gismap",
+    "rust_mod": "gismap",
+    "crate": "semio-s-plugin-gis",
+    "stdio": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+    "extras": []
+  },
+  {
+    "plugin": "🏗️fem",
+    "artifact": "◻2d",
+    "rust_mod": "fem2d",
+    "crate": "semio-s-plugin-fem",
+    "stdio": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
+    "extras": []
+  },
+  {
+    "plugin": "🏗️fem",
+    "artifact": "🧊️3d",
+    "rust_mod": "fem3d",
+    "crate": "semio-s-plugin-fem",
+    "stdio": [
+      "csv",
+      "json",
+      "md"
+    ],
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📓️iso16757",
+    "rust_mod": "iso16757",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📔️vdi3805",
+    "rust_mod": "vdi3805",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📕️din4108",
+    "rust_mod": "din4108",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📗️din16798",
+    "rust_mod": "din16798",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1990",
+    "rust_mod": "en1990",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1991",
+    "rust_mod": "en1991",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1992",
+    "rust_mod": "en1992",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1993",
+    "rust_mod": "en1993",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1994",
+    "rust_mod": "en1994",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1995",
+    "rust_mod": "en1995",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1996",
+    "rust_mod": "en1996",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1997",
+    "rust_mod": "en1997",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1998",
+    "rust_mod": "en1998",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📘️en1999",
+    "rust_mod": "en1999",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+    "extras": []
+  },
+  {
+    "plugin": "📕️norm",
+    "artifact": "📙️din18599",
+    "rust_mod": "din18599",
+    "crate": "semio-s-plugin-norm",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+    "extras": []
+  },
+  {
+    "plugin": "🔋️energy",
+    "artifact": "🔋️model",
+    "rust_mod": "model",
+    "crate": "semio-s-plugin-energy",
+    "stdio": [
+      "csv",
+      "json",
+      "xlsx",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+    "extras": []
+  },
+  {
+    "plugin": "🔱️trinity",
+    "artifact": "♻️rewrite",
+    "rust_mod": "rewrite",
+    "crate": "semio-s-plugin-trinity",
+    "stdio": [
+      "docx",
+      "json",
+      "md",
+      "pdf",
+      "txt"
+    ],
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+    "extras": []
+  },
+  {
+    "plugin": "🔱️trinity",
+    "artifact": "🔌️jack",
+    "rust_mod": "jack",
+    "crate": "semio-s-plugin-trinity",
+    "stdio": [
+      "csv",
+      "json",
+      "md",
+      "png",
+      "svg"
+    ],
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+    "extras": []
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "◻2d",
+    "rust_mod": "puzzle2d",
+    "crate": "semio-s-plugin-puzzle",
+    "stdio": [
+      "dwg",
+      "dxf",
+      "json",
+      "pdf",
+      "png",
+      "svg"
+    ],
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+    "extras": []
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "🖐️5d",
+    "rust_mod": "puzzle5d",
+    "crate": "semio-s-plugin-puzzle",
+    "stdio": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+    "extras": []
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "artifact": "🧊️3d",
+    "rust_mod": "puzzle3d",
+    "crate": "semio-s-plugin-puzzle",
+    "stdio": [
+      "dwg",
+      "glb",
+      "gltf",
+      "json",
+      "las",
+      "obj",
+      "ply",
+      "png",
+      "stl"
+    ],
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+    "extras": []
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "◻2d",
+    "rust_mod": "block2d",
+    "crate": "semio-s-plugin-block",
+    "stdio": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+    "extras": []
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "🖐️5d",
+    "rust_mod": "block5d",
+    "crate": "semio-s-plugin-block",
+    "stdio": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+    "extras": []
+  },
+  {
+    "plugin": "🧱️block",
+    "artifact": "🧊️3d",
+    "rust_mod": "block3d",
+    "crate": "semio-s-plugin-block",
+    "stdio": [
+      "glb",
+      "json",
+      "obj",
+      "png",
+      "stl",
+      "zip"
+    ],
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+    "extras": []
+  }
+]

@@ -28,6 +28,15 @@ pub enum LowpolyCoreError {
 }
 //#endregion ⚠️ Errors
 
+pub use crate::artifacts::lowpoly::engine::paint::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
+pub use crate::artifacts::lowpoly::engine::media::{
+    lowpoly_document_from_mesh,
+    lowpoly_mesh_from_document,
+    mesh_data_from_transfer,
+    mesh_document_from_mesh,
+    mesh_from_mesh_document,
+};
+
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `crate::artifacts::lowpoly::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow

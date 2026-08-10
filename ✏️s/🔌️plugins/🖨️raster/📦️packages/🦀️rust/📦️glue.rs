@@ -111,10 +111,10 @@ pub mod artifacts {
                 }
             }
         }
-        pub mod op { pub use crate::artifacts::raster::schema::mutations::{apply_raster_mutation, RasterMutation}; }
+        pub mod op { pub use crate::artifacts::raster::schema::mutations::text::*; pub use crate::artifacts::raster::schema::mutations::{apply_raster_mutation, RasterMutation}; }
         pub mod dsl { pub use crate::artifacts::raster::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::raster::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::raster::schema::diff::*; pub mod schema { pub use crate::artifacts::raster::schema::diff::*; } pub mod text { pub use crate::artifacts::raster::schema::diff::text::*; } }
+        pub mod diff { pub use crate::artifacts::raster::schema::diff::text::*; pub use crate::artifacts::raster::schema::diff::*; pub mod schema { pub use crate::artifacts::raster::schema::diff::*; } pub mod text { pub use crate::artifacts::raster::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::raster::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::raster::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::raster::schema::snapshot::binary::*; } }
         #[path = "../../🗿️artifacts/🖨️raster/🏗️builder/🦀️component.rs"]

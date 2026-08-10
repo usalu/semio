@@ -376,27 +376,41 @@ Artifacts must be versionable independantely.
 ---
 
 The current import export architecture is extremely adhoc.
-Make sure that every single artifact can be
+Make sure that every single artifact can be implemented independantly for different standards and subsets.
 
 ```
 s
   plugins
     stdio
       artifacts
-        <artifact> # e.g. gltf, pdf, png, etc
-          schema
-            <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc,
-              <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
-                component.rs
-                component.ts
+        <artifact> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+          <standard> # e.g. 1.6 for pdf, 2x3 for ifc, AP225 for STEP, etc,
+            <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+              snapshot
                 …
-          io
-            import
-              deserializers
-                artifacts
-                  <artifact> # e.g. json for gltf, binary for glb, etc
-                    <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
-                      <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+              diff
+                …
+              mutations
+                …
+              builder # only for creating new artifacts
+                …
+              analyzer # read-only for existing artifacts - former decomposer
+                …
+              composer # combining builder and analyzer
+                …
+              io
+                import
+                  deserializers
+                    artifacts
+                      <artifact> # e.g. json for gltf, binary for glb, etc
+                        <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                          <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
                         component.rs
                         component.ts
                         …
@@ -409,18 +423,18 @@ s
                   component.rs
                   component.ts
                   …
-                component.rs
-                component.ts
-                …
-              component.rs
-              component.ts
-              …
-            export
-              serializers
-                artifacts
-                  <artifact> # e.g. json for gltf, binary for glb, etc
-                    <standard> e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
-                      <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                export
+                  serializers
+                    artifacts
+                      <artifact> # e.g. json for gltf, binary for glb, etc
+                        <standard> # e.g. 1.0 for pdf, 2x3 for ifc, AP225 for STEP, etc
+                          <subset> # e.g. a or x for pdf, CV 2.0 or Structural Analysis View for ifc, Conformance Class 6 for STEP, etc
+                            component.rs
+                            component.ts
+                            …
+                          component.rs
+                          component.ts
+                          …
                         component.rs
                         component.ts
                         …
@@ -433,12 +447,12 @@ s
                   component.rs
                   component.ts
                   …
-                component.rs
-                component.ts
-                …
               component.rs
               component.ts
               …
+            component.rs
+            component.ts
+            …
           component.rs
           component.ts
           …

@@ -1,0 +1,20 @@
+def verify_tree(art: Path) -> list[str]:
+    errs = []
+    for rel in [
+        BUILDER,
+        DECOMPOSER,
+        f"🧬️schema/📸️snapshot/{TEXT}",
+        f"🧬️schema/📸️snapshot/{BINARY}",
+        f"🚪️io/📥️import/{DESER}/🗿️artifacts",
+        f"🚪️io/📤️export/{SER}/🗿️artifacts",
+    ]:
+        if not (art / rel).exists():
+            errs.append(f"missing {rel}")
+    for old in ["🗣️dsl", "📸️snapshot", "🔺️diff", "🔧️op", "📡️spr"]:
+        if (art / old).exists():
+            errs.append(f"old facet {old}")
+    if (art / "🧬️mutations").exists():
+        errs.append("root mutations")
+    return errs
+
+

@@ -1,17 +1,16 @@
 //! remodel -> stl
-use crate::artifacts::remodel::WatertightReportSnapshot;
+use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
 use semio_s_plugin_stdio::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &WatertightReportSnapshot) -> Result<StlSnapshot, store::TextError> {
-    let bytes = <WatertightReportSnapshot as store::DocumentPack>::encode_pack(snapshot)
-        .or_else(|_| Ok(<WatertightReportSnapshot as store::DocumentDsl>::print_dsl(snapshot).into_bytes()))?;
-    semio_s_plugin_stdio::artifacts::stl::engine::decode_stl(&bytes)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize(snapshot: &RemodelSnapshot) -> Result<StlSnapshot, store::TextError> {
+    let _ = STDIO_STL_DOCUMENT_SCHEMA;
+    let bytes = <RemodelSnapshot as store::DocumentPack>::encode_pack(snapshot);
+    <StlSnapshot as store::DocumentPack>::decode_pack(&bytes)
+        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
-pub fn serialize_bytes(snapshot: &WatertightReportSnapshot) -> Result<Vec<u8>, store::TextError> {
-    semio_s_plugin_stdio::artifacts::stl::engine::encode_stl(&serialize(snapshot)?)
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &RemodelSnapshot) -> Result<Vec<u8>, store::TextError> {
+    Ok(<StlSnapshot as store::DocumentPack>::encode_pack(&serialize(snapshot)?))
 }

@@ -1,5 +1,10 @@
 //! En1992 — document entities (constitutional: general).
 
+
+pub use crate::artifacts::en1992::schema::snapshot::En1992Snapshot;
+pub use crate::artifacts::en1992::schema::mutations::En1992Mutation;
+pub use crate::artifacts::en1992::schema::diff::En1992Diff;
+
 use crate::document::AnnexChoice;
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +34,6 @@ pub mod part_3 {
 }
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::en1992::snapshot::schema::En1992Snapshot;
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

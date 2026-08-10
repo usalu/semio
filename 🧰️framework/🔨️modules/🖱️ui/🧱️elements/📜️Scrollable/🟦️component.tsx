@@ -16,8 +16,8 @@ import { useWindowContentDeadLineScroll, windowContentDeadLineScrollClass } from
 // #endregion 🔌️Adapters
 
 // #region 🎮️Scrollable
-/** @emoji 📜️ Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
-const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
+/** @emoji 📜️ Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops); {@link viewportClassName} lets directional hosts anchor the natural-height content stack without creating a second scroller. */
+const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both"; viewportClassName?: string }>(({ className, children, orientation = "vertical", viewportClassName, ...props }, ref) => {
   const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const setScrollerRef = reactHostPort.useCallback(
     (node: HTMLDivElement | null) => {
@@ -40,7 +40,7 @@ const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentProps
       )}
       {...props}
     >
-      <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0 w-full">
+      <div data-slot="scroll-area-viewport" className={cn("min-h-0 min-w-0 w-full", viewportClassName)}>
         {children}
       </div>
     </div>

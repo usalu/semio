@@ -21,7 +21,7 @@ impl ArtifactBuilder for DagBuilder {
         Ok(Self::from_snapshot(<DagSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_dag_mutation(&mut self.snapshot, &mutation);
+        crate::artifacts::dag::schema::mutations::apply_dag_mutation(&mut self.snapshot, &mutation);
         self
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

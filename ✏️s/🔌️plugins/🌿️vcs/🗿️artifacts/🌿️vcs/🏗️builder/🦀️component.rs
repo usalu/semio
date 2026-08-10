@@ -21,7 +21,7 @@ impl ArtifactBuilder for VcsBuilder {
         Ok(Self::from_snapshot(<VcsSnapshot as store::DocumentPack>::decode_pack(bytes)?))
     }
     fn mutate(mut self, mutation: Self::Mutation) -> Self {
-        apply_vcs_demo_mutation(&mut self.snapshot, &mutation);
+        crate::artifacts::vcs::schema::mutations::apply_vcs_demo_mutation(&mut self.snapshot, &mutation);
         self
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

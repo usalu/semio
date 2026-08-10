@@ -1,5 +1,10 @@
 //! 🧱️ EN 1996 app — document entities (constitutional: general).
 
+
+pub use crate::artifacts::en1996::schema::snapshot::En1996Snapshot;
+pub use crate::artifacts::en1996::schema::mutations::En1996Mutation;
+pub use crate::artifacts::en1996::schema::diff::En1996Diff;
+
 use crate::document::{AnnexChoice, DesignSituation};
 use serde::{Deserialize, Serialize};
 
@@ -67,7 +72,6 @@ pub mod part_2 {
 }
 
 
-pub use crate::artifacts::en1996::snapshot::schema::En1996Snapshot;
 
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
