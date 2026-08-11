@@ -1,5 +1,6 @@
 //! 🧬️ CsvArtifact schema — full artifact state.
 
+use crate::artifacts::csv::schema::snapshot::CsvRecord;
 use crate::artifacts::csv::CsvSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -17,10 +18,7 @@ pub struct CsvArtifact {
     pub has_header: bool,
     #[state(persistent)]
     #[serde(default)]
-    pub headers: Vec<String>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub rows: Vec<Vec<String>>,
+    pub records: Vec<CsvRecord>,
 }
 //#endregion 🔖️Artifact
 
@@ -37,8 +35,7 @@ impl CsvArtifact {
         CsvSnapshot {
             schema: self.schema.clone(),
             has_header: self.has_header,
-            headers: self.headers.clone(),
-            rows: self.rows.clone(),
+            records: self.records.clone(),
         }
     }
 
@@ -47,8 +44,7 @@ impl CsvArtifact {
         Self {
             schema: snapshot.schema,
             has_header: snapshot.has_header,
-            headers: snapshot.headers,
-            rows: snapshot.rows,
+            records: snapshot.records,
         }
     }
 
@@ -56,8 +52,7 @@ impl CsvArtifact {
     pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
         self.has_header = snapshot.has_header;
-        self.headers = snapshot.headers;
-        self.rows = snapshot.rows;
+        self.records = snapshot.records;
     }
 }
 //#endregion 🔖️Conversions

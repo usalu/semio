@@ -1,5 +1,10 @@
-# 🧬️ BinaryMutation
+# 🧬️ BinaryMutation — imperative content mutation for `stdio.binary`. Discriminated on
+# `mutation`; only the fields relevant to that variant are set.
 type BinaryMutation {
-  schema: String! @state(class: PERSISTENT)
-  bytes: String! @state(class: PERSISTENT)
+  mutation: String!
+  snapshot: BinarySnapshot
+  offset: Int
+  removeLen: Int
+  insert: [Int!]
+  data: [Int!]
 }

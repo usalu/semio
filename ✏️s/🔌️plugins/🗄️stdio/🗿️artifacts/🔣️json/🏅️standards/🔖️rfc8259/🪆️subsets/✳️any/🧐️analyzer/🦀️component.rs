@@ -16,11 +16,11 @@ pub struct JsonParts {
 /// 🧐️ Analyzes `stdio.json` (rfc8259/✳️any) sources.
 pub struct JsonAnalyzer;
 
-/// 🔍 JSON has no magic bytes — a real `serde_json` parse attempt is the strongest
-/// available signal (cheap for realistic file sizes); fall back to a first-non-whitespace-
-/// character heuristic when the bytes aren't valid UTF-8 text at all.
+/// 🔍 JSON has no magic bytes — a real parse attempt with our own rfc8259 recursive-descent
+/// parser is the strongest available signal (cheap for realistic file sizes); fall back to a
+/// first-non-whitespace-character heuristic when the bytes aren't valid UTF-8 text at all.
 fn looks_like_json(text: &str) -> IoConfidence {
-    if serde_json::from_str::<serde_json::Value>(text.trim()).is_ok() {
+    if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).is_ok() {
         return IoConfidence::High;
     }
     match text.trim_start().chars().next() {

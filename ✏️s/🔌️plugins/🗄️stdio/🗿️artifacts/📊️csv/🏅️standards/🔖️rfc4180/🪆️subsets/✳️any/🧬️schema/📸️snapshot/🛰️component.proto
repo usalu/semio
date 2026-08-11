@@ -1,6 +1,20 @@
 syntax = "proto3";
 package semio.s_stdio_csv.snapshot;
+
+// 🔤 One RFC 4180 field value plus whether the source quoted it.
+message CsvField {
+  string value = 1;
+  bool quoted = 2;
+}
+
+// 📄 One RFC 4180 record (row) — index-keyed within CsvSnapshot.records.
+message CsvRecord {
+  repeated CsvField fields = 1;
+}
+
+// 📸️ Persisted stdio.csv snapshot. records[0] is the header row when has_header.
 message CsvSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  bool has_header = 2;
+  repeated CsvRecord records = 3;
 }

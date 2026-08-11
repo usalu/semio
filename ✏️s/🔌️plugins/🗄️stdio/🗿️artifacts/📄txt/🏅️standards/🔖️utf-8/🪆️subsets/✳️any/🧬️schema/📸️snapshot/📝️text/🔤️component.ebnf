@@ -1,3 +1,10 @@
-(* ebnf stdio.txt snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.txt', newline ;
+(* ebnf stdio.txt snapshot: preamble line + line-terminated body, `line_ending` decides which
+   terminator ("\n" vs "\r\n") separates lines, `trailing_newline` decides whether the body ends
+   with one more terminator after the final line. *)
+document      = preamble , newline , body ;
+preamble      = "semio" , SP , envelope-id , SP , "v" , digit+ ;
+envelope-id   = ident , { "." , ident } ;
+body          = [ line , { line-ending , line } ] , [ line-ending ] ;
+line          = { any-char-except-cr-or-lf } ;
+line-ending   = "\n" | "\r\n" ;
+ident         = ( letter | "_" ) , { letter | digit | "_" | "-" } ;

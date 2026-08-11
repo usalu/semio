@@ -1,4 +1,9 @@
-/** 🧬️ DeflateMutation union. */
+/** 🧬️ DeflateMutation union — imperative verbs over the typed RFC1950 container fields. */
+import type { DeflateSnapshot, DeflateLevelHint } from '../📸️snapshot/🟦️component.ts';
+
 export type DeflateMutation =
   | { mutation: 'noMutation' }
-  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️component.ts').DeflateSnapshot };
+  | { mutation: 'setSnapshot'; snapshot: DeflateSnapshot }
+  | { mutation: 'setCompressionParams'; method: number; windowBits: number; levelHint: DeflateLevelHint }
+  | { mutation: 'setPresetDictionary'; dictId?: number }
+  | { mutation: 'setPayload'; payload: number[] };

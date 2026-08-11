@@ -1,6 +1,28 @@
 syntax = "proto3";
 package semio.s_stdio_deflate.mutation;
+
+enum DeflateLevelHint {
+  FASTEST = 0;
+  FAST = 1;
+  DEFAULT = 2;
+  MAXIMUM = 3;
+}
+
+message SetSnapshot { bytes snapshot_pack = 1; } // packed DeflateSnapshot (see snapshot.proto)
+message SetCompressionParams {
+  uint32 method = 1;
+  uint32 window_bits = 2;
+  DeflateLevelHint level_hint = 3;
+}
+message SetPresetDictionary { optional uint32 dict_id = 1; }
+message SetPayload { bytes payload = 1; }
+
 message DeflateMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  oneof variant {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetCompressionParams set_compression_params = 3;
+    SetPresetDictionary set_preset_dictionary = 4;
+    SetPayload set_payload = 5;
+  }
 }

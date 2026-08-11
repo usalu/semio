@@ -1,5 +1,11 @@
-# 🧬️ BinaryDiff
+# ✂️ ByteSplice
+type ByteSplice {
+  offset: Int!
+  removeLen: Int!
+  insert: [Int!]!
+}
+
+# 🔺️ BinaryDiff
 type BinaryDiff {
-  schema: String
-  bytes: String
+  splices: [ByteSplice!]!
 }

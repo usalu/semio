@@ -1,6 +1,28 @@
 dialect grammar stdio.xml.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.xml' NL
-body = payload NL?
-payload = *OCTET
+document = declaration? doctype? element misc*
+declaration = '<?xml' SP 'version' EQ AttValue (SP 'encoding' EQ AttValue)? (SP 'standalone' EQ ('"yes"' / '"no"' / "'yes'" / "'no'"))? SP? '?>'
+doctype = '<!DOCTYPE' (~'>' / bracketed)* '>'
+bracketed = '[' (~']')* ']'
+EQ = SP? '=' SP?
+misc = comment / pi / whitespace
+element = emptyElemTag / (sTag content eTag)
+emptyElemTag = '<' Name attribute* SP? '/>'
+sTag = '<' Name attribute* SP? '>'
+eTag = '</' Name SP? '>'
+attribute = SP Name EQ AttValue
+AttValue = '"' (~'"')* '"' / "'" (~"'")* "'"
+content = (element / reference / cdSect / pi / comment / charData)*
+charData = (~('<' / '&'))*
+cdSect = '<![CDATA[' (~']]>')* ']]>'
+comment = '<!--' (~'-->')* '-->'
+pi = '<?' PITarget (SP (~'?>')*)? '?>'
+PITarget = Name
+reference = entityRef / charRef
+entityRef = '&' ('amp' / 'lt' / 'gt' / 'quot' / 'apos') ';'
+charRef = '&#' [0-9]+ ';' / '&#x' [0-9a-fA-F]+ ';'
+Name = NameStartChar NameChar*
+NameStartChar = ':' / [A-Za-z] / '_'
+NameChar = NameStartChar / [0-9] / '-' / '.'
+SP = [ \t\r\n]+
+whitespace = [ \t\r\n]+

@@ -1,6 +1,21 @@
 syntax = "proto3";
 package semio.s_stdio_binary.mutation;
+
+import "s_stdio_binary/snapshot.proto";
+
+enum BinaryMutationKind {
+  NO_MUTATION = 0;
+  SET_SNAPSHOT = 1;
+  SPLICE = 2;
+  APPEND_BYTES = 3;
+  TRUNCATE_AT = 4;
+}
+
 message BinaryMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  BinaryMutationKind mutation = 1;
+  semio.s_stdio_binary.snapshot.BinarySnapshot snapshot = 2;
+  uint64 offset = 3;
+  uint64 remove_len = 4;
+  bytes insert = 5;
+  bytes data = 6;
 }

@@ -1,3 +1,13 @@
 dialect protocol stdio.deflate.mutations
-magic = %x00
-payload = *OCTET
+; The "binary" wire form is UTF-8 JSON bytes (protocol::OpBinary::encode_op = serde_json::to_vec),
+; the same tagged camelCase object as 📝️text/📖️component.grammar.semio -- not a distinct byte
+; layout. document below is that same per-variant JSON grammar, restated for the protocol dialect.
+document = no-mutation / set-snapshot / set-compression-params / set-preset-dictionary / set-payload
+no-mutation = %s"{\"mutation\":\"noMutation\"}"
+set-snapshot = %s"{\"mutation\":\"setSnapshot\",\"snapshot\":" snapshot-object "}"
+set-compression-params = %s"{\"mutation\":\"setCompressionParams\",\"method\":" 1*DIGIT
+                          %s",\"windowBits\":" 1*DIGIT %s",\"levelHint\":" level-hint "}"
+set-preset-dictionary = %s"{\"mutation\":\"setPresetDictionary\",\"dictId\":" ( "null" / 1*DIGIT ) "}"
+set-payload = %s"{\"mutation\":\"setPayload\",\"payload\":\"[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]\"}"
+level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""
+snapshot-object = *OCTET   ; see sibling 📸️snapshot facet for the full DeflateSnapshot shape

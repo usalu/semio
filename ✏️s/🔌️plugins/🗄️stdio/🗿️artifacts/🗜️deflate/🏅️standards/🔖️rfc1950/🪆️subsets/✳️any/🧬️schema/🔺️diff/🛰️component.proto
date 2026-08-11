@@ -1,6 +1,22 @@
 syntax = "proto3";
 package semio.s_stdio_deflate.diff;
+
+enum DeflateLevelHint {
+  FASTEST = 0;
+  FAST = 1;
+  DEFAULT = 2;
+  MAXIMUM = 3;
+}
+
 message DeflateDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional uint32 compression_method = 1;
+  optional uint32 window_bits = 2;
+  optional DeflateLevelHint compression_level_hint = 3;
+  // 🪆️ Tri-state: field absent (no oneof set) = unchanged; proto3 `oneof` can't express
+  // "changed-to-null" vs "unchanged" any other way without a wrapper message.
+  oneof dict_id_change {
+    bool dict_id_cleared = 4;
+    uint32 dict_id_set = 5;
+  }
+  optional bytes payload = 6;
 }

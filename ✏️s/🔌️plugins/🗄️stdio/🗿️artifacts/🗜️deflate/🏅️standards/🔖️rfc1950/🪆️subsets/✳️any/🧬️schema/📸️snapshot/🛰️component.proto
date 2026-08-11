@@ -1,6 +1,18 @@
 syntax = "proto3";
 package semio.s_stdio_deflate.snapshot;
+
+enum DeflateLevelHint {
+  FASTEST = 0;
+  FAST = 1;
+  DEFAULT = 2;
+  MAXIMUM = 3;
+}
+
 message DeflateSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 compression_method = 2;
+  uint32 window_bits = 3;
+  DeflateLevelHint compression_level_hint = 4;
+  optional uint32 dict_id = 5;
+  bytes payload = 6;
 }

@@ -1,5 +1,13 @@
+# ⏎️ LineEnding
+enum LineEnding {
+  LF
+  CR_LF
+}
+
 # 🧬️ TxtSnapshot
 type TxtSnapshot {
   schema: String! @state(class: PERSISTENT)
-  text: String! @state(class: PERSISTENT)
+  lines: [String!]! @state(class: PERSISTENT)
+  trailingNewline: Boolean! @state(class: PERSISTENT)
+  lineEnding: LineEnding! @state(class: PERSISTENT)
 }

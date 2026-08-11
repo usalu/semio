@@ -63,6 +63,26 @@ pub struct XmlDocument {
     /// round-trip losslessly.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<String>,
+    /// 🏳️ The typed `<?xml version="1.0" encoding="..." standalone="..."?>` XML declaration, if
+    /// the source document had one -- unlike `doctype` this IS structurally decoded (three named
+    /// fields) since `version`/`encoding`/`standalone` are each independently meaningful and each
+    /// independently diffable/mutable (`XmlMutation::SetDeclaration`), where a raw-string DOCTYPE
+    /// has no such sub-structure worth decoding.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declaration: Option<XmlDeclaration>,
+}
+
+/// 🏳️ Typed XML declaration (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`).
+/// `version` is mandatory per the XML 1.0 spec whenever a declaration is present at all;
+/// `encoding`/`standalone` are each independently optional.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlDeclaration {
+    pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub encoding: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub standalone: Option<bool>,
 }
 //#endregion 🔖️XmlModel
 
@@ -168,6 +188,22 @@ fn xml_unescape_text(s: &str) -> Result<String, String> {
 
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
     let mut out = String::new();
+    if let Some(decl) = &doc.declaration {
+        out.push_str("<?xml version=\"");
+        out.push_str(&decl.version);
+        out.push('"');
+        if let Some(encoding) = &decl.encoding {
+            out.push_str(" encoding=\"");
+            out.push_str(encoding);
+            out.push('"');
+        }
+        if let Some(standalone) = decl.standalone {
+            out.push_str(" standalone=\"");
+            out.push_str(if standalone { "yes" } else { "no" });
+            out.push('"');
+        }
+        out.push_str("?>\n");
+    }
     if let Some(doctype) = &doc.doctype {
         out.push_str(doctype);
         out.push('\n');
@@ -211,13 +247,60 @@ pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
         return Ok(XmlDocument::default());
     }
     let mut pos = 0;
+    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
     let doctype = skip_misc(trimmed, &mut pos)?;
     let root = parse_node(trimmed, &mut pos)?;
     skip_misc(trimmed, &mut pos)?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
-    Ok(XmlDocument { root: Some(root), doctype })
+    Ok(XmlDocument { root: Some(root), doctype, declaration })
+}
+
+/// 🏳️ Parses the leading `<?xml version="1.0" encoding="..." standalone="..."?>` declaration, if
+/// present. Per the XML 1.0 spec the declaration (when present at all) MUST be the very first
+/// thing in the document -- unlike ordinary processing instructions it is not represented as an
+/// `XmlNode::ProcessingInstruction` and is only ever looked for here, at the very start.
+fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDeclaration>, String> {
+    if !s[*pos..].starts_with("<?xml") {
+        return Ok(None);
+    }
+    // Distinguish the reserved `<?xml ...?>` declaration target from an ordinary PI whose target
+    // merely starts with the same four letters (e.g. `<?xml-stylesheet ...?>`).
+    let after = s[*pos + "<?xml".len()..].chars().next();
+    match after {
+        Some(c) if c.is_ascii_whitespace() || c == '?' => {}
+        _ => return Ok(None),
+    }
+    *pos += "<?xml".len();
+    let mut version = None;
+    let mut encoding = None;
+    let mut standalone = None;
+    loop {
+        skip_ws(s, pos);
+        if s[*pos..].starts_with("?>") {
+            break;
+        }
+        let name = parse_name(s, pos)?;
+        skip_ws(s, pos);
+        if s[*pos..].chars().next() != Some('=') {
+            return Err("expected = in xml declaration".into());
+        }
+        *pos += 1;
+        let value = parse_attr_value(s, pos)?;
+        match name.as_str() {
+            "version" => version = Some(value),
+            "encoding" => encoding = Some(value),
+            "standalone" => standalone = Some(value == "yes"),
+            other => return Err(format!("unknown xml declaration attribute {other}")),
+        }
+    }
+    *pos += 2;
+    Ok(Some(XmlDeclaration {
+        version: version.ok_or("xml declaration missing version")?,
+        encoding,
+        standalone,
+    }))
 }
 
 /// 🚧️ Skips XML-declaration (`<?xml ...?>`), processing instructions, comments, and a `<!DOCTYPE

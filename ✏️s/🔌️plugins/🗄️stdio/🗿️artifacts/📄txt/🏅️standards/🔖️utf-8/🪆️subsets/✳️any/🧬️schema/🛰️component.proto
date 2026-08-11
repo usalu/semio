@@ -1,6 +1,11 @@
 syntax = "proto3";
 package semio.s_stdio_txt.artifact;
+
+import "s_stdio_txt/snapshot.proto";
+
 message TxtArtifact {
   string schema = 1;
-  string text_wire = 2;
+  repeated string lines = 2;
+  bool trailing_newline = 3;
+  semio.s_stdio_txt.snapshot.LineEnding line_ending = 4;
 }

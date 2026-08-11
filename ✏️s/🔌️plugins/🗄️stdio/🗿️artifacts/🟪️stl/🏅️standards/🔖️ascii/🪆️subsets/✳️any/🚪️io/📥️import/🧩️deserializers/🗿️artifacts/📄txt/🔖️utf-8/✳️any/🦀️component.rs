@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse stl text into a StlSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<StlSnapshot, store::TextError> {
-    crate::artifacts::stl::engine::decode_stl_ascii(from.text.as_str())
+    crate::artifacts::stl::engine::decode_stl_ascii(from.to_body())
         .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 

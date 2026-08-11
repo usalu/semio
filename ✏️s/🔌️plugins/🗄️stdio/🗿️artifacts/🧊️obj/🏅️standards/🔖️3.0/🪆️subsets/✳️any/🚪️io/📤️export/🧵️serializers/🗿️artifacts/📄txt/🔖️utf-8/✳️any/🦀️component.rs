@@ -10,7 +10,7 @@ pub fn register() {}
 /// 📤️ Encode obj into a TxtSnapshot.
 pub fn serialize(from: &ObjSnapshot) -> Result<TxtSnapshot, store::PackError> {
     let text = crate::artifacts::obj::engine::encode_obj(from);
-    Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
+    Ok(TxtSnapshot::from_body(&text))
 }
 
 /// 📤️ Encode as txt DSL.

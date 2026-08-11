@@ -1,4 +1,13 @@
 module Stdio_deflate_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+
+# RFC1950 zlib stream: CMF/FLG header, optional preset-dictionary id (only when FLG.FDICT is
+# set), then the raw RFC1951 DEFLATE stream immediately followed by the 4-byte big-endian
+# Adler-32 trailer (RFC1950 §2.3). Spicy has no built-in DEFLATE/Huffman decoder, so the
+# compressed-data+trailer tail is retained as one EOD-bounded raw region -- an honest boundary,
+# not a whole-body placeholder (the header fields above it are fully typed).
+public type Document = unit {
+    cmf: uint8;
+    flg: uint8;
+    dict_id: uint32 &big if (self.flg & 0x20) != 0;
+    tail: bytes &eod;
 };

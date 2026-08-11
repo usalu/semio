@@ -1,8 +1,74 @@
+# 🧬️ ZipMutation — a discriminated-union input shape (GraphQL has no native unions on input
+# types, so every op's payload fields are optional siblings, disambiguated by `mutation`).
+
+enum ZipMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_ARCHIVE_COMMENT
+  ADD_ENTRY
+  REMOVE_ENTRY
+  RENAME_ENTRY
+  SET_ENTRY_DATA
+  SET_ENTRY_METHOD
+  SET_ENTRY_TIMESTAMPS
+  SET_ENTRY_FLAGS
+  SET_ENTRY_VERSIONS
+  SET_ENTRY_ATTRIBUTES
+  SET_ENTRY_EXTRA
+  SET_ENTRY_COMMENT
+}
+
+enum ZipCompressionMethod {
+  STORED
+  DEFLATE
+}
+
+type ZipExtraField {
+  id: Int!
+  payload: [Int!]!
+}
+
 type ZipEntry {
   name: String!
   data: [Int!]!
+  method: ZipCompressionMethod!
+  dosDate: Int!
+  dosTime: Int!
+  unixMtime: Int
+  flags: Int!
+  versionMadeBy: Int!
+  versionNeeded: Int!
+  internalAttrs: Int!
+  externalAttrs: Int!
+  localExtra: [ZipExtraField!]!
+  centralExtra: [ZipExtraField!]!
+  comment: String!
 }
+
+type ZipSnapshot {
+  schema: String!
+  entries: [ZipEntry!]!
+  comment: String!
+}
+
 type ZipMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [ZipEntry!]! @state(class: PERSISTENT)
+  mutation: ZipMutationKind!
+  snapshot: ZipSnapshot
+  comment: String
+  index: Int
+  entry: ZipEntry
+  name: String
+  newName: String
+  data: [Int!]
+  method: ZipCompressionMethod
+  dosDate: Int
+  dosTime: Int
+  unixMtime: Int
+  flags: Int
+  versionMadeBy: Int
+  versionNeeded: Int
+  internalAttrs: Int
+  externalAttrs: Int
+  localExtra: [ZipExtraField!]
+  centralExtra: [ZipExtraField!]
 }

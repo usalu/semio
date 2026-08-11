@@ -191,6 +191,7 @@ fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
             }],
         }),
         doctype: None,
+        declaration: None,
     }
 }
 
@@ -270,6 +271,7 @@ fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> Xm
             ],
         }),
         doctype: None,
+        declaration: None,
     }
 }
 

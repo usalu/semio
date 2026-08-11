@@ -1,3 +1,10 @@
-(* ebnf stdio.deflate diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.deflate', newline ;
+(* ebnf stdio.deflate diff: sparse camelCase JSON object, only changed fields present *)
+document = "{", [ member, { ",", member } ], "}" ;
+member = compression method | window bits | compression level hint | dict id | payload ;
+compression method = '"compressionMethod":', digit, { digit } ;
+window bits = '"windowBits":', digit, { digit } ;
+compression level hint = '"compressionLevelHint":', level hint value ;
+dict id = '"dictId":', ( "null" | digit, { digit } ) ;   (* tri-state *)
+payload = '"payload":', "[", [ digit, { digit }, { ",", digit, { digit } } ], "]" ;
+level hint value = '"fastest"' | '"fast"' | '"default"' | '"maximum"' ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

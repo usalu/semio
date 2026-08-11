@@ -1,3 +1,3 @@
 dialect protocol stdio.txt.diff
-magic = %x00
-payload = *OCTET
+; wire body is UTF-8 JSON (serde_json of TxtDiff), not an opaque octet run.
+body = utf8-json-string(eof)

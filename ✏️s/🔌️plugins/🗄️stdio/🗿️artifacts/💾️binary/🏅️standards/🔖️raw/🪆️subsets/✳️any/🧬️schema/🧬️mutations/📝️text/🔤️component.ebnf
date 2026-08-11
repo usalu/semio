@@ -1,3 +1,10 @@
-(* ebnf stdio.binary mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.binary', newline ;
+(* ebnf stdio.binary mutation: JSON object, `mutation` tag selects the variant. *)
+mutation    = "{" , '"mutation"' , ":" , kind , { "," , field } , "}" ;
+kind        = '"noMutation"' | '"setSnapshot"' | '"splice"' | '"appendBytes"' | '"truncateAt"' ;
+field       = snapshot-field | offset-field | remove-len-field | insert-field | data-field ;
+snapshot-field  = '"snapshot"' , ":" , snapshot-object ;
+offset-field    = '"offset"' , ":" , integer ;
+remove-len-field = '"removeLen"' , ":" , integer ;
+insert-field    = '"insert"' , ":" , byte-array ;
+data-field      = '"data"' , ":" , byte-array ;
+byte-array      = "[" , [ byte , { "," , byte } ] , "]" ;

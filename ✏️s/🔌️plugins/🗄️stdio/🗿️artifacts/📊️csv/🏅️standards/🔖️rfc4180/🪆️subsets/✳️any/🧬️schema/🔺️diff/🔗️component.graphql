@@ -1,2 +1,32 @@
-# diff facet
- type Placeholder { headers: String! }
+# 🔺️ CsvDiff schema facet — sparse structural diff, mirrors 🦀️component.rs.
+
+type CsvFieldDiff {
+  value: String
+  quoted: Boolean
+}
+
+"Positional per-field patch list; null at a position means that field is unchanged."
+type CsvRecordDiff {
+  fields: [CsvFieldDiff]
+}
+
+type CsvRecordModified {
+  index: Int!
+  diff: CsvRecordDiff!
+}
+
+type CsvRecordAdded {
+  index: Int!
+  record: CsvRecord!
+}
+
+type CsvRecordsDiff {
+  removed: [Int!]
+  modified: [CsvRecordModified!]
+  added: [CsvRecordAdded!]
+}
+
+type CsvDiff {
+  hasHeader: Boolean
+  records: CsvRecordsDiff
+}

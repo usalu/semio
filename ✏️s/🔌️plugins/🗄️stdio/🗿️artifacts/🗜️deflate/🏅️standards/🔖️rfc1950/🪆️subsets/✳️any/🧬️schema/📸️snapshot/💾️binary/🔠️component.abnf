@@ -1,3 +1,7 @@
-; abnf stdio.deflate snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.deflate snapshot -- RFC1950 zlib stream binary representation
+document        = cmf flg [ dict-id ] compressed-data adler32
+cmf             = OCTET                ; low nibble = compression method (8=deflate), high nibble = CINFO
+flg             = OCTET                ; bits 6-7 FLEVEL, bit 5 FDICT, bits 0-4 FCHECK
+dict-id         = 4OCTET               ; preset-dictionary Adler-32 id, present only when flg bit 5 (FDICT) is set
+compressed-data = *OCTET               ; raw RFC1951 DEFLATE stream (opaque: no ABNF-expressible Huffman bitstream)
+adler32         = 4OCTET               ; Adler-32 (RFC1950 §2.3) of the DECOMPRESSED payload

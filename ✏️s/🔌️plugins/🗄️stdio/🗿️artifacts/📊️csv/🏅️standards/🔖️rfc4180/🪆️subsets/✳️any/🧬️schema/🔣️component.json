@@ -2,14 +2,33 @@
   "$id": "https://semio.tech/schema/s.stdio.csv/artifact.csv",
   "title": "CsvArtifact",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "hasHeader", "records"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "hasHeader": { "type": "boolean", "x-semio-state": "persistent" },
+    "records": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fields"],
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["value", "quoted"],
+              "properties": {
+                "value": { "type": "string" },
+                "quoted": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

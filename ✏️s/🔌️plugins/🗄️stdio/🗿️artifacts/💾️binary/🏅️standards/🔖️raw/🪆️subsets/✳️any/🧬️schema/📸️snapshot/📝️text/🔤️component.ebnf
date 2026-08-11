@@ -1,3 +1,8 @@
-(* ebnf stdio.binary snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.binary', newline ;
+(* ebnf stdio.binary snapshot: preamble line + lowercase-hex body (2 hex digits per byte,
+   whitespace between pairs is insignificant and stripped on parse). *)
+document  = preamble , newline , hex-body ;
+preamble  = "semio" , SP , envelope-id , SP , "v" , digit+ ;
+envelope-id = ident , { "." , ident } ;
+hex-body  = { hex-pair | SP | newline } ;
+hex-pair  = hex-digit , hex-digit ;
+hex-digit = "0".."9" | "a".."f" ;

@@ -3,7 +3,7 @@
 use crate::artifacts::json::schema::diff::{JsonDiff, diff_set_snapshot};
 use crate::artifacts::json::JsonSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot.
-pub fn diff(snapshot: &JsonSnapshot) -> JsonDiff {
-    diff_set_snapshot(snapshot)
+/// 🔺️ Diff helper for set-snapshot — sparse `between(base, next)`, never a full-replace slot.
+pub fn diff(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
+    diff_set_snapshot(base, next)
 }

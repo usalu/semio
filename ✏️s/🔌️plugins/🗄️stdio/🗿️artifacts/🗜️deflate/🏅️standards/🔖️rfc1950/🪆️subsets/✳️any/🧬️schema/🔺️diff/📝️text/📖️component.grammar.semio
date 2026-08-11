@@ -1,6 +1,12 @@
 dialect grammar stdio.deflate.diff
+; DeflateDiff wire form (protocol::OpText::print_op = serde_json::to_string): a sparse JSON
+; object, camelCase, only changed fields present (skip_serializing_if = Option::is_none).
 root = document
-document = header body
-header = 'schema' SP 'stdio.deflate' NL
-body = payload NL?
-payload = *OCTET
+document = "{" [ member *( "," member ) ] "}"
+member = compression-method / window-bits / compression-level-hint / dict-id / payload
+compression-method = %s"\"compressionMethod\":" 1*DIGIT
+window-bits = %s"\"windowBits\":" 1*DIGIT
+compression-level-hint = %s"\"compressionLevelHint\":" level-hint
+dict-id = %s"\"dictId\":" ( "null" / 1*DIGIT )   ; tri-state: absent=unchanged, null=cleared, number=set
+payload = %s"\"payload\":" "[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]"
+level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""

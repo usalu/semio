@@ -1,3 +1,3 @@
-; abnf stdio.txt diff
-document = payload
-payload = *OCTET
+; abnf stdio.txt diff (binary op transport)
+op        = json-body
+json-body = *OCTET   ; UTF-8 JSON text of TxtDiff -- see diff/text/component.ebnf for the shape

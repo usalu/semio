@@ -1,6 +1,72 @@
 syntax = "proto3";
 package semio.s_stdio_zip.diff;
+
+enum ZipCompressionMethod {
+  STORED = 0;
+  DEFLATE = 1;
+}
+
+message ZipExtraField {
+  uint32 id = 1;
+  bytes payload = 2;
+}
+
+message ZipEntry {
+  string name = 1;
+  bytes data = 2;
+  ZipCompressionMethod method = 3;
+  uint32 dos_date = 4;
+  uint32 dos_time = 5;
+  optional int64 unix_mtime = 6;
+  uint32 flags = 7;
+  uint32 version_made_by = 8;
+  uint32 version_needed = 9;
+  uint32 internal_attrs = 10;
+  uint32 external_attrs = 11;
+  repeated ZipExtraField local_extra = 12;
+  repeated ZipExtraField central_extra = 13;
+  string comment = 14;
+}
+
+// unix_mtime tri-state on the wire: `has_unix_mtime = false` = unchanged; `true` + unset
+// `unix_mtime` = cleared (Some(None)); `true` + set = a new value.
+message ZipEntryDiff {
+  optional string name = 1;
+  optional bytes data = 2;
+  optional ZipCompressionMethod method = 3;
+  optional uint32 dos_date = 4;
+  optional uint32 dos_time = 5;
+  bool has_unix_mtime = 6;
+  optional int64 unix_mtime = 7;
+  optional uint32 flags = 8;
+  optional uint32 version_made_by = 9;
+  optional uint32 version_needed = 10;
+  optional uint32 internal_attrs = 11;
+  optional uint32 external_attrs = 12;
+  bool has_local_extra = 13;
+  repeated ZipExtraField local_extra = 14;
+  bool has_central_extra = 15;
+  repeated ZipExtraField central_extra = 16;
+  optional string comment = 17;
+}
+
+message ZipEntryModified {
+  string name = 1;
+  ZipEntryDiff diff = 2;
+}
+
+message ZipEntryAdded {
+  uint64 index = 1;
+  ZipEntry entry = 2;
+}
+
+message ZipEntriesDiff {
+  repeated string removed = 1;
+  repeated ZipEntryModified modified = 2;
+  repeated ZipEntryAdded added = 3;
+}
+
 message ZipDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional string comment = 1;
+  ZipEntriesDiff entries = 2;
 }

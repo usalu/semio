@@ -1,3 +1,2 @@
-# stdio.xml snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+""" 📝️ stdio.xml snapshot text representation -- the raw well-formed XML document text. """
+scalar XmlSnapshotText

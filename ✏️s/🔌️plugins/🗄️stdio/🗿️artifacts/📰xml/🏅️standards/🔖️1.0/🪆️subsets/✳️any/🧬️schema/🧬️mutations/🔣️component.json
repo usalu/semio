@@ -1,15 +1,48 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.xml/mutation.xml",
   "title": "XmlMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDeclaration" }, "declaration": { "type": "object" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "type": "string" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index", "node"],
+      "properties": {
+        "mutation": { "const": "insertElement" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 },
+        "node": { "type": "object" }
+      }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index"],
+      "properties": {
+        "mutation": { "const": "removeElement" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "name"],
+      "properties": {
+        "mutation": { "const": "setAttribute" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "name": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "text"],
+      "properties": {
+        "mutation": { "const": "setText" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "text": { "type": "string" }
+      }
     }
-  }
+  ]
 }

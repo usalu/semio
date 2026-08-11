@@ -1,4 +1,10 @@
 module Stdio_csv_snapshot;
+
+# Shared `.semio` binary envelope wrapping a stdio.csv payload: the UTF-8 bytes of the
+# same RFC 4180 document the text facet parses.
 type Document = unit {
-    payload: bytes &eod;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;   # UTF-8 "stdio.csv.pack v1"
+    payload: bytes &eod;                 # UTF-8 RFC 4180 CSV text
 };

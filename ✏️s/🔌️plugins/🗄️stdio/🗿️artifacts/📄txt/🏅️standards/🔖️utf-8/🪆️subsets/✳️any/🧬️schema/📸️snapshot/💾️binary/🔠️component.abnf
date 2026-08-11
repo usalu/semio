@@ -1,3 +1,6 @@
-; abnf stdio.txt snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.txt snapshot (binary pack layer)
+document    = magic token-len token body
+magic       = %x89 %x53.45.4D %x0D.0A.1A.0A
+token-len   = 4OCTET                    ; u32 LE byte count of token
+token       = *OCTET                    ; UTF-8 "plugin.artifact.component vN", token-len bytes
+body        = *OCTET                    ; UTF-8 text: lines joined by line-ending, see snapshot.grammar.semio

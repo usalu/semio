@@ -1,3 +1,7 @@
 dialect protocol stdio.zip.diff
-magic = %x00
-payload = *OCTET
+; `ZipDiff::encode_op` is `serde_json::to_vec` of the exact same shape as the text-facet grammar
+; (`../📝️text/📖️component.grammar.semio`) — the "binary" op-wire form is UTF-8 JSON bytes, not a
+; packed binary layout (no magic/length-prefix framing exists at this facet; the caller already
+; knows the byte-slice boundary). Documented here rather than hidden behind a placeholder.
+payload = utf8-bytes-of(diff-line) ; `diff-line` is defined by the sibling text grammar; the
+                                    ; binary op is exactly its UTF-8 byte encoding, no framing.

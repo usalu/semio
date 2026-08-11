@@ -1,3 +1,12 @@
 dialect protocol stdio.deflate.diff
-magic = %x00
-payload = *OCTET
+; The "binary" wire form is UTF-8 JSON bytes (protocol::OpBinary::encode_op = serde_json::to_vec),
+; the same sparse camelCase object as 📝️text/📖️component.grammar.semio -- not a distinct byte
+; layout. document below is that same JSON-object grammar, restated for the protocol dialect.
+document = "{" [ member *( "," member ) ] "}"
+member = compression-method / window-bits / compression-level-hint / dict-id / payload
+compression-method = %s"\"compressionMethod\":" 1*DIGIT
+window-bits = %s"\"windowBits\":" 1*DIGIT
+compression-level-hint = %s"\"compressionLevelHint\":" level-hint
+dict-id = %s"\"dictId\":" ( "null" / 1*DIGIT )
+payload = %s"\"payload\":" "[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]"
+level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""

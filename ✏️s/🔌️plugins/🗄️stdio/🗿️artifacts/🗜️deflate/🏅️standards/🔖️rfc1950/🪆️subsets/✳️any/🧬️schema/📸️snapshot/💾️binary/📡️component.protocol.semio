@@ -1,3 +1,7 @@
 dialect protocol stdio.deflate.snapshot
-magic = %x00
-payload = *OCTET
+cmf = OCTET                       ; low nibble = compression method (8=deflate), high nibble = window bits (CINFO)
+flg = OCTET                       ; bits6-7 FLEVEL, bit5 FDICT, bits0-4 FCHECK; cmf*256+flg mod 31 == 0
+dict-id = 4OCTET                  ; preset-dictionary Adler-32 id, present only when flg.FDICT is set
+compressed-data = *OCTET          ; raw RFC1951 DEFLATE stream (opaque bitstream)
+adler32 = 4OCTET                  ; Adler-32 of the DECOMPRESSED payload, RFC1950 §2.3
+document = cmf flg [dict-id] compressed-data adler32

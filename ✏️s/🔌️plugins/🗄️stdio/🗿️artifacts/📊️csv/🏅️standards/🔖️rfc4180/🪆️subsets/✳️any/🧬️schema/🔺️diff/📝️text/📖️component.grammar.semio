@@ -1,6 +1,14 @@
 dialect grammar stdio.csv.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.csv' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of CsvDiff (protocol::OpText — serde_json); this
+; names the real sparse fields rather than restating RFC 8259's own JSON grammar
+diff = "{" (member ("," member)*)? "}"
+member = '"hasHeader"' ":" BOOL
+       / '"records"' ":" records_diff
+records_diff = "{" (rmember ("," rmember)*)? "}"
+rmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" record_modified* "]"
+        / '"added"' ":" "[" record_added* "]"
+record_modified = "{" '"index"' ":" INT "," '"diff"' ":" record_diff "}"
+record_added = "{" '"index"' ":" INT "," '"record"' ":" record_json "}"
+BOOL = "true" / "false"

@@ -1,5 +1,6 @@
 //! ⚙️ CsvEngine — owns a real `CsvArtifact` + the real RFC 4180 codec.
 
+use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use crate::artifacts::csv::{CsvArtifact, CsvDiff, CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 //#region 🔖️DocumentHelpers
@@ -13,13 +14,19 @@ pub fn empty_csv_snapshot() -> CsvSnapshot {
 //#region 🔖️Tokenizer
 /// 📥 RFC 4180 record tokenizer over the WHOLE text (not line-by-line, so a quoted
 /// field's embedded `\n`/`\r\n` is consumed as data, not a record boundary), handling
-/// escaped `""` quotes and both CRLF and bare-LF line endings.
-fn parse_csv_records(text: &str) -> Vec<Vec<String>> {
+/// escaped `""` quotes, both CRLF and bare-LF line endings, and tracking per-field
+/// whether the source actually wrapped it in quotes (real, losslessly-retained
+/// information per RFC 4180 §2 rule 5 — quoting is optional).
+fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
     let mut records = Vec::new();
-    let mut fields: Vec<String> = Vec::new();
+    let mut fields: Vec<CsvField> = Vec::new();
     let mut cur = String::new();
+    let mut cur_quoted = false;
     let mut in_quotes = false;
     let mut chars = text.chars().peekable();
+    fn take_field(cur: &mut String, cur_quoted: &mut bool) -> CsvField {
+        CsvField { value: std::mem::take(cur), quoted: std::mem::take(cur_quoted) }
+    }
     while let Some(ch) = chars.next() {
         if in_quotes {
             if ch == '"' {
@@ -35,41 +42,51 @@ fn parse_csv_records(text: &str) -> Vec<Vec<String>> {
             continue;
         }
         match ch {
-            '"' => in_quotes = true,
-            ',' => fields.push(std::mem::take(&mut cur)),
+            '"' => {
+                in_quotes = true;
+                cur_quoted = true;
+            }
+            ',' => fields.push(take_field(&mut cur, &mut cur_quoted)),
             '\r' => {
                 if chars.peek() == Some(&'\n') {
                     chars.next();
                 }
-                fields.push(std::mem::take(&mut cur));
-                records.push(std::mem::take(&mut fields));
+                fields.push(take_field(&mut cur, &mut cur_quoted));
+                records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             '\n' => {
-                fields.push(std::mem::take(&mut cur));
-                records.push(std::mem::take(&mut fields));
+                fields.push(take_field(&mut cur, &mut cur_quoted));
+                records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             _ => cur.push(ch),
         }
     }
-    if !cur.is_empty() || !fields.is_empty() {
-        fields.push(cur);
-        records.push(fields);
+    if !cur.is_empty() || cur_quoted || !fields.is_empty() {
+        fields.push(take_field(&mut cur, &mut cur_quoted));
+        records.push(CsvRecord { fields });
     }
     records
 }
 
-fn escape_field(field: &str) -> String {
-    if field.contains(',') || field.contains('"') || field.contains('\n') || field.contains('\r') {
-        format!("\"{}\"", field.replace('"', "\"\""))
+/// 📤 Quotes a field when the source quoted it OR when RFC 4180 §2 rule 6 REQUIRES
+/// quoting (the value itself contains a comma, quote, or line break).
+fn escape_field(field: &CsvField) -> String {
+    let needs_quote = field.quoted
+        || field.value.contains(',')
+        || field.value.contains('"')
+        || field.value.contains('\n')
+        || field.value.contains('\r');
+    if needs_quote {
+        format!("\"{}\"", field.value.replace('"', "\"\""))
     } else {
-        field.to_string()
+        field.value.clone()
     }
 }
 
-fn write_csv_records(records: &[Vec<String>], line_ending: &str) -> String {
+fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
     let mut out = String::new();
     for record in records {
-        out.push_str(&record.iter().map(|f| escape_field(f)).collect::<Vec<_>>().join(","));
+        out.push_str(&record.fields.iter().map(escape_field).collect::<Vec<_>>().join(","));
         out.push_str(line_ending);
     }
     out
@@ -77,12 +94,13 @@ fn write_csv_records(records: &[Vec<String>], line_ending: &str) -> String {
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️SnapshotCodec
-/// 📥 Decodes RFC 4180 text into a snapshot, treating the first record as the header
-/// row when `has_header` is true (the RFC4180 "header-row option").
+/// 📥 Decodes RFC 4180 text into a snapshot. `has_header` is pure metadata about whether
+/// `records[0]` should be read as a header row — RFC 4180 draws no structural distinction
+/// between a header record and a data record on the wire, so decoding never drops or
+/// relocates the first record.
 pub fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
-    let mut records = parse_csv_records(text);
-    let headers = if has_header && !records.is_empty() { records.remove(0) } else { Vec::new() };
-    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, headers, rows: records }
+    let records = parse_csv_records(text);
+    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records }
 }
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
@@ -95,17 +113,12 @@ pub fn encode_csv(snap: &CsvSnapshot) -> String {
     encode_csv_with(snap, "\n")
 }
 
-/// 📤 Encodes with a caller-chosen line ending (`"\n"` or `"\r\n"`), honoring `has_header`.
+/// 📤 Encodes with a caller-chosen line ending (`"\n"` or `"\r\n"`).
 pub fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
-    if snap.headers.is_empty() && snap.rows.is_empty() {
+    if snap.records.is_empty() {
         return String::new();
     }
-    let mut records = Vec::new();
-    if snap.has_header {
-        records.push(snap.headers.clone());
-    }
-    records.extend(snap.rows.iter().cloned());
-    write_csv_records(&records, line_ending)
+    write_csv_records(&snap.records, line_ending)
 }
 //#endregion 🔖️SnapshotCodec
 //#endregion 🔖️Codec
@@ -177,19 +190,26 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
+    fn field_values(record: &CsvRecord) -> Vec<String> {
+        record.fields.iter().map(|f| f.value.clone()).collect()
+    }
+
     #[test]
     fn quoted_field_with_embedded_comma_and_escaped_quote() {
         let text = "name,note\n\"Doe, John\",\"He said \"\"hi\"\"\"\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(snap.headers, vec!["name", "note"]);
-        assert_eq!(snap.rows, vec![vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]]);
+        assert_eq!(field_values(&snap.records[0]), vec!["name", "note"]);
+        assert_eq!(field_values(&snap.records[1]), vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]);
+        assert!(snap.records[1].fields[0].quoted, "comma-containing field must be recorded as quoted");
+        assert!(snap.records[1].fields[1].quoted);
+        assert!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
     }
 
     #[test]
     fn quoted_field_with_embedded_newline_spans_records() {
         let text = "a,b\n\"line1\nline2\",2\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(snap.rows, vec![vec!["line1\nline2".to_string(), "2".to_string()]]);
+        assert_eq!(field_values(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
     }
 
     #[test]
@@ -200,15 +220,32 @@ mod tests {
     }
 
     #[test]
-    fn header_row_option_toggles_whether_first_record_is_consumed() {
+    fn header_row_option_is_pure_metadata_first_record_always_decoded() {
         let text = "1,2\n3,4\n";
         let with_header = decode_csv_with(text, true);
-        assert_eq!(with_header.headers, vec!["1", "2"]);
-        assert_eq!(with_header.rows, vec![vec!["3".to_string(), "4".to_string()]]);
+        assert!(with_header.has_header);
+        assert_eq!(with_header.records.len(), 2);
+        assert_eq!(field_values(&with_header.records[0]), vec!["1", "2"]);
+        assert_eq!(field_values(&with_header.records[1]), vec!["3", "4"]);
 
         let without_header = decode_csv_with(text, false);
-        assert!(without_header.headers.is_empty());
-        assert_eq!(without_header.rows, vec![vec!["1".to_string(), "2".to_string()], vec!["3".to_string(), "4".to_string()]]);
+        assert!(!without_header.has_header);
+        assert_eq!(without_header.records, with_header.records);
+    }
+
+    #[test]
+    fn quoted_flag_round_trips_even_when_not_structurally_required() {
+        // 🔒 A field that didn't NEED quoting but WAS quoted in the source must re-encode
+        // quoted (lossless retention, not a lossy structural-minimum normal form).
+        let snap = CsvSnapshot {
+            schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
+            has_header: false,
+            records: vec![CsvRecord { fields: vec![CsvField { value: "plain".into(), quoted: true }] }],
+        };
+        let text = encode_csv(&snap);
+        assert_eq!(text, "\"plain\"\n");
+        let reparsed = decode_csv_with(&text, false);
+        assert_eq!(reparsed.records, snap.records);
     }
 
     #[test]

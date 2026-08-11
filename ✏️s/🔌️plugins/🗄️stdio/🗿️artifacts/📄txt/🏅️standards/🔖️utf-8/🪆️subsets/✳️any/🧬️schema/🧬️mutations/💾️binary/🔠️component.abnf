@@ -1,3 +1,3 @@
-; abnf stdio.txt mutations
-document = payload
-payload = *OCTET
+; abnf stdio.txt mutation (binary op transport)
+op        = json-body
+json-body = *OCTET   ; UTF-8 JSON text of TxtMutation -- see mutations/text/component.ebnf

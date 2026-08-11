@@ -376,7 +376,11 @@ s
   plugins
     stdio
       artifacts
-        <artifact> # e.g. brep, mesh, document, cad, drawing, raster, video, audio, animation, etc.
+        <artifact> # e.g. brep, mesh, object, document, cad, drawing, raster, video, audio, animation, etc.
+          engine
+            component.rs
+            component.ts
+            …
           schema
             snapshot
               …
@@ -425,7 +429,35 @@ s
 
 ---
 
-The standard subsets are not correctly implemented.
+The current architecture has artifacts but now artifacts and formats should be separated.
+Artifacts are the shared abstractions of the data. Formats are for io.
+
+```
+s
+  plugins
+    stdio
+      artifacts
+        <artifact> # e.g. brep, mesh, object, document, cad, drawing, raster, video, audio, animation, etc.
+          schema
+            snapshot
+              …
+            diff
+              …
+            mutations
+              …
+            …
+          …
+      formats
+        <format> # e.g. gltf (including both .gltf and .glb), pdf, png, etc
+          standards
+            <standard> # e.g. 2.0 for pdf, 4x3 for ifc, AP225 for STEP, etc,
+              subsets
+                <subset> # e.g. x, vt, h for pdf, cv20, sav, cobie for ifc 2x3, cc0, cc1, cc2, cc3, cc4, cc5, cc6 for STEP, etc
+```
+
+---
+
+The artifact standard subsets are not correctly implemented.
 
 e.g. pdf has a,x,e,ua,vt,h subsets.
 PDF/A (Archiving): Designed for long-term document preservation. It ensures a document looks exactly the same in the future by embedding all necessary information, such as fonts and colors.

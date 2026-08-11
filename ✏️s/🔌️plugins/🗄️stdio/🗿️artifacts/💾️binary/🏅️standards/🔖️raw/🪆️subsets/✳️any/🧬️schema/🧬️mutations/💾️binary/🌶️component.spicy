@@ -1,4 +1,5 @@
-module Stdio_binary_mutations;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_binary_mutation;
+
+public type Op = unit {
+    json_body: bytes &eod;   # serde_json-encoded BinaryMutation, see mutations/text/*.ebnf
 };

@@ -1,6 +1,7 @@
 //! 🧬️ JsonArtifact schema — full artifact state.
 
 use crate::artifacts::json::{JsonSnapshot};
+use crate::artifacts::json::schema::snapshot::JsonValue;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +15,7 @@ pub struct JsonArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub value: serde_json::Value,
+    pub value: JsonValue,
 }
 //#endregion 🔖️Artifact
 

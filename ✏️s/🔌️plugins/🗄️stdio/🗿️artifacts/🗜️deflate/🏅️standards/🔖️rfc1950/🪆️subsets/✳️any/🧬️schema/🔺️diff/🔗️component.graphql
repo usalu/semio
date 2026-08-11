@@ -1,5 +1,10 @@
-# 🧬️ DeflateDiff
+# 🔺️ DeflateDiff — sparse per-field RFC1950 container diff
 type DeflateDiff {
-  schema: String
-  bytes: String
+  compressionMethod: Int
+  windowBits: Int
+  compressionLevelHint: DeflateLevelHint
+  """Tri-state: absent (field itself null) = unchanged is expressed via omission upstream;
+  present + null = dictionary cleared; present + value = dictionary set."""
+  dictId: Int
+  payload: [Int!]
 }

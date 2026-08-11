@@ -112,6 +112,7 @@ fn sst_to_xml(shared: &[String]) -> XmlDocument {
             children,
         }),
         doctype: None,
+        declaration: None,
     }
 }
 
@@ -167,6 +168,7 @@ fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
             children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: sheets }],
         }),
         doctype: None,
+        declaration: None,
     }
 }
 
@@ -237,6 +239,7 @@ fn worksheet_to_xml(sheet: &XlsxSheet, shared: &mut Vec<String>) -> XmlDocument 
             children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }],
         }),
         doctype: None,
+        declaration: None,
     }
 }
 

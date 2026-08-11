@@ -1,6 +1,55 @@
-dialect grammar stdio.zip.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.zip' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.zip.mutation
+; A `ZipMutation` op-text line is `serde_json::to_string` of the `#[serde(tag = "mutation")]`
+; enum — a single-line JSON object whose `"mutation"` member is the camelCase variant name and
+; whose remaining members are that variant's own fields (untagged serde adjacency: no nested
+; payload wrapper).
+root = mutation-line
+mutation-line = mutation-object NL?
+mutation-object = '{' '"mutation"' ':' mutation-kind [ ',' variant-fields ] '}'
+mutation-kind = '"noMutation"' / '"setSnapshot"' / '"setArchiveComment"' / '"addEntry"'
+              / '"removeEntry"' / '"renameEntry"' / '"setEntryData"' / '"setEntryMethod"'
+              / '"setEntryTimestamps"' / '"setEntryFlags"' / '"setEntryVersions"'
+              / '"setEntryAttributes"' / '"setEntryExtra"' / '"setEntryComment"'
+; The concrete member set is exactly one of the following, selected by `mutation-kind` above —
+; `noMutation` has none; the rest are the mutation's own struct fields, camelCase, no member ever
+; omitted (unlike the diff facet, mutation payload fields are not sparse).
+variant-fields = set-snapshot-fields / set-archive-comment-fields / add-entry-fields
+               / remove-entry-fields / rename-entry-fields / set-entry-data-fields
+               / set-entry-method-fields / set-entry-timestamps-fields / set-entry-flags-fields
+               / set-entry-versions-fields / set-entry-attributes-fields / set-entry-extra-fields
+               / set-entry-comment-fields
+set-snapshot-fields = '"snapshot"' ':' zip-snapshot-object
+set-archive-comment-fields = '"comment"' ':' json-string
+add-entry-fields = '"index"' ':' json-number ',' '"entry"' ':' zip-entry-object
+remove-entry-fields = '"name"' ':' json-string
+rename-entry-fields = '"name"' ':' json-string ',' '"newName"' ':' json-string
+set-entry-data-fields = '"name"' ':' json-string ',' '"data"' ':' byte-array
+set-entry-method-fields = '"name"' ':' json-string ',' '"method"' ':' method-literal
+set-entry-timestamps-fields = '"name"' ':' json-string ',' '"dosDate"' ':' json-number ','
+                               '"dosTime"' ':' json-number ','
+                               '"unixMtime"' ':' ( json-number / 'null' )
+set-entry-flags-fields = '"name"' ':' json-string ',' '"flags"' ':' json-number
+set-entry-versions-fields = '"name"' ':' json-string ',' '"versionMadeBy"' ':' json-number ','
+                             '"versionNeeded"' ':' json-number
+set-entry-attributes-fields = '"name"' ':' json-string ',' '"internalAttrs"' ':' json-number ','
+                               '"externalAttrs"' ':' json-number
+set-entry-extra-fields = '"name"' ':' json-string ',' '"localExtra"' ':' extra-field-array ','
+                          '"centralExtra"' ':' extra-field-array
+set-entry-comment-fields = '"name"' ':' json-string ',' '"comment"' ':' json-string
+; Full snapshot/entry shapes — see `📸️snapshot/📝️text/📖️component.grammar.semio` for the
+; complete `ZipEntry` field set this artifact models (`zip-entry-object` reuses it verbatim).
+zip-snapshot-object = '{' '"schema"' ':' json-string ',' '"entries"' ':' '[' *( zip-entry-object ',' ) ']' ','
+                       '"comment"' ':' json-string '}'
+zip-entry-object = '{' '"name"' ':' json-string ',' *( entry-field ',' ) '}'
+entry-field = '"data"' ':' byte-array / '"method"' ':' method-literal / '"dosDate"' ':' json-number
+            / '"dosTime"' ':' json-number / '"unixMtime"' ':' ( json-number / 'null' )
+            / '"flags"' ':' json-number / '"versionMadeBy"' ':' json-number
+            / '"versionNeeded"' ':' json-number / '"internalAttrs"' ':' json-number
+            / '"externalAttrs"' ':' json-number / '"localExtra"' ':' extra-field-array
+            / '"centralExtra"' ':' extra-field-array / '"comment"' ':' json-string
+method-literal = '"stored"' / '"deflate"'
+byte-array = '[' *( json-number ',' ) ']'
+extra-field-array = '[' *( extra-field-object ',' ) ']'
+extra-field-object = '{' '"id"' ':' json-number ',' '"payload"' ':' byte-array '}'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = 1*DIGIT

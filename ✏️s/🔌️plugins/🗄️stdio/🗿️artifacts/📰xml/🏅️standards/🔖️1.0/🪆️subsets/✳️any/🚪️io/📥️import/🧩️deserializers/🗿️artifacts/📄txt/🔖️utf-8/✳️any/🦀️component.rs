@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse xml text into a XmlSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<XmlSnapshot, store::TextError> {
-    let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(from.text.trim()).map_err(|e| {
+    let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(from.to_body().trim()).map_err(|e| {
         store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))
     })?;
     Ok(XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc })

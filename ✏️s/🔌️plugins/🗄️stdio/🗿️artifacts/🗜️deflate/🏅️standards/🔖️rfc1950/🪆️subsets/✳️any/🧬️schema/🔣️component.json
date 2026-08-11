@@ -2,13 +2,20 @@
   "$id": "https://semio.tech/schema/s.stdio.deflate/artifact.json",
   "title": "DeflateArtifact",
   "type": "object",
+  "required": ["schema", "compressionMethod", "windowBits", "compressionLevelHint", "payload"],
   "properties": {
-    "schema": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "compressionMethod": { "type": "integer", "minimum": 0, "maximum": 15, "x-semio-state": "persistent" },
+    "windowBits": { "type": "integer", "minimum": 0, "maximum": 15, "x-semio-state": "persistent" },
+    "compressionLevelHint": {
       "type": "string",
+      "enum": ["fastest", "fast", "default", "maximum"],
       "x-semio-state": "persistent"
     },
-    "bytes": {
-      "type": "string",
+    "dictId": { "type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-state": "persistent" },
+    "payload": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
       "x-semio-state": "persistent"
     }
   }

@@ -1,6 +1,13 @@
 dialect grammar stdio.txt.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.txt' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; every field is optional (present = changed) -- mirrors TxtDiff/TxtLinesDiff exactly, no
+; full-snapshot replace slot.
+diff = '{' [member *(',' member)] '}'
+member = trailing-newline-m / line-ending-m / lines-m
+trailing-newline-m = '"trailingNewline":' bool
+line-ending-m = '"lineEnding":' ('"lf"' / '"crLf"')
+lines-m = '"lines":' lines-diff
+lines-diff = '{"removed":' int-array ',"modified":' line-entries ',"added":' line-entries '}'
+line-entries = '[' [line-entry *(',' line-entry)] ']'
+line-entry = '{"index":' digits ',"text":' json-string '}'
+int-array = '[' [digits *(',' digits)] ']'

@@ -1,5 +1,25 @@
-# 🧬️ TxtDiff
+# ➕️ TxtLineAdded
+type TxtLineAdded {
+  index: Int!
+  text: String!
+}
+
+# ✏️ TxtLineModified
+type TxtLineModified {
+  index: Int!
+  text: String!
+}
+
+# 🧮 TxtLinesDiff
+type TxtLinesDiff {
+  removed: [Int!]!
+  modified: [TxtLineModified!]!
+  added: [TxtLineAdded!]!
+}
+
+# 🔺️ TxtDiff
 type TxtDiff {
-  schema: String
-  text: String
+  trailingNewline: Boolean
+  lineEnding: LineEnding
+  lines: TxtLinesDiff
 }

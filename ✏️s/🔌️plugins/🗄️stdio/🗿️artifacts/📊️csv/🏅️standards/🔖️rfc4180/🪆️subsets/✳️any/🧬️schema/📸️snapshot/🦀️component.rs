@@ -6,8 +6,37 @@ use serde::{Deserialize, Serialize};
 
 fn default_true() -> bool { true }
 
+//#region 🔖️Field
+/// 🔤 One RFC 4180 field value plus whether the source quoted it — rfc4180's own optional
+/// quoting means whether a field WAS quoted is real information worth preserving losslessly,
+/// so re-serializing can reproduce the exact source bytes rather than a lossy normal form
+/// (https://www.rfc-editor.org/rfc/rfc4180#section-2, rule 5).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvField {
+    #[serde(default)]
+    pub value: String,
+    #[serde(default)]
+    pub quoted: bool,
+}
+//#endregion 🔖️Field
+
+//#region 🔖️Record
+/// 📄 One RFC 4180 record (row) — a strong-like entity, index-keyed within
+/// `CsvSnapshot::records`. Field COUNT is real, per-record information (rfc4180 is a
+/// loosely-typed grid on the wire even though most producers keep it rectangular).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvRecord {
+    #[serde(default)]
+    pub fields: Vec<CsvField>,
+}
+//#endregion 🔖️Record
+
 //#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option).
+/// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option). The
+/// header row (when present) is `records[0]` — RFC 4180 draws no structural distinction
+/// between a header record and a data record, only a convention of which one comes first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
@@ -20,10 +49,7 @@ pub struct CsvSnapshot {
     pub has_header: bool,
     #[state(persistent)]
     #[serde(default)]
-    pub headers: Vec<String>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub rows: Vec<Vec<String>>,
+    pub records: Vec<CsvRecord>,
 }
 
 impl Default for CsvSnapshot {
@@ -31,8 +57,7 @@ impl Default for CsvSnapshot {
         Self {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
-            headers: Vec::new(),
-            rows: Vec::new(),
+            records: Vec::new(),
         }
     }
 }

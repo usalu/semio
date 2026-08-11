@@ -1,3 +1,11 @@
-(* ebnf stdio.deflate mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.deflate', newline ;
+(* ebnf stdio.deflate mutations: tagged camelCase JSON object, "mutation" discriminates variant *)
+document = no mutation | set snapshot | set compression params | set preset dictionary | set payload ;
+no mutation = '{"mutation":"noMutation"}' ;
+set snapshot = '{"mutation":"setSnapshot","snapshot":', snapshot object, '}' ;
+set compression params = '{"mutation":"setCompressionParams","method":', digit, { digit },
+                          ',"windowBits":', digit, { digit }, ',"levelHint":', level hint, '}' ;
+set preset dictionary = '{"mutation":"setPresetDictionary","dictId":', ( "null" | digit, { digit } ), '}' ;
+set payload = '{"mutation":"setPayload","payload":[', [ digit, { digit }, { ",", digit, { digit } } ], ']}' ;
+level hint = '"fastest"' | '"fast"' | '"default"' | '"maximum"' ;
+snapshot object = ? see sibling snapshot facet for the full DeflateSnapshot JSON shape ? ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

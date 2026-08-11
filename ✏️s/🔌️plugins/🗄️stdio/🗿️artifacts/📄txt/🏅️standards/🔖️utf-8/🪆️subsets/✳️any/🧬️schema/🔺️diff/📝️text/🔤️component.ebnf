@@ -1,3 +1,13 @@
-(* ebnf stdio.txt diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.txt', newline ;
+(* ebnf stdio.txt diff: JSON object mirroring the Rust TxtDiff sparse struct one-to-one --
+   only changed fields are present ("present = changed", per the diff recipe). *)
+diff            = "{" , [ member , { "," , member } ] , "}" ;
+member          = trailing-newline | line-ending | lines ;
+trailing-newline = '"trailingNewline"' , ":" , boolean ;
+line-ending     = '"lineEnding"' , ":" , ( '"lf"' | '"crLf"' ) ;
+lines           = '"lines"' , ":" , lines-diff ;
+lines-diff      = "{" , '"removed"' , ":" , int-array , "," ,
+                        '"modified"' , ":" , line-entry-array , "," ,
+                        '"added"' , ":" , line-entry-array , "}" ;
+line-entry      = "{" , '"index"' , ":" , integer , "," , '"text"' , ":" , string , "}" ;
+int-array       = "[" , [ integer , { "," , integer } ] , "]" ;
+line-entry-array = "[" , [ line-entry , { "," , line-entry } ] , "]" ;

@@ -1,4 +1,6 @@
 module Stdio_csv_mutations;
+
+# protocol::OpBinary raw JSON encoding of CsvMutation — no `.semio` envelope header.
 type Document = unit {
-    payload: bytes &eod;
+    payload: bytes &eod;   # UTF-8 JSON object
 };

@@ -1,2 +1,16 @@
-# schema facet
- type Placeholder { headers: String! }
+# 🧬️ CsvArtifact schema facet — full artifact state, mirrors CsvSnapshot field-for-field.
+
+type CsvArtifactField {
+  value: String!
+  quoted: Boolean!
+}
+
+type CsvArtifactRecord {
+  fields: [CsvArtifactField!]!
+}
+
+type CsvArtifact {
+  schema: String!
+  hasHeader: Boolean!
+  records: [CsvArtifactRecord!]!
+}

@@ -1,6 +1,17 @@
 syntax = "proto3";
 package semio.s_stdio_csv.artifact;
+
+message CsvArtifactField {
+  string value = 1;
+  bool quoted = 2;
+}
+
+message CsvArtifactRecord {
+  repeated CsvArtifactField fields = 1;
+}
+
 message CsvArtifact {
   string schema = 1;
-  string value_wire = 2;
+  bool has_header = 2;
+  repeated CsvArtifactRecord records = 3;
 }

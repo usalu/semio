@@ -10,7 +10,7 @@ pub fn register() {}
 /// 📤️ Encode xml into a TxtSnapshot.
 pub fn serialize(from: &XmlSnapshot) -> Result<TxtSnapshot, store::PackError> {
     let text = crate::artifacts::xml::schema::snapshot::xml_document_to_text(&from.doc);
-    Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text })
+    Ok(TxtSnapshot::from_body(&text))
 }
 
 /// 📤️ Encode as txt DSL.

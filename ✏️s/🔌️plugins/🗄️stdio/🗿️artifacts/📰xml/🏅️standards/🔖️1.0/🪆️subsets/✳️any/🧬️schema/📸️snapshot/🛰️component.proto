@@ -1,6 +1,57 @@
 syntax = "proto3";
 package semio.s_stdio_xml.snapshot;
+
+message XmlAttr {
+  string name = 1;
+  string value = 2;
+}
+
+message XmlNode {
+  oneof node {
+    XmlElement element = 1;
+    XmlText text = 2;
+    XmlCData c_data = 3;
+    XmlComment comment = 4;
+    XmlProcessingInstruction processing_instruction = 5;
+  }
+}
+
+message XmlElement {
+  string name = 1;
+  repeated XmlAttr attrs = 2;
+  repeated XmlNode children = 3;
+}
+
+message XmlText {
+  string text = 1;
+}
+
+message XmlCData {
+  string text = 1;
+}
+
+message XmlComment {
+  string text = 1;
+}
+
+message XmlProcessingInstruction {
+  string target = 1;
+  string data = 2;
+}
+
+message XmlDeclaration {
+  string version = 1;
+  optional string encoding = 2;
+  optional bool standalone = 3;
+}
+
+message XmlDocument {
+  optional XmlNode root = 1;
+  optional string doctype = 2;
+  optional XmlDeclaration declaration = 3;
+}
+
 message XmlSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  XmlDocument doc = 2;
 }

@@ -1,0 +1,8 @@
+[workspace]
+
+[package]
+name = "csv-diff-scratch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]

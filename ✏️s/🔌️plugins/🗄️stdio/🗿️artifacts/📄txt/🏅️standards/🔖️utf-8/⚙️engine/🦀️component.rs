@@ -1,5 +1,6 @@
 //! ⚙️ TxtEngine — owns a real `TxtArtifact`.
 
+use crate::artifacts::txt::schema::snapshot::LineEnding;
 use crate::artifacts::txt::{TxtArtifact, TxtDiff, TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 
 //#region 🔖️DocumentHelpers
@@ -79,13 +80,85 @@ mod tests {
     #[test]
     fn nontrivial_multiline_unicode_round_trip() {
         let body = "Hello, \u{4e16}\u{754c}!\nLine two with an emoji \u{1f389}.\nTab\there.\n".to_string();
-        let snap = TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text: body.clone() };
+        let snap = TxtSnapshot::from_body(&body);
+        assert_eq!(snap.to_body(), body);
         let dsl_text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
-        assert_eq!(parsed.text, body);
+        assert_eq!(parsed.to_body(), body);
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(decoded.text, body);
+        assert_eq!(decoded.to_body(), body);
     }
+
+    /// 🧪️ `codec_retention_law`: decode→encode is byte-preserving on real fixtures — CRLF, no
+    /// trailing newline, and a fully empty document all round-trip exactly at the `to_body`/
+    /// `from_body` and binary-pack layers (pack has no preamble-trimming quirk). The DSL-text
+    /// layer additionally round-trips for bodies that don't open with a blank line: the shared
+    /// `store::semio_format::wrap_text` (outside this artifact's ownership boundary) unwraps
+    /// via `body.trim_start()`, which is documented-lossy for a body starting with its own
+    /// newline -- pre-existing framework behavior, not something this diff/mutation wave owns.
+    #[test]
+    fn codec_retention_law() {
+        for body in ["a\nb\nc\n", "a\r\nb\r\nc", "", "\n", "just one line, no newline"] {
+            let snap = TxtSnapshot::from_body(body);
+            assert_eq!(snap.to_body(), body, "to_body/from_body mismatch for {body:?}");
+            let bytes = store::ArtifactPack::encode_pack(&snap);
+            let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+            assert_eq!(decoded, snap, "pack round-trip mismatch for {body:?}");
+        }
+        for body in ["a\nb\nc\n", "a\r\nb\r\nc", "just one line, no newline"] {
+            let snap = TxtSnapshot::from_body(body);
+            let dsl_text = store::ArtifactDsl::print_dsl(&snap);
+            let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+            assert_eq!(parsed, snap, "dsl round-trip mismatch for {body:?}");
+        }
+    }
+
+    //#region 🔖️FieldSweep
+    /// 🧹 Canonical "every mutable field differs" snapshot A.
+    fn sweep_a() -> TxtSnapshot {
+        TxtSnapshot {
+            schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
+            lines: vec!["keep-me".into(), "remove-me".into(), "modify-me".into()],
+            trailing_newline: false,
+            line_ending: LineEnding::Lf,
+        }
+    }
+
+    /// 🧹 Canonical "every mutable field differs" snapshot B: `lines` exercises one removed
+    /// (`remove-me`), one modified-in-place (`modify-me` → `modified!`), one added (`added!`);
+    /// `trailing_newline`/`line_ending` both flip.
+    fn sweep_b() -> TxtSnapshot {
+        TxtSnapshot {
+            schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
+            lines: vec!["keep-me".into(), "modified!".into(), "added!".into()],
+            trailing_newline: true,
+            line_ending: LineEnding::CrLf,
+        }
+    }
+
+    /// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, every
+    /// diff field is populated (`is_some()`), and `between(a,a)` is empty.
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
+        use protocol::DiffAlgebra;
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let ab = TxtDiff::between(&a, &b);
+        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) must equal b");
+        let ba = TxtDiff::between(&b, &a);
+        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) must equal a");
+
+        assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
+        assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");
+        let lines_diff = ab.lines.as_ref().expect("lines diff must be Some in a sweep diff");
+        assert!(!lines_diff.removed.is_empty(), "sweep must exercise a removed line");
+        assert!(!lines_diff.modified.is_empty(), "sweep must exercise a modified line");
+        assert!(!lines_diff.added.is_empty(), "sweep must exercise an added line");
+
+        assert!(TxtDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+    }
+    //#endregion 🔖️FieldSweep
 }
 //#endregion 🧪️Tests

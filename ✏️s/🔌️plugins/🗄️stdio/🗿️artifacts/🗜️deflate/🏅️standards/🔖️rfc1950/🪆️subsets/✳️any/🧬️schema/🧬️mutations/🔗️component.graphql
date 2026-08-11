@@ -1,5 +1,18 @@
-# 🧬️ DeflateMutation
-type DeflateMutation {
-  schema: String! @state(class: PERSISTENT)
-  bytes: String! @state(class: PERSISTENT)
+# 🧬️ DeflateMutation — imperative verbs over the typed RFC1950 container fields
+enum DeflateMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_COMPRESSION_PARAMS
+  SET_PRESET_DICTIONARY
+  SET_PAYLOAD
+}
+
+input DeflateMutationInput {
+  mutation: DeflateMutationTag!
+  snapshot: DeflateSnapshotInput
+  method: Int
+  windowBits: Int
+  levelHint: DeflateLevelHint
+  dictId: Int
+  payload: [Int!]
 }

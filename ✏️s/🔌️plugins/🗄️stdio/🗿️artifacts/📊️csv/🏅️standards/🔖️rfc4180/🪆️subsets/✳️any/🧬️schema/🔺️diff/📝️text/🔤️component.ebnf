@@ -1,3 +1,12 @@
-(* ebnf stdio.csv diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.csv', newline ;
+(* CsvDiff's wire text IS its JSON serialization (protocol::OpText — serde_json), sparse
+   fields per 🦀️component.rs; this documents the real shape, not RFC 8259's JSON grammar. *)
+diff = "{", [ member, { ",", member } ], "}" ;
+member = '"hasHeader"', ":", bool
+       | '"records"', ":", records diff ;
+records diff = "{", [ rmember, { ",", rmember } ], "}" ;
+rmember = '"removed"', ":", "[", { integer }, "]"
+        | '"modified"', ":", "[", { record modified }, "]"
+        | '"added"', ":", "[", { record added }, "]" ;
+record modified = "{", '"index"', ":", integer, ",", '"diff"', ":", record diff, "}" ;
+record added = "{", '"index"', ":", integer, ",", '"record"', ":", record json, "}" ;
+bool = "true" | "false" ;

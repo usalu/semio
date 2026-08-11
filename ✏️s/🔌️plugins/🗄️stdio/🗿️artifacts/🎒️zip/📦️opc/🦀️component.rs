@@ -133,6 +133,7 @@ impl OpcContentTypes {
         XmlDocument {
             root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
             doctype: None,
+            declaration: None,
         }
     }
 
@@ -261,6 +262,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
     XmlDocument {
         root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
         doctype: None,
+        declaration: None,
     }
 }
 

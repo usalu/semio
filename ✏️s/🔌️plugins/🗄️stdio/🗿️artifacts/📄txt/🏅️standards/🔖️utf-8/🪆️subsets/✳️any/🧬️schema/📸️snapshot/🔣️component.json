@@ -7,9 +7,20 @@
       "type": "string",
       "x-semio-state": "persistent"
     },
-    "text": {
+    "lines": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "persistent"
+    },
+    "trailingNewline": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "lineEnding": {
       "type": "string",
+      "enum": ["lf", "crLf"],
       "x-semio-state": "persistent"
     }
-  }
+  },
+  "required": ["schema", "lines", "trailingNewline", "lineEnding"]
 }

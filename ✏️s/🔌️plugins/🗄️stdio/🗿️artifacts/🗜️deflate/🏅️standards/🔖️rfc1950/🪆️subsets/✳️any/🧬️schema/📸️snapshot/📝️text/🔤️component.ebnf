@@ -1,3 +1,9 @@
-(* ebnf stdio.deflate snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.deflate', newline ;
+(* ebnf stdio.deflate snapshot: hex-pair-encoded RFC1950 zlib stream (the `.zz` DSL text form) *)
+document = cmf, flg, [ dict id ], compressed data, adler32 ;
+cmf = hex digit, hex digit ;                    (* CM low nibble (8=deflate) / CINFO high nibble *)
+flg = hex digit, hex digit ;                     (* FLEVEL/FDICT/FCHECK *)
+dict id = hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit ; (* only when flg.FDICT set *)
+compressed data = { hex digit, hex digit } ;     (* raw RFC1951 DEFLATE stream, hex-encoded, opaque bitstream *)
+adler32 = hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit ; (* RFC1950 §2.3 *)
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+          | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;

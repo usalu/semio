@@ -3,13 +3,21 @@
   "title": "DeflateDiff",
   "type": "object",
   "properties": {
-    "schema": {
+    "compressionMethod": { "type": "integer", "minimum": 0, "maximum": 15 },
+    "windowBits": { "type": "integer", "minimum": 0, "maximum": 15 },
+    "compressionLevelHint": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": ["fastest", "fast", "default", "maximum"]
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "dictId": {
+      "description": "tri-state: absent=unchanged, null=cleared, number=set",
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "payload": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
     }
   }
 }

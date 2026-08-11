@@ -1,6 +1,13 @@
 dialect grammar stdio.deflate.mutations
+; DeflateMutation wire form (protocol::OpText::print_op = serde_json::to_string): a tagged
+; camelCase JSON object, `mutation` discriminates the variant (serde(tag = "mutation")).
 root = document
-document = header body
-header = 'schema' SP 'stdio.deflate' NL
-body = payload NL?
-payload = *OCTET
+document = no-mutation / set-snapshot / set-compression-params / set-preset-dictionary / set-payload
+no-mutation = %s"{\"mutation\":\"noMutation\"}"
+set-snapshot = %s"{\"mutation\":\"setSnapshot\",\"snapshot\":" snapshot-object "}"
+set-compression-params = %s"{\"mutation\":\"setCompressionParams\",\"method\":" 1*DIGIT
+                          %s",\"windowBits\":" 1*DIGIT %s",\"levelHint\":" level-hint "}"
+set-preset-dictionary = %s"{\"mutation\":\"setPresetDictionary\",\"dictId\":" ( "null" / 1*DIGIT ) "}"
+set-payload = %s"{\"mutation\":\"setPayload\",\"payload\":\"[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]\"}"
+level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""
+snapshot-object = *OCTET   ; see sibling 📸️snapshot/🔣️component.json for the full DeflateSnapshot shape

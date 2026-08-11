@@ -1,6 +1,8 @@
 dialect grammar stdio.csv.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.csv' NL
-body = payload NL?
-payload = *OCTET
+root = mutation
+; wire text IS the JSON serialization of CsvMutation (protocol::OpText — serde_json),
+; tagged on "mutation" per 🦀️component.rs's enum
+mutation = "{" '"mutation"' ":" tag ("," member)* "}"
+tag = '"noMutation"' / '"setSnapshot"' / '"setHasHeader"'
+    / '"insertRecord"' / '"removeRecord"' / '"setField"'
+member = STRING ":" JSON_VALUE

@@ -1,2 +1,19 @@
-# schema facet
- type Placeholder { headers: String! }
+# 🧬️ CsvSnapshot schema facet — mirrors 🦀️component.rs field-for-field.
+
+"🔤 One RFC 4180 field value plus whether the source quoted it."
+type CsvField {
+  value: String!
+  quoted: Boolean!
+}
+
+"📄 One RFC 4180 record (row) — index-keyed within CsvSnapshot.records."
+type CsvRecord {
+  fields: [CsvField!]!
+}
+
+"📸️ Persisted stdio.csv snapshot. records[0] is the header row when hasHeader."
+type CsvSnapshot {
+  schema: String!
+  hasHeader: Boolean!
+  records: [CsvRecord!]!
+}

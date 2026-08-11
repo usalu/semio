@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📤️ Encode md into a TxtSnapshot.
 pub fn serialize(from: &MdSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    Ok(TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), text: from.body.clone() })
+    Ok(TxtSnapshot::from_body(&from.body))
 }
 
 /// 📤️ Encode as txt DSL.

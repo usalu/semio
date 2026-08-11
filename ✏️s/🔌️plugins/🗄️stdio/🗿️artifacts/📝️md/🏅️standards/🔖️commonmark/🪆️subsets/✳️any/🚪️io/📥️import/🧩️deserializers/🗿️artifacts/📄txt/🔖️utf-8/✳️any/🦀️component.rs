@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse md text into a MdSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<MdSnapshot, store::TextError> {
-    Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), body: from.text.clone() })
+    Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), body: from.to_body() })
 }
 
 /// 📥 Parse DSL/text bytes via txt then md.

@@ -7,11 +7,10 @@ use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 /// Register deserializer hooks.
 pub fn register() {}
 
-/// 🎒️ Inflate zlib stream then parse ZIP.
+/// 🎒️ `from.payload` is already the decompressed RFC1950 payload (typed `DeflateSnapshot`
+/// decoding already inflated it) -- parse it as ZIP directly.
 pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackError> {
-    let payload = crate::artifacts::deflate::engine::zlib_decompress(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
-    let mut snap = crate::artifacts::zip::engine::decode_zip(&payload)
+    let mut snap = crate::artifacts::zip::engine::decode_zip(&from.payload)
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_ZIP_DOCUMENT_SCHEMA.into();
     Ok(snap)

@@ -1,3 +1,10 @@
-; abnf stdio.deflate diff
-document = payload
-payload = *OCTET
+; abnf stdio.deflate diff -- wire form is UTF-8 JSON bytes (serde_json::to_vec), same shape as
+; the sibling text grammar: a sparse camelCase object, only changed fields present.
+document = "{" [ member *( "," member ) ] "}"
+member = compression-method / window-bits / compression-level-hint / dict-id / payload
+compression-method = %s"\"compressionMethod\":" 1*DIGIT
+window-bits = %s"\"windowBits\":" 1*DIGIT
+compression-level-hint = %s"\"compressionLevelHint\":" level-hint
+dict-id = %s"\"dictId\":" ( "null" / 1*DIGIT )
+payload = %s"\"payload\":" "[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]"
+level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""

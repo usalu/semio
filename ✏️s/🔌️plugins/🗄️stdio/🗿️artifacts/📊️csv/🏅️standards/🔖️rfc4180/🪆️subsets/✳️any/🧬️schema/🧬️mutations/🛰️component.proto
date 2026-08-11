@@ -1,6 +1,26 @@
 syntax = "proto3";
 package semio.s_stdio_csv.mutation;
+
+import "s_stdio_csv/snapshot.proto";
+
+message SetSnapshot { semio.s_stdio_csv.snapshot.CsvSnapshot snapshot = 1; }
+message SetHasHeader { bool has_header = 1; }
+message InsertRecord { uint64 index = 1; semio.s_stdio_csv.snapshot.CsvRecord record = 2; }
+message RemoveRecord { uint64 index = 1; }
+message SetField {
+  uint64 record_index = 1;
+  uint64 field_index = 2;
+  string value = 3;
+  bool quoted = 4;
+}
+
 message CsvMutation {
-  string schema = 1;
-  string value_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetHasHeader set_has_header = 3;
+    InsertRecord insert_record = 4;
+    RemoveRecord remove_record = 5;
+    SetField set_field = 6;
+  }
 }

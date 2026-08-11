@@ -3,7 +3,7 @@ use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::step::{StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
 pub fn register() {}
 pub fn deserialize(from: &TxtSnapshot) -> Result<StepSnapshot, store::TextError> {
-    let document = crate::artifacts::step::engine::part21::parse_part21(from.text.trim()).map_err(|e| {
+    let document = crate::artifacts::step::engine::part21::parse_part21(from.to_body().trim()).map_err(|e| {
         store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1))
     })?;
     Ok(StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), document })

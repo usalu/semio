@@ -1,2 +1,60 @@
-# diff facet
- type Placeholder { doc: String! }
+""" 🔺️ Diff for `stdio.xml`. `declaration`/`doctype` are tri-state scalars: the field is absent
+from the payload when unchanged; represented here as plain nullable fields since GraphQL has no
+native tri-state -- the wire encoding (JSON, via the sibling `.json`/`.ts` facets) is authoritative
+for the absent/null/set distinction. """
+type XmlDiff {
+  declaration: XmlDeclaration
+  doctype: String
+  root: XmlNodeDiff
+}
+
+enum XmlNodeDiffKind {
+  ELEMENT
+  TEXT
+  REPLACE
+}
+
+""" 🌳 Recursive per-node diff -- tagged union flattened like `XmlNode`. """
+type XmlNodeDiff {
+  kind: XmlNodeDiffKind!
+  name: String
+  attributes: XmlAttributesDiff
+  children: XmlChildrenDiff
+  text: String
+  node: XmlNode
+}
+
+type XmlAttrModified {
+  name: String!
+  value: String!
+}
+
+type XmlAttrAdded {
+  index: Int!
+  name: String!
+  value: String!
+}
+
+""" 🏷️ Name-keyed, order-preserving attribute triple. """
+type XmlAttributesDiff {
+  removed: [String!]!
+  modified: [XmlAttrModified!]!
+  added: [XmlAttrAdded!]!
+}
+
+type XmlChildModified {
+  index: Int!
+  diff: XmlNodeDiff!
+}
+
+type XmlChildAdded {
+  index: Int!
+  item: XmlNode!
+}
+
+""" 🌳 Index-keyed, recursive children triple. """
+type XmlChildrenDiff {
+  removed: [Int!]!
+  modified: [XmlChildModified!]!
+  added: [XmlChildAdded!]!
+}

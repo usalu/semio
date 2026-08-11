@@ -7,15 +7,18 @@ use crate::artifacts::zip::ZipSnapshot;
 /// Register serializer hooks.
 pub fn register() {}
 
-/// Encode ZIP bytes then zlib-compress via deflate artifact.
+/// Encode ZIP bytes as the deflate artifact's typed payload (real zlib compression happens on
+/// `ArtifactPack`/`ArtifactDsl` encode, via `engine::encode_deflate_snapshot`).
 pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError> {
     let zip_bytes = crate::artifacts::zip::engine::encode_zip(from)
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
-    let bytes = crate::artifacts::deflate::engine::zlib_compress(&zip_bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
     Ok(DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        bytes,
+        compression_method: 8,
+        window_bits: 7,
+        compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::default(),
+        dict_id: None,
+        payload: zip_bytes,
     })
 }
 

@@ -1,6 +1,9 @@
 dialect grammar stdio.binary.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.binary' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; a splice list: each entry replaces [offset, offset+removeLen) with `insert`, processed
+; DESCENDING by offset against the BASE buffer on apply -- see the Rust `BinaryDiff::apply` docs.
+diff = '{' ['"splices":' splice-array] '}'
+splice-array = '[' [splice *(',' splice)] ']'
+splice = '{"offset":' digits ',"removeLen":' digits ',"insert":' byte-array '}'
+byte-array = '[' [byte *(',' byte)] ']'
+byte = 1*3DIGIT

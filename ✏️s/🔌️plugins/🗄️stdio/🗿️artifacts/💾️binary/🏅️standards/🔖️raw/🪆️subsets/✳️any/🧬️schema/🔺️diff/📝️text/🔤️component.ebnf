@@ -1,3 +1,9 @@
-(* ebnf stdio.binary diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.binary', newline ;
+(* ebnf stdio.binary diff: JSON object mirroring the Rust BinaryDiff struct one-to-one -- an
+   ordered splice list, no full-replace slot. *)
+diff        = "{" , [ '"splices"' , ":" , splice-array ] , "}" ;
+splice-array = "[" , [ splice , { "," , splice } ] , "]" ;
+splice      = "{" , '"offset"' , ":" , integer , "," ,
+                    '"removeLen"' , ":" , integer , "," ,
+                    '"insert"' , ":" , byte-array , "}" ;
+byte-array  = "[" , [ byte , { "," , byte } ] , "]" ;
+byte        = digit , [ digit ] , [ digit ] ;   (* 0..255 *)

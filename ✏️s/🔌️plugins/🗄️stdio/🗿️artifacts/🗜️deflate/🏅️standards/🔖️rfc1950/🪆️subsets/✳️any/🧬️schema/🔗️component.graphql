@@ -1,5 +1,9 @@
-# 🧬️ DeflateArtifact
+# 🧬️ DeflateArtifact — mirrors DeflateSnapshot's typed RFC1950 fields
 type DeflateArtifact {
   schema: String! @state(class: PERSISTENT)
-  bytes: String! @state(class: PERSISTENT)
+  compressionMethod: Int! @state(class: PERSISTENT)
+  windowBits: Int! @state(class: PERSISTENT)
+  compressionLevelHint: DeflateLevelHint! @state(class: PERSISTENT)
+  dictId: Int @state(class: PERSISTENT)
+  payload: [Int!]! @state(class: PERSISTENT)
 }

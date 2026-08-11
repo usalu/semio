@@ -1,0 +1,60 @@
+     |
+4219 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4376:5
+     |
+4376 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4375:5
+     |
+4375 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4562:5
+     |
+4562 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4561:5
+     |
+4561 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4748:5
+     |
+4748 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4747:5
+     |
+4747 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4934:5
+     |
+4934 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4933:5
+     |
+4933 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+For more information about this error, try `rustc --explain E0432`.
+warning: `semio-s-plugin-stdio` (lib) generated 150 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 4 previous errors; 150 warnings emitted

@@ -1,3 +1,4 @@
 dialect protocol stdio.csv.mutations
-magic = %x00
-payload = *OCTET
+; protocol::OpBinary raw JSON encoding of CsvMutation — NOT wrapped in the shared `.semio`
+; binary envelope
+payload = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)

@@ -1,6 +1,15 @@
 dialect grammar stdio.csv.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.csv' NL
-body = payload NL?
-payload = *OCTET
+root = file
+; envelope preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble)
+file = record (CRLF record)* CRLF?
+record = field (COMMA field)*
+field = escaped / non_escaped
+escaped = DQUOTE (TEXTDATA / COMMA / CR / LF / DQUOTE DQUOTE)* DQUOTE
+non_escaped = TEXTDATA*
+COMMA = ","
+CR = "\r"
+LF = "\n"
+CRLF = CR LF / LF
+DQUOTE = '"'
+TEXTDATA = %x20-21 / %x23-2B / %x2D-7E / %x80-10FFFF

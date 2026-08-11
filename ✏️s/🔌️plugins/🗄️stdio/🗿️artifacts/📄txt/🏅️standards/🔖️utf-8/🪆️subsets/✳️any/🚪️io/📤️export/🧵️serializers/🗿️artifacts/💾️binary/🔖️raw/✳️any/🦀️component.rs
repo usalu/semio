@@ -11,7 +11,7 @@ pub fn register() {}
 pub fn serialize(from: &TxtSnapshot) -> BinarySnapshot {
     BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        bytes: from.text.as_bytes().to_vec(),
+        bytes: from.to_body().into_bytes(),
     }
 }
 

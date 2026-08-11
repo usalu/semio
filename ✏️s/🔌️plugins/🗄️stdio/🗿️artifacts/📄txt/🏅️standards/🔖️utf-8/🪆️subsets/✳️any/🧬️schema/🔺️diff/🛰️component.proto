@@ -1,6 +1,26 @@
 syntax = "proto3";
 package semio.s_stdio_txt.diff;
+
+import "s_stdio_txt/snapshot.proto";
+
+message TxtLineAdded {
+  uint64 index = 1;
+  string text = 2;
+}
+
+message TxtLineModified {
+  uint64 index = 1;
+  string text = 2;
+}
+
+message TxtLinesDiff {
+  repeated uint64 removed = 1;
+  repeated TxtLineModified modified = 2;
+  repeated TxtLineAdded added = 3;
+}
+
 message TxtDiff {
-  string schema = 1;
-  string text_wire = 2;
+  optional bool trailing_newline = 1;
+  optional semio.s_stdio_txt.snapshot.LineEnding line_ending = 2;
+  optional TxtLinesDiff lines = 3;
 }

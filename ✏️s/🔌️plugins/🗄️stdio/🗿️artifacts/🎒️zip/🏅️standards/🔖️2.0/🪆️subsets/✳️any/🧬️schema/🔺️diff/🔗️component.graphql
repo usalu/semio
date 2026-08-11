@@ -1,5 +1,67 @@
-# 🧬️ ZipDiff
+# 🔺️ ZipDiff — handcrafted sparse diff.
+
+enum ZipCompressionMethod {
+  STORED
+  DEFLATE
+}
+
+type ZipExtraField {
+  id: Int!
+  payload: [Int!]!
+}
+
+type ZipEntry {
+  name: String!
+  data: [Int!]!
+  method: ZipCompressionMethod!
+  dosDate: Int!
+  dosTime: Int!
+  unixMtime: Int
+  flags: Int!
+  versionMadeBy: Int!
+  versionNeeded: Int!
+  internalAttrs: Int!
+  externalAttrs: Int!
+  localExtra: [ZipExtraField!]!
+  centralExtra: [ZipExtraField!]!
+  comment: String!
+}
+
+"Per-field patch for one ZipEntry. unixMtime is tri-state: absent = unchanged, null = cleared, a value = set."
+type ZipEntryDiff {
+  name: String
+  data: [Int!]
+  method: ZipCompressionMethod
+  dosDate: Int
+  dosTime: Int
+  unixMtime: Int
+  flags: Int
+  versionMadeBy: Int
+  versionNeeded: Int
+  internalAttrs: Int
+  externalAttrs: Int
+  localExtra: [ZipExtraField!]
+  centralExtra: [ZipExtraField!]
+  comment: String
+}
+
+type ZipEntryModified {
+  name: String!
+  diff: ZipEntryDiff!
+}
+
+type ZipEntryAdded {
+  index: Int!
+  entry: ZipEntry!
+}
+
+type ZipEntriesDiff {
+  removed: [String!]!
+  modified: [ZipEntryModified!]!
+  added: [ZipEntryAdded!]!
+}
+
 type ZipDiff {
-  schema: String
-  bytes: String
+  comment: String @state(class: PERSISTENT)
+  entries: ZipEntriesDiff @state(class: PERSISTENT)
 }

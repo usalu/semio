@@ -1,15 +1,61 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.csv/mutation.csv",
   "title": "CsvMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation"],
+      "properties": { "mutation": { "const": "noMutation" } }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "snapshot"],
+      "properties": {
+        "mutation": { "const": "setSnapshot" },
+        "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.csv/snapshot.csv" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "hasHeader"],
+      "properties": {
+        "mutation": { "const": "setHasHeader" },
+        "hasHeader": { "type": "boolean" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "index", "record"],
+      "properties": {
+        "mutation": { "const": "insertRecord" },
+        "index": { "type": "integer", "minimum": 0 },
+        "record": { "$ref": "https://semio.tech/schema/s.stdio.csv/snapshot.csv#/$defs/CsvRecord" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "index"],
+      "properties": {
+        "mutation": { "const": "removeRecord" },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "recordIndex", "fieldIndex", "value", "quoted"],
+      "properties": {
+        "mutation": { "const": "setField" },
+        "recordIndex": { "type": "integer", "minimum": 0 },
+        "fieldIndex": { "type": "integer", "minimum": 0 },
+        "value": { "type": "string" },
+        "quoted": { "type": "boolean" }
+      }
     }
-  }
+  ]
 }

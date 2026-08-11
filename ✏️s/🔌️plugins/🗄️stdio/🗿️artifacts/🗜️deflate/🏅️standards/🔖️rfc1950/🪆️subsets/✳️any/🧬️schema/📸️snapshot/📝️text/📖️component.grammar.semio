@@ -1,6 +1,8 @@
 dialect grammar stdio.deflate.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.deflate' NL
-body = payload NL?
-payload = *OCTET
+document = cmf flg dict-id? compressed-data adler32
+cmf = 2HEXDIG                     ; low nibble = compression method (8=deflate), high nibble = CINFO (window bits)
+flg = 2HEXDIG                     ; bits6-7 FLEVEL, bit5 FDICT, bits0-4 FCHECK
+dict-id = 8HEXDIG                 ; preset-dictionary id, present only when flg.FDICT is set
+compressed-data = *2HEXDIG        ; raw RFC1951 DEFLATE stream, hex-pair-encoded (opaque bitstream)
+adler32 = 8HEXDIG                 ; Adler-32 of the decompressed payload, hex-encoded, RFC1950 §2.3

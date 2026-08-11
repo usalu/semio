@@ -1,6 +1,41 @@
 dialect grammar stdio.zip.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.zip' NL
-body = payload NL?
-payload = *OCTET
+; A `ZipDiff` op-text line is the exact `serde_json::to_string` of the Rust struct — a single-line
+; JSON object, camelCase keys, absent fields omitted (never emitted as `null`) except the tri-state
+; `unixMtime` inside an entry patch, where `null` is a real, distinct value (the timestamp was
+; cleared) from "key absent" (the timestamp was left untouched).
+root = diff-line
+diff-line = diff-object NL?
+diff-object = '{' [ comment-member ',' ] [ entries-member ] '}'
+comment-member = '"comment"' ':' json-string
+entries-member = '"entries"' ':' entries-object
+entries-object = '{' [ removed-member ',' ] [ modified-member ',' ] [ added-member ] '}'
+removed-member = '"removed"' ':' '[' *( json-string ',' ) ']'
+modified-member = '"modified"' ':' '[' *( modified-entry ',' ) ']'
+modified-entry = '{' '"name"' ':' json-string ',' '"diff"' ':' entry-diff-object '}'
+added-member = '"added"' ':' '[' *( added-entry ',' ) ']'
+added-entry = '{' '"index"' ':' json-number ',' '"entry"' ':' zip-entry-object '}'
+; Every key optional (sparse patch); `unixMtime` is the one tri-state member — absent = unchanged,
+; `null` = cleared, a number = set. All other members follow the same field set as the snapshot's
+; `ZipEntry` (see `📸️snapshot/📝️text/📖️component.grammar.semio` sibling once handcrafted).
+entry-diff-object = '{' *( entry-diff-member ',' ) '}'
+entry-diff-member = '"name"' ':' json-string
+                   / '"data"' ':' byte-array
+                   / '"method"' ':' method-literal
+                   / '"dosDate"' ':' json-number
+                   / '"dosTime"' ':' json-number
+                   / '"unixMtime"' ':' ( json-number / 'null' )
+                   / '"flags"' ':' json-number
+                   / '"versionMadeBy"' ':' json-number
+                   / '"versionNeeded"' ':' json-number
+                   / '"internalAttrs"' ':' json-number
+                   / '"externalAttrs"' ':' json-number
+                   / '"localExtra"' ':' extra-field-array
+                   / '"centralExtra"' ':' extra-field-array
+                   / '"comment"' ':' json-string
+zip-entry-object = '{' '"name"' ':' json-string ',' *( entry-diff-member ',' ) '}'
+method-literal = '"stored"' / '"deflate"'
+byte-array = '[' *( json-number ',' ) ']'
+extra-field-array = '[' *( extra-field-object ',' ) ']'
+extra-field-object = '{' '"id"' ':' json-number ',' '"payload"' ':' byte-array '}'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = 1*DIGIT

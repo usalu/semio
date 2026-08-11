@@ -2,14 +2,47 @@
   "$id": "https://semio.tech/schema/s.stdio.csv/snapshot.csv",
   "title": "CsvSnapshot",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "hasHeader", "records"],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "persistent"
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "hasHeader": {
+      "type": "boolean",
+      "x-semio-state": "persistent",
+      "description": "Whether records[0] is a header row (RFC 4180's own optional convention)."
+    },
+    "records": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": { "$ref": "#/$defs/CsvRecord" }
+    }
+  },
+  "$defs": {
+    "CsvField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "quoted"],
+      "properties": {
+        "value": { "type": "string" },
+        "quoted": {
+          "type": "boolean",
+          "description": "Whether the source wrapped this field in double quotes (RFC 4180 §2 rule 5, real losslessly-retained information)."
+        }
+      }
+    },
+    "CsvRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields"],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CsvField" }
+        }
+      }
     }
   }
 }

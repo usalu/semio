@@ -2,14 +2,55 @@
   "$id": "https://semio.tech/schema/s.stdio.xml/snapshot.xml",
   "title": "XmlSnapshot",
   "type": "object",
+  "required": ["schema", "doc"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "identity" },
+    "doc": { "$ref": "#/$defs/XmlDocument" }
+  },
+  "$defs": {
+    "XmlAttr": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "name", "attrs", "children"],
+          "properties": {
+            "kind": { "const": "element" },
+            "name": { "type": "string" },
+            "attrs": { "type": "array", "items": { "$ref": "#/$defs/XmlAttr" } },
+            "children": { "type": "array", "items": { "$ref": "#/$defs/XmlNode" } }
+          }
+        },
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "cData" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "comment" }, "text": { "type": "string" } } },
+        {
+          "type": "object",
+          "required": ["kind", "target", "data"],
+          "properties": { "kind": { "const": "processingInstruction" }, "target": { "type": "string" }, "data": { "type": "string" } }
+        }
+      ]
+    },
+    "XmlDeclaration": {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": { "type": "string" },
+        "encoding": { "type": "string" },
+        "standalone": { "type": "boolean" }
+      }
+    },
+    "XmlDocument": {
+      "type": "object",
+      "properties": {
+        "root": { "$ref": "#/$defs/XmlNode" },
+        "doctype": { "type": "string" },
+        "declaration": { "$ref": "#/$defs/XmlDeclaration" }
+      }
     }
   }
 }

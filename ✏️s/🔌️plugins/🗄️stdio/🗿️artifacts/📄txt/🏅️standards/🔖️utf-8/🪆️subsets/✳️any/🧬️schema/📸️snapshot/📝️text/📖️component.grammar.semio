@@ -1,6 +1,11 @@
 dialect grammar stdio.txt.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.txt' NL
-body = payload NL?
-payload = *OCTET
+document = preamble NL body
+preamble = 'semio' SP envelope-id SP 'v' digits
+envelope-id = ident *('.' ident)
+; body is the line-sequence itself: `lines` joined by `line_ending`, plus one more
+; `line_ending` at the end iff `trailing_newline` is set -- never a raw octet blob.
+body = [line *(line-ending line)] [line-ending]
+line = *(OCTET-except-CR-LF)
+line-ending = LF / CRLF
+ident = (ALPHA / '_') *(ALPHA / DIGIT / '_' / '-')

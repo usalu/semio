@@ -1,6 +1,39 @@
 syntax = "proto3";
 package semio.s_stdio_csv.diff;
+
+import "s_stdio_csv/snapshot.proto";
+
+message CsvFieldDiff {
+  optional string value = 1;
+  optional bool quoted = 2;
+}
+
+// Positional per-field patch list; an absent entry means that field is unchanged.
+message CsvFieldPatchSlot {
+  optional CsvFieldDiff patch = 1;
+}
+
+message CsvRecordDiff {
+  repeated CsvFieldPatchSlot fields = 1;
+}
+
+message CsvRecordModified {
+  uint64 index = 1;
+  CsvRecordDiff diff = 2;
+}
+
+message CsvRecordAdded {
+  uint64 index = 1;
+  semio.s_stdio_csv.snapshot.CsvRecord record = 2;
+}
+
+message CsvRecordsDiff {
+  repeated uint64 removed = 1;
+  repeated CsvRecordModified modified = 2;
+  repeated CsvRecordAdded added = 3;
+}
+
 message CsvDiff {
-  string schema = 1;
-  string value_wire = 2;
+  optional bool has_header = 1;
+  optional CsvRecordsDiff records = 2;
 }

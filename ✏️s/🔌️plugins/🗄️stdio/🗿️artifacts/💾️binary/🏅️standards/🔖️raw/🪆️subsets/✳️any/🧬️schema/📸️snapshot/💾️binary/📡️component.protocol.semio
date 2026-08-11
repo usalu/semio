@@ -1,3 +1,7 @@
 dialect protocol stdio.binary.snapshot
-magic = %x00
-payload = *OCTET
+magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = u32le
+token = utf8-string(token-len)
+; the payload is the snapshot's own `bytes` field verbatim -- this artifact's documented
+; "format IS bytes" exception, not an unfinished leaf.
+raw-bytes = octet-string(eof)

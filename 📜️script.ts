@@ -7705,6 +7705,169 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 8:
+ * replaces the old `policyCodecFidelityBreaches` (a 5-string banned-marker grep — "does this file
+ * avoid saying SRAS/IFCCARTOONMESH", a purely negative signal) with a positive one: every
+ * standard-level `⚙️engine/🦀️component.rs` must contain a real decode→encode→decode (or
+ * equivalent lossless) round-trip test. Detected via a deliberately generous name/body heuristic
+ * (`round_trip`/`roundtrip`/`decode_encode`/`encode_decode`/`lossless`, case-insensitive) rather
+ * than requiring one exact test name — every codec this session actually delivered uses one of
+ * these, under varying names (`codec_round_trip`, `zip_deflate_round_trip`,
+ * `real_decode_stays_lossless_on_reencode`, ...). Old rule NOT deleted yet (still catches literal
+ * stub markers, a cheap orthogonal check) — the plan calls for deleting it once this one's
+ * allowlist is fully burned down; premature while 43 files remain.
+ */
+const POLICY_ROUND_TRIP_TEST_ALLOWLIST = new Set<string>([
+  // 🐛 Same lesson as the other two allowlists in this file: keys are policyNormalizeRelPath's
+  // canonical short form, computed programmatically against a real repo scan, never hand-typed —
+  // see the sniff-reality allowlist's own comment for the full story of what happens otherwise.
+  "trinity/jack/standards#1-engine-component",
+  "trinity/rewrite/standards#1-engine-component",
+  "raster/standards#1-engine-component",
+  "flow/standards#1-engine-component",
+  "process/process3d/standards#1-engine-component",
+  "norm/din4108/standards#1-engine-component",
+  "norm/din18599/standards#1-engine-component",
+  "norm/din16798/standards#1-engine-component",
+  "norm/en1990/standards#1-engine-component",
+  "norm/en1991/standards#1-engine-component",
+  "norm/en1992/standards#1-engine-component",
+  "norm/en1993/standards#1-engine-component",
+  "norm/en1994/standards#1-engine-component",
+  "norm/en1995/standards#1-engine-component",
+  "norm/en1996/standards#1-engine-component",
+  "norm/en1997/standards#1-engine-component",
+  "norm/en1998/standards#1-engine-component",
+  "norm/en1999/standards#1-engine-component",
+  "cad/standards#1-engine-component",
+  "demonstrator/playground/standards#1-engine-component",
+  "block/2d/standards#1-engine-component",
+  "block/3d/standards#1-engine-component",
+  "block/5d/standards#1-engine-component",
+  "dag/standards#1-engine-component",
+  "stdio/pdf/standards#1.4-engine-component", // deliberately untouched; real vocabulary is on 1.7
+  "reasoning/wires/standards#1-engine-component",
+  "writer/standards#1-engine-component",
+  "animate/present/standards#1-engine-component",
+  "space/home/standards#1-engine-component",
+  "procedural/procedural2d/standards#1-engine-component",
+  "vcs/standards#1-engine-component",
+  "gis/gismap/standards#1-engine-component",
+  "gis/gisterrain/standards#1-engine-component",
+  "note/standards#1-engine-component",
+  "architect/program/standards#1-engine-component",
+  "shooting/standards#1-engine-component",
+  "puzzle/2d/standards#1-engine-component",
+  "puzzle/3d/standards#1-engine-component",
+  "puzzle/5d/standards#1-engine-component",
+  "fem/2d/standards#1-engine-component",
+  "fem/3d/standards#1-engine-component",
+  "playbook/standards#1-engine-component",
+  "energy/model/standards#1-engine-component",
+]);
+
+const POLICY_ROUND_TRIP_SIGNAL_RE = /round_trip|roundtrip|decode_encode|encode_decode|lossless/i;
+
+function policyRoundTripTestBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!relPath.startsWith("✏️s/🔌️plugins/")) continue;
+    if (!relPath.endsWith(`⚙️engine/${POLICY_RS_COMPONENT_LEAF}`)) continue;
+    if (!relPath.includes("🏅️standards/🔖️")) continue;
+    const normalized = policyNormalizeRelPath(relPath);
+    const allowlisted = POLICY_ROUND_TRIP_TEST_ALLOWLIST.has(normalized);
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const hasSignal = content.includes("#[cfg(test)]") && POLICY_ROUND_TRIP_SIGNAL_RE.test(content);
+    if (!hasSignal) {
+      if (allowlisted) continue;
+      breaches.push({
+        id: `round-trip-test-${relPath}`,
+        summary: `"${relPath}" has no real decode→encode→decode round-trip test`,
+        kind: "artifact-io/round-trip-test",
+        scope: relPath,
+        priority: "high",
+        reason: "Every standard-level engine must prove its codec is lossless with a real round-trip test, not just avoid a list of known-stub markers.",
+        solution: `Add a #[test] round-trip (decode→encode→decode) test to ${relPath}, or if this standard hasn't been reached by the codec uplift yet, add "${normalized}" to POLICY_ROUND_TRIP_TEST_ALLOWLIST citing this ticket.`,
+      });
+    } else if (allowlisted) {
+      breaches.push({
+        id: `round-trip-test-stale-${relPath}`,
+        summary: `"${relPath}" is allowlisted in POLICY_ROUND_TRIP_TEST_ALLOWLIST but already has a round-trip test`,
+        kind: "artifact-io/round-trip-test",
+        scope: relPath,
+        priority: "low",
+        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is fixed.",
+        solution: `Remove "${normalized}" from POLICY_ROUND_TRIP_TEST_ALLOWLIST.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 6
+ * (scoped): every `🎹️composer` declares its cross-artifact dependencies as `const DEP_<NAME>:
+ * Dialect = Dialect { artifact_kind: "s.stdio.<dep>", standard: StandardId("<std>"), subset:
+ * SubsetId(...) }` (confirmed the universal pattern across every stdio composer this session
+ * touched). This rule verifies each declared dependency's (artifact, standard) pair actually
+ * exists on disk — `🗿️artifacts/<dep-dir>/🏅️standards/🔖️<std>/` — catching a phantom dependency
+ * (typo'd standard, or a standard that got renamed/deleted out from under a composer that still
+ * references the old name, e.g. exactly the `ac1018`→`ac1024` kind of rename this session did
+ * several times) at policy-check time instead of a runtime compose failure. This is the "no
+ * phantoms" half of the plan's fuller "composer dialect consts ↔ io leaf dirs bijection" — the "no
+ * orphans" half (an io leaf dir nobody's composer ever references) needs a second pass once rule 3
+ * (io-matrix migrated-leaves) traces the legacy early-continue branch it currently shares
+ * plumbing with; left for a future session rather than rushed.
+ */
+const POLICY_DEP_DIALECT_RE = /const\s+DEP_\w+\s*:\s*Dialect\s*=\s*Dialect\s*\{\s*artifact_kind:\s*"s\.stdio\.([^"]+)"\s*,\s*standard:\s*StandardId\("([^"]+)"\)/g;
+
+function policyComposerDependencyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const table = policyLoadStdioOwnerTable(repoRoot);
+  if (!table) return breaches;
+  const dirByKey = new Map<string, string>();
+  for (const [key, entry] of Object.entries(table.stdio_roster ?? {})) {
+    dirByKey.set(key, entry.dir);
+  }
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!relPath.endsWith(`🎹️composer/${POLICY_RS_COMPONENT_LEAF}`)) continue;
+    if (!relPath.startsWith(`${POLICY_STDIO_ARTIFACTS_REL}/`)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    POLICY_DEP_DIALECT_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_DEP_DIALECT_RE.exec(content))) {
+      const [, depKey, depStandard] = m!;
+      const depDir = dirByKey.get(depKey!);
+      if (!depDir) {
+        breaches.push({
+          id: `composer-dep-unknown-artifact-${relPath}-${depKey}`,
+          summary: `"${relPath}" depends on unknown stdio artifact "${depKey}" (not in the catalog roster)`,
+          kind: "artifact-io/composer-dependency",
+          scope: relPath,
+          priority: "high",
+          reason: "A composer's DEP_* dialect must name a real, currently-cataloged stdio artifact — an unknown one is either a typo or a stale reference to a deleted/renamed artifact.",
+          solution: `Fix the artifact_kind in ${relPath}'s DEP_* constant, or add "${depKey}" to the catalog roster if it's genuinely new.`,
+        });
+        continue;
+      }
+      const depStandardDir = join(repoRoot, POLICY_STDIO_ARTIFACTS_REL, depDir, "🏅️standards", `🔖️${depStandard}`);
+      if (!existsSync(depStandardDir)) {
+        breaches.push({
+          id: `composer-dep-unknown-standard-${relPath}-${depKey}-${depStandard}`,
+          summary: `"${relPath}" depends on ${depKey}@${depStandard}, but no such standard directory exists`,
+          kind: "artifact-io/composer-dependency",
+          scope: relPath,
+          priority: "high",
+          reason: "A composer's DEP_* dialect must name a standard that actually exists on disk — a phantom reference (typo, or a stale reference to a renamed/deleted standard) fails at compose time instead of at policy-check time.",
+          solution: `Fix the StandardId in ${relPath}'s DEP_* constant to match an existing 🏅️standards/🔖️<std>/ directory under ${depDir}, or restore that standard if it was deleted in error.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
  * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 5:
  * flagship artifacts (svg/gltf/pdf/gif — the ones D2 explicitly names as getting real mutation
  * vocabularies, not just `{NoMutation, SetSnapshot}`) must have a mutation enum with more than
@@ -7815,6 +7978,8 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyArtifactComposerBreaches(repoRoot),
     ...policyDialectLiteralPathBreaches(repoRoot),
     ...policyMutationVocabularyBreaches(repoRoot),
+    ...policyRoundTripTestBreaches(repoRoot),
+    ...policyComposerDependencyBreaches(repoRoot),
   ];
 }
 

@@ -1,6 +1,18 @@
-dialect grammar stdio.txt.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.txt' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.txt.mutation
+root = mutation
+; discriminated on `mutation`; only that variant's own fields are present:
+;   noMutation                        -- no extra fields
+;   setSnapshot        { snapshot }
+;   setTrailingNewline { value: bool }
+;   setLineEnding      { value: "lf"|"crLf" }
+;   insertLine         { index, text }
+;   removeLine         { index }
+;   setLine            { index, text }
+mutation = '{"mutation":' kind *(',' field) '}'
+kind = '"noMutation"' / '"setSnapshot"' / '"setTrailingNewline"' / '"setLineEnding"'
+     / '"insertLine"' / '"removeLine"' / '"setLine"'
+field = snapshot-f / value-f / index-f / text-f
+snapshot-f = '"snapshot":' snapshot-object
+value-f = '"value":' (bool / '"lf"' / '"crLf"')
+index-f = '"index":' digits
+text-f = '"text":' json-string

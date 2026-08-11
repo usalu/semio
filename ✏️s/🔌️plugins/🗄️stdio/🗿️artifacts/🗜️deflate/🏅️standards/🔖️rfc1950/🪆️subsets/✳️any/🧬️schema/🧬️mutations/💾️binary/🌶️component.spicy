@@ -1,4 +1,8 @@
 module Stdio_deflate_mutations;
-type Document = unit {
-    payload: bytes &eod;
+
+# The "binary" wire form is UTF-8 JSON bytes (protocol::OpBinary::encode_op = serde_json::to_vec),
+# the same tagged camelCase object as the sibling text grammar -- not a distinct byte layout.
+# Spicy has no JSON grammar of its own, so it's typed as the UTF-8 text it actually is.
+public type Document = unit {
+    json_utf8: bytes &eod &convert=cast<string>($$);
 };

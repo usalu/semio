@@ -1,6 +1,18 @@
-dialect grammar stdio.binary.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.binary' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.binary.mutation
+root = mutation
+; discriminated on `mutation`; only that variant's own fields are present:
+;   noMutation                          -- no extra fields
+;   setSnapshot     { snapshot }
+;   splice          { offset, removeLen, insert }
+;   appendBytes     { data }
+;   truncateAt      { offset }
+mutation = '{"mutation":' kind *(',' field) '}'
+kind = '"noMutation"' / '"setSnapshot"' / '"splice"' / '"appendBytes"' / '"truncateAt"'
+field = snapshot-f / offset-f / remove-len-f / insert-f / data-f
+snapshot-f = '"snapshot":' snapshot-object
+offset-f = '"offset":' digits
+remove-len-f = '"removeLen":' digits
+insert-f = '"insert":' byte-array
+data-f = '"data":' byte-array
+byte-array = '[' [byte *(',' byte)] ']'
+byte = 1*3DIGIT

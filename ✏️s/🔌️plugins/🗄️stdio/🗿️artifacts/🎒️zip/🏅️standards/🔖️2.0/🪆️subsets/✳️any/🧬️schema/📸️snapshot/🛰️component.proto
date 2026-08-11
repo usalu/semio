@@ -1,6 +1,35 @@
 syntax = "proto3";
 package semio.s_stdio_zip.snapshot;
+
+enum ZipCompressionMethod {
+  STORED = 0;
+  DEFLATE = 1;
+}
+
+message ZipExtraField {
+  uint32 id = 1;
+  bytes payload = 2;
+}
+
+message ZipEntry {
+  string name = 1;
+  bytes data = 2;
+  ZipCompressionMethod method = 3;
+  uint32 dos_date = 4;
+  uint32 dos_time = 5;
+  optional int64 unix_mtime = 6;
+  uint32 flags = 7;
+  uint32 version_made_by = 8;
+  uint32 version_needed = 9;
+  uint32 internal_attrs = 10;
+  uint32 external_attrs = 11;
+  repeated ZipExtraField local_extra = 12;
+  repeated ZipExtraField central_extra = 13;
+  string comment = 14;
+}
+
 message ZipSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  repeated ZipEntry entries = 2;
+  string comment = 3;
 }

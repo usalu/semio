@@ -1,5 +1,10 @@
-# 🧬️ TxtMutation
+# 🧬️ TxtMutation — imperative content mutation for `stdio.txt`. Discriminated on `mutation`;
+# only the fields relevant to that variant are set (mirrors the Rust `#[serde(tag = "mutation")]`
+# enum and the TS discriminated union, not a flat "every field always present" object).
 type TxtMutation {
-  schema: String! @state(class: PERSISTENT)
-  text: String! @state(class: PERSISTENT)
+  mutation: String!
+  snapshot: TxtSnapshot
+  value: String
+  index: Int
+  text: String
 }

@@ -28,6 +28,7 @@ impl Default for SvgSnapshot {
                     children: Vec::new(),
                 }),
                 doctype: None,
+                declaration: None,
             },
         }
     }
@@ -1119,7 +1120,7 @@ pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
 }
 
 pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<String>) -> XmlDocument {
-    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype }
+    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None }
 }
 //#endregion 🔖️TypedElementModel
 

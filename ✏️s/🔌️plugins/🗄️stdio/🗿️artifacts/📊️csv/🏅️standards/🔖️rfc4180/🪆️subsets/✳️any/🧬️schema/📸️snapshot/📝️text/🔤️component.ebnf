@@ -1,3 +1,15 @@
-(* ebnf stdio.csv snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.csv', newline ;
+(* RFC 4180 CSV wire grammar (https://www.rfc-editor.org/rfc/rfc4180). Bare text: the
+   `semio stdio.csv.dsl v1` preamble line and its trailing newline are stripped by
+   `store::semio_format::split_text_preamble` BEFORE this grammar's `file` production runs. *)
+file = record, { crlf, record }, [ crlf ] ;
+record = field, { comma, field } ;
+field = escaped | non escaped ;
+escaped = dquote, { text data | comma | cr | lf | dquote, dquote }, dquote ;
+non escaped = { text data } ;
+comma = "," ;
+cr = "\r" ;
+lf = "\n" ;
+crlf = cr, lf | lf ;
+dquote = '"' ;
+(* text data = any character except comma, dquote, cr, lf *)
+text data = ? any UTF-8 scalar value except ',' '"' '\r' '\n' ? ;

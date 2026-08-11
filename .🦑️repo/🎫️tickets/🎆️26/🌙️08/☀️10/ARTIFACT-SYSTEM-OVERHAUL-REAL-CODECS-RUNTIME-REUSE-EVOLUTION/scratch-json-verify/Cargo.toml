@@ -1,0 +1,10 @@
+[workspace]
+
+[package]
+name = "scratch-json-verify"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "scratch_json_verify"
+path = "src/main.rs"

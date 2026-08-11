@@ -1,6 +1,61 @@
 syntax = "proto3";
 package semio.s_stdio_xml.mutation;
+
+import "s_stdio_xml/snapshot.proto";
+
+message XmlNodePath {
+  repeated uint64 segments = 1;
+}
+
 message XmlMutation {
-  string schema = 1;
-  string value_wire = 2;
+  oneof mutation {
+    NoMutation no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetDeclaration set_declaration = 3;
+    SetDoctype set_doctype = 4;
+    InsertElement insert_element = 5;
+    RemoveElement remove_element = 6;
+    SetAttribute set_attribute = 7;
+    SetText set_text = 8;
+  }
+}
+
+message NoMutation {}
+
+message SetSnapshot {
+  semio.s_stdio_xml.snapshot.XmlSnapshot snapshot = 1;
+}
+
+message SetDeclaration {
+  optional semio.s_stdio_xml.snapshot.XmlDeclaration declaration = 1;
+}
+
+message SetDoctype {
+  optional string doctype = 1;
+}
+
+// ➕️ Inserts `node` at `index` among the children of the element addressed by `path` (the PARENT).
+message InsertElement {
+  XmlNodePath path = 1;
+  uint64 index = 2;
+  semio.s_stdio_xml.snapshot.XmlNode node = 3;
+}
+
+// ➖️ Removes the child at `index` among the children of the element addressed by `path` (the PARENT).
+message RemoveElement {
+  XmlNodePath path = 1;
+  uint64 index = 2;
+}
+
+// 🏷️ Sets (or, if `value` is unset, removes) attribute `name` on the element addressed by `path`.
+message SetAttribute {
+  XmlNodePath path = 1;
+  string name = 2;
+  optional string value = 3;
+}
+
+// 🔤️ Sets the literal text of the `Text` node addressed by `path`.
+message SetText {
+  XmlNodePath path = 1;
+  string text = 2;
 }

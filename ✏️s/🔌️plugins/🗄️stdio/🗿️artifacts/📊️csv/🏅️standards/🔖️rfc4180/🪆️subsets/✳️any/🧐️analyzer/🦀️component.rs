@@ -24,15 +24,15 @@ fn looks_like_csv(text: &str) -> IoConfidence {
     if sample.trim().is_empty() {
         return IoConfidence::Low;
     }
-    let records = crate::artifacts::csv::engine::decode_csv_with(&sample, false);
-    if records.rows.is_empty() {
+    let snapshot = crate::artifacts::csv::engine::decode_csv_with(&sample, false);
+    if snapshot.records.is_empty() {
         return IoConfidence::Low;
     }
-    let width = records.rows[0].len();
+    let width = snapshot.records[0].fields.len();
     if width == 0 {
         return IoConfidence::Low;
     }
-    let consistent = records.rows.iter().all(|r| r.len() == width);
+    let consistent = snapshot.records.iter().all(|r| r.fields.len() == width);
     let has_delimiter = sample.contains(',');
     match (consistent, width > 1, has_delimiter) {
         (true, true, true) => IoConfidence::High,

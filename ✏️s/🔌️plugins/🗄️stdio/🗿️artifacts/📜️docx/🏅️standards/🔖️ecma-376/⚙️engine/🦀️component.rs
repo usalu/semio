@@ -84,6 +84,7 @@ fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
             children: vec![XmlNode::Element { name: "w:body".into(), attrs: vec![], children: body_children }],
         }),
         doctype: None,
+        declaration: None,
     }
 }
 

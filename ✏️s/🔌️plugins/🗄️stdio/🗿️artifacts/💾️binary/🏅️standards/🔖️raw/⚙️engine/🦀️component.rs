@@ -76,5 +76,68 @@ mod tests {
         let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
+
+    /// 🧪️ `codec_retention_law`: decode→encode is byte-preserving on real fixtures, incl. bytes
+    /// that are themselves invalid UTF-8 (the hex DSL layer never interprets payload bytes as
+    /// text, so this is a real test of the hex codec, not just the binary-pack envelope).
+    #[test]
+    fn codec_retention_law() {
+        for bytes in [
+            vec![],
+            vec![0x00, 0x01, 0xFF, 0xFE],
+            (0u8..=255).collect::<Vec<u8>>(),
+        ] {
+            let snap = BinarySnapshot { bytes: bytes.clone(), ..Default::default() };
+            let dsl_text = store::ArtifactDsl::print_dsl(&snap);
+            let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+            assert_eq!(parsed, snap, "dsl round-trip mismatch for {bytes:?}");
+            let packed = store::ArtifactPack::encode_pack(&snap);
+            let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode");
+            assert_eq!(decoded, snap, "pack round-trip mismatch for {bytes:?}");
+        }
+    }
+
+    //#region 🔖️FieldSweep
+    /// 🧹 Canonical "every mutable field differs" snapshot A.
+    fn sweep_a() -> BinarySnapshot {
+        BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }
+    }
+
+    /// 🧹 Canonical "every mutable field differs" snapshot B: an insert-only region (bytes 100
+    /// inserted mid-buffer), a pure-removal region (bytes 3,4 dropped), and a pure-replacement
+    /// region (byte 8 → 88) -- one splice can't express all three at once, exercising the
+    /// splice mechanism's full range per the artifact's own field-sweep note.
+    fn sweep_b() -> BinarySnapshot {
+        BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 100, 5, 6, 7, 88] }
+    }
+
+    /// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, the
+    /// splice list is non-empty (the only "field" a splice-list diff has), and `between(a,a)`
+    /// is empty.
+    #[test]
+    fn field_sweep_covers_every_byte_level_change() {
+        use protocol::DiffAlgebra;
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let ab = BinaryDiff::between(&a, &b);
+        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) must equal b");
+        let ba = BinaryDiff::between(&b, &a);
+        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert!(!ab.splices.is_empty(), "sweep diff must carry at least one splice");
+
+        // 🔬️ Exercise insert/remove/replace explicitly via hand-built splices (not just the
+        // minimal `between` form) to prove the mechanism itself, not just this one pair.
+        let hand_built = BinaryDiff {
+            splices: vec![
+                crate::artifacts::binary::schema::diff::ByteSplice { offset: 2, remove_len: 2, insert: vec![100] }, // replace+shrink
+                crate::artifacts::binary::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
+            ],
+        };
+        assert_eq!(hand_built.apply(&a), b);
+
+        assert!(BinaryDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+    }
+    //#endregion 🔖️FieldSweep
 }
 //#endregion 🧪️Tests

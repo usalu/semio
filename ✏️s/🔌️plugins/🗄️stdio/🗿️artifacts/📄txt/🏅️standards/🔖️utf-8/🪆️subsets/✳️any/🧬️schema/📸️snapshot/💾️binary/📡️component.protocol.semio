@@ -1,3 +1,7 @@
 dialect protocol stdio.txt.snapshot
-magic = %x00
-payload = *OCTET
+magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = u32le
+token = utf8-string(token-len)
+; body is UTF-8 text, not an opaque octet run -- it is exactly `TxtSnapshot::to_body()`:
+; lines joined by line_ending, with a trailing line_ending iff trailing_newline is set.
+body = utf8-string(eof)

@@ -1,6 +1,10 @@
 dialect grammar stdio.binary.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.binary' NL
-body = payload NL?
-payload = *OCTET
+document = preamble NL hex-body
+preamble = 'semio' SP envelope-id SP 'v' digits
+envelope-id = ident *('.' ident)
+; each byte of `BinarySnapshot::bytes` is printed as two lowercase hex digits; whitespace
+; between pairs is insignificant (stripped before hex-decoding on parse).
+hex-body = *(hex-pair / WSP / NL)
+hex-pair = HEXDIG-LOWER HEXDIG-LOWER
+ident = (ALPHA / '_') *(ALPHA / DIGIT / '_' / '-')

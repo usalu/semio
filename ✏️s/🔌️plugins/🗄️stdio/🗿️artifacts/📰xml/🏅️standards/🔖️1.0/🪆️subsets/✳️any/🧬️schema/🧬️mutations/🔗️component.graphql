@@ -1,2 +1,26 @@
-# schema facet
- type Placeholder { doc: String! }
+enum XmlMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_DECLARATION
+  SET_DOCTYPE
+  INSERT_ELEMENT
+  REMOVE_ELEMENT
+  SET_ATTRIBUTE
+  SET_TEXT
+}
+
+""" 🧬️ XmlMutation union, flattened -- only the fields matching `mutation` are set.
+`insertElement`/`removeElement`'s `path` addresses the PARENT element; every other path-carrying
+variant's `path` addresses the target node itself. """
+type XmlMutation {
+  mutation: XmlMutationKind!
+  snapshot: XmlSnapshot
+  declaration: XmlDeclaration
+  doctype: String
+  path: [Int!]
+  index: Int
+  node: XmlNode
+  name: String
+  value: String
+  text: String
+}

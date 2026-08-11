@@ -3,13 +3,71 @@
   "title": "XmlDiff",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "declaration": { "$ref": "#/$defs/NullableXmlDeclaration" },
+    "doctype": { "$ref": "#/$defs/NullableString" },
+    "root": { "$ref": "#/$defs/XmlNodeDiff" }
+  },
+  "$defs": {
+    "NullableXmlDeclaration": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, object = set.",
+      "type": ["object", "null"]
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "NullableString": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
+      "type": ["string", "null"]
+    },
+    "XmlAttrModified": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "XmlAttrAdded": {
+      "type": "object",
+      "required": ["index", "name", "value"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "XmlAttributesDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/XmlAttrModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/XmlAttrAdded" } }
+      }
+    },
+    "XmlChildModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/XmlNodeDiff" } }
+    },
+    "XmlChildAdded": {
+      "type": "object",
+      "required": ["index", "item"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "item": { "type": "object" } }
+    },
+    "XmlChildrenDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/XmlChildModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/XmlChildAdded" } }
+      }
+    },
+    "XmlElementDiff": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "attributes": { "$ref": "#/$defs/XmlAttributesDiff" },
+        "children": { "$ref": "#/$defs/XmlChildrenDiff" }
+      }
+    },
+    "XmlNodeDiff": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "element" } }, "allOf": [{ "$ref": "#/$defs/XmlElementDiff" }] },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "replace" }, "node": { "type": ["object", "null"] } } }
+      ]
     }
   }
 }

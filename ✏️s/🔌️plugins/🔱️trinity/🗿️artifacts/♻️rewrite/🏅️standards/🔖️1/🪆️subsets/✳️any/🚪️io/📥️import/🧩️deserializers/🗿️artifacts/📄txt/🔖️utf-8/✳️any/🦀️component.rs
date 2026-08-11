@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &TxtSnapshot) -> Result<RewriteSnapshot, store::TextError> {
     let _ = STDIO_TXT_DOCUMENT_SCHEMA;
-    <RewriteSnapshot as store::ArtifactDsl>::parse_dsl(&from.text)
+    <RewriteSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_body())
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RewriteSnapshot, store::TextError> {

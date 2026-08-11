@@ -3,13 +3,14 @@
   "title": "TxtMutation",
   "type": "object",
   "properties": {
-    "schema": {
+    "mutation": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": ["noMutation", "setSnapshot", "setTrailingNewline", "setLineEnding", "insertLine", "removeLine", "setLine"]
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+    "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
+    "value": {},
+    "index": { "type": "integer", "minimum": 0 },
+    "text": { "type": "string" }
+  },
+  "required": ["mutation"]
 }

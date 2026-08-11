@@ -158,6 +158,7 @@ fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
     let doc = XmlDocument {
         root: Some(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children }),
         doctype: None,
+        declaration: None,
     };
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     out.push_str(&xml_document_to_text(&doc));

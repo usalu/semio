@@ -78,15 +78,29 @@ mod tests {
 
     #[test]
     fn nontrivial_nested_value_round_trip() {
-        let value = serde_json::json!({
-            "name": "semio",
-            "count": 42,
-            "ratio": 3.5,
-            "active": true,
-            "missing": null,
-            "tags": ["a", "b", "c"],
-            "nested": { "deep": { "deeper": [1, 2, 3] } }
-        });
+        use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
+        let value = JsonValue::Object(vec![
+            JsonMember { key: "name".into(), value: JsonValue::String("semio".into()) },
+            JsonMember { key: "count".into(), value: JsonValue::Number { lexeme: "42".into() } },
+            JsonMember { key: "ratio".into(), value: JsonValue::Number { lexeme: "3.5".into() } },
+            JsonMember { key: "active".into(), value: JsonValue::Bool(true) },
+            JsonMember { key: "missing".into(), value: JsonValue::Null },
+            JsonMember { key: "tags".into(), value: JsonValue::Array(vec![JsonValue::String("a".into()), JsonValue::String("b".into()), JsonValue::String("c".into())]) },
+            JsonMember {
+                key: "nested".into(),
+                value: JsonValue::Object(vec![JsonMember {
+                    key: "deep".into(),
+                    value: JsonValue::Object(vec![JsonMember {
+                        key: "deeper".into(),
+                        value: JsonValue::Array(vec![
+                            JsonValue::Number { lexeme: "1".into() },
+                            JsonValue::Number { lexeme: "2".into() },
+                            JsonValue::Number { lexeme: "3".into() },
+                        ]),
+                    }]),
+                }]),
+            },
+        ]);
         let snap = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value };
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

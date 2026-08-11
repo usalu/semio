@@ -1,5 +1,6 @@
 //! ⚙️ DeflateEngine — zlib (RFC1950) + DEFLATE (RFC1951) + Adler32, hand-rolled.
 
+use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::{DeflateArtifact, DeflateDiff, DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 
 //#region Adler32
@@ -548,6 +549,101 @@ pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     }
     Ok(out)
 }
+
+//#region 🔖️SnapshotCodec
+/// 🧬️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: the typed
+/// entry points -- these are what `DeflateSnapshot`'s `ArtifactDsl`/`ArtifactPack` impls call.
+/// `zlib_compress`/`zlib_decompress` above stay byte<->byte (they're load-bearing for other
+/// artifacts' own internal zlib framing -- PNG IDAT, PDF stream objects -- which have never gone
+/// through a `DeflateSnapshot` and must not start doing so here); these two are the RFC1950
+/// container<->typed-snapshot pair that actually populates/consumes `cmf`/`flg`/`dict_id` instead
+/// of a bare byte blob.
+///
+/// 🧮️ Encodes a `DeflateSnapshot` into a full zlib (RFC1950) byte stream: CMF/FLG rebuilt from
+/// the typed fields (with a freshly computed FCHECK -- it's a pure function of the other header
+/// bits, never independently stored), the preset-dictionary id when present, the raw DEFLATE
+/// payload, and a freshly computed Adler-32 trailer (never a stale stored checksum).
+pub fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
+    let cmf = ((snapshot.window_bits & 0x0F) << 4) | (snapshot.compression_method & 0x0F);
+    let fdict = snapshot.dict_id.is_some();
+    let flg_hi = (snapshot.compression_level_hint.to_bits() << 6) | ((fdict as u8) << 5);
+    let fcheck = (31 - (((cmf as u16) * 256 + flg_hi as u16) % 31)) % 31;
+    let flg = flg_hi | (fcheck as u8);
+
+    let raw = deflate_raw(&snapshot.payload);
+    let mut out = Vec::with_capacity(2 + 4 + raw.len() + 4);
+    out.push(cmf);
+    out.push(flg);
+    if let Some(dict_id) = snapshot.dict_id {
+        out.extend_from_slice(&dict_id.to_be_bytes());
+    }
+    out.extend_from_slice(&raw);
+    out.extend_from_slice(&adler32(&snapshot.payload).to_be_bytes());
+    out
+}
+
+/// 🧮️ Decodes a zlib (RFC1950) byte stream into a typed `DeflateSnapshot`: CMF/FLG parsed into
+/// typed fields, the preset-dictionary id extracted when FDICT is set, the payload inflated, and
+/// the Adler-32 trailer verified against the freshly decompressed payload.
+///
+/// 📖️ A preset dictionary's ID is retained honestly as typed data, but this codec cannot prime
+/// the LZ77 window with actual dictionary content -- that capability doesn't exist in
+/// `inflate_raw`/`deflate_raw` (the real LZ77+Huffman engine, untouched per this wave's mandate).
+/// Round trips through this codec's own `encode_deflate_snapshot` are unaffected (it never
+/// primes a dictionary either); a foreign stream that truly relied on dictionary-primed
+/// backreferences would surface as an "invalid backreference" error from `inflate_raw`, same as
+/// any other genuinely undecodable stream.
+pub fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
+    if data.len() < 6 {
+        return Err("zlib stream too short".into());
+    }
+    let cmf = data[0];
+    let flg = data[1];
+    let compression_method = cmf & 0x0F;
+    let window_bits = (cmf >> 4) & 0x0F;
+    if compression_method != 8 {
+        return Err("unsupported zlib compression method".into());
+    }
+    if ((cmf as u16) * 256 + flg as u16) % 31 != 0 {
+        return Err("zlib CMF/FLG check failed".into());
+    }
+    let fdict = flg & 0x20 != 0;
+    let compression_level_hint = DeflateLevelHint::from_bits(flg >> 6);
+
+    let mut pos = 2usize;
+    let dict_id = if fdict {
+        if data.len() < pos + 4 {
+            return Err("truncated preset dictionary id".into());
+        }
+        let id = u32::from_be_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
+        pos += 4;
+        Some(id)
+    } else {
+        None
+    };
+
+    if data.len() < pos + 4 {
+        return Err("zlib stream too short".into());
+    }
+    let adler_bytes = &data[data.len() - 4..];
+    let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
+    let raw = &data[pos..data.len() - 4];
+    let payload = inflate_raw(raw)?;
+    let got = adler32(&payload);
+    if got != expect {
+        return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
+    }
+
+    Ok(DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method,
+        window_bits,
+        compression_level_hint,
+        dict_id,
+        payload,
+    })
+}
+//#endregion 🔖️SnapshotCodec
 //#endregion DeflateCodec
 
 //#region DocumentHelpers
@@ -683,16 +779,54 @@ mod tests {
 
     #[test]
     fn codec_round_trip() {
-        let payload = b"pack-envelope-payload";
-        let zz = zlib_compress(payload).unwrap();
+        let payload = b"pack-envelope-payload".to_vec();
         let snap = DeflateSnapshot {
             schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-            bytes: zz.clone(),
+            compression_method: 8,
+            window_bits: 7,
+            compression_level_hint: DeflateLevelHint::Default,
+            dict_id: None,
+            payload: payload.clone(),
         };
         let pack = store::ArtifactPack::encode_pack(&snap);
         let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
-        assert_eq!(decoded.bytes, zz);
-        assert_eq!(zlib_decompress(&decoded.bytes).unwrap(), payload);
+        assert_eq!(decoded, snap);
+        assert_eq!(decoded.payload, payload);
+    }
+
+    /// 🧪️ `encode_deflate_snapshot`/`decode_deflate_snapshot` round-trip every typed header field,
+    /// including a preset-dictionary id.
+    #[test]
+    fn snapshot_codec_round_trip_with_preset_dictionary() {
+        let snap = DeflateSnapshot {
+            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+            compression_method: 8,
+            window_bits: 5,
+            compression_level_hint: DeflateLevelHint::Maximum,
+            dict_id: Some(0x1234_5678),
+            payload: b"preset-dictionary-id-round-trip".to_vec(),
+        };
+        let bytes = encode_deflate_snapshot(&snap);
+        // 🪆️ FDICT set + DICTID present between CMF/FLG and the deflate body.
+        assert_eq!(bytes[1] & 0x20, 0x20);
+        let decoded = decode_deflate_snapshot(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+
+    /// 🧪️ Ticket 26/08/10/…: `decode_deflate_snapshot` rejects a CMF/FLG check failure --
+    /// FCHECK is derived, not fabricated, so a corrupted header must not silently decode.
+    #[test]
+    fn snapshot_codec_rejects_bad_check_bits() {
+        let mut bytes = encode_deflate_snapshot(&DeflateSnapshot {
+            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+            compression_method: 8,
+            window_bits: 7,
+            compression_level_hint: DeflateLevelHint::Default,
+            dict_id: None,
+            payload: b"corrupt-me".to_vec(),
+        });
+        bytes[1] ^= 0x01; // flip a FCHECK bit
+        assert!(decode_deflate_snapshot(&bytes).is_err());
     }
 }
 //#endregion Tests

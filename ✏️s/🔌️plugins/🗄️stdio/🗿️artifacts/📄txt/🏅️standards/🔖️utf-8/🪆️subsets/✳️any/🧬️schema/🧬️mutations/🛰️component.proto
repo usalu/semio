@@ -1,6 +1,23 @@
 syntax = "proto3";
 package semio.s_stdio_txt.mutation;
+
+import "s_stdio_txt/snapshot.proto";
+
+enum TxtMutationKind {
+  NO_MUTATION = 0;
+  SET_SNAPSHOT = 1;
+  SET_TRAILING_NEWLINE = 2;
+  SET_LINE_ENDING = 3;
+  INSERT_LINE = 4;
+  REMOVE_LINE = 5;
+  SET_LINE = 6;
+}
+
 message TxtMutation {
-  string schema = 1;
-  string text_wire = 2;
+  TxtMutationKind mutation = 1;
+  semio.s_stdio_txt.snapshot.TxtSnapshot snapshot = 2;
+  bool bool_value = 3;
+  semio.s_stdio_txt.snapshot.LineEnding line_ending_value = 4;
+  uint64 index = 5;
+  string text = 6;
 }

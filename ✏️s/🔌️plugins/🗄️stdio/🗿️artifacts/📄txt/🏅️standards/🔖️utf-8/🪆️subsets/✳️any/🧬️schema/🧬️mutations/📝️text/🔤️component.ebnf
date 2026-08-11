@@ -1,3 +1,10 @@
-(* ebnf stdio.txt mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.txt', newline ;
+(* ebnf stdio.txt mutation: JSON object, `mutation` tag selects the variant, only that
+   variant's own fields follow -- mirrors the Rust `#[serde(tag = "mutation")]` enum. *)
+mutation      = "{" , '"mutation"' , ":" , kind , { "," , field } , "}" ;
+kind          = '"noMutation"' | '"setSnapshot"' | '"setTrailingNewline"' | '"setLineEnding"'
+              | '"insertLine"' | '"removeLine"' | '"setLine"' ;
+field         = snapshot-field | value-field | index-field | text-field ;
+snapshot-field = '"snapshot"' , ":" , snapshot-object ;  (* see snapshot/text grammar *)
+value-field   = '"value"' , ":" , ( boolean | '"lf"' | '"crLf"' ) ;
+index-field   = '"index"' , ":" , integer ;
+text-field    = '"text"' , ":" , string ;

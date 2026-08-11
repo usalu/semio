@@ -2,13 +2,43 @@
   "$id": "https://semio.tech/schema/s.stdio.deflate/snapshot.json",
   "title": "DeflateSnapshot",
   "type": "object",
+  "required": ["schema", "compressionMethod", "windowBits", "compressionLevelHint", "payload"],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "persistent"
     },
-    "bytes": {
+    "compressionMethod": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15,
+      "description": "CMF low nibble (CM); RFC1950 defines only 8 (deflate) as legal",
+      "x-semio-state": "persistent"
+    },
+    "windowBits": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15,
+      "description": "CMF high nibble (CINFO); window size = 2^(cinfo+8)",
+      "x-semio-state": "persistent"
+    },
+    "compressionLevelHint": {
       "type": "string",
+      "enum": ["fastest", "fast", "default", "maximum"],
+      "description": "FLG.FLEVEL, informational only",
+      "x-semio-state": "persistent"
+    },
+    "dictId": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "description": "FLG.FDICT + DICTID; present only when a preset dictionary is declared",
+      "x-semio-state": "persistent"
+    },
+    "payload": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "description": "decompressed payload",
       "x-semio-state": "persistent"
     }
   }

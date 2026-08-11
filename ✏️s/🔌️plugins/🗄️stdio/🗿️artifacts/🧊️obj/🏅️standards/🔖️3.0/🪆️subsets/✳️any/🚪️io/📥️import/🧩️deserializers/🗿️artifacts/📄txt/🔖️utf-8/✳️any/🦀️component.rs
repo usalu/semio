@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse obj text into a ObjSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    crate::artifacts::obj::engine::decode_obj(from.text.as_str())
+    crate::artifacts::obj::engine::decode_obj(from.to_body())
         .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 

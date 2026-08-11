@@ -1,6 +1,12 @@
 syntax = "proto3";
 package semio.s_stdio_binary.diff;
+
+message ByteSplice {
+  uint64 offset = 1;
+  uint64 remove_len = 2;
+  bytes insert = 3;
+}
+
 message BinaryDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  repeated ByteSplice splices = 1;
 }

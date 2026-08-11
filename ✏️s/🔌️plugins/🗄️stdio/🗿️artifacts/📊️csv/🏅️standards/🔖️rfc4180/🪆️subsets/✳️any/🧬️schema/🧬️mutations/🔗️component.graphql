@@ -1,2 +1,24 @@
-# schema facet
- type Placeholder { headers: String! }
+# 🧬️ CsvMutation union — mirrors 🦀️component.rs's tagged enum (GraphQL has no native
+# discriminated union, so this models it as one input type with the tag plus optional
+# per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
+
+enum CsvMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_HAS_HEADER
+  INSERT_RECORD
+  REMOVE_RECORD
+  SET_FIELD
+}
+
+input CsvMutationInput {
+  mutation: CsvMutationTag!
+  snapshot: CsvSnapshotInput
+  hasHeader: Boolean
+  index: Int
+  record: CsvRecordInput
+  recordIndex: Int
+  fieldIndex: Int
+  value: String
+  quoted: Boolean
+}

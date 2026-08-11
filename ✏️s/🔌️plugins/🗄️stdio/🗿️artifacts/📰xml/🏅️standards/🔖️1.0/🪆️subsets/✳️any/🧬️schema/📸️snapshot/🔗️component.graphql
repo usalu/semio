@@ -1,2 +1,47 @@
-# schema facet
- type Placeholder { doc: String! }
+""" 🏷️ XML attribute pair. """
+type XmlAttr {
+  name: String!
+  value: String!
+}
+
+""" 🌳 XML node discriminant. """
+enum XmlNodeKind {
+  ELEMENT
+  TEXT
+  C_DATA
+  COMMENT
+  PROCESSING_INSTRUCTION
+}
+
+""" 🌳 XML node: element, text, CDATA, comment, or processing instruction -- a tagged union
+represented flatly since GraphQL has no native sum type; only the fields matching `kind` are set.
+"""
+type XmlNode {
+  kind: XmlNodeKind!
+  name: String
+  attrs: [XmlAttr!]
+  children: [XmlNode!]
+  text: String
+  target: String
+  data: String
+}
+
+""" 🏳️ Typed `<?xml version="1.0" encoding="..." standalone="..."?>` declaration. """
+type XmlDeclaration {
+  version: String!
+  encoding: String
+  standalone: Boolean
+}
+
+""" 📰 Well-formed XML document root. """
+type XmlDocument {
+  root: XmlNode
+  doctype: String
+  declaration: XmlDeclaration
+}
+
+""" 📸️ Persisted `stdio.xml` snapshot. """
+type XmlSnapshot {
+  schema: String!
+  doc: XmlDocument!
+}

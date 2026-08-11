@@ -1,3 +1,2 @@
-dialect protocol stdio.binary.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.binary.mutation
+body = utf8-json-string(eof)

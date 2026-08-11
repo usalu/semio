@@ -1,6 +1,7 @@
 //! 🧬️ TxtArtifact schema — full artifact state.
 
-use crate::artifacts::txt::{TxtSnapshot};
+use crate::artifacts::txt::schema::snapshot::LineEnding;
+use crate::artifacts::txt::TxtSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +15,13 @@ pub struct TxtArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub text: String,
+    pub lines: Vec<String>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub trailing_newline: bool,
+    #[state(persistent)]
+    #[serde(default)]
+    pub line_ending: LineEnding,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +37,9 @@ impl TxtArtifact {
     pub fn to_snapshot(&self) -> TxtSnapshot {
         TxtSnapshot {
             schema: self.schema.clone(),
-            text: self.text.clone(),
+            lines: self.lines.clone(),
+            trailing_newline: self.trailing_newline,
+            line_ending: self.line_ending,
         }
     }
 
@@ -38,14 +47,18 @@ impl TxtArtifact {
     pub fn from_snapshot(snapshot: TxtSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            text: snapshot.text,
+            lines: snapshot.lines,
+            trailing_newline: snapshot.trailing_newline,
+            line_ending: snapshot.line_ending,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: TxtSnapshot) {
         self.schema = snapshot.schema;
-        self.text = snapshot.text;
+        self.lines = snapshot.lines;
+        self.trailing_newline = snapshot.trailing_newline;
+        self.line_ending = snapshot.line_ending;
     }
 }
 //#endregion 🔖️Conversions
