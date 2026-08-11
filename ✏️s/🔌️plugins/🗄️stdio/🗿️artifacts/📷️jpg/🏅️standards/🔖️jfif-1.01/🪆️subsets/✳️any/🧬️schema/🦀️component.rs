@@ -1,10 +1,13 @@
 //! 🧬️ JpgArtifact schema — full artifact state.
 
-use crate::artifacts::jpg::schema::snapshot::RasterImage;
 use crate::artifacts::jpg::JpgSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+/// 🎪️ Reduced UI-editable view: identity + the raster the user is directly manipulating. Ticket
+/// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION killed the shared
+/// `RasterImage` wrapper (jpg/png/tiff each copy-pasted it) — `width`/`height`/`pixels` are
+/// first-class fields here, matching `JpgSnapshot`'s own shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg")]
@@ -13,7 +16,13 @@ pub struct JpgArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub image: RasterImage,
+    pub width: u32,
+    #[state(persistent)]
+    #[serde(default)]
+    pub height: u32,
+    #[state(persistent)]
+    #[serde(default)]
+    pub pixels: Vec<u8>,
 }
 
 impl Default for JpgArtifact {
@@ -22,14 +31,19 @@ impl Default for JpgArtifact {
 
 impl JpgArtifact {
     pub fn to_snapshot(&self) -> JpgSnapshot {
-        JpgSnapshot { schema: self.schema.clone(), image: self.image.clone() }
+        // 🎪️ `JpgArtifact` is the reduced UI-editable view (schema+raster only) — it never
+        // carries frame/table data, so `frame`/`sof_marker`/`arithmetic`/`quant_tables`/
+        // `huffman_tables`/etc. fall back to `JpgSnapshot::default()`'s "no decoded frame" state.
+        JpgSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, pixels: self.pixels.clone(), ..JpgSnapshot::default() }
     }
     pub fn from_snapshot(snapshot: JpgSnapshot) -> Self {
-        Self { schema: snapshot.schema, image: snapshot.image }
+        Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, pixels: snapshot.pixels }
     }
     pub fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
         self.schema = snapshot.schema;
-        self.image = snapshot.image;
+        self.width = snapshot.width;
+        self.height = snapshot.height;
+        self.pixels = snapshot.pixels;
     }
 }
 

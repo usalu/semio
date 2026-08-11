@@ -1,6 +1,27 @@
 dialect grammar stdio.obj.snapshot
+; envelope preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble). Statements may appear in ANY order (real
+; Wavefront OBJ files interleave v/vt/vn/f/o/g/usemtl/mtllib/s freely); this is the real,
+; commonly-implemented grammar the decoder accepts, not the encoder's own canonical
+; output order (see ⚙️engine module docs for that documented normal form).
 root = document
-document = header body
-header = 'schema' SP 'stdio.obj' NL
-body = payload NL?
-payload = *OCTET
+document = statement*
+statement = comment / vertex / texcoord / normal / face / object_stmt / group_stmt
+          / usemtl_stmt / mtllib_stmt / smoothing_stmt / unknown_stmt
+comment = "#" *OCTET NL
+vertex = "v" SP float SP float SP float (SP float)? NL           ; x y z [w]
+texcoord = "vt" SP float (SP float)? (SP float)? NL               ; u [v] [w]
+normal = "vn" SP float SP float SP float NL                       ; x y z
+face = "f" (SP face_vertex)3*  NL                                 ; n-gon, >= 3 refs
+face_vertex = index ("/" index? "/" index / "/" index)?
+index = ["-"] 1*DIGIT
+object_stmt = "o" (SP name)? NL
+group_stmt = "g" (SP name)* NL                                    ; 0+ simultaneous names
+usemtl_stmt = "usemtl" (SP name)? NL
+mtllib_stmt = "mtllib" (SP name)+ NL                               ; 1+ library names
+smoothing_stmt = "s" SP ("off" / 1*DIGIT) NL
+unknown_stmt = *OCTET NL                                          ; any other real line,
+                                                                    ; retained verbatim in
+                                                                    ; `unknown_statements`
+float = ["-"] 1*DIGIT ["." 1*DIGIT] [("e" / "E") ["-" / "+"] 1*DIGIT]
+name = 1*(%x21-7E)                                                 ; whitespace-free token

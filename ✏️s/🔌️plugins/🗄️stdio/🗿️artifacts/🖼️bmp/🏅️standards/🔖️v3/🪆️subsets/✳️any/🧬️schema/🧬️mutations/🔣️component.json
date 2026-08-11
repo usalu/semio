@@ -1,15 +1,79 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.bmp/mutation.json",
   "title": "BmpMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation"],
+      "properties": { "mutation": { "const": "noMutation" } }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "snapshot"],
+      "properties": {
+        "mutation": { "const": "setSnapshot" },
+        "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation"],
+      "properties": {
+        "mutation": { "const": "setHeaderFields" },
+        "headerSize": { "type": "integer", "minimum": 0 },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "rowOrder": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpRowOrder" },
+        "planes": { "type": "integer", "minimum": 0 },
+        "bitsPerPixel": { "type": "integer", "minimum": 0 },
+        "compression": { "type": "integer", "minimum": 0 },
+        "imageSize": { "type": "integer", "minimum": 0 },
+        "xPixelsPerMeter": { "type": "integer" },
+        "yPixelsPerMeter": { "type": "integer" },
+        "colorsUsed": { "type": "integer", "minimum": 0 },
+        "colorsImportant": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "index", "entry"],
+      "properties": {
+        "mutation": { "const": "insertPaletteEntry" },
+        "index": { "type": "integer", "minimum": 0 },
+        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "index"],
+      "properties": {
+        "mutation": { "const": "removePaletteEntry" },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "index", "entry"],
+      "properties": {
+        "mutation": { "const": "setPaletteEntry" },
+        "index": { "type": "integer", "minimum": 0 },
+        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "pixels"],
+      "properties": {
+        "mutation": { "const": "setPixelData" },
+        "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      }
     }
-  }
+  ]
 }

@@ -1,3 +1,2 @@
-(* ebnf stdio.svg mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.svg', newline ;
+(* ebnf stdio.svg mutations -- JSON per the sibling JSON Schema facet, no custom textual grammar *)
+document = jsonValue ;

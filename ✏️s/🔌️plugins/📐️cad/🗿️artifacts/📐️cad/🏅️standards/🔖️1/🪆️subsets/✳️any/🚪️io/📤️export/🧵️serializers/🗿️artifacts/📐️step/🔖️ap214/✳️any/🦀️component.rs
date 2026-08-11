@@ -23,8 +23,9 @@ pub fn serialize(from: &CadSnapshot) -> Result<StepSnapshot, store::PackError> {
         });
         i += 12;
     }
+    let _ = STDIO_STEP_DOCUMENT_SCHEMA;
     let document = brep_mesh_to_part21(&BrepMesh { vertices, faces: Vec::new() });
-    Ok(StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), document })
+    Ok(StepSnapshot::from_part21_document(document))
 }
 
 pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {

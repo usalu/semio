@@ -1,0 +1,9 @@
+{
+  "artifact": "s.gis.gismap",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained gismap 1"
+    }
+  }
+}

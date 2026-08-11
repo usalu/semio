@@ -703,6 +703,19 @@ export class VerifyScript extends Script {
         throw new Error(`[verify] ${osBreaches.length} OS exclusive state authority policy breach(es)`);
       }
     }
+    console.log("[verify] standards/subsets vocabulary…");
+    {
+      const subsetVocabBreaches = [
+        ...policyStandardsCoverageBreaches(this.root),
+        ...policyStandardSubsetVocabularyBreaches(this.root),
+      ].filter((b) => b.priority === "high");
+      if (subsetVocabBreaches.length > 0) {
+        for (const b of subsetVocabBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${subsetVocabBreaches.length} standards/subsets vocabulary policy breach(es)`);
+      }
+    }
     console.log("[verify] handcrafted grammar P3/M4 policies…");
     {
       const handcraftedBreaches = policyHandcraftedSpecP3Breaches(this.root);
@@ -6910,6 +6923,38 @@ function policyStripRustCommentsAndStrings(content: string): string {
       out += '"';
       continue;
     }
+    if (content[i] === "'") {
+      // 🩹 Rust char literal (`'"'`, `'{'`, `'\n'`, `'\''`, `'\u{1F600}'`, …) vs a lifetime/generic
+      // tick (`'a`, `'static`) — a char literal always closes with another `'` within a few chars
+      // (accounting for escapes); a lifetime tick never does. Without this, a char literal whose
+      // content is itself `'"'` gets misread as the START of a double-quoted string by the block
+      // above, silently swallowing everything up to the next literal `"` in the file — which can
+      // hide real code (e.g. a later `impl Trait for ...`) from every regex-based policy check
+      // that runs against the stripped output.
+      let j = i + 1;
+      if (content[j] === "\\") {
+        j += 1;
+        if (content[j] === "u" && content[j + 1] === "{") {
+          j += 2;
+          while (j < n && content[j] !== "}") j++;
+          j += 1;
+        } else {
+          j += content[j] === "x" ? 3 : 1;
+        }
+      } else if (j < n) {
+        j += 1;
+      }
+      if (content[j] === "'") {
+        out += content.slice(i, j + 1);
+        i = j + 1;
+        continue;
+      }
+      // Not a char literal -- a lifetime/generic tick. Copy just the tick through; the identifier
+      // that follows contains no quote characters, so falling through the loop handles it safely.
+      out += content[i];
+      i++;
+      continue;
+    }
     out += content[i];
     i++;
   }
@@ -7126,8 +7171,22 @@ type PolicyArtifactDialect = {
   standardRel: string;
   standardSlug: string;
   subsetRel: string;
+  /** 🪆️ Raw on-disk dir name, e.g. "✳️any", "✳️a", "✳️cc6" — kept for path-building. */
+  subsetDirName: string;
+  /** 🪆️ Logical subset id: `subsetDirName` with the `✳️` prefix stripped and "any" mapped to "*"
+   * (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) — this is what a standard's
+   * `🪆️subsets/🔣️component.json` manifest and Rust `SubsetId` both speak. */
   subsetId: string;
 };
+
+/** 🪆 Maps a subset dir name to its logical id via taxonomy's subsetDirPrefix/subsetAnyId/subsetAnyDirName. */
+function policySubsetIdFromDirName(taxonomy: ReturnType<typeof loadTaxonomy>, dirName: string): string {
+  const anyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
+  const anyId = (taxonomy as any).subsetAnyId ?? "*";
+  if (dirName === anyDirName) return anyId;
+  const prefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
+  return dirName.startsWith(prefix) ? dirName.slice(prefix.length) : dirName;
+}
 
 /** 🏅 One row per (migrated artifact, standard, subset) triple; empty until any artifact migrates. */
 function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[] {
@@ -7152,7 +7211,8 @@ function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[
           standardRel,
           standardSlug,
           subsetRel: `${subsetsRel}/${sub.name}`,
-          subsetId: sub.name,
+          subsetDirName: sub.name,
+          subsetId: policySubsetIdFromDirName(taxonomy, sub.name),
         });
       }
     }
@@ -7167,6 +7227,9 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
   const standardChildDirs = ((taxonomy as any).standardChildDirs as string[] | undefined) ?? [];
   const subsetChildDirs = ((taxonomy as any).subsetChildDirs as string[] | undefined) ?? [];
   const slugPattern = new RegExp((taxonomy as any).standardSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
+  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
+  const subsetAnyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
+  const subsetSlugPattern = new RegExp((taxonomy as any).subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
   for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
     if (!slugPattern.test(dialect.standardSlug)) {
       breaches.push({
@@ -7177,6 +7240,27 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
         priority: "high",
         reason: "Standard directory slugs are normalized lowercase identifiers (🔖️2.0, 🔖️ap214, 🔖️1, …).",
         solution: `Rename ${dialect.standardRel} to match the slug pattern.`,
+      });
+    }
+    if (!dialect.subsetDirName.startsWith(subsetDirPrefix)) {
+      breaches.push({
+        id: `standards-subset-prefix-${dialect.subsetRel}`,
+        summary: `"${dialect.subsetRel}" subset dir "${dialect.subsetDirName}" does not start with taxonomy's subsetDirPrefix "${subsetDirPrefix}"`,
+        kind: "stdio-artifacts/standards-coverage",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Every subset dir under 🪆️subsets/ must be emoji-prefixed with subsetDirPrefix, symmetric with standards' 🔖️ prefix.",
+        solution: `Rename ${dialect.subsetRel} to start with "${subsetDirPrefix}".`,
+      });
+    } else if (dialect.subsetDirName !== subsetAnyDirName && !subsetSlugPattern.test(dialect.subsetId)) {
+      breaches.push({
+        id: `standards-subset-slug-${dialect.subsetRel}`,
+        summary: `"${dialect.subsetRel}" subset id "${dialect.subsetId}" does not match ${subsetSlugPattern}`,
+        kind: "stdio-artifacts/standards-coverage",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Real subset ids are normalized lowercase identifiers naming an industry conformance profile/class/view (✳️a, ✳️cc6, ✳️rv, …), never a version or a conformance level.",
+        solution: `Rename ${dialect.subsetRel} to match the slug pattern.`,
       });
     }
     for (const child of standardChildDirs) {
@@ -7319,6 +7403,187 @@ export function policyArtifactComposerBreaches(repoRoot: string): BreachRecord[]
   }
   return breaches;
 }
+
+/** 🔣 One row per (migrated artifact, standard) — the manifest a `policyStandardSubsetVocabularyBreaches` group checks. */
+type PolicyStandardManifestGroup = {
+  artRel: string;
+  standardRel: string;
+  standardSlug: string;
+  manifestRel: string;
+  dialects: PolicyArtifactDialect[];
+};
+
+function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifestGroup[] {
+  const taxonomy = loadTaxonomy();
+  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
+  const manifestFilename = (taxonomy as any).subsetsManifestFilename ?? "🔣️component.json";
+  const groups = new Map<string, PolicyStandardManifestGroup>();
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    let group = groups.get(dialect.standardRel);
+    if (!group) {
+      group = {
+        artRel: dialect.artRel,
+        standardRel: dialect.standardRel,
+        standardSlug: dialect.standardSlug,
+        manifestRel: `${dialect.standardRel}/${subsetsDirName}/${manifestFilename}`,
+        dialects: [],
+      };
+      groups.set(dialect.standardRel, group);
+    }
+    group.dialects.push(dialect);
+  }
+  return [...groups.values()];
+}
+
+/**
+ * ⚖️ Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: every migrated standard declares
+ * its real industry subset vocabulary (or, for non-stdio/"domain" artifacts, explicitly declares
+ * none) in `🪆️subsets/🔣️component.json`, and that declaration must always equal what's actually on
+ * disk — in both directions, so a manifest can never silently drift ahead of or behind the real
+ * dirs. Real (non-`*`) subsets on stdio artifacts additionally need a registered `SubsetValidator`
+ * on their subset composer — the static half of "every real subset gets a real validator"; the
+ * generic runtime half (`io.subset.validator-missing`) is `run_subset_validation` in
+ * `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`.
+ */
+export function policyStandardSubsetVocabularyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const taxonomy = loadTaxonomy();
+  const anyId = (taxonomy as any).subsetAnyId ?? "*";
+  const anyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
+  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
+  const subsetSlugPattern = new RegExp((taxonomy as any).subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
+  const stdioPrefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
+  for (const group of policyGroupDialectsByStandard(repoRoot)) {
+    const isStdio = group.artRel.startsWith(stdioPrefix);
+    const manifestAbs = join(repoRoot, group.manifestRel);
+    if (!existsSync(manifestAbs)) {
+      breaches.push({
+        id: `standards-subset-vocabulary-missing-${group.standardRel}`,
+        summary: `"${group.standardRel}" has no ${group.manifestRel.split("/").pop()} subset vocabulary manifest`,
+        kind: "stdio-artifacts/standards-subset-vocabulary",
+        scope: group.artRel,
+        priority: "high",
+        reason: "Every standard declares its subset vocabulary in 🪆️subsets/🔣️component.json — the single source of truth policy checks on-disk dirs against.",
+        solution: `Create ${group.manifestRel} declaring {"${anyId}": {...}${isStdio ? ", plus each real subset this standard actually has" : ""}}.`,
+      });
+      continue;
+    }
+    let parsed: { artifact?: unknown; standard?: unknown; subsets?: Record<string, unknown> } | undefined;
+    try {
+      parsed = JSON.parse(readFileSync(manifestAbs, "utf8"));
+    } catch (e) {
+      breaches.push({
+        id: `standards-subset-vocabulary-invalid-${group.standardRel}`,
+        summary: `"${group.manifestRel}" is not valid JSON (${(e as Error).message})`,
+        kind: "stdio-artifacts/standards-subset-vocabulary",
+        scope: group.artRel,
+        priority: "high",
+        reason: "The subset vocabulary manifest must parse as JSON.",
+        solution: `Fix ${group.manifestRel}.`,
+      });
+      continue;
+    }
+    const declaredIds = Object.keys(parsed?.subsets ?? {});
+    if (parsed?.standard !== group.standardSlug) {
+      breaches.push({
+        id: `standards-subset-vocabulary-standard-mismatch-${group.standardRel}`,
+        summary: `"${group.manifestRel}" declares standard "${String(parsed?.standard)}" but lives under 🔖️${group.standardSlug}/`,
+        kind: "stdio-artifacts/standards-subset-vocabulary",
+        scope: group.artRel,
+        priority: "high",
+        reason: "The manifest's own standard field must match the 🔖️<slug> directory it lives under.",
+        solution: `Fix "standard" in ${group.manifestRel} to "${group.standardSlug}".`,
+      });
+    }
+    if (!declaredIds.includes(anyId)) {
+      breaches.push({
+        id: `standards-subset-vocabulary-missing-any-${group.standardRel}`,
+        summary: `"${group.manifestRel}" does not declare the base subset "${anyId}"`,
+        kind: "stdio-artifacts/standards-subset-vocabulary",
+        scope: group.artRel,
+        priority: "high",
+        reason: "Every standard carries the unconstrained base subset; it must always be declared.",
+        solution: `Add "${anyId}" to the "subsets" object in ${group.manifestRel}.`,
+      });
+    }
+    for (const id of declaredIds) {
+      if (id === anyId || subsetSlugPattern.test(id)) continue;
+      breaches.push({
+        id: `standards-subset-vocabulary-bad-id-${group.standardRel}-${id}`,
+        summary: `"${group.manifestRel}" declares subset id "${id}" which does not match ${subsetSlugPattern}`,
+        kind: "stdio-artifacts/standards-subset-vocabulary",
+        scope: group.artRel,
+        priority: "high",
+        reason: "Declared subset ids must be normalized lowercase identifiers.",
+        solution: `Fix or remove "${id}" in ${group.manifestRel}.`,
+      });
+    }
+    if (!isStdio) {
+      const extra = declaredIds.filter((id) => id !== anyId);
+      if (extra.length > 0) {
+        breaches.push({
+          id: `standards-subset-vocabulary-domain-real-subset-${group.standardRel}`,
+          summary: `"${group.manifestRel}" declares real subset(s) [${extra.join(", ")}] on a non-stdio (domain) artifact`,
+          kind: "stdio-artifacts/standards-subset-vocabulary",
+          scope: group.artRel,
+          priority: "high",
+          reason: "Domain (non-stdio) artifacts stay at v1 with the \"*\" subset only — real industry subset vocabularies are a stdio-only concept.",
+          solution: `Remove [${extra.join(", ")}] from ${group.manifestRel}, or move this artifact under stdio if it genuinely has industry subsets.`,
+        });
+      }
+    }
+    const declaredDirs = new Set(declaredIds.map((id) => (id === anyId ? anyDirName : `${subsetDirPrefix}${id}`)));
+    const actualDirs = new Set(group.dialects.map((d) => d.subsetDirName));
+    for (const dir of actualDirs) {
+      if (!declaredDirs.has(dir)) {
+        breaches.push({
+          id: `standards-subset-vocabulary-undeclared-dir-${group.standardRel}-${dir}`,
+          summary: `"${group.standardRel}/${(taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR}/${dir}" exists on disk but is not declared in ${group.manifestRel}`,
+          kind: "stdio-artifacts/standards-subset-vocabulary",
+          scope: group.artRel,
+          priority: "high",
+          reason: "On-disk subset dirs and the manifest's declared vocabulary must be exactly equal, in both directions.",
+          solution: `Add an entry for this subset to ${group.manifestRel}.`,
+        });
+      }
+    }
+    for (const dir of declaredDirs) {
+      if (!actualDirs.has(dir)) {
+        breaches.push({
+          id: `standards-subset-vocabulary-missing-dir-${group.standardRel}-${dir}`,
+          summary: `${group.manifestRel} declares a subset whose dir "${dir}" does not exist under ${group.standardRel}/${(taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR}/`,
+          kind: "stdio-artifacts/standards-subset-vocabulary",
+          scope: group.artRel,
+          priority: "high",
+          reason: "On-disk subset dirs and the manifest's declared vocabulary must be exactly equal, in both directions.",
+          solution: `Create the ${dir}/ subset dir, or remove its entry from ${group.manifestRel} if it was declared ahead of the real implementation.`,
+        });
+      }
+    }
+    if (isStdio) {
+      for (const dialect of group.dialects) {
+        if (dialect.subsetId === anyId) continue;
+        const composerRel = `${dialect.subsetRel}/${POLICY_FACET_COMPOSER}/${POLICY_RS_COMPONENT_LEAF}`;
+        const composerAbs = join(repoRoot, composerRel);
+        const body = existsSync(composerAbs) ? readFileSync(composerAbs, "utf8") : "";
+        const hasValidatorImpl = policyRustFileHasRealTraitImpl(body, "SubsetValidator");
+        const hasRegisterCall = /register_subset_validator\s*\(/.test(policyStripRustCommentsAndStrings(body));
+        if (!hasValidatorImpl || !hasRegisterCall) {
+          breaches.push({
+            id: `standards-subset-vocabulary-validator-missing-${dialect.subsetRel}`,
+            summary: `"${dialect.subsetRel}" is a real subset but its composer does not ${!hasValidatorImpl ? "implement SubsetValidator" : "call register_subset_validator"}`,
+            kind: "stdio-artifacts/standards-subset-vocabulary",
+            scope: dialect.artRel,
+            priority: "high",
+            reason: "Every real (non-\"*\") stdio subset registers a real SubsetValidator (io.subset.validator-missing otherwise fires at runtime for every compose of this dialect) — see the PDF/A pilot.",
+            solution: `Add \`impl SubsetValidator for ...\` and a \`register_subset_validator(...)\` call to ${composerRel}.`,
+          });
+        }
+      }
+    }
+  }
+  return breaches;
+}
 //#endregion 🏅️PolicyRuleStandardsSubsets
 
 function policySchemaRepresentationLeavesFor(repDir: string): readonly string[] {
@@ -7430,6 +7695,78 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
       }
     }
    }
+  }
+  return breaches;
+}
+
+/** 🔎️True if any `🦀️component.rs` exists anywhere under `rootRel` (any depth) — used to check a
+ * migrated io leaf exists without having to guess which of a stdio format's own (standard,
+ * subset) pairs a given domain artifact happens to bridge to. */
+function policyHasComponentUnder(repoRoot: string, rootRel: string): boolean {
+  const abs = join(repoRoot, rootRel);
+  if (!existsSync(abs)) return false;
+  const stack = [rootRel];
+  while (stack.length > 0) {
+    const dir = stack.pop()!;
+    for (const entry of policyReaddirSafe(repoRoot, dir)) {
+      if (entry.isDirectory) {
+        stack.push(`${dir}/${entry.name}`);
+      } else if (entry.name === POLICY_RS_COMPONENT_LEAF) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 3: the
+ * REAL replacement for `policyIoSerializerMatrixBreaches`'s dead early-continue (see that
+ * function's own comment — every owner is migrated now, so it has been a permanent no-op since
+ * this session's Phase 1 completed the migration; confirmed via zero `stdio-artifacts/io-matrix`
+ * breaches anywhere in a real `bun ./📜️script.ts policy` run). This checks the MIGRATED shape
+ * instead: for each catalog owner's curated import/export format list, at least one of that domain
+ * artifact's own (standard, subset) dirs must carry a real io leaf for that format — searched
+ * existence-anywhere-under its `🚪️io/<direction>/<facet>/🗿️artifacts/<format-dir>/` tree (not a
+ * specific (format-standard, format-subset) pair, since a domain artifact may reasonably bridge to
+ * any one of a format's now-multiple standards, e.g. pdf 1.4 vs 1.7 — picking one to require would
+ * be guessing, and this rule shouldn't invent a policy the codebase hasn't actually adopted yet).
+ */
+export function policyIoMatrixMigratedBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const table = policyLoadStdioOwnerTable(repoRoot);
+  if (!table) return breaches;
+  const roster = table.stdio_roster ?? {};
+  const artifactsDir = policyStdioArtifactsDirName();
+  const dialectsByArt = new Map<string, PolicyArtifactDialect[]>();
+  for (const d of policyListArtifactDialectDirs(repoRoot)) {
+    if (!dialectsByArt.has(d.artRel)) dialectsByArt.set(d.artRel, []);
+    dialectsByArt.get(d.artRel)!.push(d);
+  }
+  for (const owner of table.owners ?? []) {
+    const scope = owner.path;
+    const dialects = dialectsByArt.get(scope);
+    if (!dialects || dialects.length === 0) continue; // not migrated (yet) -- the legacy flat-path rule below still owns it
+    const checkDirection = (direction: string, childFacet: string, formatIds: string[], label: string) => {
+      for (const formatId of formatIds) {
+        const formatDir = policyStdioFormatDir(roster, formatId);
+        if (!formatDir) continue; // unknown-format-id is already reported by the legacy rule for unmigrated owners; a migrated owner referencing an unknown id is vanishingly unlikely and not worth a second breach shape here
+        const found = dialects.some((d) => policyHasComponentUnder(repoRoot, `${d.subsetRel}/🚪️io/${direction}/${childFacet}/${artifactsDir}/${formatDir}`));
+        if (!found) {
+          breaches.push({
+            id: `io-matrix-migrated-${scope}-${direction}-${formatId}`,
+            summary: `"${scope}" has no migrated ${label} leaf for stdio format "${formatId}" in any of its own (standard, subset) dirs`,
+            kind: "artifact-io/io-matrix-migrated",
+            scope,
+            priority: "high",
+            reason: `The catalog's curated ${label} list for this artifact names "${formatId}", but no 🚪️io/${direction}/${childFacet}/${artifactsDir}/${formatDir}/ leaf exists under any of this artifact's migrated standard/subset dirs.`,
+            solution: `Add a ${direction}/${childFacet} leaf for ${formatId} under one of "${scope}"'s 🏅️standards/🔖️.../🪆️subsets/✳️.../🚪️io/ dirs, or remove "${formatId}" from the ${label} list in ${POLICY_STDIO_OWNER_TABLE_REL} if it's no longer curated.`,
+          });
+        }
+      }
+    };
+    checkDirection(POLICY_STDIO_IO_IMPORT, POLICY_STDIO_FACET_DESERIALIZERS, owner.import ?? [], "import");
+    checkDirection(POLICY_STDIO_IO_EXPORT, POLICY_STDIO_FACET_SERIALIZERS, owner.export ?? [], "export");
   }
   return breaches;
 }
@@ -7655,6 +7992,10 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches; // owner-table-missing is already flagged by policyStdioCatalogBreaches
+  const taxonomy = loadTaxonomy();
+  const subsetAnyId = (taxonomy as any).subsetAnyId ?? "*";
+  const subsetAnyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
+  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
   const dirToKey = new Map<string, string>();
   for (const [key, entry] of Object.entries(table.stdio_roster ?? {})) {
     dirToKey.set(entry.dir, key);
@@ -7687,16 +8028,16 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
           solution: `Fix StandardId("${litStandard}") in ${relPath} to "${standardMatch[1]}", or move the file to 🏅️standards/🔖️${litStandard}/ if that's the one that's wrong.`,
         });
       }
-      const subsetDir = litSubset === "*" ? "any" : litSubset;
+      const subsetDir = litSubset === subsetAnyId ? subsetAnyDirName.slice(subsetDirPrefix.length) : litSubset;
       if (subsetMatch && subsetDir !== subsetMatch[1]) {
         breaches.push({
           id: `dialect-literal-subset-${relPath}-${litSubset}`,
-          summary: `"${relPath}" declares SubsetId("${litSubset}") but lives under 🪆️subsets/✳️${subsetMatch[1]}/`,
+          summary: `"${relPath}" declares SubsetId("${litSubset}") but lives under 🪆️subsets/${subsetDirPrefix}${subsetMatch[1]}/`,
           kind: "artifact-io/dialect-literal-path",
           scope: relPath,
           priority: "high",
-          reason: "A self-referential Dialect literal's subset must match the ✳️<subset> directory the file physically lives under (SubsetId(\"*\") ⇔ ✳️any by convention).",
-          solution: `Fix SubsetId("${litSubset}") in ${relPath} to match ✳️${subsetMatch[1]}/, or move the file if the directory is what's wrong.`,
+          reason: `A self-referential Dialect literal's subset must match the ${subsetDirPrefix}<subset> directory the file physically lives under (SubsetId("${subsetAnyId}") ⇔ ${subsetAnyDirName} by convention).`,
+          solution: `Fix SubsetId("${litSubset}") in ${relPath} to match ${subsetDirPrefix}${subsetMatch[1]}/, or move the file if the directory is what's wrong.`,
         });
       }
     }
@@ -7970,6 +8311,7 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyArtifactDecomposerBreaches(repoRoot),
     ...policySchemaRepresentationBreaches(repoRoot),
     ...policyIoSerializerMatrixBreaches(repoRoot),
+    ...policyIoMatrixMigratedBreaches(repoRoot),
     ...policyIoTerminalityBreaches(repoRoot),
     ...policyCodecFidelityBreaches(repoRoot),
     ...policyStandardsCoverageBreaches(repoRoot),
@@ -7980,6 +8322,7 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyMutationVocabularyBreaches(repoRoot),
     ...policyRoundTripTestBreaches(repoRoot),
     ...policyComposerDependencyBreaches(repoRoot),
+    ...policyStandardSubsetVocabularyBreaches(repoRoot),
   ];
 }
 
@@ -8177,9 +8520,21 @@ function policyListStdioStandardEntries(repoRoot: string): PolicyStdioStandardEn
   return out;
 }
 
-/** 🔎️Just the `✳️any` subset entries — the canonical schema-owning subset for a stdio standard (a conformance sub-profile like pdf 1.7's `✳️a-2b` does not carry its own snapshot/diff/mutations facet; it composes on top of `✳️any`'s). */
-function policyListStdioAnyStandardEntries(repoRoot: string): PolicyStdioStandardEntry[] {
-  return policyListStdioStandardEntries(repoRoot).filter((e) => e.subsetId === "✳️any");
+/**
+ * 🔎️Only the SCHEMA-OWNING subset entries (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES,
+ * replaces the old exact-string `subsetId === "✳️any"` filter). A subset is schema-owning iff its
+ * `🧬️schema/📸️snapshot/` dir exists on disk — a real conformance subset (pdf 1.7's `✳️a`, step's
+ * `✳️cc6`, …) is a validation-gated DELEGATING stamp on top of its standard's owning subset (pure
+ * `pub use …::subsets::any::schema::*`, per the pilot), never a new snapshot type, so it never has
+ * its own `📸️snapshot/` dir. `✳️any` is always schema-owning by construction. This is structural
+ * rather than name-based so a future new subset never needs an allowlist/filter edit here — it is
+ * automatically excluded from schema-internal rules (DiffAlgebra, field-sweep, grammar-honesty,
+ * facet-mirror-drift) the moment it's created as a delegating subset, and automatically INCLUDED in
+ * builder/analyzer/composer/io rules (those already iterate the full `policyListStdioStandardEntries`
+ * result, unfiltered).
+ */
+function policyListStdioSchemaOwningEntries(repoRoot: string): PolicyStdioStandardEntry[] {
+  return policyListStdioStandardEntries(repoRoot).filter((e) => existsSync(join(repoRoot, e.subsetRel, "🧬️schema", "📸️snapshot")));
 }
 
 /**
@@ -8188,43 +8543,11 @@ function policyListStdioAnyStandardEntries(repoRoot: string): PolicyStdioStandar
  * for nothing — see `s1-spine-report.md`). Seeded with all 31 current standards; F-wave agents shrink
  * this to zero as they land real diffs with handcrafted `inverse`/`between`/`is_empty`.
  */
-const POLICY_DIFF_ALGEBRA_ALLOWLIST = new Set<string>([
-  "stdio/bcf/standards#2.1-subsets-any-schema-diff-component",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-component",
-  "stdio/bmp/standards#v3-subsets-any-schema-diff-component",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-component",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-component",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-diff-component",
-  "stdio/dwg/standards#ac1018-subsets-any-schema-diff-component",
-  "stdio/dwg/standards#ac1024-subsets-any-schema-diff-component",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-component",
-  "stdio/gif/standards#87a-subsets-any-schema-diff-component",
-  "stdio/gif/standards#89a-subsets-any-schema-diff-component",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-component",
-  "stdio/ifc/standards#4-subsets-any-schema-diff-component",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-component",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-component",
-  "stdio/las/standards#1.0-subsets-any-schema-diff-component",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-component",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-component",
-  "stdio/pdf/standards#1.4-subsets-any-schema-diff-component",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-component",
-  "stdio/ply/standards#1.0-subsets-any-schema-diff-component",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-component",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-component",
-  "stdio/step/standards#ap214-subsets-any-schema-diff-component",
-  "stdio/stl/standards#ascii-subsets-any-schema-diff-component",
-  "stdio/svg/standards#1.1-subsets-any-schema-diff-component",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-component",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-component",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-component",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-component",
-  "stdio/zip/standards#2.0-subsets-any-schema-diff-component",
-]);
+const POLICY_DIFF_ALGEBRA_ALLOWLIST = new Set<string>([]);
 
 function policyDiffAlgebraBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const entry of policyListStdioAnyStandardEntries(repoRoot)) {
+  for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     const rustRel = `${entry.subsetRel}/🧬️schema/🔺️diff/🦀️component.rs`;
     if (!existsSync(join(repoRoot, rustRel))) continue;
     const content = readFileSync(join(repoRoot, rustRel), "utf8");
@@ -8263,39 +8586,7 @@ function policyDiffAlgebraBreaches(repoRoot: string): BreachRecord[] {
  * 'diff can change every field'" (see 🧬️schema-design.md's Test laws section). Seeded with all 31
  * current standards (none exist yet, confirmed by grep at S1/S2).
  */
-const POLICY_FIELD_SWEEP_ALLOWLIST = new Set<string>([
-  "stdio/bcf/standards#2.1",
-  "stdio/binary/standards#raw",
-  "stdio/bmp/standards#v3",
-  "stdio/csv/standards#rfc4180",
-  "stdio/deflate/standards#rfc1950",
-  "stdio/docx/standards#ecma-376",
-  "stdio/dwg/standards#ac1018",
-  "stdio/dwg/standards#ac1024",
-  "stdio/dxf/standards#r12",
-  "stdio/gif/standards#87a",
-  "stdio/gif/standards#89a",
-  "stdio/gltf/standards#2.0",
-  "stdio/ifc/standards#4",
-  "stdio/jpg/standards#jfif-1.01",
-  "stdio/json/standards#rfc8259",
-  "stdio/las/standards#1.0",
-  "stdio/md/standards#commonmark",
-  "stdio/obj/standards#3.0",
-  "stdio/pdf/standards#1.4",
-  "stdio/pdf/standards#1.7",
-  "stdio/ply/standards#1.0",
-  "stdio/png/standards#1.2",
-  "stdio/pptx/standards#ecma-376",
-  "stdio/step/standards#ap214",
-  "stdio/stl/standards#ascii",
-  "stdio/svg/standards#1.1",
-  "stdio/tiff/standards#6.0",
-  "stdio/txt/standards#utf-8",
-  "stdio/xlsx/standards#ecma-376",
-  "stdio/xml/standards#1.0",
-  "stdio/zip/standards#2.0",
-]);
+const POLICY_FIELD_SWEEP_ALLOWLIST = new Set<string>([]);
 
 function policyStdioStandardKey(artifactId: string, standardSlug: string): string {
   return `stdio/${artifactId}/standards#${standardSlug}`;
@@ -8304,7 +8595,7 @@ function policyStdioStandardKey(artifactId: string, standardSlug: string): strin
 function policyFieldSweepPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const fieldSweepRe = /fn\s+\w*field_sweep\w*\s*\(/;
-  for (const entry of policyListStdioAnyStandardEntries(repoRoot)) {
+  for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     const standardRel = entry.subsetRel.split("/🪆️subsets/")[0]!;
     const rsFiles = policyWalkRelFiles(repoRoot, [standardRel], (_p, name) => name.endsWith(".rs"));
     const found = rsFiles.some((f) => fieldSweepRe.test(readFileSync(join(repoRoot, f), "utf8")));
@@ -8381,90 +8672,15 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-text-component.g4",
   "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-text-component.g4",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-text-component.g4",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/bmp/standards#v3-subsets-any-schema-diff-binary-component.abnf",
   "stdio/bmp/standards#v3-subsets-any-schema-diff-binary-component.ksy",
   "stdio/bmp/standards#v3-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/bmp/standards#v3-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/bmp/standards#v3-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/bmp/standards#v3-subsets-any-schema-diff-text-component.g4",
-  "stdio/bmp/standards#v3-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/bmp/standards#v3-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/bmp/standards#v3-subsets-any-schema-mutations-binary-component.ksy",
   "stdio/bmp/standards#v3-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/bmp/standards#v3-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/bmp/standards#v3-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/bmp/standards#v3-subsets-any-schema-mutations-text-component.g4",
-  "stdio/bmp/standards#v3-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/bmp/standards#v3-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/bmp/standards#v3-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-text-component.g4",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-text-component.g4",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-text-component.g4",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-text-component.g4",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/docx/standards#ecma-376-subsets-any-schema-diff-binary-component.abnf",
   "stdio/docx/standards#ecma-376-subsets-any-schema-diff-binary-component.ksy",
   "stdio/docx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8528,27 +8744,15 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/dwg/standards#ac1024-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/dwg/standards#ac1024-subsets-any-schema-snapshot-text-component.g4",
   "stdio/dwg/standards#ac1024-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-binary-component.abnf",
   "stdio/dxf/standards#r12-subsets-any-schema-diff-binary-component.ksy",
   "stdio/dxf/standards#r12-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/dxf/standards#r12-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-text-component.g4",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/dxf/standards#r12-subsets-any-schema-mutations-binary-component.ksy",
   "stdio/dxf/standards#r12-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/dxf/standards#r12-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-text-component.g4",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/dxf/standards#r12-subsets-any-schema-snapshot-binary-component.ksy",
   "stdio/dxf/standards#r12-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/dxf/standards#r12-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/gif/standards#87a-subsets-any-schema-diff-binary-component.abnf",
   "stdio/gif/standards#87a-subsets-any-schema-diff-binary-component.ksy",
   "stdio/gif/standards#87a-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8591,27 +8795,8 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/gif/standards#89a-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/gif/standards#89a-subsets-any-schema-snapshot-text-component.g4",
   "stdio/gif/standards#89a-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/gltf/standards#2.0-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/gltf/standards#2.0-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/gltf/standards#2.0-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/gltf/standards#2.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/gltf/standards#2.0-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/ifc/standards#4-subsets-any-schema-diff-binary-component.abnf",
   "stdio/ifc/standards#4-subsets-any-schema-diff-binary-component.ksy",
   "stdio/ifc/standards#4-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8626,49 +8811,14 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/ifc/standards#4-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/ifc/standards#4-subsets-any-schema-mutations-text-component.g4",
   "stdio/ifc/standards#4-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/ifc/standards#4-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-binary-component.abnf",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-text-component.g4",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-text-component.g4",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-text-component.g4",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-text-component.g4",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-text-component.g4",
   "stdio/las/standards#1.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/las/standards#1.0-subsets-any-schema-diff-binary-component.ksy",
   "stdio/las/standards#1.0-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8683,55 +8833,15 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/las/standards#1.0-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/las/standards#1.0-subsets-any-schema-mutations-text-component.g4",
   "stdio/las/standards#1.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/las/standards#1.0-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-text-component.g4",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-text-component.g4",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/obj/standards#3.0-subsets-any-schema-diff-binary-component.ksy",
   "stdio/obj/standards#3.0-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/obj/standards#3.0-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/obj/standards#3.0-subsets-any-schema-mutations-binary-component.ksy",
   "stdio/obj/standards#3.0-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/obj/standards#3.0-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/obj/standards#3.0-subsets-any-schema-snapshot-binary-component.ksy",
   "stdio/obj/standards#3.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/obj/standards#3.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/pdf/standards#1.4-subsets-any-schema-diff-binary-component.abnf",
   "stdio/pdf/standards#1.4-subsets-any-schema-diff-binary-component.ksy",
   "stdio/pdf/standards#1.4-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8753,69 +8863,22 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/pdf/standards#1.4-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/pdf/standards#1.4-subsets-any-schema-snapshot-text-component.g4",
   "stdio/pdf/standards#1.4-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-binary-component.abnf",
   "stdio/pdf/standards#1.7-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-text-component.g4",
-  "stdio/pdf/standards#1.7-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/pdf/standards#1.7-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-text-component.g4",
-  "stdio/pdf/standards#1.7-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-binary-component.ksy",
   "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/pdf/standards#1.7-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-binary-component.ksy",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-binary-component.spicy",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-text-component.ebnf",
   "stdio/ply/standards#1.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/ply/standards#1.0-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-binary-component.ksy",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-binary-component.spicy",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/ply/standards#1.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/ply/standards#1.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/ply/standards#1.0-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-text-component.g4",
-  "stdio/png/standards#1.2-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-text-component.g4",
-  "stdio/png/standards#1.2-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/png/standards#1.2-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-binary-component.abnf",
   "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-binary-component.ksy",
   "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8839,60 +8902,35 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/pptx/standards#ecma-376-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/step/standards#ap214-subsets-any-schema-diff-binary-component.abnf",
   "stdio/step/standards#ap214-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/step/standards#ap214-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/step/standards#ap214-subsets-any-schema-diff-binary-component.spicy",
   "stdio/step/standards#ap214-subsets-any-schema-diff-text-component.ebnf",
   "stdio/step/standards#ap214-subsets-any-schema-diff-text-component.g4",
-  "stdio/step/standards#ap214-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/step/standards#ap214-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/step/standards#ap214-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/step/standards#ap214-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/step/standards#ap214-subsets-any-schema-mutations-binary-component.spicy",
   "stdio/step/standards#ap214-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/step/standards#ap214-subsets-any-schema-mutations-text-component.g4",
-  "stdio/step/standards#ap214-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/step/standards#ap214-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/step/standards#ap214-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/step/standards#ap214-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/step/standards#ap214-subsets-any-schema-snapshot-binary-component.spicy",
   "stdio/step/standards#ap214-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/step/standards#ap214-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/step/standards#ap214-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/stl/standards#ascii-subsets-any-schema-diff-binary-component.abnf",
   "stdio/stl/standards#ascii-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/stl/standards#ascii-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/stl/standards#ascii-subsets-any-schema-diff-binary-component.spicy",
   "stdio/stl/standards#ascii-subsets-any-schema-diff-text-component.ebnf",
   "stdio/stl/standards#ascii-subsets-any-schema-diff-text-component.g4",
-  "stdio/stl/standards#ascii-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/stl/standards#ascii-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/stl/standards#ascii-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/stl/standards#ascii-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/stl/standards#ascii-subsets-any-schema-mutations-binary-component.spicy",
   "stdio/stl/standards#ascii-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/stl/standards#ascii-subsets-any-schema-mutations-text-component.g4",
-  "stdio/stl/standards#ascii-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/svg/standards#1.1-subsets-any-schema-diff-binary-component.abnf",
   "stdio/svg/standards#1.1-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/svg/standards#1.1-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/svg/standards#1.1-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/svg/standards#1.1-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/svg/standards#1.1-subsets-any-schema-diff-text-component.g4",
-  "stdio/svg/standards#1.1-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/svg/standards#1.1-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/svg/standards#1.1-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/svg/standards#1.1-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/svg/standards#1.1-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/svg/standards#1.1-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/svg/standards#1.1-subsets-any-schema-mutations-text-component.g4",
-  "stdio/svg/standards#1.1-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-binary-component.ksy",
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-binary-component.protocol.semio",
@@ -8900,48 +8938,6 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-text-component.g4",
   "stdio/svg/standards#1.1-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/tiff/standards#6.0-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/tiff/standards#6.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-binary-component.abnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-text-component.g4",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-binary-component.abnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-text-component.g4",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-binary-component.abnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-binary-component.abnf",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-binary-component.ksy",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
@@ -8963,41 +8959,44 @@ const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-text-component.g4",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-text-component.grammar.semio",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.abnf",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.ksy",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.protocol.semio",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-binary-component.spicy",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.abnf",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.ksy",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.protocol.semio",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-binary-component.spicy",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.ksy",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.protocol.semio",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-binary-component.spicy",
+  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-binary-component.ksy",
+  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-binary-component.ksy",
+  "stdio/json/standards#rfc8259-subsets-any-schema-diff-binary-component.ksy",
+  "stdio/json/standards#rfc8259-subsets-any-schema-diff-text-component.ebnf",
+  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-binary-component.ksy",
+  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-text-component.ebnf",
+  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-binary-component.ksy",
+  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-text-component.ebnf",
   "stdio/xml/standards#1.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/xml/standards#1.0-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/xml/standards#1.0-subsets-any-schema-diff-binary-component.spicy",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-text-component.ebnf",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/xml/standards#1.0-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/xml/standards#1.0-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/xml/standards#1.0-subsets-any-schema-mutations-binary-component.spicy",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-text-component.ebnf",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/xml/standards#1.0-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/xml/standards#1.0-subsets-any-schema-snapshot-binary-component.ksy",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/xml/standards#1.0-subsets-any-schema-snapshot-binary-component.spicy",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-text-component.ebnf",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-text-component.g4",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/zip/standards#2.0-subsets-any-schema-diff-binary-component.abnf",
   "stdio/zip/standards#2.0-subsets-any-schema-diff-binary-component.ksy",
-  "stdio/zip/standards#2.0-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/zip/standards#2.0-subsets-any-schema-diff-binary-component.spicy",
   "stdio/zip/standards#2.0-subsets-any-schema-diff-text-component.ebnf",
   "stdio/zip/standards#2.0-subsets-any-schema-diff-text-component.g4",
-  "stdio/zip/standards#2.0-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/zip/standards#2.0-subsets-any-schema-mutations-binary-component.abnf",
   "stdio/zip/standards#2.0-subsets-any-schema-mutations-binary-component.ksy",
-  "stdio/zip/standards#2.0-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/zip/standards#2.0-subsets-any-schema-mutations-binary-component.spicy",
   "stdio/zip/standards#2.0-subsets-any-schema-mutations-text-component.ebnf",
   "stdio/zip/standards#2.0-subsets-any-schema-mutations-text-component.g4",
-  "stdio/zip/standards#2.0-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/zip/standards#2.0-subsets-any-schema-snapshot-binary-component.abnf",
   "stdio/zip/standards#2.0-subsets-any-schema-snapshot-binary-component.ksy",
   "stdio/zip/standards#2.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
@@ -9088,18 +9087,9 @@ const POLICY_FACET_MIRROR_DRIFT_ALLOWLIST = new Set<string>([
   "stdio/bcf/standards#2.1-subsets-any-schema-diff-component",
   "stdio/bcf/standards#2.1-subsets-any-schema-mutations-component",
   "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-component",
-  "stdio/binary/standards#raw-subsets-any-schema-diff-component",
-  "stdio/binary/standards#raw-subsets-any-schema-mutations-component",
-  "stdio/binary/standards#raw-subsets-any-schema-snapshot-component",
   "stdio/bmp/standards#v3-subsets-any-schema-diff-component",
   "stdio/bmp/standards#v3-subsets-any-schema-mutations-component",
   "stdio/bmp/standards#v3-subsets-any-schema-snapshot-component",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-component",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-component",
-  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-component",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-component",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-component",
-  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-component",
   "stdio/docx/standards#ecma-376-subsets-any-schema-diff-component",
   "stdio/docx/standards#ecma-376-subsets-any-schema-mutations-component",
   "stdio/docx/standards#ecma-376-subsets-any-schema-snapshot-component",
@@ -9127,9 +9117,6 @@ const POLICY_FACET_MIRROR_DRIFT_ALLOWLIST = new Set<string>([
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-diff-component",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-mutations-component",
   "stdio/jpg/standards#jfif-1.01-subsets-any-schema-snapshot-component",
-  "stdio/json/standards#rfc8259-subsets-any-schema-diff-component",
-  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-component",
-  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-component",
   "stdio/las/standards#1.0-subsets-any-schema-diff-component",
   "stdio/las/standards#1.0-subsets-any-schema-mutations-component",
   "stdio/las/standards#1.0-subsets-any-schema-snapshot-component",
@@ -9166,12 +9153,24 @@ const POLICY_FACET_MIRROR_DRIFT_ALLOWLIST = new Set<string>([
   "stdio/tiff/standards#6.0-subsets-any-schema-diff-component",
   "stdio/tiff/standards#6.0-subsets-any-schema-mutations-component",
   "stdio/tiff/standards#6.0-subsets-any-schema-snapshot-component",
-  "stdio/txt/standards#utf-8-subsets-any-schema-diff-component",
-  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-component",
-  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-component",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-component",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-mutations-component",
   "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-component",
+  "stdio/binary/standards#raw-subsets-any-schema-diff-component",
+  "stdio/binary/standards#raw-subsets-any-schema-mutations-component",
+  "stdio/binary/standards#raw-subsets-any-schema-snapshot-component",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-diff-component",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-mutations-component",
+  "stdio/csv/standards#rfc4180-subsets-any-schema-snapshot-component",
+  "stdio/deflate/standards#rfc1950-subsets-any-schema-diff-component",
+  "stdio/deflate/standards#rfc1950-subsets-any-schema-mutations-component",
+  "stdio/deflate/standards#rfc1950-subsets-any-schema-snapshot-component",
+  "stdio/json/standards#rfc8259-subsets-any-schema-diff-component",
+  "stdio/json/standards#rfc8259-subsets-any-schema-mutations-component",
+  "stdio/json/standards#rfc8259-subsets-any-schema-snapshot-component",
+  "stdio/txt/standards#utf-8-subsets-any-schema-diff-component",
+  "stdio/txt/standards#utf-8-subsets-any-schema-mutations-component",
+  "stdio/txt/standards#utf-8-subsets-any-schema-snapshot-component",
   "stdio/xml/standards#1.0-subsets-any-schema-diff-component",
   "stdio/xml/standards#1.0-subsets-any-schema-mutations-component",
   "stdio/xml/standards#1.0-subsets-any-schema-snapshot-component",
@@ -9182,7 +9181,7 @@ const POLICY_FACET_MIRROR_DRIFT_ALLOWLIST = new Set<string>([
 
 function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const entry of policyListStdioAnyStandardEntries(repoRoot)) {
+  for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     for (const facet of POLICY_FACET_MIRROR_DRIFT_FACETS) {
       const facetRel = `${entry.subsetRel}/🧬️schema/${facet}`;
       const rustRel = `${facetRel}/🦀️component.rs`;

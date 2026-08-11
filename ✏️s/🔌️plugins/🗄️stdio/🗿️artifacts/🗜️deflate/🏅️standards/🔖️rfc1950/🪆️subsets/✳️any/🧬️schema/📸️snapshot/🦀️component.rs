@@ -7,7 +7,11 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️CompressionLevelHint
 /// 🎚️ RFC1950 §2.2 FLG.FLEVEL: a two-bit hint the encoder leaves for tooling about which
 /// compression strategy it used. Never affects decoding — purely informational.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+///
+/// 🧪️ F6: `dsl::DslScalar` — a plain unit-variant enum binds as `DslField` directly (no
+/// `DslVariants`/`Statements` needed), so `DeflateSnapshot`'s `compression_level_hint` field and
+/// `DeflateMutation::SetCompressionParams`'s `level_hint` argument can both embed it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum DeflateLevelHint {
     Fastest,
@@ -46,7 +50,13 @@ impl DeflateLevelHint {
 /// adler32 trailer is always recomputed fresh from `payload` on encode (never carried stale) --
 /// same treatment RFC1950 §2.3 mandates for the checksum, extended here to FCHECK too (both are
 /// pure functions of the other header bits, not independently-settable data).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+///
+/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
+/// `store::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).
+/// `DslRecord` only gives this type `DslField` so it can be embedded as
+/// `DeflateMutation::SetSnapshot { snapshot }`'s payload; it does not touch the artifact's own
+/// honest hex-text/raw-binary envelope format.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateSnapshot {
@@ -75,6 +85,7 @@ pub struct DeflateSnapshot {
     /// the recipe's legitimate exception, not generic-code-to-kill.
     #[state(persistent)]
     #[serde(default)]
+    #[dsl(base64)]
     pub payload: Vec<u8>,
 }
 

@@ -1,15 +1,39 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.gltf/diff.gltf",
+  "$id": "https://semio.tech/schema/s.stdio.gltf/diff.json",
   "title": "GltfDiff",
+  "description": "Sparse per-field diff. Index-keyed collection triples per top-level array; no full-replace snapshot slot.",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "asset": { "type": "object", "description": "Sparse GltfAssetDiff" },
+    "scene": { "type": ["integer", "null"] },
+    "scenes": { "$ref": "#/$defs/collectionDiff" },
+    "nodes": { "$ref": "#/$defs/collectionDiff" },
+    "meshes": { "$ref": "#/$defs/collectionDiff" },
+    "accessors": { "$ref": "#/$defs/collectionDiff" },
+    "bufferViews": { "$ref": "#/$defs/collectionDiff" },
+    "buffers": { "$ref": "#/$defs/collectionDiff" },
+    "bufferBytes": { "$ref": "#/$defs/collectionDiff" },
+    "materials": { "$ref": "#/$defs/collectionDiff" },
+    "textures": { "$ref": "#/$defs/collectionDiff" },
+    "images": { "$ref": "#/$defs/collectionDiff" },
+    "samplers": { "$ref": "#/$defs/collectionDiff" },
+    "skins": { "$ref": "#/$defs/collectionDiff" },
+    "animations": { "$ref": "#/$defs/collectionDiff" },
+    "cameras": { "$ref": "#/$defs/collectionDiff" },
+    "extensionsUsed": { "type": "array", "items": { "type": "string" } },
+    "extensionsRequired": { "type": "array", "items": { "type": "string" } },
+    "extensions": {},
+    "extras": {},
+    "sourceForm": { "enum": ["json", "glb"] }
+  },
+  "$defs": {
+    "collectionDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": {} } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": {} } } }
+      }
     }
   }
 }

@@ -1,4 +1,43 @@
 module Stdio_bmp_snapshot;
+
+# Shared `.semio` binary envelope wrapping the REAL on-disk BMP bytes: BITMAPFILEHEADER +
+# core BITMAPINFOHEADER + optional BI_BITFIELDS masks + optional palette + pixel data.
+# See engine::decode_bmp / engine::encode_bmp for the authoritative reader/writer.
+
+type PaletteEntry = unit {
+    b: uint8;
+    g: uint8;
+    r: uint8;
+    reserved: uint8;
+};
+
 type Document = unit {
-    payload: bytes &eod;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;      # UTF-8 "stdio.bmp.pack v1"
+
+    bmp_signature: bytes &size=2;           # "BM"
+    file_size: uint32 &byte-order=spicy::ByteOrder::Little;
+    reserved1: uint16 &byte-order=spicy::ByteOrder::Little;
+    reserved2: uint16 &byte-order=spicy::ByteOrder::Little;
+    data_offset: uint32 &byte-order=spicy::ByteOrder::Little;
+
+    header_size: uint32 &byte-order=spicy::ByteOrder::Little;   # >= 40; only the 40-byte core is decoded
+    width: int32 &byte-order=spicy::ByteOrder::Little;
+    height: int32 &byte-order=spicy::ByteOrder::Little;         # sign selects row order
+    planes: uint16 &byte-order=spicy::ByteOrder::Little;
+    bits_per_pixel: uint16 &byte-order=spicy::ByteOrder::Little;
+    compression: uint32 &byte-order=spicy::ByteOrder::Little;   # 0 = BI_RGB, 3 = BI_BITFIELDS
+    image_size: uint32 &byte-order=spicy::ByteOrder::Little;
+    x_pixels_per_meter: int32 &byte-order=spicy::ByteOrder::Little;
+    y_pixels_per_meter: int32 &byte-order=spicy::ByteOrder::Little;
+    colors_used: uint32 &byte-order=spicy::ByteOrder::Little;
+    colors_important: uint32 &byte-order=spicy::ByteOrder::Little;
+
+    # bitfield_masks: 3-4 uint32 LE masks, present only when compression == 3 (informative;
+    # Spicy's static grammar cannot easily express the header_size-dependent count here — see
+    # engine::decode_bmp for the authoritative conditional read).
+    # palette: PaletteEntry[colors_used or 2^bits_per_pixel], present only when bits_per_pixel <= 8.
+
+    pixel_data: bytes &eod;   # height rows, each padded to a 4-byte boundary
 };

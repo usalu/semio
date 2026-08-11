@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.png",
+  "standard": "1.2",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained png 1.2"
+    }
+  }
+}

@@ -2,14 +2,93 @@
   "$id": "https://semio.tech/schema/s.stdio.ply/diff.json",
   "title": "PlyDiff",
   "type": "object",
-  "properties": {
-    "schema": {
+  "$defs": {
+    "PlyScalarType": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": ["char", "uChar", "short", "uShort", "int", "uInt", "float", "double"]
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "PlyProperty": {
+      "oneOf": [
+        { "type": "object", "required": ["form", "name", "kind"], "properties": { "form": { "const": "scalar" }, "name": { "type": "string" }, "kind": { "$ref": "#/$defs/PlyScalarType" } } },
+        { "type": "object", "required": ["form", "name", "countKind", "valueKind"], "properties": { "form": { "const": "list" }, "name": { "type": "string" }, "countKind": { "$ref": "#/$defs/PlyScalarType" }, "valueKind": { "$ref": "#/$defs/PlyScalarType" } } }
+      ]
+    },
+    "PlyValue": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "properties": { "kind": { "type": "string" }, "value": {} }
+    },
+    "PlyRow": {
+      "type": "object",
+      "required": ["values"],
+      "properties": { "values": { "type": "array", "items": { "$ref": "#/$defs/PlyValue" } } }
+    },
+    "PlyElement": {
+      "type": "object",
+      "required": ["name", "count", "properties", "rows"],
+      "properties": {
+        "name": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 },
+        "properties": { "type": "array", "items": { "$ref": "#/$defs/PlyProperty" } },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/PlyRow" } }
+      }
+    },
+    "PlyRowFieldChange": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "$ref": "#/$defs/PlyValue" } }
+    },
+    "PlyRowDiff": {
+      "type": "object",
+      "properties": { "fields": { "type": "array", "items": { "$ref": "#/$defs/PlyRowFieldChange" } } }
+    },
+    "PlyRowModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/PlyRowDiff" } }
+    },
+    "PlyRowAdded": {
+      "type": "object",
+      "required": ["index", "row"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "row": { "$ref": "#/$defs/PlyRow" } }
+    },
+    "PlyRowsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PlyRowModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PlyRowAdded" } }
+      }
+    },
+    "PlyElementDiff": {
+      "type": "object",
+      "properties": {
+        "properties": { "type": "array", "items": { "$ref": "#/$defs/PlyProperty" } },
+        "rows": { "$ref": "#/$defs/PlyRowsDiff" }
+      }
+    },
+    "PlyElementModified": {
+      "type": "object",
+      "required": ["name", "diff"],
+      "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/PlyElementDiff" } }
+    },
+    "PlyElementAdded": {
+      "type": "object",
+      "required": ["index", "element"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "element": { "$ref": "#/$defs/PlyElement" } }
+    },
+    "PlyElementsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PlyElementModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PlyElementAdded" } }
+      }
     }
+  },
+  "properties": {
+    "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"] },
+    "comments": { "type": "array", "items": { "type": "string" } },
+    "elements": { "$ref": "#/$defs/PlyElementsDiff" }
   }
 }

@@ -1,8 +1,45 @@
-type PngEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ PngMutation union — mirrors 🦀️component.rs's tagged enum (GraphQL has no native
+# discriminated union, so this models it as one input type with the tag plus optional
+# per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
+
+enum PngMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_HEADER
+  SET_PALETTE
+  SET_TRANSPARENCY
+  SET_GAMMA
+  SET_CHROMATICITIES
+  SET_SRGB_INTENT
+  SET_PHYSICAL_DIMS
+  SET_TIMESTAMP
+  SET_BACKGROUND
+  INSERT_TEXT_CHUNK
+  REMOVE_TEXT_CHUNK
+  SET_TEXT_CHUNK
+  SET_PIXELS
+  INSERT_UNKNOWN_CHUNK
+  REMOVE_UNKNOWN_CHUNK
 }
-type PngMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [PngEntry!]! @state(class: PERSISTENT)
+
+input PngMutationInput {
+  mutation: PngMutationTag!
+  snapshot: PngSnapshotInput
+  width: Int
+  height: Int
+  bitDepth: Int
+  colorType: PngColorType
+  interlace: Boolean
+  plte: [PngRgbInput!]
+  trns: PngTransparencyInput
+  gama: Int
+  chrm: PngChromaticitiesInput
+  srgb: PngSrgbIntent
+  phys: PngPhysicalDimsInput
+  time: PngTimestampInput
+  bkgd: PngBackgroundInput
+  index: Int
+  chunk: PngTextChunkInput
+  unknownChunk: PngChunkInput
+  pixels: [Int!]
 }

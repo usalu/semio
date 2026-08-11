@@ -1,6 +1,23 @@
 syntax = "proto3";
-package semio.s_stdio_md.mutation;
+package semio.s_stdio_md.mutations;
+
+import "s_stdio_md/snapshot.proto";
+import "s_stdio_md/diff.proto";
+
 message MdMutation {
-  string schema = 1;
-  string value_wire = 2;
+  oneof mutation {
+    MdNoMutation no_mutation = 1;
+    MdSetSnapshot set_snapshot = 2;
+    MdInsertBlock insert_block = 3;
+    MdRemoveBlock remove_block = 4;
+    MdReplaceBlock replace_block = 5;
+    MdSetInlines set_inlines = 6;
+  }
 }
+
+message MdNoMutation {}
+message MdSetSnapshot { semio.s_stdio_md.snapshot.MdSnapshot snapshot = 1; }
+message MdInsertBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; semio.s_stdio_md.snapshot.MdBlock block = 3; }
+message MdRemoveBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; }
+message MdReplaceBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; semio.s_stdio_md.snapshot.MdBlock block = 3; }
+message MdSetInlines { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; repeated semio.s_stdio_md.snapshot.MdInline inlines = 3; }

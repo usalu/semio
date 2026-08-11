@@ -1,9 +1,9 @@
 //! 📤️ Serialize `stdio.step` to stdio.txt.
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::step::StepSnapshot;
 pub fn register() {}
 pub fn serialize(from: &StepSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::step::engine::part21::write_part21(&from.document);
+    let text = crate::artifacts::step::engine::part21::write_part21(&from.to_part21_document());
     Ok(TxtSnapshot::from_body(&text))
 }
 pub fn serialize_text(from: &StepSnapshot) -> Result<String, store::PackError> {

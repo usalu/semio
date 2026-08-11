@@ -1,5 +1,31 @@
-# 🧬️ TiffDiff
+# 🔺️ TiffDiff schema facet — sparse diff, mirrors 🦀️component.rs field-for-field.
+
+type TiffTagModified { tag: Int! kind: TiffFieldType! values: TiffValues! }
+type TiffTagAdded { tag: Int! kind: TiffFieldType! values: TiffValues! }
+
+"Tag-id-keyed `entries` triple for one IFD."
+type TiffTagsDiff {
+  removed: [Int!]
+  modified: [TiffTagModified!]
+  added: [TiffTagAdded!]
+}
+
+type TiffIfdModified { index: Int! diff: TiffTagsDiff! }
+type TiffIfdAdded { index: Int! ifd: TiffIfd! }
+
+"Index-keyed `ifds` triple (TIFF's IFD chain is positional)."
+type TiffIfdsDiff {
+  removed: [Int!]
+  modified: [TiffIfdModified!]
+  added: [TiffIfdAdded!]
+}
+
+"""
+Sparse diff for `stdio.tiff`. Every field present = changed to a value. No tri-state fields at
+this level.
+"""
 type TiffDiff {
-  schema: String
-  bytes: String
+  byteOrder: TiffByteOrder @state(class: PERSISTENT)
+  ifds: TiffIfdsDiff @state(class: PERSISTENT)
+  pixels: [Int!] @state(class: PERSISTENT)
 }

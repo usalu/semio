@@ -1,6 +1,8 @@
 dialect grammar stdio.jpg.mutations
 root = document
-document = header body
-header = 'schema' SP 'stdio.jpg' NL
-body = payload NL?
-payload = *OCTET
+document = payload
+; JpgMutation's text representation IS its JSON serialization (see the sibling
+; ../🔣️component.json for the JpgMutation JSON Schema) -- serde(rename_all = "camelCase"),
+; tag-discriminated union via the "mutation" field (`OpText::print_op`/`parse_op` both go
+; through `serde_json` directly). No custom textual grammar beyond JSON's own.
+payload = json-value

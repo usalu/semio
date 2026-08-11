@@ -1,3 +1,6 @@
 dialect protocol stdio.ifc.snapshot
-magic = %x00
-payload = *OCTET
+; Real semio binary envelope wrapping ISO 10303-21 exchange-structure text.
+magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
+token_len = u32le
+token = utf8(token_len)
+payload = utf8(eof)

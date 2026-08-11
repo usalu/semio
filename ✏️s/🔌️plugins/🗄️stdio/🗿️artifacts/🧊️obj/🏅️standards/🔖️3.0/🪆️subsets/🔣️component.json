@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.obj",
+  "standard": "3.0",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained obj 3.0"
+    }
+  }
+}

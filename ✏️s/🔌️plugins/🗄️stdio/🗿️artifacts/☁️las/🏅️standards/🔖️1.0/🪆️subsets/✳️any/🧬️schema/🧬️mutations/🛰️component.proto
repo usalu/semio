@@ -1,6 +1,50 @@
 syntax = "proto3";
 package semio.s_stdio_las.mutation;
+
+import "s.stdio.las/snapshot.proto";
+
+enum LasMutationKind {
+  NO_MUTATION = 0;
+  SET_SNAPSHOT = 1;
+  SET_VERSION = 2;
+  SET_SYSTEM_IDENTIFIER = 3;
+  SET_SOFTWARE_INFO = 4;
+  SET_CREATION_DATE = 5;
+  SET_SCALE_AND_OFFSET = 6;
+  SET_BOUNDS = 7;
+  SET_POINTS_BY_RETURN = 8;
+  INSERT_VLR = 9;
+  REMOVE_VLR = 10;
+  SET_VLR_DATA = 11;
+  INSERT_POINT = 12;
+  REMOVE_POINT = 13;
+  SET_POINT = 14;
+}
+
 message LasMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  LasMutationKind mutation = 1;
+  semio.s_stdio_las.snapshot.LasSnapshot snapshot = 2;
+  uint32 major = 3;
+  uint32 minor = 4;
+  string system_identifier = 5;
+  string generating_software = 6;
+  uint32 day_of_year = 7;
+  uint32 year = 8;
+  double scale_x = 9;
+  double scale_y = 10;
+  double scale_z = 11;
+  double offset_x = 12;
+  double offset_y = 13;
+  double offset_z = 14;
+  double max_x = 15;
+  double max_y = 16;
+  double max_z = 17;
+  double min_x = 18;
+  double min_y = 19;
+  double min_z = 20;
+  repeated uint32 counts = 21; // exactly 5, points-by-return
+  uint64 index = 22;
+  semio.s_stdio_las.snapshot.LasVlr vlr = 23;
+  bytes data = 24;
+  semio.s_stdio_las.snapshot.LasPoint point = 25;
 }

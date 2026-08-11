@@ -1,0 +1,25 @@
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::conforming_snapshot_has_no_diagnostics ... ok
+test artifacts::zip::standards::v2_0::subsets::any::schema::mutations::component::tests::codec_retention_law ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::data_descriptor_bit_is_soft ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::encrypted_entry_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::high_version_needed_is_soft ... ok
+test artifacts::zip::standards::v2_0::subsets::any::schema::mutations::component::tests::diff_codec_text_binary_roundtrip_law ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::masked_local_header_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::strong_encryption_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::version_needed_at_ceiling_is_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::typed_constructors_build_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::clean_snapshot_composes_and_stamps_iso21320 ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::encrypted_entry_gets_normalized_away_and_still_composes ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::subset_validator_flags_real_violations_without_normalizing ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::high_version_needed_gets_capped ... ok
+test artifacts::zip::standards::v2_0::subsets::any::schema::mutations::component::tests::op_text_binary_roundtrip_law ... ok
+test artifacts::zip::standards::v2_0::engine::tests::encode_rejects_would_be_zip64_entry_size ... ok
+test artifacts::pdf::examples::bachelor_thesis::bachelor_thesis_tests::analyzer_to_builder_round_trip_reproduces_equivalent_pages ... ok
+test artifacts::gif::examples::dancing::dancing_tests::decodes_real_fixture_with_nontrivial_invariants ... ok
+test artifacts::gif::examples::dancing::component::tests::dancing_source_nonempty_and_decodes ... ok
+test artifacts::gif::examples::dancing::dancing_tests::decode_encode_decode_round_trip_is_stable ... ok
+test artifacts::gif::examples::dancing::dancing_tests::analyzer_builder_round_trip_matches ... ok
+
+test result: ok. 1047 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.01s
+

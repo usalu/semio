@@ -1,0 +1,15 @@
+{
+  "artifact": "s.stdio.xlsx",
+  "standard": "ecma-376",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained xlsx ecma-376"
+    },
+    "strict": {
+      "name": "ISO/IEC 29500-1 Strict conformance class -- spreadsheetml main ns http://purl.oclc.org/ooxml/spreadsheetml/main, no VML, explicit workbook@conformance=\"strict\""
+    },
+    "transitional": {
+      "name": "ISO/IEC 29500-4 Transitional conformance class -- spreadsheetml main ns http://schemas.openxmlformats.org/spreadsheetml/2006/main (ECMA-376's original, permissive baseline)"
+    }
+  }
+}

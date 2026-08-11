@@ -1,3 +1,5 @@
-; abnf stdio.xml snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.xml snapshot (binary/pack representation)
+document = envelope-header json-payload
+; json-payload = the JSON encoding of XmlDocument (root/doctype/declaration) -- see the sibling
+; snapshot JSON Schema for that shape; this is not raw XML octets.
+json-payload = *OCTET

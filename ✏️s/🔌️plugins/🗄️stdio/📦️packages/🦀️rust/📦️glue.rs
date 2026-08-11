@@ -465,6 +465,27 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod i_json {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
                 }
             }
         }
@@ -618,6 +639,27 @@ pub mod artifacts {
                                     }
                                 }
                             }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod valid {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                     }
                 }
@@ -1264,6 +1306,27 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod iso21320 {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
                 }
             }
         }
@@ -1458,6 +1521,84 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod cc1 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cc2 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cc3 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cc4 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cc5 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cc6 {
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
         }
@@ -1638,6 +1779,185 @@ pub mod artifacts {
                     }
                 }
             }
+            #[path = "."]
+            pub mod v2x3 {
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/⚙️engine/🦀️component.rs"]
+                pub mod engine;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🏗️builder/🦀️component.rs"]
+                pub mod builder;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧐️analyzer/🦀️component.rs"]
+                pub mod analyzer;
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🎹️composer/🦀️component.rs"]
+                pub mod composer;
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod set_snapshot {
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                            }
+                        }
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod binary {
+                                            #[path = "."]
+                                            pub mod v_raw {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod txt {
+                                            #[path = "."]
+                                            pub mod v_utf_8 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod cv20 {
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod sav {
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod cobie {
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                }
+            }
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
@@ -1646,6 +1966,14 @@ pub mod artifacts {
         }
         pub mod engine {
             pub use super::standards::v4::engine::*;
+            /// 📎 Registers BOTH standards' engines (v4 canonical + v2x3 new-this-ticket) -- a
+            /// flat glob re-export can't do this (two `register` fns of the same name would
+            /// collide), so this local definition shadows the glob-imported v4 one and calls both
+            /// explicitly. Same shape as pdf's own shim fix for 1.4/1.7.
+            pub fn register() {
+                super::standards::v4::engine::register();
+                super::standards::v2x3::engine::register();
+            }
         }
         pub mod io {
             pub use super::standards::v4::subsets::any::io::*;
@@ -2747,6 +3075,39 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod tiny {
+                        // 🏅️ SVG Tiny 1.1 (W3C Mobile SVG Profiles, REC-SVGMobile-20030114 §SVG
+                        // Tiny 1.1). `schema` re-exports the ✳️any subset's `SvgSnapshot`
+                        // verbatim (same Rust type, same `s.stdio.svg` schema id); `io` reuses
+                        // the ✳️any subset's xml import/export leaves rather than duplicating
+                        // them. Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES.
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod basic {
+                        // 🏅️ SVG Basic 1.1 (W3C Mobile SVG Profiles, REC-SVGMobile-20030114 §SVG
+                        // Basic 1.1). Same shape as `✳️tiny` above.
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
         }
@@ -3549,6 +3910,38 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod a {
+                        // 🏅️ PDF/A (1.4) -- ISO 19005-1 (PDF/A-1), the honestly-scope-limited
+                        // reference case: `PdfSnapshot`(1.4) is a bare PageDoc, no object graph.
+                        // Added in ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W2.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod x {
+                        // 🏅️ PDF/X (1.4) -- ISO 15930-1 (X-1a) / ISO 15930-3 (X-3), same
+                        // honestly-scope-limited schema-gap shape as ✳️a above. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W2.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
 
@@ -3691,20 +4084,104 @@ pub mod artifacts {
                         }
                     }
                     #[path = "."]
-                    pub mod a2b {
-                        // 🏅️ PDF/A-2b (ISO 19005-2, D5 pilot) — the FIRST real, non-✳️any subset
-                        // in the repo. `schema` re-exports the ✳️any subset's `PdfSnapshot`
-                        // verbatim (same Rust type, same `s.stdio.pdf.1.7` schema id); `io` reuses
-                        // the ✳️any subset's binary/deflate DAG leaves rather than duplicating them.
-                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧬️schema/🦀️component.rs"]
+                    pub mod a {
+                        // 🏅️ PDF/A (ISO 19005-2/-3) — the FIRST real, non-✳️any subset in the
+                        // repo. Restructured from `✳️a-2b` in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W2: the conformance
+                        // LEVEL (2b/2u/3b/3u) is analyzer-detected DATA (`stdio.pdf.a.level`), not
+                        // part of the subset id. `schema` re-exports the ✳️any subset's
+                        // `PdfSnapshot` verbatim (same Rust type, same `s.stdio.pdf.1.7` schema
+                        // id); `io` reuses the ✳️any subset's binary/deflate DAG leaves rather than
+                        // duplicating them.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🦀️component.rs"]
                         pub mod schema;
-                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🏗️builder/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏗️builder/🦀️component.rs"]
                         pub mod builder;
-                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧐️analyzer/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧐️analyzer/🦀️component.rs"]
                         pub mod analyzer;
-                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🎹️composer/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🎹️composer/🦀️component.rs"]
                         pub mod composer;
-                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🚪️io/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod x {
+                        // 🏅️ PDF/X-4 -- ISO 15930-7:2010, based on PDF 1.6/1.7. Real
+                        // object-graph-backed analyzer/composer/builder (same shape as ✳️a).
+                        // Added in ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod e {
+                        // 🏅️ PDF/E-1 -- ISO 24517-1:2008, based on PDF 1.6. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod ua {
+                        // 🏅️ PDF/UA-1 -- ISO 14289-1:2014. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod vt {
+                        // 🏅️ PDF/VT-1/-2 -- ISO 16612-2:2010, layered on PDF/X-4 (ISO 15930-7):
+                        // this subset's analyzer calls `x::analyzer::check_x_conformance`
+                        // directly rather than duplicating those checks. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod h {
+                        // 🏅️ PDF/H -- AIIM/ASTM PDF Healthcare Best Practices Guide (2008);
+                        // industry best-practice, never ISO; all-soft profile, no hard checks,
+                        // composer always Ok (pass-through). Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🚪️io/🦀️component.rs"]
                         pub mod io;
                     }
                 }
@@ -3888,6 +4365,27 @@ pub mod artifacts {
                                 }
                             }
                         }
+                    }
+                    #[path = "."]
+                    pub mod baseline {
+                        // 🏅️ ITU-T T.81 / ISO 10918-1 Annex F baseline sequential DCT (JFIF 1.01
+                        // container) -- ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES.
+                        // `schema` re-exports the ✳️any subset's `JpgSnapshot` verbatim (same Rust
+                        // type, same `s.stdio.jpg` schema id); `io` reuses the ✳️any subset's
+                        // `binary` DAG leaf rather than duplicating it. `JpgSnapshot` gained
+                        // `frame`/`sof_marker`/`arithmetic`/`dc_huffman_table_count`/
+                        // `ac_huffman_table_count` fields as part of this subset landing --
+                        // `⚙️engine::decode_jpg` now persists what it already computed transiently.
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs"]
+                        pub mod io;
                     }
                 }
             }
@@ -4339,6 +4837,23 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod baseline {
+                        // 🏅️ Baseline TIFF (6.0) -- Adobe TIFF 6.0 Part 1 "Baseline TIFF", the
+                        // honestly-scope-limited case: `TiffSnapshot`(6.0) retains only a decoded
+                        // `RasterImage{width,height,rgba}`, no IFD. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
         }
@@ -4518,6 +5033,32 @@ pub mod artifacts {
                                 }
                             }
                         }
+                    }
+                    #[path = "."]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs"]
+                        pub mod io;
                     }
                 }
             }
@@ -4705,6 +5246,42 @@ pub mod artifacts {
                             }
                         }
                     }
+                    #[path = "."]
+                    pub mod strict {
+                        // 🏅️ ISO/IEC 29500-1:2016 Strict -- presentationml main ns
+                        // http://purl.oclc.org/ooxml/presentationml/main. Added in ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES. `schema`
+                        // re-exports the ✳️any subset's `PptxSnapshot` verbatim (same Rust type,
+                        // same `s.stdio.pptx` schema id); `io` reuses the ✳️any subset's
+                        // zip/xml DAG leaves rather than duplicating them.
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod transitional {
+                        // 🏅️ ISO/IEC 29500-4:2016 Transitional -- presentationml main ns
+                        // http://schemas.openxmlformats.org/presentationml/2006/main. Added in
+                        // ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES. Same
+                        // 5-leaf shape as ✳️strict above.
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
                 }
             }
         }
@@ -4890,6 +5467,40 @@ pub mod artifacts {
                                 }
                             }
                         }
+                    }
+                    #[path = "."]
+                    pub mod strict {
+                        // 🏅️ ISO/IEC 29500-1 Strict -- ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3. `schema`
+                        // re-exports the ✳️any subset's `XlsxSnapshot` verbatim (same Rust type,
+                        // same `s.stdio.xlsx` schema id); `io` reuses the ✳️any subset's
+                        // zip/xml DAG leaves rather than duplicating them.
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs"]
+                        pub mod io;
+                    }
+                    #[path = "."]
+                    pub mod transitional {
+                        // 🏅️ ISO/IEC 29500-4 Transitional -- ticket
+                        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3. Same shape as
+                        // ✳️strict above, opposite polarity.
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs"]
+                        pub mod schema;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs"]
+                        pub mod builder;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs"]
+                        pub mod analyzer;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs"]
+                        pub mod composer;
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs"]
+                        pub mod io;
                     }
                 }
             }

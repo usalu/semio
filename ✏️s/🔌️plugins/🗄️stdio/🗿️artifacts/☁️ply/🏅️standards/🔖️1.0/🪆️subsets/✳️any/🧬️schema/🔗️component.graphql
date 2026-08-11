@@ -1,2 +1,7 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ PlyArtifact schema — mirrors PlySnapshot's persistent fields exactly.
+type PlyArtifact {
+  schema: String!
+  format: PlyFormat!
+  comments: [String!]!
+  elements: [PlyElement!]!
+}

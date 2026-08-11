@@ -1,0 +1,60 @@
+F6 ply 1.0 — STEP 1 classification, real cargo check citations (temporary derive attempts,
+added then reverted before implementing the hand-rolled path).
+
+=== DIFF SIDE ===
+Added `#[derive(dsl::DslDiff)]` to PlyDiff (plus cascading `#[derive(dsl::DslScalar)]` on
+PlyFormat and `#[derive(dsl::DslRecord)]` on PlyElementsDiff/PlyElementModified/PlyElementAdded/
+PlyElementDiff to push past the trivial PlyFormat blocker down to the real one).
+
+Real `cargo check -p semio-s-plugin-stdio --lib` output:
+
+error[E0277]: the trait bound `ply::standards::v1_0::subsets::any::schema::snapshot::component::PlyProperty: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:290:28
+    |
+290 |     pub properties: Option<Vec<PlyProperty>>,
+    |                            ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `ply::standards::v1_0::subsets::any::schema::snapshot::component::PlyProperty`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:50:1
+    |
+ 50 | pub enum PlyProperty {
+    | ^^^^^^^^^^^^^^^^^^^^
+    = note: required for `Vec<ply::standards::v1_0::subsets::any::schema::snapshot::component::PlyProperty>` to implement `DslField`
+
+Conclusion: 3a "enum-in-tree" blocker — PlyProperty is a genuine data-carrying enum
+(Scalar{name,kind} / List{name,count_kind,value_kind}), no DslField impl derivable (not
+unit-variant-only, so DslScalar doesn't apply). PlyValue (Char/UChar/.../List(Vec<PlyValue>),
+reachable via PlyRowFieldChange::value) is the same shape and would block equally — not hit by
+this specific compiler run only because PlyProperty errors first, but confirmed by direct source
+inspection (☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:72-82) and
+independently confirmed via the mutation-side compile run below.
+
+=== MUTATION SIDE ===
+Added `#[derive(dsl::DslOps)]` to PlyMutation.
+
+Real `cargo check -p semio-s-plugin-stdio --lib` output (first 4 distinct blockers hit across the
+enum's variants in one run):
+
+error[E0277]: the trait bound `...::PlySnapshot: DslField` is not satisfied  (via SetSnapshot { snapshot: PlySnapshot })
+error[E0277]: the trait bound `...::PlyElement: DslField` is not satisfied   (via AddElement { element: PlyElement })
+error[E0277]: the trait bound `...::PlyRow: DslField` is not satisfied      (via InsertRow { row: PlyRow })
+error[E0277]: the trait bound `ply::standards::v1_0::subsets::any::schema::snapshot::component::PlyValue: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:29:92
+   |
+29 |     SetRowProperty { element_name: String, row_index: usize, property_name: String, value: PlyValue },
+   |                                                                                            ^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `ply::standards::v1_0::subsets::any::schema::snapshot::component::PlyValue`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:72:1
+   |
+72 | pub enum PlyValue {
+   | ^^^^^^^^^^^^^^^^^
+
+Conclusion: 3a blocker independently confirmed on the Mutation side too — SetRowProperty carries
+PlyValue directly, and SetSnapshot/AddElement/InsertRow all transitively bottom out at
+PlyProperty/PlyValue via PlySnapshot -> PlyElement -> {properties: Vec<PlyProperty>, rows:
+Vec<PlyRow> -> PlyRow{values: Vec<PlyValue>}}. Both DiffCodec and OpText/OpBinary are hand-rolled
+in the real (non-experimental) files.
+
+All temporary derive attributes above were REMOVED after capturing these citations; the diff/mutations
+files were reverted to their original derive lists before the hand-rolled implementation was written.

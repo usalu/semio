@@ -1,8 +1,79 @@
-type JpgEntry {
-  name: String!
+# 🧬️ JpgSnapshot schema facet — mirrors 🦀️component.rs field-for-field.
+
+"📏️ JFIF APP0 units byte. ASPECT means x/y density are merely a pixel aspect ratio."
+enum JfifDensityUnits {
+  ASPECT
+  PIXELS_PER_INCH
+  PIXELS_PER_CM
+}
+
+"🖼️ JFIF APP0's optional embedded thumbnail — uncompressed 24-bit RGB."
+type JfifThumbnail {
+  width: Int!
+  height: Int!
+  rgbData: [Int!]!
+}
+
+"🧩️ One SOF0 frame component descriptor. Id-keyed within JpgFrameHeader.components."
+type JpgFrameComponent {
+  id: Int!
+  hSampling: Int!
+  vSampling: Int!
+  quantTableId: Int!
+}
+
+"🖼️ Baseline (SOF0) frame header."
+type JpgFrameHeader {
+  precision: Int!
+  width: Int!
+  height: Int!
+  components: [JpgFrameComponent!]!
+}
+
+"📊️ One DQT table (id-keyed within JpgSnapshot.quantTables). values is EXACT zigzag scan order."
+type JpgQuantTable {
+  id: Int!
+  precision: Int!
+  values: [Int!]!
+}
+
+"🌳️ DHT table class."
+enum JpgHuffmanClass {
+  DC
+  AC
+}
+
+"🌳️ One DHT table, keyed by (class, id) within JpgSnapshot.huffmanTables."
+type JpgHuffmanTable {
+  id: Int!
+  class: JpgHuffmanClass!
+  bits: [Int!]!
+  values: [Int!]!
+}
+
+"🗃️ An other APPn/COM segment retained verbatim. Index-keyed within JpgSnapshot.otherSegments."
+type JpgSegment {
+  marker: Int!
   data: [Int!]!
 }
+
+"📸️ Complete stdio.jpg jfif-1.01 semantic snapshot. schema is an identity field, never diffed."
 type JpgSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [JpgEntry!]! @state(class: PERSISTENT)
+  width: Int! @state(class: PERSISTENT)
+  height: Int! @state(class: PERSISTENT)
+  pixels: [Int!]! @state(class: PERSISTENT)
+  reEncodeQuality: Int @state(class: PERSISTENT)
+  jfifVersion: [Int!]! @state(class: PERSISTENT)
+  jfifDensityUnits: JfifDensityUnits! @state(class: PERSISTENT)
+  jfifXDensity: Int! @state(class: PERSISTENT)
+  jfifYDensity: Int! @state(class: PERSISTENT)
+  jfifThumbnail: JfifThumbnail @state(class: PERSISTENT)
+  frame: JpgFrameHeader @state(class: PERSISTENT)
+  sofMarker: Int! @state(class: PERSISTENT)
+  arithmetic: Boolean! @state(class: PERSISTENT)
+  quantTables: [JpgQuantTable!]! @state(class: PERSISTENT)
+  huffmanTables: [JpgHuffmanTable!]! @state(class: PERSISTENT)
+  restartInterval: Int @state(class: PERSISTENT)
+  otherSegments: [JpgSegment!]! @state(class: PERSISTENT)
 }

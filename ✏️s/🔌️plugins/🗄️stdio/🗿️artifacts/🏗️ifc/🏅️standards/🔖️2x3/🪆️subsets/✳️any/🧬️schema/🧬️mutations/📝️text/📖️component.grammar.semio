@@ -1,0 +1,6 @@
+dialect grammar stdio.ifc.2x3.mutations
+root = document
+document = header body
+header = 'schema' SP 'stdio.ifc.2x3' NL
+body = payload NL?
+payload = *OCTET

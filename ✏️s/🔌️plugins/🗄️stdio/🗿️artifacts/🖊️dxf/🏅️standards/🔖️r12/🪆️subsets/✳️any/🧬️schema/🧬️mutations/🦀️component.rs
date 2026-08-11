@@ -1,8 +1,21 @@
-//! 🧬️ DxfMutation — document mutation dispatch.
+//! 🧬️ DxfMutation — document mutation dispatch. Every variant's `diff()` is handcrafted
+//! (constructs the sparse `DxfDiff` directly — apply-and-capture is banned); `inverse()` is
+//! handcrafted per variant, name/index-aware, reading the pre-state it needs from `base`.
+//! `SetLayer`/`SetStyle`/`SetLinetype`/`SetEntity`/`SetBlock` each set a WHOLE item (not a
+//! single sub-field) — their `diff()` still constructs a sparse per-field patch by comparing
+//! against `base`'s current value, never a full-item replace.
 
-use crate::artifacts::dxf::schema::diff::{diff_set_snapshot, DxfDiff};
+use crate::artifacts::dxf::schema::diff::{
+    block_diff_between, diff_insert_block, diff_insert_entity, diff_insert_layer,
+    diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity,
+    diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style,
+    diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype,
+    diff_set_snapshot, diff_set_style, entity_diff_between_pub, header_var_diff_between,
+    layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff,
+};
+use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
 use crate::artifacts::dxf::DxfSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -12,22 +25,58 @@ use serde::{Deserialize, Serialize};
 pub enum DxfMutation {
     #[default]
     NoMutation,
-    SetSnapshot {
-        snapshot: DxfSnapshot,
-    },
+    SetSnapshot { snapshot: DxfSnapshot },
+
+    /// 🏷️ Creates or replaces a `$VAR` header entry.
+    SetHeaderVar { name: String, header_var: DxfHeaderVar },
+    /// ➖️ Removes a `$VAR` header entry.
+    RemoveHeaderVar { name: String },
+
+    /// ➕️ Inserts a whole `LAYER` table entry at `index`.
+    InsertLayer { index: usize, layer: DxfLayer },
+    /// ➖️ Removes a `LAYER` table entry by name.
+    RemoveLayer { name: String },
+    /// ✏️ Replaces the WHOLE `LAYER` entry named `name` (diff is still a sparse per-field patch).
+    SetLayer { name: String, layer: DxfLayer },
+
+    /// ➕️ Inserts a whole `STYLE` table entry at `index`.
+    InsertStyle { index: usize, style: DxfStyle },
+    /// ➖️ Removes a `STYLE` table entry by name.
+    RemoveStyle { name: String },
+    /// ✏️ Replaces the WHOLE `STYLE` entry named `name`.
+    SetStyle { name: String, style: DxfStyle },
+
+    /// ➕️ Inserts a whole `LTYPE` table entry at `index`.
+    InsertLinetype { index: usize, linetype: DxfLinetype },
+    /// ➖️ Removes an `LTYPE` table entry by name.
+    RemoveLinetype { name: String },
+    /// ✏️ Replaces the WHOLE `LTYPE` entry named `name`.
+    SetLinetype { name: String, linetype: DxfLinetype },
+
+    /// ➕️ Inserts a whole entity at `index` in the top-level `ENTITIES` list.
+    InsertEntity { index: usize, entity: DxfEntity },
+    /// ➖️ Removes the entity at `index`.
+    RemoveEntity { index: usize },
+    /// ✏️ Replaces the WHOLE entity at `index` (diff is `Replace` on kind change, else a
+    /// sparse kind-specific patch).
+    SetEntity { index: usize, entity: DxfEntity },
+
+    /// ➕️ Inserts a whole `BLOCK` at `index`.
+    InsertBlock { index: usize, block: DxfBlock },
+    /// ➖️ Removes the `BLOCK` at `index`.
+    RemoveBlock { index: usize },
+    /// ✏️ Replaces the WHOLE `BLOCK` at `index`.
+    SetBlock { index: usize, block: DxfBlock },
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`.
+/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
+/// d.apply(snapshot); d` — the diff is the single semantics source.
 pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> DxfDiff {
-    let __diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        DxfMutation::NoMutation => {}
-        DxfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-    }
-
-    __diff
+    let diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+    *snapshot = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&diff, snapshot);
+    diff
 }
 //#endregion 🔖️Apply
 
@@ -35,10 +84,51 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 impl Mutation<DxfSnapshot> for DxfMutation {
     type Diff = DxfDiff;
 
-    fn diff(&self, _base: &DxfSnapshot) -> Self::Diff {
+    fn diff(&self, base: &DxfSnapshot) -> Self::Diff {
         match self {
             DxfMutation::NoMutation => DxfDiff::default(),
-            DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+            DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+
+            DxfMutation::SetHeaderVar { name, header_var } => {
+                let existed = base.header_vars.iter().any(|v| &v.name == name);
+                diff_set_header_var(base.header_vars.len(), name, header_var.clone(), existed)
+            }
+            DxfMutation::RemoveHeaderVar { name } => diff_remove_header_var(name),
+
+            DxfMutation::InsertLayer { index, layer } => diff_insert_layer(*index, layer.clone()),
+            DxfMutation::RemoveLayer { name } => diff_remove_layer(name),
+            DxfMutation::SetLayer { name, layer } => {
+                let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
+                diff_set_layer(name, layer_diff_between(&old, layer))
+            }
+
+            DxfMutation::InsertStyle { index, style } => diff_insert_style(*index, style.clone()),
+            DxfMutation::RemoveStyle { name } => diff_remove_style(name),
+            DxfMutation::SetStyle { name, style } => {
+                let old = base.tables.styles.iter().find(|s| &s.name == name).cloned().unwrap_or_default();
+                diff_set_style(name, style_diff_between(&old, style))
+            }
+
+            DxfMutation::InsertLinetype { index, linetype } => diff_insert_linetype(*index, linetype.clone()),
+            DxfMutation::RemoveLinetype { name } => diff_remove_linetype(name),
+            DxfMutation::SetLinetype { name, linetype } => {
+                let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
+                diff_set_linetype(name, linetype_diff_between(&old, linetype))
+            }
+
+            DxfMutation::InsertEntity { index, entity } => diff_insert_entity(*index, entity.clone()),
+            DxfMutation::RemoveEntity { index } => diff_remove_entity(*index),
+            DxfMutation::SetEntity { index, entity } => match base.entities.get(*index) {
+                Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity)),
+                None => diff_insert_entity(*index, entity.clone()),
+            },
+
+            DxfMutation::InsertBlock { index, block } => diff_insert_block(*index, block.clone()),
+            DxfMutation::RemoveBlock { index } => diff_remove_block(*index),
+            DxfMutation::SetBlock { index, block } => match base.blocks.get(*index) {
+                Some(old) => diff_set_block(*index, block_diff_between(old, block)),
+                None => diff_insert_block(*index, block.clone()),
+            },
         }
     }
 
@@ -46,6 +136,68 @@ impl Mutation<DxfSnapshot> for DxfMutation {
         match self {
             DxfMutation::NoMutation => vec![DxfMutation::NoMutation],
             DxfMutation::SetSnapshot { .. } => vec![DxfMutation::SetSnapshot { snapshot: base.clone() }],
+
+            DxfMutation::SetHeaderVar { name, .. } => match base.header_vars.iter().find(|v| &v.name == name) {
+                Some(v) => vec![DxfMutation::SetHeaderVar { name: name.clone(), header_var: v.clone() }],
+                None => vec![DxfMutation::RemoveHeaderVar { name: name.clone() }],
+            },
+            DxfMutation::RemoveHeaderVar { name } => match base.header_vars.iter().find(|v| &v.name == name) {
+                Some(v) => vec![DxfMutation::SetHeaderVar { name: name.clone(), header_var: v.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+
+            // 🧭️ Reads the name off the mutation's OWN payload, not `base` at `index` — `base`
+            // is pre-insertion state, so `base.tables.layers[index]` (if any) is whatever WAS
+            // there before, never the layer this mutation is about to insert.
+            DxfMutation::InsertLayer { layer, .. } => vec![DxfMutation::RemoveLayer { name: layer.name.clone() }],
+            DxfMutation::RemoveLayer { name } => match base.tables.layers.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::InsertLayer { index: base.tables.layers.iter().position(|x| &x.name == name).unwrap_or(base.tables.layers.len()), layer: l.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+            DxfMutation::SetLayer { name, .. } => match base.tables.layers.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::SetLayer { name: name.clone(), layer: l.clone() }],
+                None => vec![DxfMutation::RemoveLayer { name: name.clone() }],
+            },
+
+            DxfMutation::InsertStyle { style, .. } => vec![DxfMutation::RemoveStyle { name: style.name.clone() }],
+            DxfMutation::RemoveStyle { name } => match base.tables.styles.iter().find(|s| &s.name == name) {
+                Some(s) => vec![DxfMutation::InsertStyle { index: base.tables.styles.iter().position(|x| &x.name == name).unwrap_or(base.tables.styles.len()), style: s.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+            DxfMutation::SetStyle { name, .. } => match base.tables.styles.iter().find(|s| &s.name == name) {
+                Some(s) => vec![DxfMutation::SetStyle { name: name.clone(), style: s.clone() }],
+                None => vec![DxfMutation::RemoveStyle { name: name.clone() }],
+            },
+
+            DxfMutation::InsertLinetype { linetype, .. } => vec![DxfMutation::RemoveLinetype { name: linetype.name.clone() }],
+            DxfMutation::RemoveLinetype { name } => match base.tables.linetypes.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::InsertLinetype { index: base.tables.linetypes.iter().position(|x| &x.name == name).unwrap_or(base.tables.linetypes.len()), linetype: l.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+            DxfMutation::SetLinetype { name, .. } => match base.tables.linetypes.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::SetLinetype { name: name.clone(), linetype: l.clone() }],
+                None => vec![DxfMutation::RemoveLinetype { name: name.clone() }],
+            },
+
+            DxfMutation::InsertEntity { index, .. } => vec![DxfMutation::RemoveEntity { index: *index }],
+            DxfMutation::RemoveEntity { index } => match base.entities.get(*index) {
+                Some(e) => vec![DxfMutation::InsertEntity { index: *index, entity: e.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+            DxfMutation::SetEntity { index, .. } => match base.entities.get(*index) {
+                Some(e) => vec![DxfMutation::SetEntity { index: *index, entity: e.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+
+            DxfMutation::InsertBlock { index, .. } => vec![DxfMutation::RemoveBlock { index: *index }],
+            DxfMutation::RemoveBlock { index } => match base.blocks.get(*index) {
+                Some(b) => vec![DxfMutation::InsertBlock { index: *index, block: b.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
+            DxfMutation::SetBlock { index, .. } => match base.blocks.get(*index) {
+                Some(b) => vec![DxfMutation::SetBlock { index: *index, block: b.clone() }],
+                None => vec![DxfMutation::NoMutation],
+            },
         }
     }
 }
@@ -80,3 +232,335 @@ impl protocol::OpBinary for DxfMutation {
     }
 }
 //#endregion OpCodecs
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
+    use protocol::command::DiffAlgebra;
+
+    //#region 🔖️Fixtures
+    fn base_snapshot() -> DxfSnapshot {
+        DxfSnapshot {
+            schema: "stdio.dxf".into(),
+            header_vars: vec![
+                DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] },
+            ],
+            tables: DxfTables {
+                layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] }],
+                styles: vec![DxfStyle { name: "STANDARD".into(), flags: 0, font_name: "txt".into(), unknown_group_codes: vec![] }],
+                linetypes: vec![DxfLinetype { name: "CONTINUOUS".into(), flags: 0, description: "Solid".into(), unknown_group_codes: vec![] }],
+            },
+            other_tables: vec![],
+            blocks: vec![DxfBlock { name: "B1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] }],
+            entities: vec![
+                DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
+                DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 5.0, layer: "0".into(), unknown_group_codes: vec![] },
+            ],
+        }
+    }
+
+    fn variants() -> Vec<DxfMutation> {
+        vec![
+            DxfMutation::NoMutation,
+            DxfMutation::SetSnapshot { snapshot: sweep_b() },
+            DxfMutation::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } },
+            DxfMutation::SetHeaderVar { name: "$NEWVAR".into(), header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![] } },
+            DxfMutation::RemoveHeaderVar { name: "$ACADVER".into() },
+            DxfMutation::InsertLayer { index: 1, layer: DxfLayer { name: "L2".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } },
+            DxfMutation::RemoveLayer { name: "0".into() },
+            DxfMutation::SetLayer { name: "0".into(), layer: DxfLayer { name: "0".into(), color: 3, linetype: "DASHED".into(), flags: 1, unknown_group_codes: vec![] } },
+            DxfMutation::InsertStyle { index: 1, style: DxfStyle { name: "S2".into(), flags: 0, font_name: "arial".into(), unknown_group_codes: vec![] } },
+            DxfMutation::RemoveStyle { name: "STANDARD".into() },
+            DxfMutation::SetStyle { name: "STANDARD".into(), style: DxfStyle { name: "STANDARD".into(), flags: 1, font_name: "romans".into(), unknown_group_codes: vec![] } },
+            DxfMutation::InsertLinetype { index: 1, linetype: DxfLinetype { name: "DASHED".into(), flags: 0, description: "Dashed".into(), unknown_group_codes: vec![] } },
+            DxfMutation::RemoveLinetype { name: "CONTINUOUS".into() },
+            DxfMutation::SetLinetype { name: "CONTINUOUS".into(), linetype: DxfLinetype { name: "CONTINUOUS".into(), flags: 1, description: "Solid line".into(), unknown_group_codes: vec![] } },
+            DxfMutation::InsertEntity { index: 0, entity: DxfEntity::Arc { center: [1.0, 1.0, 0.0], radius: 2.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] } },
+            DxfMutation::RemoveEntity { index: 0 },
+            DxfMutation::SetEntity { index: 0, entity: DxfEntity::Line { start: [9.0, 9.0, 0.0], end: [8.0, 8.0, 0.0], layer: "L2".into(), unknown_group_codes: vec![] } },
+            DxfMutation::SetEntity { index: 1, entity: DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "hi".into(), layer: "0".into(), unknown_group_codes: vec![] } },
+            DxfMutation::InsertBlock { index: 0, block: DxfBlock { name: "B2".into(), base_point: [1.0, 1.0, 0.0], entities: vec![], unknown_group_codes: vec![] } },
+            DxfMutation::RemoveBlock { index: 0 },
+            DxfMutation::SetBlock { index: 0, block: DxfBlock { name: "B1".into(), base_point: [5.0, 5.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] } },
+        ]
+    }
+    //#endregion 🔖️Fixtures
+
+    //#region 🔖️FieldSweepFixtures
+    /// 🧬️ Canonical "differs in every mutable field" snapshot A — every collection carries a
+    /// stable-prefix item plus one that will be modified (index-keyed) or removed (name-keyed).
+    fn sweep_a() -> DxfSnapshot {
+        DxfSnapshot {
+            schema: "stdio.dxf".into(),
+            header_vars: vec![
+                DxfHeaderVar { name: "$KEEP".into(), group_code: 1, value: DxfValue::Str { value: "same".into() }, extra_group_codes: vec![] },
+                DxfHeaderVar { name: "$DROP".into(), group_code: 70, value: DxfValue::Int { value: 1 }, extra_group_codes: vec![] },
+                DxfHeaderVar { name: "$MOD".into(), group_code: 40, value: DxfValue::Double { value: 1.0 }, extra_group_codes: vec![] },
+            ],
+            tables: DxfTables {
+                layers: vec![
+                    DxfLayer { name: "KEEP".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] },
+                    DxfLayer { name: "DROP".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] },
+                    DxfLayer { name: "MOD".into(), color: 2, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] },
+                ],
+                styles: vec![DxfStyle { name: "S".into(), flags: 0, font_name: "a".into(), unknown_group_codes: vec![] }],
+                linetypes: vec![DxfLinetype { name: "L".into(), flags: 0, description: "d".into(), unknown_group_codes: vec![] }],
+            },
+            other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
+            blocks: vec![
+                DxfBlock { name: "B0".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] },
+                DxfBlock { name: "B1".into(), base_point: [1.0, 1.0, 1.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] },
+            ],
+            entities: vec![
+                DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
+                DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] },
+            ],
+        }
+    }
+
+    /// 🧬️ Sweep B: every index-keyed collection's index-0 item is UNCHANGED, index-1 is MODIFIED
+    /// in every field, and a brand-new item appears at the end — proven ADDED via `between(a,b)`
+    /// (`b` is longer) and REMOVED via `between(b,a)`. Name-keyed collections show removed +
+    /// modified + added simultaneously from ONE `between(a,b)` call. `entities[1]` changes KIND
+    /// (Circle → Text), proving `DxfEntityDiff::Replace`.
+    fn sweep_b() -> DxfSnapshot {
+        DxfSnapshot {
+            schema: "stdio.dxf".into(),
+            header_vars: vec![
+                DxfHeaderVar { name: "$KEEP".into(), group_code: 1, value: DxfValue::Str { value: "same".into() }, extra_group_codes: vec![] },
+                DxfHeaderVar { name: "$MOD".into(), group_code: 41, value: DxfValue::Point { value: [1.0, 2.0, 3.0] }, extra_group_codes: vec![(999, DxfValue::Str { value: "note".into() })] },
+                DxfHeaderVar { name: "$NEW".into(), group_code: 70, value: DxfValue::Int { value: 9 }, extra_group_codes: vec![] },
+            ],
+            tables: DxfTables {
+                layers: vec![
+                    DxfLayer { name: "KEEP".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] },
+                    DxfLayer { name: "MOD".into(), color: 5, linetype: "DASHED".into(), flags: 1, unknown_group_codes: vec![(1, DxfValue::Str { value: "x".into() })] },
+                    DxfLayer { name: "NEW".into(), color: 3, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] },
+                ],
+                styles: vec![DxfStyle { name: "S".into(), flags: 1, font_name: "b".into(), unknown_group_codes: vec![] }],
+                linetypes: vec![DxfLinetype { name: "L".into(), flags: 1, description: "e".into(), unknown_group_codes: vec![] }],
+            },
+            other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
+            blocks: vec![
+                DxfBlock { name: "B0".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] },
+                DxfBlock { name: "B1renamed".into(), base_point: [9.0, 9.0, 9.0], entities: vec![], unknown_group_codes: vec![(5, DxfValue::Str { value: "h".into() })] },
+                DxfBlock { name: "B2".into(), base_point: [2.0, 2.0, 2.0], entities: vec![], unknown_group_codes: vec![] },
+            ],
+            entities: vec![
+                DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
+                DxfEntity::Text { position: [1.0, 1.0, 1.0], height: 2.0, value: "swapped-kind".into(), layer: "T".into(), unknown_group_codes: vec![] },
+                DxfEntity::Arc { center: [0.0, 0.0, 0.0], radius: 3.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] },
+            ],
+        }
+    }
+    //#endregion 🔖️FieldSweepFixtures
+
+    //#region 🔖️MutationDiffLaw
+    #[test]
+    fn mutation_diff_law() {
+        let base = base_snapshot();
+        for m in variants() {
+            let diff = m.diff(&base);
+            let expected = diff.apply(&base);
+
+            let mut via_apply = base.clone();
+            let returned_diff = apply_dxf_mutation(&mut via_apply, &m);
+
+            assert_eq!(via_apply, expected, "apply_dxf_mutation mismatch for {m:?}");
+            assert_eq!(returned_diff, diff, "returned diff mismatch for {m:?}");
+        }
+    }
+    //#endregion 🔖️MutationDiffLaw
+
+    //#region 🔖️InverseLaw
+    #[test]
+    fn inverse_law() {
+        let base = base_snapshot();
+        for m in variants() {
+            let mut forward = base.clone();
+            apply_dxf_mutation(&mut forward, &m);
+            for inv in m.inverse(&base) {
+                apply_dxf_mutation(&mut forward, &inv);
+            }
+            assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
+
+            let d = m.diff(&base);
+            let mid = d.apply(&base);
+            let back = d.inverse(&base).apply(&mid);
+            assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
+        }
+    }
+    //#endregion 🔖️InverseLaw
+
+    //#region 🔖️AbsorbLaw
+    #[test]
+    fn absorb_law() {
+        let base = base_snapshot();
+
+        // 🧩 Insert(2)+Remove(0) on entities: the two-op sequence base → mid → after.
+        let new_entity = DxfEntity::Arc { center: [0.0, 0.0, 0.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
+        let d1 = DxfMutation::InsertEntity { index: 2, entity: new_entity.clone() }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = DxfMutation::RemoveEntity { index: 0 }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+
+        // 🧩 Insert(2,f)+Insert(2,g): both must survive.
+        let d1 = DxfMutation::InsertEntity { index: 2, entity: new_entity.clone() }.diff(&base);
+        let mid = d1.apply(&base);
+        let other_entity = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "g".into(), layer: "0".into(), unknown_group_codes: vec![] };
+        let d2 = DxfMutation::InsertEntity { index: 2, entity: other_entity }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        assert_eq!(after.entities.len(), base.entities.len() + 2, "both inserts must survive");
+
+        // 🧩 Add+SetField (kind-preserving): patch into the added payload.
+        let d1 = DxfMutation::InsertEntity { index: 1, entity: new_entity.clone() }.diff(&base);
+        let mid = d1.apply(&base);
+        let patched = DxfEntity::Arc { center: [9.0, 9.0, 9.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
+        let d2 = DxfMutation::SetEntity { index: 1, entity: patched }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Add+SetField absorb mismatch");
+        match &after.entities[1] { DxfEntity::Arc { center, .. } => assert_eq!(*center, [9.0, 9.0, 9.0]), other => panic!("expected Arc, got {other:?}") }
+
+        // 🧩 Add+SetField ACROSS a kind change: patch-into-Replace (the entity-diff-specific
+        // canonical case — SetEntity with a different kind produces `Replace`, which must still
+        // absorb cleanly into a preceding Insert's carried payload).
+        let d1 = DxfMutation::InsertEntity { index: 1, entity: new_entity.clone() }.diff(&base);
+        let mid = d1.apply(&base);
+        let swapped = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 3.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] };
+        let d2 = DxfMutation::SetEntity { index: 1, entity: swapped.clone() }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Add+Replace(kind-change) absorb mismatch");
+        assert_eq!(after.entities[1], swapped);
+
+        // 🧩 Modify+Remove: modifying then removing the same entity collapses to a removal.
+        let d1 = DxfMutation::SetEntity { index: 1, entity: DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 9.0, layer: "0".into(), unknown_group_codes: vec![] } }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = DxfMutation::RemoveEntity { index: 1 }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+
+        // 🧩 Name-keyed: Add layer + remove-of-added annihilates the add.
+        let d1 = DxfMutation::InsertLayer { index: 2, layer: DxfLayer { name: "Fresh".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = DxfMutation::RemoveLayer { name: "Fresh".into() }.diff(&mid);
+        let after = d2.apply(&mid);
+        let mut composed = d1.clone();
+        composed.absorb(d2.clone());
+        assert_eq!(composed.apply(&base), after, "Add+Remove(name-keyed) absorb mismatch");
+        assert_eq!(after.tables.layers, base.tables.layers, "add-then-remove of the same name must be a full no-op");
+
+        // 🧩 Associativity over a triple.
+        let base = base_snapshot();
+        let d1 = DxfMutation::InsertEntity { index: 0, entity: new_entity.clone() }.diff(&base);
+        let s1 = d1.apply(&base);
+        let d2 = DxfMutation::SetEntity { index: 0, entity: DxfEntity::Circle { center: [2.0, 2.0, 2.0], radius: 4.0, layer: "0".into(), unknown_group_codes: vec![] } }.diff(&s1);
+        let s2 = d2.apply(&s1);
+        let d3 = DxfMutation::RemoveEntity { index: 2 }.diff(&s2);
+        let s3 = d3.apply(&s2);
+
+        let mut left = d1.clone();
+        left.absorb(d2.clone());
+        left.absorb(d3.clone());
+
+        let mut d23 = d2.clone();
+        d23.absorb(d3.clone());
+        let mut right = d1.clone();
+        right.absorb(d23);
+
+        assert_eq!(left.apply(&base), s3);
+        assert_eq!(right.apply(&base), s3);
+        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+    }
+    //#endregion 🔖️AbsorbLaw
+
+    //#region 🔖️BetweenRoundtripLaw
+    #[test]
+    fn between_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        assert_eq!(DxfDiff::between(&a, &b).apply(&a), b);
+        assert_eq!(DxfDiff::between(&b, &a).apply(&b), a);
+        assert!(DxfDiff::between(&a, &a).is_empty());
+    }
+    //#endregion 🔖️BetweenRoundtripLaw
+
+    //#region 🔖️FieldSweep
+    #[test]
+    fn field_sweep_every_mutable_field_changes() {
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let d_ab = DxfDiff::between(&a, &b);
+        assert_eq!(d_ab.apply(&a), b, "between(a,b).apply(a) == b");
+        let d_ba = DxfDiff::between(&b, &a);
+        assert_eq!(d_ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert!(DxfDiff::between(&a, &a).is_empty());
+
+        // 🔍 header_vars (name-keyed): removed + modified + added from ONE between(a,b) call.
+        let hv = d_ab.header_vars.as_ref().expect("header_vars diff populated");
+        assert_eq!(hv.removed, vec!["$DROP".to_string()]);
+        assert!(!hv.modified.is_empty() && !hv.added.is_empty());
+        let hvm = &hv.modified.iter().find(|m| m.name == "$MOD").expect("$MOD modified").diff;
+        assert!(hvm.group_code.is_some() && hvm.value.is_some() && hvm.extra_group_codes.is_some(), "every DxfHeaderVarDiff field must be patched");
+
+        // 🔍 layers (name-keyed).
+        let ld = d_ab.tables.as_ref().and_then(|t| t.layers.as_ref()).expect("layers diff populated");
+        assert_eq!(ld.removed, vec!["DROP".to_string()]);
+        assert!(!ld.modified.is_empty() && !ld.added.is_empty());
+        let lm = &ld.modified.iter().find(|m| m.name == "MOD").expect("MOD layer modified").diff;
+        assert!(lm.color.is_some() && lm.linetype.is_some() && lm.flags.is_some() && lm.unknown_group_codes.is_some());
+
+        // 🔍 styles/linetypes (name-keyed, single-entry modify).
+        let sd = d_ab.tables.as_ref().and_then(|t| t.styles.as_ref()).expect("styles diff populated");
+        assert!(!sd.modified.is_empty());
+        assert!(sd.modified[0].diff.flags.is_some() && sd.modified[0].diff.font_name.is_some());
+        let ltd = d_ab.tables.as_ref().and_then(|t| t.linetypes.as_ref()).expect("linetypes diff populated");
+        assert!(!ltd.modified.is_empty());
+        assert!(ltd.modified[0].diff.flags.is_some() && ltd.modified[0].diff.description.is_some());
+
+        // 🔍 blocks (index-keyed): modified+added from between(a,b); modified+removed from between(b,a).
+        let bd_ab = d_ab.blocks.as_ref().expect("blocks diff populated (a->b)");
+        assert!(bd_ab.removed.is_empty() && !bd_ab.modified.is_empty() && !bd_ab.added.is_empty());
+        let bm = &bd_ab.modified[0].diff;
+        assert!(bm.name.is_some() && bm.base_point.is_some() && bm.unknown_group_codes.is_some(), "every DxfBlockDiff scalar field must be patched");
+        let bd_ba = d_ba.blocks.as_ref().expect("blocks diff populated (b->a)");
+        assert!(!bd_ba.removed.is_empty() && !bd_ba.modified.is_empty() && bd_ba.added.is_empty());
+
+        // 🔍 entities (index-keyed): modified (kind-preserving Line stays Line) + added from
+        // between(a,b); Text(index 1) proves the kind-change `Replace` path.
+        let ed_ab = d_ab.entities.as_ref().expect("entities diff populated (a->b)");
+        assert!(ed_ab.removed.is_empty() && !ed_ab.modified.is_empty() && !ed_ab.added.is_empty());
+        let em1 = &ed_ab.modified.iter().find(|m| m.index == 1).expect("entities[1] modified").diff;
+        assert!(matches!(em1, crate::artifacts::dxf::schema::diff::DxfEntityDiff::Replace { .. }), "kind change (Circle->Text) must be a Replace");
+        let ed_ba = d_ba.entities.as_ref().expect("entities diff populated (b->a)");
+        assert!(!ed_ba.removed.is_empty() && !ed_ba.modified.is_empty() && ed_ba.added.is_empty());
+    }
+    //#endregion 🔖️FieldSweep
+
+    //#region 🔖️VertexUnknownGroupCodesRetained
+    /// 🕳️ `DxfVertex.unknown_group_codes` participates in equality (weak leaf, whole-vec
+    /// replaced by the parent `Polyline` diff — confirms it isn't silently dropped by the
+    /// snapshot type even though no dedicated mutation targets it directly).
+    #[test]
+    fn vertex_unknown_group_codes_are_part_of_equality() {
+        let v1 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] };
+        let v2 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![(40, DxfValue::Double { value: 1.0 })] };
+        assert_ne!(v1, v2);
+    }
+    //#endregion 🔖️VertexUnknownGroupCodesRetained
+}
+//#endregion 🧪️Tests

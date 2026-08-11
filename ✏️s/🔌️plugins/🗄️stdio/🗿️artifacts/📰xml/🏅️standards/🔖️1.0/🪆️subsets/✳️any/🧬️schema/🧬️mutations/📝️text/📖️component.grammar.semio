@@ -1,6 +1,8 @@
 dialect grammar stdio.xml.mutations
 root = document
-document = header body
-header = 'schema' SP 'stdio.xml' NL
-body = payload NL?
-payload = *OCTET
+document = payload
+; XmlMutation's text representation IS its JSON serialization (see the sibling
+; ../🔣️component.json for the XmlMutation JSON Schema) -- serde(rename_all = "camelCase"),
+; tag-discriminated unions via a "kind"/"mutation" field. No custom textual grammar beyond JSON's
+; own (well-known, not reproduced here).
+payload = json-value

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.mathematical.mathematical",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained mathematical 1"
+    }
+  }
+}

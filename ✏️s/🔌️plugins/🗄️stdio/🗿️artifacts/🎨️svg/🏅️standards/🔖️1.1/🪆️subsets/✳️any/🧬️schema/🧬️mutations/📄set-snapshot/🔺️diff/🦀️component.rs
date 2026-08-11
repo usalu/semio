@@ -3,7 +3,8 @@
 use crate::artifacts::svg::schema::diff::{SvgDiff, diff_set_snapshot};
 use crate::artifacts::svg::SvgSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot.
-pub fn diff(snapshot: &SvgSnapshot) -> SvgDiff {
-    diff_set_snapshot(snapshot)
+/// 🔺️ Diff helper for set-snapshot -- the sparse field-by-field `SvgDiff::between(base, next)`,
+/// never a whole-`SvgSnapshot` replace slot.
+pub fn diff(base: &SvgSnapshot, next: &SvgSnapshot) -> SvgDiff {
+    diff_set_snapshot(base, next)
 }

@@ -1,4 +1,10 @@
 module Stdio_dxf_snapshot;
+
+# Shared `.semio` binary envelope wrapping a stdio.dxf payload: the UTF-8 bytes of the
+# same DXF R12 ASCII document the text facet parses.
 type Document = unit {
-    payload: bytes &eod;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;   # UTF-8 "stdio.dxf.pack v1"
+    payload: bytes &eod;                 # UTF-8 DXF R12 ASCII text
 };

@@ -2,14 +2,9 @@
   "$id": "https://semio.tech/schema/s.stdio.json/artifact.json",
   "title": "JsonArtifact",
   "type": "object",
+  "required": ["schema", "value"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "value": { "$ref": "📸️snapshot/🔣️component.json#/$defs/JsonValue", "x-semio-state": "persistent" }
   }
 }

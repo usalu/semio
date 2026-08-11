@@ -1,3 +1,8 @@
 syntax = "proto3";
 package semio.stdio_xml.diff_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+
+// 📝️ JSON text per the sibling XmlDiff message shape.
+message Artifact {
+  string schema = 1;
+  string json_text = 2;
+}

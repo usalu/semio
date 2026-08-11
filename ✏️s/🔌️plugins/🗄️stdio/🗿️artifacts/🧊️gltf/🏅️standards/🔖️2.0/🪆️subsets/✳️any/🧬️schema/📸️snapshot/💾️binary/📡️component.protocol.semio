@@ -1,3 +1,8 @@
 dialect protocol stdio.gltf.snapshot
-magic = %x00
-payload = *OCTET
+; .glb binary container -- real structure, mirrors encode_glb/decode_glb in ⚙️engine/component.rs.
+magic = %x67.6C.54.46          ; "glTF"
+version = u32le                ; must equal 2
+total_length = u32le            ; whole container byte length, header-patched after chunk emission
+chunk = chunk_length:u32le chunk_type:chunk_kind chunk_data:bytes(chunk_length)
+chunk_kind = %x4A534F4E / %x42494E00   ; "JSON" | "BIN\0"
+document = magic version total_length chunk+   ; JSON chunk MUST be first; BIN chunk (if any) MUST be second

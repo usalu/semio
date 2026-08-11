@@ -1,0 +1,9 @@
+{
+  "artifact": "s.playbook.playbook",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained playbook 1"
+    }
+  }
+}

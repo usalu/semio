@@ -1,2 +1,33 @@
-# schema facet
- type Placeholder { width: Int! }
+# 🧬️ BmpMutation union — mirrors 🦀️component.rs's tagged enum (GraphQL has no native
+# discriminated union, so this models it as one input type with the tag plus optional
+# per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
+
+enum BmpMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_HEADER_FIELDS
+  INSERT_PALETTE_ENTRY
+  REMOVE_PALETTE_ENTRY
+  SET_PALETTE_ENTRY
+  SET_PIXEL_DATA
+}
+
+input BmpMutationInput {
+  mutation: BmpMutationTag!
+  snapshot: BmpSnapshotInput
+  headerSize: Int
+  width: Int
+  height: Int
+  rowOrder: BmpRowOrder
+  planes: Int
+  bitsPerPixel: Int
+  compression: Int
+  imageSize: Int
+  xPixelsPerMeter: Int
+  yPixelsPerMeter: Int
+  colorsUsed: Int
+  colorsImportant: Int
+  index: Int
+  entry: BmpPaletteEntryInput
+  pixels: [Int!]
+}

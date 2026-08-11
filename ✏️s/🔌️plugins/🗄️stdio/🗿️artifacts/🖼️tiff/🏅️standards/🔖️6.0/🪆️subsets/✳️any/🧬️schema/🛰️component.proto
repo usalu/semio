@@ -1,6 +1,13 @@
 syntax = "proto3";
 package semio.s_stdio_tiff.artifact;
+
+import "s_stdio_tiff/snapshot.proto";
+
+// 🧬️ TiffArtifact — full artifact state, mirrors TiffSnapshot field-for-field (reuses the
+// snapshot facet's message types directly rather than redeclaring them).
 message TiffArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  semio.s_stdio_tiff.snapshot.TiffByteOrder byte_order = 2;
+  repeated semio.s_stdio_tiff.snapshot.TiffIfd ifds = 3;
+  bytes pixels = 4;
 }

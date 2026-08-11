@@ -1,3 +1,50 @@
-; abnf stdio.las snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.las snapshot: §LAS 1.0 public header block (227 bytes) + VLRs + point records.
+; Matches engine::{encode_las, decode_las} exactly. See component.ksy for the fuller doc'd
+; version of the same layout (Kaitai's `switch-on`/named types read more naturally there).
+document       = magic file-source-id global-encoding project-id-guid header-rest
+                 vlr-list point-list
+magic          = %x4C.41.53.46                    ; "LASF"
+file-source-id = 2OCTET                           ; spec-real, out of contracted scope
+global-encoding = 2OCTET                          ; spec-real, out of contracted scope
+project-id-guid = 16OCTET                         ; spec-real, out of contracted scope
+header-rest    = version-major version-minor system-identifier generating-software
+                 creation-day-of-year creation-year header-size offset-to-point-data
+                 number-of-vlrs point-data-format-id point-data-record-length
+                 number-of-point-records points-by-return
+                 x-scale y-scale z-scale x-offset y-offset z-offset
+                 max-x min-x max-y min-y max-z min-z
+version-major  = OCTET
+version-minor  = OCTET
+system-identifier = 32OCTET
+generating-software = 32OCTET
+creation-day-of-year = 2OCTET
+creation-year  = 2OCTET
+header-size    = 2OCTET                           ; structural, always 227 on encode
+offset-to-point-data = 4OCTET                     ; structural
+number-of-vlrs = 4OCTET                           ; structural, == vlr-list count
+point-data-format-id = OCTET                      ; structural, 0-3
+point-data-record-length = 2OCTET                 ; structural
+number-of-point-records = 4OCTET                  ; structural, == point-list count
+points-by-return = 5(4OCTET)
+x-scale = 8OCTET
+y-scale = 8OCTET
+z-scale = 8OCTET
+x-offset = 8OCTET
+y-offset = 8OCTET
+z-offset = 8OCTET
+max-x = 8OCTET
+min-x = 8OCTET
+max-y = 8OCTET
+min-y = 8OCTET
+max-z = 8OCTET
+min-z = 8OCTET
+vlr-list       = *vlr                             ; number-of-vlrs entries
+vlr            = 2OCTET 16OCTET 2OCTET 2OCTET 32OCTET vlr-data
+                 ; reserved, user-id, record-id, record-length, description, data
+vlr-data       = *OCTET                           ; record-length bytes, proprietary/opaque
+point-list     = *point-record                    ; number-of-point-records entries
+point-record   = 4OCTET 4OCTET 4OCTET 2OCTET OCTET OCTET OCTET OCTET 2OCTET [ format-tail ]
+                 ; x y z intensity return-flags classification scan-angle-rank user-data
+                 ; point-source-id, then format-specific tail (0/8/6/14 bytes for fmt 0/1/2/3)
+format-tail    = 8OCTET / (2OCTET 2OCTET 2OCTET) / (8OCTET 2OCTET 2OCTET 2OCTET)
+                 ; gps-time (fmt1) / rgb (fmt2) / gps-time+rgb (fmt3)

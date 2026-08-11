@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.stl",
+  "standard": "ascii",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained stl ascii"
+    }
+  }
+}

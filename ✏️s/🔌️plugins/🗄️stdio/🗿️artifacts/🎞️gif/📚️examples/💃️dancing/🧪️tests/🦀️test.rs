@@ -23,7 +23,8 @@ fn decodes_real_fixture_with_nontrivial_invariants() {
     assert_eq!(snapshot.loop_count, Some(0), "NETSCAPE2.0 loop count must be decoded (0 == infinite)");
     assert!(snapshot.frames.iter().any(|f| f.delay_cs > 0), "at least one frame must have a real (non-zero) delay");
     for frame in &snapshot.frames {
-        assert_eq!(frame.rgba.len(), (frame.width as usize) * (frame.height as usize) * 4, "frame rgba must be fully populated, not a black/empty stub");
+        assert_eq!(frame.indices.len(), (frame.width as usize) * (frame.height as usize), "frame indices must be fully populated, not a black/empty stub");
+        assert_eq!(frame.rgba(snapshot.gct.as_ref()).len(), frame.indices.len() * 4, "derived rgba() must decode every index");
     }
 }
 
@@ -48,11 +49,20 @@ fn analyzer_builder_round_trip_matches() {
     let analysis_a = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_original)]);
     let parts_a = analysis_a.parts.snapshot.clone().expect("analyzer must report a snapshot for a valid real fixture");
 
-    let mut builder = GifBuilder::new(parts_a.width, parts_a.height);
+    let mut builder = GifBuilder::new(parts_a.width, parts_a.height)
+        .set_global_color_table(parts_a.gct.clone())
+        .set_background_color_index(parts_a.background_color_index)
+        .set_pixel_aspect_ratio(parts_a.pixel_aspect_ratio)
+        .set_loop_count(parts_a.loop_count);
     for frame in &parts_a.frames {
         builder = builder.add_frame(frame.clone());
     }
-    builder = builder.set_loop_count(parts_a.loop_count);
+    for comment in &parts_a.comments {
+        builder = builder.add_comment(comment.clone());
+    }
+    for ext in &parts_a.app_extensions {
+        builder = builder.add_app_extension(ext.clone());
+    }
     let rebuilt = builder.build().expect("typed-constructor rebuild must succeed");
 
     let packed_rebuilt = <crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot as store::ArtifactPack>::encode_pack(&rebuilt);

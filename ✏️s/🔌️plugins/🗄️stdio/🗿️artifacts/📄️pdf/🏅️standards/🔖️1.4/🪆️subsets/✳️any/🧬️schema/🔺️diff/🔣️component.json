@@ -3,13 +3,8 @@
   "title": "PdfDiff",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
+    "width": { "type": "number", "x-semio-state": "persistent" },
+    "height": { "type": "number", "x-semio-state": "persistent" },
+    "text": { "type": "string", "x-semio-state": "persistent" }
   }
 }

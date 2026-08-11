@@ -1,0 +1,9 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.ifc.2x3.mutation/mutation.json",
+  "title": "Ifc2x3Mutation",
+  "type": "object",
+  "properties": {
+    "mutation": { "type": "string", "enum": ["noMutation", "setSnapshot", "upsertInstance", "removeInstance", "setHeader"] }
+  },
+  "required": ["mutation"]
+}

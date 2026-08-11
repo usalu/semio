@@ -1,5 +1,128 @@
-# 🧬️ GltfDiff
+# 🔺️ GltfDiff — sparse per-field diff, index-keyed collection triples per top-level array.
+scalar GltfJson
+
+type GltfAssetDiff { version: String generator: String copyright: String minVersion: String extensions: GltfJson extras: GltfJson }
+type GltfSceneModified { index: Int! diff: GltfSceneDiff! }
+type GltfSceneAdded { index: Int! item: GltfScene! }
+type GltfScenesDiff { removed: [Int!] modified: [GltfSceneModified!] added: [GltfSceneAdded!] }
+type GltfSceneDiff { nodes: [Int!] name: String extensions: GltfJson extras: GltfJson }
+
+type GltfNodeModified { index: Int! diff: GltfNodeDiff! }
+type GltfNodeAdded { index: Int! item: GltfNode! }
+type GltfNodesDiff { removed: [Int!] modified: [GltfNodeModified!] added: [GltfNodeAdded!] }
+type GltfNodeDiff {
+  children: [Int!]
+  mesh: Int
+  camera: Int
+  skin: Int
+  matrix: [Float!]
+  translation: [Float!]
+  rotation: [Float!]
+  scale: [Float!]
+  weights: [Float!]
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfMeshModified { index: Int! diff: GltfMeshDiff! }
+type GltfMeshAdded { index: Int! item: GltfMesh! }
+type GltfMeshesDiff { removed: [Int!] modified: [GltfMeshModified!] added: [GltfMeshAdded!] }
+type GltfMeshDiff { primitives: [GltfPrimitive!] weights: [Float!] name: String extensions: GltfJson extras: GltfJson }
+
+type GltfAccessorModified { index: Int! diff: GltfAccessorDiff! }
+type GltfAccessorAdded { index: Int! item: GltfAccessor! }
+type GltfAccessorsDiff { removed: [Int!] modified: [GltfAccessorModified!] added: [GltfAccessorAdded!] }
+type GltfAccessorDiff {
+  bufferView: Int
+  byteOffset: Int
+  componentType: Int
+  normalized: Boolean
+  count: Int
+  kind: String
+  max: [Float!]
+  min: [Float!]
+  sparse: GltfSparseAccessor
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfMaterialModified { index: Int! diff: GltfMaterialDiff! }
+type GltfMaterialAdded { index: Int! item: GltfMaterial! }
+type GltfMaterialsDiff { removed: [Int!] modified: [GltfMaterialModified!] added: [GltfMaterialAdded!] }
+type GltfMaterialDiff {
+  name: String
+  pbrMetallicRoughness: GltfPbrMetallicRoughness
+  normalTexture: GltfNormalTextureInfo
+  occlusionTexture: GltfOcclusionTextureInfo
+  emissiveTexture: GltfTextureInfo
+  emissiveFactor: [Float!]
+  alphaMode: GltfAlphaMode
+  alphaCutoff: Float
+  doubleSided: Boolean
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfBufferModified { index: Int! diff: GltfBufferDiff! }
+type GltfBufferAdded { index: Int! item: GltfBuffer! }
+type GltfBuffersDiff { removed: [Int!] modified: [GltfBufferModified!] added: [GltfBufferAdded!] }
+type GltfBufferDiff { byteLength: Int uri: String name: String extensions: GltfJson extras: GltfJson }
+
+# Weak collections (diff IS the whole new item): bufferViews/bufferBytes/textures/images/samplers/skins/animations/cameras
+type GltfBufferViewModified { index: Int! diff: GltfBufferView! }
+type GltfBufferViewAdded { index: Int! item: GltfBufferView! }
+type GltfBufferViewsDiff { removed: [Int!] modified: [GltfBufferViewModified!] added: [GltfBufferViewAdded!] }
+
+type GltfBufferBytesModified { index: Int! diff: [Int!]! }
+type GltfBufferBytesAdded { index: Int! item: [Int!]! }
+type GltfBufferBytesDiff { removed: [Int!] modified: [GltfBufferBytesModified!] added: [GltfBufferBytesAdded!] }
+
+type GltfTextureModified { index: Int! diff: GltfTexture! }
+type GltfTextureAdded { index: Int! item: GltfTexture! }
+type GltfTexturesDiff { removed: [Int!] modified: [GltfTextureModified!] added: [GltfTextureAdded!] }
+
+type GltfImageModified { index: Int! diff: GltfImage! }
+type GltfImageAdded { index: Int! item: GltfImage! }
+type GltfImagesDiff { removed: [Int!] modified: [GltfImageModified!] added: [GltfImageAdded!] }
+
+type GltfSamplerModified { index: Int! diff: GltfSampler! }
+type GltfSamplerAdded { index: Int! item: GltfSampler! }
+type GltfSamplersDiff { removed: [Int!] modified: [GltfSamplerModified!] added: [GltfSamplerAdded!] }
+
+type GltfSkinModified { index: Int! diff: GltfSkin! }
+type GltfSkinAdded { index: Int! item: GltfSkin! }
+type GltfSkinsDiff { removed: [Int!] modified: [GltfSkinModified!] added: [GltfSkinAdded!] }
+
+type GltfAnimationModified { index: Int! diff: GltfAnimation! }
+type GltfAnimationAdded { index: Int! item: GltfAnimation! }
+type GltfAnimationsDiff { removed: [Int!] modified: [GltfAnimationModified!] added: [GltfAnimationAdded!] }
+
+type GltfCameraModified { index: Int! diff: GltfCamera! }
+type GltfCameraAdded { index: Int! item: GltfCamera! }
+type GltfCamerasDiff { removed: [Int!] modified: [GltfCameraModified!] added: [GltfCameraAdded!] }
+
 type GltfDiff {
-  schema: String
-  PLACEHOLDER_VALUE_COLON String
+  asset: GltfAssetDiff @state(class: PERSISTENT)
+  scene: Int @state(class: PERSISTENT)
+  scenes: GltfScenesDiff @state(class: PERSISTENT)
+  nodes: GltfNodesDiff @state(class: PERSISTENT)
+  meshes: GltfMeshesDiff @state(class: PERSISTENT)
+  accessors: GltfAccessorsDiff @state(class: PERSISTENT)
+  bufferViews: GltfBufferViewsDiff @state(class: PERSISTENT)
+  buffers: GltfBuffersDiff @state(class: PERSISTENT)
+  bufferBytes: GltfBufferBytesDiff @state(class: PERSISTENT)
+  materials: GltfMaterialsDiff @state(class: PERSISTENT)
+  textures: GltfTexturesDiff @state(class: PERSISTENT)
+  images: GltfImagesDiff @state(class: PERSISTENT)
+  samplers: GltfSamplersDiff @state(class: PERSISTENT)
+  skins: GltfSkinsDiff @state(class: PERSISTENT)
+  animations: GltfAnimationsDiff @state(class: PERSISTENT)
+  cameras: GltfCamerasDiff @state(class: PERSISTENT)
+  extensionsUsed: [String!] @state(class: PERSISTENT)
+  extensionsRequired: [String!] @state(class: PERSISTENT)
+  extensions: GltfJson @state(class: PERSISTENT)
+  extras: GltfJson @state(class: PERSISTENT)
+  sourceForm: GltfSourceForm @state(class: PERSISTENT)
 }

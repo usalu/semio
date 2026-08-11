@@ -1,0 +1,66 @@
+{
+  "unit": "s.stdio.json",
+  "standards": [
+    {
+      "std": "rfc8259",
+      "subsets": [
+        {
+          "id": "i-json",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_object_reports_nothing",
+            "analyzer::tests::duplicate_member_name_is_hard",
+            "analyzer::tests::nested_duplicate_member_name_is_detected_recursively",
+            "analyzer::tests::integer_within_safe_bound_is_clean",
+            "analyzer::tests::integer_beyond_safe_bound_is_hard",
+            "analyzer::tests::negative_integer_beyond_safe_bound_is_hard",
+            "analyzer::tests::astronomically_large_integer_is_hard",
+            "analyzer::tests::fractional_number_is_never_flagged_as_unsafe_integer",
+            "analyzer::tests::top_level_scalar_is_soft",
+            "analyzer::tests::top_level_array_is_clean_on_that_check",
+            "analyzer::tests::noncharacter_in_string_is_soft",
+            "analyzer::tests::reserved_bmp_noncharacter_range_is_detected",
+            "analyzer::tests::ordinary_string_has_no_noncharacter_diagnostic",
+            "composer::tests::conforming_document_composes_and_stamps_i_json",
+            "composer::tests::duplicate_member_name_fails_compose_with_real_diagnostic",
+            "composer::tests::unsafe_integer_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document",
+            "builder::tests::conforming_snapshot_builds_clean",
+            "builder::tests::duplicate_member_name_fails_build",
+            "builder::tests::unsafe_integer_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "files_modified": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/🔣️component.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🎹️composer/🦀️component.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/⚙️engine/🦀️component.rs"
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/json-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "preexisting_breakage_noted": [
+    "Per baseline-cargo-w0.txt, json rfc8259's ✳️any diff/mutations component.rs previously failed to compile (E0432 unresolved import protocol::DiffAlgebra) due to another concurrent session's in-flight DiffAlgebra relocation; that session's fix has since landed (confirmed by a live cargo check run during this unit's work: zero DiffAlgebra-related errors remain anywhere in the crate). i-json's schema delegates via pure `pub use ...::any::schema::*` and never touches diff/mutations directly, so it was never exposed to this gap regardless. The only cargo check errors touching 🔣json now are the two expected E0433 'cannot find i_json in subsets' errors (composer aggregator + engine::register(), both edited by this unit) -- the documented glue.rs-not-yet-applied state other W3 units are also in. One unrelated pre-existing error remains crate-wide: gltf's json export serializer (JsonValue vs serde_json::Value mismatch, not touched by this unit)."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio currently reports exactly 2 errors for this unit (both E0433 'cannot find i_json in subsets', at json/rfc8259/composer/component.rs:8 and json/rfc8259/engine/component.rs:22) because glue.rs does not yet know about the new subsets::i_json module. This is the sole blocker; resolves once json-glue.rs.txt is applied."
+  ]
+}

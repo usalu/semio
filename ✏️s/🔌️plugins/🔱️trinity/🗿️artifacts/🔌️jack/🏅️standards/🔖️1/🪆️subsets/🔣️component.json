@@ -1,0 +1,9 @@
+{
+  "artifact": "s.trinity.jack",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained jack 1"
+    }
+  }
+}

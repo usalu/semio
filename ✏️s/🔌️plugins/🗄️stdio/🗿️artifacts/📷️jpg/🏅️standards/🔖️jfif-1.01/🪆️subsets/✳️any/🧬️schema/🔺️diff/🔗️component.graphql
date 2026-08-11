@@ -1,5 +1,48 @@
-# 🧬️ JpgDiff
+# 🔺️ JpgDiff schema facet — mirrors 🦀️component.rs field-for-field. No full-replace slot.
+
+type JpgComponentDiff { hSampling: Int, vSampling: Int, quantTableId: Int }
+type JpgComponentModified { id: Int!, diff: JpgComponentDiff! }
+type JpgComponentAdded { index: Int!, item: JpgFrameComponent! }
+type JpgComponentsDiff { removed: [Int!], modified: [JpgComponentModified!], added: [JpgComponentAdded!] }
+
+type JpgFrameFieldsDiff { precision: Int, width: Int, height: Int, components: JpgComponentsDiff }
+"frame's change shape: MODIFY (field patch) or REPLACE (decode-status kind change)."
+type JpgFrameChange { change: String!, precision: Int, width: Int, height: Int, components: JpgComponentsDiff, frame: JpgFrameHeader }
+
+type JpgQuantTableDiff { precision: Int, values: [Int!] }
+type JpgQuantTableModified { id: Int!, diff: JpgQuantTableDiff! }
+type JpgQuantTableAdded { index: Int!, item: JpgQuantTable! }
+type JpgQuantTablesDiff { removed: [Int!], modified: [JpgQuantTableModified!], added: [JpgQuantTableAdded!] }
+
+"Compound identity for huffmanTables — DC id=0 and AC id=0 are different tables."
+type JpgHuffmanTableKey { class: JpgHuffmanClass!, id: Int! }
+type JpgHuffmanTableDiff { bits: [Int!], values: [Int!] }
+type JpgHuffmanTableModified { key: JpgHuffmanTableKey!, diff: JpgHuffmanTableDiff! }
+type JpgHuffmanTableAdded { index: Int!, item: JpgHuffmanTable! }
+type JpgHuffmanTablesDiff { removed: [JpgHuffmanTableKey!], modified: [JpgHuffmanTableModified!], added: [JpgHuffmanTableAdded!] }
+
+type JpgSegmentDiff { marker: Int, data: [Int!] }
+type JpgSegmentModified { index: Int!, diff: JpgSegmentDiff! }
+type JpgSegmentAdded { index: Int!, item: JpgSegment! }
+type JpgOtherSegmentsDiff { removed: [Int!], modified: [JpgSegmentModified!], added: [JpgSegmentAdded!] }
+
+"🔺️ Sparse diff for stdio.jpg. Tri-state fields (reEncodeQuality/jfifThumbnail/restartInterval)
+use an explicit null to mean cleared, vs. the field being absent meaning unchanged."
 type JpgDiff {
-  schema: String
-  bytes: String
+  width: Int @state(class: PERSISTENT)
+  height: Int @state(class: PERSISTENT)
+  pixels: [Int!] @state(class: PERSISTENT)
+  reEncodeQuality: Int @state(class: PERSISTENT)
+  jfifVersion: [Int!] @state(class: PERSISTENT)
+  jfifDensityUnits: JfifDensityUnits @state(class: PERSISTENT)
+  jfifXDensity: Int @state(class: PERSISTENT)
+  jfifYDensity: Int @state(class: PERSISTENT)
+  jfifThumbnail: JfifThumbnail @state(class: PERSISTENT)
+  frame: JpgFrameChange @state(class: PERSISTENT)
+  sofMarker: Int @state(class: PERSISTENT)
+  arithmetic: Boolean @state(class: PERSISTENT)
+  quantTables: JpgQuantTablesDiff @state(class: PERSISTENT)
+  huffmanTables: JpgHuffmanTablesDiff @state(class: PERSISTENT)
+  restartInterval: Int @state(class: PERSISTENT)
+  otherSegments: JpgOtherSegmentsDiff @state(class: PERSISTENT)
 }

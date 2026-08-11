@@ -1,8 +1,12 @@
-type TiffEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ TiffArtifact schema facet — full artifact state, mirrors TiffSnapshot field-for-field
+# (see ./📸️snapshot/🔗️component.graphql for the supporting types).
+
+"""
+Full `stdio.tiff` artifact state.
+"""
 type TiffArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [TiffEntry!]! @state(class: PERSISTENT)
+  byteOrder: TiffByteOrder! @state(class: PERSISTENT)
+  ifds: [TiffIfd!]! @state(class: PERSISTENT)
+  pixels: [Int!]! @state(class: PERSISTENT)
 }

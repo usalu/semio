@@ -1,0 +1,50 @@
+{
+  "unit": "s.stdio.zip",
+  "standards": [
+    {
+      "std": "2.0",
+      "subsets": [
+        {
+          "id": "iso21320",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🚪️io/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🔣️component.json (edited: added iso21320 entry alongside existing '*')",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🎹️composer/🦀️component.rs (edited: entries() now aggregates ZipIso21320Composer too)",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs (edited: register() now also calls subsets::iso21320::composer::register())"
+          ],
+          "tests": [
+            "analyzer: conforming_snapshot_has_no_diagnostics, encrypted_entry_is_hard, strong_encryption_bit_is_hard, masked_local_header_bit_is_hard, data_descriptor_bit_is_soft, high_version_needed_is_soft, version_needed_at_ceiling_is_clean",
+            "composer: clean_snapshot_composes_and_stamps_iso21320, encrypted_entry_gets_normalized_away_and_still_composes, high_version_needed_gets_capped, subset_validator_flags_real_violations_without_normalizing",
+            "builder: typed_constructors_build_clean, hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/zip-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "ISO/IEC 21320-1 §4.2 also constrains split/spanned archives (EOCD 'number of this disk' / 'disk where central directory starts' fields must both be zero). ZipSnapshot/ZipEntry retain no disk-number field at all -- ZipEngine::decode_zip already unconditionally rejects any non-zero disk-start with ZipError::UnsupportedMultiDisk before a ZipSnapshot is ever produced, so there is no field left to check post-hoc and no honest way to verify split/spanned-ness from this schema. Skipped per the roster's explicit instruction rather than fabricated; NOT emitted as a runtime schema-gap diagnostic because the rest of ISO/IEC 21320-1 Core IS fully checkable from this schema (encryption/strong-encryption flag bits, data-descriptor bit, version-needed) -- a subset-wide 'unverifiable' diagnostic would itself be dishonest here, unlike PDF 1.4 ✳️a/✳️x's genuinely broad schema gap."
+  ],
+  "preexisting_breakage_noted": [
+    "cargo check shows the SAME class of glue.rs-missing error already present for another concurrent W3 unit (s.stdio.step ✳️cc1: 'could not find `cc1` in `subsets`'), confirming this is the expected shared-tree handoff state for this wave, not something introduced by this unit.",
+    "unrelated pre-existing warning in ✳️any/🎹️composer/component.rs:24 ('expected lifetime parameter' on ComposeSource) -- present before this unit's edits, not touched."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio, filtered to the zip artifact path, shows exactly the expected 'could not find `iso21320` in `subsets`' E0433 at the two files this unit edited (🏅️standards/🔖️2.0/🎹️composer/🦀️component.rs:7 and ⚙️engine/🦀️component.rs:606) -- both reference crate::artifacts::zip::standards::v2_0::subsets::iso21320::composer, which glue.rs does not yet map (this unit is FORBIDDEN from editing glue.rs itself). No other new errors from this unit's own new files -- they aren't referenced by any #[path] yet so the compiler doesn't see them at all. Applying 🧩glue/zip-glue.rs.txt is the only thing standing between this subset and a real green compile."
+  ]
+}

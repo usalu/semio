@@ -4,7 +4,7 @@ use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct PageDoc {
     pub width: f64,
@@ -13,7 +13,7 @@ pub struct PageDoc {
     pub text: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]
 pub struct PdfSnapshot {
@@ -21,6 +21,7 @@ pub struct PdfSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    #[dsl(block)]
     pub page: PageDoc,
 }
 

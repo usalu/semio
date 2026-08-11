@@ -1,3 +1,26 @@
-; abnf stdio.png snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.png snapshot (binary) — the shared `.semio` binary envelope wrapping the REAL
+; PNG 1.2 file bytes (store::semio_format::wrap_binary; magic/token-len/token per that codec,
+; §5 signature + chunk stream for the payload).
+document      = envelope-magic token-len token png-file
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len     = 4OCTET                                      ; u32, little-endian
+token         = 18OCTET                                     ; UTF-8 "stdio.png.pack v1"
+
+; the real §5-conformant PNG file.
+png-file      = png-signature 1*chunk
+png-signature = %x89 %x50 %x4E %x47 %x0D %x0A %x1A %x0A     ; 8 bytes: 0x89 "PNG" CR LF SUB LF
+chunk         = length chunk-type chunk-data crc32
+length        = 4OCTET                                      ; u32, big-endian, byte count of chunk-data
+chunk-type    = 4ALPHA                                      ; e.g. "IHDR" "PLTE" "IDAT" "IEND" "tEXt" ...
+chunk-data    = *OCTET                                      ; exactly `length` bytes; shape depends on chunk-type (§11.2/§11.3)
+crc32         = 4OCTET                                      ; u32, big-endian, CRC-32 over (chunk-type chunk-data)
+
+; §11.2.2 IHDR body (compression/filter method always 0, validated on decode).
+ihdr-body     = width height bit-depth color-type compression-method filter-method interlace-method
+width         = 4OCTET
+height        = 4OCTET
+bit-depth     = OCTET
+color-type    = OCTET
+compression-method = %x00
+filter-method = %x00
+interlace-method   = %x00 / %x01

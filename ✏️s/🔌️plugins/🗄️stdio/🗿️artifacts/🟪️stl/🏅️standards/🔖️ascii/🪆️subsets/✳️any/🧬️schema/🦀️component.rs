@@ -14,10 +14,10 @@ pub struct StlArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<crate::artifacts::stl::schema::snapshot::MeshVertex>,
+    pub solid_name: String,
     #[state(persistent)]
     #[serde(default)]
-    pub faces: Vec<crate::artifacts::stl::schema::snapshot::MeshTriangle>,
+    pub triangles: Vec<crate::artifacts::stl::schema::snapshot::StlTriangle>,
 }
 //#endregion 🔖️Artifact
 
@@ -33,7 +33,8 @@ impl StlArtifact {
     pub fn to_snapshot(&self) -> StlSnapshot {
         StlSnapshot {
             schema: self.schema.clone(),
-            vertices: self.vertices.clone(),            faces: self.faces.clone(),
+            solid_name: self.solid_name.clone(),
+            triangles: self.triangles.clone(),
         }
     }
 
@@ -41,14 +42,16 @@ impl StlArtifact {
     pub fn from_snapshot(snapshot: StlSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            vertices: snapshot.vertices,            faces: snapshot.faces,
+            solid_name: snapshot.solid_name,
+            triangles: snapshot.triangles,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: StlSnapshot) {
         self.schema = snapshot.schema;
-        self.vertices = snapshot.vertices;        self.faces = snapshot.faces;
+        self.solid_name = snapshot.solid_name;
+        self.triangles = snapshot.triangles;
     }
 }
 //#endregion 🔖️Conversions

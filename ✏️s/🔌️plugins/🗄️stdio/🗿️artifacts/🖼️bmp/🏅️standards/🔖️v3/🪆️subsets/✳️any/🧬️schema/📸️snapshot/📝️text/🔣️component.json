@@ -1,5 +1,7 @@
 {
   "$id": "https://semio.tech/schema/stdio.bmp/snapshot/text.json",
   "title": "BmpSnapshotText",
-  "type": "object"
+  "type": "string",
+  "pattern": "^([0-9a-f]{2})*$",
+  "description": "Lowercase-hex dump of the real on-disk BMP bytes, after the 'semio ...' preamble line is stripped (store::semio_format::split_text_preamble). See ../💾️binary/ for the field-by-field structure those bytes decode to."
 }

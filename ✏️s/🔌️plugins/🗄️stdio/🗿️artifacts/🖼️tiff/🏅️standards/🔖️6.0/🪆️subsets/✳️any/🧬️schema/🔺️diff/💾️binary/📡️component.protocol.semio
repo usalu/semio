@@ -1,3 +1,5 @@
 dialect protocol stdio.tiff.diff
-magic = %x00
-payload = *OCTET
+; protocol::OpBinary raw JSON encoding of TiffDiff — NOT wrapped in the shared `.semio`
+; binary envelope (contrast with ../../📸️snapshot/💾️binary/component.protocol.semio). No
+; length prefix: the entire op body IS the JSON document.
+json-object = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)

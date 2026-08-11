@@ -1,0 +1,171 @@
+{
+  "unit": "s.stdio.pdf",
+  "standards": [
+    {
+      "std": "1.7",
+      "subsets": [
+        {
+          "id": "x",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "conforming_snapshot_has_no_hard_diagnostics",
+            "missing_output_intent_is_hard",
+            "page_missing_trim_or_art_box_is_hard",
+            "encryption_dict_shape_is_hard",
+            "non_embedded_font_is_soft",
+            "javascript_action_is_soft",
+            "movie_annotation_is_soft",
+            "conforming_builder_snapshot_composes_and_stamps_x",
+            "missing_output_intent_fails_compose",
+            "subset_validator_recheck_runs_the_same_check",
+            "new_requires_output_condition_and_builds_clean",
+            "hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true,
+          "spec": "ISO 15930-7:2010 (PDF/X-4)"
+        },
+        {
+          "id": "e",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "empty_snapshot_only_reports_soft_findings",
+            "encryption_dict_shape_is_hard",
+            "javascript_action_is_hard",
+            "launch_action_is_hard",
+            "movie_annotation_is_hard_but_3d_is_never_flagged",
+            "sound_annotation_is_hard",
+            "output_intent_present_clears_the_soft_finding",
+            "conforming_builder_snapshot_composes_and_stamps_e",
+            "subset_validator_recheck_runs_the_same_check",
+            "empty_builder_builds_clean",
+            "hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true,
+          "spec": "ISO 24517-1:2008 (PDF/E-1)"
+        },
+        {
+          "id": "ua",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "fully_tagged_conforming_document_has_no_diagnostics",
+            "missing_markinfo_and_structtreeroot_are_hard",
+            "marked_false_is_still_hard",
+            "missing_lang_title_and_displaydoctitle_are_soft",
+            "conforming_builder_snapshot_composes_and_stamps_ua",
+            "missing_markinfo_fails_compose",
+            "new_requires_lang_and_builds_clean",
+            "hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true,
+          "spec": "ISO 14289-1:2014 (PDF/UA-1)"
+        },
+        {
+          "id": "vt",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "fully_conforming_vt_document_has_no_hard_diagnostics",
+            "missing_dpartroot_is_hard",
+            "x_violations_are_inherited_as_hard",
+            "dpart_missing_dpm_is_soft",
+            "conforming_builder_snapshot_composes_and_stamps_vt",
+            "missing_dpartroot_fails_compose",
+            "new_requires_output_condition_and_builds_clean",
+            "hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true,
+          "spec": "ISO 16612-2:2010 (PDF/VT-1/-2), layered on ✳️x (calls x::analyzer::check_x_conformance directly)"
+        },
+        {
+          "id": "h",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "empty_snapshot_reports_only_soft_findings",
+            "title_and_author_present_clears_that_finding",
+            "javascript_action_is_soft_never_hard",
+            "signature_field_present_clears_that_finding",
+            "compose_always_succeeds_even_with_zero_setup",
+            "conforming_builder_snapshot_composes_with_fewer_advisories",
+            "build_always_succeeds",
+            "set_info_clears_title_author_advisory"
+          ],
+          "validator_registered": true,
+          "spec": "AIIM/ASTM PDF Healthcare Best Practices Guide (2008); industry best-practice, never ISO; ALL-SOFT, no hard checks; pass-through composer (always Ok)"
+        }
+      ],
+      "standard_level_files_updated": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🎹️composer/🦀️component.rs",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/⚙️engine/🦀️component.rs",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/🔣️component.json"
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/pdf-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "preexisting_breakage_noted": [
+    "gltf json export serializer JsonValue/Value mismatch (unrelated to pdf, confirmed pre-existing/concurrent per baseline-cargo-w0.txt)",
+    "jpg baseline / json i-json / other artifacts' 'cannot find X in subsets' errors belong to other concurrent W3 units, not touched here"
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio currently shows exactly 10 expected E0433 'cannot find <subset> in subsets' errors for pdf (2 each for x/e/ua/vt/h: one in 1.7's composer::entries(), one in 1.7's engine::register()) -- these resolve once the orchestrator applies 🧩glue/pdf-glue.rs.txt, which adds the five new #[path]-wired pub mod <id> blocks under v1_7::subsets in stdio's glue.rs. No other pdf-attributable errors present."
+  ]
+}

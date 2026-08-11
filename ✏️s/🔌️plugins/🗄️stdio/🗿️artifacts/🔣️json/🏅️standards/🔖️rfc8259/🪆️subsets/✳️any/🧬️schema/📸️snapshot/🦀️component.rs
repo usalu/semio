@@ -26,11 +26,15 @@ pub struct JsonMember {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValue {
     Null,
-    Bool(bool),
+    // NOTE: every non-unit variant MUST be a struct variant (named field), never a bare tuple
+    // variant — serde's internally-tagged (`tag = "kind"`) representation can only merge the tag
+    // into map-shaped content; a tuple variant wrapping a non-map type (`bool`/`String`/`Vec<_>`)
+    // compiles fine but fails at RUNTIME serialization ("can only flatten structs and maps").
+    Bool { value: bool },
     Number { lexeme: String },
-    String(String),
-    Array(Vec<JsonValue>),
-    Object(Vec<JsonMember>),
+    String { value: String },
+    Array { items: Vec<JsonValue> },
+    Object { members: Vec<JsonMember> },
 }
 
 impl Default for JsonValue {
@@ -102,9 +106,9 @@ impl<'a> Parser<'a> {
         match self.peek() {
             Some(b'{') => self.parse_object(),
             Some(b'[') => self.parse_array(),
-            Some(b'"') => Ok(JsonValue::String(self.parse_string()?)),
-            Some(b't') => self.parse_literal("true", JsonValue::Bool(true)),
-            Some(b'f') => self.parse_literal("false", JsonValue::Bool(false)),
+            Some(b'"') => Ok(JsonValue::String { value: self.parse_string()? }),
+            Some(b't') => self.parse_literal("true", JsonValue::Bool { value: true }),
+            Some(b'f') => self.parse_literal("false", JsonValue::Bool { value: false }),
             Some(b'n') => self.parse_literal("null", JsonValue::Null),
             Some(b'-') | Some(b'0'..=b'9') => self.parse_number(),
             Some(other) => Err(self.err(format!("unexpected character '{}'", other as char))),
@@ -128,7 +132,7 @@ impl<'a> Parser<'a> {
         self.skip_ws();
         if self.peek() == Some(b'}') {
             self.advance();
-            return Ok(JsonValue::Object(members));
+            return Ok(JsonValue::Object { members });
         }
         loop {
             self.skip_ws();
@@ -153,7 +157,7 @@ impl<'a> Parser<'a> {
                 None => return Err(self.err("unterminated object, expected ',' or '}'")),
             }
         }
-        Ok(JsonValue::Object(members))
+        Ok(JsonValue::Object { members })
     }
 
     fn parse_array(&mut self) -> Result<JsonValue, TextError> {
@@ -162,7 +166,7 @@ impl<'a> Parser<'a> {
         self.skip_ws();
         if self.peek() == Some(b']') {
             self.advance();
-            return Ok(JsonValue::Array(items));
+            return Ok(JsonValue::Array { items });
         }
         loop {
             let value = self.parse_value()?;
@@ -180,7 +184,7 @@ impl<'a> Parser<'a> {
                 None => return Err(self.err("unterminated array, expected ',' or ']'")),
             }
         }
-        Ok(JsonValue::Array(items))
+        Ok(JsonValue::Array { items })
     }
 
     /// 🔤️ Parses a quoted string, decoding escapes (incl. `\uXXXX` surrogate pairs) into their
@@ -330,11 +334,11 @@ pub fn write_json_text(value: &JsonValue) -> String {
 fn write_value_compact(value: &JsonValue, out: &mut String) {
     match value {
         JsonValue::Null => out.push_str("null"),
-        JsonValue::Bool(true) => out.push_str("true"),
-        JsonValue::Bool(false) => out.push_str("false"),
+        JsonValue::Bool { value: true } => out.push_str("true"),
+        JsonValue::Bool { value: false } => out.push_str("false"),
         JsonValue::Number { lexeme } => out.push_str(lexeme),
-        JsonValue::String(s) => write_string_escaped(s, out),
-        JsonValue::Array(items) => {
+        JsonValue::String { value: s } => write_string_escaped(s, out),
+        JsonValue::Array { items } => {
             out.push('[');
             for (i, item) in items.iter().enumerate() {
                 if i > 0 {
@@ -344,7 +348,7 @@ fn write_value_compact(value: &JsonValue, out: &mut String) {
             }
             out.push(']');
         }
-        JsonValue::Object(members) => {
+        JsonValue::Object { members } => {
             out.push('{');
             for (i, member) in members.iter().enumerate() {
                 if i > 0 {
@@ -374,7 +378,7 @@ fn push_indent(out: &mut String, depth: usize) {
 
 fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
     match value {
-        JsonValue::Array(items) if !items.is_empty() => {
+        JsonValue::Array { items } if !items.is_empty() => {
             out.push_str("[\n");
             for (i, item) in items.iter().enumerate() {
                 push_indent(out, depth + 1);
@@ -387,8 +391,8 @@ fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
             push_indent(out, depth);
             out.push(']');
         }
-        JsonValue::Array(_) => out.push_str("[]"),
-        JsonValue::Object(members) if !members.is_empty() => {
+        JsonValue::Array { items: _ } => out.push_str("[]"),
+        JsonValue::Object { members } if !members.is_empty() => {
             out.push_str("{\n");
             for (i, member) in members.iter().enumerate() {
                 push_indent(out, depth + 1);
@@ -403,7 +407,7 @@ fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
             push_indent(out, depth);
             out.push('}');
         }
-        JsonValue::Object(_) => out.push_str("{}"),
+        JsonValue::Object { members: _ } => out.push_str("{}"),
         other => write_value_compact(other, out),
     }
 }
@@ -509,15 +513,15 @@ mod tests {
     use super::*;
 
     fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
-        JsonValue::Object(pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect())
+        JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
     #[test]
     fn parses_all_scalar_kinds() {
         assert_eq!(parse_json_text("null").unwrap(), JsonValue::Null);
-        assert_eq!(parse_json_text("true").unwrap(), JsonValue::Bool(true));
-        assert_eq!(parse_json_text("false").unwrap(), JsonValue::Bool(false));
-        assert_eq!(parse_json_text("\"hi\"").unwrap(), JsonValue::String("hi".into()));
+        assert_eq!(parse_json_text("true").unwrap(), JsonValue::Bool { value: true });
+        assert_eq!(parse_json_text("false").unwrap(), JsonValue::Bool { value: false });
+        assert_eq!(parse_json_text("\"hi\"").unwrap(), JsonValue::String { value: "hi".into() });
         assert_eq!(parse_json_text("42").unwrap(), JsonValue::Number { lexeme: "42".into() });
     }
 
@@ -539,7 +543,7 @@ mod tests {
     fn preserves_object_member_insertion_order() {
         let value = parse_json_text(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
         match &value {
-            JsonValue::Object(members) => {
+            JsonValue::Object { members } => {
                 let keys: Vec<&str> = members.iter().map(|m| m.key.as_str()).collect();
                 assert_eq!(keys, vec!["z", "a", "m"]);
             }
@@ -551,7 +555,7 @@ mod tests {
     #[test]
     fn decodes_string_escapes_incl_surrogate_pair() {
         let value = parse_json_text(r#""a\tb\nc\"\\ A 😀""#).unwrap();
-        assert_eq!(value, JsonValue::String("a\tb\nc\"\\ A 😀".into()));
+        assert_eq!(value, JsonValue::String { value: "a\tb\nc\"\\ A 😀".into() });
     }
 
     #[test]
@@ -575,7 +579,7 @@ mod tests {
     fn snapshot_dsl_and_pack_round_trip() {
         let snapshot = JsonSnapshot {
             schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-            value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array(vec![JsonValue::Bool(true), JsonValue::Null]))]),
+            value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]),
         };
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

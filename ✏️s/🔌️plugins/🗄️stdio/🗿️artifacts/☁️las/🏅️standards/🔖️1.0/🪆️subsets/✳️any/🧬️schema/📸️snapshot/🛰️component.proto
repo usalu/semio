@@ -1,6 +1,65 @@
 syntax = "proto3";
 package semio.s_stdio_las.snapshot;
+
+message LasHeader {
+  uint32 version_major = 1;
+  uint32 version_minor = 2;
+  string system_identifier = 3;
+  string generating_software = 4;
+  uint32 creation_day_of_year = 5;
+  uint32 creation_year = 6;
+  uint32 header_size = 7;
+  uint32 offset_to_point_data = 8;
+  uint32 number_of_vlrs = 9;
+  uint32 point_data_format_id = 10;
+  uint32 point_data_record_length = 11;
+  uint32 number_of_point_records = 12;
+  repeated uint32 points_by_return = 13; // exactly 5
+  double x_scale = 14;
+  double y_scale = 15;
+  double z_scale = 16;
+  double x_offset = 17;
+  double y_offset = 18;
+  double z_offset = 19;
+  double max_x = 20;
+  double min_x = 21;
+  double max_y = 22;
+  double min_y = 23;
+  double max_z = 24;
+  double min_z = 25;
+}
+
+// 📦️ One Variable Length Record — data is retained byte-verbatim.
+message LasVlr {
+  string user_id = 1;
+  uint32 record_id = 2;
+  string description = 3;
+  bytes data = 4;
+}
+
+// 📍 One LAS point record (formats 0-3; gps_time/rgb absent unless the format carries them).
+message LasPoint {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  uint32 intensity = 4;
+  uint32 return_number = 5;
+  uint32 number_of_returns = 6;
+  bool scan_direction_flag = 7;
+  bool edge_of_flight_line = 8;
+  uint32 classification = 9;
+  sint32 scan_angle_rank = 10;
+  uint32 user_data = 11;
+  uint32 point_source_id = 12;
+  optional double gps_time = 13;
+  optional uint32 rgb_r = 14;
+  optional uint32 rgb_g = 15;
+  optional uint32 rgb_b = 16;
+}
+
 message LasSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  LasHeader header = 2;
+  repeated LasVlr vlrs = 3;
+  repeated LasPoint points = 4;
 }

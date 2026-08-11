@@ -1,15 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.gltf/artifact.gltf",
+  "$id": "https://semio.tech/schema/s.stdio.gltf/artifact.json",
   "title": "GltfArtifact",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+  "description": "Full artifact state -- same shape as GltfSnapshot.",
+  "$ref": "📸️snapshot/🔣️component.json"
 }

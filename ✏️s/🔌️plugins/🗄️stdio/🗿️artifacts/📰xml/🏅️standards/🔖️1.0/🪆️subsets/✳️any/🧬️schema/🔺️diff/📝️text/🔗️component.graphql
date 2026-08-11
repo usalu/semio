@@ -1,3 +1,2 @@
-# stdio.xml diff text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+""" 📝️ stdio.xml diff text representation -- JSON per the sibling XmlDiff type. """
+scalar XmlDiffText

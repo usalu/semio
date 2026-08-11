@@ -2,7 +2,7 @@
 
 // 🔀️ S-6: `crate::artifacts::gif::schema` now shims to 89a (canonical) -- 87a's own schema uses
 // its own standard-local snapshot type directly rather than the shared root re-export.
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifSnapshot, RasterImage};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +13,21 @@ pub struct GifArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
+    pub width: u32,
+    #[state(persistent)]
+    pub height: u32,
+    #[state(persistent)]
     #[serde(default)]
-    pub image: RasterImage,
+    pub gct: Option<GifColorTable>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub background_color_index: u8,
+    #[state(persistent)]
+    #[serde(default)]
+    pub pixel_aspect_ratio: u8,
+    #[state(persistent)]
+    #[serde(default)]
+    pub images: Vec<GifImage>,
 }
 
 impl Default for GifArtifact {
@@ -23,14 +36,35 @@ impl Default for GifArtifact {
 
 impl GifArtifact {
     pub fn to_snapshot(&self) -> GifSnapshot {
-        GifSnapshot { schema: self.schema.clone(), image: self.image.clone() }
+        GifSnapshot {
+            schema: self.schema.clone(),
+            width: self.width,
+            height: self.height,
+            gct: self.gct.clone(),
+            background_color_index: self.background_color_index,
+            pixel_aspect_ratio: self.pixel_aspect_ratio,
+            images: self.images.clone(),
+        }
     }
     pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
-        Self { schema: snapshot.schema, image: snapshot.image }
+        Self {
+            schema: snapshot.schema,
+            width: snapshot.width,
+            height: snapshot.height,
+            gct: snapshot.gct,
+            background_color_index: snapshot.background_color_index,
+            pixel_aspect_ratio: snapshot.pixel_aspect_ratio,
+            images: snapshot.images,
+        }
     }
     pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
-        self.image = snapshot.image;
+        self.width = snapshot.width;
+        self.height = snapshot.height;
+        self.gct = snapshot.gct;
+        self.background_color_index = snapshot.background_color_index;
+        self.pixel_aspect_ratio = snapshot.pixel_aspect_ratio;
+        self.images = snapshot.images;
     }
 }
 

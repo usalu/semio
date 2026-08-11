@@ -1,0 +1,91 @@
+{
+  "unit": "s.stdio.svg",
+  "standards": [
+    {
+      "std": "1.1",
+      "subsets": [
+        {
+          "id": "tiny",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::fully_conforming_document_reports_no_diagnostics",
+            "analyzer::tests::blocklisted_element_is_hard",
+            "analyzer::tests::filter_primitive_by_prefix_is_hard",
+            "analyzer::tests::blocklisted_attribute_is_hard",
+            "analyzer::tests::missing_base_profile_is_soft",
+            "analyzer::tests::external_href_is_soft",
+            "analyzer::tests::same_document_fragment_href_is_clean",
+            "composer::tests::conforming_document_composes_and_stamps_tiny",
+            "composer::tests::blocklisted_element_fails_compose_with_real_diagnostic",
+            "composer::tests::blocklisted_attribute_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document",
+            "builder::tests::empty_builder_injects_profile_and_builds_clean",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build",
+            "builder::tests::from_text_round_trips_through_tiny_build"
+          ],
+          "validator_registered": true
+        },
+        {
+          "id": "basic",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::fully_conforming_document_reports_no_diagnostics",
+            "analyzer::tests::blocklisted_filter_primitive_is_hard",
+            "analyzer::tests::lighting_child_primitive_is_hard",
+            "analyzer::tests::clip_path_referencing_text_is_hard",
+            "analyzer::tests::clip_path_referencing_shapes_only_is_clean",
+            "analyzer::tests::nested_svg_is_soft",
+            "analyzer::tests::missing_base_profile_is_soft",
+            "composer::tests::conforming_document_composes_and_stamps_basic",
+            "composer::tests::blocklisted_filter_primitive_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document",
+            "builder::tests::empty_builder_injects_profile_and_builds_clean",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build",
+            "builder::tests::from_text_round_trips_through_basic_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/svg-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "also_edited": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔣️component.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🎹️composer/🦀️component.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/⚙️engine/🦀️component.rs"
+  ],
+  "preexisting_breakage_noted": [
+    "gltf 2.0 ✳️any io export json serializer: error[E0308] mismatched types (JsonValue vs Value) at 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10 -- unrelated to s.stdio.svg, not touched"
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio shows exactly the expected 'cannot find `tiny`/`basic` in `subsets`' E0433 errors at 🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🎹️composer/🦀️component.rs:8-9 and ⚙️engine/🦀️component.rs:23-24, both pointing at the same-shaped pending-glue-handoff state every other concurrent unit is in this wave (step cc1-6, pdf x/e, ifc/bcf ua/vt/h, etc.) -- resolves once the orchestrator applies 🧩glue/svg-glue.rs.txt. No other svg-specific errors were produced."
+  ]
+}

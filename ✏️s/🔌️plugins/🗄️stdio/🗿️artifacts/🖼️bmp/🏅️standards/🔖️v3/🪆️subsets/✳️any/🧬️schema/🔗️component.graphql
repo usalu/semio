@@ -1,2 +1,31 @@
-# schema facet
- type Placeholder { width: Int! }
+# 🧬️ BmpArtifact schema facet — full artifact state, mirrors BmpSnapshot field-for-field.
+
+enum BmpArtifactRowOrder {
+  BOTTOM_UP
+  TOP_DOWN
+}
+
+type BmpArtifactPaletteEntry {
+  b: Int!
+  g: Int!
+  r: Int!
+  reserved: Int!
+}
+
+type BmpArtifact {
+  schema: String!
+  headerSize: Int!
+  width: Int!
+  height: Int!
+  rowOrder: BmpArtifactRowOrder!
+  planes: Int!
+  bitsPerPixel: Int!
+  compression: Int!
+  imageSize: Int!
+  xPixelsPerMeter: Int!
+  yPixelsPerMeter: Int!
+  colorsUsed: Int!
+  colorsImportant: Int!
+  palette: [BmpArtifactPaletteEntry!]!
+  pixels: [Int!]!
+}

@@ -1,3 +1,26 @@
-(* ebnf stdio.ply snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.ply', newline ;
+(* ebnf stdio.ply snapshot — real PLY 1.0 header + ascii-body grammar. *)
+document = magic line , format line , header body , "end_header" , newline , body ;
+magic line = "ply" , newline ;
+format line = "format" , space , format kind , space , "1.0" , newline ;
+format kind = "ascii" | "binary_little_endian" | "binary_big_endian" ;
+
+header body = { comment line | obj info line | element block } ;
+comment line = "comment" , [ space , text ] , newline ;
+obj info line = "obj_info" , [ space , text ] , newline ;
+
+element block = element line , { property line } ;
+element line = "element" , space , identifier , space , digits , newline ;
+property line = scalar property line | list property line ;
+scalar property line = "property" , space , scalar type , space , identifier , newline ;
+list property line = "property" , space , "list" , space , scalar type , space , scalar type , space , identifier , newline ;
+scalar type = "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double"
+            | "int8" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "float32" | "float64" ;
+
+(* One row per element instance, one cell per declared property, in order. *)
+body = { row } ;
+row = { cell } , newline ;
+cell = scalar cell | list cell ;
+scalar cell = number ;
+list cell = number , { space , number } ; (* count token, then that many value tokens *)
+number = [ "-" ] , digits , [ "." , digits ] ;
+identifier = letter , { letter | digit | "_" } ;

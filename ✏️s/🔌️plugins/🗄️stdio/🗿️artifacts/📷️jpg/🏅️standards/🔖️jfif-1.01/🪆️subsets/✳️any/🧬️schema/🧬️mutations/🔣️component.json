@@ -1,26 +1,29 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.jpg/mutation.json",
+  "$id": "https://semio.tech/schema/s.stdio.jpg/mutations.json",
   "title": "JpgMutation",
   "type": "object",
   "properties": {
-    "schema": {
+    "mutation": {
       "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
+      "enum": [
+        "noMutation", "setSnapshot", "setJfifHeader", "setQuantTable", "removeQuantTable",
+        "setHuffmanTable", "removeHuffmanTable", "setRestartInterval", "insertOtherSegment",
+        "removeOtherSegment", "setPixels", "setReEncodeQuality"
+      ]
     }
-  }
+  },
+  "required": ["mutation"],
+  "allOf": [
+    { "if": { "properties": { "mutation": { "const": "setSnapshot" } } }, "then": { "required": ["snapshot"] } },
+    { "if": { "properties": { "mutation": { "const": "setJfifHeader" } } }, "then": { "required": ["version", "densityUnits", "xDensity", "yDensity"] } },
+    { "if": { "properties": { "mutation": { "const": "setQuantTable" } } }, "then": { "required": ["table"] } },
+    { "if": { "properties": { "mutation": { "const": "removeQuantTable" } } }, "then": { "required": ["id"] } },
+    { "if": { "properties": { "mutation": { "const": "setHuffmanTable" } } }, "then": { "required": ["table"] } },
+    { "if": { "properties": { "mutation": { "const": "removeHuffmanTable" } } }, "then": { "required": ["key"] } },
+    { "if": { "properties": { "mutation": { "const": "setRestartInterval" } } }, "then": { "required": [] } },
+    { "if": { "properties": { "mutation": { "const": "insertOtherSegment" } } }, "then": { "required": ["index", "segment"] } },
+    { "if": { "properties": { "mutation": { "const": "removeOtherSegment" } } }, "then": { "required": ["index"] } },
+    { "if": { "properties": { "mutation": { "const": "setPixels" } } }, "then": { "required": ["pixels"] } },
+    { "if": { "properties": { "mutation": { "const": "setReEncodeQuality" } } }, "then": { "required": [] } }
+  ]
 }

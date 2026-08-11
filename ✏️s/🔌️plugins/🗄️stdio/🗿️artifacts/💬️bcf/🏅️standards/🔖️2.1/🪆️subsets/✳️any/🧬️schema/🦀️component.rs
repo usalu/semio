@@ -1,6 +1,6 @@
 //! 🧬️ BcfArtifact schema — full artifact state.
 
-use crate::artifacts::bcf::schema::snapshot::{BcfEntry, BcfTopic};
+use crate::artifacts::bcf::schema::snapshot::{BcfRawPart, BcfTopic};
 use crate::artifacts::bcf::BcfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -15,10 +15,13 @@ pub struct BcfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entries: Vec<BcfEntry>,
+    pub version: String,
     #[state(persistent)]
     #[serde(default)]
     pub topics: Vec<BcfTopic>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub parts: Vec<BcfRawPart>,
 }
 //#endregion Artifact
 
@@ -34,8 +37,9 @@ impl BcfArtifact {
     pub fn to_snapshot(&self) -> BcfSnapshot {
         BcfSnapshot {
             schema: self.schema.clone(),
-            entries: self.entries.clone(),
+            version: self.version.clone(),
             topics: self.topics.clone(),
+            parts: self.parts.clone(),
         }
     }
 
@@ -43,16 +47,18 @@ impl BcfArtifact {
     pub fn from_snapshot(snapshot: BcfSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            entries: snapshot.entries,
+            version: snapshot.version,
             topics: snapshot.topics,
+            parts: snapshot.parts,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
         self.schema = snapshot.schema;
-        self.entries = snapshot.entries;
+        self.version = snapshot.version;
         self.topics = snapshot.topics;
+        self.parts = snapshot.parts;
     }
 }
 //#endregion Conversions

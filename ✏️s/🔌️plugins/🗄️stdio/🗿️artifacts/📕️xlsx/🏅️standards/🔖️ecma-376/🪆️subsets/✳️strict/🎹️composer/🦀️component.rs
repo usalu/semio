@@ -1,0 +1,167 @@
+//! 🎹️ XlsxStrictComposer (ecma-376/✳️strict) — reads the same sources the ✳️any subset does
+//! (native `stdio.xlsx` ecma-376, plus its `zip`/`xml` DAG deps), delegates the actual parse to
+//! the ✳️any composer, then HARD-GATES the `strict` dialect stamp on real ISO/IEC 29500-1 Strict
+//! conformance (namespace/relationship-base/`conformance` attribute/VML). A hard violation fails
+//! composition outright with specific `Diagnostic`s naming what's wrong; a soft one (worksheet
+//! content-type mismatch) passes through as an advisory diagnostic on the successful
+//! `Composition`.
+//!
+//! Also registers this dialect's `SubsetValidator` (D5's generic validate-on-build hook, see
+//! `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`) — the SAME `check_strict_conformance` function
+//! backs both: the hard gate here runs pre-serialization against the typed `XlsxSnapshot`
+//! (authoritative, since it inspects `xl/workbook.xml` bytes as DECODED from the real source),
+//! while the registered validator re-runs it post-hoc against the wire `IoPayload`. Because
+//! today's ecma-376 writer (`⚙️engine::encode_xlsx` / `regenerate_workbook_parts`) always
+//! re-emits `xl/workbook.xml` with the Transitional namespace and no `conformance` attribute (a
+//! documented scope cut — the writer has no dialect parameter to thread through), the post-hoc
+//! wire-level recheck will honestly re-report Strict violations for any already-composed artifact
+//! that went through a pack round trip. That's not a false positive: the serialized bytes
+//! genuinely no longer declare Strict; the pre-serialization hard gate here (not the post-hoc
+//! recheck) is the authoritative "was this ever a clean Strict document" answer, matching the
+//! PDF/A `1.7/✳️a` pilot's identically-documented writer-scope-cut note.
+
+use std::sync::OnceLock;
+use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+use semio_framework_plugin::{
+    ArtifactComposer, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    register_subset_validator, subset_validator_entry_of,
+};
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::composer::XlsxComposer as XlsxAnyComposer;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::analyzer::check_strict_conformance;
+
+const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
+const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
+const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
+const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
+
+//#region 🔖️Composer
+pub struct XlsxStrictComposer;
+
+impl ArtifactComposer for XlsxStrictComposer {
+    type Snapshot = XlsxSnapshot;
+    const WRITES: Dialect = DIALECT_STRICT;
+
+    fn reads() -> &'static [Dialect] {
+        &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
+    }
+
+    fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        let inner = XlsxAnyComposer::compose(sources)?;
+        let checks = check_strict_conformance(&inner.snapshot);
+        let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
+        if !hard.is_empty() {
+            let mut all = hard.clone();
+            all.extend(soft);
+            return Err(ComposeError {
+                message: format!("ISO/IEC 29500-1 Strict conformance violated: {} hard issue(s) -- not stamping the strict dialect", hard.len()),
+                diagnostics: all,
+            });
+        }
+        let mut diagnostics = inner.diagnostics;
+        diagnostics.extend(soft);
+        Ok(Composition { snapshot: inner.snapshot, confidence: inner.confidence, diagnostics })
+    }
+}
+//#endregion 🔖️Composer
+
+//#region 🔖️SubsetValidator
+/// 🛡️ The registered `SubsetValidator` for `ecma-376/strict` -- see the module doc comment for
+/// how this relates to (and honestly differs from) the composer's own pre-serialization hard gate
+/// above.
+pub struct XlsxStrictValidator;
+
+impl SubsetValidator for XlsxStrictValidator {
+    const DIALECT: Dialect = DIALECT_STRICT;
+
+    fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        let decoded = match payload {
+            IoPayload::Binary(bytes) => <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
+            IoPayload::Text(text) => <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+        };
+        match decoded {
+            Some(snapshot) => check_strict_conformance(&snapshot),
+            None => vec![Diagnostic {
+                code: FaultCode::new("stdio.xlsx.strict.validate-decode-failed"),
+                severity: Severity::Warning,
+                span: TextSpan::at(1, 1),
+                message: "Xlsx Strict SubsetValidator: payload did not decode as an XlsxSnapshot -- skipped".into(),
+                expected: None,
+                scope: dsl::FaultScope::default(),
+            }],
+        }
+    }
+}
+
+static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
+
+fn validator_entry() -> &'static SubsetValidatorEntry {
+    VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<XlsxStrictValidator>)
+}
+
+/// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
+/// validate-on-build hook). Called from the ecma-376 standard's own `⚙️engine::register()`, which
+/// is already invoked from the artifact-level `crate::artifacts::xlsx::composer::register()`. The
+/// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
+/// (`crate::artifacts::xlsx::standards::v_ecma_376::composer::entries()`), matching how `✳️any`'s
+/// own entry is registered.
+pub fn register() {
+    register_subset_validator(validator_entry());
+}
+//#endregion 🔖️SubsetValidator
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::analyzer::{CODE_CONFORMANCE_ATTRIBUTE, CODE_NAMESPACE_MISMATCH};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::builder::XlsxStrictBuilder;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
+
+    /// 🩹 `encode_xlsx` (`⚙️engine/🦀️component.rs`) always calls `regenerate_workbook_parts`,
+    /// which REBUILDS `xl/workbook.xml` from `snap.workbook` (the typed model) on every encode --
+    /// it doesn't know about Strict mode, so it would silently overwrite whatever
+    /// `XlsxStrictBuilder::new(...)`'s `stamp_strict_namespace` post-processing wrote into `opc`.
+    /// Encoding the OPC package directly (bypassing the typed-model regeneration entirely) is how
+    /// this test genuinely exercises a workbook whose XML matches what the strict builder seeded —
+    /// same fix as docx's sibling `✳️strict` composer test.
+    fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
+        let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <XlsxSnapshot as store::ArtifactDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        ).expect("valid envelope_id");
+        store::semio_format::wrap_binary(&envelope, &raw)
+    }
+
+    #[test]
+    fn conforming_builder_snapshot_composes_and_stamps_strict() {
+        let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("conforming strict construction must build");
+        let bytes = conforming_pack_bytes(&snapshot);
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
+        let composed = XlsxStrictComposer::compose(&sources).expect("clean document must compose to strict");
+        assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
+    }
+
+    #[test]
+    fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
+        let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::engine::build_minimal_xlsx(XlsxWorkbook::default());
+        let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
+        let err = XlsxStrictComposer::compose(&sources).expect_err("a Transitional-shaped workbook.xml must not stamp strict");
+        assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
+    }
+
+    #[test]
+    fn subset_validator_recheck_flags_hard_diagnostics_on_the_wire_payload() {
+        // Documented writer scope cut (module doc comment): `encode_pack` -> `encode_xlsx` ->
+        // `regenerate_workbook_parts` always re-emits Transitional-shaped bytes, so a round trip
+        // honestly re-reports the Strict conformance-attribute violation -- not a false positive,
+        // the wire bytes genuinely no longer declare Strict.
+        let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("build");
+        let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let diagnostics = XlsxStrictValidator::validate(&IoPayload::Binary(bytes));
+        assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CONFORMANCE_ATTRIBUTE && d.severity == Severity::Error), "got {diagnostics:?}");
+    }
+}

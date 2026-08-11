@@ -1,6 +1,15 @@
 syntax = "proto3";
 package semio.s_stdio_stl.snapshot;
+
+message StlTriangle {
+  repeated double normal = 1;
+  repeated double vertex0 = 2;
+  repeated double vertex1 = 3;
+  repeated double vertex2 = 4;
+}
+
 message StlSnapshot {
   string schema = 1;
-  string text_wire = 2;
+  string solid_name = 2;
+  repeated StlTriangle triangles = 3;
 }

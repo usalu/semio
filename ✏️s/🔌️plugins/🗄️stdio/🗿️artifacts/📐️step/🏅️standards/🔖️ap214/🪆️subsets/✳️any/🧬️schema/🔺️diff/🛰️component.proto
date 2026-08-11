@@ -1,6 +1,46 @@
 syntax = "proto3";
 package semio.s_stdio_step.diff;
+
+import "component.proto"; // 📸️ snapshot facet: StepValue, StepComplexType, StepEntity,
+                           // StepFileDescription, StepFileName, StepFileSchema
+
+message StepArgModified {
+  uint64 index = 1;
+  semio.s_stdio_step.snapshot.StepValue value = 2;
+}
+message StepArgAdded {
+  uint64 index = 1;
+  semio.s_stdio_step.snapshot.StepValue value = 2;
+}
+message StepArgsDiff {
+  repeated uint64 removed = 1;
+  repeated StepArgModified modified = 2;
+  repeated StepArgAdded added = 3;
+}
+
+message StepEntityDiff {
+  optional string name = 1;
+  StepArgsDiff args = 2;
+  repeated semio.s_stdio_step.snapshot.StepComplexType complex = 3;
+}
+
+message StepEntityModified {
+  uint64 id = 1;
+  StepEntityDiff diff = 2;
+}
+message StepEntityAdded {
+  uint64 index = 1;
+  semio.s_stdio_step.snapshot.StepEntity entity = 2;
+}
+message StepEntitiesDiff {
+  repeated uint64 removed = 1;
+  repeated StepEntityModified modified = 2;
+  repeated StepEntityAdded added = 3;
+}
+
 message StepDiff {
-  string schema = 1;
-  string text_wire = 2;
+  semio.s_stdio_step.snapshot.StepFileDescription file_description = 1;
+  semio.s_stdio_step.snapshot.StepFileName file_name = 2;
+  semio.s_stdio_step.snapshot.StepFileSchema file_schema = 3;
+  StepEntitiesDiff entities = 4;
 }

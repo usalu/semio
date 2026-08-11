@@ -2,25 +2,49 @@
   "$id": "https://semio.tech/schema/s.stdio.tiff/snapshot.json",
   "title": "TiffSnapshot",
   "type": "object",
-  "properties": {
-    "schema": {
+  "$defs": {
+    "TiffByteOrder": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": ["littleEndian", "bigEndian"]
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
+    "TiffFieldType": {
+      "type": "string",
+      "enum": ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"],
+      "description": "TIFF6 §2 Table 2 — the 12 real IFD entry field types."
+    },
+    "TiffValues": {
+      "type": "object",
+      "description": "Adjacently-tagged (kind/value) typed union — `value`'s real shape depends on `kind` (number[] for most, string for ascii, [number,number][] for rational/sRational).",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/TiffFieldType" },
+        "value": {}
+      }
+    },
+    "TiffTag": {
+      "type": "object",
+      "description": "One IFD entry — a weak value (whole-value replaced in diffs).",
+      "required": ["tag", "kind", "values"],
+      "properties": {
+        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "kind": { "$ref": "#/$defs/TiffFieldType" },
+        "values": { "$ref": "#/$defs/TiffValues" }
+      }
+    },
+    "TiffIfd": {
+      "type": "object",
+      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order).",
+      "required": ["entries"],
+      "properties": {
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/TiffTag" } }
       }
     }
+  },
+  "required": ["schema", "byteOrder", "ifds", "pixels"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "byteOrder": { "$ref": "#/$defs/TiffByteOrder", "x-semio-state": "persistent" },
+    "ifds": { "type": "array", "items": { "$ref": "#/$defs/TiffIfd" }, "x-semio-state": "persistent" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "persistent" }
   }
 }

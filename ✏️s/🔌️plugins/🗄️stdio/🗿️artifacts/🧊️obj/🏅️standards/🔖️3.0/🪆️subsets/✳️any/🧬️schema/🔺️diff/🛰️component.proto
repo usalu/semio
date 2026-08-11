@@ -1,6 +1,60 @@
 syntax = "proto3";
 package semio.s_stdio_obj.diff;
+
+message ObjFaceVertex { uint32 vertex = 1; optional uint32 texcoord = 2; optional uint32 normal = 3; }
+message ObjUsemtlRange { uint64 face_index_from = 1; string material = 2; }
+message ObjSmoothingRange { uint64 face_index_from = 1; optional uint32 group = 2; }
+message ObjUnknownStatement { uint64 line_index = 1; string raw = 2; }
+
+message ObjVertexPayload { double x = 1; double y = 2; double z = 3; optional double w = 4; }
+message ObjVertexDiff { optional double x = 1; optional double y = 2; optional double z = 3; optional double w = 4; bool w_present = 5; }
+message ObjVertexModified { uint64 index = 1; ObjVertexDiff diff = 2; }
+message ObjVertexAdded { uint64 index = 1; ObjVertexPayload vertex = 2; }
+message ObjVerticesDiff { repeated uint64 removed = 1; repeated ObjVertexModified modified = 2; repeated ObjVertexAdded added = 3; }
+
+message ObjTexCoordPayload { double u = 1; double v = 2; optional double w = 3; }
+message ObjTexCoordDiff { optional double u = 1; optional double v = 2; optional double w = 3; bool w_present = 4; }
+message ObjTexCoordModified { uint64 index = 1; ObjTexCoordDiff diff = 2; }
+message ObjTexCoordAdded { uint64 index = 1; ObjTexCoordPayload texcoord = 2; }
+message ObjTexCoordsDiff { repeated uint64 removed = 1; repeated ObjTexCoordModified modified = 2; repeated ObjTexCoordAdded added = 3; }
+
+message ObjNormalPayload { double x = 1; double y = 2; double z = 3; }
+message ObjNormalDiff { optional double x = 1; optional double y = 2; optional double z = 3; }
+message ObjNormalModified { uint64 index = 1; ObjNormalDiff diff = 2; }
+message ObjNormalAdded { uint64 index = 1; ObjNormalPayload normal = 2; }
+message ObjNormalsDiff { repeated uint64 removed = 1; repeated ObjNormalModified modified = 2; repeated ObjNormalAdded added = 3; }
+
+message ObjFacePayload { repeated ObjFaceVertex vertices = 1; }
+message ObjFaceDiff { repeated ObjFaceVertex vertices = 1; bool vertices_present = 2; }
+message ObjFaceModified { uint64 index = 1; ObjFaceDiff diff = 2; }
+message ObjFaceAdded { uint64 index = 1; ObjFacePayload face = 2; }
+message ObjFacesDiff { repeated uint64 removed = 1; repeated ObjFaceModified modified = 2; repeated ObjFaceAdded added = 3; }
+
+message ObjGroupPayload { string name = 1; repeated uint64 faces = 2; }
+message ObjGroupDiff { repeated uint64 faces = 1; bool faces_present = 2; }
+message ObjGroupModified { string name = 1; ObjGroupDiff diff = 2; }
+message ObjGroupAdded { uint64 index = 1; ObjGroupPayload group = 2; }
+message ObjGroupsDiff { repeated string removed = 1; repeated ObjGroupModified modified = 2; repeated ObjGroupAdded added = 3; }
+
+message ObjObjectPayload { string name = 1; repeated uint64 faces = 2; }
+message ObjObjectAdded { uint64 index = 1; ObjObjectPayload object = 2; }
+message ObjObjectsDiff { repeated string removed = 1; repeated ObjGroupModified modified = 2; repeated ObjObjectAdded added = 3; }
+
+// Diff for stdio.obj. schema is an identity field and never appears here.
 message ObjDiff {
-  string schema = 1;
-  string text_wire = 2;
+  optional ObjVerticesDiff vertices = 1;
+  optional ObjTexCoordsDiff texcoords = 2;
+  optional ObjNormalsDiff normals = 3;
+  optional ObjFacesDiff faces = 4;
+  optional ObjGroupsDiff groups = 5;
+  optional ObjObjectsDiff objects = 6;
+  // tri-state: mtllib_present=false -> unchanged; mtllib_present=true + mtllib empty -> cleared; else set
+  string mtllib = 7;
+  bool mtllib_present = 8;
+  repeated ObjUsemtlRange usemtl = 9;
+  bool usemtl_present = 10;
+  repeated ObjSmoothingRange smoothing_groups = 11;
+  bool smoothing_groups_present = 12;
+  repeated ObjUnknownStatement unknown_statements = 13;
+  bool unknown_statements_present = 14;
 }

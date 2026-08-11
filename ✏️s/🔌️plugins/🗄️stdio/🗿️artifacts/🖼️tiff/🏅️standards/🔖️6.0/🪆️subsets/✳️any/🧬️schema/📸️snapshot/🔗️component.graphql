@@ -1,8 +1,57 @@
-type TiffEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ TiffSnapshot schema facet — complete TIFF 6.0 semantic model.
+
+enum TiffByteOrder { LITTLE_ENDIAN BIG_ENDIAN }
+
+"TIFF6 §2 Table 2 — the 12 real IFD entry field types."
+enum TiffFieldType { BYTE ASCII SHORT LONG RATIONAL S_BYTE UNDEFINED S_SHORT S_LONG S_RATIONAL FLOAT DOUBLE }
+
+"One numerator/denominator pair (RATIONAL/S_RATIONAL element)."
+type TiffRationalPair {
+  numerator: Int!
+  denominator: Int!
 }
+
+"""
+Typed union over every TIFF 6.0 field type's decoded value (adjacently tagged: `kind` selects
+which ONE of the typed fields below is populated — GraphQL has no native discriminated union
+with heterogeneous payload shapes, so this mirrors the JSON `{kind,value}` shape as loosely
+grouped fields, same practical approach as `ply`'s `PlyValue`).
+"""
+type TiffValues {
+  kind: TiffFieldType!
+  byteValue: [Int!]
+  asciiValue: String
+  shortValue: [Int!]
+  longValue: [Int!]
+  rationalValue: [TiffRationalPair!]
+  sByteValue: [Int!]
+  undefinedValue: [Int!]
+  sShortValue: [Int!]
+  sLongValue: [Int!]
+  sRationalValue: [TiffRationalPair!]
+  floatValue: [Float!]
+  doubleValue: [Float!]
+}
+
+"One IFD entry — a weak value (whole-value replaced in diffs)."
+type TiffTag {
+  tag: Int!
+  kind: TiffFieldType!
+  values: TiffValues!
+}
+
+"One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order)."
+type TiffIfd {
+  entries: [TiffTag!]!
+}
+
+"""
+Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never diffed.
+`pixels` is the decoded raster payload (canonical 8-bit RGBA, decoded from IFD 0 only).
+"""
 type TiffSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [TiffEntry!]! @state(class: PERSISTENT)
+  byteOrder: TiffByteOrder! @state(class: PERSISTENT)
+  ifds: [TiffIfd!]! @state(class: PERSISTENT)
+  pixels: [Int!]! @state(class: PERSISTENT)
 }

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.bcf",
+  "standard": "2.1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained bcf 2.1"
+    }
+  }
+}

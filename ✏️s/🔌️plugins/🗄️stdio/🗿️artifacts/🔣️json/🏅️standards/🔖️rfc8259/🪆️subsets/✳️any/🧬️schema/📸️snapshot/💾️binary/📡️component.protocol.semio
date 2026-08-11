@@ -10,6 +10,8 @@ field format_minor u16
 field flags u32
 field domain_tag u32
 field header_crc32 u32
+; payload bytes are UTF-8 RFC8259 JSON text (compact form) -- same grammar as the sibling
+; ../📝️text/📖️component.grammar.semio's `json-text` production, not an unstructured blob.
 segment payload varint bytes
 footer fixed 64
 field artifact_mark utf8

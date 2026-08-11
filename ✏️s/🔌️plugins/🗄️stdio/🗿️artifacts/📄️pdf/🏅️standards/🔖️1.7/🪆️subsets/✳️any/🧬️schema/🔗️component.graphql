@@ -1,8 +1,10 @@
-type PdfEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ PdfArtifact (1.7) schema -- see 📸️snapshot/🔗️component.graphql for PdfPage/PdfInfo/
+# PdfIndirectObject/PdfDictEntry.
 type PdfArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [PdfEntry!]! @state(class: PERSISTENT)
+  declaredVersion: String! @state(class: PERSISTENT)
+  pages: [PdfPage!]! @state(class: PERSISTENT)
+  info: PdfInfo! @state(class: PERSISTENT)
+  objects: [PdfIndirectObject!]! @state(class: PERSISTENT)
+  trailer: [PdfDictEntry!]! @state(class: PERSISTENT)
 }

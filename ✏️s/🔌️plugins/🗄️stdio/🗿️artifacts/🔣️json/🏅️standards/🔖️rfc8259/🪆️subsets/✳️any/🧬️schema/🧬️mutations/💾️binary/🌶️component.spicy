@@ -1,4 +1,6 @@
 module Stdio_json_mutations;
+
+# payload: UTF-8 JSON text of the tagged `JsonMutation` struct (`encode_op`, compact form).
 type Document = unit {
-    payload: bytes &eod;
+    payload: bytes &eod &convert=$$.decode("utf-8");
 };

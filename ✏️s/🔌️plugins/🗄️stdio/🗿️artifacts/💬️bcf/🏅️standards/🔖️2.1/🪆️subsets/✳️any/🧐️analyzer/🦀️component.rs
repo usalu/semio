@@ -89,15 +89,9 @@ impl ArtifactAnalyzer for BcfAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::bcf::schema::snapshot::BcfEntry;
-
     #[test]
     fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
-        let snap = BcfSnapshot {
-            schema: "stdio.bcf".into(),
-            entries: vec![BcfEntry { name: "bcf.version".into(), data: b"<Version VersionId=\"2.1\"/>".to_vec() }],
-            topics: Vec::new(),
-        };
+        let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
         let bytes = crate::artifacts::bcf::engine::encode_bcf(&snap).expect("encode");
         assert_eq!(BcfAnalyzer::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
     }

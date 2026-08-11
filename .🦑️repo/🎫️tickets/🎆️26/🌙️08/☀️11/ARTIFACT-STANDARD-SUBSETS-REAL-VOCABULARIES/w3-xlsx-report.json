@@ -1,0 +1,89 @@
+{
+  "unit": "xlsx",
+  "standards": [
+    {
+      "std": "ecma-376",
+      "subsets": [
+        {
+          "id": "strict",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_strict_workbook_has_no_hard_diagnostics",
+            "analyzer::tests::transitional_namespace_is_hard",
+            "analyzer::tests::missing_conformance_attribute_is_hard",
+            "analyzer::tests::vml_part_is_hard",
+            "analyzer::tests::worksheet_wrong_content_type_is_soft",
+            "builder::tests::new_stamps_strict_and_builds_clean",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build",
+            "composer::tests::conforming_builder_snapshot_composes_and_stamps_strict",
+            "composer::tests::transitional_shaped_document_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_recheck_flags_hard_diagnostics_on_the_wire_payload"
+          ],
+          "validator_registered": true
+        },
+        {
+          "id": "transitional",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_transitional_workbook_has_no_hard_diagnostics",
+            "analyzer::tests::strict_namespace_is_hard",
+            "analyzer::tests::explicit_strict_conformance_attribute_is_hard",
+            "analyzer::tests::explicit_transitional_conformance_attribute_is_fine",
+            "analyzer::tests::worksheet_wrong_content_type_is_soft",
+            "builder::tests::new_stamps_transitional_and_builds_clean",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build",
+            "composer::tests::conforming_builder_snapshot_composes_and_stamps_transitional",
+            "composer::tests::strict_shaped_document_fails_compose_with_real_diagnostic"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "other_files_edited": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs -- added REL_TYPE_OFFICE_DOCUMENT_STRICT/REL_TYPE_SHARED_STRINGS_STRICT constants and additive recognition of them in decode_xlsx/sniff_xlsx_bytes (so a genuinely ISO/IEC 29500-1 Strict-shaped package can be decoded at all -- ISO 29500-1 Strict's Annex replaces every schemas.openxmlformats.org relationship-TYPE URI with a purl.oclc.org/ooxml equivalent, not just content markup namespaces); register() now also calls subsets::strict::composer::register() and subsets::transitional::composer::register(); added one new decode test decode_recognizes_strict_office_document_and_shared_strings_relationship_types",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs -- entries() now aggregates XlsxStrictComposer and XlsxTransitionalComposer alongside the existing any composer",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔣️component.json -- added strict and transitional manifest entries (kept the existing \"*\" entry)"
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/xlsx-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "design_notes": [
+    "XlsxSnapshot.opc retains every OPC part verbatim (D2 ground rule), including xl/workbook.xml's raw bytes, so this is a full-depth subset (like pdf 1.7 ✳️a), not a schema-gapped one: Strict vs Transitional is directly checkable from workbook.xml's own xmlns/xmlns:r/conformance attributes plus package content types -- no honest-schema-gap diagnostic needed.",
+    "Checks (both subsets): HARD spreadsheetml main namespace match, HARD officeDocument relationships (markup) namespace match, HARD workbook@conformance attribute consistency, SOFT worksheet part content-type declaration (ECMA-376 Part 1 §12.3.24). ✳️strict adds one more HARD check: no part may declare the legacy VML drawing content type (ISO/IEC 29500-1 Strict removes VML entirely) -- the 'VML rules' the roster brief calls out.",
+    "Builders stamp their dialect's namespace/conformance attrs onto an already-engine-built snapshot (real XML rewrite via the shared xml component, not a fabricated literal) so a 'conforming construction must build' test is possible for ✳️strict; documented that ArtifactPack::encode_pack always regenerates workbook.xml as Transitional-shaped (engine::encode_xlsx has no dialect parameter to thread through), so a ✳️strict artifact's post-round-trip SubsetValidator recheck honestly re-reports the conformance-attribute violation -- same documented scope cut as the PDF/A 1.7 ✳️a pilot's writer note, not a false positive.",
+    "Engine fix (in-scope: standard-level ⚙️engine file): decode_xlsx/sniff_xlsx_bytes previously only recognized the Transitional officeDocument/sharedStrings relationship TYPE URIs, which would have made every genuinely ISO/IEC 29500-1 Strict-shaped package (whose relationship Type URIs are also purl.oclc.org variants per the Strict Annex) fail to decode at all before either subset analyzer ever ran. Fixed additively (Transitional recognition unchanged) and covered with a new hand-built-package decode test."
+  ],
+  "preexisting_breakage_noted": [
+    "cargo check -p semio-s-plugin-stdio shows unrelated pre-existing/concurrent errors outside this artifact (e.g. gltf/json rfc8259 JsonValue mismatch, pptx's own W3 ✳️strict/✳️transitional module-not-found while its glue.rs entry is pending, json's i_json subset module-not-found) -- none touched, per fanout brief instructions to not fix files outside this artifact."
+  ],
+  "status": "done",
+  "blockers": [
+    "Expected handoff state (per pattern doc §7 / fanout brief): cargo check reports exactly two 'cannot find `strict`/`transitional` in `subsets`' errors (E0433) at ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs:9-10 and ⚙️engine/🦀️component.rs:458-459 -- both resolve once the orchestrator applies 🧩glue/xlsx-glue.rs.txt, which adds `pub mod strict { .. }` / `pub mod transitional { .. }` under glue.rs's `xlsx::standards::v_ecma_376::subsets` block. Neither the new subset .rs files nor their tests are exercised by cargo until that lands, since nothing currently `#[path]`-references them; verified structurally instead (brace-balance check on every new/edited file, cross-checked struct/const names, and manual review against the pdf 1.7 ✳️a pilot's proven signatures)."
+  ]
+}

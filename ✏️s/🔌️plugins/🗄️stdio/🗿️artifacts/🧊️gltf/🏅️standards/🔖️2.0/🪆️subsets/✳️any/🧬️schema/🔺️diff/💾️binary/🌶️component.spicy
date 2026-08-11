@@ -1,4 +1,7 @@
-module Stdio_gltf_diff;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_gltf_diff_wire;
+# GltfDiff's binary wire form IS its own JSON text (see 📝️text/component grammar) encoded UTF-8 --
+# OpBinary delegates straight to serde_json; no separate binary framing exists (honest fact, not a
+# placeholder).
+public type Document = unit {
+    json_utf8_text: bytes &eod;
 };

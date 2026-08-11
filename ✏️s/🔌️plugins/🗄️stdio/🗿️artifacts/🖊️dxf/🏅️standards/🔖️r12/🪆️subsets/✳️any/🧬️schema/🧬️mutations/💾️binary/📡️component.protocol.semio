@@ -1,3 +1,7 @@
 dialect protocol stdio.dxf.mutations
-magic = %x00
-payload = *OCTET
+; DxfMutation's wire binary IS its serde_json encoding (protocol::OpBinary — no bespoke
+; binary layout); shares the same envelope shape as every other .semio binary facet.
+magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = *OCTET                      ; UTF-8 "stdio.dxf.mutation v1"
+payload = *OCTET                    ; UTF-8 JSON bytes of DxfMutation (see ../📝️text/📖️component.grammar.semio)

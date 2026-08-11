@@ -38,16 +38,30 @@ fn escape_pdf(s: &str) -> String {
     s.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)")
 }
 
+/// 🔍️ Byte-level (never char-boundary-assuming) subslice search -- `decode_pdf` must locate the
+/// `stream`/`endstream` markers in the RAW bytes, not in a lossy UTF-8 string conversion of them
+/// (the deflate-compressed stream payload is essentially never valid UTF-8, so slicing a
+/// `String::from_utf8_lossy` copy corrupts the very bytes being extracted -- `codec_retention_law`
+/// caught this as a real, pre-existing decode bug).
+fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
+    data.windows(needle.len()).position(|w| w == needle)
+}
+
 pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
-    let text = String::from_utf8_lossy(data);
-    if !text.starts_with("%PDF") { return Err("not pdf".into()); }
+    if !data.starts_with(b"%PDF") { return Err("not pdf".into()); }
     let w = 612.0f64;
     let h = 792.0f64;
     let mut content = String::new();
-    if let Some(i) = text.find("stream") {
-        let rest = &text[i + 6..];
-        if let Some(j) = rest.find("endstream") {
-            let raw = rest[..j].trim().as_bytes();
+    if let Some(i) = find_subslice(data, b"stream") {
+        let rest = &data[i + 6..];
+        if let Some(j) = find_subslice(rest, b"endstream") {
+            let raw_slice = &rest[..j];
+            // `stream` is followed by an EOL before the real payload begins (ISO 32000-1
+            // §7.3.8.1) and the payload itself may carry a trailing EOL before `endstream` --
+            // trim only ASCII whitespace bytes at each end, never the lossy-string `.trim()`.
+            let start = raw_slice.iter().position(|b| !b.is_ascii_whitespace()).unwrap_or(raw_slice.len());
+            let end = raw_slice.iter().rposition(|b| !b.is_ascii_whitespace()).map(|p| p + 1).unwrap_or(start);
+            let raw = &raw_slice[start..end];
             if let Ok(dec) = crate::artifacts::deflate::engine::zlib_decompress(raw) {
                 content = String::from_utf8_lossy(&dec).into_owned();
             }
@@ -66,11 +80,33 @@ pub fn register() {
     crate::artifacts::pdf::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️a/✳️x subsets' SubsetValidators so
+    // `io_dispatch`/`wire_artifact_compose` re-check them for free. Their ComposerEntrys are
+    // registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::pdf::standards::v1_4::subsets::a::composer::register();
+    crate::artifacts::pdf::standards::v1_4::subsets::x::composer::register();
 }
 
 pub struct PdfEngine { artifact_state: PdfArtifact, snapshot_state: PdfSnapshot }
 impl PdfEngine {
     pub fn new(snapshot: PdfSnapshot) -> Self {
         Self { artifact_state: PdfArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🧪️ `codec_retention_law`: decode→encode→decode is stable on the field this stub actually
+    /// round-trips (`text`, threaded through the FlateDecode content stream) -- `width`/`height`
+    /// are NOT retained by `decode_pdf` (documented pre-real-codec scope boundary, W0 recon: 1.4
+    /// stays a frozen stub, no decode enrichment), so only `text` is asserted here.
+    #[test]
+    fn codec_retention_law_text_round_trips_through_encode_decode() {
+        let original = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: "Hello Semio".into() } };
+        let bytes = encode_pdf(&original).expect("encode");
+        let redecoded = decode_pdf(&bytes).expect("decode");
+        assert_eq!(redecoded.page.text, original.page.text);
     }
 }

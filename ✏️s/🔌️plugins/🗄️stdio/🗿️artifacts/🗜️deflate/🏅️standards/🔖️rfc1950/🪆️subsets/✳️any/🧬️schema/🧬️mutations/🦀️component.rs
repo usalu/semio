@@ -7,16 +7,26 @@ use crate::artifacts::deflate::schema::diff::{
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::DeflateSnapshot;
 use protocol::Mutation;
+#[cfg(test)]
+use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.deflate`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6: `dsl::DslOps` derive — `DeflateSnapshot`'s field tree has no data-carrying enum
+/// anywhere (`DeflateLevelHint` is unit-variant-only, `dsl::DslScalar`-derived), so every
+/// variant's payload binds cleanly (confirmed via real `cargo check`, no mirror-enum needed).
+/// `#[dsl(block)]` on the struct-valued `snapshot` payload matches the `SpaceMutation`/
+/// `GifMutation` framework precedent's formatting convention; `#[dsl(base64)]` on the two bare
+/// `Vec<u8>`/`insert`-shaped payloads keeps the printed op compact.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum DeflateMutation {
     #[default]
     NoMutation,
     SetSnapshot {
+        #[dsl(block)]
         snapshot: DeflateSnapshot,
     },
     /// 🧮️ Sets CMF's compression method/window bits and FLG's compression-level hint together
@@ -32,6 +42,7 @@ pub enum DeflateMutation {
     },
     /// 📦️ Replaces the decompressed payload wholesale.
     SetPayload {
+        #[dsl(base64)]
         payload: Vec<u8>,
     },
 }
@@ -82,31 +93,89 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
+/// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only, never `OpText`/
+/// `OpBinary` themselves) — the same ~15-line body every `DslOps`-derived enum's `OpText` impl
+/// uses (`FlowMutationDsl`/`SpaceMutation`/`BinaryMutation`/`GifMutation` precedent). Replaces
+/// the prior `serde_json` stub.
 impl protocol::OpText for DeflateMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
-    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
+/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`. Replaces the prior
+/// `serde_json` stub.
 impl protocol::OpBinary for DeflateMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs
+
+//#region Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+
+    fn base_snapshot() -> DeflateSnapshot {
+        DeflateSnapshot {
+            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+            compression_method: 8,
+            window_bits: 7,
+            compression_level_hint: DeflateLevelHint::Fastest,
+            dict_id: None,
+            payload: b"op-text-binary-fixture".to_vec(),
+        }
+    }
+
+    /// 🧪️ `op_text_binary_roundtrip_law`: every variant (incl. both `SetPresetDictionary` arms,
+    /// `Some`/`None`, and the `SetSnapshot` struct-payload variant) round-trips through
+    /// `print_op`/`parse_op` (one line, no `\n`) AND `encode_op`/`decode_op`.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        for mutation in [
+            DeflateMutation::NoMutation,
+            DeflateMutation::SetSnapshot {
+                snapshot: DeflateSnapshot { dict_id: Some(0xDEAD_BEEF), ..base.clone() },
+            },
+            DeflateMutation::SetCompressionParams {
+                method: 8,
+                window_bits: 5,
+                level_hint: DeflateLevelHint::Maximum,
+            },
+            DeflateMutation::SetPresetDictionary { dict_id: Some(7) },
+            DeflateMutation::SetPresetDictionary { dict_id: None },
+            DeflateMutation::SetPayload { payload: b"mutation-op-text-binary".to_vec() },
+            DeflateMutation::SetPayload { payload: Vec::new() },
+        ] {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = DeflateMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = DeflateMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+}
+//#endregion Tests

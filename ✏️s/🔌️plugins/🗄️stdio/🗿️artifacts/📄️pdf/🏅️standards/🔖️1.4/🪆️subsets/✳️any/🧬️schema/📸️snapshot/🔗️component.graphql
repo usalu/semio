@@ -1,8 +1,10 @@
-type PdfEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ PdfSnapshot (1.4) schema — the intentionally-frozen pre-real-codec stub.
+type PageDoc {
+  width: Float!
+  height: Float!
+  text: String!
 }
 type PdfSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [PdfEntry!]! @state(class: PERSISTENT)
+  page: PageDoc! @state(class: PERSISTENT)
 }

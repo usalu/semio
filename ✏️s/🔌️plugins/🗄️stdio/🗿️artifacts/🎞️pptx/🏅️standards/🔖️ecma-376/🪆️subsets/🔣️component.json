@@ -1,0 +1,15 @@
+{
+  "artifact": "s.stdio.pptx",
+  "standard": "ecma-376",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained pptx ecma-376"
+    },
+    "strict": {
+      "name": "ISO/IEC 29500-1:2016 Strict -- presentationml main ns http://purl.oclc.org/ooxml/presentationml/main"
+    },
+    "transitional": {
+      "name": "ISO/IEC 29500-4:2016 Transitional -- presentationml main ns http://schemas.openxmlformats.org/presentationml/2006/main"
+    }
+  }
+}

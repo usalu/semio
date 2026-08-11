@@ -16,6 +16,10 @@ pub fn register() {
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️i-json subset's SubsetValidator so
+    // the wire-level `io_dispatch`/`wire_artifact_compose` hook can re-check it. The ComposerEntry
+    // itself is registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::json::standards::v_rfc8259::subsets::i_json::composer::register();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
@@ -79,28 +83,28 @@ mod tests {
     #[test]
     fn nontrivial_nested_value_round_trip() {
         use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-        let value = JsonValue::Object(vec![
-            JsonMember { key: "name".into(), value: JsonValue::String("semio".into()) },
+        let value = JsonValue::Object { members: vec![
+            JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
             JsonMember { key: "count".into(), value: JsonValue::Number { lexeme: "42".into() } },
             JsonMember { key: "ratio".into(), value: JsonValue::Number { lexeme: "3.5".into() } },
-            JsonMember { key: "active".into(), value: JsonValue::Bool(true) },
+            JsonMember { key: "active".into(), value: JsonValue::Bool { value: true } },
             JsonMember { key: "missing".into(), value: JsonValue::Null },
-            JsonMember { key: "tags".into(), value: JsonValue::Array(vec![JsonValue::String("a".into()), JsonValue::String("b".into()), JsonValue::String("c".into())]) },
+            JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::String { value: "a".into() }, JsonValue::String { value: "b".into() }, JsonValue::String { value: "c".into() }] } },
             JsonMember {
                 key: "nested".into(),
-                value: JsonValue::Object(vec![JsonMember {
+                value: JsonValue::Object { members: vec![JsonMember {
                     key: "deep".into(),
-                    value: JsonValue::Object(vec![JsonMember {
+                    value: JsonValue::Object { members: vec![JsonMember {
                         key: "deeper".into(),
-                        value: JsonValue::Array(vec![
+                        value: JsonValue::Array { items: vec![
                             JsonValue::Number { lexeme: "1".into() },
                             JsonValue::Number { lexeme: "2".into() },
                             JsonValue::Number { lexeme: "3".into() },
-                        ]),
-                    }]),
-                }]),
+                        ] },
+                    }] },
+                }] },
             },
-        ]);
+        ] };
         let snap = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value };
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

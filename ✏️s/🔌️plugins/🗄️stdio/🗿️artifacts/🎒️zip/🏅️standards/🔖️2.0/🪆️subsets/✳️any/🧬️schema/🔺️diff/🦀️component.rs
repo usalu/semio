@@ -4,6 +4,23 @@
 //! archive `comment` plus a name-keyed `entries` triple (`removed`/`modified`/`added`), every
 //! `ZipEntry` field individually patchable (including a `name` field on `ZipEntryDiff` for
 //! renames and a tri-state `unixMtime` for clearing the Info-ZIP timestamp).
+//!
+//! 🧪️ F6 FINDING: `#[derive(dsl::DslDiff)]` CANNOT be used on `ZipDiff` — confirmed by real
+//! `cargo check` (not guessed): `ZipEntryDiff::unix_mtime: Option<Option<i64>>` gives `error[E0277]:
+//! the trait bound std::option::Option<i64>: DslField is not satisfied`. Root cause (per the
+//! ticket's `f6-recon-report.md` §3b): `dsl_derive::classify_field` peels exactly ONE `Option<..>`
+//! layer before binding, so a tri-state field's REMAINING type after that peel is `Option<i64>`
+//! itself, and no `impl<T: DslField> DslField for Option<T>` exists anywhere in the `dsl` crate.
+//! `unix_mtime` is zip's only tri-state field and there is zero data-carrying enum anywhere in
+//! `ZipDiff`'s tree (`ZipCompressionMethod` is unit-variant-only, `DslScalar`-eligible — see
+//! `🧬️mutations/component.rs`, whose `ZipMutation` DOES derive cleanly via `dsl::DslOps`, the
+//! same "diff hand-rolled, mutation derived" split `f6-recon-report.md` documents for gif 89a).
+//! `DiffCodec` for `ZipDiff` is hand-rolled below instead, following the report's §5 grammar
+//! template (hex for strings/bytes, positional `[f1,f2,...]` tuples for structs, single-letter
+//! `tag:value` pairs for `ZipEntryDiff`'s own sparse fields, `name{[removed];[modified];[added]}`
+//! for the `entries` collection triple — adapted here for a NAME-keyed, not index-keyed,
+//! collection: `removed`/`modified` keys are hex-encoded entry names, `added` keys are the
+//! final-position `usize` index, matching `ZipEntriesDiff`'s own field types above).
 
 use std::collections::{HashMap, HashSet};
 
@@ -390,3 +407,263 @@ pub fn diff_set_entry_comment(name: &str, comment: &str) -> ZipDiff {
     diff_entry_field(name, ZipEntryDiff { comment: Some(comment.to_string()), ..Default::default() })
 }
 //#endregion 🔖️MutationDiffBuilders
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `ZipDiff` (see the module doc comment for the
+/// confirmed derive-blocking compile error). Grammar matches `f6-recon-report.md` §5 and gif 89a's
+/// precedent exactly: space-separated `name=value` top-level tokens (absent token = unchanged),
+/// hex for strings/bytes, positional `[f1,f2,...]` tuples for plain structs, a uniform
+/// `[0]`=None / `[1,<T>]`=Some(T) tag for every `Option<T>` (real optional fields AND diff
+/// tri-states alike), single-letter `tag:value` pairs for `ZipEntryDiff`'s sparse fields, and
+/// `entries{[removed];[modified];[added]}` for the one collection triple — `removed`/`modified`
+/// keyed by hex-encoded entry NAME (matching `ZipEntriesDiff`'s own `String` key), `added` keyed
+/// by the final-position `usize` index (matching `ZipEntryAdded::index`).
+//#region 🔖️Primitives
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn hex_decode_string(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_u16(s: &str) -> Result<u16, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_i64(s: &str) -> Result<i64, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+
+/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
+/// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️ValueCodecs
+fn enc_method(m: ZipCompressionMethod) -> char {
+    match m {
+        ZipCompressionMethod::Stored => 's',
+        ZipCompressionMethod::Deflate => 'd',
+    }
+}
+fn dec_method(s: &str) -> Result<ZipCompressionMethod, String> {
+    match s {
+        "s" => Ok(ZipCompressionMethod::Stored),
+        "d" => Ok(ZipCompressionMethod::Deflate),
+        other => Err(format!("bad compression method {other:?}")),
+    }
+}
+fn enc_extra_field(e: &ZipExtraField) -> String {
+    format!("[{},{}]", e.id, hex_encode(&e.payload))
+}
+fn dec_extra_field(s: &str) -> Result<ZipExtraField, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [id, payload] = parts.as_slice() else { return Err(format!("extra field: expected 2 fields, got {}", parts.len())) };
+    Ok(ZipExtraField { id: parse_u16(id)?, payload: hex_decode(payload)? })
+}
+fn enc_extra_list(v: &[ZipExtraField]) -> String {
+    format!("[{}]", v.iter().map(enc_extra_field).collect::<Vec<_>>().join(","))
+}
+fn dec_extra_list(s: &str) -> Result<Vec<ZipExtraField>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_extra_field).collect()
+}
+/// 🧭️ Whole `ZipEntry` — positional tuple, field order matches the struct declaration exactly
+/// (📸️snapshot/component.rs).
+fn enc_entry(e: &ZipEntry) -> String {
+    format!(
+        "[{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
+        hex_encode(e.name.as_bytes()),
+        hex_encode(&e.data),
+        enc_method(e.method),
+        e.dos_date,
+        e.dos_time,
+        encode_option(&e.unix_mtime, |v| v.to_string()),
+        e.flags,
+        e.version_made_by,
+        e.version_needed,
+        e.internal_attrs,
+        e.external_attrs,
+        enc_extra_list(&e.local_extra),
+        enc_extra_list(&e.central_extra),
+        hex_encode(e.comment.as_bytes()),
+    )
+}
+fn dec_entry(s: &str) -> Result<ZipEntry, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [name, data, method, dos_date, dos_time, unix_mtime, flags, version_made_by, version_needed, internal_attrs, external_attrs, local_extra, central_extra, comment] = parts.as_slice() else {
+        return Err(format!("entry: expected 14 fields, got {}", parts.len()));
+    };
+    Ok(ZipEntry {
+        name: hex_decode_string(name)?,
+        data: hex_decode(data)?,
+        method: dec_method(method)?,
+        dos_date: parse_u16(dos_date)?,
+        dos_time: parse_u16(dos_time)?,
+        unix_mtime: decode_option(unix_mtime, parse_i64)?,
+        flags: parse_u16(flags)?,
+        version_made_by: parse_u16(version_made_by)?,
+        version_needed: parse_u16(version_needed)?,
+        internal_attrs: parse_u16(internal_attrs)?,
+        external_attrs: external_attrs.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        local_extra: dec_extra_list(local_extra)?,
+        central_extra: dec_extra_list(central_extra)?,
+        comment: hex_decode_string(comment)?,
+    })
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️DiffValueCodecs
+/// 🧭️ `ZipEntryDiff`'s sparse fields as single-letter `tag:value` pairs (only present tags are
+/// emitted — an absent tag = unchanged). `U` (`unix_mtime`) is the artifact's one tri-state field:
+/// its `Option<Option<i64>>` value's OUTER layer gates emission (like every other field here), its
+/// INNER `Option<i64>` uses the shared `encode_option`/`decode_option` primitive.
+fn enc_entry_diff(d: &ZipEntryDiff) -> String {
+    let mut parts = Vec::new();
+    if let Some(v) = &d.name { parts.push(format!("N:{}", hex_encode(v.as_bytes()))); }
+    if let Some(v) = &d.data { parts.push(format!("D:{}", hex_encode(v))); }
+    if let Some(v) = d.method { parts.push(format!("M:{}", enc_method(v))); }
+    if let Some(v) = d.dos_date { parts.push(format!("A:{v}")); }
+    if let Some(v) = d.dos_time { parts.push(format!("T:{v}")); }
+    if let Some(v) = d.unix_mtime { parts.push(format!("U:{}", encode_option(&v, |x| x.to_string()))); }
+    if let Some(v) = d.flags { parts.push(format!("F:{v}")); }
+    if let Some(v) = d.version_made_by { parts.push(format!("B:{v}")); }
+    if let Some(v) = d.version_needed { parts.push(format!("V:{v}")); }
+    if let Some(v) = d.internal_attrs { parts.push(format!("I:{v}")); }
+    if let Some(v) = d.external_attrs { parts.push(format!("E:{v}")); }
+    if let Some(v) = &d.local_extra { parts.push(format!("L:{}", enc_extra_list(v))); }
+    if let Some(v) = &d.central_extra { parts.push(format!("C:{}", enc_extra_list(v))); }
+    if let Some(v) = &d.comment { parts.push(format!("O:{}", hex_encode(v.as_bytes()))); }
+    format!("[{}]", parts.join(","))
+}
+fn dec_entry_diff(s: &str) -> Result<ZipEntryDiff, String> {
+    let inner = strip_brackets(s)?;
+    let mut d = ZipEntryDiff::default();
+    for entry in split_top_level(inner, ',') {
+        if entry.is_empty() { continue; }
+        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("entry diff: bad entry {entry:?}"))?;
+        match tag {
+            "N" => d.name = Some(hex_decode_string(val)?),
+            "D" => d.data = Some(hex_decode(val)?),
+            "M" => d.method = Some(dec_method(val)?),
+            "A" => d.dos_date = Some(parse_u16(val)?),
+            "T" => d.dos_time = Some(parse_u16(val)?),
+            "U" => d.unix_mtime = Some(decode_option(val, parse_i64)?),
+            "F" => d.flags = Some(parse_u16(val)?),
+            "B" => d.version_made_by = Some(parse_u16(val)?),
+            "V" => d.version_needed = Some(parse_u16(val)?),
+            "I" => d.internal_attrs = Some(parse_u16(val)?),
+            "E" => d.external_attrs = Some(val.parse().map_err(|e: std::num::ParseIntError| e.to_string())?),
+            "L" => d.local_extra = Some(dec_extra_list(val)?),
+            "C" => d.central_extra = Some(dec_extra_list(val)?),
+            "O" => d.comment = Some(hex_decode_string(val)?),
+            other => return Err(format!("entry diff: unknown tag {other:?}")),
+        }
+    }
+    Ok(d)
+}
+
+/// 🧭️ The one, NAME-keyed collection triple (`f6-recon-report.md` §5's `name{[removed];[modified];[added]}`
+/// shape, adapted per this module's doc comment: `removed`/`modified` keys are hex-encoded entry
+/// names, `added` keys are the final-position `usize` index).
+fn enc_entries_diff(d: &ZipEntriesDiff) -> String {
+    let removed = d.removed.iter().map(|n| hex_encode(n.as_bytes())).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", hex_encode(m.name.as_bytes()), enc_entry_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_entry(&a.entry))).collect::<Vec<_>>().join(",");
+    format!("entries{{[{removed}];[{modified}];[{added}]}}")
+}
+fn dec_entries_diff(body: &str) -> Result<ZipEntriesDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entries: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_string).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (name_hex, diff_s) = entry.split_once(':').ok_or_else(|| format!("entries modified: bad entry {entry:?}"))?;
+        Ok(ZipEntryModified { name: hex_decode_string(name_hex)?, diff: dec_entry_diff(diff_s)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx_s, entry_s) = entry.split_once(':').ok_or_else(|| format!("entries added: bad entry {entry:?}"))?;
+        Ok(ZipEntryAdded { index: parse_usize(idx_s)?, entry: dec_entry(entry_s)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(ZipEntriesDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_zip_diff(d: &ZipDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = &d.comment { tokens.push(format!("comment={}", hex_encode(v.as_bytes()))); }
+    if let Some(v) = &d.entries { tokens.push(enc_entries_diff(v)); }
+    tokens.join(" ")
+}
+fn parse_zip_diff(line: &str) -> Result<ZipDiff, String> {
+    let mut d = ZipDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("comment=") { d.comment = Some(hex_decode_string(rest)?); }
+        else if let Some(rest) = token.strip_prefix("entries{") { d.entries = Some(dec_entries_diff(rest.strip_suffix('}').ok_or_else(|| "entries: missing closing brace".to_string())?)?); }
+        else { return Err(format!("zip diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for ZipDiff {
+    fn print_diff(&self) -> String {
+        print_zip_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_zip_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim (same simplification `WriterDiff`/gif89a's/svg's
+    /// hand-rolled `DiffCodec`s use — satisfies every LAW without inventing a second, denser wire
+    /// format; a future agent MAY tighten this to a true packed encoding without changing the
+    /// trait contract).
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec

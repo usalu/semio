@@ -1,15 +1,78 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.md/diff.md",
+  "$id": "https://semio.tech/schema/s.stdio.md/diff.json",
   "title": "MdDiff",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "blocks": { "$ref": "#/$defs/MdBlocksDiff" }
+  },
+  "$defs": {
+    "MdBlocksDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/MdBlockModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/MdBlockAdded" } }
+      }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "MdBlockModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/MdBlockDiff" } }
+    },
+    "MdBlockAdded": {
+      "type": "object",
+      "required": ["index", "item"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "item": { "type": "object" } }
+    },
+    "NullableUint32": { "description": "Tri-state: absent = unchanged, null = cleared, integer = set.", "type": ["integer", "null"], "minimum": 0 },
+    "NullableString": { "description": "Tri-state: absent = unchanged, null = cleared, string = set.", "type": ["string", "null"] },
+    "MdBlockDiff": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "heading" }, "level": { "type": "integer" }, "inlines": { "type": "array" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "paragraph" }, "inlines": { "type": "array" } } },
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "list" },
+            "ordered": { "type": "boolean" },
+            "start": { "$ref": "#/$defs/NullableUint32" },
+            "tight": { "type": "boolean" },
+            "items": { "$ref": "#/$defs/MdListItemsDiff" }
+          }
+        },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "codeBlock" }, "info": { "$ref": "#/$defs/NullableString" }, "literal": { "type": "string" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "blockQuote" }, "blocks": { "$ref": "#/$defs/MdBlocksDiff" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "thematicBreak" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "htmlBlock" }, "raw": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "block"], "properties": { "kind": { "const": "replace" }, "block": { "type": "object" } } }
+      ]
+    },
+    "MdListItemsDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/MdListItemModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/MdListItemAdded" } }
+      }
+    },
+    "MdListItemModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/MdBlocksDiff" } }
+    },
+    "MdListItemAdded": {
+      "type": "object",
+      "required": ["index", "item"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "item": { "type": "array", "items": { "type": "object" } } }
+    },
+    "MdPathStep": {
+      "oneOf": [
+        { "type": "object", "required": ["step", "index"], "properties": { "step": { "const": "blockQuote" }, "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "required": ["step", "index", "item"], "properties": { "step": { "const": "listItem" }, "index": { "type": "integer", "minimum": 0 }, "item": { "type": "integer", "minimum": 0 } } }
+      ]
     }
   }
 }

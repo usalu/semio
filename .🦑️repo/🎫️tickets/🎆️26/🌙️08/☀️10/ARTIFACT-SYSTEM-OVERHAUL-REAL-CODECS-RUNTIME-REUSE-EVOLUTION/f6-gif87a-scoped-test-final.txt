@@ -1,0 +1,40 @@
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:435:4
+    |
+435 | fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+    |    ^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib test) generated 276 warnings (run `cargo fix --lib -p semio-s-plugin-stdio --tests` to apply 165 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.62s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_stdio-e256466e4a01b7f8)
+
+running 27 tests
+test artifacts::gif::standards::v87a::engine::tests::decode_gif_rejects_garbage ... ok
+test artifacts::gif::standards::v87a::engine::tests::interlace_round_trip ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_empty_and_single_symbol ... ok
+test artifacts::gif::standards::v87a::engine::tests::encode_gif_rejects_index_past_color_table ... ok
+test artifacts::gif::standards::v87a::engine::tests::encode_decode_round_trip_global_color_table_and_screen_fields ... ok
+test artifacts::gif::standards::v87a::engine::tests::interlace_flag_round_trips_through_real_encode ... ok
+test artifacts::gif::standards::v87a::engine::tests::encode_decode_encode_decode_is_stable ... ok
+test artifacts::gif::standards::v87a::engine::tests::encode_decode_round_trip_multiple_images ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_trivial ... ok
+test artifacts::gif::standards::v87a::engine::tests::encode_decode_round_trip_checkerboard ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::absorb_insert_then_set_field_patches_into_added ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::absorb_insert_then_remove_before_shifts_index ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::absorb_insert_insert_same_index_both_survive ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::between_roundtrip_law ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::absorb_law_holds_over_curated_ops ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::gct_tristate_removal_is_some_none ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::field_sweep_covers_every_mutable_field ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_forces_code_size_growth ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::inverse_law ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::diff::component::tests::diff_codec_text_binary_roundtrip_law ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::mutations::component::tests::remove_image_out_of_range_is_noop_not_panic ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::mutations::component::tests::mutation_apply_inverse_round_trips_every_variant ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::mutations::component::tests::mutation_diff_law ... ok
+test artifacts::gif::standards::v87a::subsets::any::schema::mutations::component::tests::op_text_binary_roundtrip_law ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_solid_run_and_kwkwk ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_period_two_alternating_hits_growth_boundary_at_tail ... ok
+test artifacts::gif::standards::v87a::engine::tests::lzw_round_trip_pseudo_random_all_min_code_sizes ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 1020 filtered out; finished in 0.15s
+

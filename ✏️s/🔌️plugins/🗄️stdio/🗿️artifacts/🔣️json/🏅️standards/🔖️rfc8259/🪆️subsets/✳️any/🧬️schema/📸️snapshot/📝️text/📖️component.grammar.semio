@@ -5,5 +5,29 @@ start document
 
 document = header body
 header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+body = json-text NL?
+
+; -- RFC8259 §2-§7, the format's real grammar (the envelope body above is a wrap_text preamble,
+; -- not part of RFC8259 itself). Insertion order of object members and the literal number lexeme
+; -- are preserved by the codec -- this grammar describes the wire syntax, not the in-memory model.
+json-text = ws value ws
+value = object | array | string | number | "true" | "false" | "null"
+
+object = "{" ws ( member ( ws "," ws member )* )? ws "}"
+member = string ws ":" ws value
+
+array = "[" ws ( value ( ws "," ws value )* )? ws "]"
+
+string = quote ( unescaped | escape )* quote
+quote = %x22
+unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
+escape = "\" ( %x22 | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" hexdig hexdig hexdig hexdig ) )
+
+number = "-"? int frac? exp?
+int = "0" | ( %x31-39 digit* )
+frac = "." digit+
+exp = ( "e" | "E" ) ( "+" | "-" )? digit+
+digit = %x30-39
+hexdig = digit | %x41-46 | %x61-66
+
+ws = ( %x20 | %x09 | %x0A | %x0D )*

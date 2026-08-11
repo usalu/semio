@@ -1,18 +1,23 @@
 //! 🧬️ DocxSnapshot — an OPC package (every part verbatim, lossless) plus a typed semantic view
-//! of `word/document.xml` (paragraphs/runs with basic formatting). Unmodeled parts
-//! (`styles.xml`, `numbering.xml`, headers/footers, media, …) stay verbatim inside `opc` — only
-//! `word/document.xml` is round-tripped through the typed `document` model.
+//! of `word/document.xml` (a block tree: paragraphs-with-runs and tables) and `word/styles.xml`
+//! (named styles). Unmodeled parts (`numbering.xml`, headers/footers, media, …) stay verbatim
+//! inside `opc` — only `word/document.xml` and `word/styles.xml` are round-tripped through the
+//! typed `document` model. Regions of `word/document.xml` this model doesn't understand (unknown
+//! `w:rPr`/`w:pPr`/`w:trPr`/`w:tcPr`/`w:tblPr` children) are never dropped — they are carried
+//! verbatim as raw XML child nodes on the owning `extra_*_properties` field and re-emitted on
+//! encode, per the raw-retention rule.
 
 use crate::artifacts::docx::STDIO_DOCX_DOCUMENT_SCHEMA;
+use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocxModel
-/// ✍️ One `w:r` run: literal text plus the minimal formatting flags this artifact models.
-/// Any richer `w:rPr` (color, underline, font, …) that a decoded run carried is not lost — see
-/// `DocxRun::extra_run_properties`, kept verbatim as raw `<w:rPr>` child XML text so a round trip
-/// never silently drops formatting this model doesn't understand.
+/// ✍️ One `w:r` run: literal text plus the formatting flags this artifact models. Any richer
+/// `w:rPr` (color, font, size, …) that a decoded run carried is not lost — see
+/// `extra_run_properties`, kept verbatim as raw `<w:rPr>` child XML so a round trip never silently
+/// drops formatting this model doesn't understand.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocxRun {
@@ -21,28 +26,103 @@ pub struct DocxRun {
     pub bold: bool,
     #[serde(default)]
     pub italic: bool,
+    #[serde(default)]
+    pub underline: bool,
+    /// 🗄️ Raw retention of `<w:rPr>` children this model doesn't interpret (color, font, size,
+    /// strike, highlight, …), in original order.
+    #[serde(default)]
+    pub extra_run_properties: Vec<XmlNode>,
 }
 
-/// 📄️ One `w:p` paragraph: an ordered list of runs.
+/// 📄️ One `w:p` paragraph: an ordered list of runs plus an optional named style reference.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocxParagraph {
     #[serde(default)]
     pub runs: Vec<DocxRun>,
+    /// 🎨️ `<w:pPr><w:pStyle w:val="…"/></w:pPr>` — references a `DocxStyle::id`.
+    #[serde(default)]
+    pub style: Option<String>,
+    /// 🗄️ Raw retention of `<w:pPr>` children other than `<w:pStyle>` (alignment, numbering,
+    /// spacing, …), in original order.
+    #[serde(default)]
+    pub extra_paragraph_properties: Vec<XmlNode>,
 }
 
 impl DocxParagraph {
     pub fn text(text: impl Into<String>) -> Self {
-        Self { runs: vec![DocxRun { text: text.into(), bold: false, italic: false }] }
+        Self { runs: vec![DocxRun { text: text.into(), ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }
     }
 }
 
-/// 📰 Typed semantic view of `word/document.xml`'s `w:body` -> paragraphs -> runs.
+/// 🔲️ One `w:tc` table cell: recursively holds its own block content (WordprocessingML cells may
+/// contain paragraphs and nested tables).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxTableCell {
+    #[serde(default)]
+    pub blocks: Vec<DocxBlock>,
+    /// 🗄️ Raw retention of `<w:tcPr>` children (width, span, merge, shading, …).
+    #[serde(default)]
+    pub extra_cell_properties: Vec<XmlNode>,
+}
+
+/// ➖️ One `w:tr` table row.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxTableRow {
+    #[serde(default)]
+    pub cells: Vec<DocxTableCell>,
+    /// 🗄️ Raw retention of `<w:trPr>` children (height, header-row flag, …).
+    #[serde(default)]
+    pub extra_row_properties: Vec<XmlNode>,
+}
+
+/// 🏛️ One `w:tbl` table.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxTable {
+    #[serde(default)]
+    pub rows: Vec<DocxTableRow>,
+    /// 🗄️ Raw retention of `<w:tblPr>` children (borders, width, look, …).
+    #[serde(default)]
+    pub extra_table_properties: Vec<XmlNode>,
+}
+
+/// 🧱️ One block-level content item inside `word/document.xml`'s `w:body` (or a table cell) — a
+/// paragraph or a table, matching WordprocessingML's own block-content model.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum DocxBlock {
+    Paragraph(DocxParagraph),
+    Table(DocxTable),
+}
+
+impl DocxBlock {
+    pub fn paragraph(text: impl Into<String>) -> Self {
+        Self::Paragraph(DocxParagraph::text(text))
+    }
+}
+
+/// 🎨️ One `<w:style>` entry from `word/styles.xml`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxStyle {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub based_on: Option<String>,
+}
+
+/// 📰 Typed semantic view of `word/document.xml`'s `w:body` (a block tree) plus `word/styles.xml`
+/// (name-keyed by `DocxStyle::id`, styleId in WordprocessingML terms).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocxDocument {
     #[serde(default)]
-    pub paragraphs: Vec<DocxParagraph>,
+    pub body: Vec<DocxBlock>,
+    #[serde(default)]
+    pub styles: Vec<DocxStyle>,
 }
 //#endregion 🔖️DocxModel
 
@@ -53,12 +133,12 @@ pub struct DocxDocument {
 pub struct DocxSnapshot {
     #[state(persistent)]
     pub schema: String,
-    /// 📦️ Lossless OPC container — every part verbatim, including `word/document.xml` (kept in
-    /// sync with `document` on encode; see `engine::encode_docx`).
+    /// 📦️ Lossless OPC container — every part verbatim, including `word/document.xml` and
+    /// `word/styles.xml` (kept in sync with `document` on encode; see `engine::encode_docx`).
     #[state(persistent)]
     #[serde(default)]
     pub opc: OpcPackage,
-    /// 🧬️ Typed semantic view of `word/document.xml`.
+    /// 🧬️ Typed semantic view of `word/document.xml` + `word/styles.xml`.
     #[state(persistent)]
     #[serde(default)]
     pub document: DocxDocument,

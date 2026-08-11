@@ -1,3 +1,2 @@
-# stdio.svg mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+""" 📝️ stdio.svg mutations text representation -- JSON per the sibling SvgMutation type. """
+scalar SvgMutationText

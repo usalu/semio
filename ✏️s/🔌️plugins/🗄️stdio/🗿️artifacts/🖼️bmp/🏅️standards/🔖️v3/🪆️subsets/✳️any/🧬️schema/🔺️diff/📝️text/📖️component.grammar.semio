@@ -1,6 +1,27 @@
 dialect grammar stdio.bmp.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.bmp' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of BmpDiff (serde, camelCase); this names the real
+; sparse fields rather than restating RFC 8259's own JSON grammar in full
+diff = "{" (member ("," member)*)? "}"
+member = '"headerSize"' ":" INT
+       / '"width"' ":" INT
+       / '"height"' ":" INT
+       / '"rowOrder"' ":" row_order
+       / '"planes"' ":" INT
+       / '"bitsPerPixel"' ":" INT
+       / '"compression"' ":" INT
+       / '"imageSize"' ":" INT
+       / '"xPixelsPerMeter"' ":" INT
+       / '"yPixelsPerMeter"' ":" INT
+       / '"colorsUsed"' ":" INT
+       / '"colorsImportant"' ":" INT
+       / '"palette"' ":" palette_diff
+       / '"pixels"' ":" "[" INT* "]"
+row_order = '"bottomUp"' / '"topDown"'
+palette_diff = "{" (pmember ("," pmember)*)? "}"
+pmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" palette_modified* "]"
+        / '"added"' ":" "[" palette_added* "]"
+palette_modified = "{" '"index"' ":" INT "," '"entry"' ":" palette_entry "}"
+palette_added = "{" '"index"' ":" INT "," '"entry"' ":" palette_entry "}"
+palette_entry = "{" '"b"' ":" INT "," '"g"' ":" INT "," '"r"' ":" INT "," '"reserved"' ":" INT "}"

@@ -4,6 +4,16 @@
 //! mutation, `AddEntry`/`RemoveEntry`/`RenameEntry` cover the name-keyed collection ops. Every
 //! variant's `diff()` is handcrafted (constructs `ZipDiff` directly via the `schema::diff`
 //! builders) — apply-and-capture is never used.
+//!
+//! 🧬️ F6: `dsl::DslOps` derive added below — emits `dsl::DslVariants` only (P6: `OpText`/
+//! `OpBinary` are always handcrafted, see the `OpCodecs` region). Compiles clean with zero
+//! enum/tri-state blockers (verified by real `cargo check`, see `f6-zip-report.md`) once
+//! `ZipCompressionMethod` got `#[derive(dsl::DslScalar)]` and `ZipExtraField`/`ZipEntry`/
+//! `ZipSnapshot` got `#[derive(dsl::DslRecord)]` (📸️snapshot/component.rs) — the cascading
+//! nested-struct requirement `f6-recon-report.md` §3's "unified decision rule" describes. Unlike
+//! `ZipDiff` (hand-rolled: tri-state `unix_mtime: Option<Option<i64>>`, see `🔺️diff/component.rs`),
+//! the Mutation side's `unix_mtime: Option<i64>` (in `SetEntryTimestamps` below) is a
+//! single-layer Option ("the new value", not a diff tri-state) and binds fine.
 
 use crate::artifacts::zip::schema::diff::{self, ZipDiff};
 use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry, ZipExtraField};
@@ -13,12 +23,13 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.zip`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipMutation {
     #[default]
     NoMutation,
     SetSnapshot {
+        #[dsl(block)]
         snapshot: ZipSnapshot,
     },
     /// 💬️ Sets the archive-level (EOCD) comment.
@@ -28,6 +39,7 @@ pub enum ZipMutation {
     /// ➕️ Inserts a fully-specified entry at `index` (final position, clamped to `len`).
     AddEntry {
         index: usize,
+        #[dsl(block)]
         entry: ZipEntry,
     },
     /// ➖️ Removes the entry named `name` (no-op if absent).
@@ -42,6 +54,7 @@ pub enum ZipMutation {
     /// 📦️ Replaces an entry's decompressed payload.
     SetEntryData {
         name: String,
+        #[dsl(base64)]
         data: Vec<u8>,
     },
     /// 🗜️ Changes an entry's compression method.
@@ -233,31 +246,39 @@ impl Mutation<ZipSnapshot> for ZipMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
+/// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — one-line grammar via
+/// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
+/// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl`, `BinaryMutation`/
+/// `GifMutation` for the precedent this copies verbatim — `f6-recon-report.md` §2).
 impl protocol::OpText for ZipMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
-    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
+/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
+/// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
+/// type. Zero per-artifact logic.
 impl protocol::OpBinary for ZipMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs
@@ -269,6 +290,7 @@ mod tests {
     use crate::artifacts::zip::schema::diff::ZipEntriesDiff;
     use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
+    use protocol::{DiffCodec, OpBinary, OpText};
 
     //#region Fixtures
     fn entry(name: &str, data: &[u8]) -> ZipEntry {
@@ -623,5 +645,71 @@ mod tests {
         apply_zip_mutation(&mut snap, &ZipMutation::RemoveEntry { name: "missing".into() });
         assert_eq!(snap, base);
     }
+
+    //#region 🔖️op_text_binary_roundtrip_law
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
+    /// `dsl::DslOps`-derived `DslVariants`) — every variant, including `SetEntryTimestamps`'s
+    /// `Option<i64>` argument in both the `Some` and `None` shape, and the two variants carrying
+    /// a whole nested record (`SetSnapshot`, `AddEntry`).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let variants = vec![
+            ZipMutation::NoMutation,
+            ZipMutation::SetSnapshot { snapshot: base.clone() },
+            ZipMutation::SetArchiveComment { comment: "new comment".into() },
+            ZipMutation::AddEntry { index: 1, entry: entry("x.bin", b"xxx") },
+            ZipMutation::RemoveEntry { name: "b.txt".into() },
+            ZipMutation::RenameEntry { name: "a.txt".into(), new_name: "a2.txt".into() },
+            ZipMutation::SetEntryData { name: "a.txt".into(), data: b"new-data".to_vec() },
+            ZipMutation::SetEntryMethod { name: "a.txt".into(), method: ZipCompressionMethod::Deflate },
+            ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: Some(1_234_567) },
+            ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: None },
+            ZipMutation::SetEntryFlags { name: "a.txt".into(), flags: 0x0800 },
+            ZipMutation::SetEntryVersions { name: "a.txt".into(), version_made_by: 63, version_needed: 45 },
+            ZipMutation::SetEntryAttributes { name: "a.txt".into(), internal_attrs: 1, external_attrs: 0o100755 << 16 },
+            ZipMutation::SetEntryExtra { name: "a.txt".into(), local_extra: vec![ZipExtraField { id: 1, payload: vec![1, 2] }], central_extra: vec![] },
+            ZipMutation::SetEntryComment { name: "a.txt".into(), comment: "hi".into() },
+        ];
+        for m in variants {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = ZipMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = ZipMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+        }
+    }
+    //#endregion 🔖️op_text_binary_roundtrip_law
+
+    //#region 🔖️diff_codec_text_binary_roundtrip_law
+    /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `ZipDiff` text/binary grammar
+    /// (`🔺️diff/component.rs`) — exercises the archive `comment` scalar, the tri-state
+    /// `unix_mtime` (both `Some(None)`-clear and `Some(Some(_))`-set), and all three sections of
+    /// the `entries` collection triple simultaneously via real `between()` results (both
+    /// directions, plus the empty diff).
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        let cases = vec![
+            ZipDiff::default(),
+            ZipDiff::between(&a, &b),
+            ZipDiff::between(&b, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = ZipDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = ZipDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+    //#endregion 🔖️diff_codec_text_binary_roundtrip_law
 }
 //#endregion Tests

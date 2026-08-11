@@ -1,3 +1,2 @@
-# stdio.svg diff text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+""" 📝️ stdio.svg diff text representation -- JSON per the sibling SvgDiff type. """
+scalar SvgDiffText

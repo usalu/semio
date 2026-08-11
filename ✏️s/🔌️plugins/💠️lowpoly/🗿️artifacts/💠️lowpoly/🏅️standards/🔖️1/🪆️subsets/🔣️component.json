@@ -1,0 +1,9 @@
+{
+  "artifact": "s.lowpoly.lowpoly",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained lowpoly 1"
+    }
+  }
+}

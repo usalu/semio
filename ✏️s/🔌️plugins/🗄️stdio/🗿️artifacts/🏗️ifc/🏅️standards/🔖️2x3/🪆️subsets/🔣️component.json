@@ -1,0 +1,18 @@
+{
+  "artifact": "s.stdio.ifc",
+  "standard": "2x3",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained ifc 2x3"
+    },
+    "cv20": {
+      "name": "buildingSMART Coordination View 2.0 MVD (IFC2x3, ISO/PAS 16739:2005 schema)"
+    },
+    "sav": {
+      "name": "buildingSMART Structural Analysis View MVD (IFC2x3)"
+    },
+    "cobie": {
+      "name": "buildingSMART Basic FM Handover MVD (IFC2x3, carries COBie 2.4)"
+    }
+  }
+}

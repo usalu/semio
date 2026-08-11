@@ -1,3 +1,12 @@
 dialect protocol stdio.md.snapshot
-magic = %x00
-payload = *OCTET
+; 📦 `store::semio_format::wrap_binary` envelope followed by the UTF-8 bytes of the rendered
+; markdown text (`render_markdown_blocks`) -- honest reference to the sibling text grammar
+; (../📝️text/📖️component.grammar.semio), not an untyped octet blob: the payload's structure
+; IS that grammar, just UTF-8-encoded instead of parsed from a `.md` file directly.
+envelope = magic version schema-id
+magic = %x53.45.4D.49 ; "SEMI"
+version = u8
+schema-id = length-prefixed-utf8
+payload = markdown-text ; see ../📝️text/📖️component.grammar.semio `document`
+markdown-text = utf8-bytes
+length-prefixed-utf8 = u32-le *OCTET

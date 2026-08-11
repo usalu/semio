@@ -1,6 +1,37 @@
 syntax = "proto3";
 package semio.s_stdio_bmp.diff;
+
+import "s_stdio_bmp/snapshot.proto";
+
+message BmpPaletteModified {
+  uint64 index = 1;
+  semio.s_stdio_bmp.snapshot.BmpPaletteEntry entry = 2;
+}
+
+message BmpPaletteAdded {
+  uint64 index = 1;
+  semio.s_stdio_bmp.snapshot.BmpPaletteEntry entry = 2;
+}
+
+message BmpPaletteDiff {
+  repeated uint64 removed = 1;
+  repeated BmpPaletteModified modified = 2;
+  repeated BmpPaletteAdded added = 3;
+}
+
 message BmpDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional uint32 header_size = 1;
+  optional uint32 width = 2;
+  optional uint32 height = 3;
+  optional semio.s_stdio_bmp.snapshot.BmpRowOrder row_order = 4;
+  optional uint32 planes = 5;
+  optional uint32 bits_per_pixel = 6;
+  optional uint32 compression = 7;
+  optional uint32 image_size = 8;
+  optional int32 x_pixels_per_meter = 9;
+  optional int32 y_pixels_per_meter = 10;
+  optional uint32 colors_used = 11;
+  optional uint32 colors_important = 12;
+  optional BmpPaletteDiff palette = 13;
+  optional bytes pixels = 14;
 }

@@ -1,5 +1,8 @@
-//! 🧬️ StepArtifact schema — full artifact state.
+//! 🧬️ StepArtifact schema — full artifact state, mirrors `StepSnapshot`'s own typed HEADER +
+//! id-keyed entity graph (never a raw `Part21Document` — same specific-code mandate as the
+//! snapshot itself).
 
+use crate::artifacts::step::schema::snapshot::{StepEntity, StepHeader};
 use crate::artifacts::step::StepSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -11,10 +14,12 @@ use serde::{Deserialize, Serialize};
 pub struct StepArtifact {
     #[state(persistent)]
     pub schema: String,
-    /// 📦️ The full, lossless generic Part-21 graph — the actual persisted state.
     #[state(persistent)]
     #[serde(default)]
-    pub document: crate::artifacts::step::engine::part21::Part21Document,
+    pub header: StepHeader,
+    #[state(persistent)]
+    #[serde(default)]
+    pub entities: Vec<StepEntity>,
 }
 //#endregion 🔖️Artifact
 
@@ -29,25 +34,29 @@ impl StepArtifact {
     pub fn to_snapshot(&self) -> StepSnapshot {
         StepSnapshot {
             schema: self.schema.clone(),
-            document: self.document.clone(),
+            header: self.header.clone(),
+            entities: self.entities.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: StepSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            document: snapshot.document,
+            header: snapshot.header,
+            entities: snapshot.entities,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: StepSnapshot) {
         self.schema = snapshot.schema;
-        self.document = snapshot.document;
+        self.header = snapshot.header;
+        self.entities = snapshot.entities;
     }
 
-    /// 🧐️ Derived BrepMesh analyzer view — computed on demand, never stored.
+    /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
+    /// `StepSnapshot::to_part21_document`, never stored.
     pub fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
-        crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.document)
+        crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }
 }
 //#endregion 🔖️Conversions

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.dag.dag",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained dag 1"
+    }
+  }
+}

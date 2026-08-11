@@ -1,6 +1,54 @@
-dialect grammar stdio.step.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.step' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.step.mutation
+; A `StepMutation` op-text line is `serde_json::to_string` of the `#[serde(tag = "mutation")]`
+; enum — a single-line JSON object whose `"mutation"` member is the camelCase variant name and
+; whose remaining members are that variant's own fields (untagged serde adjacency).
+root = mutation-line
+mutation-line = mutation-object NL?
+mutation-object = '{' '"mutation"' ':' mutation-kind [ ',' variant-fields ] '}'
+mutation-kind = '"noMutation"' / '"setSnapshot"' / '"setFileDescription"' / '"setFileName"'
+              / '"setFileSchema"' / '"insertEntity"' / '"removeEntity"' / '"setEntityName"'
+              / '"setEntityArg"' / '"insertEntityArg"' / '"removeEntityArg"'
+variant-fields = set-snapshot-fields / set-file-description-fields / set-file-name-fields
+               / set-file-schema-fields / insert-entity-fields / remove-entity-fields
+               / set-entity-name-fields / set-entity-arg-fields / insert-entity-arg-fields
+               / remove-entity-arg-fields
+set-snapshot-fields = '"snapshot"' ':' step-snapshot-object
+set-file-description-fields = '"fileDescription"' ':' file-description-object
+set-file-name-fields = '"fileName"' ':' file-name-object
+set-file-schema-fields = '"fileSchema"' ':' file-schema-object
+insert-entity-fields = '"index"' ':' json-number ',' '"entity"' ':' entity-object
+remove-entity-fields = '"id"' ':' json-number
+set-entity-name-fields = '"id"' ':' json-number ',' '"name"' ':' json-string
+set-entity-arg-fields = '"id"' ':' json-number ',' '"argIndex"' ':' json-number ','
+                         '"value"' ':' step-value
+insert-entity-arg-fields = '"id"' ':' json-number ',' '"argIndex"' ':' json-number ','
+                            '"value"' ':' step-value
+remove-entity-arg-fields = '"id"' ':' json-number ',' '"argIndex"' ':' json-number
+; Full snapshot/entity/value shapes — see `📸️snapshot/📝️text/📖️component.grammar.semio` for
+; `exchange-file`'s own ISO 10303-21 grammar; this facet's JSON shapes mirror `StepSnapshot`'s
+; typed Rust fields, not the raw Part-21 syntax.
+step-snapshot-object = '{' '"schema"' ':' json-string ',' '"header"' ':' header-object ','
+                        '"entities"' ':' '[' *( entity-object ',' ) ']' '}'
+header-object = '{' '"fileDescription"' ':' file-description-object ',' '"fileName"' ':' file-name-object ','
+                 '"fileSchema"' ':' file-schema-object '}'
+file-description-object = '{' '"description"' ':' '[' *( json-string ',' ) ']' ',' '"implementationLevel"' ':' json-string '}'
+file-name-object = '{' '"name"' ':' json-string ',' '"timestamp"' ':' json-string ','
+                    '"author"' ':' '[' *( json-string ',' ) ']' ',' '"organization"' ':' '[' *( json-string ',' ) ']' ','
+                    '"preprocessorVersion"' ':' json-string ',' '"originatingSystem"' ':' json-string ','
+                    '"authorization"' ':' json-string '}'
+file-schema-object = '{' '"schemas"' ':' '[' *( json-string ',' ) ']' '}'
+entity-object = '{' '"id"' ':' json-number ',' '"name"' ':' json-string ',' '"args"' ':' '[' *( step-value ',' ) ']'
+                 [ ',' '"complex"' ':' complex-array ] '}'
+complex-array = '[' *( complex-object ',' ) ']'
+complex-object = '{' '"name"' ':' json-string ',' '"args"' ':' '[' *( step-value ',' ) ']' '}'
+step-value = 'unset' / 'derived'
+           / '{' '"integer"' ':' json-integer '}'
+           / '{' '"real"' ':' json-number '}'
+           / '{' '"string"' ':' json-string '}'
+           / '{' '"enum"' ':' json-string '}'
+           / '{' '"reference"' ':' json-number '}'
+           / '{' '"aggregate"' ':' '[' *( step-value ',' ) ']' '}'
+           / '{' '"typedValue"' ':' '{' '"typeName"' ':' json-string ',' '"value"' ':' step-value '}' '}'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = [ '-' ] 1*DIGIT [ '.' 1*DIGIT ]
+json-integer = [ '-' ] 1*DIGIT

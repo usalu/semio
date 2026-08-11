@@ -1,34 +1,1120 @@
-//! 🔺️ PngDiff — sparse replace-snapshot diff.
+//! 🔺️ PngDiff — handcrafted sparse diff. Ticket
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: replaces the old
+//! `PngDiff{snapshot: Option<PngSnapshot>}` full-replace template. IHDR/tRNS/ancillary fields
+//! are top-level scalars (plain `Option<T>` for always-present IHDR fields, tri-state
+//! `Option<Option<T>>` for the genuinely optional ones); `plte`/`text_chunks`/`chunk_order`/
+//! `unknown_chunks` are index-keyed `removed`/`modified`/`added` triples (`plte` additionally
+//! nested inside a tri-state so "palette chunk removed entirely" and "palette entries changed"
+//! are both expressible — see `PngPlteDiff` doc).
+//!
+//! 🧪️ F6 CONFIRMED (real `cargo check -p semio-s-plugin-stdio --lib` runs, output kept in the
+//! ticket folder as `f6-png-diff-derive-check.txt`/`f6-png-mutation-derive-check.txt`):
+//! `#[derive(dsl::DslDiff)]` on `PngDiff` fails for TWO independent reasons (per
+//! `f6-recon-report.md` §3's decision rule), same as `SvgDiff`/`GifDiff`: (1) 8 top-level
+//! tri-state `Option<Option<T>>` fields (`plte`, `trns`, `gama`, `chrm`, `srgb`, `phys`, `time`,
+//! `bkgd`) — e.g. `error[E0277]: the trait bound Option<PngChromaticities>: DslField is not
+//! satisfied`; (2) `PngTransparency`/`PngBackground` are genuine data-carrying enums
+//! (`Indexed`/`Grayscale`/`Rgb` etc., each with fields) reachable through `trns`/`bkgd` — e.g.
+//! `error[E0277]: the trait bound PngTransparency: DslField is not satisfied`. `PngMutation`'s
+//! own `#[derive(dsl::DslOps)]` attempt fails for the SAME enum reason (`SetTransparency`/
+//! `SetBackground` carry the enum directly; `SetSnapshot` carries it via `PngSnapshot`) —
+//! independently confirmed with its own real `cargo check` (42 `DslField` errors). Both sides are
+//! hand-rolled below/in `🧬️mutations/🦀️component.rs`, following the gif89a/svg template exactly
+//! (`f6-recon-report.md` §5).
 
+use crate::artifacts::png::schema::snapshot::{
+    PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
+    PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency,
+};
 use crate::artifacts::png::PngSnapshot;
+use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
+
+//#region 🔖️PlteTriple
+/// 🎨️ One `plte.modified[]`/`plte.added[]` entity — `PngRgb` is a weak value, so `modified`
+/// carries the entry's NEW value directly (not a nested diff).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngPlteEntryModified {
+    pub index: usize,
+    pub rgb: PngRgb,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngPlteEntryAdded {
+    pub index: usize,
+    pub rgb: PngRgb,
+}
+
+/// 🔺️ Index-keyed `PLTE` entries triple. Nested inside `PngDiff::plte`'s OUTER
+/// `Option<Option<_>>`: outer `None` = palette unchanged; outer `Some(None)` = the `PLTE`
+/// chunk was removed entirely; outer `Some(Some(triple))` = the palette is present (whether
+/// newly created — an all-`added` triple — or an existing palette's entries changed).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngPlteDiff {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<PngPlteEntryModified>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<PngPlteEntryAdded>,
+}
+//#endregion 🔖️PlteTriple
+
+//#region 🔖️TextChunkDiff
+/// 💬️ Sparse per-field patch for one [`PngTextChunk`].
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngTextChunkDiff {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keyword: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compressed: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<PngTextKind>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language_tag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub translated_keyword: Option<String>,
+}
+
+impl PngTextChunkDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+    fn apply(&self, base: &PngTextChunk) -> PngTextChunk {
+        PngTextChunk {
+            keyword: self.keyword.clone().unwrap_or_else(|| base.keyword.clone()),
+            value: self.value.clone().unwrap_or_else(|| base.value.clone()),
+            compressed: self.compressed.unwrap_or(base.compressed),
+            kind: self.kind.unwrap_or(base.kind),
+            language_tag: self.language_tag.clone().unwrap_or_else(|| base.language_tag.clone()),
+            translated_keyword: self.translated_keyword.clone().unwrap_or_else(|| base.translated_keyword.clone()),
+        }
+    }
+    fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
+        Self {
+            keyword: (a.keyword != b.keyword).then(|| b.keyword.clone()),
+            value: (a.value != b.value).then(|| b.value.clone()),
+            compressed: (a.compressed != b.compressed).then_some(b.compressed),
+            kind: (a.kind != b.kind).then_some(b.kind),
+            language_tag: (a.language_tag != b.language_tag).then(|| b.language_tag.clone()),
+            translated_keyword: (a.translated_keyword != b.translated_keyword).then(|| b.translated_keyword.clone()),
+        }
+    }
+    /// ➕️ LWW field-by-field absorb.
+    fn absorb(&mut self, other: Self) {
+        if other.keyword.is_some() { self.keyword = other.keyword; }
+        if other.value.is_some() { self.value = other.value; }
+        if other.compressed.is_some() { self.compressed = other.compressed; }
+        if other.kind.is_some() { self.kind = other.kind; }
+        if other.language_tag.is_some() { self.language_tag = other.language_tag; }
+        if other.translated_keyword.is_some() { self.translated_keyword = other.translated_keyword; }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngTextChunkModified {
+    pub index: usize,
+    pub diff: PngTextChunkDiff,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngTextChunkAdded {
+    pub index: usize,
+    pub chunk: PngTextChunk,
+}
+
+/// 🔺️ Index-keyed `text_chunks` triple (see `PngTextChunk` doc for why index, not keyword).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngTextChunksDiff {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<PngTextChunkModified>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<PngTextChunkAdded>,
+}
+//#endregion 🔖️TextChunkDiff
+
+//#region 🔖️UnknownChunksDiff
+/// 🗃️ One `unknown_chunks.modified[]`/`.added[]` entity — `PngChunk` is a weak value.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngUnknownChunkModified {
+    pub index: usize,
+    pub chunk: PngChunk,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngUnknownChunkAdded {
+    pub index: usize,
+    pub chunk: PngChunk,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngUnknownChunksDiff {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<PngUnknownChunkModified>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<PngUnknownChunkAdded>,
+}
+//#endregion 🔖️UnknownChunksDiff
+
+//#region 🔖️ChunkOrderDiff
+/// 🧭️ One `chunk_order.modified[]`/`.added[]` entity — `PngChunkMarker` is a weak value.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngChunkOrderModified {
+    pub index: usize,
+    pub marker: PngChunkMarker,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngChunkOrderAdded {
+    pub index: usize,
+    pub marker: PngChunkMarker,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PngChunkOrderDiff {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<PngChunkOrderModified>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<PngChunkOrderAdded>,
+}
+//#endregion 🔖️ChunkOrderDiff
+
+//#region 🔖️IndexTransport
+// 🧮 Base-free index transport for absorb — simulates the SAME removed(descending)/added
+// (ascending, clamped) sequence `apply` performs, over a virtual index universe bounded
+// tightly by what a diff's own removed/modified keys actually reference (matches the recipe's
+// "structural, total, base-free" absorb contract; ported verbatim from csv's proven
+// `simulate_slots`/`base_len_hint`, which are already fully type-agnostic).
+
+#[derive(Clone, Copy, Debug)]
+enum Slot {
+    Base(usize),
+    Added(usize),
+}
+
+fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+    let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
+    let mut removed_desc = removed.to_vec();
+    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+    removed_desc.dedup();
+    for r in removed_desc {
+        if r < slots.len() {
+            slots.remove(r);
+        }
+    }
+    let mut order: Vec<usize> = (0..added_indices.len()).collect();
+    order.sort_by_key(|&i| added_indices[i]);
+    for i in order {
+        let at = added_indices[i].min(slots.len());
+        slots.insert(at, Slot::Added(i));
+    }
+    slots
+}
+
+fn base_len_hint(
+    removed: &[usize],
+    modified_indices: impl Iterator<Item = usize>,
+    added_indices: impl Iterator<Item = usize>,
+) -> usize {
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+}
+
+/// ➕️ Structural, total, base-free absorb for an index-keyed collection of WEAK values (the
+/// `modified` payload is the new value itself, not a nested diff — a doubly-modified position
+/// is plain LWW). Shared by `plte`/`unknown_chunks`/`chunk_order` (`text_chunks` needs its own
+/// field-aware variant, see `absorb_text_chunks`, since its modified payload IS a nested diff).
+fn absorb_weak_index_triple<T: Clone>(
+    d1_removed: Vec<usize>,
+    d1_modified: Vec<(usize, T)>,
+    d1_added: Vec<(usize, T)>,
+    d2_removed: Vec<usize>,
+    d2_modified: Vec<(usize, T)>,
+    d2_added: Vec<(usize, T)>,
+) -> (Vec<usize>, Vec<(usize, T)>, Vec<(usize, T)>) {
+    let d1_added_indices: Vec<usize> = d1_added.iter().map(|(i, _)| *i).collect();
+    let removed_count = {
+        let mut r = d1_removed.clone();
+        r.sort_unstable();
+        r.dedup();
+        r.len()
+    };
+    let needed_mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).max().map(|m| m + 1).unwrap_or(0);
+    let base_len = base_len_hint(&d1_removed, d1_modified.iter().map(|(i, _)| *i), d1_added_indices.iter().copied())
+        .max((needed_mid_len + removed_count).saturating_sub(d1_added.len()));
+    let mid_slots = simulate_slots(base_len, &d1_removed, &d1_added_indices);
+
+    let mut final_removed: Vec<usize> = d1_removed;
+    let mut modified_map: BTreeMap<usize, T> = d1_modified.into_iter().collect();
+    let mut added_alive: Vec<Option<(usize, T)>> = d1_added.into_iter().map(Some).collect();
+
+    for mid_idx in &d2_removed {
+        match mid_slots.get(*mid_idx) {
+            Some(Slot::Base(b)) => {
+                final_removed.push(*b);
+                modified_map.remove(b);
+            }
+            Some(Slot::Added(ai)) => {
+                added_alive[*ai] = None;
+            }
+            None => {}
+        }
+    }
+    for (mid_idx, val) in &d2_modified {
+        match mid_slots.get(*mid_idx) {
+            Some(Slot::Base(b)) => {
+                modified_map.insert(*b, val.clone());
+            }
+            Some(Slot::Added(ai)) => {
+                if let Some(a) = added_alive[*ai].as_mut() {
+                    a.1 = val.clone();
+                }
+            }
+            None => {}
+        }
+    }
+
+    final_removed.sort_unstable();
+    final_removed.dedup();
+    for r in &final_removed {
+        modified_map.remove(r);
+    }
+    let final_modified: Vec<(usize, T)> = modified_map.into_iter().collect();
+
+    let alive_mid_positions: Vec<usize> = mid_slots
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, slot)| match slot {
+            Slot::Added(ai) if added_alive[*ai].is_some() => Some(pos),
+            _ => None,
+        })
+        .collect();
+    let d2_added_indices: Vec<usize> = d2_added.iter().map(|(i, _)| *i).collect();
+    let mid_len = d2_removed
+        .iter()
+        .copied()
+        .chain(d2_modified.iter().map(|(i, _)| *i))
+        .chain(alive_mid_positions.iter().copied())
+        .chain(d2_added_indices.iter().copied())
+        .max()
+        .map(|m| m + 1)
+        .unwrap_or(0);
+    let after_slots = simulate_slots(mid_len, &d2_removed, &d2_added_indices);
+    let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
+    for (pos, slot) in after_slots.iter().enumerate() {
+        if let Slot::Base(m) = slot {
+            mid_to_after.insert(*m, pos);
+        }
+    }
+
+    let mut final_added: Vec<(usize, T)> = Vec::new();
+    for (ai, alive) in added_alive.into_iter().enumerate() {
+        if let Some((_, val)) = alive {
+            let mid_pos = mid_slots
+                .iter()
+                .position(|s| matches!(s, Slot::Added(idx) if *idx == ai))
+                .expect("added_alive index always has a corresponding mid slot");
+            if let Some(after_pos) = mid_to_after.get(&mid_pos) {
+                final_added.push((*after_pos, val));
+            }
+        }
+    }
+    for (i, v) in d2_added {
+        final_added.push((i, v));
+    }
+    final_added.sort_by_key(|(i, _)| *i);
+
+    (final_removed, final_modified, final_added)
+}
+
+/// ➕️ Field-aware absorb for `text_chunks` (mirrors csv's `absorb_records` exactly, retargeted
+/// to `PngTextChunk`/`PngTextChunkDiff`).
+fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextChunksDiff {
+    let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
+    let removed_count = {
+        let mut r = d1.removed.clone();
+        r.sort_unstable();
+        r.dedup();
+        r.len()
+    };
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied())
+        .max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
+
+    let mut final_removed: Vec<usize> = d1.removed;
+    let mut modified_map: BTreeMap<usize, PngTextChunkDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut added_alive: Vec<Option<PngTextChunkAdded>> = d1.added.into_iter().map(Some).collect();
+
+    for mid_idx in &d2.removed {
+        match mid_slots.get(*mid_idx) {
+            Some(Slot::Base(b)) => {
+                final_removed.push(*b);
+                modified_map.remove(b);
+            }
+            Some(Slot::Added(ai)) => {
+                added_alive[*ai] = None;
+            }
+            None => {}
+        }
+    }
+    for m2 in &d2.modified {
+        match mid_slots.get(m2.index) {
+            Some(Slot::Base(b)) => {
+                modified_map.entry(*b).or_default().absorb(m2.diff.clone());
+            }
+            Some(Slot::Added(ai)) => {
+                if let Some(a) = added_alive[*ai].as_mut() {
+                    a.chunk = m2.diff.apply(&a.chunk);
+                }
+            }
+            None => {}
+        }
+    }
+
+    final_removed.sort_unstable();
+    final_removed.dedup();
+    for r in &final_removed {
+        modified_map.remove(r);
+    }
+    let mut final_modified: Vec<PngTextChunkModified> = modified_map
+        .into_iter()
+        .filter(|(_, d)| !d.is_empty())
+        .map(|(index, diff)| PngTextChunkModified { index, diff })
+        .collect();
+    final_modified.sort_by_key(|m| m.index);
+
+    let alive_mid_positions: Vec<usize> = mid_slots
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, slot)| match slot {
+            Slot::Added(ai) if added_alive[*ai].is_some() => Some(pos),
+            _ => None,
+        })
+        .collect();
+    let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
+    let mid_len = d2.removed
+        .iter()
+        .copied()
+        .chain(d2.modified.iter().map(|m| m.index))
+        .chain(alive_mid_positions.iter().copied())
+        .chain(d2_added_indices.iter().copied())
+        .max()
+        .map(|m| m + 1)
+        .unwrap_or(0);
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
+    let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
+    for (pos, slot) in after_slots.iter().enumerate() {
+        if let Slot::Base(m) = slot {
+            mid_to_after.insert(*m, pos);
+        }
+    }
+
+    let mut final_added: Vec<PngTextChunkAdded> = Vec::new();
+    for (ai, alive) in added_alive.into_iter().enumerate() {
+        if let Some(added) = alive {
+            let mid_pos = mid_slots
+                .iter()
+                .position(|s| matches!(s, Slot::Added(idx) if *idx == ai))
+                .expect("added_alive index always has a corresponding mid slot");
+            if let Some(after_pos) = mid_to_after.get(&mid_pos) {
+                final_added.push(PngTextChunkAdded { index: *after_pos, chunk: added.chunk });
+            }
+        }
+    }
+    for a2 in d2.added {
+        final_added.push(a2);
+    }
+    final_added.sort_by_key(|a| a.index);
+
+    PngTextChunksDiff { removed: final_removed, modified: final_modified, added: final_added }
+}
+//#endregion 🔖️IndexTransport
+
+//#region 🔖️CollectionApplyBetween
+fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec<PngRgb>> {
+    match d {
+        None => None,
+        Some(triple) => {
+            let mut entries = base.clone().unwrap_or_default();
+            let mut removed_desc = triple.removed.clone();
+            removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+            removed_desc.dedup();
+            for idx in removed_desc {
+                if idx < entries.len() {
+                    entries.remove(idx);
+                }
+            }
+            for m in &triple.modified {
+                if let Some(e) = entries.get_mut(m.index) {
+                    *e = m.rgb;
+                }
+            }
+            let mut adds = triple.added.clone();
+            adds.sort_by_key(|a| a.index);
+            for a in adds {
+                let at = a.index.min(entries.len());
+                entries.insert(at, a.rgb);
+            }
+            Some(entries)
+        }
+    }
+}
+
+fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
+    if a == b {
+        return None;
+    }
+    match b {
+        None => Some(None),
+        Some(bv) => {
+            let av = a.clone().unwrap_or_default();
+            let min = av.len().min(bv.len());
+            let mut modified = Vec::new();
+            for i in 0..min {
+                if av[i] != bv[i] {
+                    modified.push(PngPlteEntryModified { index: i, rgb: bv[i] });
+                }
+            }
+            let removed: Vec<usize> = (min..av.len()).collect();
+            let added: Vec<PngPlteEntryAdded> = (min..bv.len()).map(|i| PngPlteEntryAdded { index: i, rgb: bv[i] }).collect();
+            Some(Some(PngPlteDiff { removed, modified, added }))
+        }
+    }
+}
+
+fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngPlteDiff>>) {
+    let Some(other) = other else { return };
+    match other {
+        None => {
+            *base = Some(None);
+        }
+        Some(t2) => match base.take() {
+            None | Some(None) => {
+                *base = Some(Some(t2));
+            }
+            Some(Some(t1)) => {
+                let (removed, modified, added) = absorb_weak_index_triple(
+                    t1.removed,
+                    t1.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
+                    t1.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
+                    t2.removed,
+                    t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
+                    t2.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
+                );
+                *base = Some(Some(PngPlteDiff {
+                    removed,
+                    modified: modified.into_iter().map(|(index, rgb)| PngPlteEntryModified { index, rgb }).collect(),
+                    added: added.into_iter().map(|(index, rgb)| PngPlteEntryAdded { index, rgb }).collect(),
+                }));
+            }
+        },
+    }
+}
+
+fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTextChunk> {
+    let mut items = base.to_vec();
+    for m in &d.modified {
+        if let Some(it) = items.get_mut(m.index) {
+            *it = m.diff.apply(it);
+        }
+    }
+    let mut removed_desc = d.removed.clone();
+    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+    removed_desc.dedup();
+    for idx in removed_desc {
+        if idx < items.len() {
+            items.remove(idx);
+        }
+    }
+    let mut adds = d.added.clone();
+    adds.sort_by_key(|a| a.index);
+    for a in adds {
+        let at = a.index.min(items.len());
+        items.insert(at, a.chunk);
+    }
+    items
+}
+
+fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngTextChunksDiff> {
+    let min = a.len().min(b.len());
+    let mut modified = Vec::new();
+    for i in 0..min {
+        if a[i] != b[i] {
+            let d = PngTextChunkDiff::between(&a[i], &b[i]);
+            if !d.is_empty() {
+                modified.push(PngTextChunkModified { index: i, diff: d });
+            }
+        }
+    }
+    let removed: Vec<usize> = (min..a.len()).collect();
+    let added: Vec<PngTextChunkAdded> = (min..b.len()).map(|i| PngTextChunkAdded { index: i, chunk: b[i].clone() }).collect();
+    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(PngTextChunksDiff { removed, modified, added }) }
+}
+
+fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngChunk> {
+    let mut items = base.to_vec();
+    for m in &d.modified {
+        if let Some(it) = items.get_mut(m.index) {
+            *it = m.chunk.clone();
+        }
+    }
+    let mut removed_desc = d.removed.clone();
+    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+    removed_desc.dedup();
+    for idx in removed_desc {
+        if idx < items.len() {
+            items.remove(idx);
+        }
+    }
+    let mut adds = d.added.clone();
+    adds.sort_by_key(|a| a.index);
+    for a in adds {
+        let at = a.index.min(items.len());
+        items.insert(at, a.chunk);
+    }
+    items
+}
+
+fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownChunksDiff> {
+    let min = a.len().min(b.len());
+    let mut modified = Vec::new();
+    for i in 0..min {
+        if a[i] != b[i] {
+            modified.push(PngUnknownChunkModified { index: i, chunk: b[i].clone() });
+        }
+    }
+    let removed: Vec<usize> = (min..a.len()).collect();
+    let added: Vec<PngUnknownChunkAdded> = (min..b.len()).map(|i| PngUnknownChunkAdded { index: i, chunk: b[i].clone() }).collect();
+    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(PngUnknownChunksDiff { removed, modified, added }) }
+}
+
+fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngChunkMarker> {
+    let mut items = base.to_vec();
+    for m in &d.modified {
+        if let Some(it) = items.get_mut(m.index) {
+            *it = m.marker.clone();
+        }
+    }
+    let mut removed_desc = d.removed.clone();
+    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+    removed_desc.dedup();
+    for idx in removed_desc {
+        if idx < items.len() {
+            items.remove(idx);
+        }
+    }
+    let mut adds = d.added.clone();
+    adds.sort_by_key(|a| a.index);
+    for a in adds {
+        let at = a.index.min(items.len());
+        items.insert(at, a.marker);
+    }
+    items
+}
+
+fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<PngChunkOrderDiff> {
+    let min = a.len().min(b.len());
+    let mut modified = Vec::new();
+    for i in 0..min {
+        if a[i] != b[i] {
+            modified.push(PngChunkOrderModified { index: i, marker: b[i].clone() });
+        }
+    }
+    let removed: Vec<usize> = (min..a.len()).collect();
+    let added: Vec<PngChunkOrderAdded> = (min..b.len()).map(|i| PngChunkOrderAdded { index: i, marker: b[i].clone() }).collect();
+    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(PngChunkOrderDiff { removed, modified, added }) }
+}
+
+fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<PngTextChunksDiff>) {
+    match (base.take(), other) {
+        (None, o) => *base = o,
+        (Some(b), None) => *base = Some(b),
+        (Some(b), Some(o)) => *base = Some(absorb_text_chunks(b, o)),
+    }
+}
+
+fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Option<PngUnknownChunksDiff>) {
+    match (base.take(), other) {
+        (None, o) => *base = o,
+        (Some(b), None) => *base = Some(b),
+        (Some(b), Some(o)) => {
+            let (removed, modified, added) = absorb_weak_index_triple(
+                b.removed,
+                b.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
+                b.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
+                o.removed,
+                o.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
+                o.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
+            );
+            *base = Some(PngUnknownChunksDiff {
+                removed,
+                modified: modified.into_iter().map(|(index, chunk)| PngUnknownChunkModified { index, chunk }).collect(),
+                added: added.into_iter().map(|(index, chunk)| PngUnknownChunkAdded { index, chunk }).collect(),
+            });
+        }
+    }
+}
+
+fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<PngChunkOrderDiff>) {
+    match (base.take(), other) {
+        (None, o) => *base = o,
+        (Some(b), None) => *base = Some(b),
+        (Some(b), Some(o)) => {
+            let (removed, modified, added) = absorb_weak_index_triple(
+                b.removed,
+                b.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
+                b.added.into_iter().map(|a| (a.index, a.marker)).collect(),
+                o.removed,
+                o.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
+                o.added.into_iter().map(|a| (a.index, a.marker)).collect(),
+            );
+            *base = Some(PngChunkOrderDiff {
+                removed,
+                modified: modified.into_iter().map(|(index, marker)| PngChunkOrderModified { index, marker }).collect(),
+                added: added.into_iter().map(|(index, marker)| PngChunkOrderAdded { index, marker }).collect(),
+            });
+        }
+    }
+}
+//#endregion 🔖️CollectionApplyBetween
+
+//#region 🔖️ChunkOrderMutationHelpers
+// 🧩 Shared by `schema::mutations`' `diff()` builders — keeps every mutation that toggles an
+// ancillary field's presence, or inserts/removes a `text_chunks`/`unknown_chunks` entry, ALSO
+// producing the matching `chunk_order` delta (the recipe's "nothing real silently dropped"
+// rule extends to ORDER: a scalar going None→Some without a chunk_order entry would silently
+// desync the two).
+
+/// 📍 Where a freshly created marker lands — always just before `Iend` (or at the very end if
+/// there is none). Documented normalization: only a DECODED file's `chunk_order` carries the
+/// real original position; anything created via mutation gets this deterministic default.
+pub fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
+    order.iter().position(|m| matches!(m, PngChunkMarker::Iend)).unwrap_or(order.len())
+}
+
+/// 🔀 Diff for a scalar ancillary field's marker toggling presence (`None` if presence didn't
+/// change — e.g. a value-only change to an already-present field).
+pub fn chunk_order_presence_diff(
+    order: &[PngChunkMarker],
+    is_marker: fn(&PngChunkMarker) -> bool,
+    marker: PngChunkMarker,
+    was_present: bool,
+    want_present: bool,
+) -> Option<PngChunkOrderDiff> {
+    if was_present == want_present {
+        return None;
+    }
+    if want_present {
+        let pos = chunk_order_insert_pos(order);
+        Some(PngChunkOrderDiff { removed: vec![], modified: vec![], added: vec![PngChunkOrderAdded { index: pos, marker }] })
+    } else {
+        order.iter().position(|m| is_marker(m)).map(|idx| PngChunkOrderDiff { removed: vec![idx], modified: vec![], added: vec![] })
+    }
+}
+
+/// ➕️ Diff for inserting a new `Text{index: at}` marker: renumbers every existing `Text`
+/// marker whose embedded index is `>= at` (`modified`, same `chunk_order` position, bumped
+/// payload) and appends the new marker just before `Iend` (`added`).
+pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+    let modified = order
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, m)| match m {
+            PngChunkMarker::Text { index } if *index >= at => {
+                Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Text { index: index + 1 } })
+            }
+            _ => None,
+        })
+        .collect();
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Text { index: at } }];
+    PngChunkOrderDiff { removed: vec![], modified, added }
+}
+
+/// ➖️ Diff for removing the `Text{index: at}` marker: drops it (`removed`) and renumbers every
+/// `Text` marker with a HIGHER embedded index down by one (`modified`).
+pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+    let removed: Vec<usize> = order
+        .iter()
+        .position(|m| matches!(m, PngChunkMarker::Text { index } if *index == at))
+        .into_iter()
+        .collect();
+    let modified = order
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, m)| match m {
+            PngChunkMarker::Text { index } if *index > at => {
+                Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Text { index: index - 1 } })
+            }
+            _ => None,
+        })
+        .collect();
+    PngChunkOrderDiff { removed, modified, added: vec![] }
+}
+
+/// ➕️ `Unknown{index}` analogue of [`chunk_order_insert_text_diff`].
+pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+    let modified = order
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, m)| match m {
+            PngChunkMarker::Unknown { index } if *index >= at => {
+                Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Unknown { index: index + 1 } })
+            }
+            _ => None,
+        })
+        .collect();
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Unknown { index: at } }];
+    PngChunkOrderDiff { removed: vec![], modified, added }
+}
+
+/// ➖️ `Unknown{index}` analogue of [`chunk_order_remove_text_diff`].
+pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+    let removed: Vec<usize> = order
+        .iter()
+        .position(|m| matches!(m, PngChunkMarker::Unknown { index } if *index == at))
+        .into_iter()
+        .collect();
+    let modified = order
+        .iter()
+        .enumerate()
+        .filter_map(|(pos, m)| match m {
+            PngChunkMarker::Unknown { index } if *index > at => {
+                Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Unknown { index: index - 1 } })
+            }
+            _ => None,
+        })
+        .collect();
+    PngChunkOrderDiff { removed, modified, added: vec![] }
+}
+//#endregion 🔖️ChunkOrderMutationHelpers
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.png`.
+/// 🔺️ Diff for `stdio.png`. No `snapshot: Option<PngSnapshot>` full-replace slot — even
+/// `SetSnapshot`'s diff is `PngDiff::between(base, next)`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png.diff")]
 pub struct PngDiff {
     #[state(persistent)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub snapshot: Option<PngSnapshot>,
+    pub width: Option<u32>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<u32>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bit_depth: Option<u8>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color_type: Option<PngColorType>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interlace: Option<bool>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plte: Option<Option<PngPlteDiff>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trns: Option<Option<PngTransparency>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gama: Option<Option<u32>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chrm: Option<Option<PngChromaticities>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub srgb: Option<Option<PngSrgbIntent>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phys: Option<Option<PngPhysicalDims>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time: Option<Option<PngTimestamp>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bkgd: Option<Option<PngBackground>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text_chunks: Option<PngTextChunksDiff>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pixels: Option<Vec<u8>>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chunk_order: Option<PngChunkOrderDiff>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unknown_chunks: Option<PngUnknownChunksDiff>,
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
     fn apply(&self, base: &PngSnapshot) -> PngSnapshot {
-        self.snapshot.clone().unwrap_or_else(|| base.clone())
+        let mut next = base.clone();
+        if let Some(v) = self.width { next.width = v; }
+        if let Some(v) = self.height { next.height = v; }
+        if let Some(v) = self.bit_depth { next.bit_depth = v; }
+        if let Some(v) = self.color_type { next.color_type = v; }
+        if let Some(v) = self.interlace { next.interlace = v; }
+        if let Some(d) = &self.plte { next.plte = apply_plte(&next.plte, d); }
+        if let Some(v) = &self.trns { next.trns = v.clone(); }
+        if let Some(v) = self.gama { next.gama = v; }
+        if let Some(v) = self.chrm { next.chrm = v; }
+        if let Some(v) = self.srgb { next.srgb = v; }
+        if let Some(v) = self.phys { next.phys = v; }
+        if let Some(v) = self.time { next.time = v; }
+        if let Some(v) = &self.bkgd { next.bkgd = v.clone(); }
+        if let Some(td) = &self.text_chunks { next.text_chunks = apply_text_chunks(&next.text_chunks, td); }
+        if let Some(v) = &self.pixels { next.pixels = v.clone(); }
+        if let Some(od) = &self.chunk_order { next.chunk_order = apply_chunk_order(&next.chunk_order, od); }
+        if let Some(ud) = &self.unknown_chunks { next.unknown_chunks = apply_unknown_chunks(&next.unknown_chunks, ud); }
+        next
     }
+
+    /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars
+    /// (incl. every tri-state, `plte` excepted): LWW. Collections: index-transported merge —
+    /// `plte`/`unknown_chunks`/`chunk_order` via the shared weak-value transport,
+    /// `text_chunks` via its own field-aware variant.
     fn absorb(&mut self, other: Self) {
-        if other.snapshot.is_some() {
-            self.snapshot = other.snapshot;
-        }
+        if other.width.is_some() { self.width = other.width; }
+        if other.height.is_some() { self.height = other.height; }
+        if other.bit_depth.is_some() { self.bit_depth = other.bit_depth; }
+        if other.color_type.is_some() { self.color_type = other.color_type; }
+        if other.interlace.is_some() { self.interlace = other.interlace; }
+        absorb_plte(&mut self.plte, other.plte);
+        if other.trns.is_some() { self.trns = other.trns; }
+        if other.gama.is_some() { self.gama = other.gama; }
+        if other.chrm.is_some() { self.chrm = other.chrm; }
+        if other.srgb.is_some() { self.srgb = other.srgb; }
+        if other.phys.is_some() { self.phys = other.phys; }
+        if other.time.is_some() { self.time = other.time; }
+        if other.bkgd.is_some() { self.bkgd = other.bkgd; }
+        absorb_text_chunks_opt(&mut self.text_chunks, other.text_chunks);
+        if other.pixels.is_some() { self.pixels = other.pixels; }
+        absorb_chunk_order_opt(&mut self.chunk_order, other.chunk_order);
+        absorb_unknown_chunks_opt(&mut self.unknown_chunks, other.unknown_chunks);
     }
 }
 
-/// 🧩 Builds a set-snapshot diff.
-pub fn diff_set_snapshot(snapshot: &PngSnapshot) -> PngDiff {
-    PngDiff { snapshot: Some(snapshot.clone()) }
+impl DiffAlgebra<PngSnapshot> for PngDiff {
+    /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's:
+    /// the state delta from `self.apply(base)` back to `base`.
+    fn inverse(&self, base: &PngSnapshot) -> Self {
+        let mutated = self.apply(base);
+        Self::between(&mutated, base)
+    }
+
+    /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
+    /// every collection, tri-state comparison for every optional scalar/nested triple.
+    fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
+        Self {
+            width: (base.width != other.width).then_some(other.width),
+            height: (base.height != other.height).then_some(other.height),
+            bit_depth: (base.bit_depth != other.bit_depth).then_some(other.bit_depth),
+            color_type: (base.color_type != other.color_type).then_some(other.color_type),
+            interlace: (base.interlace != other.interlace).then_some(other.interlace),
+            plte: between_plte(&base.plte, &other.plte),
+            trns: (base.trns != other.trns).then(|| other.trns.clone()),
+            gama: (base.gama != other.gama).then_some(other.gama),
+            chrm: (base.chrm != other.chrm).then_some(other.chrm),
+            srgb: (base.srgb != other.srgb).then_some(other.srgb),
+            phys: (base.phys != other.phys).then_some(other.phys),
+            time: (base.time != other.time).then_some(other.time),
+            bkgd: (base.bkgd != other.bkgd).then(|| other.bkgd.clone()),
+            text_chunks: between_text_chunks(&base.text_chunks, &other.text_chunks),
+            pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()),
+            chunk_order: between_chunk_order(&base.chunk_order, &other.chunk_order),
+            unknown_chunks: between_unknown_chunks(&base.unknown_chunks, &other.unknown_chunks),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.width.is_none()
+            && self.height.is_none()
+            && self.bit_depth.is_none()
+            && self.color_type.is_none()
+            && self.interlace.is_none()
+            && self.plte.is_none()
+            && self.trns.is_none()
+            && self.gama.is_none()
+            && self.chrm.is_none()
+            && self.srgb.is_none()
+            && self.phys.is_none()
+            && self.time.is_none()
+            && self.bkgd.is_none()
+            && self.text_chunks.is_none()
+            && self.pixels.is_none()
+            && self.chunk_order.is_none()
+            && self.unknown_chunks.is_none()
+    }
+}
+
+/// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
+pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
+    PngDiff::between(base, next)
 }
 //#endregion 🔖️Diff
+
+//#region 🔖️MutationDiffBuilders
+// 🧩 One handcrafted builder per `schema::mutations::PngMutation` variant (excluding
+// `NoMutation`/`SetSnapshot`, covered above) — each constructs the sparse `PngDiff` directly,
+// including the matching `chunk_order` delta where the mutation changes chunk presence/order.
+
+pub fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
+    PngDiff {
+        width: (base.width != width).then_some(width),
+        height: (base.height != height).then_some(height),
+        bit_depth: (base.bit_depth != bit_depth).then_some(bit_depth),
+        color_type: (base.color_type != color_type).then_some(color_type),
+        interlace: (base.interlace != interlace).then_some(interlace),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
+    PngDiff {
+        plte: between_plte(&base.plte, plte),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Plte), PngChunkMarker::Plte, base.plte.is_some(), plte.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
+    PngDiff {
+        trns: (base.trns != *trns).then(|| trns.clone()),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Trns), PngChunkMarker::Trns, base.trns.is_some(), trns.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
+    PngDiff {
+        gama: (base.gama != gama).then_some(gama),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
+    PngDiff {
+        chrm: (base.chrm != chrm).then_some(chrm),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Chrm), PngChunkMarker::Chrm, base.chrm.is_some(), chrm.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
+    PngDiff {
+        srgb: (base.srgb != srgb).then_some(srgb),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Srgb), PngChunkMarker::Srgb, base.srgb.is_some(), srgb.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
+    PngDiff {
+        phys: (base.phys != phys).then_some(phys),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Phys), PngChunkMarker::Phys, base.phys.is_some(), phys.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
+    PngDiff {
+        time: (base.time != time).then_some(time),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Time), PngChunkMarker::Time, base.time.is_some(), time.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
+    PngDiff {
+        bkgd: (base.bkgd != *bkgd).then(|| bkgd.clone()),
+        chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Bkgd), PngChunkMarker::Bkgd, base.bkgd.is_some(), bkgd.is_some()),
+        ..Default::default()
+    }
+}
+
+pub fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+    let at = index.min(base.text_chunks.len());
+    PngDiff {
+        text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![], added: vec![PngTextChunkAdded { index: at, chunk }] }),
+        chunk_order: Some(chunk_order_insert_text_diff(&base.chunk_order, at)),
+        ..Default::default()
+    }
+}
+
+pub fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+    if index >= base.text_chunks.len() {
+        return PngDiff::default();
+    }
+    PngDiff {
+        text_chunks: Some(PngTextChunksDiff { removed: vec![index], modified: vec![], added: vec![] }),
+        chunk_order: Some(chunk_order_remove_text_diff(&base.chunk_order, index)),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+    let existing = match base.text_chunks.get(index) {
+        Some(c) => c,
+        None => return PngDiff::default(),
+    };
+    let d = PngTextChunkDiff::between(existing, &chunk);
+    if d.is_empty() {
+        return PngDiff::default();
+    }
+    PngDiff {
+        text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![PngTextChunkModified { index, diff: d }], added: vec![] }),
+        ..Default::default()
+    }
+}
+
+pub fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
+    PngDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
+}
+
+pub fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
+    let at = index.min(base.unknown_chunks.len());
+    PngDiff {
+        unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![], modified: vec![], added: vec![PngUnknownChunkAdded { index: at, chunk }] }),
+        chunk_order: Some(chunk_order_insert_unknown_diff(&base.chunk_order, at)),
+        ..Default::default()
+    }
+}
+
+pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+    if index >= base.unknown_chunks.len() {
+        return PngDiff::default();
+    }
+    PngDiff {
+        unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![index], modified: vec![], added: vec![] }),
+        chunk_order: Some(chunk_order_remove_unknown_diff(&base.chunk_order, index)),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️MutationDiffBuilders

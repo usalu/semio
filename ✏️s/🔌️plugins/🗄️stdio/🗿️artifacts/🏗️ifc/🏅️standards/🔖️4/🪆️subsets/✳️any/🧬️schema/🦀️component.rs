@@ -1,5 +1,9 @@
-//! 🧬️ IfcArtifact schema — full artifact state.
+//! 🧬️ IfcArtifact schema — full artifact state. Ticket
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: this used to duplicate
+//! `IfcSnapshot`'s prior worst-offender defect (`document: step::engine::part21::Part21Document`
+//! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
+use crate::artifacts::ifc::schema::snapshot::{IfcHeader, IfcEntity};
 use crate::artifacts::ifc::IfcSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -11,10 +15,13 @@ use serde::{Deserialize, Serialize};
 pub struct IfcArtifact {
     #[state(persistent)]
     pub schema: String,
-    /// 📦️ The full, lossless generic Part-21 graph — the actual persisted state.
+    /// 📦️ The full, lossless IFC4 graph in IFC's own typed model — the actual persisted state.
     #[state(persistent)]
     #[serde(default)]
-    pub document: crate::artifacts::step::engine::part21::Part21Document,
+    pub header: IfcHeader,
+    #[state(persistent)]
+    #[serde(default)]
+    pub entities: Vec<IfcEntity>,
 }
 //#endregion 🔖️Artifact
 
@@ -29,25 +36,31 @@ impl IfcArtifact {
     pub fn to_snapshot(&self) -> IfcSnapshot {
         IfcSnapshot {
             schema: self.schema.clone(),
-            document: self.document.clone(),
+            header: self.header.clone(),
+            entities: self.entities.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            document: snapshot.document,
+            header: snapshot.header,
+            entities: snapshot.entities,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
         self.schema = snapshot.schema;
-        self.document = snapshot.document;
+        self.header = snapshot.header;
+        self.entities = snapshot.entities;
     }
 
-    /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never stored.
+    /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never
+    /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
+    /// (the analyzer's own relationship-graph traversal still walks that generic shape).
     pub fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
-        crate::artifacts::ifc::engine::spatial::analyze_spatial(&self.document)
+        let document = crate::artifacts::ifc::schema::snapshot::to_part21_document(&self.to_snapshot());
+        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document)
     }
 }
 //#endregion 🔖️Conversions

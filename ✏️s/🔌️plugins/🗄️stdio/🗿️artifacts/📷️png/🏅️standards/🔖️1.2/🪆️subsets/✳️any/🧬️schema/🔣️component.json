@@ -2,25 +2,26 @@
   "$id": "https://semio.tech/schema/s.stdio.png/artifact.json",
   "title": "PngArtifact",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "width", "height", "bitDepth", "colorType", "interlace", "textChunks", "pixels", "chunkOrder", "unknownChunks"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
-    }
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "width": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "height": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 16, "x-semio-state": "persistent" },
+    "colorType": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngColorType", "x-semio-state": "persistent" },
+    "interlace": { "type": "boolean", "x-semio-state": "persistent" },
+    "plte": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngRgb" }, "x-semio-state": "persistent" },
+    "trns": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTransparency", "x-semio-state": "persistent" },
+    "gama": { "type": "integer", "x-semio-state": "persistent" },
+    "chrm": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChromaticities", "x-semio-state": "persistent" },
+    "srgb": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngSrgbIntent", "x-semio-state": "persistent" },
+    "phys": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims", "x-semio-state": "persistent" },
+    "time": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTimestamp", "x-semio-state": "persistent" },
+    "bkgd": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngBackground", "x-semio-state": "persistent" },
+    "textChunks": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextChunk" }, "x-semio-state": "persistent" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "persistent" },
+    "chunkOrder": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunkMarker" }, "x-semio-state": "persistent" },
+    "unknownChunks": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunk" }, "x-semio-state": "persistent" }
   }
 }

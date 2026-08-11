@@ -2,25 +2,9 @@
   "$id": "https://semio.tech/schema/s.stdio.pdf/artifact.json",
   "title": "PdfArtifact",
   "type": "object",
+  "required": ["schema", "page"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
-    }
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "page": { "type": "object", "x-semio-state": "persistent" }
   }
 }

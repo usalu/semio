@@ -1,15 +1,78 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.step/mutation.json",
+  "$id": "https://semio.tech/schema/s.stdio.step/mutations.json",
   "title": "StepMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "StepValue": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepValue" },
+    "StepEntity": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepEntity" },
+    "StepFileDescription": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepFileDescription" },
+    "StepFileName": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepFileName" },
+    "StepFileSchema": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepFileSchema" }
+  },
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "snapshot"],
+      "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" } }
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "required": ["mutation", "fileDescription"],
+      "properties": { "mutation": { "const": "setFileDescription" }, "fileDescription": { "$ref": "#/$defs/StepFileDescription" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "fileName"],
+      "properties": { "mutation": { "const": "setFileName" }, "fileName": { "$ref": "#/$defs/StepFileName" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "fileSchema"],
+      "properties": { "mutation": { "const": "setFileSchema" }, "fileSchema": { "$ref": "#/$defs/StepFileSchema" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "index", "entity"],
+      "properties": { "mutation": { "const": "insertEntity" }, "index": { "type": "integer", "minimum": 0 }, "entity": { "$ref": "#/$defs/StepEntity" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "id"],
+      "properties": { "mutation": { "const": "removeEntity" }, "id": { "type": "integer", "minimum": 0 } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "id", "name"],
+      "properties": { "mutation": { "const": "setEntityName" }, "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "id", "argIndex", "value"],
+      "properties": {
+        "mutation": { "const": "setEntityArg" },
+        "id": { "type": "integer", "minimum": 0 },
+        "argIndex": { "type": "integer", "minimum": 0 },
+        "value": { "$ref": "#/$defs/StepValue" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "id", "argIndex", "value"],
+      "properties": {
+        "mutation": { "const": "insertEntityArg" },
+        "id": { "type": "integer", "minimum": 0 },
+        "argIndex": { "type": "integer", "minimum": 0 },
+        "value": { "$ref": "#/$defs/StepValue" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "id", "argIndex"],
+      "properties": {
+        "mutation": { "const": "removeEntityArg" },
+        "id": { "type": "integer", "minimum": 0 },
+        "argIndex": { "type": "integer", "minimum": 0 }
+      }
     }
-  }
+  ]
 }

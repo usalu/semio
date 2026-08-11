@@ -1,0 +1,12 @@
+{
+  "artifact": "s.stdio.xml",
+  "standard": "1.0",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained xml 1.0"
+    },
+    "valid": {
+      "name": "XML 1.0 (Fifth Edition) §5.1 Validity -- scope-limited: doctype is retained as a raw unparsed String, so full DTD element/attribute-list content-model validation is out of scope; only doctype presence and declared-root-name/actual-root-name agreement are checked"
+    }
+  }
+}

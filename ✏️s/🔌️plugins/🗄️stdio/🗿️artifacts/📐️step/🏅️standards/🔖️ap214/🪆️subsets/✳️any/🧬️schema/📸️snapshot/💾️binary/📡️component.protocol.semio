@@ -1,3 +1,14 @@
 dialect protocol stdio.step.snapshot
-magic = %x00
-payload = *OCTET
+; `StepSnapshot::encode_pack_with` is: a `SemioEnvelope` header (`wrap_binary`, envelope id
+; `stdio.step`, component `Pack`, version 1) followed by the UTF-8 bytes of the SAME Part-21 text
+; the DSL facet emits (`write_part21(&self.to_part21_document())`) — no separate packed binary
+; layout exists at this facet; the pack form is envelope-framed text, documented here rather than
+; hidden behind a placeholder. See the sibling text grammar
+; (`../📝️text/📖️component.grammar.semio`) for `exchange-file`'s own definition.
+root = pack-payload
+pack-payload = semio-envelope exchange-file-bytes
+semio-envelope = envelope-id component-tag version-tag
+envelope-id = 'stdio.step'
+component-tag = 'pack'
+version-tag = '1'
+exchange-file-bytes = utf8-bytes-of(exchange-file) ; `exchange-file` per the sibling text grammar

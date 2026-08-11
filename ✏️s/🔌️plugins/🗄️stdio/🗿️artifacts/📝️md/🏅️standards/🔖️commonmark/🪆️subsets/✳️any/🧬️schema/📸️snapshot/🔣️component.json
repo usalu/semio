@@ -1,15 +1,46 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.md/snapshot.md",
+  "$id": "https://semio.tech/schema/s.stdio.md/snapshot.json",
   "title": "MdSnapshot",
   "type": "object",
+  "required": ["schema", "blocks"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string" },
+    "blocks": { "type": "array", "items": { "$ref": "#/$defs/MdBlock" } }
+  },
+  "$defs": {
+    "MdInline": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "inlines"], "properties": { "kind": { "const": "emphasis" }, "inlines": { "type": "array", "items": { "$ref": "#/$defs/MdInline" } } } },
+        { "type": "object", "required": ["kind", "inlines"], "properties": { "kind": { "const": "strong" }, "inlines": { "type": "array", "items": { "$ref": "#/$defs/MdInline" } } } },
+        { "type": "object", "required": ["kind", "literal"], "properties": { "kind": { "const": "code" }, "literal": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "text", "url"], "properties": { "kind": { "const": "link" }, "text": { "type": "array", "items": { "$ref": "#/$defs/MdInline" } }, "url": { "type": "string" }, "title": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "alt", "url"], "properties": { "kind": { "const": "image" }, "alt": { "type": "string" }, "url": { "type": "string" }, "title": { "type": "string" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "softBreak" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "hardBreak" } } },
+        { "type": "object", "required": ["kind", "raw"], "properties": { "kind": { "const": "htmlInline" }, "raw": { "type": "string" } } }
+      ]
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "MdBlock": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "level", "inlines"], "properties": { "kind": { "const": "heading" }, "level": { "type": "integer", "minimum": 1, "maximum": 6 }, "inlines": { "type": "array", "items": { "$ref": "#/$defs/MdInline" } } } },
+        { "type": "object", "required": ["kind", "inlines"], "properties": { "kind": { "const": "paragraph" }, "inlines": { "type": "array", "items": { "$ref": "#/$defs/MdInline" } } } },
+        {
+          "type": "object",
+          "required": ["kind", "ordered", "tight", "items"],
+          "properties": {
+            "kind": { "const": "list" },
+            "ordered": { "type": "boolean" },
+            "start": { "type": "integer", "minimum": 0 },
+            "tight": { "type": "boolean" },
+            "items": { "type": "array", "items": { "type": "array", "items": { "$ref": "#/$defs/MdBlock" } } }
+          }
+        },
+        { "type": "object", "required": ["kind", "literal"], "properties": { "kind": { "const": "codeBlock" }, "info": { "type": "string" }, "literal": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "blocks"], "properties": { "kind": { "const": "blockQuote" }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/MdBlock" } } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "thematicBreak" } } },
+        { "type": "object", "required": ["kind", "raw"], "properties": { "kind": { "const": "htmlBlock" }, "raw": { "type": "string" } } }
+      ]
     }
   }
 }

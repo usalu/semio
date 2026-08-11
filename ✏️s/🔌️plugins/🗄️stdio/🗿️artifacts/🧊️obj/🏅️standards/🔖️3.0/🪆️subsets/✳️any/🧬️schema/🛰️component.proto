@@ -1,6 +1,27 @@
 syntax = "proto3";
 package semio.s_stdio_obj.artifact;
+
+message ObjVertex { double x = 1; double y = 2; double z = 3; optional double w = 4; }
+message ObjTexCoord { double u = 1; double v = 2; optional double w = 3; }
+message ObjNormal { double x = 1; double y = 2; double z = 3; }
+message ObjFaceVertex { uint32 vertex = 1; optional uint32 texcoord = 2; optional uint32 normal = 3; }
+message ObjFace { repeated ObjFaceVertex vertices = 1; }
+message ObjGroup { string name = 1; repeated uint64 faces = 2; }
+message ObjObject { string name = 1; repeated uint64 faces = 2; }
+message ObjUsemtlRange { uint64 face_index_from = 1; string material = 2; }
+message ObjSmoothingRange { uint64 face_index_from = 1; optional uint32 group = 2; }
+message ObjUnknownStatement { uint64 line_index = 1; string raw = 2; }
+
 message ObjArtifact {
   string schema = 1;
-  string text_wire = 2;
+  repeated ObjVertex vertices = 2;
+  repeated ObjTexCoord texcoords = 3;
+  repeated ObjNormal normals = 4;
+  repeated ObjFace faces = 5;
+  repeated ObjGroup groups = 6;
+  repeated ObjObject objects = 7;
+  optional string mtllib = 8;
+  repeated ObjUsemtlRange usemtl = 9;
+  repeated ObjSmoothingRange smoothing_groups = 10;
+  repeated ObjUnknownStatement unknown_statements = 11;
 }

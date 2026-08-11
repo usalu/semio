@@ -1,11 +1,16 @@
 //! ⚙️ BmpEngine — real bmp codec (BITMAPFILEHEADER + BITMAPINFOHEADER).
 //!
-//! Decode supports 1/4/8-bit indexed (BGR[A] palette), 16/32-bit `BI_BITFIELDS`, 24-bit
-//! `BI_RGB`, and 32-bit `BI_RGB` (default full-byte channel masks) — always canonicalized into
-//! an 8-bit RGBA `pixels` buffer (`width * height * 4` bytes, row 0 = image top). Encode always
-//! emits 24-bit `BI_RGB`, bottom-up, uncompressed — see 🚫️EncodeScopeNote below.
+//! Decode reads the FULL BITMAPINFOHEADER (11 real fields, honestly typed on `BmpSnapshot`,
+//! see `schema::snapshot`) and supports 1/4/8-bit indexed (BGR[A] palette), 16/32-bit
+//! `BI_BITFIELDS`, 24-bit `BI_RGB`, and 32-bit `BI_RGB` (default full-byte channel masks) —
+//! pixel data is always canonicalized into an 8-bit RGBA `pixels` buffer (`width * height * 4`
+//! bytes, row 0 = image top, regardless of the file's on-disk row order). Encode always emits a
+//! 24-bit `BI_RGB`, 40-byte-header, uncompressed bitmap (row order honors `row_order`; all other
+//! metadata fields — resolution, colors used/important, image size — round-trip from the
+//! snapshot) — see 🚫️EncodeScopeNote below.
 
-use crate::artifacts::bmp::{BmpArtifact, BmpDiff, BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
+use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+use crate::artifacts::bmp::{BmpArtifact, BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
 
 //#region ByteIo
 const BMP_MAGIC: [u8; 2] = *b"BM";
@@ -74,16 +79,44 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
         return Err("bmp: bad signature".into());
     }
     let data_offset = read_u32(bytes, 10)? as usize;
-    let header_size = read_u32(bytes, 14)? as usize;
-    if header_size < 40 {
+    let header_size = read_u32(bytes, 14)?;
+    if (header_size as usize) < 40 {
         return Err(format!("bmp: unsupported info header size {header_size}"));
     }
     let width_i = read_i32(bytes, 18)?;
     let height_i = read_i32(bytes, 22)?;
+    // 🧾 The rest of BITMAPINFOHEADER's 11 real fields — read honestly regardless of which
+    // branch (empty-sentinel vs. real image) follows, per the recipe's "codec fills what it
+    // decodes" rule.
+    let planes = read_u16(bytes, 26)?;
+    let bpp = read_u16(bytes, 28)?;
+    let compression = read_u32(bytes, 30)?;
+    let image_size = read_u32(bytes, 34)?;
+    let x_pixels_per_meter = read_i32(bytes, 38)?;
+    let y_pixels_per_meter = read_i32(bytes, 42)?;
+    let colors_used_field = read_u32(bytes, 46)?;
+    let colors_important = read_u32(bytes, 50)?;
+
     if width_i == 0 && height_i == 0 {
         // 🌱 The zero-dimension "empty document" case round-tripped by encode_bmp — no pixel
-        // data to read, nothing else to validate.
-        return Ok(BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), width: 0, height: 0, pixels: Vec::new() });
+        // data or palette to read, but the header fields themselves are still real bytes.
+        return Ok(BmpSnapshot {
+            schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+            header_size,
+            width: 0,
+            height: 0,
+            row_order: BmpRowOrder::BottomUp,
+            planes,
+            bits_per_pixel: bpp,
+            compression,
+            image_size,
+            x_pixels_per_meter,
+            y_pixels_per_meter,
+            colors_used: colors_used_field,
+            colors_important,
+            palette: Vec::new(),
+            pixels: Vec::new(),
+        });
     }
     if width_i <= 0 {
         return Err("bmp: non-positive width".into());
@@ -93,16 +126,14 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     }
     let width = width_i as u32;
     let top_down = height_i < 0;
+    let row_order = if top_down { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp };
     let height = height_i.unsigned_abs();
-    let bpp = read_u16(bytes, 28)?;
-    let compression = read_u32(bytes, 30)?;
-    let colors_used_field = read_u32(bytes, 46)?;
 
     if compression != 0 && compression != 3 {
         return Err(format!("bmp: unsupported compression {compression} (only BI_RGB/BI_BITFIELDS are implemented)"));
     }
 
-    let mut cursor = 14 + header_size;
+    let mut cursor = 14 + header_size as usize;
     let mut masks = [0u32; 4]; // r, g, b, a
     if compression == 3 {
         if bpp != 16 && bpp != 32 {
@@ -143,13 +174,13 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     } else {
         0
     };
-    let mut palette: Vec<[u8; 4]> = Vec::with_capacity(palette_count);
+    let mut palette: Vec<BmpPaletteEntry> = Vec::with_capacity(palette_count);
     for i in 0..palette_count {
         let o = cursor + i * 4;
         if o + 4 > bytes.len() || o + 4 > data_offset {
             return Err("bmp: palette truncated".into());
         }
-        palette.push([bytes[o], bytes[o + 1], bytes[o + 2], bytes[o + 3]]);
+        palette.push(BmpPaletteEntry { b: bytes[o], g: bytes[o + 1], r: bytes[o + 2], reserved: bytes[o + 3] });
     }
 
     let rb = row_bytes(width, bpp);
@@ -165,11 +196,11 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
             1 | 4 | 8 => {
                 for x in 0..width as usize {
                     let idx = unpack_index(row, x, bpp);
-                    let entry = palette.get(idx).ok_or_else(|| format!("bmp: palette index {idx} out of range"))?;
+                    let pentry = palette.get(idx).ok_or_else(|| format!("bmp: palette index {idx} out of range"))?;
                     let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = entry[2];
-                    pixels[o + 1] = entry[1];
-                    pixels[o + 2] = entry[0];
+                    pixels[o] = pentry.r;
+                    pixels[o + 1] = pentry.g;
+                    pixels[o + 2] = pentry.b;
                     pixels[o + 3] = 255;
                 }
             }
@@ -208,14 +239,37 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
             _ => return Err(format!("bmp: unsupported bit depth {bpp}")),
         }
     }
-    Ok(BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), width, height, pixels })
+    Ok(BmpSnapshot {
+        schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+        header_size,
+        width,
+        height,
+        row_order,
+        planes,
+        bits_per_pixel: bpp,
+        compression,
+        image_size,
+        x_pixels_per_meter,
+        y_pixels_per_meter,
+        colors_used: colors_used_field,
+        colors_important,
+        palette,
+        pixels,
+    })
 }
 
-/// 🚫 EncodeScopeNote: always emits 24-bit `BI_RGB`, uncompressed, bottom-up row order.
-/// `pixels` is treated as canonical 8-bit RGBA; encode drops the alpha channel (`BI_RGB` has
-/// none) — only decode supports the wider palette/bitfields input diversity documented above.
-/// A real implementation could reasonably restrict *encode* to 24/32-bit only while *decode*
-/// covers every depth, which is exactly the scope cut made here.
+/// 🚫 EncodeScopeNote: always emits 24-bit `BI_RGB`, a standard 40-byte BITMAPINFOHEADER,
+/// uncompressed (`header_size`/`planes`/`bits_per_pixel`/`compression` are therefore FIXED on
+/// output, not read from the snapshot — decode supports the wider palette/bitfields/extended-
+/// header input diversity documented above, encode does not attempt to reproduce it). `row_order`
+/// IS honored (drives the sign of the on-disk `height` field and the row-write direction); the
+/// remaining metadata fields (`x_pixels_per_meter`, `y_pixels_per_meter`, `colors_used`,
+/// `colors_important`) round-trip verbatim from the snapshot. `pixels` is treated as canonical
+/// 8-bit RGBA (row 0 = image top); encode drops the alpha channel (`BI_RGB` has none) and does
+/// not emit a palette section (24-bit has none, even if `snap.palette` is non-empty — that
+/// metadata simply doesn't apply to this encode target). A real implementation could reasonably
+/// restrict *encode* to 24/32-bit only while *decode* covers every depth, which is exactly the
+/// scope cut made here.
 pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);
     let expected = w as usize * h as usize * 4;
@@ -233,14 +287,24 @@ pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     out.extend_from_slice(&54u32.to_le_bytes());
     out.extend_from_slice(&40u32.to_le_bytes());
     out.extend_from_slice(&(w as i32).to_le_bytes());
-    out.extend_from_slice(&(h as i32).to_le_bytes()); // positive height => bottom-up
+    let height_field: i32 = match snap.row_order {
+        BmpRowOrder::BottomUp => h as i32,
+        BmpRowOrder::TopDown => -(h as i32),
+    };
+    out.extend_from_slice(&height_field.to_le_bytes());
     out.extend_from_slice(&1u16.to_le_bytes());
     out.extend_from_slice(&24u16.to_le_bytes());
     out.extend_from_slice(&0u32.to_le_bytes()); // BI_RGB
     out.extend_from_slice(&(pixel_bytes as u32).to_le_bytes());
-    out.extend_from_slice(&[0u8; 16]); // resolution x2, colorsUsed, colorsImportant
+    out.extend_from_slice(&snap.x_pixels_per_meter.to_le_bytes());
+    out.extend_from_slice(&snap.y_pixels_per_meter.to_le_bytes());
+    out.extend_from_slice(&snap.colors_used.to_le_bytes());
+    out.extend_from_slice(&snap.colors_important.to_le_bytes());
     for file_row in 0..h as usize {
-        let src_y = h as usize - 1 - file_row;
+        let src_y = match snap.row_order {
+            BmpRowOrder::BottomUp => h as usize - 1 - file_row,
+            BmpRowOrder::TopDown => file_row,
+        };
         let mut row_buf = vec![0u8; rb];
         for x in 0..w as usize {
             let i = (src_y * w as usize + x) * 4;
@@ -361,7 +425,7 @@ mod tests {
     fn gradient_checkerboard_24bit_round_trip() {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
-        let snap = BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: pixels.clone() };
+        let snap = BmpSnapshot { width: w, height: h, pixels: pixels.clone(), ..BmpSnapshot::default() };
         let encoded = encode_bmp(&snap).expect("encode");
         // sanity: row padded to 4-byte boundary (6*3=18 raw -> 20 padded)
         assert_eq!(row_bytes(w, 24), 20);
@@ -525,5 +589,54 @@ mod tests {
         let err = decode_bmp(b"not a bmp at all").unwrap_err();
         assert!(err.contains("signature"));
     }
+
+    //#region 🔖️CodecRetentionLaw
+    /// 🔬 `codec_retention_law`: decode(encode(snap)) is byte-preserving for every field encode
+    /// actually controls — `row_order` (both directions), metadata (`x/y_pixels_per_meter`,
+    /// `colors_used`, `colors_important`, `image_size`), and pixels — while the DOCUMENTED
+    /// EncodeScopeNote normalization (`header_size`→40, `planes`→1, `bits_per_pixel`→24,
+    /// `compression`→0) is asserted explicitly rather than silently ignored.
+    #[test]
+    fn codec_retention_law() {
+        let (w, h) = (6u32, 4u32);
+        let pixels = gradient_checkerboard_rgba(w, h);
+
+        let bottom_up = BmpSnapshot {
+            width: w,
+            height: h,
+            row_order: BmpRowOrder::BottomUp,
+            x_pixels_per_meter: 2835,
+            y_pixels_per_meter: 2835,
+            colors_used: 0,
+            colors_important: 0,
+            pixels: pixels.clone(),
+            ..BmpSnapshot::default()
+        };
+        let encoded = encode_bmp(&bottom_up).expect("encode bottom-up");
+        let decoded = decode_bmp(&encoded).expect("decode bottom-up");
+        assert_eq!(decoded.width, bottom_up.width);
+        assert_eq!(decoded.height, bottom_up.height);
+        assert_eq!(decoded.row_order, BmpRowOrder::BottomUp);
+        assert_eq!(decoded.x_pixels_per_meter, bottom_up.x_pixels_per_meter);
+        assert_eq!(decoded.y_pixels_per_meter, bottom_up.y_pixels_per_meter);
+        assert_eq!(decoded.colors_used, bottom_up.colors_used);
+        assert_eq!(decoded.colors_important, bottom_up.colors_important);
+        assert_eq!(decoded.image_size, row_bytes(w, 24) as u32 * h);
+        assert_eq!(decoded.pixels, pixels, "decoded pixels must exactly match the original");
+        assert_eq!(decoded.header_size, 40, "documented normalization: encode always emits a 40-byte header");
+        assert_eq!(decoded.planes, 1, "documented normalization: encode always emits planes=1");
+        assert_eq!(decoded.bits_per_pixel, 24, "documented normalization: encode always emits 24bpp");
+        assert_eq!(decoded.compression, 0, "documented normalization: encode always emits BI_RGB");
+
+        // 🔁 Same fixture, top-down: proves `row_order` drives BOTH the sign of the on-disk
+        // `height` field AND the physical row-write direction, not just the enum's own equality.
+        let top_down = BmpSnapshot { row_order: BmpRowOrder::TopDown, ..bottom_up.clone() };
+        let encoded_td = encode_bmp(&top_down).expect("encode top-down");
+        assert_ne!(encoded_td, encoded, "top-down encode must differ from bottom-up (row order + height sign)");
+        let decoded_td = decode_bmp(&encoded_td).expect("decode top-down");
+        assert_eq!(decoded_td.row_order, BmpRowOrder::TopDown);
+        assert_eq!(decoded_td.pixels, pixels, "canonical pixels (row 0 = top) must match regardless of row_order");
+    }
+    //#endregion 🔖️CodecRetentionLaw
 }
 //#endregion 🧪️Tests

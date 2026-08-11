@@ -1,6 +1,44 @@
 dialect grammar stdio.ply.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.ply' NL
-body = payload NL?
-payload = *OCTET
+; A `PlyDiff` op-text line is the exact `serde_json::to_string` of the Rust struct — a single-
+; line JSON object, camelCase keys, absent (unchanged) fields omitted, never emitted as `null`.
+root = diff-line
+diff-line = diff-object NL?
+diff-object = '{' [ format-member ',' ] [ comments-member ',' ] [ elements-member ] '}'
+format-member = '"format"' ':' format-literal
+format-literal = '"ascii"' / '"binaryLittleEndian"' / '"binaryBigEndian"'
+comments-member = '"comments"' ':' '[' *( json-string ',' ) ']'
+elements-member = '"elements"' ':' elements-object
+elements-object = '{' [ removed-member ',' ] [ modified-member ',' ] [ added-member ] '}'
+removed-member = '"removed"' ':' '[' *( json-string ',' ) ']'
+modified-member = '"modified"' ':' '[' *( modified-entry ',' ) ']'
+modified-entry = '{' '"name"' ':' json-string ',' '"diff"' ':' element-diff-object '}'
+added-member = '"added"' ':' '[' *( added-entry ',' ) ']'
+added-entry = '{' '"index"' ':' json-number ',' '"element"' ':' element-object '}'
+; `properties` is a weak value-list (whole-vec replace); `rows` is a nested index-keyed triple —
+; SAME removed/modified/added shape as `elements`, one level deeper, over row indices.
+element-diff-object = '{' [ properties-member ',' ] [ rows-member ] '}'
+properties-member = '"properties"' ':' property-array
+rows-member = '"rows"' ':' rows-object
+rows-object = '{' [ rows-removed ',' ] [ rows-modified ',' ] [ rows-added ] '}'
+rows-removed = '"removed"' ':' '[' *( json-number ',' ) ']'
+rows-modified = '"modified"' ':' '[' *( row-modified-entry ',' ) ']'
+row-modified-entry = '{' '"index"' ':' json-number ',' '"diff"' ':' row-diff-object '}'
+rows-added = '"added"' ':' '[' *( row-added-entry ',' ) ']'
+row-added-entry = '{' '"index"' ':' json-number ',' '"row"' ':' row-object '}'
+; A row's own patch is sparse and keyed by PROPERTY NAME (stable per-element schema).
+row-diff-object = '{' [ '"fields"' ':' '[' *( field-change-object ',' ) ']' ] '}'
+field-change-object = '{' '"name"' ':' json-string ',' '"value"' ':' ply-value-object '}'
+; Full snapshot/element/row/value shapes — see the sibling
+; `📸️snapshot/📝️text/📖️component.grammar.semio` for the complete `PlySnapshot` field set this
+; artifact models (`element-object`/`row-object`/`ply-value-object`/`property-array` reuse it).
+element-object = '{' '"name"' ':' json-string ',' '"count"' ':' json-number ',' '"properties"' ':' property-array ',' '"rows"' ':' '[' *( row-object ',' ) ']' '}'
+row-object = '{' '"values"' ':' '[' *( ply-value-object ',' ) ']' '}'
+property-array = '[' *( property-object ',' ) ']'
+property-object = scalar-property-object / list-property-object
+scalar-property-object = '{' '"form"' ':' '"scalar"' ',' '"name"' ':' json-string ',' '"kind"' ':' scalar-kind-literal '}'
+list-property-object = '{' '"form"' ':' '"list"' ',' '"name"' ':' json-string ',' '"countKind"' ':' scalar-kind-literal ',' '"valueKind"' ':' scalar-kind-literal '}'
+scalar-kind-literal = '"char"' / '"uChar"' / '"short"' / '"uShort"' / '"int"' / '"uInt"' / '"float"' / '"double"'
+ply-value-object = '{' '"kind"' ':' scalar-kind-literal-or-list ',' '"value"' ':' ( json-number / '[' *( ply-value-object ',' ) ']' ) '}'
+scalar-kind-literal-or-list = scalar-kind-literal / '"list"'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = ["-"] 1*DIGIT

@@ -1,15 +1,56 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.obj/mutation.json",
   "title": "ObjMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+  "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"],
+      "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "vertex"],
+      "properties": { "mutation": { "const": "insertVertex" }, "index": { "type": "integer", "minimum": 0 }, "vertex": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjVertex" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeVertex" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "vertex"],
+      "properties": { "mutation": { "const": "setVertex" }, "index": { "type": "integer", "minimum": 0 }, "vertex": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjVertex" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "texcoord"],
+      "properties": { "mutation": { "const": "insertTexCoord" }, "index": { "type": "integer", "minimum": 0 }, "texcoord": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjTexCoord" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeTexCoord" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "texcoord"],
+      "properties": { "mutation": { "const": "setTexCoord" }, "index": { "type": "integer", "minimum": 0 }, "texcoord": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjTexCoord" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "normal"],
+      "properties": { "mutation": { "const": "insertNormal" }, "index": { "type": "integer", "minimum": 0 }, "normal": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjNormal" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeNormal" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "normal"],
+      "properties": { "mutation": { "const": "setNormal" }, "index": { "type": "integer", "minimum": 0 }, "normal": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjNormal" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "face"],
+      "properties": { "mutation": { "const": "insertFace" }, "index": { "type": "integer", "minimum": 0 }, "face": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjFace" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeFace" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "face"],
+      "properties": { "mutation": { "const": "setFace" }, "index": { "type": "integer", "minimum": 0 }, "face": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjFace" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "name", "faces"],
+      "properties": { "mutation": { "const": "setGroup" }, "name": { "type": "string" }, "faces": { "type": "array", "items": { "type": "integer" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "name"],
+      "properties": { "mutation": { "const": "removeGroup" }, "name": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "name", "faces"],
+      "properties": { "mutation": { "const": "setObject" }, "name": { "type": "string" }, "faces": { "type": "array", "items": { "type": "integer" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "name"],
+      "properties": { "mutation": { "const": "removeObject" }, "name": { "type": "string" } } },
+
+    { "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setMtllib" }, "mtllib": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "usemtl"],
+      "properties": { "mutation": { "const": "setUsemtl" }, "usemtl": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjUsemtlRange" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "smoothingGroups"],
+      "properties": { "mutation": { "const": "setSmoothingGroups" }, "smoothingGroups": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjSmoothingRange" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "unknownStatements"],
+      "properties": { "mutation": { "const": "setUnknownStatements" }, "unknownStatements": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json#/$defs/ObjUnknownStatement" } } } }
+  ]
 }

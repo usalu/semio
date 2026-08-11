@@ -1,6 +1,24 @@
 dialect grammar stdio.png.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.png' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of PngDiff (serde camelCase, sparse fields); this
+; names the real top-level fields rather than restating RFC 8259's own JSON grammar
+diff = "{" (member ("," member)*)? "}"
+member = '"width"' ":" INT
+       / '"height"' ":" INT
+       / '"bitDepth"' ":" INT
+       / '"colorType"' ":" STRING
+       / '"interlace"' ":" BOOL
+       / '"plte"' ":" ("null" / triple)
+       / '"trns"' ":" ("null" / json_value)
+       / '"gama"' ":" ("null" / INT)
+       / '"chrm"' ":" ("null" / json_value)
+       / '"srgb"' ":" ("null" / STRING)
+       / '"phys"' ":" ("null" / json_value)
+       / '"time"' ":" ("null" / json_value)
+       / '"bkgd"' ":" ("null" / json_value)
+       / '"textChunks"' ":" triple
+       / '"pixels"' ":" "[" INT* "]"
+       / '"chunkOrder"' ":" triple
+       / '"unknownChunks"' ":" triple
+triple = "{" ('"removed"' ":" "[" INT* "]" ("," '"modified"' ":" "[" json_value* "]")? ("," '"added"' ":" "[" json_value* "]")?)? "}"
+BOOL = "true" / "false"

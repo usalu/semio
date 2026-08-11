@@ -1,7 +1,7 @@
 //! 🏗️ DocxBuilder — local ArtifactBuilder until SDK Wave 3.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun};
+use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable};
 use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
 
 //#region 🔖️Builder
@@ -51,7 +51,7 @@ impl ArtifactBuilder for DocxBuilder {
 impl DocxBuilder {
     /// ➕️ Appends a paragraph.
     pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
-        self.snapshot.document.paragraphs.push(paragraph);
+        self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
         self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
         self
     }
@@ -61,9 +61,27 @@ impl DocxBuilder {
         self.add_paragraph(DocxParagraph::text(text.into()))
     }
 
-    /// ➕️ Appends a paragraph made of the given runs (basic bold/italic formatting).
+    /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
     pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
-        self.add_paragraph(DocxParagraph { runs })
+        self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
+    }
+
+    /// ➕️ Appends a table.
+    pub fn add_table(mut self, table: DocxTable) -> Self {
+        self.snapshot.document.body.push(DocxBlock::Table(table));
+        self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
+        self
+    }
+
+    /// ➕️ Appends (or replaces, by `id`) a named style.
+    pub fn add_style(mut self, style: DocxStyle) -> Self {
+        if let Some(existing) = self.snapshot.document.styles.iter_mut().find(|s| s.id == style.id) {
+            *existing = style;
+        } else {
+            self.snapshot.document.styles.push(style);
+        }
+        self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
+        self
     }
 }
 //#endregion 🔖️TypedConstructors

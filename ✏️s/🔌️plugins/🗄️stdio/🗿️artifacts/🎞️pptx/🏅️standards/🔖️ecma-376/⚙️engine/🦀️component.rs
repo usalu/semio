@@ -1,11 +1,18 @@
-//! ⚙️ PresentationML (pptx) engine — real OPC container + slide-list/text model. Zip/OPC/XML
+//! ⚙️ PresentationML (pptx) engine — real OPC container + slide-list/shape-tree model. Zip/OPC/XML
 //! byte-level work is never reimplemented here: it is reused from the shared
 //! `crate::artifacts::zip::opc` layer. `ppt/slideMasters`/`ppt/slideLayouts`/`ppt/theme` are
 //! unmodeled boilerplate every real reader still needs to open the package validly: they are
 //! synthesized once (fixed minimal-but-schema-shaped constants) when building a package from
 //! scratch, and left verbatim (untouched) whenever they already exist in a decoded package.
+//!
+//! `p:spTree`'s DIRECT children (`p:sp`/`p:pic`/anything else) become one `PptxShape` each --
+//! per this ticket's W0 finding, the shape tree used to be flattened away entirely (every
+//! `p:txBody`'s paragraphs concatenated, shape boundaries discarded). Shapes nested inside a
+//! `p:grpSp` group, `p:graphicFrame` (charts/tables/SmartArt), `p:cxnSp` connectors, and anything
+//! unrecognized fall back to `PptxShape::Other{xml}` -- the exact serialized child node, verbatim
+//! -- so nothing real on disk is silently dropped.
 
-use crate::artifacts::pptx::{schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxSlide}, PptxArtifact, PptxDiff, PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use crate::artifacts::pptx::{schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform}, PptxArtifact, PptxDiff, PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{self, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 
@@ -61,12 +68,53 @@ const REL_TYPE_SLIDE_LAYOUT: &str = "http://schemas.openxmlformats.org/officeDoc
 const REL_TYPE_SLIDE_MASTER: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster";
 const REL_TYPE_THEME: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
 
+/// 🏅️ ISO/IEC 29500-1:2016 Strict's officeDocument relationship type -- Strict packages carry
+/// this instead of `REL_TYPE_OFFICE_DOCUMENT` (see `🪆️subsets/🔣️component.json`'s "strictRelBase"
+/// citation, ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES). `regenerate_presentation_parts`
+/// never writes this -- this engine's own writer only ever emits Transitional -- but `decode_pptx`
+/// and `sniff_pptx_bytes` must still recognize a genuine Strict-relationship-typed input package,
+/// or the `✳️strict` subset's analyzer could never see real Strict bytes at all.
+const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument";
+
+/// 🧭️ Resolves the package root's officeDocument relationship regardless of whether it was
+/// authored under the Transitional or the Strict relationship-type namespace -- see
+/// `REL_TYPE_OFFICE_DOCUMENT_STRICT`.
+pub fn resolve_office_document_relationship(opc: &OpcPackage) -> Option<String> {
+    opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+}
+
 fn attr(name: &str, value: &str) -> XmlAttr {
     XmlAttr { name: name.into(), value: value.into() }
 }
 
 fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
+}
+
+fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
+    children.iter().find(|c| matches!(c, XmlNode::Element { name: n, .. } if n == name))
+}
+
+fn element_children(node: &XmlNode) -> &[XmlNode] {
+    match node {
+        XmlNode::Element { children, .. } => children,
+        _ => &[],
+    }
+}
+
+/// 🔤️ Serializes a single node (not a whole document) via the xml module's own document
+/// serializer -- wraps it as a document root, discards the (absent) declaration/doctype.
+fn node_to_text(node: &XmlNode) -> String {
+    xml_document_to_text(&XmlDocument { root: Some(node.clone()), doctype: None, declaration: None })
+}
+
+/// 🔤️ Parses a single node back from `node_to_text`'s output (or any other well-formed XML
+/// fragment). Falls back to a `Comment` node carrying the raw text verbatim on parse failure --
+/// this can only happen for a hand-constructed `PptxShape::Other{xml}` with malformed content
+/// (never for anything this engine itself produced), and a comment still round-trips the string
+/// losslessly instead of panicking or silently dropping it.
+fn node_from_text(text: &str) -> XmlNode {
+    xml_document_from_text(text).ok().and_then(|d| d.root).unwrap_or_else(|| XmlNode::Comment { text: text.to_string() })
 }
 
 /// 📐️ Minimal-but-schema-shaped `slideMaster1.xml` — synthesized once when a package has no
@@ -121,11 +169,14 @@ const MINIMAL_THEME_XML: &str = concat!(
 );
 //#endregion 🔖️Constants
 
-//#region 🔖️SlideXml
+//#region 🔖️TextXml
 fn run_to_xml(run: &PptxRun) -> XmlNode {
     let mut children = Vec::new();
-    if run.bold || run.italic {
+    if run.bold || run.italic || run.font_size.is_some() {
         let mut attrs = Vec::new();
+        if let Some(sz) = run.font_size {
+            attrs.push(attr("sz", &(sz * 100).to_string()));
+        }
         if run.bold {
             attrs.push(attr("b", "1"));
         }
@@ -142,115 +193,243 @@ fn paragraph_to_xml(p: &PptxParagraph) -> XmlNode {
     XmlNode::Element { name: "a:p".into(), attrs: vec![], children: p.runs.iter().map(run_to_xml).collect() }
 }
 
-fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
-    let mut text_body_children = vec![XmlNode::Element { name: "a:bodyPr".into(), attrs: vec![], children: vec![] }];
-    text_body_children.extend(slide.paragraphs.iter().map(paragraph_to_xml));
+fn run_from_xml(node: &XmlNode) -> Option<PptxRun> {
+    let XmlNode::Element { name, children, .. } = node else { return None };
+    if name != "a:r" {
+        return None;
+    }
+    let mut bold = false;
+    let mut italic = false;
+    let mut font_size = None;
+    let mut text = String::new();
+    for rc in children {
+        let XmlNode::Element { name, attrs, children: inner } = rc else { continue };
+        match name.as_str() {
+            "a:rPr" => {
+                if let Some(b) = attr_val(attrs, "b") {
+                    bold = b == "1";
+                }
+                if let Some(i) = attr_val(attrs, "i") {
+                    italic = i == "1";
+                }
+                if let Some(sz) = attr_val(attrs, "sz").and_then(|v| v.parse::<u32>().ok()) {
+                    font_size = Some(sz / 100);
+                }
+            }
+            "a:t" => {
+                for t in inner {
+                    if let XmlNode::Text { text: t } = t {
+                        text.push_str(t);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    Some(PptxRun { text, bold, italic, font_size })
+}
 
-    let sp = XmlNode::Element {
-        name: "p:sp".into(),
+fn paragraph_from_xml(node: &XmlNode) -> PptxParagraph {
+    let mut runs = Vec::new();
+    for c in element_children(node) {
+        if let Some(r) = run_from_xml(c) {
+            runs.push(r);
+        }
+    }
+    PptxParagraph { runs }
+}
+
+fn text_frame_to_xml(paragraphs: &[PptxParagraph]) -> Vec<XmlNode> {
+    let mut children = vec![XmlNode::Element { name: "a:bodyPr".into(), attrs: vec![], children: vec![] }];
+    children.extend(paragraphs.iter().map(paragraph_to_xml));
+    children
+}
+
+/// 🔎️ Every `a:p` directly inside `p:txBody` (direct children only -- a real `p:txBody` never
+/// nests paragraphs inside anything else).
+fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
+    element_children(tx_body).iter().filter(|c| matches!(c, XmlNode::Element { name, .. } if name == "a:p")).map(paragraph_from_xml).collect()
+}
+//#endregion 🔖️TextXml
+
+//#region 🔖️ShapeXml
+fn xfrm_node(position: &PptxTransform) -> XmlNode {
+    XmlNode::Element {
+        name: "a:xfrm".into(),
         attrs: vec![],
         children: vec![
-            XmlNode::Element {
-                name: "p:nvSpPr".into(),
-                attrs: vec![],
-                children: vec![
-                    XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", "2"), attr("name", "TextBox 1")], children: vec![] },
-                    XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![attr("txBox", "1")], children: vec![] },
-                    XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
-                ],
-            },
-            XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![] },
-            XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_body_children },
+            XmlNode::Element { name: "a:off".into(), attrs: vec![attr("x", &position.x.to_string()), attr("y", &position.y.to_string())], children: vec![] },
+            XmlNode::Element { name: "a:ext".into(), attrs: vec![attr("cx", &position.cx.to_string()), attr("cy", &position.cy.to_string())], children: vec![] },
         ],
-    };
+    }
+}
+
+/// 🔎️ Reads `p:spPr/a:xfrm`'s `a:off`/`a:ext` (defaulting each missing field to `0`, same
+/// convention the rest of this engine uses for "not present in the XML").
+fn position_from_xml(shape_children: &[XmlNode]) -> PptxTransform {
+    let Some(sp_pr) = find_child(shape_children, "p:spPr") else { return PptxTransform::default() };
+    let Some(xfrm) = find_child(element_children(sp_pr), "a:xfrm") else { return PptxTransform::default() };
+    let xfrm_children = element_children(xfrm);
+    let (mut x, mut y, mut cx, mut cy) = (0i64, 0i64, 0i64, 0i64);
+    if let Some(XmlNode::Element { attrs, .. }) = find_child(xfrm_children, "a:off") {
+        x = attr_val(attrs, "x").and_then(|v| v.parse().ok()).unwrap_or(0);
+        y = attr_val(attrs, "y").and_then(|v| v.parse().ok()).unwrap_or(0);
+    }
+    if let Some(XmlNode::Element { attrs, .. }) = find_child(xfrm_children, "a:ext") {
+        cx = attr_val(attrs, "cx").and_then(|v| v.parse().ok()).unwrap_or(0);
+        cy = attr_val(attrs, "cy").and_then(|v| v.parse().ok()).unwrap_or(0);
+    }
+    PptxTransform { x, y, cx, cy }
+}
+
+/// 🏗️ Serializes one `PptxShape` as its `p:spTree`-child XML node. `id` is a synthesized
+/// `p:cNvPr@id` (this layer doesn't model shape ids -- any positive, unique-within-the-slide
+/// value satisfies the schema).
+fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
+    match shape {
+        PptxShape::TextBox { text_frame, position } => XmlNode::Element {
+            name: "p:sp".into(),
+            attrs: vec![],
+            children: vec![
+                XmlNode::Element {
+                    name: "p:nvSpPr".into(),
+                    attrs: vec![],
+                    children: vec![
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("TextBox {id}"))], children: vec![] },
+                        XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![attr("txBox", "1")], children: vec![] },
+                        XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
+                    ],
+                },
+                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position)] },
+                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame) },
+            ],
+        },
+        PptxShape::Placeholder { kind, text_frame, position } => XmlNode::Element {
+            name: "p:sp".into(),
+            attrs: vec![],
+            children: vec![
+                XmlNode::Element {
+                    name: "p:nvSpPr".into(),
+                    attrs: vec![],
+                    children: vec![
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("Placeholder {id}"))], children: vec![] },
+                        XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![], children: vec![] },
+                        XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:ph".into(), attrs: vec![attr("type", kind)], children: vec![] }] },
+                    ],
+                },
+                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position)] },
+                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame) },
+            ],
+        },
+        PptxShape::Picture { blip_rel_id, position } => XmlNode::Element {
+            name: "p:pic".into(),
+            attrs: vec![],
+            children: vec![
+                XmlNode::Element {
+                    name: "p:nvPicPr".into(),
+                    attrs: vec![],
+                    children: vec![
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("Picture {id}"))], children: vec![] },
+                        XmlNode::Element { name: "p:cNvPicPr".into(), attrs: vec![], children: vec![] },
+                        XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
+                    ],
+                },
+                XmlNode::Element {
+                    name: "p:blipFill".into(),
+                    attrs: vec![],
+                    children: vec![
+                        XmlNode::Element { name: "a:blip".into(), attrs: vec![attr("r:embed", blip_rel_id)], children: vec![] },
+                        XmlNode::Element { name: "a:stretch".into(), attrs: vec![], children: vec![XmlNode::Element { name: "a:fillRect".into(), attrs: vec![], children: vec![] }] },
+                    ],
+                },
+                XmlNode::Element {
+                    name: "p:spPr".into(),
+                    attrs: vec![],
+                    children: vec![xfrm_node(position), XmlNode::Element { name: "a:prstGeom".into(), attrs: vec![attr("prst", "rect")], children: vec![XmlNode::Element { name: "a:avLst".into(), attrs: vec![], children: vec![] }] }],
+                },
+            ],
+        },
+        PptxShape::Other { xml } => node_from_text(xml),
+    }
+}
+
+/// 🧭️ Classifies one `p:spTree` DIRECT child into a typed `PptxShape` (`p:sp`/`p:pic` get real
+/// per-kind typing; everything else -- `p:graphicFrame`, `p:grpSp`, `p:cxnSp`, unrecognized --
+/// falls back to `Other{xml}`, the exact serialized node, verbatim).
+fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
+    let XmlNode::Element { name, children, .. } = node else { return PptxShape::Other { xml: node_to_text(node) } };
+    match name.as_str() {
+        "p:sp" => {
+            let ph_type = find_child(children, "p:nvSpPr")
+                .and_then(|nv| find_child(element_children(nv), "p:nvPr"))
+                .and_then(|nvpr| find_child(element_children(nvpr), "p:ph"))
+                .map(|ph| match ph {
+                    XmlNode::Element { attrs, .. } => attr_val(attrs, "type").unwrap_or("body").to_string(),
+                    _ => "body".to_string(),
+                });
+            let position = position_from_xml(children);
+            let text_frame = find_child(children, "p:txBody").map(text_frame_from_xml).unwrap_or_default();
+            match ph_type {
+                Some(kind) => PptxShape::Placeholder { kind, text_frame, position },
+                None => PptxShape::TextBox { text_frame, position },
+            }
+        }
+        "p:pic" => {
+            let blip_rel_id = find_child(children, "p:blipFill")
+                .and_then(|fill| find_child(element_children(fill), "a:blip"))
+                .and_then(|blip| match blip { XmlNode::Element { attrs, .. } => attr_val(attrs, "r:embed"), _ => None })
+                .unwrap_or_default()
+                .to_string();
+            let position = position_from_xml(children);
+            PptxShape::Picture { blip_rel_id, position }
+        }
+        _ => PptxShape::Other { xml: node_to_text(node) },
+    }
+}
+//#endregion 🔖️ShapeXml
+
+//#region 🔖️SlideXml
+fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
+    let mut sp_tree_children = vec![
+        XmlNode::Element {
+            name: "p:nvGrpSpPr".into(),
+            attrs: vec![],
+            children: vec![
+                XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", "1"), attr("name", "")], children: vec![] },
+                XmlNode::Element { name: "p:cNvGrpSpPr".into(), attrs: vec![], children: vec![] },
+                XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
+            ],
+        },
+        XmlNode::Element { name: "p:grpSpPr".into(), attrs: vec![], children: vec![] },
+    ];
+    // 🔢 ids start at 2 -- id 1 is reserved for the group's own `p:cNvPr` above.
+    for (i, shape) in slide.shapes.iter().enumerate() {
+        sp_tree_children.push(shape_to_xml(shape, i as u32 + 2));
+    }
 
     XmlDocument {
         root: Some(XmlNode::Element {
             name: "p:sld".into(),
             attrs: vec![attr("xmlns:a", A_NS), attr("xmlns:p", P_NS)],
-            children: vec![XmlNode::Element {
-                name: "p:cSld".into(),
-                attrs: vec![],
-                children: vec![XmlNode::Element {
-                    name: "p:spTree".into(),
-                    attrs: vec![],
-                    children: vec![
-                        XmlNode::Element {
-                            name: "p:nvGrpSpPr".into(),
-                            attrs: vec![],
-                            children: vec![
-                                XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", "1"), attr("name", "")], children: vec![] },
-                                XmlNode::Element { name: "p:cNvGrpSpPr".into(), attrs: vec![], children: vec![] },
-                                XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
-                            ],
-                        },
-                        XmlNode::Element { name: "p:grpSpPr".into(), attrs: vec![], children: vec![] },
-                        sp,
-                    ],
-                }],
-            }],
+            children: vec![XmlNode::Element { name: "p:cSld".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:spTree".into(), attrs: vec![], children: sp_tree_children }] }],
         }),
         doctype: None,
         declaration: None,
     }
 }
 
-fn paragraph_from_xml(node: &XmlNode) -> PptxParagraph {
-    let mut runs = Vec::new();
-    if let XmlNode::Element { children, .. } = node {
-        for c in children {
-            let XmlNode::Element { name, children: r_children, .. } = c else { continue };
-            if name != "a:r" {
-                continue;
-            }
-            let mut bold = false;
-            let mut italic = false;
-            let mut text = String::new();
-            for rc in r_children {
-                let XmlNode::Element { name, attrs, children: inner } = rc else { continue };
-                match name.as_str() {
-                    "a:rPr" => {
-                        if let Some(b) = attr_val(attrs, "b") {
-                            bold = b == "1";
-                        }
-                        if let Some(i) = attr_val(attrs, "i") {
-                            italic = i == "1";
-                        }
-                    }
-                    "a:t" => {
-                        for t in inner {
-                            if let XmlNode::Text { text: t } = t {
-                                text.push_str(t);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            runs.push(PptxRun { text, bold, italic });
-        }
-    }
-    PptxParagraph { runs }
-}
-
-/// 🔎️ Recursively collects every `p:txBody`'s paragraphs, in document order, across the whole
-/// shape tree (shapes may nest inside `p:grpSp` groups) — "shape -> text body -> paragraphs" per
-/// the D2 plan, not just the first shape found.
-fn collect_paragraphs(node: &XmlNode, out: &mut Vec<PptxParagraph>) {
-    let XmlNode::Element { name, children, .. } = node else { return };
-    if name == "p:txBody" {
-        for c in children {
-            if let XmlNode::Element { name, .. } = c {
-                if name == "a:p" {
-                    out.push(paragraph_from_xml(c));
-                }
-            }
-        }
-    } else {
-        for c in children {
-            collect_paragraphs(c, out);
-        }
-    }
+/// 🔎️ Collects every `p:spTree` DIRECT child (skipping the group's own `p:nvGrpSpPr`/
+/// `p:grpSpPr` container elements) into one `PptxShape` each, in document order -- shape
+/// BOUNDARIES are preserved (not flattened away like the pre-migration model).
+fn collect_shapes(root: &XmlNode) -> Vec<PptxShape> {
+    let XmlNode::Element { children, .. } = root else { return Vec::new() };
+    let Some(c_sld) = find_child(children, "p:cSld") else { return Vec::new() };
+    let Some(sp_tree) = find_child(element_children(c_sld), "p:spTree") else { return Vec::new() };
+    element_children(sp_tree)
+        .iter()
+        .filter(|c| !matches!(c, XmlNode::Element { name, .. } if name == "p:nvGrpSpPr" || name == "p:grpSpPr"))
+        .map(shape_from_xml_node)
+        .collect()
 }
 //#endregion 🔖️SlideXml
 
@@ -304,7 +483,17 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
 /// list would otherwise leave orphaned. Synthesizes the slideMaster/slideLayout/theme boilerplate
 /// chain only when entirely absent — an already-decoded package's real ones are left untouched.
 fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresentation) {
-    opc.parts.retain(|p| !p.path.starts_with("ppt/slides/"));
+    // 🩹 `ppt/presentation.xml` is retained-away HERE TOO (not just the slide parts) so its
+    // `opc.parts` position is FRESHLY appended (after the slide loop, below) on EVERY call, not
+    // just the first one. Without this, a SECOND regenerate on an already-built package (e.g.
+    // `store::ArtifactPack::encode_pack` calling this again on a snapshot `build_minimal_pptx`
+    // already regenerated once) leaves `presentation.xml`'s PART untouched at its OLD position
+    // (before the slides, from the first call) while the slide parts get retained-away and
+    // RE-APPENDED at the true end -- flipping their relative order and breaking
+    // `codec_retention_law`'s exact `Vec<OpcPart>` equality (a real bug found while adding this
+    // wave's typed shape tree, not present before because no prior test round-tripped a
+    // `build_minimal_pptx` snapshot through `encode_pack`/`decode_pack` twice).
+    opc.parts.retain(|p| !p.path.starts_with("ppt/slides/") && p.path != PRESENTATION_PART);
     opc.relationships.retain(|owner, _| !owner.starts_with("ppt/slides/"));
 
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -372,7 +561,7 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
 
 pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
     let opc = opc::decode_opc(data)?;
-    let presentation_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).ok_or(PptxError::MissingPresentationRelationship)?;
+    let presentation_path = resolve_office_document_relationship(&opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let bytes = opc.part_bytes(&presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
     let text = String::from_utf8(bytes.to_vec()).map_err(|_| PptxError::Xml { part: presentation_path.clone(), detail: "not valid utf-8".into() })?;
     let xml = xml_document_from_text(&text).map_err(|e| PptxError::Xml { part: presentation_path.clone(), detail: e })?;
@@ -389,11 +578,8 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
         let bytes = opc.part_bytes(&path).ok_or_else(|| PptxError::MissingPart(path.clone()))?;
         let text = String::from_utf8(bytes.to_vec()).map_err(|_| PptxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
         let slide_xml = xml_document_from_text(&text).map_err(|e| PptxError::Xml { part: path.clone(), detail: e })?;
-        let mut paragraphs = Vec::new();
-        if let Some(root) = &slide_xml.root {
-            collect_paragraphs(root, &mut paragraphs);
-        }
-        slides.push(PptxSlide { paragraphs });
+        let shapes = slide_xml.root.as_ref().map(collect_shapes).unwrap_or_default();
+        slides.push(PptxSlide { shapes });
     }
 
     Ok(PptxSnapshot::from_parts(opc, PptxPresentation { slides }))
@@ -405,15 +591,22 @@ pub fn register() {
     crate::artifacts::pptx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
+    // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Their
+    // ComposerEntrys themselves are registered separately via this standard's own
+    // `composer::entries()` aggregation.
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::composer::register();
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::composer::register();
 }
 //#endregion 🔖️Codec
 
 //#region 🔖️Sniff
-/// 🕵️ Real pptx sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
-/// `ppt/` — disambiguates from docx/xlsx sharing the same zip magic and OPC shape.
+/// 🕵️ Real pptx sniff: OPC-shaped bytes whose root officeDocument relationship (Transitional or
+/// Strict) resolves under `ppt/` — disambiguates from docx/xlsx sharing the same zip magic and
+/// OPC shape.
 pub fn sniff_pptx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
-    match opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT) {
+    match resolve_office_document_relationship(&opc) {
         Some(path) => path.starts_with("ppt/"),
         None => false,
     }
@@ -437,8 +630,23 @@ mod tests {
     fn sample_presentation() -> PptxPresentation {
         PptxPresentation {
             slides: vec![
-                PptxSlide { paragraphs: vec![PptxParagraph { runs: vec![PptxRun { text: "Title Slide".into(), bold: true, italic: false }] }] },
-                PptxSlide { paragraphs: vec![PptxParagraph::text("Second slide, plain."), PptxParagraph { runs: vec![PptxRun { text: "italic note".into(), bold: false, italic: true }] }] },
+                PptxSlide {
+                    shapes: vec![PptxShape::Placeholder {
+                        kind: "title".into(),
+                        text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Title Slide".into(), bold: true, italic: false, font_size: Some(44) }] }],
+                        position: PptxTransform { x: 100, y: 200, cx: 300, cy: 400 },
+                    }],
+                },
+                PptxSlide {
+                    shapes: vec![
+                        PptxShape::TextBox { text_frame: vec![PptxParagraph::text("Second slide, plain.")], position: PptxTransform::default() },
+                        PptxShape::TextBox {
+                            text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "italic note".into(), bold: false, italic: true, font_size: None }] }],
+                            position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 },
+                        },
+                        PptxShape::Picture { blip_rel_id: "rId5".into(), position: PptxTransform { x: 10, y: 20, cx: 30, cy: 40 } },
+                    ],
+                },
             ],
         }
     }
@@ -458,9 +666,10 @@ mod tests {
     }
 
     #[test]
-    fn decode_resolves_real_hand_built_package_with_nested_group_shapes() {
-        // Hand-built OOXML: real presentation.xml/rels + slide with a shape nested inside a
-        // group (p:grpSp) — exercises the recursive shape-tree walk, not just the first shape.
+    fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_position() {
+        // Hand-built OOXML: a slide with TWO real shapes -- a positioned placeholder title and a
+        // positioned picture -- exercising real shape-BOUNDARY recovery (not flattened text) and
+        // real `a:xfrm` position decoding.
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -469,10 +678,13 @@ mod tests {
             r#"<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">"#,
             "<p:cSld><p:spTree>",
             r#"<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>"#,
-            "<p:grpSp><p:nvGrpSpPr><p:cNvPr id=\"3\" name=\"Group\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>",
-            "<p:sp><p:nvSpPr><p:cNvPr id=\"4\" name=\"Nested\"/><p:cNvSpPr txBox=\"1\"/><p:nvPr/></p:nvSpPr><p:spPr/>",
-            r#"<p:txBody><a:bodyPr/><a:p><a:r><a:rPr b="1" i="1"/><a:t>Nested &amp; bold-italic</a:t></a:r></a:p></p:txBody>"#,
-            "</p:sp></p:grpSp>",
+            "<p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"Title\"/><p:cNvSpPr/><p:nvPr><p:ph type=\"title\"/></p:nvPr></p:nvSpPr>",
+            r#"<p:spPr><a:xfrm><a:off x="111" y="222"/><a:ext cx="333" cy="444"/></a:xfrm></p:spPr>"#,
+            r#"<p:txBody><a:bodyPr/><a:p><a:r><a:rPr b="1" i="1" sz="4400"/><a:t>Nested &amp; bold-italic</a:t></a:r></a:p></p:txBody>"#,
+            "</p:sp>",
+            r#"<p:pic><p:nvPicPr><p:cNvPr id="3" name="Pic"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>"#,
+            r#"<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>"#,
+            r#"<p:spPr><a:xfrm><a:off x="5" y="6"/><a:ext cx="7" cy="8"/></a:xfrm></p:spPr></p:pic>"#,
             "</p:spTree></p:cSld></p:sld>",
         );
         opc.set_part("ppt/slides/slide1.xml", SLIDE_CONTENT_TYPE, slide_xml.as_bytes().to_vec());
@@ -494,11 +706,88 @@ mod tests {
         let decoded = decode_pptx(&bytes).expect("decode hand-built pptx");
 
         assert_eq!(decoded.presentation.slides.len(), 1);
-        let paragraphs = &decoded.presentation.slides[0].paragraphs;
-        assert_eq!(paragraphs.len(), 1);
-        assert_eq!(paragraphs[0].runs[0].text, "Nested & bold-italic");
-        assert!(paragraphs[0].runs[0].bold);
-        assert!(paragraphs[0].runs[0].italic);
+        let shapes = &decoded.presentation.slides[0].shapes;
+        assert_eq!(shapes.len(), 2, "two DIRECT shapes must be recovered as two distinct PptxShape entries, not flattened");
+        let PptxShape::Placeholder { kind, text_frame, position } = &shapes[0] else { panic!("expected placeholder shape") };
+        assert_eq!(kind, "title");
+        assert_eq!(*position, PptxTransform { x: 111, y: 222, cx: 333, cy: 444 });
+        assert_eq!(text_frame[0].runs[0].text, "Nested & bold-italic");
+        assert!(text_frame[0].runs[0].bold && text_frame[0].runs[0].italic);
+        assert_eq!(text_frame[0].runs[0].font_size, Some(44));
+        let PptxShape::Picture { blip_rel_id, position } = &shapes[1] else { panic!("expected picture shape") };
+        assert_eq!(blip_rel_id, "rId9");
+        assert_eq!(*position, PptxTransform { x: 5, y: 6, cx: 7, cy: 8 });
+    }
+
+    #[test]
+    fn decode_preserves_unmodeled_shape_kinds_as_other_verbatim() {
+        // A `p:graphicFrame` (chart/table/SmartArt) direct child -- not typed by this layer --
+        // must survive decode->encode->decode verbatim via `PptxShape::Other`.
+        let mut opc = OpcPackage::empty();
+        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+        opc.content_types.set_default("xml", "application/xml");
+        let graphic_frame = r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr><a:graphic/></p:graphicFrame>"#;
+        let slide_xml = format!(
+            concat!(
+                r#"<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">"#,
+                "<p:cSld><p:spTree>",
+                r#"<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>"#,
+                "{}",
+                "</p:spTree></p:cSld></p:sld>",
+            ),
+            graphic_frame,
+        );
+        opc.set_part("ppt/slides/slide1.xml", SLIDE_CONTENT_TYPE, slide_xml.into_bytes());
+        opc.add_relationship("ppt/slides/slide1.xml", "rId1", REL_TYPE_SLIDE_LAYOUT, "../slideLayouts/slideLayout1.xml");
+        let presentation_xml = concat!(
+            r#"<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">"#,
+            r#"<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>"#,
+            r#"<p:sldIdLst><p:sldId id="256" r:id="rId2"/></p:sldIdLst>"#,
+            "</p:presentation>",
+        );
+        opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, presentation_xml.as_bytes().to_vec());
+        opc.add_relationship(PRESENTATION_PART, "rId1", REL_TYPE_SLIDE_MASTER, "slideMasters/slideMaster1.xml");
+        opc.add_relationship(PRESENTATION_PART, "rId2", REL_TYPE_SLIDE, "slides/slide1.xml");
+        opc.set_part(SLIDE_MASTER_PART, SLIDE_MASTER_CONTENT_TYPE, MINIMAL_SLIDE_MASTER_XML.as_bytes().to_vec());
+        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, PRESENTATION_PART);
+
+        let bytes = opc::encode_opc(&opc).expect("encode");
+        let decoded = decode_pptx(&bytes).expect("decode");
+        assert_eq!(decoded.presentation.slides[0].shapes.len(), 1);
+        let PptxShape::Other { xml } = &decoded.presentation.slides[0].shapes[0] else { panic!("expected Other shape") };
+        assert!(xml.contains("p:graphicFrame") && xml.contains("Table 1"));
+
+        // Re-encode -> re-decode: the raw xml must survive the round trip verbatim.
+        let re_encoded = encode_pptx(&decoded).expect("re-encode");
+        let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
+        assert_eq!(re_decoded.presentation, decoded.presentation);
+    }
+
+    #[test]
+    fn decode_resolves_strict_office_document_relationship_too() {
+        // 🏅️ A genuine ISO/IEC 29500-1 Strict package's root relationship carries
+        // `REL_TYPE_OFFICE_DOCUMENT_STRICT`, never the Transitional type this engine's own writer
+        // emits -- `decode_pptx`/`sniff_pptx_bytes` must still recognize it (ticket
+        // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES, so the `✳️strict` subset's
+        // analyzer can ever see real Strict bytes).
+        let mut opc = OpcPackage::empty();
+        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+        opc.content_types.set_default("xml", "application/xml");
+        let presentation_xml = concat!(
+            r#"<p:presentation xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships">"#,
+            r#"<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>"#,
+            r#"<p:sldIdLst/>"#,
+            "</p:presentation>",
+        );
+        opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, presentation_xml.as_bytes().to_vec());
+        opc.set_part(SLIDE_MASTER_PART, SLIDE_MASTER_CONTENT_TYPE, MINIMAL_SLIDE_MASTER_XML.as_bytes().to_vec());
+        opc.add_relationship(PRESENTATION_PART, "rId1", REL_TYPE_SLIDE_MASTER, "slideMasters/slideMaster1.xml");
+        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT_STRICT, PRESENTATION_PART);
+
+        let bytes = opc::encode_opc(&opc).expect("encode hand-built Strict package");
+        assert!(sniff_pptx_bytes(&bytes), "Strict-relationship-typed package must still sniff as pptx");
+        let decoded = decode_pptx(&bytes).expect("decode Strict-relationship-typed package");
+        assert_eq!(decoded.presentation.slides.len(), 0);
     }
 
     #[test]
@@ -550,6 +839,31 @@ mod tests {
         assert!(decoded.opc.part("ppt/slides/slide2.xml").is_none(), "stale second slide part must be dropped");
         assert!(decoded.opc.relationships_for("ppt/slides/slide2.xml").is_empty(), "stale second slide's relationships must be dropped too");
         assert_eq!(decoded.presentation.slides.len(), 1);
+    }
+
+    #[test]
+    fn double_regenerate_keeps_opc_parts_order_stable() {
+        // 🐛 Regression: `regenerate_presentation_parts` runs TWICE in a real round trip
+        // (`build_minimal_pptx` once, then `encode_pptx`/`store::ArtifactPack::encode_pack`
+        // again on the ALREADY-built snapshot). The slide parts get retained-away + re-appended
+        // on EVERY call, but `ppt/presentation.xml` didn't, so on the SECOND call it stayed at
+        // its OLD position (before the slides, from the first call) while the slides moved to
+        // the true end -- flipping their relative `opc.parts` order and breaking exact
+        // `Vec<OpcPart>` equality (caught by `codec_retention_law`). Asserts the FIX: two
+        // `regenerate` passes produce the IDENTICAL parts order as one.
+        let snap = build_minimal_pptx(sample_presentation());
+        let once = snap.opc.parts.iter().map(|p| p.path.clone()).collect::<Vec<_>>();
+        let twice_bytes = encode_pptx(&snap).expect("encode (second regenerate pass)");
+        let twice = decode_pptx(&twice_bytes).expect("decode").opc.parts.iter().map(|p| p.path.clone()).collect::<Vec<_>>();
+        assert_eq!(once, twice, "opc.parts order must be stable across repeated regenerate passes");
+        // `ppt/presentation.xml` must always sort AFTER every `ppt/slides/*` part specifically
+        // (the exact symptom the bug produced).
+        let pres_idx = once.iter().position(|p| p == PRESENTATION_PART).expect("presentation.xml present");
+        for (i, p) in once.iter().enumerate() {
+            if p.starts_with("ppt/slides/") {
+                assert!(i < pres_idx, "slide part {p} must precede presentation.xml in opc.parts");
+            }
+        }
     }
 }
 //#endregion 🧪️Tests

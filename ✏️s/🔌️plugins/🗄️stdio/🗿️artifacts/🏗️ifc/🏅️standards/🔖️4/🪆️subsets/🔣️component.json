@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.ifc",
+  "standard": "4",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained ifc 4"
+    }
+  }
+}

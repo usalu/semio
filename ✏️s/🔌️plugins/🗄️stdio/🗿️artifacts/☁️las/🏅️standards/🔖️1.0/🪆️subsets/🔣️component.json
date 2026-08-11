@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.las",
+  "standard": "1.0",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained las 1.0"
+    }
+  }
+}

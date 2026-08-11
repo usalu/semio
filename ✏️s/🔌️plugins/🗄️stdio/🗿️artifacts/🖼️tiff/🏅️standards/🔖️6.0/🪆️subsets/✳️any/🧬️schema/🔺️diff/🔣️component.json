@@ -2,14 +2,64 @@
   "$id": "https://semio.tech/schema/s.stdio.tiff/diff.json",
   "title": "TiffDiff",
   "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "TiffTagModified": {
+      "type": "object",
+      "required": ["tag", "kind", "values"],
+      "properties": {
+        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "kind": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffFieldType" },
+        "values": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffValues" }
+      }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "TiffTagAdded": {
+      "type": "object",
+      "required": ["tag", "kind", "values"],
+      "properties": {
+        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "kind": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffFieldType" },
+        "values": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffValues" }
+      }
+    },
+    "TiffTagsDiff": {
+      "type": "object",
+      "description": "Tag-id-keyed entries triple for one IFD.",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/TiffTagModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/TiffTagAdded" } }
+      }
+    },
+    "TiffIfdModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "diff": { "$ref": "#/$defs/TiffTagsDiff" }
+      }
+    },
+    "TiffIfdAdded": {
+      "type": "object",
+      "required": ["index", "ifd"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "ifd": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffIfd" }
+      }
+    },
+    "TiffIfdsDiff": {
+      "type": "object",
+      "description": "Index-keyed ifds triple (TIFF's IFD chain is positional).",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/TiffIfdModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/TiffIfdAdded" } }
+      }
     }
+  },
+  "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
+  "properties": {
+    "byteOrder": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffByteOrder", "x-semio-state": "persistent" },
+    "ifds": { "$ref": "#/$defs/TiffIfdsDiff", "x-semio-state": "persistent" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "persistent" }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.raster.raster",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained raster 1"
+    }
+  }
+}

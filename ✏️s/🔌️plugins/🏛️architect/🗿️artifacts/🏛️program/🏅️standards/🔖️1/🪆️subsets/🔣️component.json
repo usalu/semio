@@ -1,0 +1,9 @@
+{
+  "artifact": "s.architect.program",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained program 1"
+    }
+  }
+}

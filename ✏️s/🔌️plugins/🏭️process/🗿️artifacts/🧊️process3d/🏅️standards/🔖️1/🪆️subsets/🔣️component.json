@@ -1,0 +1,9 @@
+{
+  "artifact": "s.process.process3d",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained process3d 1"
+    }
+  }
+}

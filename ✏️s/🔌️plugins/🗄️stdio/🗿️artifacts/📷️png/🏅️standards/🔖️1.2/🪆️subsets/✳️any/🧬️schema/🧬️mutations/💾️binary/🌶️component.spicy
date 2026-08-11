@@ -1,4 +1,9 @@
-module Stdio_png_mutations;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_png_mutation;
+
+# protocol::OpBinary raw JSON encoding of PngMutation (#[serde(tag = "mutation")]) — no
+# `.semio` envelope header. No length prefix: the whole op body IS the JSON document; the
+# "mutation" tag selects one of 17 real variants (see ../📝️text/📖️component.grammar.semio).
+public type Document = unit {
+    : bytes &eod -> self.json_utf8;
+    var json_utf8: bytes;
 };

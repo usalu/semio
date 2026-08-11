@@ -1,11 +1,12 @@
 //! 🧬️ PlyArtifact schema — full artifact state.
 
+use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat};
 use crate::artifacts::ply::PlySnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full `stdio.ply` artifact state.
+/// 🧬️ Full `stdio.ply` artifact state — mirrors `PlySnapshot`'s persistent fields exactly.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply")]
@@ -14,10 +15,13 @@ pub struct PlyArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub vertices: Vec<crate::artifacts::ply::schema::snapshot::MeshVertex>,
+    pub format: PlyFormat,
     #[state(persistent)]
     #[serde(default)]
-    pub faces: Vec<crate::artifacts::ply::schema::snapshot::MeshTriangle>,
+    pub comments: Vec<String>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub elements: Vec<PlyElement>,
 }
 //#endregion 🔖️Artifact
 
@@ -33,7 +37,9 @@ impl PlyArtifact {
     pub fn to_snapshot(&self) -> PlySnapshot {
         PlySnapshot {
             schema: self.schema.clone(),
-            vertices: self.vertices.clone(),            faces: self.faces.clone(),
+            format: self.format,
+            comments: self.comments.clone(),
+            elements: self.elements.clone(),
         }
     }
 
@@ -41,14 +47,18 @@ impl PlyArtifact {
     pub fn from_snapshot(snapshot: PlySnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            vertices: snapshot.vertices,            faces: snapshot.faces,
+            format: snapshot.format,
+            comments: snapshot.comments,
+            elements: snapshot.elements,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: PlySnapshot) {
         self.schema = snapshot.schema;
-        self.vertices = snapshot.vertices;        self.faces = snapshot.faces;
+        self.format = snapshot.format;
+        self.comments = snapshot.comments;
+        self.elements = snapshot.elements;
     }
 }
 //#endregion 🔖️Conversions

@@ -1,0 +1,53 @@
+{
+  "unit": "s.stdio.jpg",
+  "standards": [
+    {
+      "std": "jfif-1.01",
+      "subsets": [
+        {
+          "id": "baseline",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "🧐️analyzer: conforming_snapshot_has_no_diagnostics, missing_frame_is_hard, non_sof0_marker_is_hard, non_8bit_precision_is_hard, arithmetic_conditioning_present_is_hard, excess_huffman_tables_is_soft, excess_components_is_soft, out_of_range_sampling_is_soft",
+            "🎹️composer: engine_encoded_jpeg_composes_and_stamps_baseline, subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode",
+            "🏗️builder: real_encoded_jpeg_builds_clean_via_from_binary, empty_snapshot_fails_build_with_no_frame"
+          ],
+          "validator_registered": true
+        }
+      ],
+      "files_modified": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs (JpgFrameComponent/JpgFrameHeader gained Serialize/Deserialize; JpgSnapshot gained frame/sof_marker/arithmetic/dc_huffman_table_count/ac_huffman_table_count fields + Default update)",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs (JpgArtifact::to_snapshot fixed for new fields)",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/⚙️engine/🦀️component.rs (decode_jpg now persists frame/sof_marker/arithmetic/huffman-table-counts; explicit 0xCC/DAC rejection added as JpgError::Unsupported instead of falling into the generic unhandled-marker Malformed case; register() now also calls subsets::baseline::composer::register(); 3 test snapshot literals updated for the new fields)",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🎹️composer/🦀️component.rs (entries() now also aggregates composer_entry_of::<JpgBaselineComposer>())",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🔣️component.json (added baseline entry)"
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/jpg-jfif-1.01-baseline-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "RESOLVED, not honest-gap-protocol: per the fan-out task brief, JpgFrameHeader/JpgScanComponent were already defined in the ✳️any schema file (used internally by engine::decode_jpg for its own decode) but not exposed as JpgSnapshot fields. Fixed for real depth: added frame: Option<JpgFrameHeader>, sof_marker: u8, arithmetic: bool, dc_huffman_table_count: u8, ac_huffman_table_count: u8 to JpgSnapshot, with JpgFrameComponent/JpgFrameHeader gaining Serialize/Deserialize, and engine::decode_jpg populating all five from data it already computes transiently during decode (dc_tables/ac_tables map sizes, the SOF0 marker byte, the frame header itself). Also added an explicit 0xCC (DAC/arithmetic-conditioning) rejection case to decode_jpg (previously fell through to a generic 'unhandled marker' Malformed error) so JpgSnapshot.arithmetic is honestly false-by-construction for every engine-produced snapshot, matching baseline's Huffman-only invariant. Minor residual gap (out of the five-component scope, not blocking): the sibling JSON-schema/proto/graphql/kaitai/spicy/ABNF/grammar description files under ✳️any/🧬️schema/📸️snapshot/ were not updated to describe the five new Rust struct fields -- those are documentation/codegen artifacts (embedded via include_str! into the schema descriptor, not type-checked by rustc) and updating all of them for every existing snapshot field was judged out of scope for this ticket's five-component (schema/analyzer/composer/builder/io) ask."
+  ],
+  "preexisting_breakage_noted": [
+    "cargo check -p semio-s-plugin-stdio currently reports 37 errors repo-wide; all but one are the SAME expected error class this ticket's own W2 pattern doc documents (multiple other concurrent units in this wave -- pdf vt/h, pptx strict/transitional, xml valid, and ~9 others -- each show 'cannot find <subset> in subsets' because their glue.rs snippets haven't been applied yet either); the remaining one (gltf json export serializer, JsonValue vs serde_json::Value mismatch) is unrelated pre-existing/concurrent churn outside this ticket entirely (see baseline-cargo-w0.txt's W1 update note on the same gltf/json error). None of the 37 errors touch anything in this unit's own new snapshot fields, analyzer, composer, or builder logic."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check shows exactly 2 occurrences of the expected 'error[E0433]: cannot find `baseline` in `subsets`' (one in 🏅️standards/🔖️jfif-1.01/🎹️composer/🦀️component.rs's use-import, one in ⚙️engine/🦀️component.rs's register() call) -- both are the documented, expected state per the pattern doc's §7 self-verification note: ✳️baseline's Rust files are not yet referenced by any #[path] in glue.rs, so rustc's module tree doesn't see crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline until the orchestrator applies 🧩glue/jpg-jfif-1.01-baseline-glue.rs.txt. This resolves once that snippet lands; no other action needed from this unit."
+  ]
+}

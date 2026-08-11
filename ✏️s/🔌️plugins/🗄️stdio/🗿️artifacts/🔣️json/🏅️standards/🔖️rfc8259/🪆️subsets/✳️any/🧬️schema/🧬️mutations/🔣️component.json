@@ -1,15 +1,24 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.json/mutation.json",
   "title": "JsonMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "JsonValue": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/JsonValue" },
+    "JsonSnapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
+    "JsonPathSegment": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "key" }, "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "index" }, "value": { "type": "integer", "minimum": 0 } } }
+      ]
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+    "JsonPath": { "type": "array", "items": { "$ref": "#/$defs/JsonPathSegment" } }
+  },
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "#/$defs/JsonSnapshot" } } },
+    { "type": "object", "required": ["mutation", "path", "key", "value"], "properties": { "mutation": { "const": "setMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" }, "value": { "$ref": "#/$defs/JsonValue" } } },
+    { "type": "object", "required": ["mutation", "path", "key"], "properties": { "mutation": { "const": "removeMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" } } },
+    { "type": "object", "required": ["mutation", "path", "index", "value"], "properties": { "mutation": { "const": "insertArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "#/$defs/JsonValue" } } },
+    { "type": "object", "required": ["mutation", "path", "index"], "properties": { "mutation": { "const": "removeArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "required": ["mutation", "path", "value"], "properties": { "mutation": { "const": "setScalar" }, "path": { "$ref": "#/$defs/JsonPath" }, "value": { "$ref": "#/$defs/JsonValue" } } }
+  ]
 }

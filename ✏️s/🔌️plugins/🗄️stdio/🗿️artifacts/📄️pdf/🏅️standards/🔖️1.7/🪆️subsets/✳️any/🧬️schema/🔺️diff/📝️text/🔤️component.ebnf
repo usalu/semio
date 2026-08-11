@@ -1,3 +1,16 @@
-(* ebnf stdio.pdf diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.pdf', newline ;
+(* ISO-14977 EBNF for the real serde_json-tagged wire shape of PdfDiff (1.7) -- plain JSON,
+   PdfDiff has no dedicated OpText envelope yet (F6 wave). Matches ../🔣️component.json. *)
+pdf diff = '{', [ member, { ',', member } ], '}' ;
+member = '"declaredVersion"', ':', json string
+       | '"info"', ':', pdf info
+       | '"pages"', ':', triple
+       | '"objects"', ':', triple
+       | '"trailer"', ':', triple ;
+pdf info = '{', [ info member, { ',', info member } ], '}' ;
+info member = ( '"title"' | '"author"' | '"subject"' | '"keywords"' | '"creator"' | '"producer"' ), ':', json string ;
+triple = '{', [ triple member, { ',', triple member } ], '}' ;
+triple member = ( '"removed"' | '"modified"' | '"added"' ), ':', json array ;
+json string = '"', { ? any char except '"' or '\' ? | '\', escape }, '"' ;
+json array = '[', [ json value, { ',', json value } ], ']' ;
+json value = json object | json array | json string | number | 'true' | 'false' | 'null' ;
+json object = '{', [ json string, ':', json value, { ',', json string, ':', json value } ], '}' ;

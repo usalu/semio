@@ -1,3 +1,13 @@
 dialect protocol stdio.png.snapshot
-magic = %x00
-payload = *OCTET
+; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the REAL PNG
+; 1.2 file bytes (§5 signature + chunk stream) this artifact's engine decodes/encodes.
+envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = UTF8(18)                    ; "stdio.png.pack v1"
+png-file = png-signature chunk*
+png-signature = %x89.50.4E.47.0D.0A.1A.0A
+chunk = length:U32BE type:ASCII(4) data:BYTES(length) crc32:U32BE
+; §11.2.2 IHDR body — compression/filter method fixed at 0, validated not modeled mutable.
+ihdr-body = width:U32BE height:U32BE bit-depth:U8 color-type:U8 compression-method:U8 filter-method:U8 interlace-method:U8
+; §11.3.5.2 gAMA/cHRM, §11.3.5.3 sRGB, §11.3.5.4 pHYs, §11.3.6.1 tIME — see sibling
+; ../🥋️component.ksy for the fully typed per-chunk bodies.

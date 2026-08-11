@@ -1,5 +1,26 @@
-# 🧬️ StepMutation
-type StepMutation {
-  schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_TEXT_COLON String! @state(class: PERSISTENT)
-}
+# 🧬️ StepMutation union — discriminated on `mutation`, mirroring the Rust `StepMutation` enum.
+
+input StepNoMutationInput { _: Boolean }
+input StepSetSnapshotInput { snapshot: StepSnapshotInput! }
+input StepSetFileDescriptionInput { fileDescription: StepFileDescriptionInput! }
+input StepSetFileNameInput { fileName: StepFileNameInput! }
+input StepSetFileSchemaInput { fileSchema: StepFileSchemaInput! }
+input StepInsertEntityInput { index: Int!, entity: StepEntityInput! }
+input StepRemoveEntityInput { id: Int! }
+input StepSetEntityNameInput { id: Int!, name: String! }
+input StepSetEntityArgInput { id: Int!, argIndex: Int!, value: StepValueInput! }
+input StepInsertEntityArgInput { id: Int!, argIndex: Int!, value: StepValueInput! }
+input StepRemoveEntityArgInput { id: Int!, argIndex: Int! }
+
+union StepMutation =
+    StepNoMutationInput
+  | StepSetSnapshotInput
+  | StepSetFileDescriptionInput
+  | StepSetFileNameInput
+  | StepSetFileSchemaInput
+  | StepInsertEntityInput
+  | StepRemoveEntityInput
+  | StepSetEntityNameInput
+  | StepSetEntityArgInput
+  | StepInsertEntityArgInput
+  | StepRemoveEntityArgInput

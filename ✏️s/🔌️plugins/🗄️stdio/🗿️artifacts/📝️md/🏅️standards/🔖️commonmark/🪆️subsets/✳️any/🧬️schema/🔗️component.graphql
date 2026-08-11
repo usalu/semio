@@ -1,2 +1,5 @@
-# schema facet
- type Placeholder { body: String! }
+""" 🧬️ Full `stdio.md` artifact state. """
+type MdArtifact {
+  schema: String!
+  blocks: [MdBlock!]!
+}

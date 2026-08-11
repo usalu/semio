@@ -1,0 +1,90 @@
+{
+  "unit": "ifc",
+  "standards": [
+    {
+      "std": "2x3",
+      "new_standard": true,
+      "engine": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/⚙️engine/🦀️component.rs",
+        "reuses": "crate::artifacts::step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Instance, Part21Header, Part21Value} -- all already `pub`, imported cross-artifact exactly like ifc/4's own engine already does; NO visibility change to step's part21 component.rs was needed (confirmed by reading it first), so that contingency file was not touched",
+        "own_snapshot_type": "Ifc2x3Snapshot { schema: String, document: Part21Document } -- own distinct struct/type identity (not `pub use step::Part21Document`, not the same Rust type as 4's IfcSnapshot), per the ticket's explicit allowance to wrap Part21Document as an internal field while keeping type identity distinct",
+        "round_trip_test": "decode_encode_decode_round_trip_is_lossless (plus decode_rejects_non_ifc2x3_schema, codec_round_trip_through_store_traits) -- genuine decode(bytes)->encode->decode(bytes) equality assertion, not a stub"
+      },
+      "subsets": [
+        {
+          "id": "*",
+          "schema_owning": true,
+          "files_created": [
+            "🪆️subsets/✳️any/🧬️schema/🦀️component.rs (Ifc2x3Artifact + descriptor)",
+            "🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs (Ifc2x3Snapshot + ArtifactDsl/ArtifactPack)",
+            "🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs (Ifc2x3Diff, real id-keyed instance diff)",
+            "🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs (Ifc2x3Mutation: NoMutation/SetSnapshot/UpsertInstance/RemoveInstance/SetHeader)",
+            "full schemaFormats leaf set (rs/ts/graphql/json/proto) + text/binary spec leaves (g4/ebnf/grammar.semio/abnf/ksy/spicy/protocol.semio) under snapshot, diff, mutations, both representations, plus the set-snapshot mutation/diff/inverse leaves",
+            "🏗️builder, 🧐️analyzer (real byte/text sniff, not underscore-prefixed), 🎹️composer, 🚪️io (doc leaf + binary/raw + txt/utf-8 serializer/deserializer leaves reusing engine::{encode_ifc2x3,decode_ifc2x3})"
+          ],
+          "tests": [
+            "field_sweep_between_covers_every_field (diff)",
+            "absorb_upsert_then_remove_same_id_cancels_to_removed_only, absorb_remove_then_upsert_same_id_un_removes, absorb_matches_sequential_apply, inverse_diff_level_roundtrip, between_self_is_empty (diff)",
+            "upsert_then_inverse_restores_absent_id_via_remove, remove_then_inverse_restores_prior_instance, op_text_round_trips (mutations)",
+            "sniff_high_confidence_for_ifc2x3_envelope, sniff_medium_confidence_for_other_part21_schema, sniff_low_confidence_for_non_part21_input (analyzer)"
+          ],
+          "diff_algebra_impl": true,
+          "validator_registered": "n/a (base subset, no SubsetValidator required)"
+        },
+        {
+          "id": "cv20",
+          "spec": "buildingSMART Coordination View 2.0 MVD (IFC2x3, ISO/PAS 16739:2005 schema)",
+          "checks": ["HARD FILE_SCHEMA=IFC2X3", "HARD ViewDefinition names CoordinationView", "HARD no IFCSTRUCTURALANALYSISMODEL/IFCSTRUCTURALCURVEMEMBER/IFCSTRUCTURALLOADGROUP", "SOFT exactly one IFCPROJECT with UnitsInContext", "SOFT geometry-bearing products resolve ObjectPlacement to an IFCLOCALPLACEMENT"],
+          "files_created": ["🧬️schema (pub use any)", "🧐️analyzer (check_cv20_conformance + 6 tests)", "🎹️composer (ArtifactComposer hard-gate + SubsetValidator + register + 3 tests)", "🏗️builder (Ifc2x3Cv20Builder, conforming-by-construction + 2 tests)", "🚪️io (doc leaf)"],
+          "tests": ["conforming_snapshot_has_no_hard_diagnostics", "wrong_file_schema_is_hard", "missing_view_definition_is_hard", "structural_entity_present_is_hard", "missing_unit_assignment_is_soft", "product_without_placement_is_soft", "conforming_builder_snapshot_composes_and_stamps_cv20", "wrong_view_definition_fails_compose_with_real_diagnostic", "subset_validator_recheck_is_clean_for_a_conforming_document", "new_builds_clean", "hard_violation_injected_via_raw_mutate_still_fails_build"],
+          "validator_registered": true
+        },
+        {
+          "id": "sav",
+          "spec": "buildingSMART Structural Analysis View MVD (IFC2x3)",
+          "checks": ["HARD FILE_SCHEMA=IFC2X3", "HARD ViewDefinition names StructuralAnalysisView", "HARD at least one IFCSTRUCTURALANALYSISMODEL", "SOFT IFCRELASSIGNSTOGROUP present", "SOFT IFCSTRUCTURALLOADGROUP present"],
+          "files_created": ["🧬️schema (pub use any)", "🧐️analyzer (check_sav_conformance + 4 tests)", "🎹️composer (hard-gate + SubsetValidator + register + 2 tests)", "🏗️builder (Ifc2x3SavBuilder + 2 tests)", "🚪️io (doc leaf)"],
+          "tests": ["conforming_snapshot_has_no_hard_diagnostics", "missing_analysis_model_is_hard", "wrong_view_definition_is_hard", "missing_loads_and_group_assignment_are_soft", "conforming_builder_snapshot_composes_and_stamps_sav", "no_analysis_model_fails_compose_with_real_diagnostic", "new_builds_clean", "removing_the_analysis_model_via_raw_mutate_still_fails_build"],
+          "validator_registered": true
+        },
+        {
+          "id": "cobie",
+          "spec": "buildingSMART Basic FM Handover MVD (IFC2x3, carries COBie 2.4)",
+          "checks": ["HARD FILE_SCHEMA=IFC2X3", "HARD ViewDefinition names FMHandOverView", "SOFT every IFCSPACE has non-empty Name", "SOFT at least one IFCBUILDING+IFCBUILDINGSTOREY", "SOFT real IFC*TYPE + IFCRELDEFINESBYTYPE pairing present"],
+          "files_created": ["🧬️schema (pub use any)", "🧐️analyzer (check_cobie_conformance + 4 tests)", "🎹️composer (hard-gate + SubsetValidator + register + 2 tests)", "🏗️builder (Ifc2x3CobieBuilder + 2 tests)", "🚪️io (doc leaf)"],
+          "tests": ["conforming_snapshot_has_no_hard_diagnostics", "wrong_view_definition_is_hard", "unnamed_space_is_soft", "missing_storey_is_soft", "missing_type_assignment_is_soft", "conforming_builder_snapshot_composes_and_stamps_cobie", "wrong_view_definition_fails_compose_with_real_diagnostic", "new_builds_clean", "wrong_schema_via_raw_mutate_still_fails_build"],
+          "validator_registered": true,
+          "scope_note": "composer's 'inject missing storey/space names' duty (roster text) was intentionally scoped down to hard-gate + soft-passthrough only, matching the pdf/A pilot's and sav's own composer shape -- no synthetic name/storey injection was implemented. Documented here rather than silently dropped."
+        }
+      ],
+      "standard_level_aggregation": {
+        "engine_register": "registers Ifc2x3Artifact schema descriptor + Ifc2x3Snapshot/Ifc2x3Mutation document codec, then calls cv20/sav/cobie's composer::register() (SubsetValidator registration) -- does NOT call the artifact-level ifc::composer::register() a second time (that union is invoked once from 4's own engine::register(), same non-redundant reasoning gif 89a's engine::register doc comment gives)",
+        "composer_entries": "unions any + cv20 + sav + cobie ComposerEntry rows",
+        "builder_analyzer": "thin delegators to the ✳️any subset, mirroring gif 89a's standard-level shape"
+      }
+    }
+  ],
+  "artifact_level_changes": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🎹️composer/🦀️component.rs",
+      "change": "extended entries()/register() to union v4::entries() with v2x3::entries() (previously v4-only), matching the pdf 1.4+1.7 / gif 87a+89a precedent",
+      "in_scope": "yes -- this file lives under 🗿️artifacts/🏗️ifc/, within this unit's ownership"
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/ifc-2x3-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "cv20's 'geometry-bearing IFCPRODUCT' soft placement check uses a curated common-subtype list (IFCWALL/IFCWALLSTANDARDCASE/IFCDOOR/IFCWINDOW/IFCSLAB/IFCBEAM/IFCCOLUMN/IFCROOF/IFCSTAIR/IFCBUILDINGELEMENTPROXY) rather than the full IfcProduct EXPRESS hierarchy, since Ifc2x3Snapshot retains the generic Part-21 graph, not a schema-typed entity model -- documented honestly in the analyzer's module doc comment, same honesty pattern as the PDF/A pilot's own scope notes.",
+    "cobie's composer does not literally inject missing storey/space names (roster's stated composer duty) -- scoped to hard-gate + soft-passthrough only; see the cobie subset's scope_note above."
+  ],
+  "preexisting_breakage_noted": [
+    "baseline-cargo-w0.txt's noted pre-existing errors (deflate/rfc1950 payload rename, gltf json export serializer) are unrelated to this unit and were not touched."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio cannot yet type-check the new 🔖️2x3 files themselves: they are not reachable from any `mod` declaration until glue.rs (orchestrator-only, forbidden to this unit) is updated per ifc-2x3-glue.rs.txt. Self-verification was instead done by: (1) closely mirroring proven-compiling precedent files field-for-field (gif 89a's engine/schema split, txt's DiffAlgebra shape, pdf/A's composer+builder+SubsetValidator shape), (2) a full manual review pass of every new file for import/type/signature consistency against those precedents, and (3) confirming via `cargo check -p semio-s-plugin-stdio` that the ONLY new error versus baseline is the expected `error[E0432]: unresolved import crate::artifacts::ifc::standards::v2x3` at the one artifact-level file this unit edited (🎹️composer/🦀️component.rs) -- exactly the error predicted by the glue-snippet handoff protocol, not a defect in this unit's own new files (none of which appear anywhere in the cargo output, confirming they simply aren't compiled yet). This resolves once the glue snippet is applied; recommend the orchestrator re-run cargo check after merging it and report back if anything surfaces."
+  ]
+}

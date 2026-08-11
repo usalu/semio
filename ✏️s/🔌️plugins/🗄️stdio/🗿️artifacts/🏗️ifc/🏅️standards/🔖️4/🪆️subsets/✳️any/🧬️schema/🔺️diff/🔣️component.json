@@ -2,14 +2,56 @@
   "$id": "https://semio.tech/schema/s.stdio.ifc/diff.json",
   "title": "IfcDiff",
   "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "definitions": {
+    "IfcArgModified": {
+      "type": "object",
+      "required": ["index", "value"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "snapshot.json#/definitions/IfcValue" } }
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "IfcArgAdded": {
+      "type": "object",
+      "required": ["index", "value"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "snapshot.json#/definitions/IfcValue" } }
+    },
+    "IfcArgsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/definitions/IfcArgModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/definitions/IfcArgAdded" } }
+      }
+    },
+    "IfcEntityDiff": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "args": { "$ref": "#/definitions/IfcArgsDiff" },
+        "complex": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcComplexType" } }
+      }
+    },
+    "IfcEntityModified": {
+      "type": "object",
+      "required": ["id", "diff"],
+      "properties": { "id": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/definitions/IfcEntityDiff" } }
+    },
+    "IfcEntityAdded": {
+      "type": "object",
+      "required": ["index", "entity"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "entity": { "$ref": "snapshot.json#/definitions/IfcEntity" } }
+    },
+    "IfcEntitiesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/definitions/IfcEntityModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/definitions/IfcEntityAdded" } }
+      }
     }
+  },
+  "properties": {
+    "fileDescription": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } },
+    "fileName": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } },
+    "fileSchema": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } },
+    "entities": { "$ref": "#/definitions/IfcEntitiesDiff" }
   }
 }

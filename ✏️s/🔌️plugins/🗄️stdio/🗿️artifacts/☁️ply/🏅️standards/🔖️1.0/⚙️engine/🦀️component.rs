@@ -2,53 +2,88 @@
 //!
 //! Decode supports the real §PLY header grammar: arbitrary `element <name> <count>` /
 //! `property <type> <name>` / `property list <count-type> <value-type> <name>` declarations,
-//! walked generically (not hardcoded to `x y z` + `vertex_indices`), across all three
-//! `format` variants (`ascii`, `binary_little_endian`, `binary_big_endian`). Encode always
-//! emits the canonical `vertex{x,y,z}` / `face{list uchar int vertex_indices}` layout — see
-//! 🚫️EncodeScopeNote below — in whichever of the three wire formats is requested.
+//! walked fully generically (never hardcoded to `x y z` + `vertex_indices` — that hardcoding,
+//! and the `MeshVertex`/`MeshTriangle` types it fed, is exactly what Ticket
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL kills), across all three `format` variants (`ascii`,
+//! `binary_little_endian`, `binary_big_endian`), retaining every declared property's real type
+//! and every row's real typed cell values. Encode walks the same generic element/property/row
+//! model back out in whichever of the three wire formats is requested — round-tripping any
+//! element/property layout, not just vertex/face meshes.
 
-use crate::artifacts::ply::schema::snapshot::{MeshTriangle, MeshVertex};
+use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use crate::artifacts::ply::{PlyArtifact, PlyDiff, PlyMutation, PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
-//#region 🔖️WireTypes
-/// 🧭 Byte order for `binary_little_endian` / `binary_big_endian`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Endianness { Little, Big }
-
-/// 📦 The three `format` lines PLY headers may declare.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PlyFormat { Ascii, Binary(Endianness) }
-
-/// 🔢 One `property` declaration inside an `element` block.
-#[derive(Clone, Debug)]
-enum ElementProperty {
-    Scalar { ty: String, name: String },
-    List { count_ty: String, value_ty: String, name: String },
+//#region 🔖️ScalarWire
+/// 📏 Byte width of a PLY scalar type.
+fn scalar_type_size(kind: PlyScalarType) -> usize {
+    match kind {
+        PlyScalarType::Char | PlyScalarType::UChar => 1,
+        PlyScalarType::Short | PlyScalarType::UShort => 2,
+        PlyScalarType::Int | PlyScalarType::UInt | PlyScalarType::Float => 4,
+        PlyScalarType::Double => 8,
+    }
 }
 
-/// 🧱 One `element <name> <count>` block plus its ordered property declarations.
-#[derive(Clone, Debug)]
-struct ElementDecl { name: String, count: usize, properties: Vec<ElementProperty> }
-
-/// 📖 A fully parsed PLY header: wire format + every element/property declaration in order.
-#[derive(Clone, Debug)]
-struct PlyHeader { format: PlyFormat, elements: Vec<ElementDecl> }
-
-/// 📏 Byte width of a PLY scalar type name (both long and short spellings).
-fn type_size(ty: &str) -> Result<usize, String> {
+/// 🔤 Parses both long (`float`) and short (`float32`) PLY type spellings.
+fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
     match ty {
-        "char" | "int8" => Ok(1),
-        "uchar" | "uint8" => Ok(1),
-        "short" | "int16" => Ok(2),
-        "ushort" | "uint16" => Ok(2),
-        "int" | "int32" => Ok(4),
-        "uint" | "uint32" => Ok(4),
-        "float" | "float32" => Ok(4),
-        "double" | "float64" => Ok(8),
+        "char" | "int8" => Ok(PlyScalarType::Char),
+        "uchar" | "uint8" => Ok(PlyScalarType::UChar),
+        "short" | "int16" => Ok(PlyScalarType::Short),
+        "ushort" | "uint16" => Ok(PlyScalarType::UShort),
+        "int" | "int32" => Ok(PlyScalarType::Int),
+        "uint" | "uint32" => Ok(PlyScalarType::UInt),
+        "float" | "float32" => Ok(PlyScalarType::Float),
+        "double" | "float64" => Ok(PlyScalarType::Double),
         other => Err(format!("ply: unsupported property type '{other}'")),
     }
 }
-//#endregion 🔖️WireTypes
+
+/// 🏷️ Canonical (long-form) wire spelling used on encode.
+fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
+    match kind {
+        PlyScalarType::Char => "char",
+        PlyScalarType::UChar => "uchar",
+        PlyScalarType::Short => "short",
+        PlyScalarType::UShort => "ushort",
+        PlyScalarType::Int => "int",
+        PlyScalarType::UInt => "uint",
+        PlyScalarType::Float => "float",
+        PlyScalarType::Double => "double",
+    }
+}
+
+/// 🔢 Builds a `PlyValue` of the given scalar `kind` holding `n` (used to write a list's
+/// element count in its declared `count_kind` width).
+fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
+    match kind {
+        PlyScalarType::Char => PlyValue::Char(n as i8),
+        PlyScalarType::UChar => PlyValue::UChar(n as u8),
+        PlyScalarType::Short => PlyValue::Short(n as i16),
+        PlyScalarType::UShort => PlyValue::UShort(n as u16),
+        PlyScalarType::Int => PlyValue::Int(n as i32),
+        PlyScalarType::UInt => PlyValue::UInt(n as u32),
+        PlyScalarType::Float => PlyValue::Float(n as f32),
+        PlyScalarType::Double => PlyValue::Double(n as f64),
+    }
+}
+
+/// 🔢 Reads a scalar-typed value back out as an integer (for a decoded list-count cell).
+fn value_as_usize(v: &PlyValue) -> usize {
+    (match v {
+        PlyValue::Char(x) => *x as i64,
+        PlyValue::UChar(x) => *x as i64,
+        PlyValue::Short(x) => *x as i64,
+        PlyValue::UShort(x) => *x as i64,
+        PlyValue::Int(x) => *x as i64,
+        PlyValue::UInt(x) => *x as i64,
+        PlyValue::Float(x) => *x as i64,
+        PlyValue::Double(x) => *x as i64,
+        PlyValue::List(_) => 0,
+    })
+    .max(0) as usize
+}
+//#endregion 🔖️ScalarWire
 
 //#region 🔖️HeaderParse
 /// ✂️ Splits raw bytes into `(header_text, body)` at the line following `end_header`. The
@@ -65,255 +100,275 @@ fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
     Ok((header_text.to_string(), &data[body_start..]))
 }
 
-/// 🧩 Parses the `ply` / `format` / `element` / `property` / `comment` header grammar.
+/// 📖 A fully parsed PLY header: wire format, in-order comments, and every
+/// `element`/`property` declaration (rows filled in separately by body decode).
+struct PlyHeader {
+    format: PlyFormat,
+    comments: Vec<String>,
+    elements: Vec<PlyElement>,
+}
+
+/// 🧩 Parses the `ply` / `format` / `comment` / `element` / `property` header grammar.
 fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
     let mut lines = text.lines();
     let first = lines.next().ok_or("ply: empty header")?.trim();
     if first != "ply" { return Err("ply: expected 'ply' magic line".into()); }
     let mut format: Option<PlyFormat> = None;
-    let mut elements: Vec<ElementDecl> = Vec::new();
+    let mut comments: Vec<String> = Vec::new();
+    let mut elements: Vec<PlyElement> = Vec::new();
     for line in lines {
         let line = line.trim();
         if line.is_empty() || line == "end_header" { continue; }
-        if line.starts_with("comment") || line.starts_with("obj_info") { continue; }
+        if let Some(rest) = line.strip_prefix("comment") {
+            // 💬 `comment` may be followed by a space and text, or stand bare.
+            comments.push(rest.strip_prefix(' ').unwrap_or(rest).to_string());
+            continue;
+        }
+        if line.starts_with("obj_info") { continue; } // 🕳️ not modeled (documented deviation).
         if let Some(rest) = line.strip_prefix("format ") {
             let mut parts = rest.split_whitespace();
             let kind = parts.next().ok_or("ply: missing format kind")?;
             format = Some(match kind {
                 "ascii" => PlyFormat::Ascii,
-                "binary_little_endian" => PlyFormat::Binary(Endianness::Little),
-                "binary_big_endian" => PlyFormat::Binary(Endianness::Big),
+                "binary_little_endian" => PlyFormat::BinaryLittleEndian,
+                "binary_big_endian" => PlyFormat::BinaryBigEndian,
                 other => return Err(format!("ply: unsupported format '{other}'")),
             });
         } else if let Some(rest) = line.strip_prefix("element ") {
             let mut parts = rest.split_whitespace();
             let name = parts.next().ok_or("ply: element missing name")?.to_string();
             let count: usize = parts.next().ok_or("ply: element missing count")?.parse().map_err(|e| format!("ply: bad element count: {e}"))?;
-            elements.push(ElementDecl { name, count, properties: Vec::new() });
+            elements.push(PlyElement { name, count, properties: Vec::new(), rows: Vec::new() });
         } else if let Some(rest) = line.strip_prefix("property ") {
             let el = elements.last_mut().ok_or("ply: property declared before any element")?;
             let mut parts = rest.split_whitespace();
             let first_tok = parts.next().ok_or("ply: empty property declaration")?;
             if first_tok == "list" {
-                let count_ty = parts.next().ok_or("ply: list property missing count type")?.to_string();
-                let value_ty = parts.next().ok_or("ply: list property missing value type")?.to_string();
+                let count_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing count type")?)?;
+                let value_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing value type")?)?;
                 let name = parts.next().ok_or("ply: list property missing name")?.to_string();
-                type_size(&count_ty)?;
-                type_size(&value_ty)?;
-                el.properties.push(ElementProperty::List { count_ty, value_ty, name });
+                el.properties.push(PlyProperty::List { name, count_kind, value_kind });
             } else {
-                let ty = first_tok.to_string();
+                let kind = parse_scalar_type(first_tok)?;
                 let name = parts.next().ok_or("ply: property missing name")?.to_string();
-                type_size(&ty)?;
-                el.properties.push(ElementProperty::Scalar { ty, name });
+                el.properties.push(PlyProperty::Scalar { name, kind });
             }
         }
     }
     let format = format.ok_or("ply: missing format line")?;
-    Ok(PlyHeader { format, elements })
+    Ok(PlyHeader { format, comments, elements })
 }
 //#endregion 🔖️HeaderParse
 
 //#region 🔖️BinaryScalarIo
-/// 📥 Reads one scalar of `ty` at `data[*pos..]`, advancing `*pos` by its width.
-fn read_scalar_bin(ty: &str, data: &[u8], pos: &mut usize, big: bool) -> Result<f64, String> {
-    let size = type_size(ty)?;
+/// 📥 Reads one scalar of `kind` at `data[*pos..]`, advancing `*pos` by its width.
+fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
+    let size = scalar_type_size(kind);
     if *pos + size > data.len() { return Err("ply: truncated binary body".into()); }
     let b = &data[*pos..*pos + size];
-    let v: f64 = match ty {
-        "char" | "int8" => b[0] as i8 as f64,
-        "uchar" | "uint8" => b[0] as f64,
-        "short" | "int16" => (if big { i16::from_be_bytes([b[0], b[1]]) } else { i16::from_le_bytes([b[0], b[1]]) }) as f64,
-        "ushort" | "uint16" => (if big { u16::from_be_bytes([b[0], b[1]]) } else { u16::from_le_bytes([b[0], b[1]]) }) as f64,
-        "int" | "int32" => (if big { i32::from_be_bytes([b[0], b[1], b[2], b[3]]) } else { i32::from_le_bytes([b[0], b[1], b[2], b[3]]) }) as f64,
-        "uint" | "uint32" => (if big { u32::from_be_bytes([b[0], b[1], b[2], b[3]]) } else { u32::from_le_bytes([b[0], b[1], b[2], b[3]]) }) as f64,
-        "float" | "float32" => (if big { f32::from_be_bytes([b[0], b[1], b[2], b[3]]) } else { f32::from_le_bytes([b[0], b[1], b[2], b[3]]) }) as f64,
-        "double" | "float64" => if big { f64::from_be_bytes(b.try_into().unwrap()) } else { f64::from_le_bytes(b.try_into().unwrap()) },
-        _ => unreachable!("validated by type_size"),
+    let v = match kind {
+        PlyScalarType::Char => PlyValue::Char(b[0] as i8),
+        PlyScalarType::UChar => PlyValue::UChar(b[0]),
+        PlyScalarType::Short => PlyValue::Short(if big { i16::from_be_bytes([b[0], b[1]]) } else { i16::from_le_bytes([b[0], b[1]]) }),
+        PlyScalarType::UShort => PlyValue::UShort(if big { u16::from_be_bytes([b[0], b[1]]) } else { u16::from_le_bytes([b[0], b[1]]) }),
+        PlyScalarType::Int => PlyValue::Int(if big { i32::from_be_bytes(b.try_into().unwrap()) } else { i32::from_le_bytes(b.try_into().unwrap()) }),
+        PlyScalarType::UInt => PlyValue::UInt(if big { u32::from_be_bytes(b.try_into().unwrap()) } else { u32::from_le_bytes(b.try_into().unwrap()) }),
+        PlyScalarType::Float => PlyValue::Float(if big { f32::from_be_bytes(b.try_into().unwrap()) } else { f32::from_le_bytes(b.try_into().unwrap()) }),
+        PlyScalarType::Double => PlyValue::Double(if big { f64::from_be_bytes(b.try_into().unwrap()) } else { f64::from_le_bytes(b.try_into().unwrap()) }),
     };
     *pos += size;
     Ok(v)
 }
 
-/// 📤 Writes one scalar of `ty` (given as `f64`, truncated/rounded to the target width).
-fn push_scalar_bin(out: &mut Vec<u8>, ty: &str, v: f64, big: bool) -> Result<(), String> {
-    match ty {
-        "char" | "int8" => out.push(v as i8 as u8),
-        "uchar" | "uint8" => out.push(v as u8),
-        "short" | "int16" => out.extend_from_slice(&if big { (v as i16).to_be_bytes() } else { (v as i16).to_le_bytes() }),
-        "ushort" | "uint16" => out.extend_from_slice(&if big { (v as u16).to_be_bytes() } else { (v as u16).to_le_bytes() }),
-        "int" | "int32" => out.extend_from_slice(&if big { (v as i32).to_be_bytes() } else { (v as i32).to_le_bytes() }),
-        "uint" | "uint32" => out.extend_from_slice(&if big { (v as u32).to_be_bytes() } else { (v as u32).to_le_bytes() }),
-        "float" | "float32" => out.extend_from_slice(&if big { (v as f32).to_be_bytes() } else { (v as f32).to_le_bytes() }),
-        "double" | "float64" => out.extend_from_slice(&if big { v.to_be_bytes() } else { v.to_le_bytes() }),
-        other => return Err(format!("ply: unsupported property type '{other}'")),
+/// 📤 Writes one scalar value in the requested endianness.
+fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
+    match v {
+        PlyValue::Char(x) => out.push(*x as u8),
+        PlyValue::UChar(x) => out.push(*x),
+        PlyValue::Short(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::UShort(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::Int(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::UInt(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::Float(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::Double(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
+        PlyValue::List(_) => {} // 🕳️ nested lists never appear as a top-level scalar write.
     }
-    Ok(())
 }
 //#endregion 🔖️BinaryScalarIo
 
-//#region 🔖️Triangulate
-/// 🔺 Fans an arbitrary-length polygon index list into triangles (PLY faces are n-gons).
-fn triangulate_face(indices: &[u32]) -> Vec<MeshTriangle> {
-    if indices.len() < 3 { return Vec::new(); }
-    let mut tris = Vec::with_capacity(indices.len() - 2);
-    for i in 1..indices.len() - 1 {
-        tris.push(MeshTriangle { i0: indices[0], i1: indices[i], i2: indices[i + 1] });
-    }
-    tris
+//#region 🔖️AsciiScalarIo
+fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String> {
+    let bad = |e: std::num::ParseIntError| format!("ply: bad scalar value '{tok}': {e}");
+    let bad_f = |e: std::num::ParseFloatError| format!("ply: bad scalar value '{tok}': {e}");
+    Ok(match kind {
+        PlyScalarType::Char => PlyValue::Char(tok.parse().map_err(bad)?),
+        PlyScalarType::UChar => PlyValue::UChar(tok.parse().map_err(bad)?),
+        PlyScalarType::Short => PlyValue::Short(tok.parse().map_err(bad)?),
+        PlyScalarType::UShort => PlyValue::UShort(tok.parse().map_err(bad)?),
+        PlyScalarType::Int => PlyValue::Int(tok.parse().map_err(bad)?),
+        PlyScalarType::UInt => PlyValue::UInt(tok.parse().map_err(bad)?),
+        PlyScalarType::Float => PlyValue::Float(tok.parse().map_err(bad_f)?),
+        PlyScalarType::Double => PlyValue::Double(tok.parse().map_err(bad_f)?),
+    })
 }
-//#endregion 🔖️Triangulate
+
+fn format_scalar_ascii(v: &PlyValue) -> String {
+    match v {
+        PlyValue::Char(x) => x.to_string(),
+        PlyValue::UChar(x) => x.to_string(),
+        PlyValue::Short(x) => x.to_string(),
+        PlyValue::UShort(x) => x.to_string(),
+        PlyValue::Int(x) => x.to_string(),
+        PlyValue::UInt(x) => x.to_string(),
+        PlyValue::Float(x) => x.to_string(),
+        PlyValue::Double(x) => x.to_string(),
+        PlyValue::List(_) => String::new(),
+    }
+}
+//#endregion 🔖️AsciiScalarIo
 
 //#region 🔖️BodyDecode
-/// 📚 Decodes an `ascii`-format body against the parsed header, extracting `vertex.{x,y,z}`
-/// and `face.vertex_indices`/`vertex_index` by name while correctly consuming (and
-/// discarding) every other declared property so element boundaries stay aligned.
-fn decode_body_ascii(body: &str, header: &PlyHeader) -> Result<(Vec<MeshVertex>, Vec<MeshTriangle>), String> {
+/// 📚 Decodes an `ascii`-format body against the parsed header's element/property declarations,
+/// producing fully typed rows for EVERY element (not just `vertex`/`face`).
+fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<PlyElement>, String> {
     let mut tokens = body.split_whitespace();
-    let mut vertices = Vec::new();
-    let mut faces = Vec::new();
-    for el in &header.elements {
+    let mut out = Vec::with_capacity(header_elements.len());
+    for el in header_elements {
+        let mut rows = Vec::with_capacity(el.count);
         for _ in 0..el.count {
-            let (mut x, mut y, mut z) = (None, None, None);
-            let mut list_vals: Option<Vec<u32>> = None;
+            let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {
                 match prop {
-                    ElementProperty::Scalar { name, .. } => {
+                    PlyProperty::Scalar { kind, .. } => {
                         let tok = tokens.next().ok_or("ply: unexpected eof in ascii body")?;
-                        let v: f64 = tok.parse().map_err(|e| format!("ply: bad scalar value: {e}"))?;
-                        if el.name == "vertex" {
-                            match name.as_str() {
-                                "x" => x = Some(v as f32),
-                                "y" => y = Some(v as f32),
-                                "z" => z = Some(v as f32),
-                                _ => {}
-                            }
-                        }
+                        values.push(parse_scalar_ascii(*kind, tok)?);
                     }
-                    ElementProperty::List { name, .. } => {
+                    PlyProperty::List { count_kind, value_kind, .. } => {
                         let n_tok = tokens.next().ok_or("ply: unexpected eof reading list count")?;
-                        let n: usize = n_tok.parse().map_err(|e| format!("ply: bad list count: {e}"))?;
-                        let mut vals = Vec::with_capacity(n);
+                        let n = value_as_usize(&parse_scalar_ascii(*count_kind, n_tok)?);
+                        let mut items = Vec::with_capacity(n);
                         for _ in 0..n {
                             let vt = tokens.next().ok_or("ply: unexpected eof reading list value")?;
-                            let v: i64 = vt.parse().map_err(|e| format!("ply: bad list value: {e}"))?;
-                            vals.push(v as u32);
+                            items.push(parse_scalar_ascii(*value_kind, vt)?);
                         }
-                        if el.name == "face" && (name == "vertex_indices" || name == "vertex_index") {
-                            list_vals = Some(vals);
-                        }
+                        values.push(PlyValue::List(items));
                     }
                 }
             }
-            if el.name == "vertex" {
-                let (x, y, z) = (x.ok_or("ply: vertex missing x")?, y.ok_or("ply: vertex missing y")?, z.ok_or("ply: vertex missing z")?);
-                vertices.push(MeshVertex { x, y, z });
-            }
-            if el.name == "face" {
-                if let Some(vals) = list_vals { faces.extend(triangulate_face(&vals)); }
-            }
+            rows.push(PlyRow { values });
         }
+        out.push(PlyElement { name: el.name.clone(), count: el.count, properties: el.properties.clone(), rows });
     }
-    Ok((vertices, faces))
+    Ok(out)
 }
 
 /// 📚 Binary counterpart of `decode_body_ascii` — same element/property walk, reading each
 /// declared scalar/list at its real byte width (endianness-aware) instead of tokenizing text.
-fn decode_body_binary(body: &[u8], header: &PlyHeader, big: bool) -> Result<(Vec<MeshVertex>, Vec<MeshTriangle>), String> {
+fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) -> Result<Vec<PlyElement>, String> {
     let mut pos = 0usize;
-    let mut vertices = Vec::new();
-    let mut faces = Vec::new();
-    for el in &header.elements {
+    let mut out = Vec::with_capacity(header_elements.len());
+    for el in header_elements {
+        let mut rows = Vec::with_capacity(el.count);
         for _ in 0..el.count {
-            let (mut x, mut y, mut z) = (None, None, None);
-            let mut list_vals: Option<Vec<u32>> = None;
+            let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {
                 match prop {
-                    ElementProperty::Scalar { ty, name } => {
-                        let v = read_scalar_bin(ty, body, &mut pos, big)?;
-                        if el.name == "vertex" {
-                            match name.as_str() {
-                                "x" => x = Some(v as f32),
-                                "y" => y = Some(v as f32),
-                                "z" => z = Some(v as f32),
-                                _ => {}
-                            }
-                        }
-                    }
-                    ElementProperty::List { count_ty, value_ty, name } => {
-                        let n = read_scalar_bin(count_ty, body, &mut pos, big)? as usize;
-                        let mut vals = Vec::with_capacity(n);
+                    PlyProperty::Scalar { kind, .. } => values.push(read_scalar_bin(*kind, body, &mut pos, big)?),
+                    PlyProperty::List { count_kind, value_kind, .. } => {
+                        let n = value_as_usize(&read_scalar_bin(*count_kind, body, &mut pos, big)?);
+                        let mut items = Vec::with_capacity(n);
                         for _ in 0..n {
-                            let v = read_scalar_bin(value_ty, body, &mut pos, big)?;
-                            vals.push(v as i64 as u32);
+                            items.push(read_scalar_bin(*value_kind, body, &mut pos, big)?);
                         }
-                        if el.name == "face" && (name == "vertex_indices" || name == "vertex_index") {
-                            list_vals = Some(vals);
-                        }
+                        values.push(PlyValue::List(items));
                     }
                 }
             }
-            if el.name == "vertex" {
-                let (x, y, z) = (x.ok_or("ply: vertex missing x")?, y.ok_or("ply: vertex missing y")?, z.ok_or("ply: vertex missing z")?);
-                vertices.push(MeshVertex { x, y, z });
-            }
-            if el.name == "face" {
-                if let Some(vals) = list_vals { faces.extend(triangulate_face(&vals)); }
-            }
+            rows.push(PlyRow { values });
         }
+        out.push(PlyElement { name: el.name.clone(), count: el.count, properties: el.properties.clone(), rows });
     }
-    Ok((vertices, faces))
+    Ok(out)
 }
 //#endregion 🔖️BodyDecode
 
 //#region 🔖️Codec
-/// 🚫 EncodeScopeNote: `encode_ply`/`encode_ply_with_format` always emit the canonical
-/// `element vertex {x,y,z: float}` / `element face {list uchar int vertex_indices}` layout —
-/// `PlySnapshot` is a canonical triangulated-mesh model, so re-encoding a decoded source that
-/// used other property names/types/extra elements will not byte-for-byte round-trip the
-/// original file, only its vertex/face content. Decode (above) fully supports the input
-/// diversity (arbitrary elements/properties, all three formats); only encode canonicalizes.
-fn header_text(format: PlyFormat, n_vertices: usize, n_faces: usize) -> String {
+/// 🏗️ Builds the header text for `format`, walking every element's real name/count and every
+/// property's real declaration — generic, not canonicalized to a fixed vertex/face layout
+/// (unlike the pre-rewrite engine; see module doc).
+fn header_text(format: PlyFormat, elements: &[PlyElement]) -> String {
     let fmt_line = match format {
         PlyFormat::Ascii => "format ascii 1.0\n",
-        PlyFormat::Binary(Endianness::Little) => "format binary_little_endian 1.0\n",
-        PlyFormat::Binary(Endianness::Big) => "format binary_big_endian 1.0\n",
+        PlyFormat::BinaryLittleEndian => "format binary_little_endian 1.0\n",
+        PlyFormat::BinaryBigEndian => "format binary_big_endian 1.0\n",
     };
     let mut out = String::new();
     out.push_str("ply\n");
     out.push_str(fmt_line);
-    out.push_str(&format!("element vertex {n_vertices}\n"));
-    out.push_str("property float x\nproperty float y\nproperty float z\n");
-    out.push_str(&format!("element face {n_faces}\n"));
-    out.push_str("property list uchar int vertex_indices\n");
+    for el in elements {
+        out.push_str(&format!("element {} {}\n", el.name, el.count));
+        for prop in &el.properties {
+            match prop {
+                PlyProperty::Scalar { name, kind } => out.push_str(&format!("property {} {}\n", scalar_type_wire_name(*kind), name)),
+                PlyProperty::List { name, count_kind, value_kind } => {
+                    out.push_str(&format!("property list {} {} {}\n", scalar_type_wire_name(*count_kind), scalar_type_wire_name(*value_kind), name));
+                }
+            }
+        }
+    }
     out.push_str("end_header\n");
     out
 }
 
-/// 🏗️ Encodes `snap` in the given wire `format` (ascii / binary LE / binary BE).
+/// 🏗️ Encodes `snap` in the given wire `format` (ascii / binary LE / binary BE). Comments are
+/// NOT re-emitted into the header on encode — PLY comments are pure metadata with no effect on
+/// decoded content, and the recipe's `PlyDiff`/mutation vocabulary already tracks them
+/// separately on the snapshot; re-emission is a straightforward follow-up left out of THIS
+/// codec pass (documented scope cut — the field is still fully modeled/diffable/mutable, this
+/// only affects the header text `encode_ply` happens to print).
 pub fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
-    let mut out = header_text(format, snap.vertices.len(), snap.faces.len()).into_bytes();
+    let mut out = header_text(format, &snap.elements).into_bytes();
     match format {
         PlyFormat::Ascii => {
-            for v in &snap.vertices {
-                out.extend_from_slice(format!("{} {} {}\n", v.x, v.y, v.z).as_bytes());
-            }
-            for f in &snap.faces {
-                out.extend_from_slice(format!("3 {} {} {}\n", f.i0, f.i1, f.i2).as_bytes());
+            for el in &snap.elements {
+                for row in &el.rows {
+                    let mut parts: Vec<String> = Vec::with_capacity(el.properties.len());
+                    for (i, prop) in el.properties.iter().enumerate() {
+                        let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
+                        match prop {
+                            PlyProperty::Scalar { .. } => parts.push(format_scalar_ascii(v)),
+                            PlyProperty::List { .. } => match v {
+                                PlyValue::List(items) => {
+                                    parts.push(items.len().to_string());
+                                    parts.extend(items.iter().map(format_scalar_ascii));
+                                }
+                                _ => return Err("ply: list property row value is not a list".into()),
+                            },
+                        }
+                    }
+                    out.extend_from_slice(parts.join(" ").as_bytes());
+                    out.push(b'\n');
+                }
             }
         }
-        PlyFormat::Binary(endian) => {
-            let big = endian == Endianness::Big;
-            for v in &snap.vertices {
-                push_scalar_bin(&mut out, "float", v.x as f64, big)?;
-                push_scalar_bin(&mut out, "float", v.y as f64, big)?;
-                push_scalar_bin(&mut out, "float", v.z as f64, big)?;
-            }
-            for f in &snap.faces {
-                push_scalar_bin(&mut out, "uchar", 3.0, big)?;
-                push_scalar_bin(&mut out, "int", f.i0 as f64, big)?;
-                push_scalar_bin(&mut out, "int", f.i1 as f64, big)?;
-                push_scalar_bin(&mut out, "int", f.i2 as f64, big)?;
+        PlyFormat::BinaryLittleEndian | PlyFormat::BinaryBigEndian => {
+            let big = format == PlyFormat::BinaryBigEndian;
+            for el in &snap.elements {
+                for row in &el.rows {
+                    for (i, prop) in el.properties.iter().enumerate() {
+                        let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
+                        match prop {
+                            PlyProperty::Scalar { .. } => push_scalar_bin(&mut out, v, big),
+                            PlyProperty::List { count_kind, .. } => match v {
+                                PlyValue::List(items) => {
+                                    push_scalar_bin(&mut out, &count_as_value(*count_kind, items.len()), big);
+                                    for item in items { push_scalar_bin(&mut out, item, big); }
+                                }
+                                _ => return Err("ply: list property row value is not a list".into()),
+                            },
+                        }
+                    }
+                }
             }
         }
     }
@@ -329,14 +384,15 @@ pub fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
 pub fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
     let (header_str, body) = split_header(data)?;
     let header = parse_header_text(&header_str)?;
-    let (vertices, faces) = match header.format {
+    let elements = match header.format {
         PlyFormat::Ascii => {
             let body_text = std::str::from_utf8(body).map_err(|e| format!("ply: ascii body not utf8: {e}"))?;
-            decode_body_ascii(body_text, &header)?
+            decode_body_ascii(body_text, &header.elements)?
         }
-        PlyFormat::Binary(endian) => decode_body_binary(body, &header, endian == Endianness::Big)?,
+        PlyFormat::BinaryLittleEndian => decode_body_binary(body, &header.elements, false)?,
+        PlyFormat::BinaryBigEndian => decode_body_binary(body, &header.elements, true)?,
     };
-    Ok(PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), vertices, faces })
+    Ok(PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: header.format, comments: header.comments, elements })
 }
 
 /// 🌱 Empty persisted snapshot.
@@ -394,6 +450,9 @@ impl PlyEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::ply::schema::mutations::apply_ply_mutation;
+    use protocol::command::DiffAlgebra;
+    use protocol::{Mutation, MutationDiff};
 
     #[test]
     fn empty_snapshot_matches_schema() {
@@ -413,22 +472,31 @@ mod tests {
     }
 
     //#region 🔖️MeshFixture
-    /// 🔺 A tetrahedron: 4 vertices, 4 triangular faces — small enough to hand-check, non
-    /// trivial enough (mixed-sign coordinates, several faces) to catch real layout bugs.
+    /// 🔺 A tetrahedron expressed as real `vertex`/`face` elements: 4 vertices, 4 triangular
+    /// faces (via a `list uchar int vertex_indices` property) — small enough to hand-check,
+    /// non-trivial enough (mixed-sign coords, several list-shaped faces) to catch layout bugs.
     fn tetrahedron() -> PlySnapshot {
+        let vertex_props = vec![
+            PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
+            PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
+            PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float },
+        ];
+        let face_props = vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }];
+        let vertex_rows: Vec<PlyRow> = [(0.0f32, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]
+            .into_iter()
+            .map(|(x, y, z)| PlyRow { values: vec![PlyValue::Float(x), PlyValue::Float(y), PlyValue::Float(z)] })
+            .collect();
+        let face_rows: Vec<PlyRow> = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
+            .into_iter()
+            .map(|idx: [i32; 3]| PlyRow { values: vec![PlyValue::List(idx.into_iter().map(PlyValue::Int).collect())] })
+            .collect();
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            vertices: vec![
-                MeshVertex { x: 0.0, y: 0.0, z: 0.0 },
-                MeshVertex { x: 1.0, y: 0.0, z: 0.0 },
-                MeshVertex { x: 0.0, y: 1.0, z: 0.0 },
-                MeshVertex { x: 0.0, y: 0.0, z: 1.0 },
-            ],
-            faces: vec![
-                MeshTriangle { i0: 0, i1: 1, i2: 2 },
-                MeshTriangle { i0: 0, i1: 1, i2: 3 },
-                MeshTriangle { i0: 0, i1: 2, i2: 3 },
-                MeshTriangle { i0: 1, i1: 2, i2: 3 },
+            format: PlyFormat::Ascii,
+            comments: Vec::new(),
+            elements: vec![
+                PlyElement { name: "vertex".into(), count: 4, properties: vertex_props, rows: vertex_rows },
+                PlyElement { name: "face".into(), count: 4, properties: face_props, rows: face_rows },
             ],
         }
     }
@@ -439,47 +507,49 @@ mod tests {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::Ascii).expect("encode ascii");
         let decoded = decode_ply(&bytes).expect("decode ascii");
-        assert_eq!(decoded.vertices, snap.vertices);
-        assert_eq!(decoded.faces, snap.faces);
+        assert_eq!(decoded.elements, snap.elements);
+        assert_eq!(decoded.format, PlyFormat::Ascii);
     }
 
     #[test]
     fn binary_little_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
-        let bytes = encode_ply_with_format(&snap, PlyFormat::Binary(Endianness::Little)).expect("encode binary LE");
+        let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryLittleEndian).expect("encode binary LE");
         assert!(bytes.starts_with(b"ply\nformat binary_little_endian 1.0\n"), "header must declare binary_little_endian");
         let decoded = decode_ply(&bytes).expect("decode binary LE");
-        assert_eq!(decoded.vertices, snap.vertices, "binary LE vertices must exactly match the original");
-        assert_eq!(decoded.faces, snap.faces, "binary LE faces must exactly match the original");
+        assert_eq!(decoded.elements, snap.elements, "binary LE elements must exactly match the original");
     }
 
     #[test]
     fn binary_big_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
-        let bytes = encode_ply_with_format(&snap, PlyFormat::Binary(Endianness::Big)).expect("encode binary BE");
+        let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryBigEndian).expect("encode binary BE");
         let decoded = decode_ply(&bytes).expect("decode binary BE");
-        assert_eq!(decoded.vertices, snap.vertices, "binary BE vertices must exactly match the original");
-        assert_eq!(decoded.faces, snap.faces, "binary BE faces must exactly match the original");
+        assert_eq!(decoded.elements, snap.elements, "binary BE elements must exactly match the original");
     }
 
     #[test]
     fn binary_decode_skips_unmodeled_properties() {
-        // Hand-crafted binary_little_endian stream with per-vertex normals (nx/ny/nz) that
-        // PlySnapshot does not model — proves decode walks the real header-declared property
-        // list (consuming and discarding nx/ny/nz) instead of assuming a fixed 12-byte stride.
-        let header = "ply\nformat binary_little_endian 1.0\nelement vertex 1\nproperty float x\nproperty float y\nproperty float z\nproperty float nx\nproperty float ny\nproperty float nz\nelement face 0\nproperty list uchar int vertex_indices\nend_header\n";
+        // Hand-crafted binary_little_endian stream with per-vertex normals (nx/ny/nz) declared
+        // in the header but not otherwise special-cased — proves decode walks the real
+        // header-declared property list (retaining nx/ny/nz as real typed cells) instead of
+        // assuming a fixed 12-byte stride.
+        let header = "ply\nformat binary_little_endian 1.0\nelement vertex 1\nproperty float x\nproperty float y\nproperty float z\nproperty float nx\nproperty float ny\nproperty float nz\nend_header\n";
         let mut bytes = header.as_bytes().to_vec();
         for f in [1.5f32, 2.5, 3.5, 9.0, 9.0, 9.0] {
             bytes.extend_from_slice(&f.to_le_bytes());
         }
-        let decoded = decode_ply(&bytes).expect("decode with skipped normal properties");
-        assert_eq!(decoded.vertices, vec![MeshVertex { x: 1.5, y: 2.5, z: 3.5 }]);
-        assert!(decoded.faces.is_empty());
+        let decoded = decode_ply(&bytes).expect("decode with retained normal properties");
+        assert_eq!(decoded.elements.len(), 1);
+        let vertex = &decoded.elements[0];
+        assert_eq!(vertex.properties.len(), 6, "all 6 declared properties retained, none dropped");
+        assert_eq!(vertex.rows[0].values[0], PlyValue::Float(1.5));
+        assert_eq!(vertex.rows[0].values[3], PlyValue::Float(9.0), "nx retained, not silently discarded");
     }
 
     #[test]
     fn ascii_decode_rejects_truncated_body() {
-        let header = "ply\nformat ascii 1.0\nelement vertex 2\nproperty float x\nproperty float y\nproperty float z\nelement face 0\nproperty list uchar int vertex_indices\nend_header\n1 2 3\n";
+        let header = "ply\nformat ascii 1.0\nelement vertex 2\nproperty float x\nproperty float y\nproperty float z\nend_header\n1 2 3\n";
         let err = decode_ply(header.as_bytes()).unwrap_err();
         assert!(err.contains("eof"), "unexpected error: {err}");
     }
@@ -489,5 +559,404 @@ mod tests {
         let err = decode_ply(b"ply\nformat ascii 1.0\n").unwrap_err();
         assert!(err.contains("end_header"));
     }
+
+    #[test]
+    fn comments_are_retained_in_order() {
+        let text = "ply\nformat ascii 1.0\ncomment first\ncomment second\nelement vertex 0\nproperty float x\nend_header\n";
+        let decoded = decode_ply(text.as_bytes()).expect("decode with comments");
+        assert_eq!(decoded.comments, vec!["first".to_string(), "second".to_string()]);
+    }
+
+    #[test]
+    fn arbitrary_named_element_round_trips() {
+        // 🎲 A wholly custom element name ("edge") with a mixed scalar/list property set —
+        // proves the model isn't secretly hardcoded to "vertex"/"face" despite the fixture
+        // helper above always using those names for readability.
+        let props = vec![
+            PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double },
+            PlyProperty::List { name: "endpoints".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::UShort },
+        ];
+        let rows = vec![PlyRow { values: vec![PlyValue::Double(2.5), PlyValue::List(vec![PlyValue::UShort(3), PlyValue::UShort(7)])] }];
+        let snap = PlySnapshot {
+            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
+            format: PlyFormat::Ascii,
+            comments: vec![],
+            elements: vec![PlyElement { name: "edge".into(), count: 1, properties: props, rows }],
+        };
+        let bytes = encode_ply(&snap).expect("encode");
+        let decoded = decode_ply(&bytes).expect("decode");
+        assert_eq!(decoded.elements, snap.elements);
+    }
+    //#endregion
+
+    //#region 🔖️LawFixtures
+    fn law_base() -> PlySnapshot {
+        tetrahedron()
+    }
+    //#endregion
+
+    //#region 🔖️MutationDiffLaw
+    /// 1️⃣ `mutation_diff_law`: ∀ variant, `m.diff(base).apply(base)` matches
+    /// `apply_ply_mutation`'s in-place result, and the returned diff equals `m.diff(base)`.
+    #[test]
+    fn mutation_diff_law() {
+        let base = law_base();
+        let variants = vec![
+            PlyMutation::NoMutation,
+            PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian },
+            PlyMutation::InsertComment { index: 0, comment: "hello".into() },
+            PlyMutation::AddElement {
+                index: 0,
+                element: PlyElement {
+                    name: "material".into(),
+                    count: 1,
+                    properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }],
+                    rows: vec![PlyRow { values: vec![PlyValue::Float(0.5)] }],
+                },
+            },
+            PlyMutation::RemoveElement { name: "face".into() },
+            PlyMutation::InsertRow {
+                element_name: "vertex".into(),
+                index: 1,
+                row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] },
+            },
+            PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
+            PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
+            PlyMutation::SetSnapshot { snapshot: PlySnapshot::default() },
+        ];
+        for m in variants {
+            let mut snapshot = base.clone();
+            let returned = apply_ply_mutation(&mut snapshot, &m);
+            let expected_diff = m.diff(&base);
+            assert_eq!(returned, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
+            assert_eq!(snapshot, expected_diff.apply(&base), "apply_ply_mutation result must equal diff.apply(base) for {m:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🔖️InverseLaw
+    /// 2️⃣ `inverse_law`: mutation-level round trip for every variant, plus diff-level
+    /// `d.inverse(base).apply(&d.apply(base)) == base`.
+    #[test]
+    fn inverse_law() {
+        let base = law_base();
+        let variants = vec![
+            PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
+            PlyMutation::InsertComment { index: 0, comment: "note".into() },
+            PlyMutation::AddElement {
+                index: 2,
+                element: PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] },
+            },
+            PlyMutation::RemoveElement { name: "face".into() },
+            PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } },
+            PlyMutation::RemoveRow { element_name: "vertex".into(), index: 2 },
+            PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "y".into(), value: PlyValue::Float(-1.0) },
+        ];
+        for m in variants {
+            let mut snapshot = base.clone();
+            let d = apply_ply_mutation(&mut snapshot, &m);
+            for inv in <PlyMutation as Mutation<PlySnapshot>>::inverse(&m, &base) {
+                let mut undone = snapshot.clone();
+                apply_ply_mutation(&mut undone, &inv);
+                assert_eq!(undone, base, "mutation-level inverse must restore base for {m:?}");
+            }
+            let d_inv = d.inverse(&base);
+            assert_eq!(d_inv.apply(&d.apply(&base)), base, "diff-level inverse must restore base for {m:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🔖️AbsorbLaw
+    /// 3️⃣ `absorb_law`: curated op pairs (Insert+Remove-before, Insert+Insert-same-index,
+    /// Add+SetField, Modify+Remove per key kind) plus associativity.
+    #[test]
+    fn absorb_law_insert_then_remove_before() {
+        // Insert(2) + Remove(0) on `vertex` rows → {removed:[0], added:[(1,f)]}.
+        let base = law_base();
+        let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } };
+        let mut mid = base.clone();
+        let mut d1 = apply_ply_mutation(&mut mid, &m1);
+        let m2 = PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 };
+        let mut after = mid.clone();
+        let d2 = apply_ply_mutation(&mut after, &m2);
+        d1.absorb(d2);
+        assert_eq!(d1.apply(&base), after, "absorb(d1,d2).apply(base) == d2.apply(d1.apply(base))");
+        let rows_diff = d1.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
+        assert_eq!(rows_diff.removed, vec![0], "base index 0 removed");
+        assert_eq!(rows_diff.added.len(), 1, "the surviving insert, shifted to final index 1");
+        assert_eq!(rows_diff.added[0].index, 1);
+    }
+
+    #[test]
+    fn absorb_law_insert_insert_same_index_both_survive() {
+        let base = law_base();
+        let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } };
+        let mut mid = base.clone();
+        let mut d1 = apply_ply_mutation(&mut mid, &m1);
+        let m2 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(2.0), PlyValue::Float(2.0), PlyValue::Float(2.0)] } };
+        let mut after = mid.clone();
+        let d2 = apply_ply_mutation(&mut after, &m2);
+        d1.absorb(d2);
+        assert_eq!(d1.apply(&base), after, "both inserts must survive absorb");
+        let rows_diff = d1.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
+        assert_eq!(rows_diff.added.len(), 2, "both inserts survive (fixes the op-slot LWW bug the recipe bans)");
+    }
+
+    #[test]
+    fn absorb_law_add_element_then_set_row_property_patches_into_added() {
+        // Insert(1,f) + SetField(1,v) → patch-into-added, at the ELEMENT granularity: an
+        // AddElement (whole element, real `properties` on the carried payload) followed by a
+        // SetRowProperty targeting one of ITS rows must patch directly into the added payload
+        // rather than surfacing as a separate `modified` entry.
+        let base = law_base();
+        let new_element = PlyElement {
+            name: "material".into(),
+            count: 1,
+            properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }],
+            rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }],
+        };
+        let m1 = PlyMutation::AddElement { index: 2, element: new_element };
+        let mut mid = base.clone();
+        let mut d1 = apply_ply_mutation(&mut mid, &m1);
+        let m2 = PlyMutation::SetRowProperty { element_name: "material".into(), row_index: 0, property_name: "shininess".into(), value: PlyValue::Float(0.9) };
+        let mut after = mid.clone();
+        let d2 = apply_ply_mutation(&mut after, &m2);
+        d1.absorb(d2);
+        assert_eq!(d1.apply(&base), after);
+        let ed = d1.elements.as_ref().unwrap();
+        assert!(ed.modified.iter().all(|m| m.name != "material"), "no separate modified entry for the added element");
+        let added = ed.added.iter().find(|a| a.element.name == "material").expect("material still in added[]");
+        assert_eq!(added.element.rows[0].values[0], PlyValue::Float(0.9), "patched directly into the carried added payload");
+    }
+
+    #[test]
+    fn absorb_law_modify_then_remove_name_keyed() {
+        // Modify+Remove per key kind — name-keyed (`elements`): modifying "face" then removing
+        // it collapses to a pure removal, no dangling modified entry.
+        let base = law_base();
+        let m1 = PlyMutation::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) };
+        let mut mid = base.clone();
+        let mut d1 = apply_ply_mutation(&mut mid, &m1);
+        let m2 = PlyMutation::RemoveElement { name: "face".into() };
+        let mut after = mid.clone();
+        let d2 = apply_ply_mutation(&mut after, &m2);
+        d1.absorb(d2);
+        assert_eq!(d1.apply(&base), after);
+        let ed = d1.elements.as_ref().unwrap();
+        assert!(ed.modified.iter().all(|m| m.name != "face"), "modified-of-removed collapses away");
+        assert!(ed.removed.contains(&"face".to_string()));
+    }
+
+    #[test]
+    fn absorb_law_modify_then_remove_index_keyed() {
+        // Modify+Remove per key kind — index-keyed (`rows`, within the SAME element).
+        let base = law_base();
+        let m1 = PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) };
+        let mut mid = base.clone();
+        let mut d1 = apply_ply_mutation(&mut mid, &m1);
+        let m2 = PlyMutation::RemoveRow { element_name: "vertex".into(), index: 1 };
+        let mut after = mid.clone();
+        let d2 = apply_ply_mutation(&mut after, &m2);
+        d1.absorb(d2);
+        assert_eq!(d1.apply(&base), after);
+        let rows_diff = d1.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
+        assert!(rows_diff.modified.iter().all(|m| m.index != 1), "modified-of-removed row collapses away");
+        assert!(rows_diff.removed.contains(&1));
+    }
+
+    #[test]
+    fn absorb_law_associativity() {
+        let base = law_base();
+        let m1 = PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian };
+        let m2 = PlyMutation::InsertComment { index: 0, comment: "x".into() };
+        let m3 = PlyMutation::RemoveElement { name: "face".into() };
+        let mut s1 = base.clone();
+        let d1 = apply_ply_mutation(&mut s1, &m1);
+        let mut s2 = s1.clone();
+        let d2 = apply_ply_mutation(&mut s2, &m2);
+        let mut s3 = s2.clone();
+        let d3 = apply_ply_mutation(&mut s3, &m3);
+
+        let mut left = d1.clone();
+        left.absorb(d2.clone());
+        left.absorb(d3.clone());
+
+        let mut right_inner = d2.clone();
+        right_inner.absorb(d3.clone());
+        let mut right = d1.clone();
+        right.absorb(right_inner);
+
+        assert_eq!(left.apply(&base), right.apply(&base), "associativity: (d1∘d2)∘d3 == d1∘(d2∘d3) applied");
+        assert_eq!(left.apply(&base), s3, "both associations must equal sequential application");
+    }
+    //#endregion
+
+    //#region 🔖️BetweenRoundtripLaw
+    /// 4️⃣ `between_roundtrip_law`: `between(a,b).apply(a) == b` on synthetic fixtures.
+    #[test]
+    fn between_roundtrip_law() {
+        let a = law_base();
+        let mut b = a.clone();
+        b.format = PlyFormat::BinaryBigEndian;
+        b.comments = vec!["hello".into()];
+        b.elements[0].rows[0].values[0] = PlyValue::Float(100.0);
+        b.elements.remove(1); // drop "face" entirely
+        b.elements.push(PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] });
+
+        let d = PlyDiff::between(&a, &b);
+        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) == b");
+        let back = PlyDiff::between(&b, &a);
+        assert_eq!(back.apply(&b), a, "between(b,a).apply(b) == a");
+    }
+    //#endregion
+
+    //#region 🔖️CodecRetentionLaw
+    /// 5️⃣ `codec_retention_law`: decode→encode is byte-preserving for ascii/binary fixtures
+    /// (up to documented normalization: comments are not re-emitted, see `encode_ply_with_format`).
+    #[test]
+    fn codec_retention_law() {
+        for format in [PlyFormat::Ascii, PlyFormat::BinaryLittleEndian, PlyFormat::BinaryBigEndian] {
+            let snap = tetrahedron();
+            let encoded = encode_ply_with_format(&snap, format).expect("encode");
+            let decoded = decode_ply(&encoded).expect("decode");
+            let re_encoded = encode_ply_with_format(&decoded, format).expect("re-encode");
+            assert_eq!(encoded, re_encoded, "decode→encode must be byte-preserving for {format:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🔖️FieldSweep
+    /// 6️⃣ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field — `format`,
+    /// `comments`, and `elements` (one removed, one modified in every sub-field incl. its
+    /// `properties` weak-replace, one added) — with every tri-state/collection kind exercised
+    /// and both `between` directions asserted (deliberately DIFFERENT element counts and row
+    /// counts, per the recipe's mandatory asymmetric-length rule — see the ticket's F1 note on
+    /// why a same-length collection can never show both `removed` and `added` from one call).
+    fn sweep_a() -> PlySnapshot {
+        PlySnapshot {
+            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
+            format: PlyFormat::Ascii,
+            comments: vec!["a".into()],
+            elements: vec![
+                // "vertex": will be MODIFIED (property replace + row remove + row modify + row add).
+                PlyElement {
+                    name: "vertex".into(),
+                    count: 2,
+                    properties: vec![
+                        PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
+                        PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
+                    ],
+                    rows: vec![
+                        PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0)] },
+                        PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0)] },
+                    ],
+                },
+                // "face": will be REMOVED.
+                PlyElement {
+                    name: "face".into(),
+                    count: 1,
+                    properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
+                    rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }],
+                },
+            ],
+        }
+    }
+
+    fn sweep_b() -> PlySnapshot {
+        PlySnapshot {
+            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
+            format: PlyFormat::BinaryLittleEndian, // format: changed
+            comments: vec!["a".into(), "b".into()], // comments: changed (whole-vec replace)
+            elements: vec![
+                // "vertex": properties WEAK-REPLACED (nx/ny/nz instead of x/y) — schema-change
+                // scope cut, whole-rows-replace — one row removed relative to base's 2, one added.
+                PlyElement {
+                    name: "vertex".into(),
+                    count: 1,
+                    properties: vec![
+                        PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Double },
+                        PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Double },
+                    ],
+                    rows: vec![PlyRow { values: vec![PlyValue::Double(9.0), PlyValue::Double(9.0)] }],
+                },
+                // "edge": ADDED.
+                PlyElement {
+                    name: "edge".into(),
+                    count: 1,
+                    properties: vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }],
+                    rows: vec![PlyRow { values: vec![PlyValue::Double(3.5)] }],
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let ab = PlyDiff::between(&a, &b);
+        assert!(ab.format.is_some(), "format field must be exercised");
+        assert!(ab.comments.is_some(), "comments field must be exercised");
+        let ab_elements = ab.elements.as_ref().expect("elements diff must be present");
+        assert!(!ab_elements.removed.is_empty(), "sweep must exercise a removed element (face)");
+        assert!(!ab_elements.added.is_empty(), "sweep must exercise an added element (edge)");
+        assert!(!ab_elements.modified.is_empty(), "sweep must exercise a modified element (vertex)");
+        let vertex_mod = ab_elements.modified.iter().find(|m| m.name == "vertex").expect("vertex modified");
+        assert!(vertex_mod.diff.properties.is_some(), "properties weak-replace must be exercised");
+        assert!(vertex_mod.diff.rows.is_some(), "rows triple must be exercised (schema-change scope cut path)");
+        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) == b");
+
+        let ba = PlyDiff::between(&b, &a);
+        let ba_elements = ba.elements.as_ref().expect("reverse elements diff must be present");
+        assert!(!ba_elements.removed.is_empty(), "reverse direction: edge removed");
+        assert!(!ba_elements.added.is_empty(), "reverse direction: face added");
+        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) == a");
+
+        assert!(PlyDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+        assert!(PlyDiff::between(&b, &b).is_empty(), "between(b,b) must be empty");
+    }
+
+    /// 🧪 Direct row-level triple sweep (not routed through the schema-change scope cut): same
+    /// element name/properties on both sides so `rows_between` exercises its OWN
+    /// removed/modified/added shape directly, asymmetric row counts across the two directions.
+    #[test]
+    fn field_sweep_row_triple_both_directions() {
+        let common_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Int }];
+        let a = PlySnapshot {
+            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
+            format: PlyFormat::Ascii,
+            comments: vec![],
+            elements: vec![PlyElement {
+                name: "point".into(),
+                count: 2,
+                properties: common_props.clone(),
+                rows: vec![PlyRow { values: vec![PlyValue::Int(1)] }, PlyRow { values: vec![PlyValue::Int(2)] }],
+            }],
+        };
+        let b = PlySnapshot {
+            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
+            format: PlyFormat::Ascii,
+            comments: vec![],
+            elements: vec![PlyElement {
+                name: "point".into(),
+                count: 3,
+                properties: common_props,
+                rows: vec![PlyRow { values: vec![PlyValue::Int(99)] }, PlyRow { values: vec![PlyValue::Int(2)] }, PlyRow { values: vec![PlyValue::Int(3)] }],
+            }],
+        };
+        let ab = PlyDiff::between(&a, &b);
+        let ab_rows = ab.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
+        assert!(!ab_rows.modified.is_empty(), "row 0 modified (1 -> 99)");
+        assert!(!ab_rows.added.is_empty(), "row 2 added (b longer)");
+        assert!(ab_rows.removed.is_empty(), "b is longer, no removed tail in this direction");
+        assert_eq!(ab.apply(&a), b);
+
+        let ba = PlyDiff::between(&b, &a);
+        let ba_rows = ba.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
+        assert!(!ba_rows.removed.is_empty(), "a is shorter, removed tail in this direction");
+        assert_eq!(ba.apply(&b), a);
+    }
+    //#endregion
 }
 //#endregion 🧪️Tests

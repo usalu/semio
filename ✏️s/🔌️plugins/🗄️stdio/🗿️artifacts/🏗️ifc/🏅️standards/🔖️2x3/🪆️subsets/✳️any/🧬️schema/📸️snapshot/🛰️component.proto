@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_ifc_2x3.snapshot;
+message Ifc2x3Snapshot {
+  string schema = 1;
+  bytes document_wire = 2;
+}

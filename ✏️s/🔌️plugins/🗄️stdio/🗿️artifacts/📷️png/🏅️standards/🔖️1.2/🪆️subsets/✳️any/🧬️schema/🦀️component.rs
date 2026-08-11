@@ -1,6 +1,10 @@
-//! 🧬️ PngArtifact schema — full artifact state.
+//! 🧬️ PngArtifact schema — full artifact state (mirrors `PngSnapshot` field-for-field; see
+//! `zip_artifact_schema_descriptor`/`ZipArtifact` for the established repo pattern this follows).
 
-use crate::artifacts::png::schema::snapshot::RasterImage;
+use crate::artifacts::png::schema::snapshot::{
+    PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
+    PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency,
+};
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -12,8 +16,51 @@ pub struct PngArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
+    pub width: u32,
+    #[state(persistent)]
+    pub height: u32,
+    #[state(persistent)]
+    pub bit_depth: u8,
+    #[state(persistent)]
+    pub color_type: PngColorType,
+    #[state(persistent)]
+    pub interlace: bool,
+    #[state(persistent)]
     #[serde(default)]
-    pub image: RasterImage,
+    pub plte: Option<Vec<PngRgb>>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub trns: Option<PngTransparency>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub gama: Option<u32>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub chrm: Option<PngChromaticities>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub srgb: Option<PngSrgbIntent>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub phys: Option<PngPhysicalDims>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub time: Option<PngTimestamp>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub bkgd: Option<PngBackground>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub text_chunks: Vec<PngTextChunk>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub pixels: Vec<u8>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub chunk_order: Vec<PngChunkMarker>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub unknown_chunks: Vec<PngChunk>,
 }
 
 impl Default for PngArtifact {
@@ -22,14 +69,51 @@ impl Default for PngArtifact {
 
 impl PngArtifact {
     pub fn to_snapshot(&self) -> PngSnapshot {
-        PngSnapshot { schema: self.schema.clone(), image: self.image.clone() }
+        PngSnapshot {
+            schema: self.schema.clone(),
+            width: self.width,
+            height: self.height,
+            bit_depth: self.bit_depth,
+            color_type: self.color_type,
+            interlace: self.interlace,
+            plte: self.plte.clone(),
+            trns: self.trns.clone(),
+            gama: self.gama,
+            chrm: self.chrm,
+            srgb: self.srgb,
+            phys: self.phys,
+            time: self.time,
+            bkgd: self.bkgd.clone(),
+            text_chunks: self.text_chunks.clone(),
+            pixels: self.pixels.clone(),
+            chunk_order: self.chunk_order.clone(),
+            unknown_chunks: self.unknown_chunks.clone(),
+        }
     }
     pub fn from_snapshot(snapshot: PngSnapshot) -> Self {
-        Self { schema: snapshot.schema, image: snapshot.image }
+        Self {
+            schema: snapshot.schema,
+            width: snapshot.width,
+            height: snapshot.height,
+            bit_depth: snapshot.bit_depth,
+            color_type: snapshot.color_type,
+            interlace: snapshot.interlace,
+            plte: snapshot.plte,
+            trns: snapshot.trns,
+            gama: snapshot.gama,
+            chrm: snapshot.chrm,
+            srgb: snapshot.srgb,
+            phys: snapshot.phys,
+            time: snapshot.time,
+            bkgd: snapshot.bkgd,
+            text_chunks: snapshot.text_chunks,
+            pixels: snapshot.pixels,
+            chunk_order: snapshot.chunk_order,
+            unknown_chunks: snapshot.unknown_chunks,
+        }
     }
     pub fn set_snapshot(&mut self, snapshot: PngSnapshot) {
-        self.schema = snapshot.schema;
-        self.image = snapshot.image;
+        *self = Self::from_snapshot(snapshot);
     }
 }
 

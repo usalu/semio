@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// 🗜️ Per-entry compression method. Only the two methods the deflate artifact's own
 /// codec can round-trip are modeled — anything else is a decode-time `ZipError::UnsupportedMethod`,
 /// never a silently-dropped or fabricated entry.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum ZipCompressionMethod {
     Stored,
@@ -43,7 +43,7 @@ impl ZipCompressionMethod {
 /// 🧩️ One raw local/central "extra field" record (id + payload), kept verbatim for any id this
 /// artifact doesn't specially interpret (ZIP64 sizes and the Info-ZIP `UT` timestamp are read for
 /// convenience but their raw bytes are still kept here too — nothing genuinely unmodeled is dropped).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ZipExtraField {
     pub id: u16,
@@ -56,7 +56,7 @@ pub struct ZipExtraField {
 /// 🎒️ One ZIP archive member: uncompressed payload plus every local-file-header/central-directory
 /// field this artifact models (see `🎒️zip` D2 plan row — method, DOS+UTC times, attrs, flags, extra,
 /// comment). `data` is always the decompressed payload; `method` drives how the writer re-compresses it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ZipEntry {
     pub name: String,
@@ -102,7 +102,7 @@ pub struct ZipEntry {
 
 //#region Snapshot
 /// 📸️ Persisted `stdio.zip` snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipSnapshot {

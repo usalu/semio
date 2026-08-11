@@ -11,6 +11,8 @@ use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
+#[cfg(test)]
+use protocol::DiffCodec;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
@@ -61,6 +63,18 @@ impl CsvFieldDiff {
 /// 🔺️ Sparse diff for a single [`CsvRecord`] — positional per-field patch list, `None` at a
 /// position means that field is unchanged. Length only needs to cover the highest patched
 /// index; positions beyond `base.fields.len()` are graceful no-ops on apply.
+///
+/// 🧪️ F6: `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` CANNOT be used anywhere in
+/// `CsvDiff`'s tree because of THIS struct's `fields: Option<Vec<Option<CsvFieldDiff>>>` —
+/// confirmed via real `cargo check` error: `the trait bound
+/// std::option::Option<v_rfc4180::…::CsvFieldDiff>: DslField is not satisfied`
+/// (`dsl_derive::classify_field` peels exactly one `Option<..>` layer before checking anything
+/// else, so the field's remaining type after the derive's own unwrap is `Vec<Option<CsvFieldDiff>>`
+/// — its blanket `impl<T: DslField> DslField for Vec<T>` then requires `Option<CsvFieldDiff>:
+/// DslField`, and no `impl<T: DslField> DslField for Option<T>` exists anywhere in the `dsl`
+/// crate). Same root cause as the recon report's §3b tri-state finding (`Option<Option<T>>`), one
+/// `Vec` layer removed. `DiffCodec` for `CsvDiff` is hand-rolled below instead; see
+/// `f6-recon-report.md` §3b and this ticket's `f6-csv-report.md` for the full citation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CsvRecordDiff {
@@ -492,3 +506,265 @@ pub fn diff_set_snapshot(base: &CsvSnapshot, next: &CsvSnapshot) -> CsvDiff {
     CsvDiff::between(base, next)
 }
 //#endregion 🔖️Diff
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `CsvDiff` — the derive path
+/// (`#[derive(dsl::DslDiff)]`) is NOT usable: `CsvRecordDiff::fields: Option<Vec<Option<CsvFieldDiff>>>`
+/// (see the doc comment on `CsvRecordDiff` above for the confirmed compile error and the exact
+/// root-cause mechanism — a `Vec`-wrapped sibling of the recon report's §3b tri-state finding).
+///
+/// **Grammar** (real, not `serde_json`), following `f6-recon-report.md` §5's template exactly:
+/// one space-separated `name=value` token per changed top-level field (a field absent from the
+/// line = unchanged); `records` prints as `records{[removed];[modified];[added]}`. Strings are
+/// lowercase hex (this artifact's own `ArtifactDsl`/`⚙️engine` codec doesn't use hex — RFC 4180 is
+/// already its own text grammar — but hex is still the right choice HERE since a `CsvField.value`
+/// may itself legally contain any byte incl. `,`/`[`/`]`/space, which this diff grammar's own
+/// separators are built from; hex sidesteps escaping entirely). `Option<T>` values use the
+/// uniform `[0]`=None / `[1,<T>]` = Some(T) tag. Structs are positional `[f1,f2,...]` tuples.
+/// `CsvRecordDiff`'s own sparse per-position field-patch list prints as a bracketed list of
+/// `encode_option`-tagged `CsvFieldDiff` entries (`[[0],[1,[V:...,Q:1]]]`); `CsvFieldDiff` itself
+/// uses single-letter `tag:value` pairs (`V`/`Q`), same convention as gif89a's `GifFrameDiff`.
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+
+/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
+/// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️ValueCodecs
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_field(f: &CsvField) -> String {
+    format!("[{},{}]", enc_str(&f.value), if f.quoted { 1 } else { 0 })
+}
+pub(crate) fn dec_field(s: &str) -> Result<CsvField, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [value, quoted] = parts.as_slice() else { return Err(format!("field: expected 2 fields, got {}", parts.len())) };
+    Ok(CsvField { value: dec_str(value)?, quoted: *quoted == "1" })
+}
+pub(crate) fn enc_record(r: &CsvRecord) -> String {
+    format!("[{}]", r.fields.iter().map(enc_field).collect::<Vec<_>>().join(","))
+}
+pub(crate) fn dec_record(s: &str) -> Result<CsvRecord, String> {
+    let fields = split_top_level(strip_brackets(s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(dec_field)
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(CsvRecord { fields })
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️DiffValueCodecs
+fn enc_field_diff(d: &CsvFieldDiff) -> String {
+    let mut parts = Vec::new();
+    if let Some(v) = &d.value { parts.push(format!("V:{}", enc_str(v))); }
+    if let Some(v) = d.quoted { parts.push(format!("Q:{}", if v { 1 } else { 0 })); }
+    format!("[{}]", parts.join(","))
+}
+fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
+    let inner = strip_brackets(s)?;
+    let mut d = CsvFieldDiff::default();
+    for entry in split_top_level(inner, ',') {
+        if entry.is_empty() { continue; }
+        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("field diff: bad entry {entry:?}"))?;
+        match tag {
+            "V" => d.value = Some(dec_str(val)?),
+            "Q" => d.quoted = Some(val == "1"),
+            other => return Err(format!("field diff: unknown tag {other:?}")),
+        }
+    }
+    Ok(d)
+}
+fn enc_record_diff(d: &CsvRecordDiff) -> String {
+    encode_option(&d.fields, |fields| {
+        format!("[{}]", fields.iter().map(|f| encode_option(f, enc_field_diff)).collect::<Vec<_>>().join(","))
+    })
+}
+fn dec_record_diff(s: &str) -> Result<CsvRecordDiff, String> {
+    let fields = decode_option(s, |inner| {
+        split_top_level(strip_brackets(inner)?, ',')
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .map(|p| decode_option(p, dec_field_diff))
+            .collect::<Result<Vec<_>, String>>()
+    })?;
+    Ok(CsvRecordDiff { fields })
+}
+
+/// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser
+/// (mirrors gif89a's `enc_collection_triple`/`dec_collection_triple`, hand-instantiated here for
+/// `records` since only one collection needs it in this artifact).
+fn enc_records_diff(d: &CsvRecordsDiff) -> String {
+    let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_record_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_record(&a.record))).collect::<Vec<_>>().join(",");
+    format!("records{{[{removed}];[{modified}];[{added}]}}")
+}
+fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("records: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("records modified: bad entry {entry:?}"))?;
+            Ok(CsvRecordModified { index: parse_usize(idx)?, diff: dec_record_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("records added: bad entry {entry:?}"))?;
+            Ok(CsvRecordAdded { index: parse_usize(idx)?, record: dec_record(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(CsvRecordsDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_csv_diff(d: &CsvDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = d.has_header { tokens.push(format!("has-header={}", if v { 1 } else { 0 })); }
+    if let Some(v) = &d.records { tokens.push(enc_records_diff(v)); }
+    tokens.join(" ")
+}
+fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
+    let mut d = CsvDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("has-header=") { d.has_header = Some(rest == "1"); }
+        else if let Some(rest) = token.strip_prefix("records{") { d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?); }
+        else { return Err(format!("csv diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for CsvDiff {
+    fn print_diff(&self) -> String {
+        print_csv_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_csv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim — same simplification `WriterDiff`/gif89a/svg's
+    /// hand-rolled `DiffCodec`s use: satisfies every `DiffCodec` law (round-trips, deterministic)
+    /// without inventing a second, denser wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use crate::artifacts::csv::schema::snapshot::CsvField;
+
+    fn field(value: &str, quoted: bool) -> CsvField {
+        CsvField { value: value.into(), quoted }
+    }
+    fn record(fields: &[(&str, bool)]) -> CsvRecord {
+        CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
+    }
+
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: true,
+            records: vec![
+                record(&[("name", false), ("note, with comma", true)]),
+                record(&[("a", false), ("b", false)]),
+                record(&[("x", false), ("y", false)]),
+            ],
+        };
+        let b = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: false,
+            records: vec![
+                record(&[("new-a", true), ("new-b", false)]),
+                record(&[("x", false), ("y", false)]),
+                record(&[("brand [new]", true)]),
+            ],
+        };
+        let cases = vec![
+            CsvDiff::default(),
+            CsvDiff::between(&a, &b),
+            CsvDiff::between(&b, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = CsvDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = CsvDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+}
+//#endregion 🧪️Tests

@@ -1,3 +1,5 @@
 dialect protocol stdio.gltf.diff
-magic = %x00
-payload = *OCTET
+; Binary wire form IS the diff's own JSON text (see sibling 📝️text grammar.semio), UTF-8 encoded --
+; OpBinary::encode_op/decode_op delegate straight to serde_json::to_vec/from_slice. No separate
+; binary framing exists; this is the honest boundary.
+document = json_utf8_text:bytes(eof)

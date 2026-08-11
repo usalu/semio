@@ -1,6 +1,79 @@
 syntax = "proto3";
 package semio.s_stdio_png.diff;
+
+import "s_stdio_png/snapshot.proto";
+
+message PngPlteEntryModified { uint64 index = 1; semio.s_stdio_png.snapshot.PngRgb rgb = 2; }
+message PngPlteEntryAdded { uint64 index = 1; semio.s_stdio_png.snapshot.PngRgb rgb = 2; }
+
+message PngPlteDiff {
+  repeated uint64 removed = 1;
+  repeated PngPlteEntryModified modified = 2;
+  repeated PngPlteEntryAdded added = 3;
+}
+
+message PngTextChunkDiff {
+  optional string keyword = 1;
+  optional string value = 2;
+  optional bool compressed = 3;
+  optional semio.s_stdio_png.snapshot.PngTextKind kind = 4;
+  optional string language_tag = 5;
+  optional string translated_keyword = 6;
+}
+
+message PngTextChunkModified { uint64 index = 1; PngTextChunkDiff diff = 2; }
+message PngTextChunkAdded { uint64 index = 1; semio.s_stdio_png.snapshot.PngTextChunk chunk = 2; }
+
+message PngTextChunksDiff {
+  repeated uint64 removed = 1;
+  repeated PngTextChunkModified modified = 2;
+  repeated PngTextChunkAdded added = 3;
+}
+
+message PngUnknownChunkModified { uint64 index = 1; semio.s_stdio_png.snapshot.PngChunk chunk = 2; }
+message PngUnknownChunkAdded { uint64 index = 1; semio.s_stdio_png.snapshot.PngChunk chunk = 2; }
+
+message PngUnknownChunksDiff {
+  repeated uint64 removed = 1;
+  repeated PngUnknownChunkModified modified = 2;
+  repeated PngUnknownChunkAdded added = 3;
+}
+
+message PngChunkOrderModified { uint64 index = 1; semio.s_stdio_png.snapshot.PngChunkMarker marker = 2; }
+message PngChunkOrderAdded { uint64 index = 1; semio.s_stdio_png.snapshot.PngChunkMarker marker = 2; }
+
+message PngChunkOrderDiff {
+  repeated uint64 removed = 1;
+  repeated PngChunkOrderModified modified = 2;
+  repeated PngChunkOrderAdded added = 3;
+}
+
+// 🔺️ Sparse diff for stdio.png. Tri-state ancillary fields (trns/gama/chrm/srgb/phys/time/
+// bkgd/plte): `*_present` false + field unset = unchanged; true + field unset = cleared.
 message PngDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional uint32 width = 1;
+  optional uint32 height = 2;
+  optional uint32 bit_depth = 3;
+  optional semio.s_stdio_png.snapshot.PngColorType color_type = 4;
+  optional bool interlace = 5;
+  bool plte_present = 6;
+  optional PngPlteDiff plte = 7;
+  bool trns_present = 8;
+  optional semio.s_stdio_png.snapshot.PngTransparency trns = 9;
+  bool gama_present = 10;
+  optional uint32 gama = 11;
+  bool chrm_present = 12;
+  optional semio.s_stdio_png.snapshot.PngChromaticities chrm = 13;
+  bool srgb_present = 14;
+  optional semio.s_stdio_png.snapshot.PngSrgbIntent srgb = 15;
+  bool phys_present = 16;
+  optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 17;
+  bool time_present = 18;
+  optional semio.s_stdio_png.snapshot.PngTimestamp time = 19;
+  bool bkgd_present = 20;
+  optional semio.s_stdio_png.snapshot.PngBackground bkgd = 21;
+  optional PngTextChunksDiff text_chunks = 22;
+  optional bytes pixels = 23;
+  optional PngChunkOrderDiff chunk_order = 24;
+  optional PngUnknownChunksDiff unknown_chunks = 25;
 }

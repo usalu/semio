@@ -1,0 +1,9 @@
+{
+  "artifact": "s.imperative.imperative",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained imperative 1"
+    }
+  }
+}

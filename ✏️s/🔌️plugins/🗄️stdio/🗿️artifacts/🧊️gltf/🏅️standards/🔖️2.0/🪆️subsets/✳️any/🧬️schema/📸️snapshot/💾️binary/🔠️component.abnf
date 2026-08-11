@@ -1,3 +1,12 @@
-; abnf stdio.gltf snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.gltf snapshot -- .glb binary container (12-byte header + JSON chunk + optional BIN chunk)
+document      = header 1*chunk
+header        = magic version total-length
+magic         = %x67.6C.54.46           ; "glTF"
+version       = %x02.00.00.00           ; u32 LE, must be 2
+total-length  = 4OCTET                  ; u32 LE, whole container byte length
+chunk         = chunk-length chunk-type chunk-data
+chunk-length  = 4OCTET                  ; u32 LE, 4-byte-aligned
+chunk-type    = json-type / bin-type
+json-type     = %x4A.53.4F.4E           ; "JSON"
+bin-type      = %x42.49.4E.00           ; "BIN\0"
+chunk-data    = *OCTET                  ; length == chunk-length, JSON-chunk padded with 0x20, BIN-chunk padded with 0x00

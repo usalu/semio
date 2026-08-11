@@ -1,26 +1,76 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.png/mutation.json",
   "title": "PngMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"],
+      "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json" } }
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "width", "height", "bitDepth", "colorType", "interlace"],
+      "properties": {
+        "mutation": { "const": "setHeader" },
+        "width": { "type": "integer" }, "height": { "type": "integer" }, "bitDepth": { "type": "integer" },
+        "colorType": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngColorType" },
+        "interlace": { "type": "boolean" }
       }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setPalette" }, "plte": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngRgb" } } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setTransparency" }, "trns": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTransparency" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setGamma" }, "gama": { "type": "integer" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setChromaticities" }, "chrm": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChromaticities" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setSrgbIntent" }, "srgb": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngSrgbIntent" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setPhysicalDims" }, "phys": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setTimestamp" }, "time": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTimestamp" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation"],
+      "properties": { "mutation": { "const": "setBackground" }, "bkgd": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngBackground" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index", "chunk"],
+      "properties": { "mutation": { "const": "insertTextChunk" }, "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextChunk" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeTextChunk" }, "index": { "type": "integer", "minimum": 0 } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index", "chunk"],
+      "properties": { "mutation": { "const": "setTextChunk" }, "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextChunk" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "pixels"],
+      "properties": { "mutation": { "const": "setPixels" }, "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index", "chunk"],
+      "properties": { "mutation": { "const": "insertUnknownChunk" }, "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunk" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeUnknownChunk" }, "index": { "type": "integer", "minimum": 0 } }
     }
-  }
+  ]
 }

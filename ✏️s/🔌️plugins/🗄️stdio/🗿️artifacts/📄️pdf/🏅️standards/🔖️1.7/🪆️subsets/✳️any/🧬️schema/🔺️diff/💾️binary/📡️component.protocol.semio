@@ -1,3 +1,5 @@
-dialect protocol stdio.pdf.diff
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.pdf.1.7.diff
+
+; -- No dedicated wire magic -- `PdfDiff` has no OpText/binary envelope yet (F6 wave); on the
+; -- wire it is plain UTF-8 JSON (RFC8259), tagged per ../📝️text/📖️component.grammar.semio.
+utf8-json-text = 1*OCTET

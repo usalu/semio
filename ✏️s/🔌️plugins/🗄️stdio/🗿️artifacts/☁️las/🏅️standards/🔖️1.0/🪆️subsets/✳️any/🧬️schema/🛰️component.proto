@@ -1,6 +1,11 @@
 syntax = "proto3";
 package semio.s_stdio_las.artifact;
+
+import "s.stdio.las/snapshot.proto";
+
 message LasArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  semio.s_stdio_las.snapshot.LasHeader header = 2;
+  repeated semio.s_stdio_las.snapshot.LasVlr vlrs = 3;
+  repeated semio.s_stdio_las.snapshot.LasPoint points = 4;
 }

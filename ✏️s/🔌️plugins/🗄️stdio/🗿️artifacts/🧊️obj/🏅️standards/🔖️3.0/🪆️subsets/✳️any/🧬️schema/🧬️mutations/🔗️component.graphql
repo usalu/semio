@@ -1,2 +1,53 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ ObjMutation union — mirrors 🦀️component.rs's tagged enum (GraphQL has no native
+# discriminated union, so this models it as one input type with the tag plus optional
+# per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
+
+enum ObjMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  INSERT_VERTEX
+  REMOVE_VERTEX
+  SET_VERTEX
+  INSERT_TEX_COORD
+  REMOVE_TEX_COORD
+  SET_TEX_COORD
+  INSERT_NORMAL
+  REMOVE_NORMAL
+  SET_NORMAL
+  INSERT_FACE
+  REMOVE_FACE
+  SET_FACE
+  SET_GROUP
+  REMOVE_GROUP
+  SET_OBJECT
+  REMOVE_OBJECT
+  SET_MTLLIB
+  SET_USEMTL
+  SET_SMOOTHING_GROUPS
+  SET_UNKNOWN_STATEMENTS
+}
+
+input ObjVertexInput { x: Float! y: Float! z: Float! w: Float }
+input ObjTexCoordInput { u: Float! v: Float! w: Float }
+input ObjNormalInput { x: Float! y: Float! z: Float! }
+input ObjFaceVertexInput { vertex: Int! texcoord: Int normal: Int }
+input ObjFaceInput { vertices: [ObjFaceVertexInput!]! }
+input ObjUsemtlRangeInput { faceIndexFrom: Int! material: String! }
+input ObjSmoothingRangeInput { faceIndexFrom: Int! group: Int }
+input ObjUnknownStatementInput { lineIndex: Int! raw: String! }
+
+input ObjMutationInput {
+  mutation: ObjMutationTag!
+  snapshot: ObjSnapshotInput
+  index: Int
+  name: String
+  vertex: ObjVertexInput
+  texcoord: ObjTexCoordInput
+  normal: ObjNormalInput
+  face: ObjFaceInput
+  faces: [Int!]
+  mtllib: String
+  usemtl: [ObjUsemtlRangeInput!]
+  smoothingGroups: [ObjSmoothingRangeInput!]
+  unknownStatements: [ObjUnknownStatementInput!]
+}

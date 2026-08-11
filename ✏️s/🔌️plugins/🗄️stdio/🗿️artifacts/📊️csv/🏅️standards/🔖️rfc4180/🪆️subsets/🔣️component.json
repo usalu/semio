@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.csv",
+  "standard": "rfc4180",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained csv rfc4180"
+    }
+  }
+}

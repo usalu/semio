@@ -1,5 +1,6 @@
 //! 🧬️ MdArtifact schema — full artifact state.
 
+use crate::artifacts::md::schema::snapshot::MdBlock;
 use crate::artifacts::md::MdSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ pub struct MdArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub body: String,
+    pub blocks: Vec<MdBlock>,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +31,7 @@ impl MdArtifact {
     pub fn to_snapshot(&self) -> MdSnapshot {
         MdSnapshot {
             schema: self.schema.clone(),
-            body: self.body.clone(),
+            blocks: self.blocks.clone(),
         }
     }
 
@@ -38,14 +39,14 @@ impl MdArtifact {
     pub fn from_snapshot(snapshot: MdSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            body: snapshot.body,
+            blocks: snapshot.blocks,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: MdSnapshot) {
         self.schema = snapshot.schema;
-        self.body = snapshot.body;
+        self.blocks = snapshot.blocks;
     }
 }
 //#endregion 🔖️Conversions

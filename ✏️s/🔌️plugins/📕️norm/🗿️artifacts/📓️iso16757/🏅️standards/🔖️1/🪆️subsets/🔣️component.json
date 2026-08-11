@@ -1,0 +1,9 @@
+{
+  "artifact": "s.norm.iso16757",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained iso16757 1"
+    }
+  }
+}

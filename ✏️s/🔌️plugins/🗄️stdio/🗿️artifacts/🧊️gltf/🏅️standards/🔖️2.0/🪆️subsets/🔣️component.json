@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.gltf",
+  "standard": "2.0",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained gltf 2.0"
+    }
+  }
+}

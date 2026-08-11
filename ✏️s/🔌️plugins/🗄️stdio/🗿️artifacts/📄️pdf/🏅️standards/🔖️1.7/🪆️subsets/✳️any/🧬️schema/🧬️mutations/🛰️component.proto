@@ -1,6 +1,38 @@
 syntax = "proto3";
-package semio.s_stdio_pdf.mutation;
+package semio.s_stdio_pdf_1_7.mutation;
+
+import "s_stdio_pdf_1_7_snapshot.proto"; // ObjRef, PdfObject, PdfInfo, PdfPage, PdfSnapshot
+import "s_stdio_pdf_1_7_diff.proto";     // PdfPathSegment
+
 message PdfMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  enum Kind {
+    NO_MUTATION = 0;
+    SET_SNAPSHOT = 1;
+    INSERT_PAGE = 2;
+    REMOVE_PAGE = 3;
+    SET_PAGE_MEDIA_BOX = 4;
+    SET_PAGE_CROP_BOX = 5;
+    APPEND_PAGE_CONTENT = 6;
+    SET_INFO = 7;
+    INSERT_OBJECT = 8;
+    REMOVE_OBJECT = 9;
+    SET_OBJECT_VALUE = 10;
+    SET_DICT_ENTRY = 11;
+    REMOVE_DICT_ENTRY = 12;
+    SET_TRAILER_ENTRY = 13;
+    REMOVE_TRAILER_ENTRY = 14;
+  }
+  Kind mutation = 1;
+  semio.s_stdio_pdf_1_7.snapshot.PdfSnapshot snapshot = 2;
+  uint64 index = 3;
+  semio.s_stdio_pdf_1_7.snapshot.PdfPage page = 4;
+  repeated double media_box = 5;
+  repeated double crop_box = 6;
+  bool has_crop_box = 7;
+  string text = 8;
+  semio.s_stdio_pdf_1_7.snapshot.PdfInfo info = 9;
+  semio.s_stdio_pdf_1_7.snapshot.ObjRef id = 10;
+  semio.s_stdio_pdf_1_7.snapshot.PdfObject value = 11;
+  repeated semio.s_stdio_pdf_1_7.diff.PdfPathSegment path = 12;
+  string key = 13;
 }

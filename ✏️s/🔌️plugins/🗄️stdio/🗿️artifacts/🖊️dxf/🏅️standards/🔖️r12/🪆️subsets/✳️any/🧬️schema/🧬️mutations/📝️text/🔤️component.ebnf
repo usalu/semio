@@ -1,3 +1,12 @@
-(* ebnf stdio.dxf mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.dxf', newline ;
+(* DxfMutation's wire text IS its JSON serialization (protocol::OpText — serde_json),
+   tagged on "mutation" per 🦀️component.rs's enum; this documents the real tag vocabulary,
+   not RFC 8259's own JSON grammar. *)
+mutation = "{", '"mutation"', ":", tag, { ",", member }, "}" ;
+tag = '"noMutation"' | '"setSnapshot"'
+    | '"setHeaderVar"' | '"removeHeaderVar"'
+    | '"insertLayer"' | '"removeLayer"' | '"setLayer"'
+    | '"insertStyle"' | '"removeStyle"' | '"setStyle"'
+    | '"insertLinetype"' | '"removeLinetype"' | '"setLinetype"'
+    | '"insertEntity"' | '"removeEntity"' | '"setEntity"'
+    | '"insertBlock"' | '"removeBlock"' | '"setBlock"' ;
+member = json string, ":", json value ;

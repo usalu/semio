@@ -1,0 +1,100 @@
+error[E0277]: the trait bound `v1_2::subsets::any::schema::snapshot::component::PngColorType: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:818:28
+    |
+818 |     pub color_type: Option<PngColorType>,
+    |                            ^^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `PptxOpcDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:228:21
+    |
+228 |     pub opc: Option<PptxOpcDiff>,
+    |                     ^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `PptxPresentationDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:231:30
+    |
+231 |     pub presentation: Option<PptxPresentationDiff>,
+    |                              ^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `PptxOpcDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:222:84
+    |
+222 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
+    |                                                                                    ^^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `std::option::Option<PngPlteDiff>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:824:22
+    |
+824 |     pub plte: Option<Option<PngPlteDiff>>,
+    |                      ^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<PngPlteDiff>`
+    |
+--
+error[E0277]: the trait bound `PptxPresentationDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:222:84
+    |
+222 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
+    |                                                                                    ^^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `Option<PngTransparency>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:827:22
+    |
+827 |     pub trns: Option<Option<PngTransparency>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngTransparency>`
+    |
+--
+error[E0277]: the trait bound `std::option::Option<u32>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:830:22
+    |
+830 |     pub gama: Option<Option<u32>>,
+    |                      ^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<u32>`
+    |
+--
+error[E0277]: the trait bound `Option<PngChromaticities>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:833:22
+    |
+833 |     pub chrm: Option<Option<PngChromaticities>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngChromaticities>`
+    |
+--
+error[E0277]: the trait bound `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngSrgbIntent>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:836:22
+    |
+836 |     pub srgb: Option<Option<PngSrgbIntent>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngSrgbIntent>`
+    |
+--
+error[E0277]: the trait bound `Option<PngPhysicalDims>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:839:22
+    |
+839 |     pub phys: Option<Option<PngPhysicalDims>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngPhysicalDims>`
+    |
+--
+error[E0277]: the trait bound `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngTimestamp>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:842:22
+    |
+842 |     pub time: Option<Option<PngTimestamp>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngTimestamp>`
+    |
+--
+error[E0277]: the trait bound `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngBackground>: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:845:22
+    |
+845 |     pub bkgd: Option<Option<PngBackground>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^ the trait `DslField` is not implemented for `std::option::Option<v1_2::subsets::any::schema::snapshot::component::PngBackground>`
+    |
+--
+error[E0277]: the trait bound `PngTextChunksDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:848:29
+    |
+848 |     pub text_chunks: Option<PngTextChunksDiff>,
+    |                             ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+--
+error[E0277]: the trait bound `PngChunkOrderDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:854:29

@@ -1,3 +1,6 @@
-; abnf stdio.png mutations
-document = payload
-payload = *OCTET
+; abnf stdio.png mutation (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of
+; PngMutation (#[serde(tag = "mutation")]), NOT wrapped in the shared `.semio` envelope
+; (contrast with ../../📸️snapshot/💾️binary/). No length prefix: the entire op body IS the
+; JSON document; the "mutation" tag selects one of 17 real variants.
+document    = json-object
+json-object = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️component.grammar.semio

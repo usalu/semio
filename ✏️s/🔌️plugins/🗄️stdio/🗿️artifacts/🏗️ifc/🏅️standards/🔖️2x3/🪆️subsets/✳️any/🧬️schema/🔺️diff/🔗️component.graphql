@@ -1,0 +1,7 @@
+# 🔺️ Ifc2x3Diff
+type Ifc2x3Diff {
+  schema: String @state(class: PERSISTENT)
+  header: Bytes @state(class: PERSISTENT)
+  removedInstances: [Int!] @state(class: PERSISTENT)
+  upsertedInstances: [Bytes!] @state(class: PERSISTENT)
+}

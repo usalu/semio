@@ -1,8 +1,13 @@
-//! 🧬️ GifSnapshot schema (89a) — multi-frame animation model: Graphic Control Extension
-//! (delay/transparency/disposal per frame) + NETSCAPE2.0 loop count, real byte codecs.
-//! Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION. Distinct from
-//! 87a's `RasterImage`-shaped `GifSnapshot` (single static image, no GCE/animation concept) --
-//! the two standards genuinely differ in shape, which is why 87a→89a is the plan's "Tier 2"
+//! 🧬️ GifSnapshot schema (89a) — complete per GIF89a §18-27: logical screen descriptor + optional
+//! Global Color Table + an ordered sequence of frames, each with its own Graphic Control Extension
+//! fields (delay/disposal/transparent-index/user-input), optional Local Color Table, interlace
+//! flag, and losslessly-retained palette indices (never decoded RGBA — the lossless-payload
+//! exception). Also carries NETSCAPE2.0 loop count, comment extensions, plain-text extensions, and
+//! any OTHER application extension verbatim (`GifAppExtension`) — nothing real on disk is silently
+//! dropped. Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: a REAL
+//! rewrite of the prior decoded-rgba stub, which dropped palettes and every extension but GCE/loop.
+//! Distinct from 87a's `GifImage`-shaped `GifSnapshot` (no GCE/animation concept at all) — the two
+//! standards genuinely differ in shape, which is why 87a→89a is the plan's "Tier 2"
 //! (snapshot-type-changing) evolution pilot rather than a same-type dialect move.
 
 use schema::ArtifactSchema;
@@ -17,10 +22,38 @@ pub const STDIO_GIF89A_DOCUMENT_SCHEMA: &str = "stdio.gif.89a";
 pub const GIF89A_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gif.89a";
 //#endregion Ids
 
+//#region ColorTable
+/// 🎨️ One color table entry (GCT/LCT), stored exactly as read from disk — including any
+/// power-of-two padding entries past the meaningful palette, since those are real on-disk bytes.
+/// 🧪️ F6-PILOT: `dsl::DslRecord` throughout this file — gives every nested snapshot/strong-entity
+/// type `DslField` so `#[derive(dsl::DslOps)]` (on `GifMutation`) and `#[derive(dsl::DslDiff)]`
+/// (on `GifDiff`, `GifFrameDiff`, ...) can embed them as variant/field payloads.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct GifRgb {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+/// 🎨️ A Global or Local Color Table. `colors.len()` must be a power of two in `2..=256` on encode.
+/// `sorted` mirrors the packed byte's sort flag (decreasing importance ordering).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct GifColorTable {
+    #[serde(default)]
+    pub sorted: bool,
+    #[serde(default)]
+    pub colors: Vec<GifRgb>,
+}
+//#endregion ColorTable
+
 //#region DisposalModel
 /// 🗑️ GIF89a §23.c.4 disposal method: how the decoder should treat this frame's canvas region
 /// before rendering the next one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+/// 🧪️ F6-PILOT: `dsl::DslScalar` — a plain unit-variant enum binds as `DslField` directly (no
+/// `DslVariants`/`Statements` needed; this is the "enum but not a mutation-shaped one" case).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum GifDisposal {
     #[default]
@@ -32,8 +65,7 @@ pub enum GifDisposal {
 
 impl GifDisposal {
     /// 📐️ Decodes the GCE packed byte's 3-bit disposal field (values 4-7 are spec-reserved and
-    /// fold back to `Unspecified` rather than erroring — an unrecognized-but-legal reserved value
-    /// should not fail an otherwise-valid decode).
+    /// fold back to `Unspecified` rather than erroring).
     pub fn from_bits(bits: u8) -> Self {
         match bits {
             1 => GifDisposal::DoNotDispose,
@@ -53,13 +85,53 @@ impl GifDisposal {
 }
 //#endregion DisposalModel
 
+//#region PlainText
+/// 📝️ Plain Text Extension (GIF89a §25) — a Graphic-Rendering Block alternative to a Table-Based
+/// Image. Modeled as an optional companion on [`GifFrame`] per this ticket's design: a frame whose
+/// `plain_text` is `Some` and `width == 0` IS a plain-text-only block (no image data); a frame with
+/// both real image data and `plain_text` is a rare-but-legal combo the codec does not encode (a
+/// documented deviation — see `engine::encode_gif`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct GifPlainText {
+    pub left: u32,
+    pub top: u32,
+    pub width: u32,
+    pub height: u32,
+    pub cell_width: u8,
+    pub cell_height: u8,
+    pub fg_color_index: u8,
+    pub bg_color_index: u8,
+    #[serde(default)]
+    pub text: String,
+}
+//#endregion PlainText
+
+//#region AppExtension
+/// 🧩️ Any application extension OTHER than NETSCAPE2.0 (which is modeled separately via
+/// `GifSnapshot::loop_count`, to avoid representing the same on-disk bytes twice), retained
+/// verbatim — typed raw-retention for a spec-real-but-semantically-opaque region.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct GifAppExtension {
+    pub identifier: [u8; 8],
+    pub auth_code: [u8; 3],
+    #[serde(default)]
+    #[dsl(base64)]
+    pub data: Vec<u8>,
+}
+
+impl Default for GifAppExtension {
+    fn default() -> Self { Self { identifier: [0; 8], auth_code: [0; 3], data: Vec::new() } }
+}
+//#endregion AppExtension
+
 //#region FrameModel
-/// 🎞️ One animation frame: its own region of the logical screen (`left`/`top`/`width`/`height`
-/// -- real GIFs commonly only redraw the changed sub-rectangle per frame, confirmed against the
-/// `dancing.gif` fixture, so frames are NOT forced to canvas size), straight (non-premultiplied)
-/// RGBA pixels (`alpha==0` marks the GCE transparent index), and the Graphic Control Extension
-/// fields that preceded it in the file.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+/// 🎞️ One animation frame: its own region of the logical screen (real GIFs commonly only redraw
+/// the changed sub-rectangle per frame, confirmed against the `dancing.gif` fixture), an optional
+/// Local Color Table, interlace flag, losslessly-retained palette indices (NOT decoded RGBA — the
+/// lossless-payload exception), and the Graphic Control Extension fields that preceded it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct GifFrame {
     pub left: u32,
@@ -67,25 +139,52 @@ pub struct GifFrame {
     pub width: u32,
     pub height: u32,
     #[serde(default)]
-    pub rgba: Vec<u8>,
+    pub interlace: bool,
+    #[serde(default)]
+    #[dsl(block)]
+    pub lct: Option<GifColorTable>,
+    /// 🎞️ Palette indices, row-major, natural (non-interlaced) order — length must equal
+    /// `width * height` for a real-image frame (empty for a plain-text-only frame).
+    #[serde(default)]
+    #[dsl(base64)]
+    pub indices: Vec<u8>,
     /// ⏱️ GCE delay time in 1/100s units.
     #[serde(default)]
     pub delay_cs: u16,
     #[serde(default)]
     pub disposal: GifDisposal,
-    /// 👁️ GCE transparent-color flag (redundant with any `alpha==0` pixel present, but the flag
-    /// itself is real on-disk state — a frame can set it with no transparent pixels actually
-    /// present, and that bit should still round-trip).
+    /// 👁️ GCE transparent color index — `None` when the transparent-color flag is clear.
     #[serde(default)]
-    pub transparent: bool,
+    pub transparent_index: Option<u8>,
     /// ⌨️ GCE user-input flag.
     #[serde(default)]
     pub user_input: bool,
+    #[serde(default)]
+    #[dsl(block)]
+    pub plain_text: Option<GifPlainText>,
+}
+
+impl GifFrame {
+    /// 🖌️ Derived RGBA accessor — decodes `indices` through `lct` (falling back to `gct`).
+    /// `transparent_index`-matching pixels normalize to `[0,0,0,0]`. NOT a stored field.
+    pub fn rgba(&self, gct: Option<&GifColorTable>) -> Vec<u8> {
+        let table = self.lct.as_ref().or(gct);
+        let mut out = Vec::with_capacity(self.indices.len() * 4);
+        for &idx in &self.indices {
+            if Some(idx) == self.transparent_index {
+                out.extend_from_slice(&[0, 0, 0, 0]);
+                continue;
+            }
+            let rgb = table.and_then(|t| t.colors.get(idx as usize)).copied().unwrap_or_default();
+            out.extend_from_slice(&[rgb.r, rgb.g, rgb.b, 255]);
+        }
+        out
+    }
 }
 //#endregion FrameModel
 
 //#region Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a")]
 pub struct GifSnapshot {
@@ -95,6 +194,16 @@ pub struct GifSnapshot {
     pub width: u32,
     #[state(persistent)]
     pub height: u32,
+    #[state(persistent)]
+    #[serde(default)]
+    #[dsl(block)]
+    pub gct: Option<GifColorTable>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub background_color_index: u8,
+    #[state(persistent)]
+    #[serde(default)]
+    pub pixel_aspect_ratio: u8,
     /// 🔁️ NETSCAPE2.0 application extension loop count: `None` = no looping extension present
     /// (plays once); `Some(0)` = loop forever; `Some(n)` = loop `n` additional times.
     #[state(persistent)]
@@ -103,11 +212,31 @@ pub struct GifSnapshot {
     #[state(persistent)]
     #[serde(default)]
     pub frames: Vec<GifFrame>,
+    /// 💬️ Comment Extension bodies, in file order (positionally normalized to appear right after
+    /// the screen descriptor on re-encode — see `engine::encode_gif`'s documented normal form).
+    #[state(persistent)]
+    #[serde(default)]
+    pub comments: Vec<String>,
+    /// 🧩️ Every application extension OTHER than NETSCAPE2.0, verbatim.
+    #[state(persistent)]
+    #[serde(default)]
+    pub app_extensions: Vec<GifAppExtension>,
 }
 
 impl Default for GifSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: 0, height: 0, loop_count: None, frames: Vec::new() }
+        Self {
+            schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
+            width: 0,
+            height: 0,
+            gct: None,
+            background_color_index: 0,
+            pixel_aspect_ratio: 0,
+            loop_count: None,
+            frames: Vec::new(),
+            comments: Vec::new(),
+            app_extensions: Vec::new(),
+        }
     }
 }
 //#endregion Snapshot

@@ -1,3 +1,8 @@
-; abnf stdio.md snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.md snapshot -- real pack envelope, mirrors 📡️component.protocol.semio
+document = magic version schema-id markdown-text
+magic = %x53.45.4D.49 ; "SEMI"
+version = OCTET
+schema-id = length schema-id-bytes
+length = 4OCTET ; u32-le
+schema-id-bytes = *OCTET
+markdown-text = *OCTET ; UTF-8 bytes of the rendered document (see ../📝️text/🔤️component.ebnf)

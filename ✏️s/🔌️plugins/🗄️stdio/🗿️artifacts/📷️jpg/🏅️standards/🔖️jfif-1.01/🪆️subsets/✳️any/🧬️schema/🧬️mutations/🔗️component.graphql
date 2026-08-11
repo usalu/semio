@@ -1,8 +1,22 @@
-type JpgEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ JpgMutation union — mirrors 🦀️component.rs's #[serde(tag = "mutation")] enum. Modeled as
+# one type with a discriminant + every variant's optional payload fields (GraphQL has no native
+# tagged union for input types).
+
 type JpgMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [JpgEntry!]! @state(class: PERSISTENT)
+  mutation: String!
+  snapshot: JpgSnapshot
+  version: [Int!]
+  densityUnits: JfifDensityUnits
+  xDensity: Int
+  yDensity: Int
+  thumbnail: JfifThumbnail
+  table: JpgQuantTable
+  id: Int
+  huffmanTable: JpgHuffmanTable
+  key: JpgHuffmanTableKey
+  restartInterval: Int
+  index: Int
+  segment: JpgSegment
+  pixels: [Int!]
+  quality: Int
 }

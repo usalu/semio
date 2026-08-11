@@ -1,0 +1,146 @@
+{
+  "unit": "s.stdio.pdf",
+  "standards": [
+    {
+      "std": "1.7",
+      "subsets": [
+        {
+          "id": "a",
+          "restructuredFrom": "a-2b",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🚪️io/🟦️component.ts"
+          ],
+          "files_removed": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🚪️io/🟦️component.ts"
+          ],
+          "files_updated": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/⚙️engine/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/🔣️component.json"
+          ],
+          "levelDetection": "detect_pdfa_level(&PdfSnapshot) -> Option<PdfALevel> in 🧐️analyzer; detects PART (2 vs 3) from a real signal (Filespec object with /EF + /AFRelationship), defaults the undetectable LETTER (b/u) to 'b'; reports Severity::Hint diagnostic stdio.pdf.a.level",
+          "newHardCheck": "embedded-file Filespec objects with /EF but no /AFRelationship -> HARD, code stdio.pdf.a.embedded-file-missing-afrelationship (the A-2/A-3 differentiator)",
+          "notes": "Missing 🎹️composer/🟦️component.ts leaf on the old ✳️a-2b pilot (standing breach) fixed on ✳️a.",
+          "tests": [
+            "🧐️analyzer: conforming_snapshot_with_output_intent_reports_only_level_info",
+            "🧐️analyzer: missing_output_intent_is_soft_and_reports_no_level",
+            "🧐️analyzer: encryption_dict_shape_is_hard",
+            "🧐️analyzer: javascript_action_is_hard",
+            "🧐️analyzer: launch_action_is_hard",
+            "🧐️analyzer: non_embedded_font_is_soft",
+            "🧐️analyzer: embedded_font_via_descriptor_has_no_diagnostic",
+            "🧐️analyzer: embedded_file_missing_afrelationship_is_hard",
+            "🧐️analyzer: embedded_file_with_afrelationship_detects_level_3b_and_is_clean",
+            "🎹️composer: conforming_builder_snapshot_composes_and_stamps_a",
+            "🎹️composer: javascript_action_reachable_from_open_action_fails_compose_with_real_diagnostic",
+            "🎹️composer: launch_action_reachable_from_open_action_fails_compose_with_real_diagnostic",
+            "🎹️composer: encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine",
+            "🎹️composer: subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload",
+            "🏗️builder: new_requires_output_intent_and_builds_clean",
+            "🏗️builder: hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    },
+    {
+      "std": "1.4",
+      "subsets": [
+        {
+          "id": "a",
+          "spec": "ISO 19005-1:2005 (PDF/A-1)",
+          "schemaGap": true,
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🚪️io/🟦️component.ts"
+          ],
+          "realCheck": "SOFT: page.text non-empty (weak but genuine content-extractability signal, the only field-backed check PageDoc supports)",
+          "schemaGapDiagnostic": "stdio.pdf.a.schema-gap-unverifiable (Severity::Warning, always fires)",
+          "composerShape": "pass-through (no hard gate possible without an object graph), still impl SubsetValidator + register()",
+          "tests": [
+            "🧐️analyzer: schema_gap_diagnostic_always_fires",
+            "🧐️analyzer: empty_text_is_flagged_soft",
+            "🧐️analyzer: non_empty_text_skips_the_text_check",
+            "🎹️composer: compose_always_carries_the_schema_gap_diagnostic",
+            "🎹️composer: subset_validator_reports_the_schema_gap_diagnostic",
+            "🏗️builder: pass_through_build_never_fails_on_conformance_grounds"
+          ],
+          "validator_registered": true
+        },
+        {
+          "id": "x",
+          "spec": "ISO 15930-1:2001 (X-1a) / ISO 15930-3:2002 (X-3)",
+          "schemaGap": true,
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🚪️io/🟦️component.ts"
+          ],
+          "realCheck": "SOFT: page.width > 0 && page.height > 0 (weak but genuine non-degenerate-page-size signal, the only field-backed check PageDoc supports for a print-ready page)",
+          "schemaGapDiagnostic": "stdio.pdf.x.schema-gap-unverifiable (Severity::Warning, always fires)",
+          "composerShape": "pass-through (no hard gate possible without an object graph), still impl SubsetValidator + register()",
+          "tests": [
+            "🧐️analyzer: schema_gap_diagnostic_always_fires",
+            "🧐️analyzer: degenerate_page_size_is_flagged_soft",
+            "🧐️analyzer: positive_dimensions_skip_the_page_size_check",
+            "🎹️composer: compose_always_carries_the_schema_gap_diagnostic",
+            "🎹️composer: subset_validator_reports_the_schema_gap_diagnostic",
+            "🏗️builder: pass_through_build_never_fails_on_conformance_grounds"
+          ],
+          "validator_registered": true
+        }
+      ],
+      "files_updated": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🎹️composer/🦀️component.rs",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/⚙️engine/🦀️component.rs",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/🔣️component.json"
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/pdf-glue.rs.txt"
+  ],
+  "glue_anchor": "pub mod pdf { ... } block in ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs, lines 3407-3761 as read at the time this handoff was written",
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "PDF 1.4's PdfSnapshot (PageDoc{width,height,text}) has no retained object graph -- ✳️a/✳️x on 1.4 are honestly scope-limited to one field-backed SOFT check each plus a mandatory schema-gap diagnostic; upgrading 1.4's engine to retain an object graph (mirroring 1.7's PdfSnapshot.objects: Vec<PdfIndirectObject>) would unlock real ISO 19005-1 / ISO 15930-1/-3 checks."
+  ],
+  "preexisting_breakage_noted": [],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio currently fails with exactly one error: \"couldn't read .../🏅️standards/🔖️1.7/🪆️subsets/✳️a-2b/🧬️schema/🦀️component.rs\" at glue.rs:3700 -- expected and pending: the ✳️a-2b dir was deleted as part of this restructure, and glue.rs (orchestrator-only) still points at the old path until the handed-off snippet is applied. No other pdf-related errors were observed; all new subset Rust files were structurally verified (brace/paren balance, import paths cross-checked against the sibling ✳️any modules they delegate to, trait signatures compared 1:1 against the previously-compiling ✳️a-2b pilot) but could not be exercised by the real compiler because they are not yet referenced by any #[path] until glue.rs is updated."
+  ]
+}

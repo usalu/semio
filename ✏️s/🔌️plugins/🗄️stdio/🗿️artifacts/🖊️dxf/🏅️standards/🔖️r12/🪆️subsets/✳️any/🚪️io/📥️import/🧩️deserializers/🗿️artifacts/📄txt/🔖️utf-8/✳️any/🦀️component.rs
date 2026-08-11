@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.dxf` from stdio.txt.
 
 use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
+use crate::artifacts::dxf::DxfSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -9,9 +9,8 @@ pub fn register() {}
 
 /// 📥 Parse dxf text into a DxfSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<DxfSnapshot, store::TextError> {
-    let tags = crate::artifacts::dxf::schema::snapshot::tokenize_dxf(from.to_body())
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    Ok(DxfSnapshot { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), tags })
+    crate::artifacts::dxf::schema::snapshot::parse_dxf_document(&from.to_body())
+        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then dxf.

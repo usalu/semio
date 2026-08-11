@@ -1,4 +1,7 @@
-module Stdio_pdf_mutations;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_pdf_1_7_Mutations;
+
+# OpBinary::encode_op is serde_json::to_vec(self) -- the UTF-8 bytes of the SAME JSON text
+# ../📝️text/📖️component.grammar.semio describes (tagged by "mutation").
+public type Document = unit {
+    utf8_json_text: bytes &eod;
 };

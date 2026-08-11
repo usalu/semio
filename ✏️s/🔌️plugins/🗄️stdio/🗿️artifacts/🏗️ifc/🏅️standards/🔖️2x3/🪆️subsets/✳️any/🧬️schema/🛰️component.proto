@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_ifc_2x3.artifact;
+message Ifc2x3Artifact {
+  string schema = 1;
+  bytes document_wire = 2;
+}

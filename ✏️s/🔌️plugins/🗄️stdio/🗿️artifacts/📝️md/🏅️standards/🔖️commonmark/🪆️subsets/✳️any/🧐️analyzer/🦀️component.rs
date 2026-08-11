@@ -29,8 +29,8 @@ fn looks_like_markdown(text: &str) -> IoConfidence {
     let has_structure = blocks.iter().any(|b| {
         !matches!(
             b,
-            crate::artifacts::md::schema::snapshot::MdBlock::Paragraph { inline }
-                if inline.iter().all(|n| matches!(n, crate::artifacts::md::schema::snapshot::MdInline::Text(_)))
+            crate::artifacts::md::schema::snapshot::MdBlock::Paragraph { inlines }
+                if inlines.iter().all(|n| matches!(n, crate::artifacts::md::schema::snapshot::MdInline::Text { .. }))
         )
     });
     if has_structure { IoConfidence::High } else { IoConfidence::Medium }

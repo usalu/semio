@@ -1,6 +1,19 @@
 dialect grammar stdio.gltf.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.gltf' NL
-body = payload NL?
-payload = *OCTET
+; Wire form of GltfMutation -- RFC8259 JSON, internally tagged on "mutation" (serde
+; `#[serde(tag="mutation")]`): `{"mutation":"<variant>", ...variant fields}`.
+root = ws mutation_object ws
+mutation_object = '{' '"mutation"' ':' variant_tag ( ',' member )* '}'
+variant_tag = '"noMutation"' | '"setSnapshot"' | '"setAsset"'
+            | '"insertScene"' | '"removeScene"' | '"setScene"'
+            | '"insertNode"' | '"removeNode"' | '"setNode"'
+            | '"insertMesh"' | '"removeMesh"' | '"setMesh"'
+            | '"insertAccessor"' | '"removeAccessor"' | '"setAccessor"'
+            | '"insertMaterial"' | '"removeMaterial"' | '"setMaterial"'
+            | '"insertBuffer"' | '"removeBuffer"' | '"setBuffer"'
+            | '"insertAnimation"' | '"removeAnimation"' | '"setAnimation"'
+member = ( 'index' ':' number )
+       | ( 'snapshot' | 'asset' | 'scene' | 'node' | 'mesh' | 'accessor' | 'material' | 'buffer' | 'animation' ) ':' value
+       | 'bytes' ':' array_of_number
+value = object | array | string | number | 'true' | 'false' | 'null'
+array_of_number = '[' ( number ( ',' number )* )? ']'
+ws = ( ' ' | TAB | NL | CR )*

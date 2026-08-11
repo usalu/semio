@@ -1,2 +1,43 @@
-# schema facet
- type Placeholder { doc: String! }
+# 🌳 `XmlNode`/`XmlDeclaration` are NOT redefined here -- this facet relies on 📰xml's own
+# `📸️snapshot/🔗️component.graphql` types being present in the assembled schema (svg embeds xml's
+# NODE model directly, per the plan's spec-mandated-reuse rule), exactly as `stdio.xml`'s own
+# mutations facet relies on `XmlDeclaration`/`XmlNode` without locally redefining them.
+
+type ViewBox {
+  minX: Float!
+  minY: Float!
+  width: Float!
+  height: Float!
+}
+
+enum SvgMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_DECLARATION
+  SET_DOCTYPE
+  INSERT_ELEMENT
+  REMOVE_ELEMENT
+  SET_ELEMENT_NAME
+  SET_ATTRIBUTE
+  SET_TEXT
+  SET_VIEW_BOX
+  SET_TRANSFORM
+}
+
+""" 🧬️ SvgMutation union, flattened -- only the fields matching `mutation` are set.
+`insertElement`/`removeElement`'s `parent` addresses the PARENT element; every other
+path-carrying variant's `path` addresses the target node itself. """
+type SvgMutation {
+  mutation: SvgMutationKind!
+  snapshot: SvgSnapshot
+  declaration: XmlDeclaration
+  doctype: String
+  parent: [Int!]
+  path: [Int!]
+  index: Int
+  node: XmlNode
+  name: String
+  value: String
+  text: String
+  viewBox: ViewBox
+}

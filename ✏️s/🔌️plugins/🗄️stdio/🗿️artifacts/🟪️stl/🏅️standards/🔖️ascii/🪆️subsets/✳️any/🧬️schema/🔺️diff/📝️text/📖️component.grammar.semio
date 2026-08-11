@@ -1,6 +1,22 @@
 dialect grammar stdio.stl.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.stl' NL
-body = payload NL?
-payload = *OCTET
+; An `StlDiff` op-text line is the exact `serde_json::to_string` of the Rust struct — a
+; single-line JSON object, camelCase keys, absent fields omitted (never emitted as `null`).
+root = diff-line
+diff-line = diff-object NL?
+diff-object = '{' [ solid-name-member ',' ] [ triangles-member ] '}'
+solid-name-member = '"solidName"' ':' json-string
+triangles-member = '"triangles"' ':' triangles-object
+triangles-object = '{' [ removed-member ',' ] [ modified-member ',' ] [ added-member ] '}'
+removed-member = '"removed"' ':' '[' *( json-number ',' ) ']'
+modified-member = '"modified"' ':' '[' *( modified-entry ',' ) ']'
+modified-entry = '{' '"index"' ':' json-number ',' '"diff"' ':' triangle-diff-object '}'
+added-member = '"added"' ':' '[' *( added-entry ',' ) ']'
+added-entry = '{' '"index"' ':' json-number ',' '"triangle"' ':' triangle-object '}'
+; Every key optional (sparse patch) — see `📸️snapshot/📝️text/📖️component.grammar.semio` for the
+; complete `StlTriangle` field set this artifact models.
+triangle-diff-object = '{' [ '"normal"' ':' vector3-array ] [ ',' '"vertices"' ':' vertices-array ] '}'
+triangle-object = '{' '"normal"' ':' vector3-array ',' '"vertices"' ':' vertices-array '}'
+vertices-array = '[' vector3-array ',' vector3-array ',' vector3-array ']'
+vector3-array = '[' json-number ',' json-number ',' json-number ']'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = ["-"] 1*DIGIT ["." 1*DIGIT]

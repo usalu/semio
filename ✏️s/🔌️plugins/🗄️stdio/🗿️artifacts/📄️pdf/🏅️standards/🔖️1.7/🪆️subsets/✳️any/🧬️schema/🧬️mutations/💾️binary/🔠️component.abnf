@@ -1,3 +1,4 @@
-; abnf stdio.pdf mutations
-document = payload
-payload = *OCTET
+; abnf stdio.pdf.1.7 mutations -- `OpBinary::encode_op` is `serde_json::to_vec(self)`: the UTF-8
+; bytes of the SAME JSON text ../📝️text/📖️component.grammar.semio describes. Named encoding,
+; not a placeholder payload.
+pdf-mutation-bytes = 1*OCTET ; UTF-8 encoding of the RFC8259 JSON text described in ../📝️text/

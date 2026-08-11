@@ -1,8 +1,27 @@
-type TiffEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ TiffMutation union — mirrors 🦀️component.rs's tagged enum (GraphQL has no native
+# discriminated union, so this models it as one input type with the tag plus optional
+# per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
+
+enum TiffMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_BYTE_ORDER
+  INSERT_IFD
+  REMOVE_IFD
+  SET_TAG
+  REMOVE_TAG
+  SET_PIXELS
 }
-type TiffMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [TiffEntry!]! @state(class: PERSISTENT)
+
+input TiffMutationInput {
+  mutation: TiffMutationTag!
+  snapshot: TiffSnapshotInput
+  byteOrder: TiffByteOrder
+  index: Int
+  ifd: TiffIfdInput
+  ifdIndex: Int
+  tag: Int
+  kind: TiffFieldType
+  values: TiffValuesInput
+  pixels: [Int!]
 }

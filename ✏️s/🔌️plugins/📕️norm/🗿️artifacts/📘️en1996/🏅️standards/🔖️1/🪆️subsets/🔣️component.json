@@ -1,0 +1,9 @@
+{
+  "artifact": "s.norm.en1996",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained en1996 1"
+    }
+  }
+}

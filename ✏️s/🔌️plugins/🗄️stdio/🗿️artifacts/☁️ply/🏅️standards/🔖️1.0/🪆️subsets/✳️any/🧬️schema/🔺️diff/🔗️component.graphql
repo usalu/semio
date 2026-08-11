@@ -1,2 +1,56 @@
-# diff facet
- type Placeholder { vertices: String! }
+# 🔺️ PlyDiff schema — handcrafted sparse diff. Two collection levels nest: `elements`
+# (name-keyed) → each modified element's `rows` (index-keyed).
+
+type PlyRowFieldChange {
+  name: String!
+  value: PlyValue!
+}
+
+type PlyRowDiff {
+  fields: [PlyRowFieldChange!]
+}
+
+type PlyRowModified {
+  index: Int!
+  diff: PlyRowDiff!
+}
+
+type PlyRowAdded {
+  index: Int!
+  row: PlyRow!
+}
+
+type PlyRowsDiff {
+  removed: [Int!]
+  modified: [PlyRowModified!]
+  added: [PlyRowAdded!]
+}
+
+""" `properties` is a weak value-list — whole-vec replaced, never sub-diffed. """
+type PlyElementDiff {
+  properties: [PlyProperty!]
+  rows: PlyRowsDiff
+}
+
+type PlyElementModified {
+  name: String!
+  diff: PlyElementDiff!
+}
+
+type PlyElementAdded {
+  index: Int!
+  element: PlyElement!
+}
+
+type PlyElementsDiff {
+  removed: [String!]
+  modified: [PlyElementModified!]
+  added: [PlyElementAdded!]
+}
+
+""" 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here. """
+type PlyDiff {
+  format: PlyFormat
+  comments: [String!]
+  elements: PlyElementsDiff
+}

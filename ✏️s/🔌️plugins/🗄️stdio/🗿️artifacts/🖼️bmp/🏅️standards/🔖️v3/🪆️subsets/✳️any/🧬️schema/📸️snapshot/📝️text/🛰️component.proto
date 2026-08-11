@@ -1,3 +1,10 @@
 syntax = "proto3";
 package semio.stdio_bmp.snapshot_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+
+// A lowercase-hex dump of the real on-disk BMP bytes (after the `semio ...` preamble line
+// is stripped). See ../💾️binary/component.proto-equivalent (snapshot.proto) for the
+// field-by-field structure those bytes decode to.
+message Document {
+  string schema = 1;
+  string hex_payload = 2;
+}

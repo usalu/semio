@@ -1,6 +1,42 @@
 dialect grammar stdio.step.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.step' NL
-body = payload NL?
-payload = *OCTET
+; ISO 10303-21 exchange structure — real grammar for the `.step` physical file, not a placeholder.
+; Matches this facet's own tokenizer 1:1 (`engine::part21::{Lexer, parse_part21, write_part21}`).
+; https://www.iso.org/standard/63141.html
+root = exchange-file
+exchange-file = 'ISO-10303-21;' NL header-section data-section 'END-ISO-10303-21;' NL?
+header-section = 'HEADER;' NL file-description-record file-name-record file-schema-record 'ENDSEC;' NL
+file-description-record = 'FILE_DESCRIPTION' '(' string-list ',' simple-string ')' ';' NL
+file-name-record = 'FILE_NAME' '(' simple-string ',' simple-string ',' string-list ',' string-list ','
+                    simple-string ',' simple-string ',' simple-string ')' ';' NL
+file-schema-record = 'FILE_SCHEMA' '(' string-list ')' ';' NL
+data-section = 'DATA;' NL *instance 'ENDSEC;' NL
+; A simple instance is one `TYPE(args)` record; a complex instance (rare — real but spec-legal, see
+; `StepEntity::complex`) parenthesizes 2+ simple records back to back with no separator.
+instance = '#' digit-seq '=' ( simple-record / '(' 1*simple-record ')' ) ';' NL
+simple-record = keyword '(' [ value *( ',' value ) ] ')'
+keyword = upper *( upper / digit / '_' )
+value = unset / derived / reference / simple-string / enumeration / real-literal / integer-literal
+      / aggregate / typed-value
+unset = '$'
+derived = '*'
+reference = '#' digit-seq
+enumeration = '.' 1*( upper / digit / '_' ) '.'
+integer-literal = [ '-' / '+' ] 1*digit
+real-literal = [ '-' / '+' ] 1*digit '.' *digit [ ( 'E' / 'e' ) [ '-' / '+' ] 1*digit ]
+aggregate = '(' [ value *( ',' value ) ] ')'
+; A typed/defined-type value wrapper (`IFCLENGTHMEASURE(3000.)`-shaped) — grammatically a keyword
+; immediately followed by a parenthesized value list, indistinguishable at this level from a
+; top-level instance record; disambiguated only by nesting position (inside a value, not after
+; `#N=`). EXPRESS defined-type semantics mean the value list is always exactly one value in
+; conformant AP214 data (see `StepValue::TypedValue`'s own doc comment for the honest edge case).
+typed-value = keyword '(' [ value *( ',' value ) ] ')'
+simple-string = QUOTE *step-char QUOTE
+; `''` = literal quote; `\X\HH\` = one Latin-1 byte; `\X2\HHHH(HHHH)*\X0\` = a UCS-2 run.
+step-char = %x20-26 / %x28-7E / QUOTE QUOTE / '\X\' 2HEXDIG '\' / '\X2\' 1*( 4HEXDIG ) '\X0\'
+string-list = '(' [ simple-string *( ',' simple-string ) ] ')'
+digit-seq = 1*digit
+digit = %x30-39
+upper = %x41-5A
+HEXDIG = digit / %x41-46
+QUOTE = %x27
+NL = %x0A

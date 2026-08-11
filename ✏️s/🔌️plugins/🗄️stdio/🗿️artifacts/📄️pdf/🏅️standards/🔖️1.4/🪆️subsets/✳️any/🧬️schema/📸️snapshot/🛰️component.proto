@@ -1,6 +1,13 @@
 syntax = "proto3";
 package semio.s_stdio_pdf.snapshot;
+
+message PageDoc {
+  double width = 1;
+  double height = 2;
+  string text = 3;
+}
+
 message PdfSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  PageDoc page = 2;
 }

@@ -600,6 +600,10 @@ pub fn register() {
     store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot, ZipMutation>(
         STDIO_ZIP_DOCUMENT_SCHEMA,
     ));
+    // 🛡️ D5's generic validate-on-build hook: registers the real ✳️iso21320 subset's
+    // SubsetValidator. The ComposerEntry itself is registered separately via this standard's own
+    // `composer::entries()` aggregation (see that module).
+    crate::artifacts::zip::standards::v2_0::subsets::iso21320::composer::register();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).

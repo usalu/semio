@@ -6,7 +6,7 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<IfcSnapshot, store::TextError> 
     let document = crate::artifacts::step::engine::part21::parse_part21(from.to_body().trim()).map_err(|e| {
         store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1))
     })?;
-    Ok(IfcSnapshot { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), document })
+    Ok(crate::artifacts::ifc::schema::snapshot::from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
 }
 pub fn deserialize_text(text: &str) -> Result<IfcSnapshot, store::TextError> {
     deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)

@@ -1,2 +1,37 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ ObjSnapshot schema facet — mirrors 🦀️component.rs field-for-field.
+
+"A `v` position line: x y z [w]."
+type ObjVertex { x: Float! y: Float! z: Float! w: Float }
+"A `vt` texture-coordinate line: u [v] [w]."
+type ObjTexCoord { u: Float! v: Float! w: Float }
+"A `vn` normal line."
+type ObjNormal { x: Float! y: Float! z: Float! }
+"One v[/vt][/vn] reference inside an f line."
+type ObjFaceVertex { vertex: Int! texcoord: Int normal: Int }
+"A f line, kept as its original n-gon."
+type ObjFace { vertices: [ObjFaceVertex!]! }
+"A named g group — face-index membership list."
+type ObjGroup { name: String! faces: [Int!]! }
+"A named o object — face-index membership list."
+type ObjObject { name: String! faces: [Int!]! }
+"One usemtl transition."
+type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
+"One s transition (null group = s off)."
+type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
+"A retained comment/unrecognized source line."
+type ObjUnknownStatement { lineIndex: Int! raw: String! }
+
+"Persisted stdio.obj snapshot."
+type ObjSnapshot {
+  schema: String!
+  vertices: [ObjVertex!]!
+  texcoords: [ObjTexCoord!]!
+  normals: [ObjNormal!]!
+  faces: [ObjFace!]!
+  groups: [ObjGroup!]!
+  objects: [ObjObject!]!
+  mtllib: String
+  usemtl: [ObjUsemtlRange!]!
+  smoothingGroups: [ObjSmoothingRange!]!
+  unknownStatements: [ObjUnknownStatement!]!
+}

@@ -1,2 +1,12 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ StlSnapshot — complete per the ASCII STL spec (solid/endsolid + triangle list).
+
+type StlTriangle {
+  normal: [Float!]!
+  vertices: [[Float!]!]!
+}
+
+type StlSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  solidName: String! @state(class: PERSISTENT)
+  triangles: [StlTriangle!]! @state(class: PERSISTENT)
+}

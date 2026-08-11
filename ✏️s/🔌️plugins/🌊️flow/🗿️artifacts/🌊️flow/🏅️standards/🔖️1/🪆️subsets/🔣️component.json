@@ -1,0 +1,9 @@
+{
+  "artifact": "s.flow.flow",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained flow 1"
+    }
+  }
+}

@@ -1,5 +1,38 @@
 # 🧬️ LasMutation
-type LasMutation {
-  schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_BYTES_COLON String! @state(class: PERSISTENT)
+enum LasMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_VERSION
+  SET_SYSTEM_IDENTIFIER
+  SET_SOFTWARE_INFO
+  SET_CREATION_DATE
+  SET_SCALE_AND_OFFSET
+  SET_BOUNDS
+  SET_POINTS_BY_RETURN
+  INSERT_VLR
+  REMOVE_VLR
+  SET_VLR_DATA
+  INSERT_POINT
+  REMOVE_POINT
+  SET_POINT
+}
+
+input LasMutationInput {
+  mutation: LasMutationKind!
+  snapshot: LasSnapshotInput
+  major: Int
+  minor: Int
+  systemIdentifier: String
+  generatingSoftware: String
+  dayOfYear: Int
+  year: Int
+  scale: [Float!]
+  offset: [Float!]
+  max: [Float!]
+  min: [Float!]
+  counts: [Int!]
+  index: Int
+  vlr: LasVlrInput
+  data: [Int!]
+  point: LasPointInput
 }

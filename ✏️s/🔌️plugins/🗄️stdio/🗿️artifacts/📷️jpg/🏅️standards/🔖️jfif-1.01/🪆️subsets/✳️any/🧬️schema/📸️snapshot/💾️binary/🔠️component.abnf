@@ -1,3 +1,19 @@
-; abnf stdio.jpg snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.jpg snapshot -- real pack encoding: semio binary envelope wrapping the actual JFIF
+; byte stream (ITU-T T.81 marker-segment structure), not a raw octet blob.
+document      = envelope-magic envelope-header jpeg-stream
+envelope-magic = %x53.45.4D.49              ; "SEMI"
+envelope-header = 28OCTET
+jpeg-stream   = SOI *segment app0 *segment sof0 *segment sos entropy-data EOI
+SOI           = %xFF.D8
+EOI           = %xFF.D9
+segment       = marker length body
+marker        = %xFF OCTET
+length        = 2OCTET                      ; big-endian, includes itself
+body          = *OCTET
+app0          = %xFF.E0 length "JFIF" %x00 version units x-density y-density thumb-dims thumb-rgb
+sof0          = %xFF.C0 length precision height width n-components 1*component
+dqt           = %xFF.DB length 1*(table-id precision-tbl 64qk)
+dht           = %xFF.C4 length 1*(class-id 16-counts *symbol)
+dri           = %xFF.DD length restart-interval
+sos           = %xFF.DA length n-scan-components 1*scan-component Ss Se AhAl
+entropy-data  = *(byte-stuffed-octet / restart-marker)

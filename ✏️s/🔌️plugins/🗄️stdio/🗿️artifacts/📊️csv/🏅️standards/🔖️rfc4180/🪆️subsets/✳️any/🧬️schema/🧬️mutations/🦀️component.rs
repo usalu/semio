@@ -3,16 +3,31 @@
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
 use crate::artifacts::csv::schema::diff::{
-    diff_set_snapshot, CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified,
-    CsvRecordsDiff,
+    dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets,
+    CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff,
 };
 use crate::artifacts::csv::schema::snapshot::CsvRecord;
 use crate::artifacts::csv::CsvSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
+use protocol::OpBinary;
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.csv`.
+/// 🧪️ F6: `#[derive(dsl::DslOps)]` on this enum CANNOT be used — confirmed via a real `cargo
+/// check` error, and NOT one of the recon report's documented §3a/§3b failure modes: it is a
+/// genuine derive-macro hygiene bug. `InsertRecord`'s field is literally named `record`, and
+/// `dsl_derive::dsl_variants_codegen`'s generated `to_named_arms` match-arm body shadows any
+/// field bound by that same name with its own internal accumulator —
+/// `let mut record = ::dsl::RecordValue::default();` — declared AFTER the match pattern destructures
+/// the variant's fields. The subsequent `record.fields.insert(#id, ::dsl::DslField::to_value(record))`
+/// statement for the `record` field then resolves `record` to the SHADOWING `RecordValue`, not the
+/// `&CsvRecord` binding, giving: `error[E0308]: mismatched types … expected reference `&_`, found
+/// struct `RecordValue`` at this variant's `record: CsvRecord` field (verified: renaming the field
+/// to `csvrec` alone made the same derive attempt compile clean). Renaming the field back would fix
+/// the derive but changes the Mutation enum's wire shape, which is out of scope here — `OpText`/
+/// `OpBinary` hand-rolled below instead, reusing `CsvDiff`'s `pub(crate)` grammar primitives.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum CsvMutation {
@@ -135,31 +150,92 @@ impl Mutation<CsvSnapshot> for CsvMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for CsvMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `CsvMutation` (`#[derive(dsl::DslOps)]`
+/// confirmed rejected above — a macro hygiene bug, not §3a/§3b) — reuses `CsvDiff`'s
+/// `pub(crate)` grammar primitives (`hex`/`split_top_level`/`encode_option`/`enc_record`/...)
+/// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
+/// (space-separated), same convention gif89a's/svg's own hand-rolled `OpText` impls use, one
+/// match arm per variant (no `DslVariants` scaffolding available since nothing here derives it).
+fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
+    format!(
+        "[{},{},[{}]]",
+        enc_str(&s.schema),
+        if s.has_header { 1 } else { 0 },
+        s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),
+    )
+}
+fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, has_header, records] = parts.as_slice() else {
+        return Err(format!("csv snapshot: expected 3 fields, got {}", parts.len()));
+    };
+    let records = split_top_level(strip_brackets(records)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(dec_record)
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(CsvSnapshot { schema: dec_str(schema)?, has_header: *has_header == "1", records })
+}
+
+fn print_csv_mutation(m: &CsvMutation) -> String {
+    match m {
+        CsvMutation::NoMutation => "no-mutation".to_string(),
+        CsvMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_csv_snapshot(snapshot)),
+        CsvMutation::SetHasHeader { has_header } => format!("set-has-header has-header={}", if *has_header { 1 } else { 0 }),
+        CsvMutation::InsertRecord { index, record } => format!("insert-record index={index} record={}", enc_record(record)),
+        CsvMutation::RemoveRecord { index } => format!("remove-record index={index}"),
+        CsvMutation::SetField { record_index, field_index, value, quoted } => format!(
+            "set-field record-index={record_index} field-index={field_index} value={} quoted={}",
+            enc_str(value), if *quoted { 1 } else { 0 },
+        ),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
+    if line == "no-mutation" {
+        return Ok(CsvMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("csv mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("csv mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(CsvMutation::SetSnapshot { snapshot: dec_csv_snapshot(arg("snapshot")?)? }),
+        "set-has-header" => Ok(CsvMutation::SetHasHeader { has_header: arg("has-header")? == "1" }),
+        "insert-record" => Ok(CsvMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
+        "remove-record" => Ok(CsvMutation::RemoveRecord { index: usize_arg("index")? }),
+        "set-field" => Ok(CsvMutation::SetField {
+            record_index: usize_arg("record-index")?,
+            field_index: usize_arg("field-index")?,
+            value: dec_str(arg("value")?)?,
+            quoted: arg("quoted")? == "1",
+        }),
+        other => Err(format!("csv mutation: unknown keyword {other:?}")),
     }
 }
 
+impl OpText for CsvMutation {
+    fn print_op(&self) -> String {
+        print_csv_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_csv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification as `CsvDiff`'s hand-rolled codec.
 impl protocol::OpBinary for CsvMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -390,5 +466,42 @@ mod tests {
         assert!(CsvDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️FieldSweep
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `CsvMutation` grammar —
+    /// exercises every variant, incl. a `SetSnapshot` payload whose record fields contain the
+    /// grammar's own reserved separator characters (`,`/`[`/`]`/space) to prove hex-encoding
+    /// sidesteps escaping entirely.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let mutations = vec![
+            CsvMutation::NoMutation,
+            CsvMutation::SetSnapshot { snapshot: sweep_b() },
+            CsvMutation::SetSnapshot {
+                snapshot: CsvSnapshot {
+                    schema: "stdio.csv".into(),
+                    has_header: false,
+                    records: vec![record(&[("a, tricky [value]", true), ("plain", false)])],
+                },
+            },
+            CsvMutation::SetHasHeader { has_header: true },
+            CsvMutation::SetHasHeader { has_header: false },
+            CsvMutation::InsertRecord { index: 1, record: record(&[("new, [tricky]", true)]) },
+            CsvMutation::RemoveRecord { index: 0 },
+            CsvMutation::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true },
+            CsvMutation::SetField { record_index: 0, field_index: 2, value: "with, comma [and] brackets".into(), quoted: false },
+        ];
+        for m in mutations {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = CsvMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = CsvMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+        }
+    }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests

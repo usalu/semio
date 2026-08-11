@@ -1,0 +1,9 @@
+{
+  "artifact": "s.shooting.shooting",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained shooting 1"
+    }
+  }
+}

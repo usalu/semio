@@ -1,4 +1,6 @@
 module Stdio_json_diff;
+
+# payload: UTF-8 JSON text of the tagged `JsonDiff` struct (compact form).
 type Document = unit {
-    payload: bytes &eod;
+    payload: bytes &eod &convert=$$.decode("utf-8");
 };

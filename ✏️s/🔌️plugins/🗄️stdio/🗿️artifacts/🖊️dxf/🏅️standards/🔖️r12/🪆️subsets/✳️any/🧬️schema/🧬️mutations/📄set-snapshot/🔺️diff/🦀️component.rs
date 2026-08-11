@@ -3,7 +3,8 @@
 use crate::artifacts::dxf::schema::diff::{DxfDiff, diff_set_snapshot};
 use crate::artifacts::dxf::DxfSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot.
-pub fn diff(snapshot: &DxfSnapshot) -> DxfDiff {
-    diff_set_snapshot(snapshot)
+/// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, next)` (no
+/// full-replace slot on `DxfDiff` to short-circuit into; see `🔺️diff` module docs).
+pub fn diff(base: &DxfSnapshot, snapshot: &DxfSnapshot) -> DxfDiff {
+    diff_set_snapshot(base, snapshot)
 }

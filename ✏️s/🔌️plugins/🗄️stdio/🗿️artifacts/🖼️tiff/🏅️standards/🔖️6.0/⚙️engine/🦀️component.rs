@@ -1,14 +1,28 @@
-//! ⚙️ TiffEngine — real TIFF codec: IFD walk (II/MM), uncompressed + PackBits strips.
+//! ⚙️ TiffEngine — real TIFF codec: full IFD-chain walk (II/MM), generic typed tag/value
+//! decode for every TIFF 6.0 field type, uncompressed + PackBits strip pixel decode.
 //!
-//! Decode supports the classic baseline tag set needed for real-world files: both byte orders,
-//! multi-strip `ImageWidth`/`ImageLength`/`BitsPerSample`(8 only)/`SamplesPerPixel`(1/3/4)/
-//! `RowsPerStrip` chunky strips, `Compression` 1 (none) and 32773 (PackBits). LZW(5)/Deflate(8)
-//! return a typed error rather than fabricate pixels — see 🚫️CompressionScopeNote. Encode always
-//! emits little-endian (`II`), 8-bit RGB, chunky, single-strip TIFF: `encode_tiff` uncompressed
-//! (the historical default, kept so callers/serializers are unaffected) and `encode_tiff_packbits`
-//! PackBits-compressed (added for real PackBits *encode* coverage, not just decode).
+//! **Decode** is fully generic: it walks the WHOLE `next IFD offset` chain (not just the
+//! first IFD) and decodes every entry's typed value via [`TiffFieldType`]/[`TiffValues`],
+//! regardless of whether the codec specially interprets that tag id — this is the "unknown
+//! tags stay typed-raw" completeness promise (`## Snapshot completeness spec`). Pixel decode
+//! itself only runs against IFD 0 (documented normalization: a multi-IFD file's later IFDs —
+//! e.g. thumbnails — keep their real tags but don't get a second decoded raster).
+//!
+//! **Encode** stays honestly narrower (🚫 `EncodeScopeNote`): it always emits a SINGLE IFD
+//! (any IFDs beyond the first aren't re-serialized) with the baseline strip/geometry tags
+//! freshly computed from `pixels`, plus every OTHER tag `ifds[0]` carries verbatim (so a
+//! caller's `SetTag`-set metadata genuinely round-trips) — `Compression`/`PhotometricInterpretation`/
+//! `BitsPerSample`/chunky/single-strip layout are always canonicalized, exactly like this same
+//! ticket's PNG encoder canonicalizes color type/bit depth/interlace. `byte_order` itself DOES
+//! round-trip (encode honors `TiffSnapshot::byte_order`, unlike the pre-migration engine which
+//! always emitted little-endian).
 
-use crate::artifacts::tiff::{schema::snapshot::RasterImage, TiffArtifact, TiffDiff, TiffMutation, TiffSnapshot, STDIO_TIFF_DOCUMENT_SCHEMA};
+use crate::artifacts::tiff::schema::snapshot::{
+    TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE,
+    TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP,
+    TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS,
+};
+use crate::artifacts::tiff::{TiffArtifact, TiffDiff, TiffMutation, STDIO_TIFF_DOCUMENT_SCHEMA};
 
 //#region ByteOrder
 #[derive(Clone, Copy)]
@@ -18,6 +32,12 @@ enum Endian {
 }
 
 impl Endian {
+    fn of(bo: TiffByteOrder) -> Self {
+        match bo {
+            TiffByteOrder::LittleEndian => Endian::Little,
+            TiffByteOrder::BigEndian => Endian::Big,
+        }
+    }
     fn u16(self, b: &[u8]) -> u16 {
         match self {
             Endian::Little => u16::from_le_bytes([b[0], b[1]]),
@@ -30,6 +50,12 @@ impl Endian {
             Endian::Big => u32::from_be_bytes([b[0], b[1], b[2], b[3]]),
         }
     }
+    fn u64(self, b: &[u8]) -> u64 {
+        match self {
+            Endian::Little => u64::from_le_bytes(b.try_into().expect("8 bytes")),
+            Endian::Big => u64::from_be_bytes(b.try_into().expect("8 bytes")),
+        }
+    }
 }
 
 fn read_u16(data: &[u8], pos: usize, e: Endian) -> Result<u16, String> {
@@ -38,28 +64,42 @@ fn read_u16(data: &[u8], pos: usize, e: Endian) -> Result<u16, String> {
 fn read_u32(data: &[u8], pos: usize, e: Endian) -> Result<u32, String> {
     data.get(pos..pos + 4).map(|s| e.u32(s)).ok_or_else(|| "tiff: truncated (u32)".into())
 }
+
+fn write_u16(out: &mut Vec<u8>, v: u16, bo: TiffByteOrder) {
+    match bo {
+        TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
+        TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
+    }
+}
+fn write_u32(out: &mut Vec<u8>, v: u32, bo: TiffByteOrder) {
+    match bo {
+        TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
+        TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
+    }
+}
+fn write_u64(out: &mut Vec<u8>, v: u64, bo: TiffByteOrder) {
+    match bo {
+        TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
+        TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
+    }
+}
 //#endregion ByteOrder
 
-//#region Ifd
-struct IfdEntry {
+//#region IfdRead
+struct RawEntry {
     tag: u16,
     typ: u16,
     count: u32,
     value_field: [u8; 4],
 }
 
-fn type_size(typ: u16) -> usize {
-    match typ {
-        1 | 2 | 6 | 7 => 1,
-        3 | 8 => 2,
-        4 | 9 | 11 => 4,
-        5 | 10 | 12 => 8,
-        _ => 1,
-    }
+struct RawIfd {
+    entries: Vec<RawEntry>,
+    next: u32,
 }
 
-/// 📖 Walks one IFD: 2-byte entry count, N x 12-byte entries, 4-byte offset to the next IFD.
-fn read_ifd(data: &[u8], ifd_off: usize, e: Endian) -> Result<Vec<IfdEntry>, String> {
+/// 📖️ Walks one IFD: 2-byte entry count, N x 12-byte entries, 4-byte offset to the next IFD.
+fn read_ifd_raw(data: &[u8], ifd_off: usize, e: Endian) -> Result<RawIfd, String> {
     let count = read_u16(data, ifd_off, e)? as usize;
     let mut entries = Vec::with_capacity(count);
     let mut pos = ifd_off + 2;
@@ -72,43 +112,85 @@ fn read_ifd(data: &[u8], ifd_off: usize, e: Endian) -> Result<Vec<IfdEntry>, Str
         let cnt = read_u32(data, pos + 4, e)?;
         let mut vf = [0u8; 4];
         vf.copy_from_slice(&data[pos + 8..pos + 12]);
-        entries.push(IfdEntry { tag, typ, count: cnt, value_field: vf });
+        entries.push(RawEntry { tag, typ, count: cnt, value_field: vf });
         pos += 12;
     }
-    Ok(entries)
+    let next = read_u32(data, pos, e)?;
+    Ok(RawIfd { entries, next })
 }
 
-/// 🔢 Reads a tag's values as `u32`s, resolving the inline-vs-offset rule (TIFF6 §2: the value
-/// is stored inline in the 4-byte field if `type_size * count <= 4`, else the field holds a file
-/// offset to the values).
-fn entry_values(data: &[u8], entry: &IfdEntry, e: Endian) -> Result<Vec<u32>, String> {
-    let sz = type_size(entry.typ);
-    let total = sz * entry.count as usize;
+/// 🔗️ Walks the WHOLE `next IFD offset` chain starting at `first_off` (0 = none). Cycle-
+/// guarded so a malformed/adversarial chain errors instead of looping forever.
+fn read_ifd_chain(data: &[u8], first_off: usize, e: Endian) -> Result<Vec<RawIfd>, String> {
+    let mut out = Vec::new();
+    let mut off = first_off;
+    let mut seen = std::collections::HashSet::new();
+    while off != 0 {
+        if !seen.insert(off) {
+            return Err("tiff: IFD offset cycle detected".into());
+        }
+        let raw = read_ifd_raw(data, off, e)?;
+        let next = raw.next as usize;
+        out.push(raw);
+        off = next;
+    }
+    Ok(out)
+}
+
+/// 🔢️ Reads one entry's real typed value, resolving the inline-vs-offset rule (TIFF6 §2: the
+/// value is stored inline in the 4-byte field if `element_size * count <= 4`, else the field
+/// holds a file offset to the values) GENERICALLY for all 12 field types.
+fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType) -> Result<TiffValues, String> {
+    let elem = kind.element_size();
+    let count = entry.count as usize;
+    let total = elem * count;
     let owned;
     let src: &[u8] = if total <= 4 {
-        &entry.value_field
+        &entry.value_field[..total]
     } else {
         let off = e.u32(&entry.value_field) as usize;
         owned = data.get(off..off + total).ok_or("tiff: tag value offset out of range")?;
         owned
     };
-    let mut out = Vec::with_capacity(entry.count as usize);
-    for i in 0..entry.count as usize {
-        let v = match entry.typ {
-            3 => e.u16(&src[i * 2..i * 2 + 2]) as u32,
-            4 => e.u32(&src[i * 4..i * 4 + 4]),
-            1 | 2 | 6 | 7 => src[i] as u32,
-            _ => return Err(format!("tiff: unsupported tag value type {}", entry.typ)),
-        };
-        out.push(v);
-    }
-    Ok(out)
+    Ok(match kind {
+        TiffFieldType::Byte => TiffValues::Byte(src.to_vec()),
+        TiffFieldType::Ascii => {
+            let text = String::from_utf8_lossy(src);
+            TiffValues::Ascii(text.trim_end_matches('\u{0}').to_string())
+        }
+        TiffFieldType::Short => TiffValues::Short((0..count).map(|i| e.u16(&src[i * 2..i * 2 + 2])).collect()),
+        TiffFieldType::Long => TiffValues::Long((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4])).collect()),
+        TiffFieldType::Rational => TiffValues::Rational(
+            (0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]), e.u32(&src[i * 8 + 4..i * 8 + 8]))).collect(),
+        ),
+        TiffFieldType::SByte => TiffValues::SByte(src.iter().map(|&b| b as i8).collect()),
+        TiffFieldType::Undefined => TiffValues::Undefined(src.to_vec()),
+        TiffFieldType::SShort => TiffValues::SShort((0..count).map(|i| e.u16(&src[i * 2..i * 2 + 2]) as i16).collect()),
+        TiffFieldType::SLong => TiffValues::SLong((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4]) as i32).collect()),
+        TiffFieldType::SRational => TiffValues::SRational(
+            (0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]) as i32, e.u32(&src[i * 8 + 4..i * 8 + 8]) as i32)).collect(),
+        ),
+        TiffFieldType::Float => TiffValues::Float((0..count).map(|i| f32::from_bits(e.u32(&src[i * 4..i * 4 + 4]))).collect()),
+        TiffFieldType::Double => TiffValues::Double((0..count).map(|i| f64::from_bits(e.u64(&src[i * 8..i * 8 + 8]))).collect()),
+    })
 }
+//#endregion IfdRead
 
-fn entry_u32(data: &[u8], entry: &IfdEntry, e: Endian) -> Result<u32, String> {
-    Ok(entry_values(data, entry, e)?.first().copied().unwrap_or(0))
+//#region TagLookup
+fn tag_values<'a>(ifd: &'a TiffIfd, tag: u16) -> Option<&'a TiffValues> {
+    ifd.entries.iter().find(|t| t.tag == tag).map(|t| &t.values)
 }
-//#endregion Ifd
+fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
+    match tag_values(ifd, tag) {
+        Some(TiffValues::Short(v)) => v.iter().map(|&x| x as u32).collect(),
+        Some(TiffValues::Long(v)) => v.clone(),
+        _ => Vec::new(),
+    }
+}
+fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
+    tag_u32_list(ifd, tag).first().copied()
+}
+//#endregion TagLookup
 
 //#region PackBits
 /// 📦 PackBits (TIFF compression scheme 32773, TIFF6 §9): signed control byte `n` — `n >= 0`
@@ -176,77 +258,34 @@ fn packbits_encode(data: &[u8]) -> Vec<u8> {
 }
 //#endregion PackBits
 
-//#region Codec
-const TAG_IMAGE_WIDTH: u16 = 256;
-const TAG_IMAGE_LENGTH: u16 = 257;
-const TAG_BITS_PER_SAMPLE: u16 = 258;
-const TAG_COMPRESSION: u16 = 259;
-const TAG_PHOTOMETRIC: u16 = 262;
-const TAG_STRIP_OFFSETS: u16 = 273;
-const TAG_SAMPLES_PER_PIXEL: u16 = 277;
-const TAG_ROWS_PER_STRIP: u16 = 278;
-const TAG_STRIP_BYTE_COUNTS: u16 = 279;
-
-pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
-    if data.len() < 8 {
-        return Err("tiff: truncated header".into());
-    }
-    let e = match &data[0..2] {
-        b"II" => Endian::Little,
-        b"MM" => Endian::Big,
-        _ => return Err("tiff: bad byte-order mark".into()),
-    };
-    if read_u16(data, 2, e)? != 42 {
-        return Err("tiff: bad magic number".into());
-    }
-    let ifd_off = read_u32(data, 4, e)? as usize;
-    let entries = read_ifd(data, ifd_off, e)?;
-
-    let mut width = None;
-    let mut height = None;
-    let mut compression = 1u32;
-    let mut samples_per_pixel = 1u32;
-    let mut bits_per_sample = 8u32;
-    let mut photometric = 1u32;
-    let mut rows_per_strip: Option<u32> = None;
-    let mut strip_offsets: Vec<u32> = Vec::new();
-    let mut strip_byte_counts: Vec<u32> = Vec::new();
-
-    for entry in &entries {
-        match entry.tag {
-            TAG_IMAGE_WIDTH => width = Some(entry_u32(data, entry, e)?),
-            TAG_IMAGE_LENGTH => height = Some(entry_u32(data, entry, e)?),
-            TAG_BITS_PER_SAMPLE => bits_per_sample = entry_values(data, entry, e)?.first().copied().unwrap_or(8),
-            TAG_COMPRESSION => compression = entry_u32(data, entry, e)?,
-            TAG_PHOTOMETRIC => photometric = entry_u32(data, entry, e)?,
-            TAG_STRIP_OFFSETS => strip_offsets = entry_values(data, entry, e)?,
-            TAG_SAMPLES_PER_PIXEL => samples_per_pixel = entry_u32(data, entry, e)?,
-            TAG_ROWS_PER_STRIP => rows_per_strip = Some(entry_u32(data, entry, e)?),
-            TAG_STRIP_BYTE_COUNTS => strip_byte_counts = entry_values(data, entry, e)?,
-            _ => {}
-        }
-    }
-
-    let width = width.ok_or("tiff: missing ImageWidth")?;
-    let height = height.ok_or("tiff: missing ImageLength")?;
+//#region Decode
+/// 🚫 CompressionScopeNote: only uncompressed(1)/PackBits(32773) are decoded for real —
+/// LZW(5)/Deflate(8)/CCITT(2/3/4)/others deliberately fail rather than fabricate pixels.
+fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, String> {
+    let width = tag_u32(ifd, TAG_IMAGE_WIDTH).ok_or("tiff: missing ImageWidth")?;
+    let height = tag_u32(ifd, TAG_IMAGE_LENGTH).ok_or("tiff: missing ImageLength")?;
     if width == 0 || height == 0 {
         return Err("tiff: zero dimension".into());
     }
+    let bits_per_sample = tag_u32(ifd, TAG_BITS_PER_SAMPLE).unwrap_or(8);
     if bits_per_sample != 8 {
         return Err(format!("tiff: unsupported BitsPerSample {bits_per_sample} (only 8 is implemented)"));
     }
+    let samples_per_pixel = tag_u32(ifd, TAG_SAMPLES_PER_PIXEL).unwrap_or(1);
     if samples_per_pixel != 1 && samples_per_pixel != 3 && samples_per_pixel != 4 {
         return Err(format!("tiff: unsupported SamplesPerPixel {samples_per_pixel}"));
     }
-    // 🚫 CompressionScopeNote: only uncompressed(1)/PackBits(32773) are decoded for real —
-    // LZW(5)/Deflate(8)/others deliberately fail rather than fabricate pixel data.
+    let compression = tag_u32(ifd, TAG_COMPRESSION).unwrap_or(1);
     if compression != 1 && compression != 32773 {
         return Err(format!("tiff: unsupported compression {compression} (only uncompressed/PackBits are implemented)"));
     }
+    let photometric = tag_u32(ifd, TAG_PHOTOMETRIC).unwrap_or(1);
+    let strip_offsets = tag_u32_list(ifd, TAG_STRIP_OFFSETS);
     if strip_offsets.is_empty() {
         return Err("tiff: missing StripOffsets".into());
     }
-    let rows_per_strip = rows_per_strip.unwrap_or(height);
+    let strip_byte_counts = tag_u32_list(ifd, TAG_STRIP_BYTE_COUNTS);
+    let rows_per_strip = tag_u32(ifd, TAG_ROWS_PER_STRIP).unwrap_or(height);
 
     let row_bytes = width as usize * samples_per_pixel as usize;
     let mut raster = vec![0u8; row_bytes * height as usize];
@@ -295,74 +334,199 @@ pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
             _ => unreachable!("validated above"),
         }
     }
-
-    Ok(TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), image: RasterImage { width, height, rgba } })
+    Ok(rgba)
 }
 
-fn rgb_bytes(img: &RasterImage) -> Result<Vec<u8>, String> {
-    let pixels = img.width as usize * img.height as usize;
-    if img.rgba.len() != pixels * 4 {
-        return Err("tiff: rgba length mismatch".into());
+pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
+    if data.len() < 8 {
+        return Err("tiff: truncated header".into());
     }
-    let mut rgb = Vec::with_capacity(pixels * 3);
-    for px in img.rgba.chunks(4) {
+    let (e, byte_order) = match &data[0..2] {
+        b"II" => (Endian::Little, TiffByteOrder::LittleEndian),
+        b"MM" => (Endian::Big, TiffByteOrder::BigEndian),
+        _ => return Err("tiff: bad byte-order mark".into()),
+    };
+    if read_u16(data, 2, e)? != 42 {
+        return Err("tiff: bad magic number".into());
+    }
+    let first_off = read_u32(data, 4, e)? as usize;
+    let raw_ifds = read_ifd_chain(data, first_off, e)?;
+    if raw_ifds.is_empty() {
+        return Err("tiff: no IFD present".into());
+    }
+
+    let mut ifds = Vec::with_capacity(raw_ifds.len());
+    for raw in &raw_ifds {
+        let mut entries = Vec::with_capacity(raw.entries.len());
+        for entry in &raw.entries {
+            let kind = TiffFieldType::from_u16(entry.typ)?;
+            let values = read_tag_values(data, entry, e, kind)?;
+            entries.push(TiffTag { tag: entry.tag, kind, values });
+        }
+        entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
+        ifds.push(TiffIfd { entries });
+    }
+
+    // Pixel decode only runs against IFD 0 — see module doc's normalization note.
+    let pixels = decode_pixels_from_ifd(data, &ifds[0])?;
+
+    Ok(TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order, ifds, pixels })
+}
+//#endregion Decode
+
+//#region Encode
+fn rgba_to_rgb(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
+    let n = width as usize * height as usize;
+    if pixels.len() != n * 4 {
+        return Err(format!("tiff: pixels length mismatch (got {}, expected {} for {width}x{height} RGBA)", pixels.len(), n * 4));
+    }
+    let mut rgb = Vec::with_capacity(n * 3);
+    for px in pixels.chunks(4) {
         rgb.extend_from_slice(&px[0..3]);
     }
     Ok(rgb)
 }
 
+fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
+    let mut out = Vec::new();
+    match values {
+        TiffValues::Byte(v) | TiffValues::Undefined(v) => out.extend_from_slice(v),
+        TiffValues::Ascii(s) => {
+            out.extend_from_slice(s.as_bytes());
+            out.push(0);
+        }
+        TiffValues::Short(v) => v.iter().for_each(|&x| write_u16(&mut out, x, bo)),
+        TiffValues::Long(v) => v.iter().for_each(|&x| write_u32(&mut out, x, bo)),
+        TiffValues::Rational(v) => v.iter().for_each(|&(n, d)| {
+            write_u32(&mut out, n, bo);
+            write_u32(&mut out, d, bo);
+        }),
+        TiffValues::SByte(v) => out.extend(v.iter().map(|&x| x as u8)),
+        TiffValues::SShort(v) => v.iter().for_each(|&x| write_u16(&mut out, x as u16, bo)),
+        TiffValues::SLong(v) => v.iter().for_each(|&x| write_u32(&mut out, x as u32, bo)),
+        TiffValues::SRational(v) => v.iter().for_each(|&(n, d)| {
+            write_u32(&mut out, n as u32, bo);
+            write_u32(&mut out, d as u32, bo);
+        }),
+        TiffValues::Float(v) => v.iter().for_each(|&x| write_u32(&mut out, x.to_bits(), bo)),
+        TiffValues::Double(v) => v.iter().for_each(|&x| write_u64(&mut out, x.to_bits(), bo)),
+    }
+    out
+}
+
+const CORE_STRIP_TAGS: [u16; 9] = [
+    TAG_IMAGE_WIDTH,
+    TAG_IMAGE_LENGTH,
+    TAG_BITS_PER_SAMPLE,
+    TAG_COMPRESSION,
+    TAG_PHOTOMETRIC,
+    TAG_STRIP_OFFSETS,
+    TAG_SAMPLES_PER_PIXEL,
+    TAG_ROWS_PER_STRIP,
+    TAG_STRIP_BYTE_COUNTS,
+];
+
+fn dir_size(n: usize) -> usize {
+    2 + 12 * n + 4
+}
+fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
+    entries
+        .iter()
+        .map(|t| {
+            let len = value_bytes(&t.values, bo).len();
+            if len <= 4 { 0 } else { len + (len % 2) }
+        })
+        .sum()
+}
+
+/// 🚫 EncodeScopeNote (see module doc): single-IFD output, baseline strip/geometry tags
+/// recomputed fresh from `pixels`, every OTHER `ifds[0]` tag carried over verbatim so
+/// `SetTag`-set metadata round-trips. `byte_order` is honored (real round-trip, unlike the
+/// pre-migration engine which always emitted little-endian).
 fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
-    let img = &snap.image;
-    if img.width == 0 || img.height == 0 {
+    let width = snap.width().ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
+    let height = snap.height().ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
+    if width == 0 || height == 0 {
         return Err("tiff: empty image".into());
     }
-    let rgb = rgb_bytes(img)?;
+    let rgb = rgba_to_rgb(&snap.pixels, width, height)?;
     let strip_bytes = if packbits { packbits_encode(&rgb) } else { rgb };
     let compression: u32 = if packbits { 32773 } else { 1 };
 
-    let entry_count = 9u16;
-    let ifd_off = 8u32;
-    let strip_off = ifd_off + 2 + 12 * entry_count as u32 + 4;
-    let entries: [(u16, u16, u32, u32); 9] = [
-        (TAG_IMAGE_WIDTH, 3, 1, img.width),
-        (TAG_IMAGE_LENGTH, 3, 1, img.height),
-        (TAG_BITS_PER_SAMPLE, 3, 1, 8),
-        (TAG_COMPRESSION, 3, 1, compression),
-        (TAG_PHOTOMETRIC, 3, 1, 2),
-        (TAG_STRIP_OFFSETS, 4, 1, strip_off),
-        (TAG_SAMPLES_PER_PIXEL, 3, 1, 3),
-        (TAG_ROWS_PER_STRIP, 3, 1, img.height),
-        (TAG_STRIP_BYTE_COUNTS, 4, 1, strip_bytes.len() as u32),
-    ];
-    let mut out = Vec::new();
-    out.extend_from_slice(b"II");
-    out.extend_from_slice(&42u16.to_le_bytes());
-    out.extend_from_slice(&ifd_off.to_le_bytes());
-    out.extend_from_slice(&entry_count.to_le_bytes());
-    for (tag, typ, cnt, val) in entries {
-        out.extend_from_slice(&tag.to_le_bytes());
-        out.extend_from_slice(&typ.to_le_bytes());
-        out.extend_from_slice(&cnt.to_le_bytes());
-        out.extend_from_slice(&val.to_le_bytes());
+    let carried: Vec<TiffTag> = snap
+        .ifds
+        .first()
+        .map(|ifd| ifd.entries.iter().filter(|t| !CORE_STRIP_TAGS.contains(&t.tag)).cloned().collect())
+        .unwrap_or_default();
+    let mut entries = carried;
+    entries.push(TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) });
+    entries.push(TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
+    entries.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
+    entries.push(TiffTag { tag: TAG_COMPRESSION, kind: TiffFieldType::Short, values: TiffValues::Short(vec![compression as u16]) });
+    entries.push(TiffTag { tag: TAG_PHOTOMETRIC, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) });
+    entries.push(TiffTag { tag: TAG_SAMPLES_PER_PIXEL, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) });
+    entries.push(TiffTag { tag: TAG_ROWS_PER_STRIP, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
+    entries.push(TiffTag { tag: TAG_STRIP_BYTE_COUNTS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![strip_bytes.len() as u32]) });
+    entries.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) }); // placeholder, patched below
+    entries.sort_by_key(|t| t.tag);
+
+    let dir_offset = 8usize;
+    let out_of_line_start = dir_offset + dir_size(entries.len());
+    let pixel_data_offset = out_of_line_start + out_of_line_size(&entries, snap.byte_order);
+    if let Some(t) = entries.iter_mut().find(|t| t.tag == TAG_STRIP_OFFSETS) {
+        t.values = TiffValues::Long(vec![pixel_data_offset as u32]); // Long/count1 stays inline: doesn't move the layout.
     }
-    out.extend_from_slice(&0u32.to_le_bytes()); // next IFD = none
-    out.resize(strip_off as usize, 0);
+
+    let mut out = Vec::new();
+    match snap.byte_order {
+        TiffByteOrder::LittleEndian => out.extend_from_slice(b"II"),
+        TiffByteOrder::BigEndian => out.extend_from_slice(b"MM"),
+    }
+    write_u16(&mut out, 42, snap.byte_order);
+    write_u32(&mut out, dir_offset as u32, snap.byte_order);
+    write_u16(&mut out, entries.len() as u16, snap.byte_order);
+    let mut cursor = out_of_line_start;
+    for t in &entries {
+        write_u16(&mut out, t.tag, snap.byte_order);
+        write_u16(&mut out, t.kind.to_u16(), snap.byte_order);
+        write_u32(&mut out, t.values.count(), snap.byte_order);
+        let vb = value_bytes(&t.values, snap.byte_order);
+        if vb.len() <= 4 {
+            let mut field = [0u8; 4];
+            field[..vb.len()].copy_from_slice(&vb);
+            out.extend_from_slice(&field);
+        } else {
+            write_u32(&mut out, cursor as u32, snap.byte_order);
+            cursor += vb.len() + (vb.len() % 2);
+        }
+    }
+    write_u32(&mut out, 0, snap.byte_order); // next IFD offset: none (single-IFD encode).
+    for t in &entries {
+        let vb = value_bytes(&t.values, snap.byte_order);
+        if vb.len() > 4 {
+            out.extend_from_slice(&vb);
+            if vb.len() % 2 == 1 {
+                out.push(0);
+            }
+        }
+    }
+    debug_assert_eq!(out.len(), pixel_data_offset, "computed layout must match actual bytes written");
     out.extend_from_slice(&strip_bytes);
     Ok(out)
 }
 
-/// 🚫 EncodeScopeNote: always emits little-endian, 8-bit RGB, chunky, single-strip, uncompressed
-/// (`Compression` 1) TIFF — the historical default kept so `print_dsl`/`encode_pack_with` and the
-/// io export serializer (which both call this exact function) are unaffected.
+/// 🚫 EncodeScopeNote: see `encode_tiff_with`. Uncompressed (`Compression` 1) variant — the
+/// historical default kept so `print_dsl`/`encode_pack_with` and the io export serializer
+/// (which both call this exact function) are unaffected.
 pub fn encode_tiff(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
     encode_tiff_with(snap, false)
 }
 
-/// 📦 Same shape as `encode_tiff` but real-PackBits-compresses the strip (`Compression` 32773) —
-/// added so PackBits has genuine encode coverage, not just decode.
+/// 📦 Same shape as `encode_tiff` but real-PackBits-compresses the strip (`Compression` 32773).
 pub fn encode_tiff_packbits(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
     encode_tiff_with(snap, true)
 }
+//#endregion Encode
 
 pub fn empty_tiff_snapshot() -> TiffSnapshot {
     TiffSnapshot::default()
@@ -372,6 +536,10 @@ pub fn register() {
     crate::artifacts::tiff::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::tiff::schema::tiff_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️baseline subset's SubsetValidator so
+    // `io_dispatch`/`wire_artifact_compose` re-check it for free. Its ComposerEntry is registered
+    // separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::tiff::standards::v6_0::subsets::baseline::composer::register();
 }
 
 pub struct TiffEngine {
@@ -389,6 +557,7 @@ impl TiffEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffValues};
 
     fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
@@ -401,18 +570,27 @@ mod tests {
         out
     }
 
+    fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
+        TiffIfd {
+            entries: vec![
+                TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) },
+                TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) },
+            ],
+        }
+    }
+
     /// 🔬 Load-bearing regression: non-solid 9x5 checkerboard/gradient round-tripped through the
     /// real uncompressed IFD codec.
     #[test]
     fn gradient_checkerboard_uncompressed_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
-        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: rgba.clone() } };
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
         let encoded = encode_tiff(&snap).expect("encode");
         let decoded = decode_tiff(&encoded).expect("decode");
-        assert_eq!(decoded.image.width, w);
-        assert_eq!(decoded.image.height, h);
-        assert_eq!(decoded.image.rgba, rgba, "decoded pixels must exactly match the original");
+        assert_eq!(decoded.width(), Some(w));
+        assert_eq!(decoded.height(), Some(h));
+        assert_eq!(decoded.pixels, rgba, "decoded pixels must exactly match the original");
     }
 
     /// 🔬 Same fixture through real PackBits encode+decode — proves PackBits compression is
@@ -422,12 +600,12 @@ mod tests {
     fn gradient_checkerboard_packbits_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
-        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: rgba.clone() } };
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
         let encoded = encode_tiff_packbits(&snap).expect("encode packbits");
         let decoded = decode_tiff(&encoded).expect("decode packbits");
-        assert_eq!(decoded.image.width, w);
-        assert_eq!(decoded.image.height, h);
-        assert_eq!(decoded.image.rgba, rgba, "packbits round trip must exactly match the original");
+        assert_eq!(decoded.width(), Some(w));
+        assert_eq!(decoded.height(), Some(h));
+        assert_eq!(decoded.pixels, rgba, "packbits round trip must exactly match the original");
     }
 
     /// 🔬 PackBits actually runs real repeat/literal RLE, not a pass-through: a solid-color strip
@@ -435,16 +613,13 @@ mod tests {
     #[test]
     fn packbits_compresses_repetitive_data() {
         let (w, h) = (20u32, 10u32);
-        // R=G=B so the underlying RGB byte stream is one long run of an identical byte value —
-        // PackBits is a byte-level RLE, so a per-pixel-but-varying-per-channel color (e.g.
-        // 200,50,25 cycling) would NOT compress; this fixture is the case that genuinely does.
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [128u8, 128, 128, 255]).collect();
-        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: rgba.clone() } };
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
         let uncompressed = encode_tiff(&snap).expect("encode uncompressed");
         let encoded = encode_tiff_packbits(&snap).expect("encode packbits");
         assert!(encoded.len() < uncompressed.len(), "packbits must shrink a byte-repetitive strip below the uncompressed encoding ({} !< {})", encoded.len(), uncompressed.len());
         let decoded = decode_tiff(&encoded).expect("decode packbits");
-        assert_eq!(decoded.image.rgba, rgba);
+        assert_eq!(decoded.pixels, rgba);
     }
 
     #[test]
@@ -454,57 +629,54 @@ mod tests {
         let expected: Vec<u8> = vec![10, 20, 30, 99, 99, 99, 99, 99, 1, 2];
         let decoded = packbits_decode(&encoded, expected.len()).expect("decode");
         assert_eq!(decoded, expected);
-        // round trip through our own encoder too
         let re_encoded = packbits_encode(&expected);
         let re_decoded = packbits_decode(&re_encoded, expected.len()).expect("re-decode");
         assert_eq!(re_decoded, expected);
     }
 
-    /// 🔬 Big-endian (`MM`) byte order must decode correctly too — hand-builds a minimal
-    /// big-endian uncompressed 2x1 RGB TIFF.
+    /// 🔬 Big-endian (`MM`) byte order must decode correctly too, AND encode must round-trip
+    /// `byte_order` itself (real round-trip, not always-little-endian).
     #[test]
-    fn big_endian_uncompressed_decode() {
-        let (w, h): (u32, u32) = (2, 1);
-        let rgb: [u8; 6] = [10, 20, 30, 40, 50, 60];
-        let entry_count = 9u16;
-        let ifd_off = 8u32;
-        let strip_off = ifd_off + 2 + 12 * entry_count as u32 + 4;
-        let entries: [(u16, u16, u32, u32); 9] = [
-            (TAG_IMAGE_WIDTH, 3, 1, w),
-            (TAG_IMAGE_LENGTH, 3, 1, h),
-            (TAG_BITS_PER_SAMPLE, 3, 1, 8),
-            (TAG_COMPRESSION, 3, 1, 1),
-            (TAG_PHOTOMETRIC, 3, 1, 2),
-            (TAG_STRIP_OFFSETS, 4, 1, strip_off),
-            (TAG_SAMPLES_PER_PIXEL, 3, 1, 3),
-            (TAG_ROWS_PER_STRIP, 3, 1, h),
-            (TAG_STRIP_BYTE_COUNTS, 4, 1, rgb.len() as u32),
-        ];
-        let mut out = Vec::new();
-        out.extend_from_slice(b"MM");
-        out.extend_from_slice(&42u16.to_be_bytes());
-        out.extend_from_slice(&ifd_off.to_be_bytes());
-        out.extend_from_slice(&entry_count.to_be_bytes());
-        for (tag, typ, cnt, val) in entries {
-            out.extend_from_slice(&tag.to_be_bytes());
-            out.extend_from_slice(&typ.to_be_bytes());
-            out.extend_from_slice(&cnt.to_be_bytes());
-            // SHORT values are left-justified within the 4-byte field even in big-endian files.
-            if typ == 3 {
-                out.extend_from_slice(&(val as u16).to_be_bytes());
-                out.extend_from_slice(&[0u8; 2]);
-            } else {
-                out.extend_from_slice(&val.to_be_bytes());
-            }
-        }
-        out.extend_from_slice(&0u32.to_be_bytes());
-        out.resize(strip_off as usize, 0);
-        out.extend_from_slice(&rgb);
+    fn big_endian_round_trip() {
+        let (w, h) = (2u32, 1u32);
+        let rgba = vec![10u8, 20, 30, 255, 40, 50, 60, 255];
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::BigEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
+        let encoded = encode_tiff(&snap).expect("encode big-endian");
+        assert_eq!(&encoded[0..2], b"MM", "encode must honor byte_order, not always little-endian");
+        let decoded = decode_tiff(&encoded).expect("decode big-endian tiff");
+        assert_eq!(decoded.byte_order, TiffByteOrder::BigEndian);
+        assert_eq!(decoded.width(), Some(w));
+        assert_eq!(decoded.height(), Some(h));
+        assert_eq!(decoded.pixels, rgba);
+    }
 
-        let decoded = decode_tiff(&out).expect("decode big-endian tiff");
-        assert_eq!(decoded.image.width, w);
-        assert_eq!(decoded.image.height, h);
-        assert_eq!(decoded.image.rgba, vec![10, 20, 30, 255, 40, 50, 60, 255]);
+    /// 🔬 A non-core tag (`Artist`, ASCII, out-of-line since its value exceeds 4 bytes) set on
+    /// `ifds[0]` must survive an encode/decode round trip verbatim — proves the generic
+    /// tag/type/value model, not just the hardcoded strip-geometry tags.
+    #[test]
+    fn carried_ascii_tag_round_trips() {
+        let (w, h) = (2u32, 2u32);
+        let rgba = vec![1u8; (w * h * 4) as usize];
+        let mut ifd = ifd0_snapshot(w, h);
+        ifd.entries.push(TiffTag { tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("A Real Artist".into()) });
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd], pixels: rgba };
+        let encoded = encode_tiff(&snap).expect("encode");
+        let decoded = decode_tiff(&encoded).expect("decode");
+        let artist = decoded.tag(315).expect("Artist tag must survive round trip");
+        assert_eq!(artist.values, TiffValues::Ascii("A Real Artist".into()));
+    }
+
+    /// 🔬 A short (inline) non-core numeric tag also survives.
+    #[test]
+    fn carried_short_tag_round_trips() {
+        let (w, h) = (2u32, 2u32);
+        let rgba = vec![1u8; (w * h * 4) as usize];
+        let mut ifd = ifd0_snapshot(w, h);
+        ifd.entries.push(TiffTag { tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) }); // ResolutionUnit
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd], pixels: rgba };
+        let encoded = encode_tiff(&snap).expect("encode");
+        let decoded = decode_tiff(&encoded).expect("decode");
+        assert_eq!(decoded.tag(296).expect("ResolutionUnit must survive").values, TiffValues::Short(vec![2]));
     }
 
     #[test]
@@ -516,28 +688,33 @@ mod tests {
     #[test]
     fn unsupported_compression_is_a_typed_error() {
         let (w, h) = (2u32, 2u32);
-        let entry_count = 6u16;
-        let ifd_off = 8u32;
-        let entries: [(u16, u16, u32, u32); 6] = [
-            (TAG_IMAGE_WIDTH, 3, 1, w),
-            (TAG_IMAGE_LENGTH, 3, 1, h),
-            (TAG_BITS_PER_SAMPLE, 3, 1, 8),
-            (TAG_COMPRESSION, 3, 1, 5), // LZW — intentionally unsupported
-            (TAG_SAMPLES_PER_PIXEL, 3, 1, 3),
-            (TAG_STRIP_OFFSETS, 4, 1, 0),
-        ];
+        let mut ifd = ifd0_snapshot(w, h);
+        ifd.entries.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
+        ifd.entries.push(TiffTag { tag: TAG_COMPRESSION, kind: TiffFieldType::Short, values: TiffValues::Short(vec![5]) }); // LZW — intentionally unsupported
+        ifd.entries.push(TiffTag { tag: TAG_SAMPLES_PER_PIXEL, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) });
+        ifd.entries.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) });
+        ifd.entries.sort_by_key(|t| t.tag);
+
+        // Hand-encode a minimal file carrying this IFD (bypassing `encode_tiff`, which always
+        // canonicalizes `Compression` itself) to exercise `decode_tiff`'s own rejection path.
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd], pixels: Vec::new() };
+        let dir_offset = 8usize;
+        let entries = &snap.ifds[0].entries;
         let mut out = Vec::new();
         out.extend_from_slice(b"II");
-        out.extend_from_slice(&42u16.to_le_bytes());
-        out.extend_from_slice(&ifd_off.to_le_bytes());
-        out.extend_from_slice(&entry_count.to_le_bytes());
-        for (tag, typ, cnt, val) in entries {
-            out.extend_from_slice(&tag.to_le_bytes());
-            out.extend_from_slice(&typ.to_le_bytes());
-            out.extend_from_slice(&cnt.to_le_bytes());
-            out.extend_from_slice(&val.to_le_bytes());
+        write_u16(&mut out, 42, TiffByteOrder::LittleEndian);
+        write_u32(&mut out, dir_offset as u32, TiffByteOrder::LittleEndian);
+        write_u16(&mut out, entries.len() as u16, TiffByteOrder::LittleEndian);
+        for t in entries {
+            write_u16(&mut out, t.tag, TiffByteOrder::LittleEndian);
+            write_u16(&mut out, t.kind.to_u16(), TiffByteOrder::LittleEndian);
+            write_u32(&mut out, t.values.count(), TiffByteOrder::LittleEndian);
+            let vb = value_bytes(&t.values, TiffByteOrder::LittleEndian);
+            let mut field = [0u8; 4];
+            field[..vb.len().min(4)].copy_from_slice(&vb[..vb.len().min(4)]);
+            out.extend_from_slice(&field);
         }
-        out.extend_from_slice(&0u32.to_le_bytes());
+        write_u32(&mut out, 0, TiffByteOrder::LittleEndian);
         let err = decode_tiff(&out).unwrap_err();
         assert!(err.contains("unsupported compression"), "unexpected error: {err}");
     }

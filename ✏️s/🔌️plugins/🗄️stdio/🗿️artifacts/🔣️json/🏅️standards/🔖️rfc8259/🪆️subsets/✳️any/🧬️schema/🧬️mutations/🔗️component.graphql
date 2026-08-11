@@ -1,5 +1,29 @@
-# 🧬️ JsonMutation
+# 🧬️ JsonMutation — every variant addresses its target via a JsonPath.
+type JsonPathSegment {
+  kind: JsonPathSegmentKind!
+  key: String
+  index: Int
+}
+enum JsonPathSegmentKind {
+  KEY
+  INDEX
+}
+
 type JsonMutation {
-  schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
+  mutation: JsonMutationKind!
+  snapshot: JsonSnapshot
+  path: [JsonPathSegment!]
+  key: String
+  index: Int
+  value: JsonValue
+}
+
+enum JsonMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_MEMBER
+  REMOVE_MEMBER
+  INSERT_ARRAY_ELEMENT
+  REMOVE_ARRAY_ELEMENT
+  SET_SCALAR
 }

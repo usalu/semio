@@ -1,6 +1,6 @@
 //! ⚙️ StepEngine — owns a real `StepArtifact`.
 
-use crate::artifacts::step::{StepArtifact, StepDiff, StepMutation, StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
+use crate::artifacts::step::{StepArtifact, StepMutation, StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
 
 //#region 🔖️Submodules
 /// 📐 Shared ISO 10303-21 tokenizer + generic graph — public, importable cross-artifact (ifc reuses it).
@@ -9,6 +9,10 @@ pub mod part21;
 /// 🧱 BrepMesh analyzer view, derived from the generic graph — never persisted itself.
 #[path = "🧱️brep/🦀️component.rs"]
 pub mod brep;
+/// 🪜 Shared CC ladder classification + FILE_SCHEMA/PRODUCT-chain scans, reused by all six
+/// `✳️ccN` subset analyzers (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
+#[path = "🪜️ladder/🦀️component.rs"]
+pub mod ladder;
 //#endregion 🔖️Submodules
 
 //#region 🔖️DocumentHelpers
@@ -24,7 +28,19 @@ pub fn register() {
     crate::artifacts::step::composer::register();
     register_artifact_schema();
     register_pilot_languages();
+    register_subset_validators();
     store::register_document_codec(store::ArtifactCodec::of::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA));
+}
+
+/// 📌️ Registers the `SubsetValidator` of every real (non-`✳️any`) ap214 subset — the six ISO
+/// 10303-214 conformance classes (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
+pub fn register_subset_validators() {
+    crate::artifacts::step::standards::v_ap214::subsets::cc1::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc2::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc3::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc4::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc5::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc6::composer::register();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).

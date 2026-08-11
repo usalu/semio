@@ -5,9 +5,12 @@
 //! deleted (steps 3-5) -- every former glb caller now targets this engine's own `.glb` binary
 //! dialect directly, so there is no longer a second container implementation to keep in sync.
 
-use crate::artifacts::gltf::schema::snapshot::GltfSourceForm;
+use crate::artifacts::gltf::schema::snapshot::{
+    GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive,
+    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues,
+};
 use crate::artifacts::gltf::{GltfArtifact, GltfDiff, GltfMutation, GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
-use serde_json::Value;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Base64
 /// 🔤️ Standard base64 alphabet (RFC 4648 §4) — glTF `data:` URIs never use the URL-safe variant.
@@ -179,6 +182,38 @@ impl GltfAccessorType {
     }
 }
 
+//#region 🔖️AccessorModelSerde
+/// 🧵 `accessor.componentType` on the wire is always the raw numeric code (5120..5126) — never a
+/// string -- so this hand-rolls `Serialize`/`Deserialize` around [`GltfComponentType::code`]/
+/// [`GltfComponentType::from_code`] rather than deriving (a derive would emit the Rust variant
+/// name, not a spec-legal wire value).
+impl Serialize for GltfComponentType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_u64(self.code())
+    }
+}
+impl<'de> Deserialize<'de> for GltfComponentType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let code = u64::deserialize(deserializer)?;
+        Self::from_code(code).map_err(serde::de::Error::custom)
+    }
+}
+
+/// 🧵 `accessor.type` on the wire is always the spec string (`"SCALAR"`, `"VEC3"`, …) -- hand-rolled
+/// for the same reason as [`GltfComponentType`]'s impl above.
+impl Serialize for GltfAccessorType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> Deserialize<'de> for GltfAccessorType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+        Self::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+//#endregion 🔖️AccessorModelSerde
+
 /// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, every
 /// component already widened to `f64` regardless of source `componentType` -- real enough for a
 /// downstream mesh-view/analyzer to consume actual vertex data instead of opaque bytes.
@@ -211,33 +246,24 @@ fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfComponent
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` (index-aligned with
 /// `document.buffers`, see [`resolve_document_buffers`]) — dense `bufferView` read, then
 /// `accessor.sparse` substitution (base is zero-filled when there's no `bufferView`, per spec).
-pub fn decode_accessor(document: &Value, buffers: &[Vec<u8>], accessor_index: usize) -> Result<GltfDecodedAccessor, String> {
-    let accessors = document.get("accessors").and_then(Value::as_array).ok_or("document has no accessors")?;
-    let acc = accessors.get(accessor_index).ok_or_else(|| format!("accessor index {accessor_index} out of range"))?;
-    let component_type = GltfComponentType::from_code(acc.get("componentType").and_then(Value::as_u64).ok_or("accessor.componentType missing")?)?;
-    let accessor_type = GltfAccessorType::from_str(acc.get("type").and_then(Value::as_str).ok_or("accessor.type missing")?)?;
-    let count = acc.get("count").and_then(Value::as_u64).ok_or("accessor.count missing")? as usize;
-    let normalized = acc.get("normalized").and_then(Value::as_bool).unwrap_or(false);
+pub fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], accessor_index: usize) -> Result<GltfDecodedAccessor, String> {
+    let acc = document.accessors.get(accessor_index).ok_or_else(|| format!("accessor index {accessor_index} out of range"))?;
+    let component_type = acc.component_type;
+    let accessor_type = acc.kind;
+    let count = acc.count;
+    let normalized = acc.normalized;
     let nc = accessor_type.components();
 
     let mut components = vec![0.0f64; count * nc];
-    if let Some(bv_idx) = acc.get("bufferView").and_then(Value::as_u64) {
-        let extra_offset = acc.get("byteOffset").and_then(Value::as_u64).unwrap_or(0) as usize;
-        components = read_bufferview_elements(document, buffers, bv_idx as usize, extra_offset, component_type, accessor_type, count)?;
+    if let Some(bv_idx) = acc.buffer_view {
+        components = read_bufferview_elements(document, buffers, bv_idx, acc.byte_offset, component_type, accessor_type, count)?;
     }
 
-    if let Some(sparse) = acc.get("sparse") {
-        let sparse_count = sparse.get("count").and_then(Value::as_u64).ok_or("accessor.sparse.count missing")? as usize;
-        let indices_obj = sparse.get("indices").ok_or("accessor.sparse.indices missing")?;
-        let indices_bv = indices_obj.get("bufferView").and_then(Value::as_u64).ok_or("sparse.indices.bufferView missing")? as usize;
-        let indices_offset = indices_obj.get("byteOffset").and_then(Value::as_u64).unwrap_or(0) as usize;
-        let indices_component = GltfComponentType::from_code(indices_obj.get("componentType").and_then(Value::as_u64).ok_or("sparse.indices.componentType missing")?)?;
-        let indices = read_bufferview_elements(document, buffers, indices_bv, indices_offset, indices_component, GltfAccessorType::Scalar, sparse_count)?;
-
-        let values_obj = sparse.get("values").ok_or("accessor.sparse.values missing")?;
-        let values_bv = values_obj.get("bufferView").and_then(Value::as_u64).ok_or("sparse.values.bufferView missing")? as usize;
-        let values_offset = values_obj.get("byteOffset").and_then(Value::as_u64).unwrap_or(0) as usize;
-        let values = read_bufferview_elements(document, buffers, values_bv, values_offset, component_type, accessor_type, sparse_count)?;
+    if let Some(sparse) = &acc.sparse {
+        let sparse_count = sparse.count;
+        let indices_component = sparse.indices.component_type;
+        let indices = read_bufferview_elements(document, buffers, sparse.indices.buffer_view, sparse.indices.byte_offset, indices_component, GltfAccessorType::Scalar, sparse_count)?;
+        let values = read_bufferview_elements(document, buffers, sparse.values.buffer_view, sparse.values.byte_offset, component_type, accessor_type, sparse_count)?;
 
         for i in 0..sparse_count {
             let idx = indices[i] as usize;
@@ -255,28 +281,24 @@ pub fn decode_accessor(document: &Value, buffers: &[Vec<u8>], accessor_index: us
 /// 📖️ Resolves `document.bufferViews[bv_idx]` against `buffers` and decodes `count` elements
 /// starting at the bufferView's own `byteOffset` plus `extra_offset` (the accessor's own
 /// `byteOffset`, or a sparse indices/values sub-offset).
-fn read_bufferview_elements(document: &Value, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Result<Vec<f64>, String> {
-    let buffer_views = document.get("bufferViews").and_then(Value::as_array).ok_or("document has no bufferViews")?;
-    let bv = buffer_views.get(bv_idx).ok_or_else(|| format!("bufferView index {bv_idx} out of range"))?;
-    let buf_idx = bv.get("buffer").and_then(Value::as_u64).ok_or("bufferView.buffer missing")? as usize;
-    let bytes = buffers.get(buf_idx).ok_or_else(|| format!("buffer index {buf_idx} out of range"))?;
+fn read_bufferview_elements(document: &GltfDocument, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Result<Vec<f64>, String> {
+    let bv = document.buffer_views.get(bv_idx).ok_or_else(|| format!("bufferView index {bv_idx} out of range"))?;
+    let bytes = buffers.get(bv.buffer).ok_or_else(|| format!("buffer index {} out of range", bv.buffer))?;
     if bytes.is_empty() {
-        return Err(format!("buffer {buf_idx} bytes unavailable (external uri not resolvable, or empty embedded buffer)"));
+        return Err(format!("buffer {} bytes unavailable (external uri not resolvable, or empty embedded buffer)", bv.buffer));
     }
-    let bv_offset = bv.get("byteOffset").and_then(Value::as_u64).unwrap_or(0) as usize;
-    let byte_stride = bv.get("byteStride").and_then(Value::as_u64).map(|v| v as usize);
-    read_elements(bytes, bv_offset + extra_offset, component_type, accessor_type, count, byte_stride)
+    read_elements(bytes, bv.byte_offset + extra_offset, component_type, accessor_type, count, bv.byte_stride)
 }
 //#endregion 🔖️AccessorModel
 
 //#region 🔖️DocumentCodec
 /// ✅️ Structural well-formedness only -- glTF 2.0 §3.9: `asset.version` is the one universally
-/// mandatory field. No mesh/accessor/POSITION precondition: a document with zero meshes (a
+/// mandatory field (already enforced by the type system: [`GltfAsset::version`] is a plain
+/// `String`, not `Option<String>`) -- this only rejects the empty string, since serde alone can't
+/// express "non-empty". No mesh/accessor/POSITION precondition: a document with zero meshes (a
 /// scene-only or skin-only document) is legitimately valid glTF and must parse.
-fn validate_document(document: &Value) -> Result<(), String> {
-    let obj = document.as_object().ok_or("gltf document must be a JSON object")?;
-    let asset = obj.get("asset").and_then(Value::as_object).ok_or("gltf document missing required 'asset' object")?;
-    if asset.get("version").and_then(Value::as_str).is_none() {
+fn validate_document(document: &GltfDocument) -> Result<(), String> {
+    if document.asset.version.trim().is_empty() {
         return Err("gltf document 'asset.version' missing or not a string".into());
     }
     Ok(())
@@ -289,12 +311,12 @@ fn validate_document(document: &Value) -> Result<(), String> {
 /// so those bytes are simply unresolved (not fabricated); the uri string itself stays verbatim in
 /// `document`, so nothing is lost, and any attempt to `decode_accessor` through them surfaces a
 /// typed error rather than silently returning garbage.
-fn resolve_document_buffers(document: &Value, embedded_bin: Option<&[u8]>) -> Vec<Vec<u8>> {
-    let Some(buffers) = document.get("buffers").and_then(Value::as_array) else { return Vec::new() };
-    buffers
+fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>) -> Vec<Vec<u8>> {
+    document
+        .buffers
         .iter()
         .enumerate()
-        .map(|(i, buf)| match buf.get("uri").and_then(Value::as_str) {
+        .map(|(i, buf)| match buf.uri.as_deref() {
             Some(uri) => decode_data_uri(uri).unwrap_or_default(),
             None if i == 0 => embedded_bin.map(|b| b.to_vec()).unwrap_or_default(),
             None => Vec::new(),
@@ -303,12 +325,12 @@ fn resolve_document_buffers(document: &Value, embedded_bin: Option<&[u8]>) -> Ve
 }
 
 /// 📥️ Parses `.gltf` JSON text bytes into a typed snapshot (lenient: no POSITION/mesh
-/// precondition, only `asset.version`). `data:` buffer/image uris are decoded eagerly into
-/// `buffers`; unmodeled/unknown top-level fields and extensions stay verbatim in `document`
-/// (plain `serde_json::Value`, never dropped).
+/// precondition, only `asset.version`) via `serde_json::from_str::<GltfDocument>` -- every spec
+/// top-level field lands in its typed slot; `extras`/`extensions` decode into this module's own
+/// [`GltfJson`] (never `serde_json::Value`), so nothing real on disk is dropped.
 pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("gltf json is not valid utf-8: {e}"))?;
-    let document: Value = serde_json::from_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
+    let document: GltfDocument = serde_json::from_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
     validate_document(&document)?;
     let buffers = resolve_document_buffers(&document, None);
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers, source_form: GltfSourceForm::Json })
@@ -321,15 +343,10 @@ pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 /// that already declare a `uri` (data or external) are left untouched.
 pub fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
     let mut document = snapshot.document.clone();
-    if let Some(buffers) = document.get_mut("buffers").and_then(Value::as_array_mut) {
-        for (i, buf) in buffers.iter_mut().enumerate() {
-            let has_uri = buf.get("uri").and_then(Value::as_str).is_some();
-            if !has_uri {
-                if let Some(bytes) = snapshot.buffers.get(i) {
-                    if let Some(obj) = buf.as_object_mut() {
-                        obj.insert("uri".into(), Value::String(encode_data_uri("application/octet-stream", bytes)));
-                    }
-                }
+    for (i, buf) in document.buffers.iter_mut().enumerate() {
+        if buf.uri.is_none() {
+            if let Some(bytes) = snapshot.buffers.get(i) {
+                buf.uri = Some(encode_data_uri("application/octet-stream", bytes));
             }
         }
     }
@@ -355,22 +372,15 @@ fn align4(len: usize) -> usize {
 pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     validate_document(&snapshot.document)?;
     let mut document = snapshot.document.clone();
-    let embed_bin = document
-        .get("buffers")
-        .and_then(Value::as_array)
-        .and_then(|bs| bs.first())
-        .map(|b| b.get("uri").and_then(Value::as_str).is_none())
-        .unwrap_or(false);
+    let embed_bin = document.buffers.first().map(|b| b.uri.is_none()).unwrap_or(false);
     let bin: Option<&[u8]> = if embed_bin { snapshot.buffers.first().map(|v| v.as_slice()) } else { None };
 
     // A buffer embedded via the BIN chunk must NOT carry a `byteLength` mismatch with what we're
     // actually about to embed -- keep it truthful if the caller mutated `buffers` without
     // updating `document.buffers[0].byteLength`.
     if let (true, Some(bin_bytes)) = (embed_bin, bin) {
-        if let Some(buf0) = document.get_mut("buffers").and_then(Value::as_array_mut).and_then(|bs| bs.get_mut(0)) {
-            if let Some(obj) = buf0.as_object_mut() {
-                obj.insert("byteLength".into(), Value::from(bin_bytes.len()));
-            }
+        if let Some(buf0) = document.buffers.get_mut(0) {
+            buf0.byte_length = bin_bytes.len();
         }
     }
 
@@ -436,20 +446,13 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     // Real-world encoders pad the JSON chunk with spaces (per spec) but some historical writers
     // used NUL or trimmed whitespace -- trim both so lenient real-world files still parse.
     let json_text = std::str::from_utf8(json_chunk).map_err(|e| format!("glb: JSON chunk is not valid utf-8: {e}"))?;
-    let document: Value = serde_json::from_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
+    let document: GltfDocument = serde_json::from_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
     validate_document(&document)?;
 
     // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is
     // `document.buffers[0].byteLength` (padding is trailing filler, never real payload).
     let bin_content: Option<Vec<u8>> = bin_chunk.map(|chunk| {
-        let declared_len = document
-            .get("buffers")
-            .and_then(Value::as_array)
-            .and_then(|bs| bs.first())
-            .and_then(|b| b.get("byteLength"))
-            .and_then(Value::as_u64)
-            .map(|v| v as usize)
-            .unwrap_or(chunk.len());
+        let declared_len = document.buffers.first().map(|b| b.byte_length).unwrap_or(chunk.len());
         chunk[..declared_len.min(chunk.len())].to_vec()
     });
 
@@ -547,6 +550,13 @@ mod tests {
     //#endregion 🔖️Base64Tests
 
     //#region 🔖️GlbPaddingTests
+    fn doc_with_buffer(byte_length: usize) -> GltfDocument {
+        GltfDocument {
+            buffers: if byte_length > 0 { vec![GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None }] } else { Vec::new() },
+            ..GltfDocument::default()
+        }
+    }
+
     /// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior `encode_glb` omitted the BIN chunk's own
     /// padding from the header's total-length field whenever `bin.len()` wasn't 4-byte-aligned.
     /// Sweeps json/bin lengths across every mod-4 residue to pin the fix down.
@@ -554,13 +564,13 @@ mod tests {
     fn glb_total_length_header_matches_actual_bytes_across_alignments() {
         for json_len in [0usize, 1, 2, 3, 4, 5, 61] {
             for bin_len in [0usize, 1, 2, 3, 4, 5, 100] {
-                let document = serde_json::json!({ "asset": { "version": "2.0" }, "buffers": if bin_len > 0 { serde_json::json!([{ "byteLength": bin_len }]) } else { serde_json::json!([]) } });
-                let mut snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: if bin_len > 0 { vec![vec![0xABu8; bin_len]] } else { vec![] }, source_form: GltfSourceForm::Glb };
+                let mut document = doc_with_buffer(bin_len);
                 // pad the json body itself out to `json_len` extra bytes via an "extras" string so
                 // encode_glb's real JSON serialization (not a synthetic buffer) varies in length.
                 if json_len > 0 {
-                    snap.document["extras"] = Value::String("x".repeat(json_len));
+                    document.extras = Some(GltfJson::String("x".repeat(json_len)));
                 }
+                let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: if bin_len > 0 { vec![vec![0xABu8; bin_len]] } else { vec![] }, source_form: GltfSourceForm::Glb };
                 let encoded = encode_glb(&snap).expect("encode");
                 let declared_total = u32::from_le_bytes(encoded[8..12].try_into().unwrap()) as usize;
                 assert_eq!(declared_total, encoded.len(), "total length header wrong for json_len={json_len} bin_len={bin_len}");
@@ -572,7 +582,7 @@ mod tests {
 
     #[test]
     fn glb_json_padding_is_space_and_bin_padding_is_zero() {
-        let document = serde_json::json!({ "asset": { "version": "2.0" }, "buffers": [{ "byteLength": 3 }] });
+        let document = doc_with_buffer(3);
         let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![1u8, 2, 3]], source_form: GltfSourceForm::Glb };
         let encoded = encode_glb(&snap).expect("encode");
         let json_len = u32::from_le_bytes(encoded[12..16].try_into().unwrap()) as usize;
@@ -594,6 +604,13 @@ mod tests {
     //#endregion 🔖️GlbPaddingTests
 
     //#region 🔖️AccessorTests
+    fn accessor(buffer_view: usize, component_type: GltfComponentType, kind: GltfAccessorType, count: usize) -> GltfAccessor {
+        GltfAccessor { buffer_view: Some(buffer_view), byte_offset: 0, component_type, normalized: false, count, kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
+    }
+    fn buffer_view(buffer: usize, byte_offset: usize, byte_stride: Option<usize>) -> GltfBufferView {
+        GltfBufferView { buffer, byte_offset, byte_length: 0, byte_stride, target: None, name: None, extensions: None, extras: None }
+    }
+
     #[test]
     fn decode_accessor_handles_byte_stride_interleaved_vec3() {
         let mut buf = Vec::new();
@@ -603,18 +620,15 @@ mod tests {
             for c in 0..3 { buf.extend_from_slice(&verts[i][c].to_le_bytes()); }
             for c in 0..3 { buf.extend_from_slice(&norms[i][c].to_le_bytes()); }
         }
-        let document = serde_json::json!({
-            "asset": { "version": "2.0" },
-            "buffers": [{ "byteLength": buf.len() }],
-            "bufferViews": [
-                { "buffer": 0, "byteOffset": 0, "byteStride": 24 },
-                { "buffer": 0, "byteOffset": 12, "byteStride": 24 }
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: buf.len(), uri: None, name: None, extensions: None, extras: None }],
+            buffer_views: vec![buffer_view(0, 0, Some(24)), buffer_view(0, 12, Some(24))],
+            accessors: vec![
+                accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2),
+                accessor(1, GltfComponentType::Float, GltfAccessorType::Vec3, 2),
             ],
-            "accessors": [
-                { "bufferView": 0, "componentType": 5126, "type": "VEC3", "count": 2 },
-                { "bufferView": 1, "componentType": 5126, "type": "VEC3", "count": 2 }
-            ]
-        });
+            ..GltfDocument::default()
+        };
         let buffers = vec![buf];
         let pos = decode_accessor(&document, &buffers, 0).unwrap();
         assert_eq!(pos.components, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
@@ -624,12 +638,12 @@ mod tests {
 
     #[test]
     fn decode_accessor_handles_all_component_types() {
-        let document = serde_json::json!({
-            "asset": { "version": "2.0" },
-            "buffers": [{ "byteLength": 32 }],
-            "bufferViews": [{ "buffer": 0, "byteOffset": 0 }],
-            "accessors": [{ "bufferView": 0, "componentType": 5121, "type": "SCALAR", "count": 4 }]
-        });
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: 32, uri: None, name: None, extensions: None, extras: None }],
+            buffer_views: vec![buffer_view(0, 0, None)],
+            accessors: vec![accessor(0, GltfComponentType::UnsignedByte, GltfAccessorType::Scalar, 4)],
+            ..GltfDocument::default()
+        };
         let buffers = vec![vec![10u8, 20, 30, 255]];
         let acc = decode_accessor(&document, &buffers, 0).unwrap();
         assert_eq!(acc.components, vec![10.0, 20.0, 30.0, 255.0]);
@@ -637,22 +651,21 @@ mod tests {
 
     #[test]
     fn decode_accessor_applies_sparse_substitution_over_zero_base() {
-        let document = serde_json::json!({
-            "asset": { "version": "2.0" },
-            "buffers": [{ "byteLength": 100 }],
-            "bufferViews": [
-                { "buffer": 0, "byteOffset": 0 },
-                { "buffer": 0, "byteOffset": 8 }
-            ],
-            "accessors": [{
-                "componentType": 5126, "type": "SCALAR", "count": 5,
-                "sparse": {
-                    "count": 2,
-                    "indices": { "bufferView": 0, "componentType": 5121 },
-                    "values": { "bufferView": 1, "componentType": 5126 }
-                }
-            }]
-        });
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
+            buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 8, None)],
+            accessors: vec![GltfAccessor {
+                buffer_view: None, byte_offset: 0, component_type: GltfComponentType::Float, normalized: false,
+                count: 5, kind: GltfAccessorType::Scalar, max: None, min: None,
+                sparse: Some(GltfSparseAccessor {
+                    count: 2,
+                    indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte },
+                    values: GltfSparseValues { buffer_view: 1, byte_offset: 0 },
+                }),
+                name: None, extensions: None, extras: None,
+            }],
+            ..GltfDocument::default()
+        };
         let mut buffers_bytes = vec![0u8; 16];
         buffers_bytes[0] = 1; // sparse index 0 -> element 1
         buffers_bytes[1] = 3; // sparse index 1 -> element 3
@@ -671,7 +684,7 @@ mod tests {
     fn parse_gltf_document_accepts_scene_only_document_without_position() {
         let text = br#"{"asset":{"version":"2.0"},"scenes":[{"nodes":[]}],"scene":0}"#;
         let snap = parse_gltf_document(text).expect("scene-only document must parse leniently");
-        assert_eq!(snap.document["asset"]["version"], "2.0");
+        assert_eq!(snap.document.asset.version, "2.0");
         assert!(snap.buffers.is_empty());
     }
 
@@ -685,8 +698,10 @@ mod tests {
     fn parse_gltf_document_preserves_unknown_top_level_fields_verbatim() {
         let text = br#"{"asset":{"version":"2.0"},"extensions":{"KHR_lights_punctual":{"lights":[{"type":"directional"}]}},"extras":{"authorNote":"kept verbatim"}}"#;
         let snap = parse_gltf_document(text).expect("parse");
-        assert_eq!(snap.document["extensions"]["KHR_lights_punctual"]["lights"][0]["type"], "directional");
-        assert_eq!(snap.document["extras"]["authorNote"], "kept verbatim");
+        let GltfJson::Object(exts) = snap.document.extensions.clone().expect("extensions") else { panic!("expected object") };
+        assert_eq!(exts[0].0, "KHR_lights_punctual");
+        let GltfJson::Object(extras) = snap.document.extras.clone().expect("extras") else { panic!("expected object") };
+        assert_eq!(extras[0], ("authorNote".to_string(), GltfJson::String("kept verbatim".into())));
     }
 
     #[test]
@@ -706,19 +721,19 @@ mod tests {
             .iter()
             .flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes()))
             .collect();
-        let document = serde_json::json!({
-            "asset": { "version": "2.0" },
-            "buffers": [{ "byteLength": position_bytes.len() }],
-            "bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": position_bytes.len() }],
-            "accessors": [{ "bufferView": 0, "componentType": 5126, "type": "VEC3", "count": 3 }],
-            "meshes": [{ "primitives": [{ "attributes": { "POSITION": 0 } }] }]
-        });
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: position_bytes.len(), uri: None, name: None, extensions: None, extras: None }],
+            buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: position_bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
+            accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 3)],
+            meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..GltfPrimitive::default() }], ..GltfMesh::default() }],
+            ..GltfDocument::default()
+        };
         let original = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![position_bytes.clone()], source_form: GltfSourceForm::Glb };
         let encoded = encode_glb(&original).expect("encode");
         assert_eq!(&encoded[0..4], b"glTF");
         let decoded = decode_glb(&encoded).expect("decode");
         assert_eq!(decoded.buffers, original.buffers);
-        assert_eq!(decoded.document["asset"]["version"], "2.0");
+        assert_eq!(decoded.document.asset.version, "2.0");
         let pos_original = decode_accessor(&original.document, &original.buffers, 0).unwrap();
         let pos_decoded = decode_accessor(&decoded.document, &decoded.buffers, 0).unwrap();
         assert_eq!(pos_original.components, pos_decoded.components);
@@ -727,16 +742,40 @@ mod tests {
         let reencoded = encode_glb(&decoded).expect("re-encode");
         let redecoded = decode_glb(&reencoded).expect("re-decode");
         assert_eq!(redecoded.buffers, decoded.buffers);
-        assert_eq!(redecoded.document["accessors"], decoded.document["accessors"]);
+        assert_eq!(redecoded.document.accessors, decoded.document.accessors);
+    }
+
+    /// 🧪️ `codec_retention_law`: decode -> encode -> decode is byte-preserving up to the
+    /// documented normal form (spec-default numeric fields round-trip as "present" iff they carry
+    /// a non-default value -- see the `is_*`/`default_*` helpers in the snapshot module).
+    #[test]
+    fn codec_retention_law_glb_decode_encode_decode_is_semantically_faithful() {
+        let bytes: Vec<u8> = (0..24u8).collect();
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: bytes.len(), uri: None, name: Some("payload".into()), extensions: None, extras: None }],
+            buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
+            accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2)],
+            meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], mode: Some(4), ..GltfPrimitive::default() }], ..GltfMesh::default() }],
+            nodes: vec![crate::artifacts::gltf::schema::snapshot::GltfNode { mesh: Some(0), name: Some("root".into()), ..Default::default() }],
+            scenes: vec![crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![0], ..Default::default() }],
+            scene: Some(0),
+            extensions_used: vec!["KHR_materials_unlit".into()],
+            ..GltfDocument::default()
+        };
+        let original = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bytes], source_form: GltfSourceForm::Glb };
+        let encoded = encode_glb(&original).expect("encode");
+        let decoded = decode_glb(&encoded).expect("decode");
+        assert_eq!(decoded.buffers, original.buffers);
+        assert_eq!(decoded.document, original.document, "decode(encode(doc)) must equal doc for a document with no spec-default-equal fields");
+        let reencoded = encode_glb(&decoded).expect("re-encode");
+        let redecoded = decode_glb(&reencoded).expect("re-decode");
+        assert_eq!(redecoded, decoded, "second decode->encode->decode cycle must be a fixed point");
     }
 
     #[test]
     fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
         let bytes: Vec<u8> = vec![9, 9, 9, 9];
-        let document = serde_json::json!({
-            "asset": { "version": "2.0" },
-            "buffers": [{ "byteLength": 4 }]
-        });
+        let document = doc_with_buffer(4);
         let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bytes.clone()], source_form: GltfSourceForm::Glb };
         let text_bytes = serialize_gltf_document(&snap);
         let text = String::from_utf8(text_bytes).unwrap();

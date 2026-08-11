@@ -1,5 +1,61 @@
 # 🧬️ LasSnapshot
+type LasHeader {
+  versionMajor: Int!
+  versionMinor: Int!
+  systemIdentifier: String!
+  generatingSoftware: String!
+  creationDayOfYear: Int!
+  creationYear: Int!
+  headerSize: Int!
+  offsetToPointData: Int!
+  numberOfVlrs: Int!
+  pointDataFormatId: Int!
+  pointDataRecordLength: Int!
+  numberOfPointRecords: Int!
+  pointsByReturn: [Int!]!
+  xScale: Float!
+  yScale: Float!
+  zScale: Float!
+  xOffset: Float!
+  yOffset: Float!
+  zOffset: Float!
+  maxX: Float!
+  minX: Float!
+  maxY: Float!
+  minY: Float!
+  maxZ: Float!
+  minZ: Float!
+}
+
+# 📦️ One Variable Length Record — `data` is retained byte-verbatim.
+type LasVlr {
+  userId: String!
+  recordId: Int!
+  description: String!
+  data: [Int!]!
+}
+
+# 📍 One LAS point record (formats 0-3; gpsTime/rgb absent unless the format carries them).
+type LasPoint {
+  x: Float!
+  y: Float!
+  z: Float!
+  intensity: Int!
+  returnNumber: Int!
+  numberOfReturns: Int!
+  scanDirectionFlag: Boolean!
+  edgeOfFlightLine: Boolean!
+  classification: Int!
+  scanAngleRank: Int!
+  userData: Int!
+  pointSourceId: Int!
+  gpsTime: Float
+  rgb: [Int!]
+}
+
 type LasSnapshot {
   schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_BYTES_COLON String! @state(class: PERSISTENT)
+  header: LasHeader! @state(class: PERSISTENT)
+  vlrs: [LasVlr!]! @state(class: PERSISTENT)
+  points: [LasPoint!]! @state(class: PERSISTENT)
 }

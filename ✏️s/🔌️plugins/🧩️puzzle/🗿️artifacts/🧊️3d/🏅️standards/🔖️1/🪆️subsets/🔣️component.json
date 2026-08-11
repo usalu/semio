@@ -1,0 +1,9 @@
+{
+  "artifact": "s.puzzle.3d",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained 3d 1"
+    }
+  }
+}

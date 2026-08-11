@@ -1,2 +1,78 @@
-# diff facet
- type Placeholder { body: String! }
+""" 🔺️ Diff for `stdio.md`. `blocks` is an index-keyed recursive triple over the top-level block
+sequence -- no full-replace slot. """
+type MdDiff {
+  blocks: MdBlocksDiff
+}
+
+type MdBlocksDiff {
+  removed: [Int!]!
+  modified: [MdBlockModified!]!
+  added: [MdBlockAdded!]!
+}
+
+type MdBlockModified {
+  index: Int!
+  diff: MdBlockDiff!
+}
+
+type MdBlockAdded {
+  index: Int!
+  item: MdBlock!
+}
+
+enum MdBlockDiffKind {
+  HEADING
+  PARAGRAPH
+  LIST
+  CODE_BLOCK
+  BLOCK_QUOTE
+  THEMATIC_BREAK
+  HTML_BLOCK
+  REPLACE
+}
+
+""" 🌳 Per-block diff, shaped like the `MdBlock` it targets. Tri-state scalars (`start`, `info`)
+are plain nullable fields here -- GraphQL has no native tri-state; the JSON/TS facets are
+authoritative for the absent/null/set distinction. """
+type MdBlockDiff {
+  kind: MdBlockDiffKind!
+  level: Int
+  inlines: [MdInline!]
+  ordered: Boolean
+  start: Int
+  tight: Boolean
+  items: MdListItemsDiff
+  info: String
+  literal: String
+  blocks: MdBlocksDiff
+  raw: String
+  block: MdBlock
+}
+
+type MdListItemsDiff {
+  removed: [Int!]!
+  modified: [MdListItemModified!]!
+  added: [MdListItemAdded!]!
+}
+
+type MdListItemModified {
+  index: Int!
+  diff: MdBlocksDiff!
+}
+
+type MdListItemAdded {
+  index: Int!
+  item: [MdBlock!]!
+}
+
+enum MdPathStepKind {
+  BLOCK_QUOTE
+  LIST_ITEM
+}
+
+""" 🧭️ One descent step from a block container into a nested one. """
+type MdPathStep {
+  step: MdPathStepKind!
+  index: Int!
+  item: Int
+}

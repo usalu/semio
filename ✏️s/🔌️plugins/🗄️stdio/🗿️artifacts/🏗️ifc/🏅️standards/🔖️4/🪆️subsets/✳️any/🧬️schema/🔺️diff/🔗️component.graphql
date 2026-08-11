@@ -1,5 +1,47 @@
-# 🧬️ IfcDiff
+# 🔺️ One `args.modified[]`/`added[]` entry.
+type IfcArgModified {
+  index: Int!
+  value: IfcValue!
+}
+type IfcArgAdded {
+  index: Int!
+  value: IfcValue!
+}
+
+# 🔺️ Index-keyed collection triple for one entity's positional `args`.
+type IfcArgsDiff {
+  removed: [Int!]!
+  modified: [IfcArgModified!]!
+  added: [IfcArgAdded!]!
+}
+
+# 🔺️ Sparse per-field diff for one `IfcEntity`.
+type IfcEntityDiff {
+  name: String
+  args: IfcArgsDiff
+  complex: [IfcComplexType!]
+}
+
+type IfcEntityModified {
+  id: Int!
+  diff: IfcEntityDiff!
+}
+type IfcEntityAdded {
+  index: Int!
+  entity: IfcEntity!
+}
+
+# 📦️ Sparse id-keyed `entities` triple.
+type IfcEntitiesDiff {
+  removed: [Int!]!
+  modified: [IfcEntityModified!]!
+  added: [IfcEntityAdded!]!
+}
+
+# 🔺️ IfcDiff — no `snapshot` full-replace slot.
 type IfcDiff {
-  schema: String
-  PLACEHOLDER_TEXT_COLON String
+  fileDescription: [IfcValue!]
+  fileName: [IfcValue!]
+  fileSchema: [IfcValue!]
+  entities: IfcEntitiesDiff
 }

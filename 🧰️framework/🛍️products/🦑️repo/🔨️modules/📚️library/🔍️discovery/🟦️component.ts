@@ -94,6 +94,16 @@ export interface Taxonomy {
   readonly appsDirName: string;
   readonly modesDirName: string;
   readonly windowsDirName: string;
+  /** 🪆️ Dir-name prefix for a subset slug under `🪆️subsets/` (mirrors `standardDirPrefix` one level down). */
+  readonly subsetDirPrefix?: string;
+  /** 🪆️ Legal shape for a subset id (the logical id, `*`/`subsetAnyId` excepted — that one never matches this pattern by design). */
+  readonly subsetSlugPattern?: string;
+  /** 🪆️ The logical id every standard's unconstrained base subset carries. */
+  readonly subsetAnyId?: string;
+  /** 🪆️ The on-disk dir name `subsetAnyId` maps to — canonical single source for the `"*"` ⇔ `✳️any` mapping. */
+  readonly subsetAnyDirName?: string;
+  /** 🔣️ Filename of the per-standard subset vocabulary manifest at `🏅️standards/🔖️<slug>/🪆️subsets/<this>`. */
+  readonly subsetsManifestFilename?: string;
   /** ✅️ COMPLETENESS set: every `🗿️artifacts/<a>/` must carry each of these as a leaf. Never merge with `artifactChildDirs`. Includes `🧬️schema`, `⚙️engine`, `🚪️io`, builder, decomposer. */
   readonly artifactComponentDirs: readonly string[];
   /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the structural-only extra is `📚️examples`). */
@@ -335,6 +345,35 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     problems.push(`exampleComponentDirs is removed — use emoji-slug examples with exampleAssetsDirName/exampleTestsDirName.`);
   }
   //#endregion ExampleShapeContract
+  //#region StandardsSubsetsShapeContract
+  if (taxonomy.standardDirPrefix) {
+    try {
+      void new RegExp(taxonomy.standardSlugPattern ?? "", "u");
+    } catch {
+      problems.push(`standardSlugPattern is not a valid unicode RegExp: ${JSON.stringify(taxonomy.standardSlugPattern)}`);
+    }
+  }
+  if (taxonomy.subsetDirPrefix || taxonomy.subsetSlugPattern || taxonomy.subsetAnyId || taxonomy.subsetAnyDirName || taxonomy.subsetsManifestFilename) {
+    if (!taxonomy.subsetDirPrefix) problems.push(`subsetDirPrefix is required once any subset-vocabulary field is declared.`);
+    if (!taxonomy.subsetSlugPattern) problems.push(`subsetSlugPattern is required once any subset-vocabulary field is declared.`);
+    else {
+      try {
+        void new RegExp(taxonomy.subsetSlugPattern, "u");
+      } catch {
+        problems.push(`subsetSlugPattern is not a valid unicode RegExp: ${JSON.stringify(taxonomy.subsetSlugPattern)}`);
+      }
+    }
+    if (!taxonomy.subsetAnyId) problems.push(`subsetAnyId is required once any subset-vocabulary field is declared.`);
+    if (!taxonomy.subsetAnyDirName) problems.push(`subsetAnyDirName is required once any subset-vocabulary field is declared.`);
+    if (taxonomy.subsetDirPrefix && taxonomy.subsetAnyDirName && taxonomy.subsetAnyDirName !== `${taxonomy.subsetDirPrefix}any`) {
+      problems.push(`subsetAnyDirName (${JSON.stringify(taxonomy.subsetAnyDirName)}) must equal subsetDirPrefix + "any" (${JSON.stringify(`${taxonomy.subsetDirPrefix}any`)}).`);
+    }
+    if (!taxonomy.subsetsManifestFilename) problems.push(`subsetsManifestFilename is required once any subset-vocabulary field is declared.`);
+    if ("subsetDirs" in taxonomy) {
+      problems.push(`subsetDirs is removed — subset id/dir mapping is now subsetAnyId/subsetAnyDirName (shape) plus each standard's own 🪆️subsets/🔣️component.json (content vocabulary), never a single repo-wide map.`);
+    }
+  }
+  //#endregion StandardsSubsetsShapeContract
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }

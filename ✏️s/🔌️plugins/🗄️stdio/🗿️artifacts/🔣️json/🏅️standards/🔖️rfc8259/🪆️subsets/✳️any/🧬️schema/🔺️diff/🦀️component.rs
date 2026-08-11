@@ -6,7 +6,11 @@
 
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::MutationDiff;
+// 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
+// trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
+// still-public `os_spr::command` path instead of touching that framework facade file.
+use protocol::os_spr::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
@@ -109,13 +113,18 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
     }
 
     /// ➕️ Structural, total, base-free, sequential-coalesce absorb (see the module-level `Absorb`
-    /// helpers below for the array/object transport algorithm).
+    /// helpers below for the array/object transport algorithm). A composed collection diff that
+    /// ends up structurally empty (e.g. an `Insert` immediately cancelled by a matching `Remove`)
+    /// collapses back to `None` rather than surviving as a no-op `Some(Array{diff: <empty>})`.
     fn absorb(&mut self, other: Self) {
         self.value = match (self.value.take(), other.value) {
             (None, None) => None,
             (Some(d1), None) => Some(d1),
             (None, Some(d2)) => Some(d2),
-            (Some(d1), Some(d2)) => Some(absorb_value_diff(d1, d2)),
+            (Some(d1), Some(d2)) => {
+                let combined = absorb_value_diff(d1, d2);
+                if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) }
+            }
         };
     }
 }
@@ -150,16 +159,16 @@ pub fn diff_set_snapshot(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
 pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
     match diff {
         JsonValueDiff::Replace { value } => value.clone(),
-        JsonValueDiff::Bool { value } => JsonValue::Bool(*value),
+        JsonValueDiff::Bool { value } => JsonValue::Bool { value: *value },
         JsonValueDiff::Number { lexeme } => JsonValue::Number { lexeme: lexeme.clone() },
-        JsonValueDiff::String { value } => JsonValue::String(value.clone()),
+        JsonValueDiff::String { value } => JsonValue::String { value: value.clone() },
         JsonValueDiff::Array { diff } => {
-            let items: &[JsonValue] = match base { JsonValue::Array(items) => items.as_slice(), _ => &[] };
-            JsonValue::Array(apply_array_diff(diff, items))
+            let items: &[JsonValue] = match base { JsonValue::Array { items } => items.as_slice(), _ => &[] };
+            JsonValue::Array { items: apply_array_diff(diff, items) }
         }
         JsonValueDiff::Object { diff } => {
-            let members: &[JsonMember] = match base { JsonValue::Object(members) => members.as_slice(), _ => &[] };
-            JsonValue::Object(apply_object_diff(diff, members))
+            let members: &[JsonMember] = match base { JsonValue::Object { members } => members.as_slice(), _ => &[] };
+            JsonValue::Object { members: apply_object_diff(diff, members) }
         }
     }
 }
@@ -225,14 +234,14 @@ pub fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff>
         return None;
     }
     match (a, b) {
-        (JsonValue::Bool(_), JsonValue::Bool(next)) => Some(JsonValueDiff::Bool { value: *next }),
+        (JsonValue::Bool { value: _ }, JsonValue::Bool { value: next }) => Some(JsonValueDiff::Bool { value: *next }),
         (JsonValue::Number { .. }, JsonValue::Number { lexeme }) => Some(JsonValueDiff::Number { lexeme: lexeme.clone() }),
-        (JsonValue::String(_), JsonValue::String(next)) => Some(JsonValueDiff::String { value: next.clone() }),
-        (JsonValue::Array(av), JsonValue::Array(bv)) => {
+        (JsonValue::String { value: _ }, JsonValue::String { value: next }) => Some(JsonValueDiff::String { value: next.clone() }),
+        (JsonValue::Array { items: av }, JsonValue::Array { items: bv }) => {
             let diff = array_diff_between(av, bv);
             if is_array_diff_empty(&diff) { None } else { Some(JsonValueDiff::Array { diff }) }
         }
-        (JsonValue::Object(am), JsonValue::Object(bm)) => {
+        (JsonValue::Object { members: am }, JsonValue::Object { members: bm }) => {
             let diff = object_diff_between(am, bm);
             if is_object_diff_empty(&diff) { None } else { Some(JsonValueDiff::Object { diff }) }
         }
@@ -290,6 +299,20 @@ fn is_array_diff_empty(d: &JsonArrayDiff) -> bool {
 
 fn is_object_diff_empty(d: &JsonObjectDiff) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
+}
+
+/// 🕳️ Whether a (possibly freshly-absorbed) node diff represents no actual change. Scalar
+/// replace/field diffs are never "empty" in isolation — a value can round-trip back to its
+/// original through absorb and still legitimately carry an explicit `Some(original)` (same
+/// accepted LWW-field limitation `compose`'s `CanonicalKitDiff` scalar fields have) — but a
+/// collection diff with nothing removed/modified/added genuinely changes nothing and should
+/// collapse away rather than survive as a no-op wrapper.
+fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
+    match d {
+        JsonValueDiff::Array { diff } => is_array_diff_empty(diff),
+        JsonValueDiff::Object { diff } => is_object_diff_empty(diff),
+        _ => false,
+    }
 }
 //#endregion 🔖️Between
 
@@ -392,16 +415,18 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
         if let Some(slot) = after.get_mut(m.index) {
             match slot {
                 AfterSlot::Base { diff, .. } => {
-                    *diff = Some(match diff.take() {
+                    let combined = match diff.take() {
                         Some(existing) => absorb_value_diff(existing, m.diff.clone()),
                         None => m.diff.clone(),
-                    });
+                    };
+                    *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
                 }
                 AfterSlot::D1Added { patch, .. } => {
-                    *patch = Some(match patch.take() {
+                    let combined = match patch.take() {
                         Some(existing) => absorb_value_diff(existing, m.diff.clone()),
                         None => m.diff.clone(),
-                    });
+                    };
+                    *patch = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
                 }
                 AfterSlot::D2Added(_) => {}
             }
@@ -464,8 +489,13 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
     for m in d2.modified {
         if let Some(a) = added.iter_mut().find(|a| a.key == m.key) {
             a.item = apply_value_diff(&m.diff, &a.item);
-        } else if let Some(existing) = modified.iter_mut().find(|e| e.key == m.key) {
-            existing.diff = absorb_value_diff(existing.diff.clone(), m.diff.clone());
+        } else if let Some(pos) = modified.iter().position(|e| e.key == m.key) {
+            let combined = absorb_value_diff(modified[pos].diff.clone(), m.diff.clone());
+            if is_value_diff_effectively_empty(&combined) {
+                modified.remove(pos);
+            } else {
+                modified[pos].diff = combined;
+            }
         } else {
             modified.push(JsonObjectModified { key: m.key, diff: m.diff });
         }
@@ -491,11 +521,11 @@ mod tests {
     }
 
     fn arr(items: Vec<JsonValue>) -> JsonValue {
-        JsonValue::Array(items)
+        JsonValue::Array { items }
     }
 
     fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
-        JsonValue::Object(pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect())
+        JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
     fn num(lexeme: &str) -> JsonValue {
@@ -503,15 +533,15 @@ mod tests {
     }
 
     fn str_(s: &str) -> JsonValue {
-        JsonValue::String(s.into())
+        JsonValue::String { value: s.into() }
     }
 
     //#region between_roundtrip_law
     #[test]
     fn between_roundtrip_law_scalars_and_kind_change() {
         let cases = [
-            (JsonValue::Null, JsonValue::Bool(true)),
-            (JsonValue::Bool(true), JsonValue::Bool(false)),
+            (JsonValue::Null, JsonValue::Bool { value: true }),
+            (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }),
             (num("1"), num("2.5e10")),
             (str_("a"), str_("b")),
             (num("1"), str_("1")),
@@ -526,7 +556,7 @@ mod tests {
     #[test]
     fn between_roundtrip_law_nested_collections() {
         let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
-        let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool(true))]);
+        let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
         let (sa, sb) = (snap(a.clone()), snap(b.clone()));
         assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa), sb);
         assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb), sa);
@@ -555,25 +585,35 @@ mod tests {
     //#endregion inverse_law
 
     //#region absorb_law canonical cases (array/index-keyed)
+    // NOTE: these construct `d1`/`d2` DIRECTLY as genuine Insert/Remove/Modify array diffs
+    // (matching exactly what `JsonMutation::InsertArrayElement`/`RemoveArrayElement`/`SetScalar`
+    // would produce) rather than via `JsonDiff::between(base, next)` — `between` does a PURE
+    // POSITIONAL comparison (0..min(len)), so a middle-insertion between two concrete array
+    // VALUES is represented as a same-position `modified` entry plus a tail `added` entry, not as
+    // a genuine `Insert` — the right, and separately law-tested, behavior for `between`, but the
+    // wrong fixture shape for exercising the mandated Insert/Remove canonical absorb cases.
+    fn array_diff(d: JsonArrayDiff) -> JsonDiff {
+        JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
+    }
+    fn object_diff(d: JsonObjectDiff) -> JsonDiff {
+        JsonDiff { value: Some(JsonValueDiff::Object { diff: d }) }
+    }
+
     #[test]
     fn absorb_array_insert_then_remove_before() {
         // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
-        let base = arr(vec![str_("a"), str_("b"), str_("c")]);
-        let mid = arr(vec![str_("a"), str_("b"), str_("f"), str_("c")]);
-        let after = arr(vec![str_("b"), str_("f"), str_("c")]);
-        let (sbase, smid, safter) = (snap(base), snap(mid.clone()), snap(after));
-        let d1 = JsonDiff::between(&sbase, &smid);
-        let d2 = JsonDiff::between(&smid, &safter);
+        let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
+        let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
+        let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
+        let sequential = d2.apply(&d1.apply(&base));
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), safter);
-        assert_eq!(combined.apply(&sbase), d2.apply(&d1.apply(&sbase)));
+        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(sequential.value, arr(vec![str_("b"), str_("f"), str_("c")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
                 assert_eq!(diff.removed, vec![0]);
-                assert_eq!(diff.added.len(), 1);
-                assert_eq!(diff.added[0].index, 1);
-                assert_eq!(diff.added[0].item, str_("f"));
+                assert_eq!(diff.added, vec![JsonArrayAdded { index: 1, item: str_("f") }]);
             }
             other => panic!("expected array diff, got {other:?}"),
         }
@@ -581,15 +621,15 @@ mod tests {
 
     #[test]
     fn absorb_array_insert_insert_same_index_both_survive() {
-        let base = arr(vec![str_("a"), str_("b")]);
-        let mid = arr(vec![str_("a"), str_("b"), str_("f")]);
-        let after = arr(vec![str_("a"), str_("b"), str_("g"), str_("f")]);
-        let (sbase, smid, safter) = (snap(base), snap(mid), snap(after.clone()));
-        let d1 = JsonDiff::between(&sbase, &smid);
-        let d2 = JsonDiff::between(&smid, &safter);
+        // base = [a,b]; d1 = Insert(2,f); d2 = Insert(2,g) (against mid=[a,b,f]) -> [a,b,g,f].
+        let base = snap(arr(vec![str_("a"), str_("b")]));
+        let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
+        let d2 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("g") }], ..Default::default() });
+        let sequential = d2.apply(&d1.apply(&base));
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(after));
+        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(sequential.value, arr(vec![str_("a"), str_("b"), str_("g"), str_("f")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
             other => panic!("expected array diff, got {other:?}"),
@@ -598,32 +638,38 @@ mod tests {
 
     #[test]
     fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
-        let base = arr(vec![str_("a")]);
-        let mid = arr(vec![str_("a"), str_("f")]);
-        let after = arr(vec![str_("a")]);
-        let (sbase, smid, safter) = (snap(base.clone()), snap(mid), snap(after));
-        let d1 = JsonDiff::between(&sbase, &smid);
-        let d2 = JsonDiff::between(&smid, &safter);
+        // base = [a]; d1 = Insert(1,f) -> mid=[a,f]; d2 = Remove(1) -> after=[a].
+        let base = snap(arr(vec![str_("a")]));
+        let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
+        let d2 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
+        let sequential = d2.apply(&d1.apply(&base));
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(base));
+        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(sequential, base);
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
 
     #[test]
     fn absorb_array_add_then_setfield_patches_added_payload() {
-        let base = arr(vec![]);
-        let mid = arr(vec![objv(vec![("x", num("1"))])]);
-        let after = arr(vec![objv(vec![("x", num("1")), ("y", num("2"))])]);
-        let (sbase, smid, safter) = (snap(base), snap(mid), snap(after.clone()));
-        let d1 = JsonDiff::between(&sbase, &smid);
-        let d2 = JsonDiff::between(&smid, &safter);
+        // base = []; d1 = Insert(0,{x:1}) -> mid=[{x:1}]; d2 = SetMember([0],y,2) -> [{x:1,y:2}].
+        let base = snap(arr(vec![]));
+        let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 0, item: objv(vec![("x", num("1"))]) }], ..Default::default() });
+        let d2 = array_diff(JsonArrayDiff {
+            modified: vec![JsonArrayModified {
+                index: 0,
+                diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } },
+            }],
+            ..Default::default()
+        });
+        let sequential = d2.apply(&d1.apply(&base));
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(after));
+        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(sequential.value, arr(vec![objv(vec![("x", num("1")), ("y", num("2"))])]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
-                assert!(diff.modified.is_empty());
+                assert!(diff.modified.is_empty(), "the patch must land INSIDE the carried added payload, not as a separate modified entry");
                 assert_eq!(diff.added.len(), 1);
                 assert_eq!(diff.added[0].item, objv(vec![("x", num("1")), ("y", num("2"))]));
             }
@@ -633,15 +679,15 @@ mod tests {
 
     #[test]
     fn absorb_array_modify_then_remove_drops_pending_patch() {
-        let base = arr(vec![num("1"), num("2")]);
-        let mid = arr(vec![num("9"), num("2")]);
-        let after = arr(vec![num("2")]);
-        let (sbase, smid, safter) = (snap(base), snap(mid), snap(after));
-        let d1 = JsonDiff::between(&sbase, &smid);
-        let d2 = JsonDiff::between(&smid, &safter);
+        // base = [1,2]; d1 = Modify(0,9) -> mid=[9,2]; d2 = Remove(0) -> after=[2].
+        let base = snap(arr(vec![num("1"), num("2")]));
+        let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
+        let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
+        let sequential = d2.apply(&d1.apply(&base));
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), safter);
+        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(sequential.value, arr(vec![num("2")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
                 assert_eq!(diff.removed, vec![0]);
@@ -777,7 +823,7 @@ mod tests {
     //#region field_sweep
     fn sweep_a() -> JsonSnapshot {
         snap(objv(vec![
-            ("keepBool", JsonValue::Bool(true)),
+            ("keepBool", JsonValue::Bool { value: true }),
             ("keepNumber", num("1")),
             ("keepString", str_("base")),
             ("kindChange", num("1")),
@@ -791,14 +837,14 @@ mod tests {
 
     fn sweep_b() -> JsonSnapshot {
         snap(objv(vec![
-            ("keepBool", JsonValue::Bool(false)),
+            ("keepBool", JsonValue::Bool { value: false }),
             ("keepNumber", num("2.5e3")),
             ("keepString", str_("changed")),
             ("kindChange", str_("now a string")),
-            ("nullToValue", JsonValue::Bool(true)),
+            ("nullToValue", JsonValue::Bool { value: true }),
             ("modifiedMember", num("99")),
             ("nestedArray", arr(vec![num("1"), num("20"), num("30"), num("4")])),
-            ("nestedObject", objv(vec![("inner", str_("y")), ("extra", JsonValue::Bool(true))])),
+            ("nestedObject", objv(vec![("inner", str_("y")), ("extra", JsonValue::Bool { value: true })])),
             ("addedMember", str_("new")),
         ]))
     }

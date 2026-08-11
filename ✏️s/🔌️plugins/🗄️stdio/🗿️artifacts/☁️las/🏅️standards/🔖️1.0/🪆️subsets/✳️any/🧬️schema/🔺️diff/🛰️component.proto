@@ -1,6 +1,97 @@
 syntax = "proto3";
 package semio.s_stdio_las.diff;
+
+import "s.stdio.las/snapshot.proto";
+
+message LasVlrDiff {
+  optional string user_id = 1;
+  optional uint32 record_id = 2;
+  optional string description = 3;
+  optional bytes data = 4;
+}
+
+message LasVlrModified {
+  uint64 index = 1;
+  LasVlrDiff diff = 2;
+}
+
+message LasVlrAdded {
+  uint64 index = 1;
+  semio.s_stdio_las.snapshot.LasVlr vlr = 2;
+}
+
+message LasVlrsDiff {
+  repeated uint64 removed = 1;
+  repeated LasVlrModified modified = 2;
+  repeated LasVlrAdded added = 3;
+}
+
+message LasPointDiff {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional uint32 intensity = 4;
+  optional uint32 return_number = 5;
+  optional uint32 number_of_returns = 6;
+  optional bool scan_direction_flag = 7;
+  optional bool edge_of_flight_line = 8;
+  optional uint32 classification = 9;
+  optional sint32 scan_angle_rank = 10;
+  optional uint32 user_data = 11;
+  optional uint32 point_source_id = 12;
+  // tri-state gps_time/rgb: field absent = unchanged; *_present=true + no payload = cleared;
+  // *_present=true + payload = set. Mirrors the Rust `Option<Option<T>>` shape.
+  optional bool gps_time_present = 13;
+  optional double gps_time = 14;
+  optional bool rgb_present = 15;
+  optional uint32 rgb_r = 16;
+  optional uint32 rgb_g = 17;
+  optional uint32 rgb_b = 18;
+}
+
+message LasPointModified {
+  uint64 index = 1;
+  LasPointDiff diff = 2;
+}
+
+message LasPointAdded {
+  uint64 index = 1;
+  semio.s_stdio_las.snapshot.LasPoint point = 2;
+}
+
+message LasPointsDiff {
+  repeated uint64 removed = 1;
+  repeated LasPointModified modified = 2;
+  repeated LasPointAdded added = 3;
+}
+
+// Every real header field is a top-level scalar; schema is an identity field and never appears here.
 message LasDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional uint32 version_major = 1;
+  optional uint32 version_minor = 2;
+  optional string system_identifier = 3;
+  optional string generating_software = 4;
+  optional uint32 creation_day_of_year = 5;
+  optional uint32 creation_year = 6;
+  optional uint32 header_size = 7;
+  optional uint32 offset_to_point_data = 8;
+  optional uint32 number_of_vlrs = 9;
+  optional uint32 point_data_format_id = 10;
+  optional uint32 point_data_record_length = 11;
+  optional uint32 number_of_point_records = 12;
+  repeated uint32 points_by_return = 13; // empty = unchanged, exactly 5 = changed
+  optional double x_scale = 14;
+  optional double y_scale = 15;
+  optional double z_scale = 16;
+  optional double x_offset = 17;
+  optional double y_offset = 18;
+  optional double z_offset = 19;
+  optional double max_x = 20;
+  optional double min_x = 21;
+  optional double max_y = 22;
+  optional double min_y = 23;
+  optional double max_z = 24;
+  optional double min_z = 25;
+  LasVlrsDiff vlrs = 26;
+  LasPointsDiff points = 27;
 }

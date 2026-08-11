@@ -1,6 +1,54 @@
 syntax = "proto3";
 package semio.s_stdio_jpg.diff;
+import "snapshot.proto";
+
+message JpgComponentDiff { optional uint32 h_sampling = 1; optional uint32 v_sampling = 2; optional uint32 quant_table_id = 3; }
+message JpgComponentModified { uint32 id = 1; JpgComponentDiff diff = 2; }
+message JpgComponentAdded { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgFrameComponent item = 2; }
+message JpgComponentsDiff { repeated uint32 removed = 1; repeated JpgComponentModified modified = 2; repeated JpgComponentAdded added = 3; }
+
+message JpgFrameFieldsDiff { optional uint32 precision = 1; optional uint32 width = 2; optional uint32 height = 3; JpgComponentsDiff components = 4; }
+message JpgFrameChange {
+  enum Kind { MODIFY = 0; REPLACE = 1; }
+  Kind change = 1;
+  JpgFrameFieldsDiff modify = 2;
+  semio.s_stdio_jpg.snapshot.JpgFrameHeader replace_frame = 3;
+}
+
+message JpgQuantTableDiff { optional uint32 precision = 1; repeated uint32 values = 2; }
+message JpgQuantTableModified { uint32 id = 1; JpgQuantTableDiff diff = 2; }
+message JpgQuantTableAdded { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgQuantTable item = 2; }
+message JpgQuantTablesDiff { repeated uint32 removed = 1; repeated JpgQuantTableModified modified = 2; repeated JpgQuantTableAdded added = 3; }
+
+message JpgHuffmanTableKey { semio.s_stdio_jpg.snapshot.JpgHuffmanClass class = 1; uint32 id = 2; }
+message JpgHuffmanTableDiff { bytes bits = 1; bytes values = 2; }
+message JpgHuffmanTableModified { JpgHuffmanTableKey key = 1; JpgHuffmanTableDiff diff = 2; }
+message JpgHuffmanTableAdded { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgHuffmanTable item = 2; }
+message JpgHuffmanTablesDiff { repeated JpgHuffmanTableKey removed = 1; repeated JpgHuffmanTableModified modified = 2; repeated JpgHuffmanTableAdded added = 3; }
+
+message JpgSegmentDiff { optional uint32 marker = 1; bytes data = 2; }
+message JpgSegmentModified { uint32 index = 1; JpgSegmentDiff diff = 2; }
+message JpgSegmentAdded { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgSegment item = 2; }
+message JpgOtherSegmentsDiff { repeated uint32 removed = 1; repeated JpgSegmentModified modified = 2; repeated JpgSegmentAdded added = 3; }
+
 message JpgDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional uint32 width = 1;
+  optional uint32 height = 2;
+  bytes pixels = 3;
+  optional uint32 re_encode_quality = 4;
+  bool re_encode_quality_cleared = 5;
+  repeated uint32 jfif_version = 6; // present (len 2) = changed
+  optional semio.s_stdio_jpg.snapshot.JfifDensityUnits jfif_density_units = 7;
+  optional uint32 jfif_x_density = 8;
+  optional uint32 jfif_y_density = 9;
+  semio.s_stdio_jpg.snapshot.JfifThumbnail jfif_thumbnail = 10;
+  bool jfif_thumbnail_cleared = 11;
+  JpgFrameChange frame = 12;
+  optional uint32 sof_marker = 13;
+  optional bool arithmetic = 14;
+  JpgQuantTablesDiff quant_tables = 15;
+  JpgHuffmanTablesDiff huffman_tables = 16;
+  optional uint32 restart_interval = 17;
+  bool restart_interval_cleared = 18;
+  JpgOtherSegmentsDiff other_segments = 19;
 }

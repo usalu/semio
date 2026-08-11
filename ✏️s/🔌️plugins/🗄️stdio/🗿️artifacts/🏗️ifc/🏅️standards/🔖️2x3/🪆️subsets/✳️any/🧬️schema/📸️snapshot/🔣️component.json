@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.ifc.2x3/snapshot.json",
+  "title": "Ifc2x3Snapshot",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "document": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

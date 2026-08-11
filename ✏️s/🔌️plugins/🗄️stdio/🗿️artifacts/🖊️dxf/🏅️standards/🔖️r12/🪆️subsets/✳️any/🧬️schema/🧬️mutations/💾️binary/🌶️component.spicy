@@ -1,4 +1,10 @@
 module Stdio_dxf_mutations;
+
+# DxfMutation's wire binary IS its serde_json encoding (protocol::OpBinary); the shared
+# `.semio` envelope wraps that JSON payload.
 type Document = unit {
-    payload: bytes &eod;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;   # UTF-8 "stdio.dxf.mutation v1"
+    payload: bytes &eod;                 # UTF-8 JSON bytes of DxfMutation
 };

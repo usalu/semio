@@ -1,3 +1,4 @@
-; abnf stdio.pdf diff
-document = payload
-payload = *OCTET
+; abnf stdio.pdf.1.7 diff -- on the wire this is UTF-8-encoded JSON (RFC8259), tagged per
+; ../🔣️component.json; see ../📝️text/📖️component.grammar.semio for the full tagged-object
+; grammar. This leaf names the byte-level encoding, not a placeholder payload.
+pdf-diff-bytes = 1*OCTET ; UTF-8 encoding of the RFC8259 JSON text described in ../📝️text/

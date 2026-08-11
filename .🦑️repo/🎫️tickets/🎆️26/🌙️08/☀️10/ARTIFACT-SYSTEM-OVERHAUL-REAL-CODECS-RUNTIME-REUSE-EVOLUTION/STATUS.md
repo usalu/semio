@@ -107,6 +107,16 @@ Per the user's explicit "finish everything, don't stop between" — kept dispatc
 
 **Live test count** (`cargo test -p semio-s-plugin-stdio --lib`, checked directly by the main session): 317 passed / 2 failed as of this revision (both pdf, still owned by its actively-iterating agent). Also fixed 3 real, isolated pdf engine bugs directly this session while the crate was blocking everyone (`hex_to_unicode_string` called with a `&u32` instead of the raw hex string token, a closure parameter illegally typed `&mut impl FnMut(...)` instead of `&mut dyn FnMut(...)`, and a `.and_then(&mut resolve)` call with a mismatched closure signature needing `.and_then(|r| resolve(r.num))`) — these were blocking-everyone compile errors in a shared crate, not a judgment call on the pdf agent's own design, safe to fix directly per the same reasoning used earlier for the plugin-ABI rename completions.
 
+## Rule 3 landed too (7 of 9 D6 rules now real: 1, 2, 3, 4, 5, 6, 8)
+
+`policyIoMatrixMigratedBreaches` — the actual replacement for the legacy `policyIoSerializerMatrixBreaches`'s dead early-continue (traced it: `owners` in the catalog are DOMAIN artifacts, not stdio artifacts — `owner.import`/`owner.export` are the stdio formats each domain artifact bridges to/from; `policyArtifactIsMigrated(scope)` returns true for literally every owner now, since Phase 1 finished migrating all of them before this session started, so the legacy rule has been silently checking zero owners this whole time). New rule checks the MIGRATED leaf shape instead — for each owner's curated format, at least one of the owner's own (standard, subset) dirs must have a real io leaf under `🚪️io/<direction>/<facet>/🗿️artifacts/<format-dir>/`, searched by existence-anywhere-under rather than requiring one specific (format-standard, format-subset) pair (a domain artifact may reasonably bridge to any one of a format's now-multiple standards, e.g. pdf 1.4 vs 1.7 — picking one to mandate would be inventing a policy the codebase hasn't adopted). **Zero breaches** on the real `bun ./📜️script.ts policy` command — genuinely confirms every domain artifact's curated bridges were already real (built during Phase 1, before this ticket even started), not a gap this ticket needed to fix. Left the dead legacy rule in place rather than deleting it (still correctly vacuous, zero risk, matches the plan's own "old rule not deleted until allowlist burned down" pattern used for rule 8).
+
+**Remaining 2 of 9 (rules 7, 9) confirmed genuinely blocked, not just unstarted:**
+- **Rule 9**: still needs `ArtifactCodec` to grow a dialect field, which needs updating all ~30 `ArtifactCodec::of::<Snapshot, Mutation>(SCHEMA)` call sites to also pass a dialect — a wide, invasive change across every stdio artifact's `register()`, not something to rush alongside everything else landing on a live shared tree.
+- **Rule 7**: still genuinely 240 files' worth of mount-or-delete remediation, not a rule-authoring task.
+
+While chasing this down, briefly investigated whether 2 files currently blocking `cargo test -p semio-s-plugin-stdio` (`json/🏅️standards/🔖️rfc8259/.../🔺️diff/🦀️component.rs` + sibling `🧬️mutations/component.rs`, both `unresolved import protocol::DiffAlgebra`, hinting at `crate::dsl::command::DiffAlgebra` as the fix) were safe to complete directly, matching the pattern used earlier for the plugin-ABI rename. **Confirmed NOT safe this time**: `git status` shows both files as currently unstaged-modified — i.e. genuinely mid-edit by the concurrent session right now, not a stale lagging-reference like the earlier ABI cases. Left untouched; should resolve on its own shortly.
+
 ## Rule 6 landed too (6 of 9 D6 rules now real: 1, 2, 4, 5, 6, 8)
 
 `policyComposerDependencyBreaches` (a scoped slice of rule 6 — see its own doc comment in script.ts for exactly what's deferred): every `🎹️composer`'s `const DEP_<NAME>: Dialect = ...` cross-artifact dependency declaration is checked against the real catalog roster + filesystem — catches a phantom dependency (typo'd standard id, or a stale reference to a renamed/deleted standard, exactly the shape of bug `ac1018`→`ac1024` could have caused if a dependent composer's `DEP_DWG` reference wasn't updated). Verified zero breaches on the real `bun ./📜️script.ts policy` command, first attempt (allowlist-free rule — no allowlist needed since it's a pure existence check, not a "not reached yet" gradient).
@@ -230,3 +240,560 @@ S1 landed all mandatory scope compile-green: S-1 (new standalone `DiffAlgebra<P>
 **Gate results**: `cargo check -p semio-framework-schema` clean. `cargo check -p semio-s-plugin-stdio` clean. `cargo test -p semio-s-plugin-stdio --lib` → **332 passed, 0 failed** (unchanged from S1's exit state, as expected for a pure additive change).
 
 **No new directories created this wave** (Task 1's resolution made triad-dir scaffolding unnecessary). Full report: `s2-spine-report.md` in this ticket folder.
+
+## F1 (fan-out wave, 7 standards) — closed 2026-08-11
+
+**Roster**: xml (1.0), zip (2.0), json (rfc8259), deflate (rfc1950), csv (rfc4180), txt (utf-8), binary (raw) — 6 fan-out agents (txt+binary shared one agent), 1 verify agent, this C1 closer.
+
+**Per-artifact completion** (all 7): real handcrafted sparse `XDiff` (no `snapshot: Option<XSnapshot>` full-replace slot anywhere, grep-confirmed zero hits across all 7 diff files), `impl DiffAlgebra<XSnapshot> for XDiff` present for all 7, full named-variant `XMutation` enums with handcrafted per-variant `diff()`/`inverse()` (never apply-and-capture) for all 7, base-free structural `absorb()` satisfying every recipe-mandated canonical case (Insert+Remove-before, Insert+Insert-same-index-both-survive, Add+SetField-patches-into-added, Modify+Remove-drops-the-modify) plus associativity, for all 7, and a `field_sweep` law test present and passing for all 7. Snapshot completeness gaps closed: xml gained a typed `XmlDeclaration`; csv gained per-field quote-provenance (`CsvField.quoted`) and dropped the old header/row-splice split; deflate gained typed RFC1950 CMF/FLG/dict-id/payload fields (replacing a `{bytes}` stub) with real encode/decode entry points wired, LZ77/Huffman codec itself untouched; json replaced the generic `serde_json::Value` passthrough with a from-scratch `JsonValue` model + hand-rolled RFC8259 parser/serializer; txt replaced bare `text: String` with `lines`/`trailing_newline`/`line_ending`; zip's already-complete snapshot got its stale facet mirrors (previously copy-pasted `{schema,bytes}`/`{name,data}` placeholders unrelated to the real shape) rewritten to match. Facet leaves (`.ts`/`.graphql`/`.json` JSON-Schema/`.proto`) and grammar leaves (`.g4`/`.ebnf`/`.grammar.semio`/`.ksy`/`.spicy`/`.abnf`/`.protocol.semio`) handcrafted for all three schema facets across all 7 artifacts; a small number of non-wired sibling grammar-mirror files (zip's un-wired per-subdir copies, a handful in csv/json/deflate/xml) were deliberately left as documented, still-real placeholders rather than papered over — tracked via `POLICY_GRAMMAR_HONESTY_ALLOWLIST`, see below.
+
+**Closer-applied fixes (6 real, own-code defects, all within F1's 7 artifacts, none touching glue.rs/script.ts's forbidden files)**, the first 4 found by the verify agent, the 5th found by this closer once the crate actually ran:
+1. `binary/raw` `⚙️engine/component.rs` (`field_sweep_covers_every_byte_level_change`): added missing `use protocol::MutationDiff;` (only `DiffAlgebra` was imported; `.apply()` lives on `MutationDiff`).
+2. `txt/utf-8` `⚙️engine/component.rs` (`field_sweep_covers_every_mutable_field`): identical missing-import fix.
+3. `xml/1.0` `⚙️engine/component.rs` (`between_roundtrip_law`, lines 350-367): 5 bare `DiffAlgebra::between(...)` calls were ambiguous under type inference; rewritten to the fully-qualified `<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(...)` form already used correctly two tests later in the same file.
+4. `txt/utf-8` `🔺️diff/component.rs` (lines 315, 358): `merged.lines.expect(...)` moved out of `merged` before a later `merged.apply(&base)` call (E0382 partial-move); changed to `merged.lines.clone().expect(...)`, matching the pattern already used correctly at a third call site in the same file.
+5. `txt/utf-8` `⚙️engine/component.rs` (`field_sweep_covers_every_mutable_field`, runtime failure, found only once the crate actually compiled and ran — see below): the test asserted `removed`/`modified`/`added` all non-empty from a *single* `TxtLinesDiff::between()` call, which is structurally impossible for a flat, unkeyed `Vec<String>` collection with equal-length fixtures (the exact "removed XOR added, never both, from one collection" limitation xml's own report already flagged, but txt's sweep fixture didn't account for). Fixed by making `sweep_a`/`sweep_b` asymmetric lengths and splitting the assertions across both diff directions (`ab` proves modified+added, `ba` proves modified+removed) — mirroring the two-direction rigor `between_roundtrip_law` already applies.
+
+After all 5 own-code fixes, none of the verify agent's original 9 defects remain attributable to F1's own files, and the one additional runtime bug is fixed and verified (see below).
+
+**Full-crate gate status — FINAL, real, on-disk result: 732 passed, 12 failed, crate-wide; 0 of the 12 failures attributable to any F1 artifact; all 187 tests across F1's 7 standards pass (xml 22/22, zip 38/38, json 58/58, deflate 17/17, csv 17/17, txt 19/19, binary 16/16).** Getting here took two phases within this closing session: first the crate would not compile at all — blocked by a large, genuinely unrelated, actively in-progress concurrent wave (confirmed via `git status`/timestamps, not assumed) adding real spec-mandated subset variants across 8 *other* artifacts: SVG Tiny/Basic, STEP conformance classes cc1-6, PDF/A+X+E+UA+VT+H, JPEG baseline, OOXML strict/transitional, IFC 2x3, TIFF baseline, and (overlapping F1 only incidentally, in a composer-registration file never touched by F1's own schema/diff/mutation work) an XML "valid" subset — 36 `E0433: cannot find <subset> in subsets` errors plus the already-known/self-reported `gltf`→`json` export-bridge `E0308` (json's `JsonSnapshot.value` type change, ~120 total call sites repo-wide per json's own report, only this one inside the same crate). Polled ~15 minutes across multiple intervals with zero change, then the blocking wave's own composer registrations landed mid-session and the crate compiled for the first time. At that point it ran **731 passed / 13 failed** — 12 of the 13 belonging entirely to the (by-then-landed) subset-multiplicities wave's own new tests (docx/ifc/jpg/pdf/tiff/xlsx), but **1 was a real, previously-undetected F1 bug** (fix #5 above, in `txt/utf-8`) that had gone unnoticed all session simply because the crate had never successfully compiled before. Fixed and re-ran: **732 passed / 12 failed**, with the remaining 12 entirely in the unrelated wave's own scope (docx/ifc/jpg/pdf/tiff/xlsx) — none touched, per this ticket's "classify, don't chase" rule for genuinely other-wave scope.
+
+**Policy shrink (`bun ./📜️script.ts policy`, the 4 new S8 rules — diff-algebra, field-sweep-presence, grammar-honesty, facet-mirror-drift)**: confirmed **zero** real breaches AND **zero** stale-allowlist breaches for all 7 F1 standards (verified directly against the regenerated `.🦑️repo/⚡️cache/breaches/compose.json`, not just the CLI's truncated stdout). Housekeeping applied to `📜️script.ts`: removed 7 now-satisfied entries each from `POLICY_DIFF_ALGEBRA_ALLOWLIST` and `POLICY_FIELD_SWEEP_ALLOWLIST` (one per F1 artifact), and 96 now-satisfied entries from `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (the wired-leaf grammars every fan-out agent rewrote) — while explicitly *keeping* 45 grammar-honesty entries that are still real, documented, not-yet-handcrafted sibling-mirror placeholders (confirmed by re-running the check with each candidate entry removed and inspecting the actual `missingBySibling` diagnostic before deciding, not by pattern-matching alone). `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST`'s 21 F1 entries were investigated (drift counts of up to 27 missing fields looked suspicious) and **deliberately left in place** — root-caused to two checker false-positive sources, not real drift: (a) the checker's field-name regex scans the *entire* `component.rs` including `#[cfg(test)] mod tests`, so local test-fixture variable names with type annotations get misread as API fields; (b) `.proto` siblings correctly use idiomatic snake_case (`has_header`) while the checker only string-matches the camelCased form (`hasHeader`). Concretely verified on csv/snapshot: of 10 flagged "missing" identifiers, only `hasHeader` (a real field, just snake_cased in proto per convention) was a plausible true positive, and the other three (`text`/`options`/`bytes`/`mismatch`) traced to test-body local variables. Removing these 21 entries would have created 21 new spurious breaches; this is flagged here as a genuine `📜️script.ts` limitation for a future, out-of-band fix (narrow the field-extraction regex to skip `#[cfg(test)]` regions, and/or normalize proto's snake_case before the substring compare) — **not** attempted by this closer since it risks changing behavior for all 31 stdio standards, not just F1's 7, and was not part of this wave's mandate.
+
+**`git check-ignore`**: no new top-level directories were created by F1's own work (all 6 fan-out agents confirmed staying within already-mounted files per S2's Task 1 resolution; zero `glue_followup` entries requesting a new directory across all 6 reports). A handful of untracked subset-related paths appeared under F1 artifact trees during this session (`zip/✳️iso21320`, `json/✳️i-json`, `xml/✳️valid`, plus stray `subsets/🔣️component.json` files) — these belong to the same unrelated concurrent "subset multiplicities" wave noted above, not to F1; `git check-ignore -v` confirms none are actually gitignored (they only match a `.gitignore` *negation* rule, i.e. explicitly un-ignored/trackable), so no action was needed.
+
+**Ownership-ledger update for F1's 7 rows** (supersedes the pre-F1 W0-recon descriptions above for these 7 artifacts): xml/1.0, zip/2.0, json/rfc8259, deflate/rfc1950, csv/rfc4180, txt/utf-8, binary/raw are now all **diff/mutation/absorb-complete per this ticket's recipe, real `cargo test`-confirmed green** (handcrafted sparse diff, `DiffAlgebra`, named-variant mutations, base-free structural absorb, all 6 test laws present and passing, facet leaves handcrafted, S8 policy-clean). Final gate: `cargo test -p semio-s-plugin-stdio --lib "artifacts::{binary,txt,xml,zip,csv,deflate,json}::"` → **187 passed, 0 failed** (per-artifact: xml 22, zip 38, json 58, deflate 17, csv 17, txt 19, binary 16). F1 is fully done — no follow-up gate re-run needed for these 7 standards.
+
+Full report: `f1-closer-report.md` in this ticket folder.
+
+## F2 (fan-out wave, 5 standards — stl/obj/ply/las/bmp; tiff deferred) — closed 2026-08-11
+
+**Roster**: stl (ascii), obj (3.0), ply (1.0), las (1.0), bmp (v3) — 5 fan-out agents, 1 verify agent, this C2 closer. tiff explicitly excluded this wave (live external "subset multiplicities" edit, see below).
+
+**Per-artifact completion** (all 5): real handcrafted sparse `XDiff` (no `snapshot: Option<XSnapshot>` full-replace slot anywhere, grep-confirmed zero hits across all 5 diff files — only doc-comment mentions of the OLD template being replaced), `impl DiffAlgebra<XSnapshot> for XDiff` present for all 5 (both `protocol::MutationDiff` and `protocol::command::DiffAlgebra`/`protocol::DiffAlgebra` imported explicitly from the start, avoiding F1's known missing-import trap), full named-variant `XMutation` enums with handcrafted per-variant `diff()`/`inverse()` (never apply-and-capture) for all 5, base-free structural absorb satisfying every recipe-mandated canonical case for all 5, and a `field_sweep`-named law test present and passing for all 5 — every one correctly avoiding the F1-txt structural trap (asymmetric-length fixtures, assertions split across both `between()` directions). Snapshot completeness gaps closed: stl gained `solid_name` + genuinely-persisted per-facet `normal` (previously silently recomputed on encode) and its own `StlTriangle` type (no shared vertex pool — STL facets don't share vertices, a real format-accurate redesign, not a rename); ply's mesh-only `{vertices, faces}` model (sharing `MeshVertex`/`MeshTriangle` verbatim with stl — the W0-flagged defect) was replaced entirely by a generic element/property/row model (`PlyElement`/`PlyProperty`/`PlyRow`/`PlyValue`) that PLY's real spec actually is, with vertices/faces falling out as the common case rather than being hardcoded; obj gained `w`-component homogeneous coords, `mtllib`/`usemtl`/`smoothing_groups`/`unknown_statements`, and split `o`/`g`/`usemtl`/`s` state out of `faces` into their own name-keyed/range-tagged collections; las gained a full 25-field `LasHeader` + index-keyed `LasVlr` collection (previously `{schema, points}` only, no header, no VLRs); bmp gained the full 11-field BITMAPINFOHEADER + index-keyed `palette` (previously `{width, height, pixels}` only, a RasterImage-equivalent anti-pattern). **W0's stl/ply shared-`MeshVertex`/`MeshTriangle` defect is confirmed killed**: each artifact now defines its own named, format-appropriate type; neither imports from the other or from any shared module (verified by this closer via independent grep, not just trusting the fan-out/verify reports). Facet leaves and grammar leaves handcrafted across all 5 per the zip/csv F1 precedent (2 live-wired leaves per facet handcrafted honestly, un-wired diff/mutations sibling leaves — `.g4`/`.ebnf`/binary-4 — left as documented, still-real placeholders, matching F1's accepted scope boundary).
+
+**Closer-found-and-fixed defect (1, real, own-code, discovered during this closer's own verification pass — not flagged by ply's fan-out report or the verify report)**: ply's snapshot facet's `.g4`/`.ebnf` grammar leaves had been written to the WRONG path — directly under `🧬️schema/📸️snapshot/` (`🅰️component.g4`, `🔤️component.ebnf`, both untracked stray files) — instead of the correct `🧬️schema/📸️snapshot/📝️text/` subdirectory, leaving the real target files at the correct path as stale, untouched placeholders (`DOCUMENT: 'schema' [ ]+ 'stdio.ply'` / equivalent 3-line ebnf stub) despite ply's own report claiming "the snapshot facet's full 6-leaf set... is handcrafted honestly." Fixed by moving the real handcrafted content into the correct `📝️text/` location (overwriting the stale placeholders) and deleting the two misplaced stray files. Re-verified: `cargo test -p semio-s-plugin-stdio --lib "artifacts::ply"` still 23/23 after the fix (grammar leaves aren't exercised by Rust tests, so this couldn't have broken anything, but re-ran anyway); `bun ./📜️script.ts policy` confirmed both leaves flip from real-and-unallowlisted-would-be-a-breach to correctly `-stale-` (fixed, allowlist entry pending removal) immediately after the fix, then pruned (see below).
+
+**Full-crate gate — FINAL, real, on-disk result: 795 passed, 0 failed, crate-wide** (re-run twice by this closer: once before the ply grammar-leaf fix, once after — both green, no regressions from either the fix or the `📜️script.ts` allowlist edits). Per-artifact filter, independently re-confirmed by this closer (not just trusting the fan-out/verify reports): stl 21/21, obj 17/17, ply 23/23, las 21/21, bmp 14/14 — **96/96 passing, 0 failing, across all of F2's 5 standards.** Unlike F1, this closer's own full-crate run never saw any external-wave compile blockage (the concurrent "subset multiplicities" wave had already settled by the time this closer ran its gates) — the 795/0 result matches exactly what the independent verify agent (`f2-verify-report.md`) reported.
+
+**Policy shrink (`bun ./📜️script.ts policy`, the 4 S8 rules)**: before this closer's edits, cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly (not just the CLI's priority-filtered stdout) for all 4 S-8 rules scoped to stl/obj/ply/las/bmp: **59 breaches, every single one `-stale-`** (5 diff-algebra + 5 field-sweep + 49 grammar-honesty; `facet-mirror-drift` showed 0 hits, real or stale, for all 5 — not investigated further since F1's own precedent already root-caused this rule's false-positive behavior and explicitly declined to touch its allowlist). Zero real (non-stale) breaches existed even before this closer's edits — every fan-out agent's underlying fix was genuinely in place (net of the one ply grammar-leaf-path defect this closer found and fixed independently, which surfaced 2 *additional* now-stale entries after the fix — pruned in the same pass). Housekeeping applied to `📜️script.ts`, restricted precisely to each rule's own allowlist array (verified line-range-scoped, not global string-replace, after discovering the same normalized key string can legitimately appear in more than one allowlist — e.g. `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST` independently, left untouched, per F1's precedent): removed exactly 5 entries from `POLICY_DIFF_ALGEBRA_ALLOWLIST` (bmp/las/obj/ply/stl, one each), 5 from `POLICY_FIELD_SWEEP_ALLOWLIST` (same 5), and 51 from `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (49 pre-existing-stale + 2 newly-stale after the ply fix: stl 11, obj 12, ply 7+2=9, las 7, bmp 12). Re-ran policy after pruning and cross-checked the freshly regenerated breach cache: **0 breaches (real or stale) for all 5 F2 artifacts across all 4 S-8 rules.** `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST` was not touched (0 hits for our 5 artifacts either way — consistent with F1's finding that this rule's checker has real false-positive sources, not re-investigated here since nothing indicated a problem).
+
+**`git check-ignore`**: no new top-level directories were created by F2's own work (all 5 fan-out reports confirm staying within already-mounted files per S2's Task 1 resolution; zero `glue_followup` entries requesting a new directory or a `glue.rs` mount across all 5 reports — `glue_edits: []`). Untracked stray files found under all 5 artifacts' own trees (`🏅️standards/🔖️<version>/🪆️subsets/🔣️component.json`, identical "Unconstrained X <version>" content, identical mtime across all 5 — a pre-existing scaffold artifact, not created by any F2 fan-out agent) and, until fixed above, ply's two misplaced grammar leaves — `git check-ignore -v` on all of them confirms none are actually gitignored (they only match the `.gitignore` *negation* rule `!**/🔖️*/**`, i.e. explicitly un-ignored/trackable), so no `.gitignore` action was needed for any of them.
+
+**tiff status (for the orchestrator's next-wave decision)**: re-polled `git status` on `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff` twice, 20 seconds apart, near the end of this closing session — identical file set both times (`⚙️engine/component.rs` and `🎹️composer/component.rs` modified, plus an untracked new `🪆️subsets/✳️baseline/` directory and a `🪆️subsets/🔣️component.json`), suggesting the external wave is currently idle/paused rather than actively churning at this exact moment — but this is a snapshot, not a guarantee of permanence. `cargo check -p semio-s-plugin-stdio --lib` compiles tiff's current on-disk state cleanly (0 errors), consistent with the 795/0 full-crate result. tiff was deliberately excluded from F2's scope per the original dispatch (live external edit) and remains untouched by this closer — its own diff/mutations/snapshot rewrite (the same recipe already applied to all 30 other standards across F1+F2) still needs a dedicated future wave; **recommend it be F2b's or F3's first item**, not folded silently into whatever wave happens to touch it next.
+
+**Ownership-ledger update for F2's 5 rows** (supersedes the pre-F2 W0-recon descriptions above for these 5 artifacts): stl/ascii, obj/3.0, ply/1.0, las/1.0, bmp/v3 are now all **diff/mutation/absorb-complete per this ticket's recipe, real `cargo test`-confirmed green** (handcrafted sparse diff, `DiffAlgebra`, named-variant mutations, base-free structural absorb, all 6 test laws present and passing, facet leaves handcrafted, S8 policy-clean, 0 breaches real-or-stale). Final gate: `cargo test -p semio-s-plugin-stdio --lib "artifacts::{stl,obj,ply,las,bmp}::"` → **96 passed, 0 failed** (per-artifact: stl 21, obj 17, ply 23, las 21, bmp 14). F2 is fully done for these 5 standards — tiff remains open, see above.
+
+Full report: `f2-closer-report.md` in this ticket folder.
+
+## F3 (fan-out wave, gif/png/md/dxf; svg/jpg/tiff deferred) — closed 2026-08-11, PARTIAL — only 2 of 4 artifacts actually landed
+
+**Roster**: gif (87a+89a), png (1.2), md (commonmark), dxf (r12) — 4 fan-out agents dispatched, 1 verify agent, this C3 closer. svg/jpg/tiff explicitly excluded this wave (live external "subset multiplicities" edit, see below).
+
+**Critical finding, independently re-verified by this closer (not just trusted from the verify report): only `f3-md-report.md` and `f3-png-report.md` exist on disk. No `f3-gif-report.md` and no `f3-dxf-report.md` were ever written — those two artifacts' F3 work either never started (dxf) or never touched the diff layer (gif 89a).**
+
+**png and md — genuinely done**, re-verified directly by this closer against disk and a fresh `cargo test` run, not taken on either agent's word: both have a real handcrafted sparse `XDiff` with zero `snapshot: Option<XSnapshot>` full-replace slot (grep-confirmed — the only string hits are doc-comments explicitly noting the slot's absence), a real `impl DiffAlgebra<XSnapshot> for XDiff`, named-variant mutations, and a passing `field_sweep`-named law test. `cargo test -p semio-s-plugin-stdio --lib "artifacts::png::"` → 22/22; `"artifacts::md::"` → 24/24. Both include all 6 required law tests (`mutation_diff_law`, `inverse_law`, `absorb_law`(+associativity), `between_roundtrip_law`, `codec_retention_law`, `field_sweep`).
+
+**gif — NOT done**: 87a's diff is a deliberately-minimal replace-only `{snapshot: Option<GifSnapshot>}` with a documented rationale (87a has no incrementally-mutable frame concept) — arguably acceptable as-is, matching 87a's own mutation file's doc comment. **89a is not done**: its diff file (`🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`, re-read directly by this closer) is still the pre-overhaul op-slot shape — `pub snapshot: Option<GifSnapshot>` full-replace slot PLUS one `Option<T>` per mutation kind (`insert_frame`, `remove_frame_at`, `set_frame_delay`, `set_loop_count`, `set_frame_disposal`) — zero `impl DiffAlgebra` anywhere in the gif artifact (87a or 89a, grep-confirmed), zero `field_sweep`-named test, and none of the 3 mandated canonical absorb tests (Insert+Remove-before, Insert+Insert-same-index, Insert+SetField-patch) exist or would pass against the current last-write-wins `absorb()`. Tests are green (26/26 for the gif module filter, 4/4 for the dancing fixture) only because nothing in the current suite exercises the missing surface — green tests here are hiding an incomplete migration, not confirming one.
+
+**dxf — NOT done at all**: `🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs` (re-read directly by this closer, 1045 bytes) is the pristine pre-overhaul scaffold — `DxfDiff{snapshot: Option<DxfSnapshot>}`, `impl MutationDiff` only, no `DiffAlgebra`. The sibling `🧬️mutations/🦀️component.rs` still only has `{NoMutation, SetSnapshot}`, the universal minimal stub every other F1-F3 artifact was expected to grow beyond. File mtimes on both predate this ticket's own working window (21:07 the day it opened) — this artifact was never touched by any F3 fan-out agent. Tests are green (6/6) but all 6 are pre-existing snapshot/codec/demo tests; none exercises diff/mutation.
+
+**Full-crate gate — this closer's own fresh run: 817 passed, 0 failed, 0 ignored** (`cargo test -p semio-s-plugin-stdio --lib`, no filter) — matches the independent verify report exactly. Per-artifact filter, independently re-run by this closer: png 22/22, md 24/24, gif 26/26 (+4/4 dancing fixture), dxf 6/6 — **all green, because gif-89a's and dxf's gaps are silent omissions (missing tests), not failures.** No crate-wide breakage exists to classify as internal-vs-external right now.
+
+**Policy shrink (`bun ./📜️script.ts policy`, the 4 S-8 rules — diff-algebra, field-sweep-presence, grammar-honesty, facet-mirror-drift), scoped to gif/png/md/dxf**: cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly (not just CLI stdout). Before pruning: 25 breaches, every one `-stale-` and every one belonging to **png or md only** (2 diff-algebra: png+md; 2 field-sweep: png+md; 21 grammar-honesty: all md, its full `🔺️diff`/`🧬️mutations` binary+text grammar-leaf set). **gif and dxf produced zero breach entries of any kind** (neither real nor stale) for all 4 rules — both remain silently allowlisted-as-not-yet-fixed, consistent with F3 never having landed real work on either. Housekeeping applied to `📜️script.ts`, scoped precisely to png/md (left every gif/dxf allowlist entry untouched, since neither is actually fixed yet — pruning those would create real, correctly-firing breaches): removed png+md from `POLICY_DIFF_ALGEBRA_ALLOWLIST` (2 entries), png+md from `POLICY_FIELD_SWEEP_ALLOWLIST` (2 entries), and md's full 21-entry grammar-honesty block from `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (png's own grammar leaves remain allowlisted — deliberately deferred to F6 per png's own `glue_followup`, not yet rewritten, correctly still-real not stale). `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST` left untouched for all 4 artifacts (0 hits, real or stale, matching F1/F2's precedent that this rule has known false-positive sources not worth re-litigating here). Re-ran policy after pruning: **0 breaches, real or stale, for all 4 S-8 rules across gif/png/md/dxf** — total breach count dropped by exactly 25 (22016 → 21991), confirming no collateral change elsewhere. `policy_shrink_confirmed: true`.
+
+**`git check-ignore`**: no new top-level directories were created by png's or md's own F3 work (both reports' `glue_followup` explicitly state no glue.rs edit / no new directory needed). The only untracked new paths under any of the 4 artifacts are identical pre-existing-scaffold `🪆️subsets/🔣️component.json` stray files (same pattern F2's closer already found and cleared) — `git check-ignore -v` on all 4 confirms they only match the `.gitignore` *negation* rule `!**/🔖️*/**` (explicitly trackable), no `.gitignore` action needed. No `glue.rs` edit was needed or made this wave (`glue_edits: []`) — both landed reports' `glue_followup` sections require only content rewrites of already-mounted sibling leaf files (png's stale zip-shaped `.ts`/`.json`/`.graphql`/`.proto` facet mirrors, deferred to F6), not a new mount.
+
+**svg/jpg/tiff status (for the orchestrator's next-wave decision), freshly re-polled by this closer**: the external "subset multiplicities" wave is still visibly in flight on all 3 — svg has 2 modified files (`⚙️engine`, `🎹️composer`) plus 2 new untracked subset dirs (`✳️basic`, `✳️tiny`); jpg has 4 modified files plus 1 new untracked subset dir (`✳️baseline`); tiff has 2 modified files plus 1 new untracked subset dir (`✳️baseline`). Newest touched file across all 3 (tiff's baseline composer) was ~96 minutes old at poll time — no file in any of the 3 trees changed in the final ~90 minutes of this closer's session, suggesting the wave is currently paused rather than actively mid-edit, but (per F2's own precedent-caveat) this is a snapshot, not a guarantee. **All 3 compile and pass their own tests cleanly right now**: `cargo test … "artifacts::svg::"` → 50/50, `"artifacts::jpg::"` → 21/21, `"artifacts::tiff::"` → 15/15 (all reflected inside this closer's 817/0 full-crate run too). Still explicitly out of scope for F3 (live external edit at dispatch time) and untouched by this closer; each still needs its own dedicated diff/mutations/absorb F-wave pass (same recipe as every other standard) once the external wave's new subsets settle for real (commit or long-idle confirmation, not just a 90-minute quiet window).
+
+**Ownership-ledger update for F3's 4 rows**: png/1.2 and md/commonmark are now **diff/mutation/absorb-complete per this ticket's recipe, real `cargo test`-confirmed green, S-8 policy-clean** (same bar as F1/F2's closed rows) — supersedes their pre-F3 W0-recon descriptions. **gif/89a and dxf/r12 remain OPEN** — gif/87a's replace-only diff is accepted as a deliberate, documented design choice; gif/89a and dxf/r12 both still need a full (or resumed) F-wave diff/mutations rewrite from scratch, exactly as flagged by the independent verify report. Recommend a dedicated gif-89a + dxf mop-up wave, distinct from (and not blocked by) the eventual svg/jpg/tiff wave.
+
+Full report: `f3-closer-report.md` in this ticket folder (superseded by the mop-up re-close below — kept for history, its gif/dxf "NOT done" finding is stale).
+
+## F3 mop-up — RE-CLOSED, all 4 artifacts now done — 2026-08-11 (this closer's own re-verified pass)
+
+The gif-89a+87a and dxf gaps flagged by the PARTIAL closure above were real at the time it was written, but a resumed mop-up pass landed for both artifacts afterward (`f3-gif-report.md`, `f3-dxf-report.md`, both now present on disk — they did not exist when the PARTIAL closer report above was written) plus an independent verify pass (`f3-verify-report.md`) that supersedes the PARTIAL closer's gif/dxf findings. This closer re-dispatched as C3, found all 4 fan-out reports plus the verify report present, and independently re-verified every claim against disk from scratch (not taken on trust from any report, including the now-stale PARTIAL closer report above):
+
+- **gif 87a**: full rewrite, not just "accepted as deliberate replace-only" — real `GifImage`/`GifColorTable`/multi-image support, sparse `GifDiff` (zero `snapshot: Option<>` slot), `impl DiffAlgebra`, ~11-variant mutation enum, all 6 laws incl. all 3 canonical absorb cases.
+- **gif 89a**: full rewrite — sparse `GifDiff` (frames/comments/app_extensions triples) replacing the old op-slot shape entirely (verified: zero occurrences of the old `insert_frame`/`remove_frame_at`/`set_frame_delay`/`set_loop_count`/`set_frame_disposal` struct fields), real GCT/loop/comment/plain-text/app-extension modeling, 20-variant mutation enum, `impl DiffAlgebra`, all 6 laws incl. all 3 canonical absorb cases (independently confirmed passing by both the fan-out agent and the separate verify agent). A genuine latent LZW encoder/decoder tail-desync bug (shared by both standards) was found and fixed along the way, with a new regression test.
+- **dxf r12**: full rewrite from the pristine pre-overhaul scaffold — typed `$VAR`-keyed header, name-keyed LAYER/STYLE/LTYPE tables + raw-retained other-table fallback, index-keyed blocks with nested entities, 8-kind typed top-level entities (Line/Circle/Arc/Polyline/Text/Solid/Insert) + `Other` raw-retention fallback, sparse name/index-keyed `DxfDiff`, `impl DiffAlgebra`, 19-variant mutation enum, all 6 laws. Polyline is correctly modeled via the real R12 POLYLINE/VERTEX/SEQEND record group (not the R14+-only LWPOLYLINE the pre-overhaul code named), a documented spec-accuracy correction. 4 real bugs (unknown-table body-start truncation, duplicated vertex layer tag on print, 3× `Insert{Layer,Style,Linetype}` inverse reading the wrong snapshot, one own-test miscount) found and fixed via the real crate's own test suite, not a scratch crate.
+
+**This closer's own independently-run verification** (not reused from any report):
+- `cargo test -p semio-s-plugin-stdio --lib` (whole crate, fresh run) → **853 passed, 0 failed, 0 ignored** — matches both fan-out reports' and the verify report's own numbers exactly.
+- Per-artifact filters, independently re-run: `artifacts::gif::` → 55/0, `artifacts::png::` → 22/0, `artifacts::md::` → 24/0, `artifacts::dxf::` → 13/0.
+- Grep gates on all 5 diff files (gif 87a, gif 89a, png, md, dxf): `impl DiffAlgebra<XSnapshot> for XDiff` present in every one; zero struct-field `snapshot: Option<...>` full-replace slots in any (doc-comment mentions of the deleted shape don't count, checked by hand).
+- `field_sweep`-named test confirmed present (via `grep -rl`) somewhere in each of the 4 artifact trees (gif and dxf keep it in their diff/mutations files; png in mutations; md in the engine file — same file-location variance the independent verify report already noted, not a defect).
+- `git check-ignore -v` on the 5 new untracked stray `🔣️component.json` scaffold files under gif ×2/png/md/dxf (same pre-existing-scaffold pattern F2's and the PARTIAL F3 closer already found and cleared): all match only the `.gitignore` *negation* rule at line 179 (`!**/🔖️*/**`, explicitly trackable) — no `.gitignore` action needed. The Chinese-character-typo `🖊️dxf/🏅️标准/` directory dxf's own report says it created-and-removed mid-session was independently confirmed absent from disk (no trace).
+
+**Policy shrink, this closer's own pass**: before pruning, cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly (not just CLI stdout), scoped to gif/png/md/dxf across all 4 S-8 rules: **39 breaches, every one `-stale-` (satisfied but still allowlisted), zero real.** Breakdown: `diff-algebra` — gif×2 (87a+89a) + dxf×1; `field-sweep-presence` — gif×2 + dxf×1; `grammar-honesty` — dxf×12 + png×21 (png's grammar leaves were rewritten for real this pass, per its own report's §6 — supersedes the PARTIAL closer's earlier note that png deferred grammar leaves to F6; that was true of an *older* version of png's report, not the current one). png/md's diff-algebra and field-sweep allowlist entries were already pruned by the earlier PARTIAL closer pass and correctly did not reappear. Pruned exactly the 39 satisfied entries from `📜️script.ts`: `POLICY_DIFF_ALGEBRA_ALLOWLIST` (gif 87a+89a, dxf — 3 entries), `POLICY_FIELD_SWEEP_ALLOWLIST` (same 3), `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (png's full 21-entry block; 12 of dxf's 21 entries — the `.abnf`/`.g4`/`.ebnf`/`.grammar.semio` leaves across all 3 facets). **Deliberately left dxf's remaining 9 grammar-honesty entries allowlisted** (`.ksy`/`.protocol.semio`/`.spicy` across snapshot/diff/mutations): direct inspection confirmed these 3 file types still literally contain the policy's own placeholder marker substring (`size-eos: true` / `payload = *OCTET` / `payload: bytes &eod;`) as part of otherwise-real, honest content describing a genuinely-unstructured UTF-8-text-blob payload — the exact same accepted false-positive shape csv's precedent already established (an arbitrary-length text/JSON blob has no further internal binary structure to describe beyond "the payload is bytes/octets"); png's own report deliberately worked around this by renaming its payload field away from the literal `payload` identifier, dxf's did not, so the mechanical checker still (technically correctly, per its own heuristic) treats those 9 as unsatisfied. Pruning them would create 9 new spurious-but-real-per-the-checker breaches — not attempted; flagged here for whoever next touches dxf's grammar leaves, not for `POLICY_GRAMMAR_HONESTY_LEAF_MARKERS` itself (a repo-wide-blast-radius change out of this wave's scope, matching F1's identical reasoning for `POLICY_FACET_MIRROR_DRIFT`'s known false positives). `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST` left fully untouched for all 4 artifacts (0 hits, real or stale — consistent with every prior wave's precedent). **After pruning, re-ran `bun ./📜️script.ts policy` and re-checked the freshly regenerated breach cache: 0 breaches, real or stale, for all 4 S-8 rules across gif/png/md/dxf.** Total breach count dropped by exactly 39 (22031 → 21992), confirming no collateral change to any other rule or artifact. `policy_shrink_confirmed: true`.
+
+**svg/jpg/tiff re-poll (for the orchestrator's next-wave decision)**: still show modified `⚙️engine`/`🎹️composer` files and untracked new subset dirs (svg: `✳️basic`/`✳️tiny`; jpg/tiff: `✳️baseline`), same shape the PARTIAL F3 closer saw ~3 hours earlier — but newest touch across all 3 is now **~175-180 minutes old with zero further change since**, and a separate, later-dated sibling ticket (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🎫️ticket.json`) confirms this IS that same "subset multiplicities" wave, its own `status` field reads **`"closed"`**, and its own summary claims "744/744 passing" delivered via a 2-agent pilot + 10-agent fan-out covering exactly svg/jpg/tiff (Tiny/Basic, baseline, baseline) among others — with a caveat that it still wants "re-verification once [unrelated stl/norm sessions] land," which does not implicate svg/jpg/tiff specifically. All 3 compile and pass cleanly right now, independently re-run by this closer: `artifacts::svg::` → 50/50, `artifacts::jpg::` → 21/21, `artifacts::tiff::` → 15/15 (same counts as the PARTIAL closer's own poll — no drift). **Given the sibling ticket's own closed status plus ~3 hours of observed quiescence, svg/jpg/tiff now read as genuinely settled, not merely paused** — a meaningfully stronger signal than the PARTIAL closer had available at the time. Still recommend the orchestrator do one final direct `git status`/`cargo test` spot-check immediately before dispatching a mop-up wave (this remains a snapshot, not a guarantee), but the evidence now favors "safe to fold in" over "still live."
+
+**Ownership-ledger update for F3's 4 rows, final**: gif/87a, gif/89a, png/1.2, md/commonmark, and dxf/r12 are now **all diff/mutation/absorb-complete per this ticket's recipe, real `cargo test`-confirmed green (853/0 whole-crate), S-8 policy-clean (0 real-or-stale breaches across all 4 rules, modulo dxf's 9 documented-accepted binary-grammar false-positive entries)** — F3 is now fully closed, no open rows remain from this wave. svg/jpg/tiff remain the only artifacts among F1-F3's original roster still needing their own dedicated diff/mutations/absorb pass, and now read as ready for that pass per the settlement evidence above.
+
+Full report: `f3-c3-final-closer-report.md` in this ticket folder.
+
+## F3b (fan-out wave, svg/jpg/tiff mop-up — the 3 artifacts deferred out of F3) — closed 2026-08-11
+
+**Roster**: svg (1.1), jpg (jfif-1.01), tiff (6.0) — 3 fan-out agents (1 per artifact), 1 verify agent (`f3b-verify-report.md`), this C3b closer. This completes the full, originally-planned F3 roster (gif, png, md, dxf, svg, jpg, tiff — 7 artifacts across the wave, F3 proper + this F3b mop-up together).
+
+**Per-artifact completion** (all 3), independently corroborated by the F3b verify agent against disk/`cargo test`, not taken on trust: real handcrafted sparse `XDiff` (zero `snapshot: Option<XSnapshot>` full-replace struct field in any of the 3 diff files — only doc-comment mentions of the deleted shape remain), `impl DiffAlgebra<XSnapshot> for XDiff` present for all 3, named-variant mutation enums with handcrafted per-variant `diff()`/`inverse()` (never apply-and-capture) for all 3, base-free structural `absorb()` satisfying the recipe's canonical cases plus associativity, and a `field_sweep`-named law test present and passing for all 3 (svg: `field_sweep`; jpg/tiff: `field_sweep_covers_every_mutable_field`). **svg's own headline defect — the apply-and-capture `SvgDiff{snapshot: Option<SvgSnapshot>}` catch-all arm flagged back in W0 recon — is confirmed genuinely fixed**: every `Mutation::diff()` variant except `SetSnapshot` builds its `SvgDiff` directly from the mutation's own fields; `SetSnapshot`'s own body is a legitimate base-vs-target recursive tree-diff (`SvgDiff::between`), not a simulate-then-compare shim. jpg killed the shared `RasterImage{width,height,rgba}` stub (flattened `width`/`height`/`pixels` onto `JpgSnapshot` directly, matching png's own precedent) and gained typed JFIF APP0/id-keyed DQT/compound-keyed DHT/DRI/verbatim-retained `other_segments`. tiff killed its own `RasterImage` copy too, replacing it with a real generic tag/type/value IFD model (`TiffByteOrder`/`TiffFieldType`/`TiffValues`/`TiffTag`/`TiffIfd`) — decode now walks the whole IFD chain generically; encode stays honestly single-IFD-scoped (`EncodeScopeNote`, mirroring this same ticket's png precedent). **Cross-checked independently by this closer: png/jpg/tiff now share zero raster/image type** (`RasterImage` appears only in historical doc-comment mentions across all three, confirmed by direct grep, not reused from any report). Both jpg's and tiff's own `✳️baseline` subset (added mid-plan by the separate, now-closed "subset multiplicities" ticket) were updated in step by their own F3b agents to keep their real ITU-T T.81/Adobe TIFF 6.0 Part 1 conformance checks working against the new snapshot shapes — confirmed compiling and passing, not just left alone.
+
+**Deviation flagged by svg's own agent, not this closer's concern to fix**: a latent, pre-existing (shared with xml, inherited by svg's mirrored design) position-restoration gap in `SetAttribute`'s mutation-level `Mutation::inverse` when removing/re-adding a non-last attribute via mutation replay — the diff-level `DiffAlgebra::inverse` is proven fully correct (new dedicated test), only the mutation-replay convenience path loses position. Not blocking (outside svg's own artifact boundary, inherited from xml), flagged here for a future xml maintenance pass, not touched this wave.
+
+**Full-crate gate — this closer's own fresh run: 883 passed, 0 failed, 0 ignored** (`cargo test -p semio-s-plugin-stdio --lib`, no filter) — matches the independent F3b verify report's own number exactly, and is up from F3's own 853/0 exit state by exactly the +30 these 3 artifacts' own test suites contribute (svg 58 + jpg 29 + tiff 29 = 116 total across the 3, net of some overlap in what F3's prior 853 already counted for these 3 as pre-existing-and-unrelated tests). Per-artifact filter, independently re-run by this closer: `artifacts::svg::` → 58/0, `artifacts::jpg::` → 29/0, `artifacts::tiff::` → 29/0.
+
+**Policy shrink (`bun ./📜️script.ts policy`, the 4 S-8 rules — diff-algebra, field-sweep-presence, grammar-honesty, facet-mirror-drift), scoped to svg/jpg/tiff**: cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly (not the CLI's low-priority-filtered stdout, which shows none of these rules at all). Before pruning: **49 breaches, every one `-stale-` (satisfied but still allowlisted), zero real** — 3 diff-algebra (svg/jpg/tiff, one each), 3 field-sweep (same 3), 43 grammar-honesty (svg 8, jpg 14, tiff 21). `facet-mirror-drift` produced **zero breach entries of either kind** for all 3 (and for gif, cross-checked too) — meaning those allowlist entries (svg×3, jpg×3, tiff×3, still present) remain correctly protecting genuine, not-yet-fixed sibling-mirror drift, exactly F1/F2/F3's own established precedent for this rule's real false-positive/still-real-gap mix; **left fully untouched**, matching every prior wave. **One correction to a fan-out agent's own self-report, caught by this closer's live-policy-not-self-report verification discipline**: tiff's own `f3b-tiff-report.md` claimed `POLICY_GRAMMAR_HONESTY_ALLOWLIST` "never had tiff entries and needs no change" — false; tiff in fact had a full 21-entry block there (all now genuinely stale), confirmed both by direct `grep` on `📜️script.ts` and by the live breach cache showing all 21 as `-stale-`. Pruned exactly the 49 confirmed-stale entries: `POLICY_DIFF_ALGEBRA_ALLOWLIST` (svg/jpg/tiff, 3 entries), `POLICY_FIELD_SWEEP_ALLOWLIST` (same 3), `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (svg's `diff`+`mutations` facets' `.g4`/`.ebnf`/`.grammar.semio`/`.protocol.semio` — 8 entries, snapshot facet correctly left allowlisted since svg's own agent explicitly did not rewrite it this wave; jpg's `diff`+`mutations`+`snapshot` facets' same 4-marker set minus `snapshot`'s `.ksy` — 14 entries, `.abnf`/`.ksy`/`.spicy` correctly left allowlisted across all 3 facets since those leaves' real content is honest JSON-wire-form prose that still legitimately contains the checker's literal substring markers, same accepted false-positive shape F1/F2/F3 already established for csv/dxf; tiff's full 21-entry block — every facet × every marker, confirmed genuinely rewritten honestly by direct content grep before pruning, not just trusting the stale-breach signal alone). **After pruning, re-ran `bun ./📜️script.ts policy` and re-checked the freshly regenerated breach cache: 0 breaches, real or stale, for all 4 S-8 rules across svg/jpg/tiff (and gif, re-confirmed still 0 — its own entries were already correctly pruned by the earlier F3 mop-up closer).** `policy_shrink_confirmed: true`. Full-crate `cargo test` re-run clean after the `📜️script.ts` edits (883/0, unchanged — expected, since these are TypeScript-tooling-only allowlist edits with zero Rust surface).
+
+**`git check-ignore`**: no new top-level directories or `glue.rs`/`📜️script.ts` mounts were needed by any of the 3 fan-out reports (`glue_edits: []` across all 3 — svg/jpg/tiff each explicitly confirm "no glue.rs edit required", all real work landed inside already-mounted `🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations}/🦀️component.rs` + sibling facet/grammar leaves per S2's Task 1 resolution). The only untracked new paths under any of the 3 artifacts' trees are the external, now-closed "subset multiplicities" ticket's own real, finished, additive work (svg's `✳️basic`/`✳️tiny`, jpg's/tiff's `✳️baseline`, plus the same pre-existing-scaffold stray `🪆️subsets/🔣️component.json` files F2's and F3's closers already found and cleared) — `git check-ignore -v` (cross-checked against `git status --porcelain --ignored`, since the raw `check-ignore -v` exit/negation-rule output is easy to misread) confirms all of them only match the `.gitignore` *negation* rule at line 179 (`!**/🔖️*/**`, explicitly trackable, not actually ignored), so no `.gitignore` action was needed. svg's own scratch-verification crate (`f3b-svg-scratch/`) lives correctly inside this ticket folder, also confirmed not gitignored.
+
+**Ownership-ledger update for F3b's 3 rows, final — completes the full F3 roster**: svg/1.1, jpg/jfif-1.01, and tiff/6.0 are now **all diff/mutation/absorb-complete per this ticket's recipe, real `cargo test`-confirmed green (883/0 whole-crate), S-8 policy-clean (0 real-or-stale breaches across all 4 rules)** — same bar as every other closed row in this ticket. **All 7 of F3's originally-planned artifacts (gif/87a, gif/89a, png/1.2, md/commonmark, dxf/r12, svg/1.1, jpg/jfif-1.01, tiff/6.0 — 8 standards across 7 artifacts) are now fully closed.** No open rows remain from the F3 wave (F3 proper + this F3b mop-up together). Remaining open work in this ticket's overall program is whatever F4/F5/F6 (gltf/pdf/step/ifc/docx, xlsx/pptx/bcf/dwg, and the deferred facet-mirror-only follow-ups png/gif/svg-snapshot flagged) still cover — out of this closer's own scope.
+
+## F4 (fan-out wave, gltf/pdf/step/ifc/docx) — closed 2026-08-11
+
+**Roster**: gltf (2.0), pdf (1.4 + 1.7), step (ap214), ifc (standard `4` only — `2x3` explicitly
+out of scope, see below), docx (ecma-376) — 5 fan-out agents (1 per artifact, pdf covering both
+its standards), 1 verify agent (`f4-verify-report.md`), this C4 closer.
+
+**Per-artifact completion** (all 5/6 standards), independently corroborated by the F4 verify
+agent against disk/`cargo test`, not taken on trust: real handcrafted sparse `XDiff` (zero
+`snapshot: Option<XSnapshot>` full-replace struct field in any diff file — only doc-comment
+mentions of the deleted shape remain), `impl DiffAlgebra<XSnapshot> for XDiff` present for every
+standard, named-variant mutation enums with handcrafted per-variant `diff()`/`inverse()` (never
+apply-and-capture), and a `field_sweep`-named law test present and passing for every standard.
+**gltf** killed `GltfSnapshot.document: serde_json::Value` entirely, replacing it with a fully
+typed `GltfDocument` covering every glTF 2.0 top-level object, verified against the real
+271-mesh/1095-accessor metabolism `.glb` fixture. **pdf** rewrote both standards' diffs from the
+banned op-slot template to real sparse recursive diffs over the existing object-graph model
+(1.7) and the minimal `PageDoc` model (1.4), verified against the real ~6.3MB bachelor-thesis
+fixture; a real pre-existing decode bug (lossy-UTF8 corruption of raw deflate stream bytes) was
+found and fixed as a side effect of 1.4's own `codec_retention_law` test. **step** replaced its
+`document: Part21Document`-shaped snapshot (STEP's own worst-offender copy-paste-type defect)
+with a typed ISO 10303-21 model (`StepHeader`/`StepEntity`/`StepValue`), keeping the shared
+Part-21 tokenizer as a genuinely shared low-level substrate. **ifc** fixed the identical, more
+severe instance of the same defect for standard `4` (`IfcSnapshot.document` was literally
+`step::engine::part21::Part21Document` verbatim) with its own `IfcValue`/`IfcEntity`/`IfcHeader`
+model; standard `2x3` was out of scope for F4 and still has the original defect (see below).
+**docx** extended its snapshot from shallow paragraphs/runs to a full block tree (tables, styles,
+raw-XML retention for unmodeled properties) while continuing to reuse zip's real `OpcPackage`
+directly (zero reimplementation) — a real OPC relative-target relationship bug was found and
+fixed while wiring the new `styles.xml` part.
+
+**Full-crate gate — this closer's own fresh run: 965 passed, 0 failed, 0 ignored** (`cargo test
+-p semio-s-plugin-stdio --lib`, no filter) — matches the independent F4 verify report's own
+number exactly, up from F3b's 883/0 exit state by the 82 net tests these 5 artifacts' rewrites
+add. Per-artifact filter, independently re-run by this closer: `artifacts::gltf` → 35/0,
+`artifacts::pdf` → 131/0, `artifacts::step` → 91/0, `artifacts::ifc` → 62/0, `artifacts::docx` →
+45/0.
+
+**Policy shrink (`bun ./📜️script.ts policy`, the 4 S-8 rules), scoped to gltf/pdf/step/ifc/docx**:
+cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly. Before pruning:
+**60 breaches, every one `-stale-` (satisfied but still allowlisted), zero real** — 6
+diff-algebra (gltf, ifc/4, pdf/1.4, pdf/1.7, step, docx — one each), 6 field-sweep (same 6), 48
+grammar-honesty (ifc/4 ×6 — snapshot facet only, diff/mutations correctly left allowlisted as a
+documented deferred gap; step ×6 — one `.protocol.semio`+`.grammar.semio` pair per facet,
+remainder correctly left allowlisted matching zip's own established precedent; pdf/1.7 ×17 — 1.4
+correctly 0 stale, its grammar leaves were explicitly left as placeholder per the brief's
+"main target" triage; gltf ×19 — every facet × every leaf kind; docx ×0 — its own report
+explicitly left grammar leaves untouched this wave, correctly still allowlisted). `facet-mirror-
+drift` produced **zero breach entries of either kind** for all 5 — the field-name-substring
+heuristic did not confirm zero-drift for gltf/pdf/step/ifc despite their own reports' claims of
+complete facet mirrors, so those allowlist entries were **left fully untouched** (same
+don't-trust-the-self-report discipline F3b's closer used on tiff); docx's own report explicitly
+didn't touch facet mirrors this wave, consistent with 0 stale there too. Pruned exactly the 60
+confirmed-stale entries from `POLICY_DIFF_ALGEBRA_ALLOWLIST` (6), `POLICY_FIELD_SWEEP_ALLOWLIST`
+(6), and `POLICY_GRAMMAR_HONESTY_ALLOWLIST` (48) — one accidental double-match caught and handled
+during pruning (the diff-algebra and facet-mirror-drift allowlists share identical literal key
+strings for these 5 artifacts, e.g.
+`"stdio/ifc/standards#4-subsets-any-schema-diff-component"` appears verbatim in both arrays;
+scoped each removal to its own array's `[`...`]);` span so only the intended array was edited).
+**After pruning, re-ran `bun ./📜️script.ts policy` and re-checked the freshly regenerated breach
+cache: 0 breaches, real or stale, for all 4 S-8 rules across gltf/pdf/step/ifc/docx** (excluding
+ifc's untouched `2x3` sibling standard, pre-existing state, not part of F4). Also swept every
+prior wave's own fan-out reports for unaddressed "should be pruned"/"stale" mentions per the
+brief's instruction: found one (`f3b-tiff-report.md`'s facet-mirror-drift claim), already
+investigated and deliberately left in place by `f3b-closer-report.md` with documented reasoning —
+not an oversight. Cross-checked via a repo-wide query of the regenerated breach cache for
+`-stale-` entries across all 4 S-8 rules: **zero**, confirming every prior wave's closer (F1, F2,
+F3, F3b) and this one left their allowlists fully shrunk. `policy_shrink_confirmed: true`.
+Full-crate `cargo test` re-run clean after the `📜️script.ts` edits (965/0, unchanged — expected,
+TypeScript-tooling-only allowlist edits with zero Rust surface).
+
+**`glue_edits: []`** — no `glue.rs`/`script.ts` mounts were needed by any of the 5 fan-out
+reports or the verify report; all real work landed inside already-mounted
+`🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations}/🦀️component.rs` + sibling `⚙️engine`/`🏗️builder`/
+`🧐️analyzer`/facet/grammar leaves per S2's Task 1 resolution. One deferred (not urgent) design
+note from docx: `DocxOpcDiff` and its 4 sibling diff types currently live inside docx's own
+`🔺️diff/🦀️component.rs` rather than `zip/📦️opc/🦀️component.rs` (docx's ownership boundary didn't
+reach that file) — future consolidation once xlsx/pptx/bcf need the same OPC diff shape, not
+actioned this wave.
+
+**`git check-ignore`**: no new directories were created by any F4 agent. The only untracked paths
+under `🗿️artifacts/{🧊️gltf,📄️pdf,📐️step,🏗️ifc,📜️docx}/**` are pre-existing deliverables from the
+separate, now-closed sibling ticket `26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES`
+(pdf's `✳️a`/`✳️e`/`✳️h`/`✳️ua`/`✳️vt`/`✳️x`, step's `✳️cc1`–`✳️cc6` + `⚙️engine/🪜️ladder`, docx's
+`✳️strict`/`✳️transitional`, ifc's whole `2x3` standard, one `🔣️component.json` subset-registry
+file per artifact) — none created or modified by F4. `git check-ignore -v` confirms all of them
+match only the `.gitignore` line-179 *negation* rule (`!**/🔖️*/**`, explicitly trackable, not
+actually ignored; `git status --porcelain` independently shows them as plain `??` untracked, not
+silently absent). No `.gitignore` action needed.
+
+**Residual defect, flagged not fixed (out of F4's assigned scope)**: ifc's **`2x3` standard**
+still has the original W0-flagged worst-offender pattern — its `IfcSnapshot`/diff/mutation
+structs directly store/import `step::engine::part21::Part21Document`/`Part21Header`/
+`Part21Instance`/`Part21Value` as their own persisted types, the exact defect standard `4` fixed
+this wave. F4's brief scoped ifc to standard `4` only; `2x3` was never assigned to any F4 agent.
+Confirmed via the breach cache: `2x3`'s grammar-honesty entries fire as genuine (non-stale, "low"
+priority) breaches, not allowlisted — pre-existing, untouched by F4, not a regression. Flagged
+for the orchestrator to decide whether `2x3` needs its own future wave.
+
+**Ownership-ledger update for F4's 5 rows**: gltf/2.0, pdf/1.4, pdf/1.7, step/ap214, and ifc/4 +
+docx/ecma-376 are now **all diff/mutation/absorb-complete per this ticket's recipe, real `cargo
+test`-confirmed green (965/0 whole-crate), S-8 policy-clean (0 real-or-stale breaches across all
+4 rules)** — same bar as every other closed row in this ticket. ifc/2x3 remains open (out of
+scope, see above). Remaining open work in this ticket's overall program is whatever F5/F6
+(xlsx/pptx/bcf/dwg, the deferred facet-mirror-only follow-ups, `DiffCodec` for every artifact,
+and ifc/2x3 if assigned) still cover — out of this closer's own scope.
+
+Full report: `f4-closer-report.md` in this ticket folder.
+
+Full report: `f3b-closer-report.md` in this ticket folder.
+
+## F5 (fan-out wave, xlsx/pptx/bcf/dwg) — closed 2026-08-11 — LAST per-artifact fan-out wave, all 31 standards now schema-complete
+
+**Roster**: xlsx (ecma-376), pptx (ecma-376), bcf (2.1), dwg (ac1018 + ac1024) — 4 fan-out agents
+(1 per artifact, dwg covering both its standards), 1 verify agent (`f5-verify-report.md`), this C5
+closer.
+
+**Per-artifact completion** (all 4/5 standards), independently corroborated by the F5 verify agent
+against disk/`cargo test`, not taken on trust: real handcrafted sparse `XDiff` (zero
+`snapshot: Option<XSnapshot>` full-replace struct field in any diff file — only doc-comment
+mentions of the deleted shape remain), `impl DiffAlgebra<XSnapshot> for XDiff` present for every
+standard, named-variant mutation enums with handcrafted per-variant `diff()`/`inverse()` (never
+apply-and-capture), and a `field_sweep`-named law test present and passing for every standard.
+**xlsx** redesigned its cell model from eagerly-resolved A1-string text to a real typed
+`(row,col)`/`XlsxCellValue{Number,SharedString(idx),InlineString,Boolean,Formula,Empty}` union with
+an explicit `shared_strings: Vec<String>` SST field (the #1 xlsx decode gotcha, previously collapsed
+away). **pptx** un-flattened its slide model — `PptxShape{TextBox,Picture,Placeholder,Other}` real
+per-shape variants replacing the old paragraphs-concatenated-across-every-shape shape, the exact W0
+defect fixed. **bcf** replaced a shallow flat-`Vec` reconciled-view stub with the full completeness
+target (guid-keyed topics/comments/viewpoints, a real `BcfCamera`/`BcfComponents`/`BcfColoring`
+visualization-info model, a `Priority`-as-attribute→element spec-accuracy fix) atop its own simple
+package wrapper (bcfzip has no OPC apparatus, so — per the brief's own documented fallback — it does
+NOT reuse `zip::opc`, unlike docx/xlsx/pptx). **dwg** gave both standards a real diff/mutations
+layer within their existing, previously-established honest decode boundaries: ac1024 kept its real
+D1/D2 (file-header decrypt, section location, LZ77-variant decompression — confirmed still green on
+the 145KB `architectural.dwg` fixture) with 2 new real header fields
+(`maintenance_version`/`codepage`, externally verified against LibreDWG's own `header.spec` and
+cross-checked byte-for-byte against the real fixture); ac1018 stayed frozen at its Decision #5
+scope (no decode parity attempted, as instructed) but gained the same schema-layer treatment, plus
+a real pre-existing bug fix (ac1018's own `diff`/`mutations` files had been silently importing
+ac1024's canonical type via the shared top-level re-export the whole time — harmless while both
+standards shared a generic template, a hard compile error once ac1018 got its own vocabulary; fixed
+by repointing to ac1018's own standard-local types).
+
+**Full-crate gate — this closer's own fresh run: 1013 passed, 0 failed, 0 ignored** (`cargo test -p
+semio-s-plugin-stdio --lib`, no filter) — matches the independent F5 verify report's own number
+exactly, up from F4's 965/0 exit state by the 48 net tests these 4 artifacts' rewrites add.
+Per-artifact filter, independently re-run by this closer: `artifacts::xlsx` → 41/0,
+`artifacts::pptx` → 48/0, `artifacts::bcf` → 16/0, `artifacts::dwg` → 31/0 (both standards
+combined).
+
+**Policy shrink (`bun run ./📜️script.ts policy`, the 4 S-8 rules), scoped to xlsx/pptx/bcf/dwg**:
+cross-checked the regenerated `.🦑️repo/⚡️cache/breaches/compose.json` directly. Before pruning: **10
+breaches, every one `-stale-` (satisfied but still allowlisted), zero real** — 5 diff-algebra
+(pptx, bcf, xlsx, dwg/ac1018, dwg/ac1024 — one each), 5 field-sweep (same 5). `grammar-honesty` and
+`facet-mirror-drift` produced **zero breach entries of either kind** for all 4 artifacts (every
+fan-out report explicitly left grammar/facet leaves untouched this wave, consistent with every
+prior wave's own documented deferral). Pruned exactly the 10 confirmed-stale entries — both
+`POLICY_DIFF_ALGEBRA_ALLOWLIST` and `POLICY_FIELD_SWEEP_ALLOWLIST` are now **fully empty `Set`s**.
+
+**Full 31-standard sweep (this wave's specific mandate, being the last fan-out wave)**: re-ran
+policy after pruning and queried the freshly regenerated breach cache **repo-wide**, all 4 S-8
+rules: `diff-algebra` → **0 stale, 0 real**; `field-sweep-presence` → **0 stale, 0 real**;
+`grammar-honesty` → 0 stale, 21 real (**all `ifc/2x3`**, a pre-existing, never-assigned-to-any-wave
+defect F4's closer already flagged, confirmed still the only source); `facet-mirror-drift` → 0
+stale, 3 real (same, all `ifc/2x3`). **Every one of this ticket's 31 standards now has a real
+`impl DiffAlgebra` and a real passing `field_sweep` test — both allowlists are empty, nothing left
+to prune, ever, for these 2 rules.** Swept every prior wave's own fan-out reports for unaddressed
+"should be pruned"/"stale" mentions: found the same single hit F4's closer already resolved
+(`f3b-tiff-report.md`, deliberately left in place by `f3b-closer-report.md`) — nothing new missed
+across F1–F5. `policy_shrink_confirmed: true`. Full-crate `cargo test` re-run clean after the
+`📜️script.ts` edits (1013/0, unchanged — TypeScript-tooling-only allowlist edits).
+
+**`glue_edits: []`** — no `glue.rs` mount was needed by any of the 4 fan-out reports or by this
+closer; all real work landed inside already-mounted `🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations}/
+🦀️component.rs` + sibling `⚙️engine`/`🏗️builder`/`🧐️analyzer` leaves per S2's Task 1 resolution.
+Three deferred (not urgent) `glue_followup` design notes reviewed, none actioned this wave (same
+"future consolidation, not this closer's mandate" call F4's closer made for docx's identical note):
+`XlsxOpcDiff`/`PptxOpcDiff` (3rd/4th copies of docx's own OPC-diff shape, still living in each
+artifact's own `🔺️diff` file rather than `zip::opc`); bcf's own copy of the generic
+`NamedTripleDiff<K,D,T>` engine (now 4 independent copies: docx, bcf, xlsx, pptx); dwg ac1018's
+`⚙️engine`/`🧐️analyzer`/`🏗️builder`/`🎹️composer`/`🚪️io` subtree still importing ac1024's canonical
+types rather than its own (this closer's own read: consistent with Decision #5's "frozen shim,
+delegate operational plumbing" framing, not a contradiction — not re-flagged as an open defect, a
+future targeted pass can start from this closer's reasoning instead of re-litigating it).
+
+**`git check-ignore`**: no new directories were created by any F5 agent. The only untracked paths
+under `🗿️artifacts/{📕️xlsx,🎞️pptx,💬️bcf,🖊️dwg}/**` are pptx's/xlsx's own `✳️strict`/`✳️transitional`
+subset dirs (pre-existing deliverables from the separate, now-closed sibling ticket
+`ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES`, matching docx's own identical pattern from F4) plus
+one stray `🔣️component.json` scaffold file per standard (same pre-existing-scaffold pattern every
+prior closer since F2 has found and cleared). `git check-ignore -v` confirms all 9 match only the
+`.gitignore` line-179 *negation* rule (`!**/🔖️*/**`, explicitly trackable, not actually ignored). No
+`.gitignore` action needed.
+
+**Ownership-ledger update for F5's 4 rows**: xlsx/ecma-376, pptx/ecma-376, bcf/2.1,
+dwg/ac1018, and dwg/ac1024 are now **all diff/mutation/absorb-complete per this ticket's recipe,
+real `cargo test`-confirmed green (1013/0 whole-crate), S-8 policy-clean (0 real-or-stale breaches
+across all 4 rules)** — same bar as every other closed row in this ticket. **F5 is the last of the
+5 originally-planned per-artifact fan-out waves — all 31 standards this program set out to cover
+are now schema-complete.** ifc/2x3 remains the sole open row, out of scope for every wave to date
+(added by a separate sibling ticket after this program's original 31-standard count was fixed, never
+assigned to F1–F5).
+
+### Final summary table — all 31 standards, pulled from this file's own F1–F5 ledger entries
+
+| # | Artifact | Standard | Closed by | Tests (own filter) |
+|---|---|---|---|---|
+| 1 | 💾️binary | raw | F1 | part of 187/0 |
+| 2 | 📄txt | utf-8 | F1 | part of 187/0 |
+| 3 | 🔣️json | rfc8259 | F1 | part of 187/0 |
+| 4 | 📰xml | 1.0 | F1 | part of 187/0 |
+| 5 | 📊️csv | rfc4180 | F1 | part of 187/0 |
+| 6 | 🗜️deflate | rfc1950 | F1 | part of 187/0 |
+| 7 | 🎒️zip | 2.0 | F1 | part of 187/0 |
+| 8 | 🟪️stl | ascii | F2 | 21/0 |
+| 9 | 🧊️obj | 3.0 | F2 | 17/0 |
+| 10 | ☁️ply | 1.0 | F2 | 23/0 |
+| 11 | ☁️las | 1.0 | F2 | 21/0 |
+| 12 | 🖼️bmp | v3 | F2 | 14/0 |
+| 13 | 🎞️gif | 87a | F3 mop-up | part of 55/0 |
+| 14 | 🎞️gif | 89a | F3 mop-up | part of 55/0 |
+| 15 | 📷️png | 1.2 | F3 | 22/0 |
+| 16 | 📝️md | commonmark | F3 | 24/0 |
+| 17 | 🖊️dxf | r12 | F3 mop-up | 13/0 |
+| 18 | 🎨️svg | 1.1 | F3b | 58/0 |
+| 19 | 📷️jpg | jfif-1.01 | F3b | 29/0 |
+| 20 | 🖼️tiff | 6.0 | F3b | 29/0 |
+| 21 | 🧊️gltf | 2.0 | F4 | 35/0 |
+| 22 | 📄️pdf | 1.4 | F4 | part of 131/0 |
+| 23 | 📄️pdf | 1.7 | F4 | part of 131/0 |
+| 24 | 📐️step | ap214 | F4 | 91/0 |
+| 25 | 🏗️ifc | 4 | F4 | 62/0 |
+| 26 | 📜️docx | ecma-376 | F4 | 45/0 |
+| 27 | 📕️xlsx | ecma-376 | **F5** | 41/0 |
+| 28 | 🎞️pptx | ecma-376 | **F5** | 48/0 |
+| 29 | 💬️bcf | 2.1 | **F5** | 16/0 |
+| 30 | 🖊️dwg | ac1018 | **F5** | part of 31/0 |
+| 31 | 🖊️dwg | ac1024 | **F5** | part of 31/0 |
+
+**All 31/31 standards closed.** `cargo test -p semio-s-plugin-stdio --lib` (whole crate, this
+closer's own fresh run): **1013 passed, 0 failed**. `ifc/2x3` (a 32nd standard added by a separate,
+unrelated sibling ticket after this program's scope was fixed) remains the only open row anywhere
+in this ticket's schema-overhaul ledger — flagged to the orchestrator by F4's closer, re-confirmed
+still open and still out of every wave's assigned roster by this closer's own full policy sweep
+(§ above). This is the primary input for F6 (op-codec) wave planning: every standard now has a real
+snapshot/diff/mutations triad to build a `DiffCodec`/wire-serialization layer on top of, plus 4
+deferred `glue_followup` consolidation notes (OPC-diff-types hoist ×2, `NamedTripleDiff` engine
+hoist, dwg ac1018 import-boundary decision — see this section's own `glue_edits` paragraph above)
+that a future targeted pass (not necessarily F6 itself) should pick up.
+
+Full report: `f5-closer-report.md` in this ticket folder.
+
+## F6a (op-codec fan-out sub-wave, ply/ifc4/txt/pdf1.4/csv/step/xlsx) — closed 2026-08-11 — first op-codec sub-wave of F6
+
+**Roster**: `☁️ply` 1.0, `🏗️ifc` 4 (not 2x3, out of scope), `📄txt` utf-8, `📄️pdf` 1.4 (not 1.7, out of
+scope), `📊️csv` rfc4180, `📐️step` ap214, `📕️xlsx` ecma-376 — 7 fan-out agents (1 per artifact/standard),
+1 verify agent (`f6a-verify-report.md`), this C6a closer. Precedes this sub-wave: a pilot (not tracked
+in this file until now) that already landed `💾️binary`/`🎞️gif 89a`/`🎨️svg 1.1` and produced
+`f6-recon-report.md` (the authoritative spec for every F6 fan-out agent, incl. this wave's 7).
+
+**Scope of F6 (distinct from F1-F5 above)**: F1-F5 built the snapshot/diff/mutation *type* triad
+(schema-complete per artifact). F6 builds the *wire codec* layer on top — `protocol::DiffCodec` for
+each artifact's `XDiff` type and `protocol::OpText`/`protocol::OpBinary` for its `XMutation` type,
+replacing the placeholder `serde_json`-based stubs every one of these 7 files still had.
+
+**Per-artifact classification** (STEP 1 of `f6-recon-report.md` §9, every one independently verified
+by actually adding the derive attributes and reading real `cargo check` errors — never trusted from
+the recon's own heuristic §8 table, which was a single-file grep sweep and got several rows wrong):
+
+| Artifact | Standard | Diff path | Mutation path | Real blocker (if hand-roll) |
+|---|---|---|---|---|
+| ☁️ply | 1.0 | hand-roll | hand-roll | `PlyProperty`/`PlyValue` data-carrying enums in the snapshot tree (§3a) — recon's own "DERIVE probable" guess was wrong |
+| 🏗️ifc | 4 | hand-roll | hand-roll | `IfcValue` data-carrying enum, directly and transitively reachable from both sides (§3a) — recon's own "DERIVE probable" guess was wrong |
+| 📄txt | utf-8 | **derive** | **derive** | none — matched the recon's own guess exactly, zero hand-rolling needed |
+| 📄️pdf | 1.4 | **derive** | **derive** | none — matched the recon's own guess; 1.4's `PdfSnapshot`/`PageDoc` tree has no `PdfValue` enum (that's 1.7's, out of scope) |
+| 📊️csv | rfc4180 | hand-roll | hand-roll | Diff: `Option<Vec<Option<CsvFieldDiff>>>` (`Vec`-wrapped tri-state, no blanket `DslField` for `Option<T>`, §3b-adjacent). Mutation: a genuine `dsl_derive` macro-hygiene bug — any variant field literally named `record` shadows the codegen's own `record` accumulator variable (a NEW failure mode beyond recon's §3a/§3b, flagged for framework awareness, not fixed — `dsl_derive` is out of this ticket's ownership) |
+| 📐️step | ap214 | hand-roll | hand-roll | `StepValue` data-carrying enum, directly and transitively reachable from both sides (§3a) |
+| 📕️xlsx | ecma-376 | hand-roll | hand-roll | `XlsxCellValue` data-carrying enum (§3a) + `NamedTripleDiff<K,D,T>`, a generic collection type with no `DslField` impl (a second, independent structural blocker) |
+
+Every hand-roll used §5's shared grammar template (bracket-depth-aware `split_top_level`, hex for
+strings/bytes, `[0]`/`[1,x]` for `Option<T>`, `[removed];[modified];[added]` collection triples,
+single-uppercase-letter enum tags, space-separated `name=value`/`keyword arg=value` top-level lines,
+`encode_*` = the printed text bytes verbatim). Every derive used cascading
+`#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslScalar)]` on nested types then `dsl::DslDiff`/`dsl::DslOps`
+on the top-level type, followed by the standard `OpText`/`OpBinary` wrapper (`DslOps` never emits
+those itself, per P6 — every mutation side, derived or not, ends with a handwritten `OpText`/`OpBinary`
+impl; "derive" in the table above means the wrapper is boilerplate-only, no custom grammar).
+
+**One real bug found and fixed in-flight** (xlsx, self-corrected by its own fan-out agent before this
+closer ran): the first `diff_codec_text_binary_roundtrip_law` run silently dropped a legitimate
+empty-string OPC relationship-owner key (`""`) because every `dec_*` list-splitter chained a defensive
+`.filter(|s| !s.is_empty())` after `split_top_level` — harmless for "0 items" (already handled by
+`split_top_level`'s own empty-input short-circuit) but actively wrong for "1+ items, one of them
+`""`". Fixed by removing all 12 occurrences across both xlsx files. Every earlier-run report in this
+ticket folder (ply/ifc4/txt/pdf1.4/csv/step) that shows a whole-crate run with "1032 passed, 1 failed"
+is this same xlsx bug caught mid-flight by a concurrently-running sibling agent, not a regression any
+of those 6 artifacts caused — confirmed by this closer's own independent full-crate re-run below,
+taken after xlsx's fix landed, showing 0 failures.
+
+**Full-crate gate — this closer's own fresh run**: `cargo test -p semio-s-plugin-stdio --lib` (no
+filter) → **1033 passed, 0 failed, 0 ignored, 0 measured, 0 filtered out**, finished in 7.46s. Matches
+the independent F6a verify agent's own number exactly (`f6a-verify-report.md`). Per-artifact filtered
+counts, cross-checked against the verify report (not re-run individually by this closer — the verify
+agent already did so scoped to exactly the standard in question, excluding sibling standards under the
+same artifact directory that are out of scope): ply 25/0, ifc/v4 19/0, txt 21/0, pdf/v1_4 23/0, csv
+19/0, step 93/0, xlsx 43/0 — every one includes both mandatory law tests
+(`diff_codec_text_binary_roundtrip_law`, `op_text_binary_roundtrip_law`), zero failures anywhere.
+
+**Policy shrink (`bun ./📜️script.ts policy`, `dsl-migration/diff-completeness` rule, stdio-scoped)**:
+this closer's own fresh run — **22 stdio breaches remain** (down from the recon's §7 baseline of 28
+"remaining before this sub-wave"). Verified precisely, not just by the summary count: grepped the
+full breach listing for every one of this wave's 7 artifact/standard paths (`☁️ply/1.0`,
+`🏗️ifc/4` — NOT `2x3`, `📄txt/utf-8`, `📄️pdf/1.4` — NOT `1.7`, `📊️csv/rfc4180`, `📐️step/ap214`,
+`📕️xlsx/ecma-376`) — **zero matches for any of the 7**, confirming every one's new `DiffCodec` impl
+(hand-rolled or `dsl::DslDiff`-derived) is real enough to satisfy the check's literal-text grep
+(`content.includes("dsl::DslDiff") || content.includes("DiffCodec for")`, `📜️script.ts:3185-3205`).
+The observed 22 (not the naively-expected 28−7=21) is **not a shortfall** — it's `21` (the official,
+recon-tracked count) **+ 1** (`🏗️ifc/2x3`, the pre-existing 32nd standard added by the unrelated sibling
+ticket `ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES`, explicitly out of scope for every wave to date
+per F5's closer's own note above, still un-migrated, unrelated to this wave's work). Full raw policy
+output saved (ticket-folder scratch, `.txt`): `f6a-closer-policy-full.txt`. Remaining 22 stdio breaches
+(for the next op-codec sub-wave to pick up): `☁️las`, `🎒️zip`, `🎞️gif 87a`, `🎞️pptx`, `🏗️ifc 2x3`,
+`💬️bcf`, `📄️pdf 1.7`, `📜️docx`, `📝️md`, `📰xml`, `📷️jpg`, `📷️png`, `🔣️json`, `🖊️dwg ac1018`,
+`🖊️dwg ac1024`, `🖊️dxf`, `🖼️bmp`, `🖼️tiff`, `🗜️deflate`, `🟪️stl`, `🧊️gltf`, `🧊️obj`.
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST` (`📜️script.ts:2304`) untouched by any of the 7 fan-out agents or
+this closer, confirmed still zero stdio entries — every one of the 7 breaches disappeared on its own
+merits, not via allowlisting, matching the mission's own "zero stdio entries, for real" goal.
+
+**`glue_followup: []`** — none of the 7 fan-out reports flagged a need for a new `glue.rs` mount (F6's
+op-codec work lands entirely inside already-mounted `🧬️schema/{🔺️diff,🧬️mutations}/🦀️component.rs`
+files, same leaves F1-F5 already wired). `📦️glue.rs` and `📜️script.ts` were both read-only for every
+one of the 7 fan-out agents (confirmed via each report's own "no shared files touched" section) and
+were not edited by this closer either — the large pending diffs `git status` currently shows on both
+files belong entirely to the separate, concurrently-active `ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES`
+sibling ticket (confirmed: `git diff` on `glue.rs` shows only step's `cc1`-`cc6` subset `#[path=...]`
+mounts, none of this wave's 7 artifacts' op-codec files, which don't need new mounts at all since they
+extend files already `#[path=...]`-mounted by F1-F5).
+
+**`git check-ignore`**: no new directories were created by any of the 7 fan-out agents. The untracked
+paths seen under this wave's own artifact dirs (`✳️a`/`✳️x` under pdf/1.4, `✳️cc1`-`✳️cc6` under
+step/ap214, `✳️strict`/`✳️transitional` under xlsx/ecma-376, plus stray `🔣️component.json` scaffolds
+per standard) are the same pre-existing sibling-ticket scaffold pattern every closer since F2 has found
+and correctly left alone — none of them were touched or need to be.
+
+**Ownership-ledger update for F6a's 7 rows**: ply/1.0, ifc/4, txt/utf-8, pdf/1.4, csv/rfc4180,
+step/ap214, and xlsx/ecma-376 are now **op-codec-complete** (real `protocol::DiffCodec` +
+`protocol::OpText`/`protocol::OpBinary`, no `serde_json` stub remaining anywhere in any of the 14
+files), real `cargo test`-confirmed green (1033/0 whole-crate), policy-clean for
+`dsl-migration/diff-completeness` (0 of the 7 present in the breach list). **24 of 31 official standards
+remain for future op-codec sub-waves** (28 minus this wave's 7 — `🏗️ifc/2x3`, the 32nd, is separately
+tracked and was never part of the 31), listed in full in the "Remaining 22 stdio breaches" paragraph
+above (21 of those 22 are official-scope; `ifc/2x3` is the extra).
+
+Full report: `f6a-closer-report.md` in this ticket folder. Per-artifact reports: `f6-ply-report.md`,
+`f6-ifc-4-report.md`, `f6-txt-report.md`, `f6-pdf-1.4-report.md`, `f6-csv-report.md`,
+`f6-step-report.md`, `f6-xlsx-report.md`. Verify report: `f6a-verify-report.md`. Recon (spec for all
+of F6): `f6-recon-report.md`.
+
+## F6b (op-codec fan-out sub-wave, dwg ac1018/ac1024/bmp/stl/las/gif87a/zip) — closed 2026-08-11 — second op-codec sub-wave of F6
+
+**Roster**: `🖊️dwg` ac1018, `🖊️dwg` ac1024, `🖼️bmp` v3, `🟪️stl` ascii, `☁️las` 1.0, `🎞️gif` 87a,
+`🎒️zip` 2.0 — 7 fan-out agents (1 per artifact/standard), 1 verify agent (`f6b-verify-report.md`),
+this C6b closer. Same scope definition as F6a: wire-codec layer (`protocol::DiffCodec` +
+`protocol::OpText`/`protocol::OpBinary`) on top of the snapshot/diff/mutation type triad F1-F5
+already built, replacing the placeholder `serde_json`-based stubs.
+
+**Per-artifact classification** (STEP 1 independently re-verified for real by every fan-out agent,
+never trusted from the recon's own §8 heuristic table):
+
+| Artifact | Standard | Diff path | Mutation path | Real blocker (if hand-roll) |
+|---|---|---|---|---|
+| 🖊️dwg | ac1018 | **derive** | derive+wrapper | none — matched recon's own guess exactly, second artifact after `💾️binary` to land clean-derive on both sides |
+| 🖊️dwg | ac1024 | **derive** | derive+wrapper | none — matched recon's own guess; real 145KB `architectural.dwg` fixture confirmed still round-trips losslessly (`codec_retention_law` green, untouched by this wave's derive additions) |
+| 🖼️bmp | v3 | **derive** | derive+wrapper | none — matched recon's own guess exactly |
+| 🟪️stl | ascii | hand-roll | hand-roll | **recon table said "DERIVE (probable)" — wrong.** A third, previously-undocumented derive blocker: nested fixed-arity arrays (`[[f64;3];3]`) compile clean under the derive but are NOT print/parse round-trip-safe at runtime — the shared `dsl` crate's `Shape::Tuple` printer flattens every nesting level into one indistinguishable comma-join, and the parser never bounds a nested tuple's comma-consumption to its own arity, greedily eating the outer tuple's remaining values too (`"tuple expects 3 elements, found 9"`, a real reproduced runtime failure). Traced to `🧰️framework/…/🗣️dsl/🧬️schema/🦀️component.rs`'s `print_shape`/`parse_shape`. Out of ownership boundary to fix (shared framework file) — documented via doc comment citation on `StlTriangle`/`StlDiff`/`StlMutation`, not fixed. Flagging: any other artifact with a `[[T;N];M]`-shaped field will hit the same bug; no repo-wide grep for this shape was run as part of any F6 agent's scope. |
+| ☁️las | 1.0 | hand-roll | hand-roll | **Missing from the recon's §8 table entirely (31 rows, no `las` row) — gap now filled.** 3b tri-state (`gps_time`/`rgb`) PLUS a fourth, previously-undocumented blocker class: bare tuples (`(u16,u16,u16)`, `(f64,f64,f64)`) have no blanket `impl DslField for (A,B,...)` anywhere in the `dsl` crate (same root cause family as 3b — a missing blanket impl — different type shape). Both sides hand-rolled cleanly, 23/23 scoped tests, both mandatory law tests present and green. |
+| 🎒️zip | 2.0 | hand-roll | **derive**+wrapper | Diff: 3b tri-state (`ZipEntryDiff::unix_mtime: Option<Option<i64>>`), zip's only tri-state field — matches recon's row 18 guess exactly. Mutation: recon table only classifies the Diff side per-standard (its own stated scope) — Mutation side independently verified DERIVE-clean, zero data-carrying enum anywhere in its reachable tree. |
+| 🎞️gif | 87a | hand-roll | **derive**+wrapper | Diff: 3b tri-state (`GifDiff::gct`, `GifImageDiff::lct`, both `Option<Option<GifColorTable>>`) — same split gif89a already documented. Mutation: derived clean, matching gif89a's precedent exactly. |
+
+Two genuinely new derive-blocker classes surfaced this wave, beyond the recon's own §3a (enum)/§3b
+(tri-state) taxonomy: **nested fixed-arity arrays** (stl, a real `dsl` framework bug, not fixed —
+out of every F6 agent's ownership boundary) and **bare tuples** (las, same missing-blanket-impl root
+cause as 3b, different shape). Neither fixed this wave (both are shared-framework-file findings);
+both documented with doc-comment citations at the point of use and flagged here for whoever next
+works on the `dsl` crate's `DslField`/`Shape` machinery.
+
+**Full-crate gate — this closer's own fresh run**: `cargo test -p semio-s-plugin-stdio --lib` (no
+filter) → **1047 passed, 0 failed, 0 ignored, 0 measured, 0 filtered out**, finished in ~7.7s.
+Matches the independent F6b verify agent's own number exactly (`f6b-verify-report.md`, which
+re-ran every one of the 7 scoped test suites itself AND the whole-crate suite, from its own
+uninvolved session). Per-artifact scoped counts (cross-checked against the verify report): dwg
+ac1018 12/12, dwg ac1024 18/18, bmp 16/16, stl 23/23, las 23/23, zip 40/40, gif87a 27/27 — sum 159 —
+every one includes both mandatory law tests (`diff_codec_text_binary_roundtrip_law`,
+`op_text_binary_roundtrip_law`), zero failures anywhere, zero `serde_json` stub remnants in any of
+the 14 diff/mutations files (independently re-confirmed by the verify agent via direct file
+inspection, not just report-trusting).
+
+**Policy shrink (`bun run ./📜️script.ts policy`, `dsl-migration/diff-completeness` rule,
+stdio-scoped)**: this closer's own fresh run — **15 stdio breaches remain** (down from F6a's
+closer-confirmed 22). Verified precisely: grepped the full breach listing for every one of this
+wave's 7 artifact/standard paths — **zero matches for any of the 7**, confirming every one's new
+`DiffCodec` impl (hand-rolled or `dsl::DslDiff`-derived) satisfies the check's literal-text grep.
+The drop from 22 → 15 is exactly this wave's 7 artifacts, no more, no less.
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST` (`📜️script.ts:2304`) confirmed untouched by any of the 7
+fan-out agents or this closer — grepped the allowlist's full contents for `stdio`: zero matches,
+same "zero stdio entries, for real" outcome as F6a. Remaining 15 stdio breaches (14 official-scope +
+`🏗️ifc/2x3` extra, tracked separately, never part of the 31): `🎞️pptx`, `🏗️ifc 2x3`, `💬️bcf`,
+`📄️pdf 1.7`, `📜️docx`, `📝️md`, `📰xml`, `📷️jpg`, `📷️png`, `🔣️json`, `🖊️dxf`, `🖼️tiff`, `🗜️deflate`,
+`🧊️gltf`, `🧊️obj`.
+
+**`glue_followup: []`** — none of the 7 fan-out reports flagged a need for a new `glue.rs` mount
+(same pattern as F6a — op-codec work lands entirely inside already-mounted
+`🧬️schema/{🔺️diff,🧬️mutations}/🦀️component.rs` files). `glue.rs` shows zero diff against its
+tracked baseline as of this closer's session (whatever "MM" state was visible in `git status` at
+session start resolved on its own — another concurrent session's unrelated edit). `script.ts` has a
+large pending diff, but grepped for every one of this wave's 7 artifact names: only pre-existing
+schema-id/grammar-manifest inventory churn (facet-mirror list entries, not policy-rule logic, not
+allowlist entries) that predates this closer's own session (file mtime earlier than this session's
+`policy` run) — same concurrent `ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES` sibling-ticket
+automation pattern every closer since F2 has documented and correctly left alone. Not touched by
+this closer.
+
+**`git check-ignore`**: every one of the 7 artifact trees shows a stray untracked
+`🪆️subsets/🔣️component.json` (same pre-existing scaffold pattern every closer since F2 has found),
+plus zip additionally shows an untracked `🪆️subsets/✳️iso21320/` directory. `git check-ignore -v` on
+all 8 paths confirms every one matches only the `.gitignore` negation rule `!**/🔖️*/**` — none
+actually gitignored, no action needed. Also noted: `bmp`/`stl` (and to a lesser extent `las`/`dwg`)
+show dozens of additional modified grammar-leaf facet-mirror files beyond the 3 `.rs` files each
+fan-out report lists as touched — content-inspected, none are op-codec-shaped edits, consistent with
+the same concurrent sibling-ticket regeneration pattern, not this wave's work. `zip`'s
+`⚙️engine`/`🎹️composer` files show small (4-5 line) pre-existing diffs predating this session,
+consistent with leftover uncommitted state from zip's much earlier F1 wave, not touched again here.
+
+**Ownership-ledger update for F6b's 7 rows**: dwg/ac1018, dwg/ac1024, bmp/v3, stl/ascii, las/1.0,
+zip/2.0, and gif/87a are now **op-codec-complete** (real `protocol::DiffCodec` +
+`protocol::OpText`/`protocol::OpBinary`, no `serde_json` stub remaining anywhere in any of the 14
+files), real `cargo test`-confirmed green (1047/0 whole-crate), policy-clean for
+`dsl-migration/diff-completeness` (0 of the 7 present in the breach list). **`las`'s classification
+gap — entirely missing from the recon's own §8 table — is now filled**, both sides hand-rolled, real
+substantive coverage, confirmed not silently skipped. **14 of 21 official-scope standards remain**
+for future op-codec sub-waves (28 recon baseline − F6a's 7 − F6b's 7 = 14; `🏗️ifc/2x3` is the extra,
+separately tracked, never part of the 31) — 15 total stdio breaches remaining including it, matching
+the policy count above exactly.
+
+Full report: `f6b-closer-report.md` in this ticket folder. Per-artifact reports:
+`f6-dwg-ac1018-report.md`, `f6-dwg-ac1024-report.md`, `f6-bmp-report.md`, `f6-stl-report.md`,
+`f6-las-report.md`, `f6-gif-87a-report.md`, `f6-zip-report.md`. Verify report:
+`f6b-verify-report.md`. Recon (spec for all of F6): `f6-recon-report.md`.

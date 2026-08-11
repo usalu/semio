@@ -1,6 +1,46 @@
-dialect grammar stdio.pdf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.pdf' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar pdf.1.7.diff
+extension json
+start pdf-diff
+
+; -- `PdfDiff` has no `OpText`/DiffCodec of its own yet (F6 wave, not this one) -- this grammar
+; -- describes the real `serde_json`-tagged shape every field already serializes to (matches the
+; -- sibling `🔣️component.json` schema and `🟦️component.ts` types field-for-field), NOT a
+; -- placeholder envelope. Field order is not normative (JSON object member order).
+pdf-diff = "{" ws ( diff-member ( ws "," ws diff-member )* )? ws "}"
+diff-member = "\"declaredVersion\"" ws ":" ws json-string
+            / "\"info\"" ws ":" ws pdf-info
+            / "\"pages\"" ws ":" ws pdf-pages-diff
+            / "\"objects\"" ws ":" ws pdf-objects-diff
+            / "\"trailer\"" ws ":" ws pdf-dict-diff
+
+pdf-info = "{" ws ( info-member ( ws "," ws info-member )* )? ws "}"
+info-member = ( "\"title\"" / "\"author\"" / "\"subject\"" / "\"keywords\"" / "\"creator\"" / "\"producer\"" ) ws ":" ws json-string
+
+pdf-pages-diff = "{" ws ( pages-member ( ws "," ws pages-member )* )? ws "}"
+pages-member = "\"removed\"" ws ":" ws json-int-array
+             / "\"modified\"" ws ":" ws json-array
+             / "\"added\"" ws ":" ws json-array
+
+pdf-objects-diff = "{" ws ( objects-member ( ws "," ws objects-member )* )? ws "}"
+objects-member = "\"removed\"" ws ":" ws json-array
+                / "\"modified\"" ws ":" ws json-array
+                / "\"added\"" ws ":" ws json-array
+
+pdf-dict-diff = "{" ws ( dict-member ( ws "," ws dict-member )* )? ws "}"
+dict-member = "\"removed\"" ws ":" ws json-string-array
+            / "\"modified\"" ws ":" ws json-array
+            / "\"added\"" ws ":" ws json-array
+
+; -- generic JSON productions (RFC8259 §2-§7), reused rather than restated in full -- see
+; -- `../../../../../../🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+; -- for the complete `json-text`/`value` productions this leaf assumes.
+json-string = %x22 *( %x20-21 / %x23-5B / %x5D-10FFFF / "\" ( %x22 / "\" / "/" / "b" / "f" / "n" / "r" / "t" / ( "u" hexdig hexdig hexdig hexdig ) ) ) %x22
+json-string-array = "[" ws ( json-string ( ws "," ws json-string )* )? ws "]"
+json-int-array = "[" ws ( 1*digit ( ws "," ws 1*digit )* )? ws "]"
+json-array = "[" ws ( json-object ( ws "," ws json-object )* )? ws "]"
+json-object = "{" ws ( json-string ws ":" ws json-value ( ws "," ws json-string ws ":" ws json-value )* )? ws "}"
+json-value = json-object / json-array / json-string / 1*digit / "true" / "false" / "null"
+digit = %x30-39
+hexdig = digit / %x41-46 / %x61-66
+ws = *( %x20 / %x09 / %x0A / %x0D )

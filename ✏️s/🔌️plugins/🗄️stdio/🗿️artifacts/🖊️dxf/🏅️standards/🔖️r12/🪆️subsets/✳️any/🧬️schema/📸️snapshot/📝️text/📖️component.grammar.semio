@@ -1,6 +1,21 @@
 dialect grammar stdio.dxf.snapshot
+; envelope preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble). Every DXF token is a TWO-LINE (group code,
+; value) pair. R12 has exactly four section kinds (HEADER/TABLES/BLOCKS/ENTITIES) — no
+; CLASSES/OBJECTS/thumbnail sections, those are R14+.
 root = document
-document = header body
-header = 'schema' SP 'stdio.dxf' NL
-body = payload NL?
-payload = *OCTET
+document = section* eof_tag
+section = tag0 "SECTION" NL code2 section_name NL entry* endsec_tag
+section_name = "HEADER" / "TABLES" / "BLOCKS" / "ENTITIES"
+entry = tag                                                        ; header var / table entry /
+                                                                    ; block header / entity tag,
+                                                                    ; dispatched by the codec on
+                                                                    ; group code 0/2/9 context
+tag = group_code NL value NL
+tag0 = "0" NL
+code2 = "2" NL
+group_code = ["-"] 1*DIGIT
+value = *(%x00-09 / %x0B-FF)                                       ; any octet but LF
+endsec_tag = "0" NL "ENDSEC" NL
+eof_tag = "0" NL "EOF" NL
+NL = [%x0D] %x0A

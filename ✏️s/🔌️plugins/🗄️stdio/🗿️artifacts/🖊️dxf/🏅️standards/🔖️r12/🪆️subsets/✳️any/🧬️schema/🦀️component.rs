@@ -1,5 +1,7 @@
-//! 🧬️ DxfArtifact schema — full artifact state.
+//! 🧬️ DxfArtifact schema — full artifact state (mirrors `DxfSnapshot`'s persisted fields
+//! one-for-one; see `📸️snapshot/🦀️component.rs` module docs for the full typed-model rationale).
 
+use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
 use crate::artifacts::dxf::DxfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -14,7 +16,19 @@ pub struct DxfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub tags: Vec<crate::artifacts::dxf::schema::snapshot::DxfTag>,
+    pub header_vars: Vec<DxfHeaderVar>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub tables: DxfTables,
+    #[state(persistent)]
+    #[serde(default)]
+    pub other_tables: Vec<DxfOtherTable>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub blocks: Vec<DxfBlock>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub entities: Vec<DxfEntity>,
 }
 //#endregion 🔖️Artifact
 
@@ -30,7 +44,11 @@ impl DxfArtifact {
     pub fn to_snapshot(&self) -> DxfSnapshot {
         DxfSnapshot {
             schema: self.schema.clone(),
-            tags: self.tags.clone(),
+            header_vars: self.header_vars.clone(),
+            tables: self.tables.clone(),
+            other_tables: self.other_tables.clone(),
+            blocks: self.blocks.clone(),
+            entities: self.entities.clone(),
         }
     }
 
@@ -38,14 +56,22 @@ impl DxfArtifact {
     pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            tags: snapshot.tags,
+            header_vars: snapshot.header_vars,
+            tables: snapshot.tables,
+            other_tables: snapshot.other_tables,
+            blocks: snapshot.blocks,
+            entities: snapshot.entities,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
         self.schema = snapshot.schema;
-        self.tags = snapshot.tags;
+        self.header_vars = snapshot.header_vars;
+        self.tables = snapshot.tables;
+        self.other_tables = snapshot.other_tables;
+        self.blocks = snapshot.blocks;
+        self.entities = snapshot.entities;
     }
 }
 //#endregion 🔖️Conversions

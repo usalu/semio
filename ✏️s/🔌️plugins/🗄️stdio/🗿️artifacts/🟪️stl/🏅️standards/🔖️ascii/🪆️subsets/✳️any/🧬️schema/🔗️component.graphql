@@ -1,2 +1,10 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ StlArtifact — full `stdio.stl` artifact state (mirrors `StlSnapshot`).
+type StlTriangle {
+  normal: [Float!]!
+  vertices: [[Float!]!]!
+}
+type StlArtifact {
+  schema: String! @state(class: PERSISTENT)
+  solidName: String! @state(class: PERSISTENT)
+  triangles: [StlTriangle!]! @state(class: PERSISTENT)
+}

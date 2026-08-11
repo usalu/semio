@@ -7,20 +7,19 @@
       "type": "string",
       "x-semio-state": "persistent"
     },
-    "entries": {
+    "width": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "height": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "pixels": {
       "type": "array",
       "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
+      "items": { "type": "integer" }
     }
-  }
+  },
+  "required": ["schema", "width", "height", "pixels"]
 }

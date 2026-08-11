@@ -1,3 +1,12 @@
-(* ebnf stdio.jpg snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.jpg', newline ;
+(* ebnf stdio.jpg snapshot -- semio preamble + the real JFIF byte stream hex-encoded (ITU-T
+   T.81/ISO 10918-1), not a placeholder octet blob. *)
+document = preamble, newline, payload ;
+preamble = "semio", space, "dsl", space, integer, space, "stdio.jpg" ;
+payload = { hex byte } ;                 (* hex-decodes to a real marker-segment jpeg stream *)
+jpeg stream = SOI, { segment }, app0, { segment }, sof0, { segment }, sos, entropy data, EOI ;
+SOI = "0xFF", "0xD8" ;
+EOI = "0xFF", "0xD9" ;
+segment = marker, length, body ;
+app0 = "0xFF", "0xE0", length, "JFIF", "0x00", version, units, x density, y density, thumb dims, thumb rgb ;
+sof0 = "0xFF", "0xC0", length, precision, height, width, n components, component, { component } ;
+sos = "0xFF", "0xDA", length, n scan components, scan component, { scan component }, Ss, Se, AhAl ;

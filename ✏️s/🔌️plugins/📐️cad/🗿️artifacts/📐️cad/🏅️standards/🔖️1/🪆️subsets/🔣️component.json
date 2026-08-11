@@ -1,0 +1,9 @@
+{
+  "artifact": "s.cad.cad",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained cad 1"
+    }
+  }
+}

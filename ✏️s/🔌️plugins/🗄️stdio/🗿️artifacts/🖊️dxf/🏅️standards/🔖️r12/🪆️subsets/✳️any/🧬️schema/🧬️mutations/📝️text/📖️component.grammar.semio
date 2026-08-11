@@ -1,6 +1,13 @@
 dialect grammar stdio.dxf.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.dxf' NL
-body = payload NL?
-payload = *OCTET
+root = mutation
+; wire text IS the JSON serialization of DxfMutation (protocol::OpText — serde_json),
+; tagged on "mutation" per 🦀️component.rs's enum
+mutation = "{" '"mutation"' ":" tag ("," member)* "}"
+tag = '"noMutation"' / '"setSnapshot"'
+    / '"setHeaderVar"' / '"removeHeaderVar"'
+    / '"insertLayer"' / '"removeLayer"' / '"setLayer"'
+    / '"insertStyle"' / '"removeStyle"' / '"setStyle"'
+    / '"insertLinetype"' / '"removeLinetype"' / '"setLinetype"'
+    / '"insertEntity"' / '"removeEntity"' / '"setEntity"'
+    / '"insertBlock"' / '"removeBlock"' / '"setBlock"'
+member = STRING ":" JSON_VALUE

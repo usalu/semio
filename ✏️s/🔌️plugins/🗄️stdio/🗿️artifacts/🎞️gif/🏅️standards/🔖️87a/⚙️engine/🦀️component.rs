@@ -7,7 +7,7 @@
 // 🔀️ S-6: `crate::artifacts::gif::schema` now shims to 89a (canonical) -- 87a's own engine uses
 // its own standard-local schema path directly rather than the shared root re-export.
 use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::{GifSnapshot, RasterImage}, GifArtifact};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::{mutations::GifMutation, snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot}, GifArtifact};
 use std::collections::HashMap;
 
 //#region BitIO
@@ -75,12 +75,17 @@ pub fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
         return bw.finish();
     }
     let mut current: i64 = indices[0] as i64;
+    // 🐛→✅ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: tracks
+    // whether at least one in-loop write has happened since start/the last clear code — see the
+    // `wrote_since_clear` note below the loop for why this is needed.
+    let mut wrote_since_clear = false;
     for &sym in &indices[1..] {
         let key = (current, sym);
         if let Some(&code) = dict.get(&key) {
             current = code as i64;
         } else {
             bw.write_bits(current as u32, code_size as u8);
+            wrote_since_clear = true;
             dict.insert(key, next_code);
             next_code += 1;
             if next_code > (1u32 << code_size) && code_size < 12 {
@@ -91,11 +96,31 @@ pub fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
                 dict.clear();
                 code_size = min_code_size as u32 + 1;
                 next_code = end_code + 1;
+                wrote_since_clear = false;
             }
             current = sym as i64;
         }
     }
     bw.write_bits(current as u32, code_size as u8);
+    // 🐛→✅ A real, previously-latent bug (found via this ticket's field_sweep-style test data —
+    // a plain period-2 alternating sequence, never exercised by the pre-existing pseudo-random/
+    // solid-run test suite): `lzw_decode` performs an insert-then-maybe-grow step for EVERY code
+    // it reads that has a preceding code (`prev.is_some()`) — INCLUDING the very last data code
+    // before the end code, whose insert uses (prev, first-symbol-of-this-code) same as any other.
+    // The encoder's loop only performs its matching insert+growth-check for in-loop dictionary
+    // misses, never for the trailing flush of `current` (there is no further symbol to trigger
+    // one) — so without this, the end code that follows could be written at the OLD code_size
+    // while the decoder, having just grown from that final insert, expects to read it at the NEW
+    // (one bit wider) code_size, desyncing the stream exactly at its tail. Mirroring that one
+    // decoder-side insert here (only when a prior in-loop write actually happened since the last
+    // clear — matching the decoder's own `prev.is_some()` guard) fixes it without touching the
+    // decoder or the well-tested asymmetric `>`/`>=` mid-stream growth thresholds at all.
+    if wrote_since_clear {
+        next_code += 1;
+        if next_code > (1u32 << code_size) && code_size < 12 {
+            code_size += 1;
+        }
+    }
     bw.write_bits(end_code, code_size as u8);
     bw.finish()
 }
@@ -313,57 +338,153 @@ pub fn deinterlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
     }
     out
 }
+
+/// 🪜️ Inverse of [`deinterlace_rows`] — reorders NATURAL row-major indices into the on-disk
+/// interlaced pass order for encoding. Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION:
+/// needed now that `interlace` is a real, round-trippable snapshot field (not decode-only).
+pub fn interlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
+    let mut out = vec![0u8; width * height];
+    let mut dst_row = 0usize;
+    for (start, step) in [(0usize, 8usize), (4, 8), (2, 4), (1, 2)] {
+        let mut row = start;
+        while row < height {
+            let src_off = row * width;
+            let dst_off = dst_row * width;
+            if src_off + width <= rows.len() && dst_off + width <= out.len() {
+                out[dst_off..dst_off + width].copy_from_slice(&rows[src_off..src_off + width]);
+            }
+            dst_row += 1;
+            row += step;
+        }
+    }
+    out
+}
 //#endregion Interlace
+
+//#region ColorTableConv
+/// 🔀️ `Vec<GifRgb>` <-> the byte-level `Vec<Rgb>` ([u8;3]) shape the LZW/sub-block helpers above
+/// speak — a thin, allocation-only bridge between the typed snapshot model and the byte codec.
+pub fn color_table_to_bytes(table: &GifColorTable) -> Vec<Rgb> {
+    table.colors.iter().map(|c| [c.r, c.g, c.b]).collect()
+}
+pub fn color_table_from_bytes(colors: Vec<Rgb>, sorted: bool) -> GifColorTable {
+    GifColorTable { sorted, colors: colors.into_iter().map(|[r, g, b]| GifRgb { r, g, b }).collect() }
+}
+//#endregion ColorTableConv
 
 //#region Codec87a
 /// 🔖️ GIF87a has no Graphic Control Extension, so it cannot express per-pixel transparency or
-/// animation — encoding a snapshot with any `alpha==0` pixel is a structurally-valid-but-
-/// unsupported-here input; callers that need transparency belong on the 89a standard instead.
+/// animation. Multiple images ARE spec-legal (§20 permits an arbitrary sequence of Image
+/// Descriptors) even without any extension — this encoder writes every `snap.images` entry in
+/// order. Palette indices are written exactly as stored (lossless-payload exception) — no
+/// re-quantization from pixel content happens here.
 pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
-    let img = &snap.image;
-    if img.width == 0 || img.height == 0 {
-        return Err("empty image".into());
+    if snap.width == 0 || snap.height == 0 {
+        return Err("gif87a: empty logical screen".into());
     }
-    if img.rgba.len() != (img.width as usize) * (img.height as usize) * 4 {
-        return Err("rgba length mismatch".into());
+    if snap.width > 0xFFFF || snap.height > 0xFFFF {
+        return Err("gif87a: logical screen dimensions exceed u16".into());
     }
-    if img.width > 0xFFFF || img.height > 0xFFFF {
-        return Err("gif87a: image dimensions exceed u16".into());
+    if snap.images.is_empty() {
+        return Err("gif87a: at least one image is required".into());
     }
-    let (palette, indices, transparent_index) = quantize_rgba(&img.rgba)?;
-    if transparent_index.is_some() {
-        return Err("gif87a: transparency needs a Graphic Control Extension, which GIF87a does not have — use the 89a standard".into());
-    }
-    let w = img.width as u16;
-    let h = img.height as u16;
-    let min_code_size = min_code_size_for(palette.len());
+
     let mut out = b"GIF87a".to_vec();
-    out.extend_from_slice(&w.to_le_bytes());
-    out.extend_from_slice(&h.to_le_bytes());
-    out.push(0x80 | color_table_size_field(palette.len()));
-    out.push(0); // background color index
-    out.push(0); // pixel aspect ratio
-    write_color_table(&mut out, &palette);
-    out.push(0x2C);
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&w.to_le_bytes());
-    out.extend_from_slice(&h.to_le_bytes());
-    out.push(0); // no local color table, not interlaced
-    out.push(min_code_size);
-    out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&indices, min_code_size)));
+    out.extend_from_slice(&(snap.width as u16).to_le_bytes());
+    out.extend_from_slice(&(snap.height as u16).to_le_bytes());
+    let gct_bytes = snap.gct.as_ref().map(color_table_to_bytes);
+    match &gct_bytes {
+        Some(colors) => {
+            let size_field = validated_color_table_size_field(colors.len(), "gif87a: global")?;
+            let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            out.push(0x80 | (sorted as u8) << 3 | size_field);
+        }
+        None => out.push(0),
+    }
+    out.push(snap.background_color_index);
+    out.push(snap.pixel_aspect_ratio);
+    if let Some(colors) = &gct_bytes {
+        write_color_table(&mut out, colors);
+    }
+
+    for (index, image) in snap.images.iter().enumerate() {
+        if image.width == 0 || image.height == 0 {
+            return Err(format!("gif87a: image {index} has empty dimensions"));
+        }
+        if image.width > 0xFFFF || image.height > 0xFFFF || image.left > 0xFFFF || image.top > 0xFFFF {
+            return Err(format!("gif87a: image {index} dimensions/offset exceed u16"));
+        }
+        if image.indices.len() != (image.width as usize) * (image.height as usize) {
+            return Err(format!("gif87a: image {index} indices length mismatch"));
+        }
+        let table = image.lct.as_ref().or(snap.gct.as_ref())
+            .ok_or_else(|| format!("gif87a: image {index} has no color table (neither local nor global)"))?;
+        if image.indices.iter().any(|&i| (i as usize) >= table.colors.len()) {
+            return Err(format!("gif87a: image {index} has an index past the end of its color table"));
+        }
+
+        out.push(0x2C);
+        out.extend_from_slice(&(image.left as u16).to_le_bytes());
+        out.extend_from_slice(&(image.top as u16).to_le_bytes());
+        out.extend_from_slice(&(image.width as u16).to_le_bytes());
+        out.extend_from_slice(&(image.height as u16).to_le_bytes());
+        let local_bytes = image.lct.as_ref().map(color_table_to_bytes);
+        let mut ipacked = (image.interlace as u8) << 6;
+        let min_code_size;
+        if let Some(colors) = &local_bytes {
+            let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local"))?;
+            let sorted = image.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
+            min_code_size = min_code_size_for(colors.len());
+        } else {
+            min_code_size = min_code_size_for(table.colors.len());
+        }
+        out.push(ipacked);
+        if let Some(colors) = &local_bytes {
+            write_color_table(&mut out, colors);
+        }
+        let on_disk_indices = if image.interlace {
+            interlace_rows(&image.indices, image.width as usize, image.height as usize)
+        } else {
+            image.indices.clone()
+        };
+        out.push(min_code_size);
+        out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size)));
+    }
     out.push(0x3B);
     Ok(out)
+}
+
+/// 📐️ Returns the color table's 3-bit on-disk "size" field. On-disk color tables are always a
+/// power of two (`2..=256`) — a snapshot table of any OTHER length is honestly padded with black
+/// filler entries up to that size by [`write_color_table`] (matching real encoders; a table
+/// constructed from e.g. `quantize_rgba`'s exact used-color count is rarely already a power of
+/// two). Only genuinely unrepresentable lengths (`> 256`) are a typed error.
+fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, String> {
+    if len > 256 {
+        return Err(format!("{what} color table length {len} exceeds the on-disk maximum of 256"));
+    }
+    Ok(color_table_size_field(len))
 }
 
 pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     if data.len() < 13 || &data[0..6] != b"GIF87a" {
         return Err("not a GIF87a file (bad magic)".into());
     }
-    let packed = data[10];
+    let w = u16::from_le_bytes([data[6], data[7]]) as u32;
+    let h = u16::from_le_bytes([data[8], data[9]]) as u32;
+    let screen_packed = data[10];
+    let background_color_index = data[11];
+    let pixel_aspect_ratio = data[12];
     let mut pos = 13usize;
-    let gct = if (packed & 0x80) != 0 { Some(read_color_table(data, &mut pos, packed & 0x07)?) } else { None };
+    let gct = if (screen_packed & 0x80) != 0 {
+        let sorted = (screen_packed & 0x08) != 0;
+        Some(color_table_from_bytes(read_color_table(data, &mut pos, screen_packed & 0x07)?, sorted))
+    } else {
+        None
+    };
 
+    let mut images: Vec<GifImage> = Vec::new();
     loop {
         let b = *data.get(pos).ok_or("truncated gif87a: missing trailer")?;
         match b {
@@ -371,13 +492,20 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 if pos + 10 > data.len() {
                     return Err("truncated gif87a image descriptor".into());
                 }
+                let left = u16::from_le_bytes([data[pos + 1], data[pos + 2]]) as u32;
+                let top = u16::from_le_bytes([data[pos + 3], data[pos + 4]]) as u32;
                 let iw = u16::from_le_bytes([data[pos + 5], data[pos + 6]]) as u32;
                 let ih = u16::from_le_bytes([data[pos + 7], data[pos + 8]]) as u32;
                 let ipacked = data[pos + 9];
                 let interlaced = (ipacked & 0x40) != 0;
                 pos += 10;
-                let local = if (ipacked & 0x80) != 0 { Some(read_color_table(data, &mut pos, ipacked & 0x07)?) } else { None };
-                let palette = local.as_ref().or(gct.as_ref()).ok_or("gif87a: image has no color table (neither global nor local)")?;
+                let local = if (ipacked & 0x80) != 0 {
+                    let sorted = (ipacked & 0x20) != 0;
+                    Some(color_table_from_bytes(read_color_table(data, &mut pos, ipacked & 0x07)?, sorted))
+                } else {
+                    None
+                };
+                let table = local.as_ref().or(gct.as_ref()).ok_or("gif87a: image has no color table (neither global nor local)")?;
                 let min_code_size = *data.get(pos).ok_or("truncated gif87a: missing lzw minimum code size")?;
                 pos += 1;
                 let sub = unpack_sub_blocks(data, &mut pos)?;
@@ -390,16 +518,20 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 if interlaced {
                     indices = deinterlace_rows(&indices, iw as usize, ih as usize);
                 }
-                let rgba = indices_to_rgba(&indices, palette, None);
-                return Ok(GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), image: RasterImage { width: iw, height: ih, rgba } });
+                let _ = table;
+                images.push(GifImage { left, top, width: iw, height: ih, interlace: interlaced, lct: local, indices });
             }
             0x21 => {
                 return Err("gif87a: this file uses an extension block, a GIF89a-only feature — decode it via the 89a standard instead".into());
             }
-            0x3B => return Err("gif87a: file has no image".into()),
+            0x3B => break,
             other => return Err(format!("gif87a: unexpected block introducer {other:#04x}")),
         }
     }
+    if images.is_empty() {
+        return Err("gif87a: file has no images".into());
+    }
+    Ok(GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), width: w, height: h, gct, background_color_index, pixel_aspect_ratio, images })
 }
 //#endregion Codec87a
 
@@ -457,7 +589,12 @@ impl GifEngine {
 mod tests {
     use super::*;
 
-    fn checkerboard(width: u32, height: u32) -> RasterImage {
+    /// 🧪️ Builds a real, lossless `GifImage` (LCT + indices) from a checkerboard RGBA pattern via
+    /// `quantize_rgba`/`indices_to_rgba` — those two byte-level helpers stay real and `pub` for
+    /// exactly this kind of "construct a frame from pixel content" test/tooling use, even though
+    /// `encode_gif`/`decode_gif` no longer call them (the codec now writes/reads whatever palette
+    /// + indices are already in the snapshot, never re-quantizing).
+    fn checkerboard(width: u32, height: u32) -> GifImage {
         let mut rgba = vec![0u8; (width * height * 4) as usize];
         for y in 0..height {
             for x in 0..width {
@@ -469,7 +606,13 @@ mod tests {
                 rgba[o + 3] = 255;
             }
         }
-        RasterImage { width, height, rgba }
+        let (palette, indices, _transparent) = quantize_rgba(&rgba).expect("quantize");
+        GifImage {
+            left: 0, top: 0, width, height,
+            interlace: false,
+            lct: Some(color_table_from_bytes(palette, false)),
+            indices,
+        }
     }
 
     /// 🧪️ LZW core: trivial round trip at the smallest legal minimum code size.
@@ -528,6 +671,25 @@ mod tests {
         assert_eq!(lzw_decode(&lzw_encode(&[3], 4), 4).unwrap(), vec![3u8]);
     }
 
+    /// 🧪️ Regression for a real bug this ticket found and fixed: a plain period-2 alternating
+    /// sequence (`0,1,0,1,...`) at `min_code_size=2` whose dictionary crosses a code-size growth
+    /// boundary EXACTLY on the final symbol desynced encoder/decoder (encoder wrote the trailing
+    /// end-code at the OLD bit width; decoder, having grown from its own insert on the final data
+    /// code, expected the NEW bit width) — the pre-existing pseudo-random/solid-run test data
+    /// never happened to land on this exact boundary. Swept across several lengths and min code
+    /// sizes to catch the boundary regardless of exactly which length triggers it.
+    #[test]
+    fn lzw_round_trip_period_two_alternating_hits_growth_boundary_at_tail() {
+        for mcs in 2u8..=6 {
+            for len in 2usize..=80 {
+                let indices: Vec<u8> = (0..len).map(|i| (i % 2) as u8).collect();
+                let enc = lzw_encode(&indices, mcs);
+                let dec = lzw_decode(&enc, mcs).unwrap_or_else(|e| panic!("min_code_size={mcs} len={len}: {e}"));
+                assert_eq!(dec, indices, "min_code_size={mcs} len={len}");
+            }
+        }
+    }
+
     /// 🧪️ `decode_gif` must reject truncated/invalid input with a typed `Err`, never fabricate
     /// pixels — regression guard for the prior stub which silently produced an all-black image.
     #[test]
@@ -536,36 +698,98 @@ mod tests {
         assert!(decode_gif(b"GIF89a").is_err(), "87a decoder must reject 89a magic");
     }
 
+    fn sample_snapshot() -> GifSnapshot {
+        GifSnapshot {
+            schema: STDIO_GIF_DOCUMENT_SCHEMA.into(),
+            width: 37,
+            height: 29,
+            gct: None,
+            background_color_index: 0,
+            pixel_aspect_ratio: 0,
+            images: vec![checkerboard(37, 29)],
+        }
+    }
+
     /// 🧪️ Full byte-level codec round trip through a real (non-solid) checkerboard image,
-    /// exercising quantization, GCT sizing, and the sub-block-packed LZW stream together.
+    /// exercising LCT sizing and the sub-block-packed LZW stream together — losslessly, at the
+    /// palette-index level, not by re-quantizing decoded RGBA.
     #[test]
     fn encode_decode_round_trip_checkerboard() {
-        let image = checkerboard(37, 29);
-        let snap = GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), image: image.clone() };
+        let snap = sample_snapshot();
         let bytes = encode_gif(&snap).expect("encode");
         assert_eq!(&bytes[0..6], b"GIF87a");
         let decoded = decode_gif(&bytes).expect("decode");
-        assert_eq!(decoded.image, image);
+        assert_eq!(decoded, snap);
     }
 
     /// 🧪️ decode(encode(decode(x))) snapshot equality — the acceptance bar from the plan's
     /// fixtures section (model equality across a second round trip, not necessarily byte-exact).
     #[test]
     fn encode_decode_encode_decode_is_stable() {
-        let image = checkerboard(9, 13);
-        let snap = GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), image };
+        let snap = GifSnapshot { width: 9, height: 13, images: vec![checkerboard(9, 13)], ..GifSnapshot::default() };
         let once = decode_gif(&encode_gif(&snap).unwrap()).unwrap();
         let twice = decode_gif(&encode_gif(&once).unwrap()).unwrap();
-        assert_eq!(once.image, twice.image);
+        assert_eq!(once, twice);
     }
 
-    /// 🧪️ GIF87a has no Graphic Control Extension — encoding a snapshot with a transparent
-    /// pixel must be a typed error, not silently dropped alpha.
+    /// 🧪️ GIF87a genuinely permits more than one Image Descriptor per file (§20) even without any
+    /// extension block — a real spec-fidelity gain over the prior single-`RasterImage` model.
     #[test]
-    fn encode_gif_rejects_transparency() {
-        let mut image = checkerboard(4, 4);
-        image.rgba[3] = 0; // make the first pixel transparent
-        let snap = GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), image };
+    fn encode_decode_round_trip_multiple_images() {
+        let snap = GifSnapshot {
+            width: 20, height: 20,
+            images: vec![checkerboard(6, 6), checkerboard(9, 4), checkerboard(3, 3)],
+            ..GifSnapshot::default()
+        };
+        let bytes = encode_gif(&snap).expect("encode");
+        let decoded = decode_gif(&bytes).expect("decode");
+        assert_eq!(decoded.images.len(), 3);
+        assert_eq!(decoded, snap);
+    }
+
+    /// 🧪️ A global color table shared by an image with no local table round-trips, including the
+    /// sort flag and the real (no-longer-hardcoded) background-color-index/pixel-aspect-ratio bytes.
+    #[test]
+    fn encode_decode_round_trip_global_color_table_and_screen_fields() {
+        let (palette, indices, _) = quantize_rgba(&{
+            let mut rgba = vec![0u8; 4 * 4 * 4];
+            for i in 0..16 { rgba[i * 4] = (i * 16) as u8; rgba[i * 4 + 3] = 255; }
+            rgba
+        }).unwrap();
+        let snap = GifSnapshot {
+            width: 4, height: 4,
+            gct: Some(color_table_from_bytes(palette, true)),
+            background_color_index: 2,
+            pixel_aspect_ratio: 17,
+            images: vec![GifImage { left: 0, top: 0, width: 4, height: 4, interlace: false, lct: None, indices }],
+            ..GifSnapshot::default()
+        };
+        let decoded = decode_gif(&encode_gif(&snap).unwrap()).unwrap();
+        assert_eq!(decoded, snap);
+        assert!(decoded.gct.unwrap().sorted);
+    }
+
+    /// 🧪️ `interlace` is now a real, round-trippable field — encode must actually reorder rows
+    /// into the on-disk interlaced pass order (not just set the bit), and decode must invert it
+    /// back to the same natural-order indices this test started with.
+    #[test]
+    fn interlace_flag_round_trips_through_real_encode() {
+        let mut image = checkerboard(11, 17);
+        image.interlace = true;
+        let snap = GifSnapshot { width: 11, height: 17, images: vec![image.clone()], ..GifSnapshot::default() };
+        let bytes = encode_gif(&snap).expect("encode");
+        let decoded = decode_gif(&bytes).expect("decode");
+        assert!(decoded.images[0].interlace);
+        assert_eq!(decoded.images[0].indices, image.indices, "de-interlaced indices must match the original natural-order indices");
+    }
+
+    /// 🧪️ An index referencing past the end of its color table is a typed encode error, never a
+    /// silently-corrupt file.
+    #[test]
+    fn encode_gif_rejects_index_past_color_table() {
+        let mut image = checkerboard(2, 2);
+        image.indices = vec![250, 250, 250, 250]; // way past the checkerboard's tiny 2-color LCT
+        let snap = GifSnapshot { width: 2, height: 2, images: vec![image], ..GifSnapshot::default() };
         assert!(encode_gif(&snap).is_err());
     }
 

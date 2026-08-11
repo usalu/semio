@@ -1,4 +1,6 @@
 module Stdio_jpg_mutations;
+# UTF-8 JSON encoding of JpgMutation -- see the sibling ../🔣️component.json shape.
+# `OpBinary::encode_op`/`decode_op` go through `serde_json::to_vec`/`from_slice` directly.
 type Document = unit {
-    payload: bytes &eod;
+    json_payload: bytes &eod;
 };

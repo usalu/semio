@@ -1,8 +1,71 @@
-type PdfEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ PdfSnapshot (1.7) schema — real object-graph model.
+
+type ObjRef {
+  num: Int!
+  gen: Int!
 }
+
+type PdfDictEntry {
+  key: String!
+  value: PdfObject!
+}
+
+"""ISO 32000-1 §7.3 COS object grammar, including streams. Exactly the kind-specific field(s)
+matching `kind` are populated. `str` is a byte string (not necessarily UTF-8)."""
+type PdfObject {
+  kind: PdfObjectKind!
+  boolValue: Boolean
+  intValue: Int
+  realValue: Float
+  strValue: [Int!]
+  nameValue: String
+  arrayValue: [PdfObject!]
+  dictValue: [PdfDictEntry!]
+  refValue: ObjRef
+  streamDict: [PdfDictEntry!]
+  streamData: [Int!]
+  streamRawFilter: String
+}
+
+enum PdfObjectKind {
+  NULL
+  BOOL
+  INT
+  REAL
+  STR
+  NAME
+  ARRAY
+  DICT
+  REF
+  STREAM
+}
+
+type PdfIndirectObject {
+  id: ObjRef!
+  value: PdfObject!
+}
+
+type PdfPage {
+  mediaBox: [Float!]!
+  cropBox: [Float!]
+  rotate: Int!
+  text: String!
+}
+
+type PdfInfo {
+  title: String
+  author: String
+  subject: String
+  keywords: String
+  creator: String
+  producer: String
+}
+
 type PdfSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [PdfEntry!]! @state(class: PERSISTENT)
+  declaredVersion: String! @state(class: PERSISTENT)
+  pages: [PdfPage!]! @state(class: PERSISTENT)
+  info: PdfInfo! @state(class: PERSISTENT)
+  objects: [PdfIndirectObject!]! @state(class: PERSISTENT)
+  trailer: [PdfDictEntry!]! @state(class: PERSISTENT)
 }

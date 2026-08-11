@@ -1,6 +1,27 @@
 syntax = "proto3";
 package semio.s_stdio_png.artifact;
+
+import "s_stdio_png/snapshot.proto";
+
+// 🧬️ PngArtifact — full artifact state, mirrors PngSnapshot field-for-field (reuses the
+// snapshot facet's message types directly rather than redeclaring them).
 message PngArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 width = 2;
+  uint32 height = 3;
+  uint32 bit_depth = 4;
+  semio.s_stdio_png.snapshot.PngColorType color_type = 5;
+  bool interlace = 6;
+  repeated semio.s_stdio_png.snapshot.PngRgb plte = 7;
+  optional semio.s_stdio_png.snapshot.PngTransparency trns = 8;
+  optional uint32 gama = 9;
+  optional semio.s_stdio_png.snapshot.PngChromaticities chrm = 10;
+  optional semio.s_stdio_png.snapshot.PngSrgbIntent srgb = 11;
+  optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 12;
+  optional semio.s_stdio_png.snapshot.PngTimestamp time = 13;
+  optional semio.s_stdio_png.snapshot.PngBackground bkgd = 14;
+  repeated semio.s_stdio_png.snapshot.PngTextChunk text_chunks = 15;
+  bytes pixels = 16;
+  repeated semio.s_stdio_png.snapshot.PngChunkMarker chunk_order = 17;
+  repeated semio.s_stdio_png.snapshot.PngChunk unknown_chunks = 18;
 }

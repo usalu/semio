@@ -1,0 +1,5 @@
+# 🧬️ Ifc2x3Snapshot
+type Ifc2x3Snapshot {
+  schema: String! @state(class: PERSISTENT)
+  document: Bytes! @state(class: PERSISTENT)
+}

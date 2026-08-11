@@ -1,6 +1,58 @@
 dialect grammar stdio.obj.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.obj' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of ObjDiff (protocol::OpText — serde_json); this
+; names the real sparse fields rather than restating RFC 8259's own JSON grammar
+diff = "{" (member ("," member)*)? "}"
+member = '"vertices"' ":" vertices_diff
+       / '"texcoords"' ":" texcoords_diff
+       / '"normals"' ":" normals_diff
+       / '"faces"' ":" faces_diff
+       / '"groups"' ":" groups_diff
+       / '"objects"' ":" objects_diff
+       / '"mtllib"' ":" (STRING / "null")
+       / '"usemtl"' ":" "[" usemtl_range* "]"
+       / '"smoothingGroups"' ":" "[" smoothing_range* "]"
+       / '"unknownStatements"' ":" "[" unknown_statement* "]"
+
+vertices_diff = "{" (vmember ("," vmember)*)? "}"
+vmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" vertex_modified* "]"
+        / '"added"' ":" "[" vertex_added* "]"
+vertex_modified = "{" '"index"' ":" INT "," '"diff"' ":" vertex_field_diff "}"
+vertex_added = "{" '"index"' ":" INT "," '"vertex"' ":" vertex_json "}"
+vertex_field_diff = "{" (('"x"' / '"y"' / '"z"' / '"w"') ":" NUMBER_OR_NULL)* "}"
+
+texcoords_diff = "{" (tmember ("," tmember)*)? "}"
+tmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" texcoord_modified* "]"
+        / '"added"' ":" "[" texcoord_added* "]"
+texcoord_modified = "{" '"index"' ":" INT "," '"diff"' ":" texcoord_field_diff "}"
+texcoord_added = "{" '"index"' ":" INT "," '"texcoord"' ":" texcoord_json "}"
+
+normals_diff = "{" (nmember ("," nmember)*)? "}"
+nmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" normal_modified* "]"
+        / '"added"' ":" "[" normal_added* "]"
+
+faces_diff = "{" (fmember ("," fmember)*)? "}"
+fmember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" face_modified* "]"
+        / '"added"' ":" "[" face_added* "]"
+face_modified = "{" '"index"' ":" INT "," '"diff"' ":" "{" ('"vertices"' ":" face_vertex_json*)? "}" "}"
+
+groups_diff = "{" (gmember ("," gmember)*)? "}"
+gmember = '"removed"' ":" "[" STRING* "]"
+        / '"modified"' ":" "[" group_modified* "]"
+        / '"added"' ":" "[" group_added* "]"
+group_modified = "{" '"name"' ":" STRING "," '"diff"' ":" "{" ('"faces"' ":" "[" INT* "]")? "}" "}"
+group_added = "{" '"index"' ":" INT "," '"group"' ":" group_json "}"
+
+objects_diff = "{" (omember ("," omember)*)? "}"
+omember = '"removed"' ":" "[" STRING* "]"
+        / '"modified"' ":" "[" group_modified* "]"
+        / '"added"' ":" "[" object_added* "]"
+object_added = "{" '"index"' ":" INT "," '"object"' ":" object_json "}"
+
+usemtl_range = "{" '"faceIndexFrom"' ":" INT "," '"material"' ":" STRING "}"
+smoothing_range = "{" '"faceIndexFrom"' ":" INT ("," '"group"' ":" INT)? "}"
+unknown_statement = "{" '"lineIndex"' ":" INT "," '"raw"' ":" STRING "}"

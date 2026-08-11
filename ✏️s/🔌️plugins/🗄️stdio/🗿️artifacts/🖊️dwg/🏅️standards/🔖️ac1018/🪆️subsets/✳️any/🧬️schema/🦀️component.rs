@@ -15,6 +15,12 @@ pub struct DwgArtifact {
     pub version: String,
     #[state(persistent)]
     #[serde(default)]
+    pub maintenance_version: u8,
+    #[state(persistent)]
+    #[serde(default)]
+    pub codepage: u16,
+    #[state(persistent)]
+    #[serde(default)]
     pub bytes: Vec<u8>,
     #[state(persistent)]
     #[serde(default)]
@@ -34,6 +40,8 @@ impl DwgArtifact {
         DwgSnapshot {
             schema: self.schema.clone(),
             version: self.version.clone(),
+            maintenance_version: self.maintenance_version,
+            codepage: self.codepage,
             bytes: self.bytes.clone(),
             section_names: self.section_names.clone(),
             // 🚧️ ac1018 is a legacy shim (nothing real behind it, per Decision #5) — it never ran
@@ -47,6 +55,8 @@ impl DwgArtifact {
         Self {
             schema: snapshot.schema,
             version: snapshot.version,
+            maintenance_version: snapshot.maintenance_version,
+            codepage: snapshot.codepage,
             bytes: snapshot.bytes,
             section_names: snapshot.section_names,
         }
@@ -55,6 +65,8 @@ impl DwgArtifact {
     pub fn set_snapshot(&mut self, snapshot: DwgSnapshot) {
         self.schema = snapshot.schema;
         self.version = snapshot.version;
+        self.maintenance_version = snapshot.maintenance_version;
+        self.codepage = snapshot.codepage;
         self.bytes = snapshot.bytes;
         self.section_names = snapshot.section_names;
     }

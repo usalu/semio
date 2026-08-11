@@ -1,0 +1,9 @@
+{
+  "artifact": "s.block.5d",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained 5d 1"
+    }
+  }
+}

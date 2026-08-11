@@ -1,3 +1,18 @@
-(* ebnf stdio.tiff diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.tiff', newline ;
+(* TiffDiff's wire text IS its JSON serialization (serde camelCase, sparse fields), per
+   🦀️component.rs; this documents the real top-level shape, not RFC 8259's own JSON grammar. *)
+diff = "{", [ member, { ",", member } ], "}" ;
+member = '"byteOrder"', ":", string
+       | '"ifds"', ":", ifds triple
+       | '"pixels"', ":", "[", { integer }, "]" ;
+ifds triple = "{", [ '"removed"', ":", "[", { integer }, "]"
+                    , [ ",", '"modified"', ":", "[", { ifd modified }, "]" ]
+                    , [ ",", '"added"', ":", "[", { json value }, "]" ] ], "}" ;
+ifd modified = "{", '"index"', ":", integer, ",", '"diff"', ":", tags triple, "}" ;
+tags triple = "{", [ '"removed"', ":", "[", { integer }, "]"
+                    , [ ",", '"modified"', ":", "[", { json value }, "]" ]
+                    , [ ",", '"added"', ":", "[", { json value }, "]" ] ], "}" ;
+json value = "{", [ member2, { ",", member2 } ], "}"
+           | "[", { json value }, "]"
+           | string | integer | bool | "null" ;
+member2 = string, ":", json value ;
+bool = "true" | "false" ;

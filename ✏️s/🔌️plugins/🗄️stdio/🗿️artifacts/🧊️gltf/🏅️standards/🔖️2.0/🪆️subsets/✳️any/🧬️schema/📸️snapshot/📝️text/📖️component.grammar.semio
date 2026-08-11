@@ -1,6 +1,37 @@
 dialect grammar stdio.gltf.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.gltf' NL
-body = payload NL?
-payload = *OCTET
+; A `.gltf` document is RFC8259 JSON text whose root object carries the glTF 2.0 (§5) top-level
+; members below. `value`/`object`/`array`/`string`/`number` follow the standard JSON grammar
+; (RFC8259 §2) verbatim -- reproduced here for a self-contained dialect, not re-derived per file.
+root = ws value ws
+value = object | array | string | number | 'true' | 'false' | 'null'
+object = '{' ws ( member ( ws ',' ws member )* )? ws '}'
+member = string ws ':' ws value
+array = '[' ws ( value ( ws ',' ws value )* )? ws ']'
+string = '"' char* '"'
+char = unescaped | '\' escape
+escape = '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'u' hex hex hex hex
+number = '-'? int frac? exp?
+ws = ( ' ' | TAB | NL | CR )*
+
+; glTF-specific root object shape (§5.2 glTF).
+gltf_document = '{' member_list '}'
+member_list = 'asset' ':' asset_object
+            ( ',' 'scene' ':' number )?
+            ( ',' 'scenes' ':' array_of scene_object )?
+            ( ',' 'nodes' ':' array_of node_object )?
+            ( ',' 'meshes' ':' array_of mesh_object )?
+            ( ',' 'accessors' ':' array_of accessor_object )?
+            ( ',' 'bufferViews' ':' array_of buffer_view_object )?
+            ( ',' 'buffers' ':' array_of buffer_object )?
+            ( ',' 'materials' ':' array_of material_object )?
+            ( ',' 'textures' ':' array_of texture_object )?
+            ( ',' 'images' ':' array_of image_object )?
+            ( ',' 'samplers' ':' array_of sampler_object )?
+            ( ',' 'skins' ':' array_of skin_object )?
+            ( ',' 'animations' ':' array_of animation_object )?
+            ( ',' 'cameras' ':' array_of camera_object )?
+            ( ',' 'extensionsUsed' ':' array_of string )?
+            ( ',' 'extensionsRequired' ':' array_of string )?
+            ( ',' 'extensions' ':' object )?
+            ( ',' 'extras' ':' value )?
+asset_object = '{' 'version' ':' string ( ',' ( 'generator' | 'copyright' | 'minVersion' ) ':' string )* '}'

@@ -1,3 +1,5 @@
 dialect protocol stdio.bmp.diff
-magic = %x00
-payload = *OCTET
+; the generic serde-derived binary encoding of BmpDiff (raw UTF-8 JSON bytes) — NOT wrapped
+; in the shared `.semio` binary envelope (contrast with ../../📸️snapshot/💾️binary/); the
+; real per-field JSON shape is documented in ../📝️text/📖️component.grammar.semio
+payload = *OCTET   ; UTF-8 JSON object

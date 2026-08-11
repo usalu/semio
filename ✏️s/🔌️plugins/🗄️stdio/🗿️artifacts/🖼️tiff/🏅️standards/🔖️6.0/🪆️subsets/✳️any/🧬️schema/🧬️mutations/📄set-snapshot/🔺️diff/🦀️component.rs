@@ -3,7 +3,7 @@
 use crate::artifacts::tiff::schema::diff::{TiffDiff, diff_set_snapshot};
 use crate::artifacts::tiff::TiffSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot.
-pub fn diff(snapshot: &TiffSnapshot) -> TiffDiff {
-    diff_set_snapshot(snapshot)
+/// 🔺️ Diff helper for set-snapshot: sparse field-by-field `between(base, next)`.
+pub fn diff(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
+    diff_set_snapshot(base, next)
 }

@@ -1,6 +1,41 @@
-dialect grammar stdio.ply.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.ply' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.ply.mutation
+; A `PlyMutation` op-text line is `serde_json::to_string` of the `#[serde(tag = "mutation")]`
+; enum — a single-line JSON object whose `"mutation"` member is the camelCase variant name and
+; whose remaining members are that variant's own fields (no nested payload wrapper).
+root = mutation-line
+mutation-line = mutation-object NL?
+mutation-object = '{' '"mutation"' ':' mutation-kind [ ',' variant-fields ] '}'
+mutation-kind = '"noMutation"' / '"setSnapshot"' / '"setFormat"' / '"insertComment"'
+              / '"removeComment"' / '"addElement"' / '"removeElement"' / '"insertRow"'
+              / '"removeRow"' / '"setRowProperty"'
+; The concrete member set is exactly one of the following, selected by `mutation-kind` above —
+; `noMutation` has none; the rest are the mutation's own struct fields, camelCase, never sparse.
+variant-fields = set-snapshot-fields / set-format-fields / insert-comment-fields
+               / remove-comment-fields / add-element-fields / remove-element-fields
+               / insert-row-fields / remove-row-fields / set-row-property-fields
+set-snapshot-fields = '"snapshot"' ':' ply-snapshot-object
+set-format-fields = '"format"' ':' format-literal
+insert-comment-fields = '"index"' ':' json-number ',' '"comment"' ':' json-string
+remove-comment-fields = '"index"' ':' json-number
+add-element-fields = '"index"' ':' json-number ',' '"element"' ':' element-object
+remove-element-fields = '"name"' ':' json-string
+insert-row-fields = '"elementName"' ':' json-string ',' '"index"' ':' json-number ',' '"row"' ':' row-object
+remove-row-fields = '"elementName"' ':' json-string ',' '"index"' ':' json-number
+set-row-property-fields = '"elementName"' ':' json-string ',' '"rowIndex"' ':' json-number ','
+                           '"propertyName"' ':' json-string ',' '"value"' ':' ply-value-object
+format-literal = '"ascii"' / '"binaryLittleEndian"' / '"binaryBigEndian"'
+; Full snapshot/element/row/value shapes — see `📸️snapshot/📝️text/📖️component.grammar.semio`
+; for the complete `PlySnapshot` field set this artifact models (reused verbatim here).
+ply-snapshot-object = '{' '"schema"' ':' json-string ',' '"format"' ':' format-literal ','
+                       '"comments"' ':' '[' *( json-string ',' ) ']' ','
+                       '"elements"' ':' '[' *( element-object ',' ) ']' '}'
+element-object = '{' '"name"' ':' json-string ',' '"count"' ':' json-number ',' '"properties"' ':' property-array ',' '"rows"' ':' '[' *( row-object ',' ) ']' '}'
+row-object = '{' '"values"' ':' '[' *( ply-value-object ',' ) ']' '}'
+property-array = '[' *( property-object ',' ) ']'
+property-object = scalar-property-object / list-property-object
+scalar-property-object = '{' '"form"' ':' '"scalar"' ',' '"name"' ':' json-string ',' '"kind"' ':' scalar-kind-literal '}'
+list-property-object = '{' '"form"' ':' '"list"' ',' '"name"' ':' json-string ',' '"countKind"' ':' scalar-kind-literal ',' '"valueKind"' ':' scalar-kind-literal '}'
+scalar-kind-literal = '"char"' / '"uChar"' / '"short"' / '"uShort"' / '"int"' / '"uInt"' / '"float"' / '"double"'
+ply-value-object = '{' '"kind"' ':' ( scalar-kind-literal / '"list"' ) ',' '"value"' ':' ( json-number / '[' *( ply-value-object ',' ) ']' ) '}'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = ["-"] 1*DIGIT

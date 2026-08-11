@@ -1,4 +1,22 @@
 module Stdio_stl_snapshot;
+
+# Binary STL (https://en.wikipedia.org/wiki/STL_(file_format)).
+type Vec3 = unit {
+    x: float64 &convert=cast<float64>(f32(self));
+    y: float64 &convert=cast<float64>(f32(self));
+    z: float64 &convert=cast<float64>(f32(self));
+};
+
+type Triangle = unit {
+    normal: Vec3;
+    v0: Vec3;
+    v1: Vec3;
+    v2: Vec3;
+    attribute_byte_count: uint16;
+};
+
 type Document = unit {
-    payload: bytes &eod;
+    header: bytes &size=80;
+    num_triangles: uint32;
+    triangles: Triangle[self.num_triangles];
 };

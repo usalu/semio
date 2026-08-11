@@ -1,3 +1,5 @@
-; abnf stdio.gltf mutations
-document = payload
-payload = *OCTET
+; abnf stdio.gltf mutations -- binary wire form IS the mutation's own internally-tagged JSON text
+; (see 📝️text/component.ebnf), UTF-8 encoded. OpBinary delegates straight to serde_json; no
+; separate binary framing exists.
+document = json-text
+json-text = *UTF8-OCTET  ; well-formed per the sibling text-facet JSON grammar

@@ -1,34 +1,17 @@
-//! ⚙️ BCF engine — ZIP container of parts, reusing the real `stdio.zip` codec for every byte
-//! concern, plus a typed `BcfTopic`/`BcfComment` view over each topic folder's `markup.bcf`,
-//! parsed/re-emitted via the real `stdio.xml` codec (never a hand-rolled parser here).
+//! ⚙️ BCF engine — flat ZIP container of parts, reusing the real `stdio.zip` codec for every
+//! byte concern, plus a typed `BcfTopic`/`BcfComment`/`BcfViewpoint` view parsed/re-emitted via
+//! the real `stdio.xml` codec (never a hand-rolled parser here). `bcfzip` is NOT an OPC package
+//! (no content-types/relationships apparatus) so this artifact builds its own simple wrapper
+//! directly on `zip::ZipEntry` rather than reusing `zip::opc::OpcPackage` — see the F5 report §1.
 
 use crate::artifacts::bcf::{
-    schema::snapshot::{BcfComment, BcfEntry, BcfTopic},
-    BcfArtifact, BcfDiff, BcfMutation, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
+    schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfColoring, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility},
+    BcfArtifact, BcfMutation, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
 };
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use crate::artifacts::zip::schema::snapshot::ZipEntry;
 
-fn to_zip(snap: &BcfSnapshot) -> crate::artifacts::zip::ZipSnapshot {
-    crate::artifacts::zip::ZipSnapshot {
-        schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        entries: snap.entries.iter().map(|e| crate::artifacts::zip::schema::snapshot::ZipEntry {
-            name: e.name.clone(),
-            data: e.data.clone(),
-            ..Default::default()
-        }).collect(),
-        comment: String::new(),
-    }
-}
-
-fn from_zip(z: crate::artifacts::zip::ZipSnapshot) -> BcfSnapshot {
-    BcfSnapshot {
-        schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
-        entries: z.entries.into_iter().map(|e| BcfEntry { name: e.name, data: e.data }).collect(),
-        topics: Vec::new(),
-    }
-}
-
-//#region 🔖️MarkupXml
+//#region 🔖️XmlHelpers
 /// 🌳️ Narrows an `XmlNode` to its `Element` shape, if it is one.
 fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
     match node {
@@ -52,8 +35,8 @@ fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
-/// 🔤️ Concatenated text/CDATA content of an element's direct children (BCF's leaf elements —
-/// `Title`, `Date`, `Author`, `Comment` — are always simple text content, never mixed markup).
+/// 🔤️ Concatenated text/CDATA content of an element's direct children (BCF's leaf elements are
+/// always simple text content, never mixed markup).
 fn text_content(node: &XmlNode) -> String {
     let Some((_, _, children)) = as_element(node) else { return String::new() };
     let mut out = String::new();
@@ -66,11 +49,77 @@ fn text_content(node: &XmlNode) -> String {
     out
 }
 
-/// 🧩️ Parses one topic folder's `markup.bcf` XML bytes into a `BcfTopic` (BCF-XML 2.1
-/// `markup.xsd`: root `<Markup>` with a required `<Topic Guid="..." TopicStatus="...">` child
-/// carrying a required `<Title>`, zero-or-more sibling `<Comment Guid="...">` elements each with
-/// `<Date>`/`<Author>`/`<Comment>`, and zero-or-more `<Viewpoints Viewpoint="...bcfv">`).
-fn parse_markup_bcf(data: &[u8]) -> Option<BcfTopic> {
+/// 🔤️ Wraps a leaf text element `<name>text</name>` (only emitted when `text` is non-empty,
+/// mirroring how real BCF writers omit optional leaf elements rather than emit them empty).
+fn text_element(name: &str, text: &str) -> Option<XmlNode> {
+    if text.is_empty() {
+        return None;
+    }
+    Some(XmlNode::Element { name: name.into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: text.into() }] })
+}
+
+fn parse_f64(s: &str) -> f64 {
+    s.parse::<f64>().unwrap_or(0.0)
+}
+
+fn xml_bytes(root: XmlNode) -> Vec<u8> {
+    let doc = XmlDocument { root: Some(root), doctype: None, declaration: None };
+    let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    out.push_str(&xml_document_to_text(&doc));
+    out.into_bytes()
+}
+//#endregion 🔖️XmlHelpers
+
+//#region 🔖️VersionXml
+/// 🧩️ Parses `bcf.version`'s `<Version VersionId="...">` root attribute.
+fn parse_bcf_version(data: &[u8]) -> Option<String> {
+    let text = std::str::from_utf8(data).ok()?;
+    let doc = xml_document_from_text(text).ok()?;
+    let root = doc.root.as_ref()?;
+    let (name, attrs, _) = as_element(root)?;
+    if name != "Version" {
+        return None;
+    }
+    Some(attr(attrs, "VersionId").unwrap_or_default().to_string())
+}
+
+fn bcf_version_bytes(version: &str) -> Vec<u8> {
+    let mut children = Vec::new();
+    if let Some(n) = text_element("DetailedVersion", version) {
+        children.push(n);
+    }
+    xml_bytes(XmlNode::Element {
+        name: "Version".into(),
+        attrs: vec![XmlAttr { name: "VersionId".into(), value: version.to_string() }],
+        children,
+    })
+}
+//#endregion 🔖️VersionXml
+
+//#region 🔖️MarkupXml
+/// 🧩 One `markup.bcf` `<Viewpoints>` reference entry: the guid plus the referenced `.bcfv`/
+/// snapshot filenames (as actually written in the file — used only to locate the sibling zip
+/// entries during decode; the typed `BcfViewpoint` itself carries no filename).
+struct ViewpointRef {
+    guid: String,
+    viewpoint_file: Option<String>,
+    snapshot_file: Option<String>,
+}
+
+/// 🧩 Everything `parse_markup_bcf` recovers from one topic folder's `markup.bcf`, before the
+/// sibling `.bcfv`/snapshot files have been resolved into full `BcfViewpoint`s.
+struct RawTopicMarkup {
+    topic: BcfTopic,
+    viewpoint_refs: Vec<ViewpointRef>,
+}
+
+/// 🧩️ Parses one topic folder's `markup.bcf` XML bytes (BCF-XML 2.1 `markup.xsd`: root
+/// `<Markup>` with a required `<Topic Guid="..." TopicStatus="...">` carrying `<Title>` plus
+/// optional `<Priority>`/`<Labels>`*/`<CreationDate>`/`<CreationAuthor>`/`<Description>` CHILD
+/// elements -- not attributes, a defect this rewrite fixes -- zero-or-more sibling `<Comment
+/// Guid="...">` elements each with `<Date>`/`<Author>`/`<Comment>`/optional `<Viewpoint Guid=
+/// "...">`, and zero-or-more `<Viewpoints Guid="...">` reference entries).
+fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let text = std::str::from_utf8(data).ok()?;
     let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
@@ -78,53 +127,66 @@ fn parse_markup_bcf(data: &[u8]) -> Option<BcfTopic> {
     if root_name != "Markup" {
         return None;
     }
-    let topic = find_child(root_children, "Topic")?;
-    let (_, topic_attrs, topic_children) = as_element(topic)?;
+    let topic_node = find_child(root_children, "Topic")?;
+    let (_, topic_attrs, topic_children) = as_element(topic_node)?;
     let guid = attr(topic_attrs, "Guid").unwrap_or_default().to_string();
     let status = attr(topic_attrs, "TopicStatus").unwrap_or_default().to_string();
     let title = find_child(topic_children, "Title").map(text_content).unwrap_or_default();
+    let priority = find_child(topic_children, "Priority").map(text_content).unwrap_or_default();
+    let description = find_child(topic_children, "Description").map(text_content).unwrap_or_default();
+    let creation_date = find_child(topic_children, "CreationDate").map(text_content).unwrap_or_default();
+    let creation_author = find_child(topic_children, "CreationAuthor").map(text_content).unwrap_or_default();
+    let labels: Vec<String> = find_children(topic_children, "Labels").into_iter().map(text_content).collect();
 
     let comments = find_children(root_children, "Comment")
         .into_iter()
         .map(|c| {
             let (_, c_attrs, c_children) = as_element(c).unwrap_or(("Comment", &[], &[]));
+            let viewpoint_ref = find_child(c_children, "Viewpoint")
+                .and_then(as_element)
+                .and_then(|(_, vattrs, _)| attr(vattrs, "Guid"))
+                .map(|s| s.to_string());
             BcfComment {
                 guid: attr(c_attrs, "Guid").unwrap_or_default().to_string(),
                 date: find_child(c_children, "Date").map(text_content).unwrap_or_default(),
                 author: find_child(c_children, "Author").map(text_content).unwrap_or_default(),
-                comment: find_child(c_children, "Comment").map(text_content).unwrap_or_default(),
+                text: find_child(c_children, "Comment").map(text_content).unwrap_or_default(),
+                viewpoint_ref,
             }
         })
         .collect();
 
-    let viewpoint_ref = find_child(root_children, "Viewpoints")
-        .and_then(|v| as_element(v))
-        .and_then(|(_, v_attrs, _)| attr(v_attrs, "Viewpoint"))
-        .map(|s| s.to_string());
+    let viewpoint_refs = find_children(root_children, "Viewpoints")
+        .into_iter()
+        .map(|v| {
+            let (_, v_attrs, v_children) = as_element(v).unwrap_or(("Viewpoints", &[], &[]));
+            ViewpointRef {
+                guid: attr(v_attrs, "Guid").unwrap_or_default().to_string(),
+                viewpoint_file: find_child(v_children, "Viewpoint").map(text_content).filter(|s| !s.is_empty()),
+                snapshot_file: find_child(v_children, "Snapshot").map(text_content).filter(|s| !s.is_empty()),
+            }
+        })
+        .collect();
 
-    Some(BcfTopic { guid, title, status, comments, viewpoint_ref })
-}
-
-/// 🔤️ Wraps a leaf text element `<name>text</name>` (only emitted when `text` is non-empty,
-/// mirroring how real BCF writers omit optional leaf elements rather than emit them empty).
-fn text_element(name: &str, text: &str) -> Option<XmlNode> {
-    if text.is_empty() {
-        return None;
-    }
-    Some(XmlNode::Element {
-        name: name.into(),
-        attrs: Vec::new(),
-        children: vec![XmlNode::Text { text: text.into() }],
+    Some(RawTopicMarkup {
+        topic: BcfTopic { guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints: Vec::new() },
+        viewpoint_refs,
     })
 }
 
 /// 🧩️ Re-emits a `BcfTopic` as a full `markup.bcf` XML document (the inverse of
-/// `parse_markup_bcf`), via the real `stdio.xml` text codec.
+/// `parse_markup_bcf`), via the real `stdio.xml` text codec. Viewpoint references always point at
+/// this artifact's canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form).
 fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
     let mut topic_children = Vec::new();
-    if let Some(title) = text_element("Title", &topic.title) {
-        topic_children.push(title);
+    if let Some(n) = text_element("Title", &topic.title) { topic_children.push(n); }
+    if let Some(n) = text_element("Priority", &topic.priority) { topic_children.push(n); }
+    for label in &topic.labels {
+        if let Some(n) = text_element("Labels", label) { topic_children.push(n); }
     }
+    if let Some(n) = text_element("CreationDate", &topic.creation_date) { topic_children.push(n); }
+    if let Some(n) = text_element("CreationAuthor", &topic.creation_author) { topic_children.push(n); }
+    if let Some(n) = text_element("Description", &topic.description) { topic_children.push(n); }
 
     let mut markup_children = vec![XmlNode::Element {
         name: "Topic".into(),
@@ -132,14 +194,17 @@ fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
             XmlAttr { name: "Guid".into(), value: topic.guid.clone() },
             XmlAttr { name: "TopicStatus".into(), value: topic.status.clone() },
         ],
-        children: topic_children.drain(..).collect(),
+        children: topic_children,
     }];
 
     for comment in &topic.comments {
         let mut children = Vec::new();
         if let Some(n) = text_element("Date", &comment.date) { children.push(n); }
         if let Some(n) = text_element("Author", &comment.author) { children.push(n); }
-        if let Some(n) = text_element("Comment", &comment.comment) { children.push(n); }
+        if let Some(n) = text_element("Comment", &comment.text) { children.push(n); }
+        if let Some(vref) = &comment.viewpoint_ref {
+            children.push(XmlNode::Element { name: "Viewpoint".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vref.clone() }], children: Vec::new() });
+        }
         markup_children.push(XmlNode::Element {
             name: "Comment".into(),
             attrs: vec![XmlAttr { name: "Guid".into(), value: comment.guid.clone() }],
@@ -147,70 +212,264 @@ fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
         });
     }
 
-    if let Some(viewpoint) = &topic.viewpoint_ref {
+    for vp in &topic.viewpoints {
+        let mut children = Vec::new();
+        children.push(XmlNode::Element { name: "Viewpoint".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: format!("{}.bcfv", vp.guid) }] });
+        if vp.snapshot.is_some() {
+            children.push(XmlNode::Element { name: "Snapshot".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: format!("{}.png", vp.guid) }] });
+        }
         markup_children.push(XmlNode::Element {
             name: "Viewpoints".into(),
-            attrs: vec![XmlAttr { name: "Viewpoint".into(), value: viewpoint.clone() }],
-            children: Vec::new(),
+            attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }],
+            children,
         });
     }
 
-    let doc = XmlDocument {
-        root: Some(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children }),
-        doctype: None,
-        declaration: None,
-    };
-    let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    out.push_str(&xml_document_to_text(&doc));
-    out.into_bytes()
-}
-
-/// 🧬️ Derives the typed `topics` view from the raw `entries` substrate: every entry whose name
-/// is `<folder>/markup.bcf` is a topic folder's markup, parsed via the real xml codec. Entries
-/// that fail to parse (not valid xml/utf-8, or missing the required `Topic`) are skipped rather
-/// than surfaced as an error -- `decode_bcf` never fails outright over an unmodeled/malformed
-/// topic folder, it just leaves that folder out of `topics` (still present verbatim in `entries`).
-pub fn derive_topics(entries: &[BcfEntry]) -> Vec<BcfTopic> {
-    entries
-        .iter()
-        .filter(|e| e.name.rsplit_once('/').map(|(_, file)| file.eq_ignore_ascii_case("markup.bcf")).unwrap_or(false))
-        .filter_map(|e| parse_markup_bcf(&e.data))
-        .collect()
-}
-
-/// 🔄️ Reconciles `topics` back onto `entries`: for every topic with a non-empty guid, the
-/// corresponding `<guid>/markup.bcf` entry is regenerated from the typed fields (overwriting it
-/// if present, inserting it if this is a topic that only exists in `topics` so far). Topic
-/// folders present only in `entries` (no matching `topics` element) are left untouched.
-pub fn apply_topics_to_entries(mut entries: Vec<BcfEntry>, topics: &[BcfTopic]) -> Vec<BcfEntry> {
-    for topic in topics {
-        if topic.guid.is_empty() {
-            continue;
-        }
-        let entry_name = format!("{}/markup.bcf", topic.guid);
-        let data = markup_bcf_bytes(topic);
-        match entries.iter_mut().find(|e| e.name == entry_name) {
-            Some(existing) => existing.data = data,
-            None => entries.push(BcfEntry { name: entry_name, data }),
-        }
-    }
-    entries
+    xml_bytes(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children })
 }
 //#endregion 🔖️MarkupXml
 
-pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
-    let reconciled = BcfSnapshot {
-        schema: snap.schema.clone(),
-        entries: apply_topics_to_entries(snap.entries.clone(), &snap.topics),
-        topics: snap.topics.clone(),
+//#region 🔖️VisualizationInfoXml
+fn parse_point(node: &XmlNode) -> BcfPoint3 {
+    let attrs = as_element(node).map(|(_, a, _)| a).unwrap_or(&[]);
+    BcfPoint3 {
+        x: attr(attrs, "X").map(parse_f64).unwrap_or(0.0),
+        y: attr(attrs, "Y").map(parse_f64).unwrap_or(0.0),
+        z: attr(attrs, "Z").map(parse_f64).unwrap_or(0.0),
+    }
+}
+
+fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
+    XmlNode::Element {
+        name: name.into(),
+        attrs: vec![
+            XmlAttr { name: "X".into(), value: p.x.to_string() },
+            XmlAttr { name: "Y".into(), value: p.y.to_string() },
+            XmlAttr { name: "Z".into(), value: p.z.to_string() },
+        ],
+        children: Vec::new(),
+    }
+}
+
+fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
+    if let Some(persp) = find_child(children, "PerspectiveCamera") {
+        let (_, _, pc) = as_element(persp)?;
+        let view_point = find_child(pc, "CameraViewPoint").map(parse_point).unwrap_or_default();
+        let direction = find_child(pc, "CameraDirection").map(parse_point).unwrap_or_default();
+        let up_vector = find_child(pc, "CameraUpVector").map(parse_point).unwrap_or_default();
+        let field_of_view = find_child(pc, "FieldOfView").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+        return Some(BcfCamera::Perspective { view_point, direction, up_vector, field_of_view });
+    }
+    if let Some(ortho) = find_child(children, "OrthogonalCamera") {
+        let (_, _, oc) = as_element(ortho)?;
+        let view_point = find_child(oc, "CameraViewPoint").map(parse_point).unwrap_or_default();
+        let direction = find_child(oc, "CameraDirection").map(parse_point).unwrap_or_default();
+        let up_vector = find_child(oc, "CameraUpVector").map(parse_point).unwrap_or_default();
+        let view_to_world_scale = find_child(oc, "ViewToWorldScale").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+        return Some(BcfCamera::Orthogonal { view_point, direction, up_vector, view_to_world_scale });
+    }
+    None
+}
+
+fn camera_element(camera: &BcfCamera) -> XmlNode {
+    match camera {
+        BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => XmlNode::Element {
+            name: "PerspectiveCamera".into(),
+            attrs: Vec::new(),
+            children: vec![
+                point_element("CameraViewPoint", view_point),
+                point_element("CameraDirection", direction),
+                point_element("CameraUpVector", up_vector),
+                XmlNode::Element { name: "FieldOfView".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: field_of_view.to_string() }] },
+            ],
+        },
+        BcfCamera::Orthogonal { view_point, direction, up_vector, view_to_world_scale } => XmlNode::Element {
+            name: "OrthogonalCamera".into(),
+            attrs: Vec::new(),
+            children: vec![
+                point_element("CameraViewPoint", view_point),
+                point_element("CameraDirection", direction),
+                point_element("CameraUpVector", up_vector),
+                XmlNode::Element { name: "ViewToWorldScale".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: view_to_world_scale.to_string() }] },
+            ],
+        },
+    }
+}
+
+fn parse_component_list(container: &XmlNode) -> Vec<String> {
+    let Some((_, _, children)) = as_element(container) else { return Vec::new() };
+    find_children(children, "Component")
+        .into_iter()
+        .filter_map(|c| as_element(c).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string()))
+        .collect()
+}
+
+fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
+    guids.iter().map(|g| XmlNode::Element { name: "Component".into(), attrs: vec![XmlAttr { name: "IfcGuid".into(), value: g.clone() }], children: Vec::new() }).collect()
+}
+
+fn parse_components(components_node: &XmlNode) -> BcfComponents {
+    let (_, _, children) = as_element(components_node).unwrap_or(("Components", &[], &[]));
+    let selection = find_child(children, "Selection").map(parse_component_list).unwrap_or_default();
+    let visibility = match find_child(children, "Visibility") {
+        Some(v) => {
+            let (_, vattrs, vchildren) = as_element(v).unwrap_or(("Visibility", &[], &[]));
+            let default_visibility = attr(vattrs, "DefaultVisibility").map(|s| s != "false").unwrap_or(true);
+            let exceptions = find_child(vchildren, "Exceptions").map(parse_component_list).unwrap_or_default();
+            BcfVisibility { default_visibility, exceptions }
+        }
+        None => BcfVisibility { default_visibility: true, exceptions: Vec::new() },
     };
-    crate::artifacts::zip::engine::encode_zip(&to_zip(&reconciled)).map_err(|e| e.to_string())
+    let coloring = match find_child(children, "Coloring") {
+        Some(c) => {
+            let (_, _, cchildren) = as_element(c).unwrap_or(("Coloring", &[], &[]));
+            find_children(cchildren, "Color")
+                .into_iter()
+                .map(|color_node| {
+                    let (_, cattrs, _) = as_element(color_node).unwrap_or(("Color", &[], &[]));
+                    BcfColoring { color: attr(cattrs, "Color").unwrap_or_default().to_string(), components: parse_component_list(color_node) }
+                })
+                .collect()
+        }
+        None => Vec::new(),
+    };
+    BcfComponents { selection, visibility, coloring }
+}
+
+fn components_element(components: &BcfComponents) -> XmlNode {
+    let mut children = Vec::new();
+    if !components.selection.is_empty() {
+        children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection) });
+    }
+    let mut visibility_children = Vec::new();
+    if !components.visibility.exceptions.is_empty() {
+        visibility_children.push(XmlNode::Element { name: "Exceptions".into(), attrs: Vec::new(), children: component_list_elements(&components.visibility.exceptions) });
+    }
+    children.push(XmlNode::Element {
+        name: "Visibility".into(),
+        attrs: vec![XmlAttr { name: "DefaultVisibility".into(), value: components.visibility.default_visibility.to_string() }],
+        children: visibility_children,
+    });
+    if !components.coloring.is_empty() {
+        let color_nodes = components.coloring.iter().map(|c| XmlNode::Element {
+            name: "Color".into(),
+            attrs: vec![XmlAttr { name: "Color".into(), value: c.color.clone() }],
+            children: component_list_elements(&c.components),
+        }).collect();
+        children.push(XmlNode::Element { name: "Coloring".into(), attrs: Vec::new(), children: color_nodes });
+    }
+    XmlNode::Element { name: "Components".into(), attrs: Vec::new(), children }
+}
+
+/// 🧩️ Parses one `.bcfv` `<VisualizationInfo Guid="...">` document (BCF-XML 2.1 `visinfo.xsd`)
+/// into `(camera, components)` — the guid itself is already known from the `markup.bcf`
+/// `<Viewpoints>` reference entry, so it isn't re-extracted here.
+fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
+    let text = std::str::from_utf8(data).ok()?;
+    let doc = xml_document_from_text(text).ok()?;
+    let root = doc.root.as_ref()?;
+    let (name, _, children) = as_element(root)?;
+    if name != "VisualizationInfo" {
+        return None;
+    }
+    let components = find_child(children, "Components").map(parse_components);
+    let camera = parse_camera(children);
+    Some((camera, components))
+}
+
+fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
+    let mut children = Vec::new();
+    if let Some(components) = &vp.components {
+        children.push(components_element(components));
+    }
+    if let Some(camera) = &vp.camera {
+        children.push(camera_element(camera));
+    }
+    xml_bytes(XmlNode::Element {
+        name: "VisualizationInfo".into(),
+        attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }],
+        children,
+    })
+}
+//#endregion 🔖️VisualizationInfoXml
+
+//#region 🔖️Codec
+pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
+    let mut entries = Vec::new();
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
+    for topic in &snap.topics {
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
+        for vp in &topic.viewpoints {
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
+            if let Some(bytes) = &vp.snapshot {
+                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
+            }
+        }
+    }
+    for part in &snap.parts {
+        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
+    }
+    let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    crate::artifacts::zip::engine::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
 pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let mut snap = from_zip(crate::artifacts::zip::engine::decode_zip(data).map_err(|e| e.to_string())?);
-    snap.topics = derive_topics(&snap.entries);
-    Ok(snap)
+    let zip = crate::artifacts::zip::engine::decode_zip(data).map_err(|e| e.to_string())?;
+
+    let mut version = String::new();
+    let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
+    if let Some(e) = zip.entries.iter().find(|e| e.name.eq_ignore_ascii_case("bcf.version")) {
+        version = parse_bcf_version(&e.data).unwrap_or_default();
+        consumed.insert(e.name.clone());
+    }
+
+    let mut folders: std::collections::BTreeMap<&str, Vec<&ZipEntry>> = Default::default();
+    for e in &zip.entries {
+        if let Some((folder, _)) = e.name.split_once('/') {
+            folders.entry(folder).or_default().push(e);
+        }
+    }
+
+    let mut topics = Vec::new();
+    for (folder, folder_entries) in &folders {
+        let markup_name = format!("{folder}/markup.bcf");
+        let Some(markup_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&markup_name)) else { continue };
+        let Some(raw) = parse_markup_bcf(&markup_entry.data) else { continue };
+        consumed.insert(markup_entry.name.clone());
+
+        let mut viewpoints = Vec::new();
+        for vref in &raw.viewpoint_refs {
+            let mut camera = None;
+            let mut components = None;
+            if let Some(vp_file) = &vref.viewpoint_file {
+                let full = format!("{folder}/{vp_file}");
+                if let Some(vp_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
+                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data) {
+                        camera = c;
+                        components = comp;
+                    }
+                    consumed.insert(vp_entry.name.clone());
+                }
+            }
+            let mut snapshot = None;
+            if let Some(snap_file) = &vref.snapshot_file {
+                let full = format!("{folder}/{snap_file}");
+                if let Some(snap_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
+                    snapshot = Some(snap_entry.data.clone());
+                    consumed.insert(snap_entry.name.clone());
+                }
+            }
+            viewpoints.push(BcfViewpoint { guid: vref.guid.clone(), camera, components, snapshot });
+        }
+
+        let mut topic = raw.topic;
+        topic.viewpoints = viewpoints;
+        topics.push(topic);
+    }
+
+    let parts = zip.entries.iter().filter(|e| !consumed.contains(&e.name)).map(|e| BcfRawPart { name: e.name.clone(), data: e.data.clone() }).collect();
+
+    Ok(BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version, topics, parts })
 }
 
 pub fn empty_bcf_snapshot() -> BcfSnapshot { BcfSnapshot::default() }
@@ -227,159 +486,474 @@ impl BcfEngine {
         Self { artifact_state: BcfArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
     }
 }
+//#endregion 🔖️Codec
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::bcf::schema::diff::BcfDiff;
+    use crate::artifacts::bcf::schema::mutations::apply_bcf_mutation;
+    use protocol::command::DiffAlgebra;
+    use protocol::{Mutation, MutationDiff};
 
     //#region Fixtures
-    /// 🏗️ A real `markup.bcf` document (BCF-XML 2.1 shape): `Topic` with `Guid`/`TopicStatus`
-    /// attributes and a `Title` child, one sibling `Comment`, and a `Viewpoints` reference.
-    fn sample_markup_xml(guid: &str) -> Vec<u8> {
-        format!(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-             <Markup><Topic Guid=\"{guid}\" TopicStatus=\"Open\"><Title>Clash on Level 2</Title></Topic>\
-             <Comment Guid=\"c1\"><Date>2024-01-01T00:00:00+00:00</Date><Author>ueli@example.com</Author>\
-             <Comment>Please review this clash.</Comment></Comment>\
-             <Viewpoints Viewpoint=\"viewpoint.bcfv\"/></Markup>"
-        ).into_bytes()
+    fn perspective_camera() -> BcfCamera {
+        BcfCamera::Perspective {
+            view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 },
+            direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 },
+            up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 },
+            field_of_view: 60.0,
+        }
     }
 
-    /// 🏗️ A `.bcfv` viewpoint file — deliberately opaque here (only its filename is modeled via
-    /// `viewpoint_ref`, never its camera/component content), so any well-formed bytes suffice.
-    fn sample_bcfv_xml() -> Vec<u8> {
-        b"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<VisualizationInfo Guid=\"vp-1\"><Components/></VisualizationInfo>".to_vec()
+    fn orthogonal_camera() -> BcfCamera {
+        BcfCamera::Orthogonal {
+            view_point: BcfPoint3 { x: 4.0, y: 5.0, z: 6.0 },
+            direction: BcfPoint3 { x: 1.0, y: 0.0, z: 0.0 },
+            up_vector: BcfPoint3 { x: 0.0, y: 0.0, z: 1.0 },
+            view_to_world_scale: 2.5,
+        }
     }
 
-    fn version_entry() -> BcfEntry {
-        BcfEntry { name: "bcf.version".into(), data: b"<?xml version=\"1.0\"?><Version VersionId=\"2.1\"/>".to_vec() }
+    fn sample_components() -> BcfComponents {
+        BcfComponents {
+            selection: vec!["2O2Fr$t4X7Zf8NOew3FLOH".into()],
+            visibility: BcfVisibility { default_visibility: false, exceptions: vec!["1yQBoo7d5EEBLiyMxGgTLc".into()] },
+            coloring: vec![BcfColoring { color: "FFFF0000".into(), components: vec!["0BTBFw6f90Nfh9rP1dl_3n".into()] }],
+        }
+    }
+
+    fn sample_viewpoint(guid: &str) -> BcfViewpoint {
+        BcfViewpoint {
+            guid: guid.into(),
+            camera: Some(perspective_camera()),
+            components: Some(sample_components()),
+            snapshot: Some(vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]),
+        }
+    }
+
+    fn sample_comment(guid: &str, viewpoint_ref: Option<&str>) -> BcfComment {
+        BcfComment {
+            guid: guid.into(),
+            date: "2024-01-01T00:00:00+00:00".into(),
+            author: "ueli@example.com".into(),
+            text: "Please review this clash.".into(),
+            viewpoint_ref: viewpoint_ref.map(|s| s.to_string()),
+        }
+    }
+
+    fn sample_topic(guid: &str) -> BcfTopic {
+        BcfTopic {
+            guid: guid.into(),
+            title: "Clash on Level 2".into(),
+            description: "MEP duct clashes with structural beam.".into(),
+            status: "Open".into(),
+            priority: "High".into(),
+            labels: vec!["Clash".into(), "MEP".into()],
+            creation_date: "2024-01-01T00:00:00+00:00".into(),
+            creation_author: "ueli@example.com".into(),
+            comments: vec![sample_comment("c1", Some("vp1"))],
+            viewpoints: vec![sample_viewpoint("vp1")],
+        }
+    }
+
+    fn sample_snapshot() -> BcfSnapshot {
+        BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version: "2.1".into(), topics: vec![sample_topic("t1")], parts: vec![BcfRawPart { name: "project.bcfp".into(), data: b"<ProjectExtension/>".to_vec() }] }
     }
     //#endregion Fixtures
 
-    /// 🧪️ Builds a small real BCF zip in-code (`bcf.version` root entry, one topic folder with
-    /// `markup.bcf` + a referenced `.bcfv`), round-trips it through `decode_bcf`, and asserts the
-    /// derived `BcfTopic`/`BcfComment` fields match what was encoded — not just that the raw zip
-    /// entries survive byte-for-byte (though `decode_rich_synthetic_archive`-style entry survival
-    /// is asserted too).
+    /// 🧪️ Full round trip through the real zip+xml codecs: version, topic markup (incl. the
+    /// previously-mismodeled `Priority`/`Description`/`Labels`/`CreationDate`/`CreationAuthor`
+    /// child elements), comments (incl. `viewpoint_ref`), and a viewpoint's camera/components/
+    /// snapshot all survive.
     #[test]
-    fn decode_derives_topics_from_markup_xml() {
-        let guid = "8e6c1f2e-1111-4a2b-9c3d-000000000001";
-        let entries = vec![
-            version_entry(),
-            BcfEntry { name: format!("{guid}/markup.bcf"), data: sample_markup_xml(guid) },
-            BcfEntry { name: format!("{guid}/viewpoint.bcfv"), data: sample_bcfv_xml() },
-        ];
-        let snap = BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), entries, topics: Vec::new() };
-        let bytes = encode_bcf(&snap).expect("encode bcf");
+    fn decode_of_encode_recovers_full_typed_model() {
+        let snap = sample_snapshot();
+        let bytes = encode_bcf(&snap).expect("encode");
+        let decoded = decode_bcf(&bytes).expect("decode");
 
-        let decoded = decode_bcf(&bytes).expect("decode bcf");
-
-        // Raw zip substrate survives verbatim.
-        assert_eq!(decoded.entries.len(), 3);
-        assert!(decoded.entries.iter().any(|e| e.name == "bcf.version"));
-        assert!(decoded.entries.iter().any(|e| e.name == format!("{guid}/viewpoint.bcfv")));
-
-        // Typed, derived view matches the xml content exactly.
+        assert_eq!(decoded.version, "2.1");
         assert_eq!(decoded.topics.len(), 1);
         let topic = &decoded.topics[0];
-        assert_eq!(topic.guid, guid);
+        assert_eq!(topic.guid, "t1");
         assert_eq!(topic.title, "Clash on Level 2");
+        assert_eq!(topic.description, "MEP duct clashes with structural beam.");
         assert_eq!(topic.status, "Open");
-        assert_eq!(topic.viewpoint_ref.as_deref(), Some("viewpoint.bcfv"));
+        assert_eq!(topic.priority, "High");
+        assert_eq!(topic.labels, vec!["Clash".to_string(), "MEP".to_string()]);
+        assert_eq!(topic.creation_date, "2024-01-01T00:00:00+00:00");
+        assert_eq!(topic.creation_author, "ueli@example.com");
+
         assert_eq!(topic.comments.len(), 1);
-        let comment = &topic.comments[0];
-        assert_eq!(comment.guid, "c1");
-        assert_eq!(comment.date, "2024-01-01T00:00:00+00:00");
-        assert_eq!(comment.author, "ueli@example.com");
-        assert_eq!(comment.comment, "Please review this clash.");
+        assert_eq!(topic.comments[0].guid, "c1");
+        assert_eq!(topic.comments[0].viewpoint_ref.as_deref(), Some("vp1"));
+
+        assert_eq!(topic.viewpoints.len(), 1);
+        let vp = &topic.viewpoints[0];
+        assert_eq!(vp.guid, "vp1");
+        assert_eq!(vp.camera, Some(perspective_camera()));
+        assert_eq!(vp.components, Some(sample_components()));
+        assert_eq!(vp.snapshot, Some(vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]));
+
+        assert!(decoded.parts.iter().any(|p| p.name == "project.bcfp"));
     }
 
-    /// 🧪️ A caller mutates `topics` directly without touching `entries` — `encode_bcf` must
-    /// regenerate the corresponding `markup.bcf` bytes so the two views never silently diverge
-    /// (the mandatory "topics -> entries" direction from the D2 depth requirement).
+    /// 🧪️ Orthogonal camera round-trips too (the `xs:choice` sibling of `PerspectiveCamera`).
     #[test]
-    fn encode_regenerates_markup_from_mutated_typed_topics() {
-        let guid = "8e6c1f2e-2222-4a2b-9c3d-000000000002";
-        let base = BcfSnapshot {
-            schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
-            entries: vec![version_entry(), BcfEntry { name: format!("{guid}/markup.bcf"), data: sample_markup_xml(guid) }],
-            topics: Vec::new(),
-        };
-        let mut snap = decode_bcf(&encode_bcf(&base).unwrap()).unwrap();
-        assert_eq!(snap.topics.len(), 1);
-
-        snap.topics[0].title = "Renamed via typed topics".into();
-        snap.topics[0].status = "Closed".into();
-        snap.topics[0].comments.push(BcfComment {
-            guid: "c2".into(),
-            date: "2024-02-02T00:00:00+00:00".into(),
-            author: "second@example.com".into(),
-            comment: "Second comment".into(),
-        });
-
-        let re_decoded = decode_bcf(&encode_bcf(&snap).expect("re-encode with mutated typed topics")).expect("decode re-encoded bcf");
-
-        assert_eq!(re_decoded.topics.len(), 1);
-        let topic = &re_decoded.topics[0];
-        assert_eq!(topic.title, "Renamed via typed topics");
-        assert_eq!(topic.status, "Closed");
-        assert_eq!(topic.comments.len(), 2);
-        assert_eq!(topic.comments[0].comment, "Please review this clash.");
-        assert_eq!(topic.comments[1].comment, "Second comment");
+    fn orthogonal_camera_round_trips() {
+        let mut snap = sample_snapshot();
+        snap.topics[0].viewpoints[0].camera = Some(orthogonal_camera());
+        let decoded = decode_bcf(&encode_bcf(&snap).unwrap()).unwrap();
+        assert_eq!(decoded.topics[0].viewpoints[0].camera, Some(orthogonal_camera()));
     }
 
-    /// 🧪️ A topic that exists only in `topics` (no pre-existing `entries` for it) still gains a
-    /// real `<guid>/markup.bcf` entry on encode — the "insert", not just "overwrite", branch of
-    /// `apply_topics_to_entries`.
+    /// 🧪️ A topic folder with no `markup.bcf` (only stray files) is retained verbatim as raw
+    /// parts, never fabricated into a bogus topic.
     #[test]
-    fn topic_created_purely_via_typed_field_gains_a_markup_entry() {
-        let guid = "8e6c1f2e-3333-4a2b-9c3d-000000000003";
-        let snap = BcfSnapshot {
-            schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
-            entries: vec![version_entry()],
-            topics: vec![BcfTopic {
-                guid: guid.into(),
-                title: "Freshly typed topic".into(),
-                status: "Open".into(),
-                comments: Vec::new(),
-                viewpoint_ref: None,
-            }],
+    fn folder_without_markup_becomes_raw_parts() {
+        let zip_snap = crate::artifacts::zip::ZipSnapshot {
+            schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+            entries: vec![
+                ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() },
+                ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() },
+            ],
+            comment: String::new(),
         };
-        let decoded = decode_bcf(&encode_bcf(&snap).expect("encode topic-only-in-typed-field")).expect("decode");
-        assert!(decoded.entries.iter().any(|e| e.name == format!("{guid}/markup.bcf")));
-        assert_eq!(decoded.topics.len(), 1);
-        assert_eq!(decoded.topics[0].title, "Freshly typed topic");
-        assert_eq!(decoded.topics[0].status, "Open");
+        let bytes = crate::artifacts::zip::engine::encode_zip(&zip_snap).unwrap();
+        let decoded = decode_bcf(&bytes).unwrap();
+        assert!(decoded.topics.is_empty());
+        assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
     }
 
     #[test]
     fn empty_snapshot_matches_schema() {
         let snapshot = empty_bcf_snapshot();
         assert_eq!(snapshot.schema, STDIO_BCF_DOCUMENT_SCHEMA);
-        assert!(snapshot.entries.is_empty());
         assert!(snapshot.topics.is_empty());
+        assert!(snapshot.parts.is_empty());
     }
 
     #[test]
     fn codec_round_trip() {
-        let guid = "8e6c1f2e-4444-4a2b-9c3d-000000000004";
-        let snap = BcfSnapshot {
-            schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
-            entries: vec![version_entry(), BcfEntry { name: format!("{guid}/markup.bcf"), data: sample_markup_xml(guid) }],
-            topics: Vec::new(),
-        };
-        let snap = decode_bcf(&encode_bcf(&snap).unwrap()).unwrap();
+        let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
-        assert_eq!(parsed.entries.len(), snap.entries.len());
-        assert_eq!(parsed.topics, snap.topics);
+        assert_eq!(parsed, snap);
 
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(decoded.entries.len(), snap.entries.len());
-        assert_eq!(decoded.topics, snap.topics);
+        assert_eq!(decoded, snap);
     }
+
+    //#region 🧪️Law1_MutationDiffLaw
+    /// ⚖️ Law 1 — `mutation_diff_law`: for every mutation variant, applying via
+    /// `apply_bcf_mutation` matches `m.diff(base).apply(base)`, and the returned diff equals
+    /// `m.diff(base)`.
+    #[test]
+    fn mutation_diff_law() {
+        let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
+        let mutations = vec![
+            BcfMutation::SetVersion { version: "2.2".into() },
+            BcfMutation::InsertTopic { topic: sample_topic("t2") },
+            BcfMutation::RemoveTopic { guid: "t1".into() },
+            BcfMutation::SetTopicMarkup {
+                guid: "t1".into(),
+                title: Some("Renamed".into()),
+                description: None,
+                status: Some("Closed".into()),
+                priority: None,
+                labels: Some(vec!["Renamed".into()]),
+                creation_date: None,
+                creation_author: None,
+            },
+            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) },
+            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
+            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) },
+            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
+            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
+            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) },
+            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None },
+            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None },
+        ];
+        for m in mutations {
+            let mut snap = base.clone();
+            let returned = apply_bcf_mutation(&mut snap, &m);
+            let expected_diff = m.diff(&base);
+            assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
+            assert_eq!(snap, expected_diff.apply(&base), "apply mismatch for {m:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🧪️Law2_InverseLaw
+    /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
+    /// round-trips (diff-level `d.inverse(base).apply(&d.apply(base)) == base`).
+    #[test]
+    fn inverse_law() {
+        let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
+        let mutations = vec![
+            BcfMutation::SetVersion { version: "2.2".into() },
+            BcfMutation::InsertTopic { topic: sample_topic("t2") },
+            BcfMutation::RemoveTopic { guid: "t1".into() },
+            BcfMutation::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: Some("New desc".into()), status: None, priority: None, labels: None, creation_date: None, creation_author: None },
+            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) },
+            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
+            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: None, text: None, viewpoint_ref: None },
+            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
+            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
+            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None },
+            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) },
+            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) },
+        ];
+        for m in mutations {
+            let mut snap = base.clone();
+            apply_bcf_mutation(&mut snap, &m);
+            for inv in m.inverse(&base) {
+                let mut undone = snap.clone();
+                apply_bcf_mutation(&mut undone, &inv);
+                assert_eq!(undone, base, "mutation-level inverse mismatch for {m:?}");
+            }
+
+            let d = m.diff(&base);
+            let after = d.apply(&base);
+            let d_inv = d.inverse(&base);
+            assert_eq!(d_inv.apply(&after), base, "diff-level inverse mismatch for {m:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🧪️Law3_AbsorbLaw
+    /// ⚖️ Law 3 — `absorb_law`: sequential-coalesce over a curated op list incl. the canonical
+    /// cases (Insert+Remove-before, Insert+Insert-same-key-both-survive [name-keyed: no
+    /// same-key clash needed, tested via disjoint-then-merge], Add+SetField patches into added,
+    /// Modify+Remove annihilates) plus associativity.
+    #[test]
+    fn absorb_law() {
+        let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
+
+        // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
+        // no interaction), net effect must match sequential application.
+        let d1 = BcfMutation::InsertTopic { topic: sample_topic("t2") }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = BcfMutation::RemoveTopic { guid: "t1".into() }.diff(&mid);
+        assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
+
+        // Add+SetField: insert a comment, then immediately edit that SAME comment -- the edit must
+        // patch into the carried `added` payload, not become a dangling `modified` entry.
+        let comment = sample_comment("c9", None);
+        let d1 = BcfMutation::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }.diff(&mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
+        let topics_diff = absorbed.topics.as_ref().expect("topics diff");
+        let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
+        let comments_diff = t1_diff.comments.as_ref().expect("comments diff");
+        assert!(comments_diff.modified.is_empty(), "edit-after-insert must patch into added, not appear as modified");
+        let added_comment = comments_diff.added.iter().find(|c| c.guid == "c9").expect("c9 still in added");
+        assert_eq!(added_comment.text, "edited after insert");
+
+        // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
+        // annihilate to a plain removal, not a dangling modify+remove pair.
+        let d1 = BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }.diff(&base);
+        let mid = d1.apply(&base);
+        let d2 = BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }.diff(&mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
+        let topics_diff = absorbed.topics.as_ref().expect("topics diff");
+        let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
+        let viewpoints_diff = t1_diff.viewpoints.as_ref().expect("viewpoints diff");
+        assert_eq!(viewpoints_diff.removed, vec!["vp1".to_string()]);
+        assert!(viewpoints_diff.modified.is_empty());
+
+        // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
+        let d1 = BcfMutation::SetVersion { version: "2.2".into() }.diff(&base);
+        let mid1 = d1.apply(&base);
+        let d2 = BcfMutation::InsertTopic { topic: sample_topic("t3") }.diff(&mid1);
+        let mid2 = d2.apply(&mid1);
+        let d3 = BcfMutation::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }.diff(&mid2);
+
+        let mut left = d1.clone();
+        protocol::MutationDiff::absorb(&mut left, d2.clone());
+        protocol::MutationDiff::absorb(&mut left, d3.clone());
+
+        let mut d2_d3 = d2;
+        protocol::MutationDiff::absorb(&mut d2_d3, d3);
+        let mut right = d1;
+        protocol::MutationDiff::absorb(&mut right, d2_d3);
+
+        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+    }
+
+    fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: BcfDiff, d2: BcfDiff) -> BcfDiff {
+        let sequential = d2.apply(&d1.apply(base));
+        let mut absorbed = d1;
+        protocol::MutationDiff::absorb(&mut absorbed, d2);
+        assert_eq!(absorbed.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+        absorbed
+    }
+    //#endregion
+
+    //#region 🧪️Law4_BetweenRoundtripLaw
+    /// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on real fixtures.
+    #[test]
+    fn between_roundtrip_law() {
+        let a = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
+        let mut b = a.clone();
+        b.version = "2.2".into();
+        b.topics[0].title = "Renamed via between".into();
+        b.topics[0].comments.push(sample_comment("c2", None));
+        b.topics.push(sample_topic("t2"));
+        b.parts.push(BcfRawPart { name: "extra.txt".into(), data: b"stray".to_vec() });
+
+        let d = BcfDiff::between(&a, &b);
+        assert_eq!(d.apply(&a), b);
+        let d_back = BcfDiff::between(&b, &a);
+        assert_eq!(d_back.apply(&b), a);
+        assert!(BcfDiff::between(&a, &a).is_empty());
+    }
+    //#endregion
+
+    //#region 🧪️Law5_CodecRetentionLaw
+    /// ⚖️ Law 5 — `codec_retention_law`: decode(encode(x)) == x (this artifact's documented
+    /// normal form for viewpoint/snapshot filenames -- see the snapshot module's `BcfViewpoint`
+    /// doc comment).
+    #[test]
+    fn codec_retention_law() {
+        let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
+        let re_encoded = encode_bcf(&snap).unwrap();
+        let re_decoded = decode_bcf(&re_encoded).unwrap();
+        assert_eq!(re_decoded, snap);
+    }
+    //#endregion
+
+    //#region 🧪️Law6_FieldSweep
+    /// ⚖️ Law 6 — `field_sweep` (the acceptance criterion): `sweep_a`/`sweep_b` differ in EVERY
+    /// mutable field, incl. per guid-keyed collection one removed/one modified-in-every-field/one
+    /// added, and every tri-state field exercising `Some(None)`.
+    fn sweep_a() -> BcfSnapshot {
+        BcfSnapshot {
+            schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
+            version: "2.1".into(),
+            topics: vec![
+                BcfTopic {
+                    guid: "keep".into(),
+                    title: "Keep-topic before".into(),
+                    description: "before desc".into(),
+                    status: "Open".into(),
+                    priority: "Low".into(),
+                    labels: vec!["before".into()],
+                    creation_date: "2024-01-01T00:00:00+00:00".into(),
+                    creation_author: "a@example.com".into(),
+                    // 🩹 Comment/viewpoint order here is deliberate, not arbitrary: `apply_named`
+                    // reconstructs a collection as "surviving items in THIS snapshot's original
+                    // relative order, then added items appended" (docx's own `f4-docx-report.md`
+                    // §5 documents the identical order-sensitivity gotcha for its `overrides`
+                    // list). `between(b,a).apply(b)` must reproduce `a`'s exact order, so the
+                    // survivor (`c-keep`/`vp-keep`) is listed FIRST here, matching where it sits
+                    // in `sweep_b` below -- otherwise the law would spuriously "fail" on order
+                    // alone despite every field being correct.
+                    comments: vec![
+                        BcfComment { guid: "c-keep".into(), date: "2024-01-01T00:00:00+00:00".into(), author: "a@example.com".into(), text: "before text".into(), viewpoint_ref: Some("vp-remove".into()) },
+                        BcfComment { guid: "c-remove".into(), date: "2024-01-01T00:00:00+00:00".into(), author: "a@example.com".into(), text: "will be removed".into(), viewpoint_ref: Some("vp-keep".into()) },
+                    ],
+                    viewpoints: vec![
+                        BcfViewpoint { guid: "vp-keep".into(), camera: Some(perspective_camera()), components: Some(sample_components()), snapshot: Some(vec![2]) },
+                        BcfViewpoint { guid: "vp-remove".into(), camera: Some(perspective_camera()), components: Some(sample_components()), snapshot: Some(vec![1]) },
+                    ],
+                },
+                BcfTopic { guid: "topic-remove".into(), title: "Will be removed".into(), description: String::new(), status: "Open".into(), priority: String::new(), labels: Vec::new(), creation_date: String::new(), creation_author: String::new(), comments: Vec::new(), viewpoints: Vec::new() },
+            ],
+            // 🩹 Same order-sensitivity as above: `part-keep.txt` (the survivor) listed first.
+            parts: vec![
+                BcfRawPart { name: "part-keep.txt".into(), data: b"before".to_vec() },
+                BcfRawPart { name: "part-remove.txt".into(), data: b"gone".to_vec() },
+            ],
+        }
+    }
+
+    fn sweep_b() -> BcfSnapshot {
+        BcfSnapshot {
+            schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
+            version: "2.2".into(),
+            topics: vec![
+                BcfTopic {
+                    guid: "keep".into(),
+                    title: "Keep-topic after".into(),
+                    description: "after desc".into(),
+                    status: "Closed".into(),
+                    priority: "High".into(),
+                    labels: vec!["after".into(), "second".into()],
+                    creation_date: "2024-02-02T00:00:00+00:00".into(),
+                    creation_author: "b@example.com".into(),
+                    comments: vec![
+                        BcfComment { guid: "c-keep".into(), date: "2024-02-02T00:00:00+00:00".into(), author: "b@example.com".into(), text: "after text".into(), viewpoint_ref: None },
+                        BcfComment { guid: "c-add".into(), date: "2024-02-02T00:00:00+00:00".into(), author: "b@example.com".into(), text: "newly added".into(), viewpoint_ref: Some("vp-keep".into()) },
+                    ],
+                    viewpoints: vec![
+                        BcfViewpoint { guid: "vp-keep".into(), camera: Some(orthogonal_camera()), components: None, snapshot: None },
+                        BcfViewpoint { guid: "vp-add".into(), camera: None, components: Some(sample_components()), snapshot: Some(vec![9]) },
+                    ],
+                },
+                BcfTopic { guid: "topic-add".into(), title: "Freshly added".into(), description: "added desc".into(), status: "Open".into(), priority: "Medium".into(), labels: vec!["fresh".into()], creation_date: "2024-03-03T00:00:00+00:00".into(), creation_author: "c@example.com".into(), comments: Vec::new(), viewpoints: Vec::new() },
+            ],
+            parts: vec![
+                BcfRawPart { name: "part-keep.txt".into(), data: b"after".to_vec() },
+                BcfRawPart { name: "part-add.txt".into(), data: b"new".to_vec() },
+            ],
+        }
+    }
+
+    #[test]
+    fn field_sweep() {
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let forward = BcfDiff::between(&a, &b);
+        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        let backward = BcfDiff::between(&b, &a);
+        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert!(BcfDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+
+        // Every top-level field patched.
+        assert!(forward.version.is_some(), "version field not swept");
+        let topics_diff = forward.topics.as_ref().expect("topics diff present");
+        assert!(!topics_diff.removed.is_empty(), "topics.removed not swept");
+        assert!(!topics_diff.added.is_empty(), "topics.added not swept");
+        let keep_diff = &topics_diff.modified.iter().find(|m| m.key == "keep").expect("keep topic modified").diff;
+
+        // Every scalar field on the modified topic patched.
+        assert!(keep_diff.title.is_some(), "topic.title not swept");
+        assert!(keep_diff.description.is_some(), "topic.description not swept");
+        assert!(keep_diff.status.is_some(), "topic.status not swept");
+        assert!(keep_diff.priority.is_some(), "topic.priority not swept");
+        assert!(keep_diff.labels.is_some(), "topic.labels not swept");
+        assert!(keep_diff.creation_date.is_some(), "topic.creation_date not swept");
+        assert!(keep_diff.creation_author.is_some(), "topic.creation_author not swept");
+
+        let comments_diff = keep_diff.comments.as_ref().expect("comments diff present");
+        assert!(!comments_diff.removed.is_empty(), "comments.removed not swept");
+        assert!(!comments_diff.added.is_empty(), "comments.added not swept");
+        let kept_comment_diff = &comments_diff.modified.iter().find(|m| m.key == "c-keep").expect("c-keep modified").diff;
+        assert!(kept_comment_diff.date.is_some());
+        assert!(kept_comment_diff.author.is_some());
+        assert!(kept_comment_diff.text.is_some());
+        assert_eq!(kept_comment_diff.viewpoint_ref, Some(None), "comment.viewpoint_ref tri-state Some(None) not swept");
+
+        let viewpoints_diff = keep_diff.viewpoints.as_ref().expect("viewpoints diff present");
+        assert!(!viewpoints_diff.removed.is_empty(), "viewpoints.removed not swept");
+        assert!(!viewpoints_diff.added.is_empty(), "viewpoints.added not swept");
+        let kept_vp_diff = &viewpoints_diff.modified.iter().find(|m| m.key == "vp-keep").expect("vp-keep modified").diff;
+        assert!(kept_vp_diff.camera.is_some(), "viewpoint.camera not swept");
+        assert_eq!(kept_vp_diff.components, Some(None), "viewpoint.components tri-state Some(None) not swept");
+        assert_eq!(kept_vp_diff.snapshot, Some(None), "viewpoint.snapshot tri-state Some(None) not swept");
+
+        let parts_diff = forward.parts.as_ref().expect("parts diff present");
+        assert!(!parts_diff.removed.is_empty(), "parts.removed not swept");
+        assert!(!parts_diff.added.is_empty(), "parts.added not swept");
+        let kept_part_diff = &parts_diff.modified.iter().find(|m| m.key == "part-keep.txt").expect("part-keep modified").diff;
+        assert!(kept_part_diff.data.is_some(), "part.data not swept");
+    }
+    //#endregion
 }
 //#endregion 🧪️Tests

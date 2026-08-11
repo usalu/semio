@@ -1,0 +1,9 @@
+{
+  "artifact": "s.writer.writer",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained writer 1"
+    }
+  }
+}

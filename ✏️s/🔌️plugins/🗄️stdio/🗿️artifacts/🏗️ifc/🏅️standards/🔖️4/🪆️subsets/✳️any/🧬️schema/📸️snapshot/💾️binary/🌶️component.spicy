@@ -1,4 +1,9 @@
 module Stdio_ifc_snapshot;
+# Real semio binary envelope wrapping ISO 10303-21 exchange-structure text.
+
 type Document = unit {
-    payload: bytes &eod;
+    magic:     bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token:     bytes &size=self.token_len;   # UTF-8 "stdio.ifc.pack vN"
+    payload:   bytes &eod;                    # UTF-8 ISO-10303-21 exchange-structure text
 };

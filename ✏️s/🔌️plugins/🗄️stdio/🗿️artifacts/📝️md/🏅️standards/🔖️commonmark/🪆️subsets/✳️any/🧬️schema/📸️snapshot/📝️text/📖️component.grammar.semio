@@ -1,6 +1,45 @@
 dialect grammar stdio.md.snapshot
+; 🧩 Real (honest-subset) CommonMark block/inline grammar -- matches
+; ⚙️engine::{parse_markdown_blocks, parse_inline} exactly. NOT full CommonMark (reference
+; links, footnotes, tables, setext headings are explicitly out of scope -- see the snapshot
+; module's own doc comment for the complete deviations list).
+
 root = document
-document = header body
-header = 'schema' SP 'stdio.md' NL
-body = payload NL?
-payload = *OCTET
+document = *block
+
+block = thematic-break / fenced-code-block / indented-code-block / block-quote
+      / atx-heading / html-block / list / paragraph
+
+thematic-break = 0*3SP 3*(("-" / "_" / "*") *SP) NL
+fenced-code-block = 0*3SP fence [info-string] NL *code-line fence NL
+fence = 3*"`" / 3*"~"
+indented-code-block = 1*("    " code-line NL)
+block-quote = 1*(0*3SP ">" [SP] line NL)
+atx-heading = 0*3SP 1*6"#" [SP inline-run] [SP 1*"#"] NL
+html-block = ("<" tag-open / "<" "/" tag-open / "<!--" ) *CHAR NL *(line NL)
+list = 1*list-item
+list-item = 0*3SP (bullet / ordinal) SP block *("  " block)
+bullet = "-" / "*" / "+"
+ordinal = 1*9DIGIT ("." / ")")
+paragraph = 1*(line NL) NL
+
+inline-run = *inline
+inline = image / link / code-span / strong / emphasis / html-inline / hard-break / soft-break / text
+image = "!" "[" inline-run "]" "(" url [SP quoted-title] ")"
+link = "[" inline-run "]" "(" url [SP quoted-title] ")"
+code-span = 1*"`" *CHAR 1*"`"
+strong = ("**" / "__") inline-run ("**" / "__")
+emphasis = ("*" / "_") inline-run ("*" / "_")
+html-inline = "<" ["/"] tag-name *(SP attr) ">" / "<!--" *CHAR "-->"
+hard-break = 2*SP NL / "\" NL
+soft-break = NL
+text = 1*CHAR
+
+url = 1*CHAR
+quoted-title = DQUOTE *CHAR DQUOTE
+tag-open = tag-name *(SP attr) ">"
+tag-name = ALPHA *(ALPHA / DIGIT / "-")
+attr = tag-name "=" DQUOTE *CHAR DQUOTE
+line = *CHAR
+code-line = *CHAR
+info-string = *CHAR

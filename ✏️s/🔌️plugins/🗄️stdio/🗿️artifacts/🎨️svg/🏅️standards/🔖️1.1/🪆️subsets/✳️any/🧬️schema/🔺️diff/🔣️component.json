@@ -3,13 +3,89 @@
   "title": "SvgDiff",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "declaration": { "$ref": "#/$defs/NullableXmlDeclaration" },
+    "doctype": { "$ref": "#/$defs/NullableString" },
+    "root": { "$ref": "#/$defs/SvgNodeDiff" }
+  },
+  "$defs": {
+    "XmlAttr": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "XmlNode": {
+      "description": "Mirrors 📰xml's own XmlNode -- see xml's snapshot facet for the canonical shape.",
+      "type": "object"
+    },
+    "XmlDeclaration": {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": { "type": "string" },
+        "encoding": { "type": "string" },
+        "standalone": { "type": "boolean" }
+      }
+    },
+    "NullableXmlDeclaration": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, object = set.",
+      "type": ["object", "null"]
+    },
+    "NullableString": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
+      "type": ["string", "null"]
+    },
+    "SvgAttrModified": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "SvgAttrAdded": {
+      "type": "object",
+      "required": ["index", "name", "value"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "SvgAttributesDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/SvgAttrModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/SvgAttrAdded" } }
+      }
+    },
+    "SvgChildModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/SvgNodeDiff" } }
+    },
+    "SvgChildAdded": {
+      "type": "object",
+      "required": ["index", "item"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "item": { "$ref": "#/$defs/XmlNode" } }
+    },
+    "SvgChildrenDiff": {
+      "type": "object",
+      "required": ["removed", "modified", "added"],
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/SvgChildModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/SvgChildAdded" } }
+      }
+    },
+    "SvgElementDiff": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "attributes": { "$ref": "#/$defs/SvgAttributesDiff" },
+        "children": { "$ref": "#/$defs/SvgChildrenDiff" }
+      }
+    },
+    "SvgNodeDiff": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "element" } }, "allOf": [{ "$ref": "#/$defs/SvgElementDiff" }] },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "replace" }, "node": { "$ref": "#/$defs/XmlNode" } } }
+      ]
     }
   }
 }

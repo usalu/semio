@@ -1,0 +1,61 @@
+{
+  "unit": "s.stdio.xml",
+  "standards": [
+    {
+      "std": "1.0",
+      "subsets": [
+        {
+          "id": "valid",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_doctype_reports_only_the_always_on_advisory",
+            "analyzer::tests::missing_doctype_is_hard",
+            "analyzer::tests::root_name_mismatch_is_hard",
+            "analyzer::tests::standalone_yes_with_external_subset_is_soft",
+            "analyzer::tests::standalone_yes_without_external_subset_is_clean",
+            "analyzer::tests::public_external_subset_reference_is_detected",
+            "composer::tests::conforming_document_composes_and_stamps_valid",
+            "composer::tests::missing_doctype_fails_compose_with_real_diagnostic",
+            "composer::tests::root_name_mismatch_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document",
+            "builder::tests::conforming_snapshot_builds_clean",
+            "builder::tests::missing_doctype_fails_build",
+            "builder::tests::root_name_mismatch_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "files_modified": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/🔣️component.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🎹️composer/🦀️component.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/xml-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "xml 1.0's XmlSnapshot.doc.doctype is retained as a raw unparsed String (no internal/external DTD subset markup declarations are parsed), so full element/attribute-list content-model validation (XML 1.0 5th Ed. §3.2/§3.3) is out of scope from this schema. check_valid_conformance always emits a Severity::Warning diagnostic (stdio.xml.valid.validity-not-fully-verified) naming this gap explicitly, per the honest-schema-gap protocol. Only doctype presence and declared-root-name/actual-root-name agreement are checked (both real, hard checks against fields the schema genuinely retains)."
+  ],
+  "preexisting_breakage_noted": [
+    "None specific to xml -- the artifact's own files compile structurally (brace/paren-balanced, import paths cross-checked against the compiling ✅️any subset's own exports). The only cargo check errors touching ✉xml are the two expected E0433 'cannot find valid in subsets' errors (in the standard-level composer aggregator and engine::register(), both edited by this unit) -- these are exactly the documented glue.rs-not-yet-applied state other W3 units (step's cc1-6, svg's tiny/basic, etc.) are also in as of this write."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio currently reports exactly 2 errors for this unit (both E0433 'cannot find valid in subsets', at xml/1.0/composer/component.rs:8 and xml/1.0/engine/component.rs:22) because glue.rs does not yet know about the new subsets::valid module. This is the sole blocker; resolves once xml-glue.rs.txt is applied."
+  ]
+}

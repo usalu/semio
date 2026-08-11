@@ -1,2 +1,33 @@
-# schema facet
- type Placeholder { vertices: String! }
+# 🧬️ StlMutation — a discriminated-union input shape (GraphQL has no native unions on input
+# types, so every op's payload fields are optional siblings, disambiguated by `mutation`).
+
+enum StlMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_SOLID_NAME
+  INSERT_TRIANGLE
+  REMOVE_TRIANGLE
+  SET_TRIANGLE_NORMAL
+  SET_TRIANGLE_VERTICES
+}
+
+type StlTriangle {
+  normal: [Float!]!
+  vertices: [[Float!]!]!
+}
+
+type StlSnapshot {
+  schema: String!
+  solidName: String!
+  triangles: [StlTriangle!]!
+}
+
+type StlMutation {
+  mutation: StlMutationKind!
+  snapshot: StlSnapshot
+  name: String
+  index: Int
+  triangle: StlTriangle
+  normal: [Float!]
+  vertices: [[Float!]!]
+}

@@ -1,3 +1,2 @@
-# stdio.xml mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+""" 📝️ stdio.xml mutations text representation -- JSON per the sibling XmlMutation type. """
+scalar XmlMutationText

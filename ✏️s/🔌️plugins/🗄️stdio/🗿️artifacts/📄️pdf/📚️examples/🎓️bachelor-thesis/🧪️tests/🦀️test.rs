@@ -65,6 +65,24 @@ fn real_decode_has_many_pages_and_real_extracted_text() {
 //#endregion (a) RealDecodeNonTrivialInvariants
 
 //#region (b) DecodeEncodeDecodeStructuralEquality
+/// 🧪️ `codec_retention_law` (real-fixture instance, per the ticket's test-law naming
+/// convention): decode→encode→decode is structurally equal at the page level on the real
+/// bachelor-thesis fixture -- `objects`/`trailer` are intentionally NOT re-emitted (see
+/// `PdfSnapshot`'s own doc comment), so this asserts the writer's honestly-scoped normal form,
+/// not full-file byte identity.
+#[test]
+fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
+    let original = decode_pdf(FIXTURE_BYTES).expect("decode");
+    let rewritten_bytes = encode_pdf(&original).expect("encode");
+    let redecoded = decode_pdf(&rewritten_bytes).expect("re-decode");
+    assert_eq!(redecoded.pages.len(), original.pages.len());
+    for (a, b) in original.pages.iter().zip(redecoded.pages.iter()) {
+        assert_eq!(a.media_box, b.media_box);
+        assert_eq!(a.rotate, b.rotate);
+        assert_eq!(a.text, b.text);
+    }
+}
+
 #[test]
 fn decode_encode_decode_is_structurally_equal_at_page_level() {
     // 📏 Structural, not byte-identical (the writer regenerates a fresh minimal file from

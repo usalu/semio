@@ -1,0 +1,10 @@
+[workspace]
+
+[package]
+name = "f1-txt-binary-scratch"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "f1-txt-binary-scratch"
+path = "src/main.rs"

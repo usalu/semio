@@ -1,3 +1,4 @@
-; abnf stdio.svg mutations
-document = payload
-payload = *OCTET
+; abnf stdio.svg mutations (binary representation)
+document = json-payload
+; json-payload = UTF-8 JSON encoding of SvgMutation -- see the sibling JSON Schema facet.
+json-payload = *OCTET

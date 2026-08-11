@@ -1,6 +1,57 @@
 syntax = "proto3";
 package semio.s_stdio_obj.mutation;
+
+import "s_stdio_obj/snapshot.proto";
+
+message InsertVertex { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjVertex vertex = 2; }
+message RemoveVertex { uint64 index = 1; }
+message SetVertex { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjVertex vertex = 2; }
+
+message InsertTexCoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
+message RemoveTexCoord { uint64 index = 1; }
+message SetTexCoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
+
+message InsertNormal { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjNormal normal = 2; }
+message RemoveNormal { uint64 index = 1; }
+message SetNormal { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjNormal normal = 2; }
+
+message InsertFace { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjFace face = 2; }
+message RemoveFace { uint64 index = 1; }
+message SetFace { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjFace face = 2; }
+
+message SetGroup { string name = 1; repeated uint64 faces = 2; }
+message RemoveGroup { string name = 1; }
+message SetObject { string name = 1; repeated uint64 faces = 2; }
+message RemoveObject { string name = 1; }
+
+message SetMtllib { optional string mtllib = 1; }
+message SetUsemtl { repeated semio.s_stdio_obj.snapshot.ObjUsemtlRange usemtl = 1; }
+message SetSmoothingGroups { repeated semio.s_stdio_obj.snapshot.ObjSmoothingRange smoothing_groups = 1; }
+message SetUnknownStatements { repeated semio.s_stdio_obj.snapshot.ObjUnknownStatement unknown_statements = 1; }
+
 message ObjMutation {
-  string schema = 1;
-  string text_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    semio.s_stdio_obj.snapshot.ObjSnapshot set_snapshot = 2;
+    InsertVertex insert_vertex = 3;
+    RemoveVertex remove_vertex = 4;
+    SetVertex set_vertex = 5;
+    InsertTexCoord insert_texcoord = 6;
+    RemoveTexCoord remove_texcoord = 7;
+    SetTexCoord set_texcoord = 8;
+    InsertNormal insert_normal = 9;
+    RemoveNormal remove_normal = 10;
+    SetNormal set_normal = 11;
+    InsertFace insert_face = 12;
+    RemoveFace remove_face = 13;
+    SetFace set_face = 14;
+    SetGroup set_group = 15;
+    RemoveGroup remove_group = 16;
+    SetObject set_object = 17;
+    RemoveObject remove_object = 18;
+    SetMtllib set_mtllib = 19;
+    SetUsemtl set_usemtl = 20;
+    SetSmoothingGroups set_smoothing_groups = 21;
+    SetUnknownStatements set_unknown_statements = 22;
+  }
 }

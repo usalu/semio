@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse csv text into a CsvSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<CsvSnapshot, store::TextError> {
-    Ok(crate::artifacts::csv::engine::decode_csv_with(from.to_body(), true))
+    Ok(crate::artifacts::csv::engine::decode_csv_with(&from.to_body(), true))
 }
 
 /// 📥 Parse DSL/text bytes via txt then csv.

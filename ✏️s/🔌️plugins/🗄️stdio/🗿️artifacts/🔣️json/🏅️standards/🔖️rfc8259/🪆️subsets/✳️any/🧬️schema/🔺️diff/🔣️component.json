@@ -3,13 +3,35 @@
   "title": "JsonDiff",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "value": { "$ref": "#/$defs/JsonValueDiff", "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "JsonValue": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/JsonValue" },
+    "JsonValueDiff": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "replace" }, "value": { "$ref": "#/$defs/JsonValue" } } },
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "bool" }, "value": { "type": "boolean" } } },
+        { "type": "object", "required": ["kind", "lexeme"], "properties": { "kind": { "const": "number" }, "lexeme": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "string" }, "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "diff"], "properties": { "kind": { "const": "array" }, "diff": { "$ref": "#/$defs/JsonArrayDiff" } } },
+        { "type": "object", "required": ["kind", "diff"], "properties": { "kind": { "const": "object" }, "diff": { "$ref": "#/$defs/JsonObjectDiff" } } }
+      ]
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "JsonArrayDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "description": "base-state indices" },
+        "modified": { "type": "array", "items": { "type": "object", "required": ["index", "diff"], "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/JsonValueDiff" } } } },
+        "added": { "type": "array", "items": { "type": "object", "required": ["index", "item"], "properties": { "index": { "type": "integer" }, "item": { "$ref": "#/$defs/JsonValue" } } }, "description": "final-state indices, ascending insert" }
+      }
+    },
+    "JsonObjectDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "required": ["key", "diff"], "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/$defs/JsonValueDiff" } } } },
+        "added": { "type": "array", "items": { "type": "object", "required": ["index", "key", "item"], "properties": { "index": { "type": "integer" }, "key": { "type": "string" }, "item": { "$ref": "#/$defs/JsonValue" } } } }
+      }
     }
   }
 }

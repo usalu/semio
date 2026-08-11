@@ -1,6 +1,184 @@
 syntax = "proto3";
 package semio.s_stdio_gltf.snapshot;
+
+// 🌳 This artifact's own JSON value type (extras/extensions).
+message GltfJsonValue {
+  oneof kind {
+    bool is_null = 1;
+    bool bool_value = 2;
+    double number_value = 3;
+    string string_value = 4;
+    GltfJsonArray array_value = 5;
+    GltfJsonObject object_value = 6;
+  }
+}
+message GltfJsonArray { repeated GltfJsonValue items = 1; }
+message GltfJsonObject { repeated GltfJsonMember members = 1; }
+message GltfJsonMember { string key = 1; GltfJsonValue value = 2; }
+
+message GltfAsset {
+  string version = 1;
+  optional string generator = 2;
+  optional string copyright = 3;
+  optional string min_version = 4;
+  optional GltfJsonValue extensions = 5;
+  optional GltfJsonValue extras = 6;
+}
+
+message GltfScene {
+  repeated uint64 nodes = 1;
+  optional string name = 2;
+  optional GltfJsonValue extensions = 3;
+  optional GltfJsonValue extras = 4;
+}
+
+message GltfNode {
+  repeated uint64 children = 1;
+  optional uint64 mesh = 2;
+  optional uint64 camera = 3;
+  optional uint64 skin = 4;
+  repeated double matrix = 5;
+  repeated double translation = 6;
+  repeated double rotation = 7;
+  repeated double scale = 8;
+  repeated double weights = 9;
+  optional string name = 10;
+  optional GltfJsonValue extensions = 11;
+  optional GltfJsonValue extras = 12;
+}
+
+message GltfAttribute { string semantic = 1; uint64 accessor = 2; }
+message GltfPrimitive {
+  repeated GltfAttribute attributes = 1;
+  optional uint64 indices = 2;
+  optional uint64 material = 3;
+  optional uint64 mode = 4;
+  optional GltfJsonValue extensions = 5;
+  optional GltfJsonValue extras = 6;
+}
+message GltfMesh {
+  repeated GltfPrimitive primitives = 1;
+  repeated double weights = 2;
+  optional string name = 3;
+  optional GltfJsonValue extensions = 4;
+  optional GltfJsonValue extras = 5;
+}
+
+message GltfSparseIndices { uint64 buffer_view = 1; uint64 byte_offset = 2; uint32 component_type = 3; }
+message GltfSparseValues { uint64 buffer_view = 1; uint64 byte_offset = 2; }
+message GltfSparseAccessor { uint64 count = 1; GltfSparseIndices indices = 2; GltfSparseValues values = 3; }
+message GltfAccessor {
+  optional uint64 buffer_view = 1;
+  uint64 byte_offset = 2;
+  uint32 component_type = 3;
+  bool normalized = 4;
+  uint64 count = 5;
+  string type = 6;
+  repeated double max = 7;
+  repeated double min = 8;
+  optional GltfSparseAccessor sparse = 9;
+  optional string name = 10;
+  optional GltfJsonValue extensions = 11;
+  optional GltfJsonValue extras = 12;
+}
+
+message GltfBufferView {
+  uint64 buffer = 1;
+  uint64 byte_offset = 2;
+  uint64 byte_length = 3;
+  optional uint64 byte_stride = 4;
+  optional uint64 target = 5;
+  optional string name = 6;
+  optional GltfJsonValue extensions = 7;
+  optional GltfJsonValue extras = 8;
+}
+
+message GltfBuffer {
+  uint64 byte_length = 1;
+  optional string uri = 2;
+  optional string name = 3;
+  optional GltfJsonValue extensions = 4;
+  optional GltfJsonValue extras = 5;
+}
+
+message GltfTextureInfo { uint64 index = 1; uint64 tex_coord = 2; optional GltfJsonValue extensions = 3; optional GltfJsonValue extras = 4; }
+message GltfNormalTextureInfo { uint64 index = 1; uint64 tex_coord = 2; double scale = 3; optional GltfJsonValue extensions = 4; optional GltfJsonValue extras = 5; }
+message GltfOcclusionTextureInfo { uint64 index = 1; uint64 tex_coord = 2; double strength = 3; optional GltfJsonValue extensions = 4; optional GltfJsonValue extras = 5; }
+message GltfPbrMetallicRoughness {
+  repeated double base_color_factor = 1;
+  optional GltfTextureInfo base_color_texture = 2;
+  double metallic_factor = 3;
+  double roughness_factor = 4;
+  optional GltfTextureInfo metallic_roughness_texture = 5;
+  optional GltfJsonValue extensions = 6;
+  optional GltfJsonValue extras = 7;
+}
+message GltfMaterial {
+  optional string name = 1;
+  optional GltfPbrMetallicRoughness pbr_metallic_roughness = 2;
+  optional GltfNormalTextureInfo normal_texture = 3;
+  optional GltfOcclusionTextureInfo occlusion_texture = 4;
+  optional GltfTextureInfo emissive_texture = 5;
+  repeated double emissive_factor = 6;
+  string alpha_mode = 7; // OPAQUE|MASK|BLEND
+  double alpha_cutoff = 8;
+  bool double_sided = 9;
+  optional GltfJsonValue extensions = 10;
+  optional GltfJsonValue extras = 11;
+}
+
+message GltfTexture { optional uint64 sampler = 1; optional uint64 source = 2; optional string name = 3; optional GltfJsonValue extensions = 4; optional GltfJsonValue extras = 5; }
+message GltfImage { optional string uri = 1; optional string mime_type = 2; optional uint64 buffer_view = 3; optional string name = 4; optional GltfJsonValue extensions = 5; optional GltfJsonValue extras = 6; }
+message GltfSampler { optional uint64 mag_filter = 1; optional uint64 min_filter = 2; uint64 wrap_s = 3; uint64 wrap_t = 4; optional string name = 5; optional GltfJsonValue extensions = 6; optional GltfJsonValue extras = 7; }
+message GltfSkin { optional uint64 inverse_bind_matrices = 1; optional uint64 skeleton = 2; repeated uint64 joints = 3; optional string name = 4; optional GltfJsonValue extensions = 5; optional GltfJsonValue extras = 6; }
+
+message GltfAnimationChannelTarget { optional uint64 node = 1; string path = 2; optional GltfJsonValue extensions = 3; optional GltfJsonValue extras = 4; }
+message GltfAnimationChannel { uint64 sampler = 1; GltfAnimationChannelTarget target = 2; optional GltfJsonValue extensions = 3; optional GltfJsonValue extras = 4; }
+message GltfAnimationSampler { uint64 input = 1; string interpolation = 2; uint64 output = 3; optional GltfJsonValue extensions = 4; optional GltfJsonValue extras = 5; }
+message GltfAnimation {
+  repeated GltfAnimationChannel channels = 1;
+  repeated GltfAnimationSampler samplers = 2;
+  optional string name = 3;
+  optional GltfJsonValue extensions = 4;
+  optional GltfJsonValue extras = 5;
+}
+
+message GltfOrthographic { double xmag = 1; double ymag = 2; double zfar = 3; double znear = 4; optional GltfJsonValue extensions = 5; optional GltfJsonValue extras = 6; }
+message GltfPerspective { optional double aspect_ratio = 1; double yfov = 2; optional double zfar = 3; double znear = 4; optional GltfJsonValue extensions = 5; optional GltfJsonValue extras = 6; }
+message GltfCamera {
+  string type = 1; // perspective|orthographic
+  optional GltfPerspective perspective = 2;
+  optional GltfOrthographic orthographic = 3;
+  optional string name = 4;
+  optional GltfJsonValue extensions = 5;
+  optional GltfJsonValue extras = 6;
+}
+
+message GltfDocument {
+  GltfAsset asset = 1;
+  optional uint64 scene = 2;
+  repeated GltfScene scenes = 3;
+  repeated GltfNode nodes = 4;
+  repeated GltfMesh meshes = 5;
+  repeated GltfAccessor accessors = 6;
+  repeated GltfBufferView buffer_views = 7;
+  repeated GltfBuffer buffers = 8;
+  repeated GltfMaterial materials = 9;
+  repeated GltfTexture textures = 10;
+  repeated GltfImage images = 11;
+  repeated GltfSampler samplers = 12;
+  repeated GltfSkin skins = 13;
+  repeated GltfAnimation animations = 14;
+  repeated GltfCamera cameras = 15;
+  repeated string extensions_used = 16;
+  repeated string extensions_required = 17;
+  optional GltfJsonValue extensions = 18;
+  optional GltfJsonValue extras = 19;
+}
+
 message GltfSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  GltfDocument document = 2;
+  repeated bytes buffers = 3; // raw payload bytes, index-aligned with document.buffers
+  string source_form = 4; // json|glb
 }

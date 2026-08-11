@@ -1,6 +1,13 @@
 dialect grammar stdio.las.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.las' NL
-body = payload NL?
-payload = *OCTET
+document = preamble NL hex-body
+preamble = 'semio' SP 'stdio.las' SP 'v' digits
+; each byte of the real LAS binary buffer (see the binary facet's
+; component.protocol.semio/component.ksy for the actual header+VLR+point layout this hex
+; payload decodes to) is printed as two lowercase hex digits; whitespace between pairs is
+; insignificant (stripped before hex-decoding on parse) -- this leaf intentionally does not
+; re-describe the byte-level LAS structure (opaque-by-design at the text-envelope level, the
+; binary facet is the honest structural leaf; matches the stdio.binary raw precedent).
+hex-body = *(hex-pair / WSP / NL)
+hex-pair = HEXDIG-LOWER HEXDIG-LOWER
+digits = 1*DIGIT

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_md.artifact;
+
+import "s_stdio_md/snapshot.proto";
+
 message MdArtifact {
   string schema = 1;
-  string value_wire = 2;
+  repeated semio.s_stdio_md.snapshot.MdBlock blocks = 2;
 }

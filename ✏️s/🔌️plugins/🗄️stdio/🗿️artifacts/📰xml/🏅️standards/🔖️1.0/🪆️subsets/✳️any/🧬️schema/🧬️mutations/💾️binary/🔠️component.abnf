@@ -1,3 +1,4 @@
-; abnf stdio.xml mutations
-document = payload
-payload = *OCTET
+; abnf stdio.xml mutations (binary representation)
+document = json-payload
+; json-payload = UTF-8 JSON encoding of XmlMutation -- see the sibling JSON Schema facet.
+json-payload = *OCTET

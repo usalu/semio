@@ -1,10 +1,12 @@
 //! ⚙️ SpreadsheetML (xlsx) engine — real OPC container + workbook/worksheet/shared-strings
 //! model. Zip/OPC/XML byte-level work is never reimplemented here: it is reused from the shared
-//! `crate::artifacts::zip::opc` layer. Shared-string resolution (`t="s"` cells reference an
-//! index into `xl/sharedStrings.xml`, not inline text) is resolved to literal text on decode and
-//! rebuilt (deduplicated, first-use order) on encode — the #1 xlsx gotcha, handled here once.
+//! `crate::artifacts::zip::opc` layer. Shared strings (`t="s"` cells reference an index into
+//! `xl/sharedStrings.xml`) are decoded/encoded as an EXPLICIT `workbook.shared_strings` table —
+//! never eagerly resolved into cell text — so the `t="s"` (shared-string reference) vs
+//! `t="inlineStr"` (literal text) distinction the format itself makes survives round-trip, and a
+//! diff over `shared_strings` means something (see `🧬️schema/🔺️diff`).
 
-use crate::artifacts::xlsx::{schema::snapshot::{XlsxCell, XlsxCellValue, XlsxRow, XlsxSheet, XlsxWorkbook}, XlsxArtifact, XlsxDiff, XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use crate::artifacts::xlsx::{schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook}, XlsxArtifact, XlsxDiff, XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{self, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 
@@ -50,6 +52,18 @@ const WORKSHEET_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocum
 const SHARED_STRINGS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml";
 const REL_TYPE_WORKSHEET: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
 const REL_TYPE_SHARED_STRINGS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
+/// 🏅️ ISO/IEC 29500-1 Strict's officeDocument relationship TYPE for the package-root -> workbook
+/// pointer (Strict's Annex replaces every `schemas.openxmlformats.org` relationship-type URI with
+/// a `purl.oclc.org/ooxml` equivalent, not just the content markup namespaces -- ticket
+/// 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3's `✳️strict` subset). Recognized here
+/// (decode/sniff, additively, alongside the Transitional URI above) so a genuinely Strict-shaped
+/// package can be decoded at all -- without this, `decode_xlsx` would reject every real Strict
+/// document with `MissingWorkbookRelationship` before the `✳️strict` subset analyzer ever ran.
+const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument";
+/// 🏅️ Strict's `sharedStrings` relationship TYPE, same rationale as above -- without recognizing
+/// it, any Strict document using shared strings would hard-fail decode with an out-of-range
+/// shared-string index (the shared-strings part would never be found).
+const REL_TYPE_SHARED_STRINGS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings";
 
 fn attr(name: &str, value: &str) -> XmlAttr {
     XmlAttr { name: name.into(), value: value.into() }
@@ -70,6 +84,25 @@ pub fn column_letter(mut index: u32) -> String {
         index = index / 26 - 1;
     }
     letters.iter().rev().collect()
+}
+
+/// 🔤️ Inverse of `column_letter`: spreadsheet column letters -> 0-indexed column number
+/// (`"A" -> 0`, `"Z" -> 25`, `"AA" -> 26`). `None` on empty or non-alphabetic input.
+pub fn column_index(letters: &str) -> Option<u32> {
+    if letters.is_empty() || !letters.chars().all(|c| c.is_ascii_alphabetic()) {
+        return None;
+    }
+    let mut idx: u64 = 0;
+    for c in letters.chars() {
+        idx = idx * 26 + (c.to_ascii_uppercase() as u64 - 'A' as u64 + 1);
+    }
+    Some((idx - 1) as u32)
+}
+
+/// 🔤️ Splits an A1-style cell reference (`"B2"`) into its column-letter prefix (`"B"`) — only the
+/// column part is needed by the decoder, since row is already known from the enclosing `<row r>`.
+fn column_letters_of(reference: &str) -> &str {
+    reference.trim_end_matches(|c: char| c.is_ascii_digit())
 }
 //#endregion 🔖️ColumnLetters
 
@@ -136,9 +169,6 @@ fn shared_strings_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>,
     Ok(out)
 }
 
-fn shared_index_of(shared: &mut Vec<String>, s: &str) -> usize {
-    if let Some(i) = shared.iter().position(|t| t == s) { i } else { shared.push(s.to_string()); shared.len() - 1 }
-}
 //#endregion 🔖️SharedStringsXml
 
 //#region 🔖️WorkbookXml
@@ -202,34 +232,80 @@ fn v_element(text: &str) -> XmlNode {
     XmlNode::Element { name: "v".into(), attrs: vec![], children: vec![XmlNode::Text { text: text.into() }] }
 }
 
+fn is_element(text: &str) -> XmlNode {
+    XmlNode::Element { name: "is".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: text.into() }] }] }
+}
+
+fn f_element(expr: &str) -> XmlNode {
+    XmlNode::Element { name: "f".into(), attrs: vec![], children: vec![XmlNode::Text { text: expr.into() }] }
+}
+
 fn format_number(n: f64) -> String {
     if n.fract() == 0.0 && n.abs() < 1e15 { format!("{}", n as i64) } else { n.to_string() }
 }
 
-fn cell_to_xml(cell: &XlsxCell, shared: &mut Vec<String>) -> XmlNode {
-    let mut attrs = vec![attr("r", &cell.reference)];
+/// 🔎️ Renders a CACHED formula value (the `<v>`/`t` pair that follows `<f>expr</f>`, if any) —
+/// mirrors `cell_to_xml`'s own top-level match, but never itself recurses into `Formula` (a
+/// formula's cached value is never itself a formula in a spec-conformant document).
+fn cached_value_xml(cached: &XlsxCellValue) -> (Option<XmlAttr>, Option<XmlNode>) {
+    match cached {
+        XlsxCellValue::Number(n) => (None, Some(v_element(&format_number(*n)))),
+        XlsxCellValue::SharedString(idx) => (Some(attr("t", "s")), Some(v_element(&idx.to_string()))),
+        XlsxCellValue::InlineString(s) => (Some(attr("t", "str")), Some(v_element(s))),
+        XlsxCellValue::Boolean(b) => (Some(attr("t", "b")), Some(v_element(if *b { "1" } else { "0" }))),
+        XlsxCellValue::Formula { .. } => (None, None),
+        XlsxCellValue::Empty => (None, None),
+    }
+}
+
+fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
+    let r = format!("{}{}", column_letter(cell.col), cell.row);
+    let mut attrs = vec![attr("r", &r)];
     match &cell.value {
         XlsxCellValue::Number(n) => XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&format_number(*n))] },
-        XlsxCellValue::Text(s) => {
-            let idx = shared_index_of(shared, s);
+        XlsxCellValue::SharedString(idx) => {
             attrs.push(attr("t", "s"));
             XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&idx.to_string())] }
         }
-        XlsxCellValue::Bool(b) => {
+        XlsxCellValue::InlineString(s) => {
+            attrs.push(attr("t", "inlineStr"));
+            XmlNode::Element { name: "c".into(), attrs, children: vec![is_element(s)] }
+        }
+        XlsxCellValue::Boolean(b) => {
             attrs.push(attr("t", "b"));
             XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(if *b { "1" } else { "0" })] }
+        }
+        XlsxCellValue::Formula { expr, cached } => {
+            let mut children = vec![f_element(expr)];
+            if let Some(cached) = cached {
+                let (t_attr, v_node) = cached_value_xml(cached);
+                if let Some(t_attr) = t_attr {
+                    attrs.push(t_attr);
+                }
+                if let Some(v_node) = v_node {
+                    children.push(v_node);
+                }
+            }
+            XmlNode::Element { name: "c".into(), attrs, children }
         }
         XlsxCellValue::Empty => XmlNode::Element { name: "c".into(), attrs, children: vec![] },
     }
 }
 
-fn worksheet_to_xml(sheet: &XlsxSheet, shared: &mut Vec<String>) -> XmlDocument {
-    let rows = sheet
-        .rows
-        .iter()
-        .map(|row| {
-            let cells = row.cells.iter().map(|cell| cell_to_xml(cell, shared)).collect();
-            XmlNode::Element { name: "row".into(), attrs: vec![attr("r", &row.index.to_string())], children: cells }
+/// 🌳 Groups `sheet.cells` (sparse, unordered `(row, col)` pairs) into SpreadsheetML's required
+/// `<row>`-then-`<c>` nesting, sorted ascending on both axes (spec order, and needed for
+/// deterministic bytes).
+fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
+    let mut by_row: std::collections::BTreeMap<u32, Vec<&XlsxCell>> = std::collections::BTreeMap::new();
+    for cell in &sheet.cells {
+        by_row.entry(cell.row).or_default().push(cell);
+    }
+    let rows = by_row
+        .into_iter()
+        .map(|(row_index, mut cells)| {
+            cells.sort_by_key(|c| c.col);
+            let cell_nodes = cells.iter().map(|c| cell_to_xml(c)).collect();
+            XmlNode::Element { name: "row".into(), attrs: vec![attr("r", &row_index.to_string())], children: cell_nodes }
         })
         .collect();
     XmlDocument {
@@ -258,18 +334,38 @@ fn find_v_text(children: &[XmlNode]) -> Option<String> {
     })
 }
 
-/// 🔎️ Resolves one `<c>` element's value, given its `t` attribute (`None` = numeric default).
-/// `t="s"` resolves through `shared` — an out-of-range index is a hard `Malformed` error, never
-/// a silently-empty cell.
-fn extract_cell_value(children: &[XmlNode], t: Option<&str>, shared: &[String], part: &str) -> Result<XlsxCellValue, XlsxError> {
+fn find_f_text(children: &[XmlNode]) -> Option<String> {
+    children.iter().find_map(|c| match c {
+        XmlNode::Element { name, children, .. } if name == "f" => {
+            let mut text = String::new();
+            for t in children {
+                if let XmlNode::Text { text: t } = t {
+                    text.push_str(t);
+                }
+            }
+            Some(text)
+        }
+        _ => None,
+    })
+}
+
+/// 🔎️ Resolves a non-formula `<c>`'s value/cached-value given its `t` attribute (`None` =
+/// numeric default). `t="s"` is bounds-checked against `sst_len` (an out-of-range index is a hard
+/// `Malformed` error, never a silently-empty cell) but NOT resolved to text here — the caller
+/// keeps the index (see the module doc comment). `t="e"`/non-formula `t="str"` normalize to
+/// `InlineString` (a documented normalization: this union has no dedicated error/formula-string
+/// variant for a BARE cell — see `Formula.cached`, which IS typed, for the formula case).
+fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
     match t {
         Some("s") => {
             let v = find_v_text(children).ok_or_else(|| XlsxError::Xml { part: part.into(), detail: "t=\"s\" cell missing <v>".into() })?;
             let idx: usize = v.trim().parse().map_err(|_| XlsxError::Malformed(format!("cell in {part}: shared-string index {v:?} is not an integer")))?;
-            let text = shared.get(idx).ok_or_else(|| XlsxError::Malformed(format!("cell in {part}: shared-string index {idx} out of range ({} entries)", shared.len())))?;
-            Ok(XlsxCellValue::Text(text.clone()))
+            if idx >= sst_len {
+                return Err(XlsxError::Malformed(format!("cell in {part}: shared-string index {idx} out of range ({sst_len} entries)")));
+            }
+            Ok(XlsxCellValue::SharedString(idx))
         }
-        Some("str") => Ok(XlsxCellValue::Text(find_v_text(children).unwrap_or_default())),
+        Some("str") => Ok(XlsxCellValue::InlineString(find_v_text(children).unwrap_or_default())),
         Some("inlineStr") => {
             let is_children = children.iter().find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "is" => Some(children), _ => None });
             let mut text = String::new();
@@ -278,13 +374,13 @@ fn extract_cell_value(children: &[XmlNode], t: Option<&str>, shared: &[String], 
                     collect_text(c, &mut text);
                 }
             }
-            Ok(XlsxCellValue::Text(text))
+            Ok(XlsxCellValue::InlineString(text))
         }
         Some("b") => {
             let v = find_v_text(children).unwrap_or_default();
-            Ok(XlsxCellValue::Bool(v.trim() == "1" || v.trim().eq_ignore_ascii_case("true")))
+            Ok(XlsxCellValue::Boolean(v.trim() == "1" || v.trim().eq_ignore_ascii_case("true")))
         }
-        Some("e") => Ok(XlsxCellValue::Text(find_v_text(children).unwrap_or_default())),
+        Some("e") => Ok(XlsxCellValue::InlineString(find_v_text(children).unwrap_or_default())),
         None | Some(_) => match find_v_text(children) {
             Some(v) => v.trim().parse::<f64>().map(XlsxCellValue::Number).map_err(|_| XlsxError::Malformed(format!("cell in {part}: invalid numeric value {v:?}"))),
             None => Ok(XlsxCellValue::Empty),
@@ -292,7 +388,26 @@ fn extract_cell_value(children: &[XmlNode], t: Option<&str>, shared: &[String], 
     }
 }
 
-fn worksheet_rows_from_xml(doc: &XmlDocument, shared: &[String], part: &str) -> Result<Vec<XlsxRow>, XlsxError> {
+/// 🔎️ Resolves one `<c>` element's full value — a `<f>` child present makes this a `Formula`
+/// cell (ECMA-376 §18.3.1.40); its `cached` is the SAME `<v>`/`t` pair, re-typed by
+/// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
+fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+    if let Some(expr) = find_f_text(children) {
+        let cached = if find_v_text(children).is_some() {
+            Some(Box::new(extract_typed_value(children, t, sst_len, part)?))
+        } else {
+            None
+        };
+        return Ok(XlsxCellValue::Formula { expr, cached });
+    }
+    extract_typed_value(children, t, sst_len, part)
+}
+
+/// 🌳 Flattens `<sheetData>`'s `<row>`-then-`<c>` nesting into `sheet.cells`'s sparse
+/// `(row, col)`-addressed list — `row` from the enclosing `<row r>`, `col` from the cell's own
+/// `<c r>` column-letter prefix (`col` in the cell's own `r` MUST agree with the row-digit suffix
+/// per spec; only the column letters carry information this decoder doesn't already have).
+fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
@@ -303,30 +418,29 @@ fn worksheet_rows_from_xml(doc: &XmlDocument, shared: &[String], part: &str) -> 
         .iter()
         .find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "sheetData" => Some(children), _ => None })
         .ok_or_else(|| bad("missing <sheetData>".into()))?;
-    let mut rows = Vec::new();
+    let mut cells = Vec::new();
     for row_node in sheet_data {
         let XmlNode::Element { name, attrs, children: row_children } = row_node else { continue };
         if name != "row" {
             continue;
         }
-        let index = attr_val(attrs, "r")
+        let row = attr_val(attrs, "r")
             .ok_or_else(|| bad("<row> missing r".into()))?
             .parse::<u32>()
             .map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
-        let mut cells = Vec::new();
         for c_node in row_children {
             let XmlNode::Element { name, attrs, children: c_children } = c_node else { continue };
             if name != "c" {
                 continue;
             }
-            let reference = attr_val(attrs, "r").ok_or_else(|| bad("<c> missing r".into()))?.to_string();
+            let reference = attr_val(attrs, "r").ok_or_else(|| bad("<c> missing r".into()))?;
+            let col = column_index(column_letters_of(reference)).ok_or_else(|| bad(format!("<c> r={reference:?} has no valid column-letter prefix")))?;
             let t = attr_val(attrs, "t");
-            let value = extract_cell_value(c_children, t, shared, part)?;
-            cells.push(XlsxCell { reference, value });
+            let value = extract_cell_value(c_children, t, sst_len, part)?;
+            cells.push(XlsxCell { row, col, value });
         }
-        rows.push(XlsxRow { index, cells });
     }
-    Ok(rows)
+    Ok(cells)
 }
 //#endregion 🔖️WorksheetXml
 
@@ -335,26 +449,30 @@ fn worksheet_rows_from_xml(doc: &XmlDocument, shared: &[String], part: &str) -> 
 /// `xl/sharedStrings.xml`, and `xl/workbook.xml`'s relationships) from `workbook`, discarding
 /// stale worksheet parts a shrinking sheet list would otherwise leave orphaned. Unrelated parts
 /// (styles, themes, media, …) are untouched.
+// 🩹 `WORKBOOK_PART` (the package's root/main part) is `set_part`'d FIRST, before
+// `SHARED_STRINGS_PART`/worksheet parts — deliberately, NOT cosmetic. `opc.parts` is a
+// name-keyed `Vec`, diffed/applied via `NamedTripleDiff`'s position-preserving-survivor
+// convention (see the diff module's doc comment): a `between(a,b).apply(a) == b` round trip only
+// reproduces `b`'s ACTUAL Vec order when survivor items keep a consistent relative position
+// across every snapshot this engine builds. Putting the root part first (rather than last, as an
+// earlier revision did) makes every `build_minimal_xlsx`/`encode_xlsx` output agree on "the part
+// two arbitrary snapshots are most likely to share" sitting at a STABLE position — this is what
+// makes `between_roundtrip_law`/`inverse_law`'s composed (non-`sweep_a`/`sweep_b`) fixture pairs
+// hold, not just the hand-tuned `sweep_a`/`sweep_b` pair itself.
 fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     opc.parts.retain(|p| !p.path.starts_with("xl/worksheets/") && p.path != WORKBOOK_PART && p.path != SHARED_STRINGS_PART);
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
 
-    let mut shared: Vec<String> = Vec::new();
     let mut sheet_bytes = Vec::with_capacity(workbook.sheets.len());
     for sheet in &workbook.sheets {
-        let xml = worksheet_to_xml(sheet, &mut shared);
+        let xml = worksheet_to_xml(sheet);
         sheet_bytes.push(xml_document_to_text(&xml).into_bytes());
     }
 
-    let sst_bytes = xml_document_to_text(&sst_to_xml(&shared)).into_bytes();
-    opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_bytes);
-
     let mut rids = Vec::with_capacity(workbook.sheets.len());
     let mut workbook_rels = Vec::new();
-    for (i, bytes) in sheet_bytes.into_iter().enumerate() {
-        let path = format!("xl/worksheets/sheet{}.xml", i + 1);
-        opc.set_part(&path, WORKSHEET_CONTENT_TYPE, bytes);
+    for i in 0..workbook.sheets.len() {
         let rid = format!("rId{}", i + 1);
         workbook_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_WORKSHEET.into(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
         rids.push(rid);
@@ -369,6 +487,17 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
 
     let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).into_bytes();
     opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, workbook_bytes);
+
+    // 🩹 `workbook.shared_strings` IS the SST — cells already carry `SharedString(idx)` indices
+    // into it, so this is a direct serialize, never a text-dedup rebuild (the #1 xlsx gotcha this
+    // engine used to paper over by eagerly resolving text; see the module doc comment).
+    let sst_bytes = xml_document_to_text(&sst_to_xml(&workbook.shared_strings)).into_bytes();
+    opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_bytes);
+
+    for (i, bytes) in sheet_bytes.into_iter().enumerate() {
+        let path = format!("xl/worksheets/sheet{}.xml", i + 1);
+        opc.set_part(&path, WORKSHEET_CONTENT_TYPE, bytes);
+    }
 
     if opc.relationships_for("").iter().all(|r| r.rel_type != REL_TYPE_OFFICE_DOCUMENT) {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
@@ -392,14 +521,20 @@ pub fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
 
 pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     let opc = opc::decode_opc(data)?;
-    let workbook_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).ok_or(XlsxError::MissingWorkbookRelationship)?;
+    // 🏅️ Recognizes either the Transitional or Strict officeDocument relationship TYPE (see the
+    // `REL_TYPE_OFFICE_DOCUMENT_STRICT` doc comment above) -- additive, doesn't change decode for
+    // any existing Transitional package.
+    let workbook_path = opc
+        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
+        .or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+        .ok_or(XlsxError::MissingWorkbookRelationship)?;
     let workbook_bytes = opc.part_bytes(&workbook_path).ok_or_else(|| XlsxError::MissingPart(workbook_path.clone()))?;
     let workbook_text = String::from_utf8(workbook_bytes.to_vec()).map_err(|_| XlsxError::Xml { part: workbook_path.clone(), detail: "not valid utf-8".into() })?;
     let workbook_xml = xml_document_from_text(&workbook_text).map_err(|e| XlsxError::Xml { part: workbook_path.clone(), detail: e })?;
     let sheet_refs = workbook_sheets_from_xml(&workbook_xml, &workbook_path)?;
 
     let workbook_rels = opc.relationships_for(&workbook_path);
-    let shared_strings = match workbook_rels.iter().find(|r| r.rel_type == REL_TYPE_SHARED_STRINGS) {
+    let shared_strings = match workbook_rels.iter().find(|r| r.rel_type == REL_TYPE_SHARED_STRINGS || r.rel_type == REL_TYPE_SHARED_STRINGS_STRICT) {
         Some(rel) => {
             let path = opc::resolve_relationship_target(&workbook_path, &rel.target);
             let bytes = opc.part_bytes(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?;
@@ -410,6 +545,7 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
         None => Vec::new(),
     };
 
+    let sst_len = shared_strings.len();
     let mut sheets = Vec::with_capacity(sheet_refs.len());
     for sheet_ref in &sheet_refs {
         let rel = workbook_rels
@@ -420,11 +556,11 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
         let bytes = opc.part_bytes(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?;
         let text = String::from_utf8(bytes.to_vec()).map_err(|_| XlsxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
         let doc = xml_document_from_text(&text).map_err(|e| XlsxError::Xml { part: path.clone(), detail: e })?;
-        let rows = worksheet_rows_from_xml(&doc, &shared_strings, &path)?;
-        sheets.push(XlsxSheet { name: sheet_ref.name.clone(), rows });
+        let cells = worksheet_cells_from_xml(&doc, sst_len, &path)?;
+        sheets.push(XlsxSheet { name: sheet_ref.name.clone(), cells });
     }
 
-    Ok(XlsxSnapshot::from_parts(opc, XlsxWorkbook { sheets }))
+    Ok(XlsxSnapshot::from_parts(opc, XlsxWorkbook { sheets, shared_strings }))
 }
 
 pub fn empty_xlsx_snapshot() -> XlsxSnapshot { XlsxSnapshot::default() }
@@ -433,6 +569,12 @@ pub fn register() {
     crate::artifacts::xlsx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
+    // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Their
+    // ComposerEntry values are registered separately via this standard's own `composer::entries()`
+    // aggregation (see `crate::artifacts::xlsx::composer::register()` above).
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::composer::register();
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::composer::register();
 }
 //#endregion 🔖️Codec
 
@@ -441,7 +583,10 @@ pub fn register() {
 /// `xl/` — disambiguates from docx/pptx sharing the same zip magic and OPC shape.
 pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
-    match opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT) {
+    let path = opc
+        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
+        .or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
+    match path {
         Some(path) => path.starts_with("xl/"),
         None => false,
     }
@@ -462,8 +607,8 @@ impl XlsxEngine {
 mod tests {
     use super::*;
 
-    fn row(index: u32, values: &[(&str, XlsxCellValue)]) -> XlsxRow {
-        XlsxRow { index, cells: values.iter().map(|(r, v)| XlsxCell { reference: r.to_string(), value: v.clone() }).collect() }
+    fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
+        XlsxCell { row, col, value }
     }
 
     fn sample_workbook() -> XlsxWorkbook {
@@ -471,15 +616,20 @@ mod tests {
             sheets: vec![
                 XlsxSheet {
                     name: "Numbers".into(),
-                    rows: vec![
-                        row(1, &[("A1", XlsxCellValue::Text("Name".into())), ("B1", XlsxCellValue::Text("Score".into()))]),
-                        row(2, &[("A2", XlsxCellValue::Text("Alice".into())), ("B2", XlsxCellValue::Number(9.5))]),
-                        row(3, &[("A3", XlsxCellValue::Text("Alice".into())), ("B3", XlsxCellValue::Number(-3.0))]),
-                        row(4, &[("A4", XlsxCellValue::Bool(true)), ("B4", XlsxCellValue::Empty)]),
+                    cells: vec![
+                        cell(1, 0, XlsxCellValue::SharedString(0)),
+                        cell(1, 1, XlsxCellValue::SharedString(1)),
+                        cell(2, 0, XlsxCellValue::SharedString(2)),
+                        cell(2, 1, XlsxCellValue::Number(9.5)),
+                        cell(3, 0, XlsxCellValue::SharedString(2)),
+                        cell(3, 1, XlsxCellValue::Number(-3.0)),
+                        cell(4, 0, XlsxCellValue::Boolean(true)),
+                        cell(4, 1, XlsxCellValue::Empty),
                     ],
                 },
-                XlsxSheet { name: "Second".into(), rows: vec![row(1, &[("A1", XlsxCellValue::Text("Alice".into()))])] },
+                XlsxSheet { name: "Second".into(), cells: vec![cell(1, 0, XlsxCellValue::SharedString(2))] },
             ],
+            shared_strings: vec!["Name".into(), "Score".into(), "Alice".into()],
         }
     }
 
@@ -494,6 +644,15 @@ mod tests {
     }
 
     #[test]
+    fn column_index_is_the_real_inverse_of_column_letter() {
+        for i in [0u32, 1, 25, 26, 27, 51, 52, 700] {
+            assert_eq!(column_index(&column_letter(i)), Some(i), "round trip failed for {i}");
+        }
+        assert_eq!(column_index(""), None);
+        assert_eq!(column_index("1A"), None);
+    }
+
+    #[test]
     fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_xlsx(sample_workbook());
         let bytes = encode_xlsx(&snap).expect("encode minimal package");
@@ -504,28 +663,30 @@ mod tests {
     }
 
     #[test]
-    fn shared_strings_dedupe_and_resolve_correctly() {
-        // "Alice" appears 3 times across 2 sheets -> exactly one shared-string entry, referenced
-        // by index from every cell. This is the exact bug class the #1 xlsx gotcha describes.
+    fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
+        // 🎯️ The engine no longer resolves `SharedString(idx)` into literal text, nor dedupes on
+        // encode -- `workbook.shared_strings` IS the SST, passed through directly. Confirms the
+        // real bytes carry the table unchanged AND every cell keeps its own index (not a
+        // resolved-text copy the old `Text` variant used to collapse into).
         let snap = build_minimal_xlsx(sample_workbook());
         let sst_bytes = snap.opc.part_bytes("xl/sharedStrings.xml").expect("sharedStrings.xml part present");
         let sst_xml = xml_document_from_text(std::str::from_utf8(sst_bytes).unwrap()).expect("parse sst");
         let strings = shared_strings_from_xml(&sst_xml, "xl/sharedStrings.xml").expect("parse strings");
-        assert_eq!(strings.iter().filter(|s| *s == "Alice").count(), 1, "Alice must be deduplicated to a single shared-string entry");
+        assert_eq!(strings, vec!["Name".to_string(), "Score".to_string(), "Alice".to_string()]);
 
-        // Round trip through real bytes and confirm every "Alice" cell across both sheets still
-        // resolves to the same literal text.
         let bytes = encode_xlsx(&snap).expect("encode");
         let re_decoded = decode_xlsx(&bytes).expect("decode");
-        assert_eq!(re_decoded.workbook.sheets[0].rows[1].cells[0].value, XlsxCellValue::Text("Alice".into()));
-        assert_eq!(re_decoded.workbook.sheets[0].rows[2].cells[0].value, XlsxCellValue::Text("Alice".into()));
-        assert_eq!(re_decoded.workbook.sheets[1].rows[0].cells[0].value, XlsxCellValue::Text("Alice".into()));
+        assert_eq!(re_decoded.workbook.shared_strings, vec!["Name".to_string(), "Score".to_string(), "Alice".to_string()]);
+        assert_eq!(re_decoded.workbook.sheets[0].cells.iter().find(|c| c.row == 2 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
+        assert_eq!(re_decoded.workbook.sheets[0].cells.iter().find(|c| c.row == 3 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
+        assert_eq!(re_decoded.workbook.sheets[1].cells[0].value, XlsxCellValue::SharedString(2));
     }
 
     #[test]
-    fn decode_resolves_real_hand_built_package_with_shared_strings() {
+    fn decode_resolves_real_hand_built_package_with_every_cell_type() {
         // Hand-built OOXML: real workbook.xml + worksheet + sharedStrings.xml + all rels wired
-        // by hand, not a generator shortcut.
+        // by hand, not a generator shortcut. Exercises every `XlsxCellValue` variant: shared
+        // string, number, boolean, inline string, and a formula with a cached numeric result.
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -543,6 +704,8 @@ mod tests {
             "<sheetData>",
             r#"<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>"#,
             r#"<row r="2"><c r="A2"><v>4</v></c><c r="B2"><v>123.5</v></c></row>"#,
+            r#"<row r="3"><c r="A3" t="b"><v>1</v></c><c r="B3" t="inlineStr"><is><t>literal</t></is></c></row>"#,
+            r#"<row r="4"><c r="A4"><f>SUM(A2:B2)</f><v>127.5</v></c></row>"#,
             "</sheetData>",
             "</worksheet>",
         );
@@ -564,11 +727,16 @@ mod tests {
 
         assert_eq!(decoded.workbook.sheets.len(), 1);
         assert_eq!(decoded.workbook.sheets[0].name, "Q1");
-        let rows = &decoded.workbook.sheets[0].rows;
-        assert_eq!(rows[0].cells[0].value, XlsxCellValue::Text("Quarter".into()));
-        assert_eq!(rows[0].cells[1].value, XlsxCellValue::Text("Revenue & Profit".into()));
-        assert_eq!(rows[1].cells[0].value, XlsxCellValue::Number(4.0));
-        assert_eq!(rows[1].cells[1].value, XlsxCellValue::Number(123.5));
+        assert_eq!(decoded.workbook.shared_strings, vec!["Quarter".to_string(), "Revenue & Profit".to_string()]);
+        let cells = &decoded.workbook.sheets[0].cells;
+        let at = |row: u32, col: u32| cells.iter().find(|c| c.row == row && c.col == col).map(|c| &c.value);
+        assert_eq!(at(1, 0), Some(&XlsxCellValue::SharedString(0)));
+        assert_eq!(at(1, 1), Some(&XlsxCellValue::SharedString(1)));
+        assert_eq!(at(2, 0), Some(&XlsxCellValue::Number(4.0)));
+        assert_eq!(at(2, 1), Some(&XlsxCellValue::Number(123.5)));
+        assert_eq!(at(3, 0), Some(&XlsxCellValue::Boolean(true)));
+        assert_eq!(at(3, 1), Some(&XlsxCellValue::InlineString("literal".into())));
+        assert_eq!(at(4, 0), Some(&XlsxCellValue::Formula { expr: "SUM(A2:B2)".into(), cached: Some(Box::new(XlsxCellValue::Number(127.5))) }));
     }
 
     #[test]
@@ -632,6 +800,51 @@ mod tests {
         let decoded = decode_xlsx(&bytes).expect("decode");
         assert!(decoded.opc.part("xl/worksheets/sheet2.xml").is_none(), "stale second sheet must be dropped, not left orphaned");
         assert_eq!(decoded.workbook.sheets.len(), 1);
+    }
+
+    #[test]
+    fn decode_recognizes_strict_office_document_and_shared_strings_relationship_types() {
+        // 🏅️ ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3: a genuinely
+        // ISO/IEC 29500-1 Strict-shaped package uses the purl.oclc.org relationship TYPE URIs for
+        // the package-root officeDocument pointer and the workbook's sharedStrings relationship --
+        // without recognizing those (alongside the Transitional ones), decode would reject every
+        // real Strict document outright.
+        let mut opc = OpcPackage::empty();
+        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+        opc.content_types.set_default("xml", "application/xml");
+
+        let sst_xml = concat!(
+            r#"<sst xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" count="1" uniqueCount="1">"#,
+            "<si><t>Strict</t></si>",
+            "</sst>",
+        );
+        opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_xml.as_bytes().to_vec());
+
+        let sheet_xml = concat!(
+            r#"<worksheet xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main">"#,
+            "<sheetData>",
+            r#"<row r="1"><c r="A1" t="s"><v>0</v></c></row>"#,
+            "</sheetData>",
+            "</worksheet>",
+        );
+        opc.set_part("xl/worksheets/sheet1.xml", WORKSHEET_CONTENT_TYPE, sheet_xml.as_bytes().to_vec());
+
+        let workbook_xml = concat!(
+            r#"<workbook xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict">"#,
+            r#"<sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets>"#,
+            "</workbook>",
+        );
+        opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, workbook_xml.as_bytes().to_vec());
+
+        opc.add_relationship(WORKBOOK_PART, "rId1", "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet", "worksheets/sheet1.xml");
+        opc.add_relationship(WORKBOOK_PART, "rId2", REL_TYPE_SHARED_STRINGS_STRICT, "sharedStrings.xml");
+        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT_STRICT, WORKBOOK_PART);
+
+        let bytes = opc::encode_opc(&opc).expect("encode strict-shaped package");
+        assert!(sniff_xlsx_bytes(&bytes), "a Strict-shaped package must still sniff as xlsx");
+        let decoded = decode_xlsx(&bytes).expect("decode Strict-shaped package");
+        assert_eq!(decoded.workbook.sheets.len(), 1);
+        assert_eq!(decoded.workbook.sheets[0].cells[0].value, XlsxCellValue::SharedString(0));
     }
 }
 //#endregion 🧪️Tests

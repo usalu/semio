@@ -2,14 +2,29 @@
   "$id": "https://semio.tech/schema/s.stdio.json/snapshot.json",
   "title": "JsonSnapshot",
   "type": "object",
+  "required": ["schema", "value"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "value": { "$ref": "#/$defs/JsonValue", "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "JsonMember": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "$ref": "#/$defs/JsonValue" }
+      }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "JsonValue": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "null" } } },
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "bool" }, "value": { "type": "boolean" } } },
+        { "type": "object", "required": ["kind", "lexeme"], "properties": { "kind": { "const": "number" }, "lexeme": { "type": "string", "description": "original RFC8259 number lexeme, verbatim" } } },
+        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "string" }, "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "items"], "properties": { "kind": { "const": "array" }, "items": { "type": "array", "items": { "$ref": "#/$defs/JsonValue" } } } },
+        { "type": "object", "required": ["kind", "members"], "properties": { "kind": { "const": "object" }, "members": { "type": "array", "items": { "$ref": "#/$defs/JsonMember" }, "description": "insertion order preserved" } } }
+      ]
     }
   }
 }

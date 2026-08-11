@@ -1,15 +1,60 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.stl/diff.json",
   "title": "StlDiff",
+  "$defs": {
+    "StlTriangle": {
+      "type": "object",
+      "required": ["normal", "vertices"],
+      "properties": {
+        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        }
+      }
+    },
+    "StlTriangleDiff": {
+      "type": "object",
+      "properties": {
+        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        }
+      }
+    },
+    "StlTriangleModified": {
+      "type": "object",
+      "required": ["index", "diff"],
+      "properties": {
+        "index": { "type": "integer" },
+        "diff": { "$ref": "#/$defs/StlTriangleDiff" }
+      }
+    },
+    "StlTriangleAdded": {
+      "type": "object",
+      "required": ["index", "triangle"],
+      "properties": {
+        "index": { "type": "integer" },
+        "triangle": { "$ref": "#/$defs/StlTriangle" }
+      }
+    },
+    "StlTrianglesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/StlTriangleModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/StlTriangleAdded" } }
+      }
+    }
+  },
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
+    "solidName": { "type": "string" },
+    "triangles": { "$ref": "#/$defs/StlTrianglesDiff" }
   }
 }

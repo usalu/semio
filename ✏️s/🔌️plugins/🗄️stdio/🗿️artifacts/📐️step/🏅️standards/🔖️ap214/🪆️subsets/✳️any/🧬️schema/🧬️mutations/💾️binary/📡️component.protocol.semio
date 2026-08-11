@@ -1,3 +1,5 @@
-dialect protocol stdio.step.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.step.mutation
+; `StepMutation::encode_op` is `serde_json::to_vec` of the exact same shape as the sibling text
+; grammar (`../📝️text/📖️component.grammar.semio`) — the binary op is the UTF-8 byte encoding of
+; that JSON object, no separate framing or magic.
+payload = utf8-bytes-of(mutation-line)

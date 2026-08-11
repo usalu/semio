@@ -1,15 +1,79 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.svg/mutation.svg",
   "title": "SvgMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDeclaration" }, "declaration": { "type": "object" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "type": "string" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "parent", "index", "node"],
+      "properties": {
+        "mutation": { "const": "insertElement" },
+        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 },
+        "node": { "type": "object" }
+      }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "required": ["mutation", "parent", "index"],
+      "properties": {
+        "mutation": { "const": "removeElement" },
+        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "name"],
+      "properties": {
+        "mutation": { "const": "setElementName" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "name": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "name"],
+      "properties": {
+        "mutation": { "const": "setAttribute" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "name": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "text"],
+      "properties": {
+        "mutation": { "const": "setText" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "text": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path"],
+      "properties": {
+        "mutation": { "const": "setViewBox" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "viewBox": {
+          "type": "object",
+          "required": ["minX", "minY", "width", "height"],
+          "properties": { "minX": { "type": "number" }, "minY": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" } }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path"],
+      "properties": {
+        "mutation": { "const": "setTransform" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "transform": { "type": "array", "items": { "type": "object" } }
+      }
     }
-  }
+  ]
 }

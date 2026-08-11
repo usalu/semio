@@ -1,6 +1,8 @@
 dialect grammar stdio.svg.diff
 root = document
-document = header body
-header = 'schema' SP 'stdio.svg' NL
-body = payload NL?
-payload = *OCTET
+document = payload
+; SvgDiff's text representation IS its JSON serialization (see the sibling
+; ../🔣️component.json for the SvgDiff JSON Schema) -- serde(rename_all = "camelCase"),
+; tag-discriminated unions via a "kind" field. No custom textual grammar beyond JSON's own
+; (well-known, not reproduced here).
+payload = json-value

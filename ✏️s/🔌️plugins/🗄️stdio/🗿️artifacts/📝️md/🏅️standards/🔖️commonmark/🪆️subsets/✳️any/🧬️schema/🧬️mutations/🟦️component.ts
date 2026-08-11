@@ -1,4 +1,13 @@
-/** 🧬️ MdMutation union. */
+import type { MdBlock, MdInline, MdSnapshot } from '../📸️snapshot/🟦️component.ts';
+import type { MdPathStep } from '../🔺️diff/🟦️component.ts';
+
+/** 🧬️ MdMutation union. Every `path`-carrying variant addresses the CONTAINER (the block
+ * sequence -- top level, a block-quote's content, or a list item's content) `index` lives in;
+ * `path: []` addresses the top-level document blocks. */
 export type MdMutation =
   | { mutation: 'noMutation' }
-  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️component.ts').MdSnapshot };
+  | { mutation: 'setSnapshot'; snapshot: MdSnapshot }
+  | { mutation: 'insertBlock'; path: MdPathStep[]; index: number; block: MdBlock }
+  | { mutation: 'removeBlock'; path: MdPathStep[]; index: number }
+  | { mutation: 'replaceBlock'; path: MdPathStep[]; index: number; block: MdBlock }
+  | { mutation: 'setInlines'; path: MdPathStep[]; index: number; inlines: MdInline[] };

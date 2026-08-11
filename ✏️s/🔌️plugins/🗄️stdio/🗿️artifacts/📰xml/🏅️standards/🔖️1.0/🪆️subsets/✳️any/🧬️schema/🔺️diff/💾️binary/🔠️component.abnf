@@ -1,3 +1,4 @@
-; abnf stdio.xml diff
-document = payload
-payload = *OCTET
+; abnf stdio.xml diff (binary representation)
+document = json-payload
+; json-payload = UTF-8 JSON encoding of XmlDiff -- see the sibling JSON Schema facet.
+json-payload = *OCTET

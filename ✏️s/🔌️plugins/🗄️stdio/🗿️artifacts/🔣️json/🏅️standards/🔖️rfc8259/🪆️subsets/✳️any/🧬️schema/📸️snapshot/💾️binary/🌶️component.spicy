@@ -1,4 +1,6 @@
 module Stdio_json_snapshot;
+
+# `pack` payload: UTF-8 RFC8259 JSON text (compact form), same grammar as the sibling text facet.
 type Document = unit {
-    payload: bytes &eod;
+    payload: bytes &eod &convert=$$.decode("utf-8");
 };

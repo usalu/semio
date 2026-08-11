@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.ply",
+  "standard": "1.0",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained ply 1.0"
+    }
+  }
+}

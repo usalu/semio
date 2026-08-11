@@ -2,14 +2,61 @@
   "$id": "https://semio.tech/schema/s.stdio.obj/snapshot.json",
   "title": "ObjSnapshot",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "vertices", "texcoords", "normals", "faces", "groups", "objects", "usemtl", "smoothingGroups", "unknownStatements"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "vertices": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjVertex" } },
+    "texcoords": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjTexCoord" } },
+    "normals": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjNormal" } },
+    "faces": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjFace" } },
+    "groups": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjGroup" } },
+    "objects": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjObject" } },
+    "mtllib": { "type": "string", "x-semio-state": "persistent" },
+    "usemtl": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjUsemtlRange" } },
+    "smoothingGroups": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjSmoothingRange" } },
+    "unknownStatements": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjUnknownStatement" } }
+  },
+  "$defs": {
+    "ObjVertex": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "z"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "w": { "type": "number" } }
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "ObjTexCoord": {
+      "type": "object", "additionalProperties": false, "required": ["u", "v"],
+      "properties": { "u": { "type": "number" }, "v": { "type": "number" }, "w": { "type": "number" } }
+    },
+    "ObjNormal": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "z"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }
+    },
+    "ObjFaceVertex": {
+      "type": "object", "additionalProperties": false, "required": ["vertex"],
+      "properties": { "vertex": { "type": "integer", "minimum": 0 }, "texcoord": { "type": "integer", "minimum": 0 }, "normal": { "type": "integer", "minimum": 0 } }
+    },
+    "ObjFace": {
+      "type": "object", "additionalProperties": false, "required": ["vertices"],
+      "properties": { "vertices": { "type": "array", "items": { "$ref": "#/$defs/ObjFaceVertex" } } }
+    },
+    "ObjGroup": {
+      "type": "object", "additionalProperties": false, "required": ["name", "faces"],
+      "properties": { "name": { "type": "string" }, "faces": { "type": "array", "items": { "type": "integer", "minimum": 0 } } }
+    },
+    "ObjObject": {
+      "type": "object", "additionalProperties": false, "required": ["name", "faces"],
+      "properties": { "name": { "type": "string" }, "faces": { "type": "array", "items": { "type": "integer", "minimum": 0 } } }
+    },
+    "ObjUsemtlRange": {
+      "type": "object", "additionalProperties": false, "required": ["faceIndexFrom", "material"],
+      "properties": { "faceIndexFrom": { "type": "integer", "minimum": 0 }, "material": { "type": "string" } }
+    },
+    "ObjSmoothingRange": {
+      "type": "object", "additionalProperties": false, "required": ["faceIndexFrom"],
+      "properties": { "faceIndexFrom": { "type": "integer", "minimum": 0 }, "group": { "type": "integer", "minimum": 0 } }
+    },
+    "ObjUnknownStatement": {
+      "type": "object", "additionalProperties": false, "required": ["lineIndex", "raw"],
+      "properties": { "lineIndex": { "type": "integer", "minimum": 0 }, "raw": { "type": "string" } }
     }
   }
 }

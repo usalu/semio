@@ -1,2 +1,56 @@
-# schema facet
- type Placeholder { body: String! }
+""" 🧩 A real CommonMark inline node -- tagged union flattened onto one type (GraphQL has no
+native union-with-payload; `kind` discriminates which of the other fields are meaningful). """
+enum MdInlineKind {
+  TEXT
+  EMPHASIS
+  STRONG
+  CODE
+  LINK
+  IMAGE
+  SOFT_BREAK
+  HARD_BREAK
+  HTML_INLINE
+}
+
+type MdInline {
+  kind: MdInlineKind!
+  text: String
+  inlines: [MdInline!]
+  literal: String
+  linkText: [MdInline!]
+  url: String
+  alt: String
+  title: String
+  raw: String
+}
+
+enum MdBlockKind {
+  HEADING
+  PARAGRAPH
+  LIST
+  CODE_BLOCK
+  BLOCK_QUOTE
+  THEMATIC_BREAK
+  HTML_BLOCK
+}
+
+""" 🧱 A real CommonMark block -- tagged union flattened the same way as `MdInline`. """
+type MdBlock {
+  kind: MdBlockKind!
+  level: Int
+  inlines: [MdInline!]
+  ordered: Boolean
+  start: Int
+  tight: Boolean
+  items: [[MdBlock!]!]
+  info: String
+  literal: String
+  blocks: [MdBlock!]
+  raw: String
+}
+
+""" 📸️ Persisted `stdio.md` snapshot. """
+type MdSnapshot {
+  schema: String!
+  blocks: [MdBlock!]!
+}

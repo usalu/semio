@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.ifc.2x3/diff/text.json",
+  "title": "Ifc2x3DiffText",
+  "type": "object"
+}

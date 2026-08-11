@@ -5,27 +5,107 @@ use crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️RowOrder
+/// 📐️ BITMAPINFOHEADER's `height` field is signed: negative encodes a top-down bitmap
+/// (rare, printer-friendly), positive (the overwhelming common case) encodes bottom-up. This
+/// carries that as a real enum instead of leaving callers to re-derive the sign every time —
+/// see `engine::decode_bmp`/`engine::encode_bmp` for how it drives row order on the wire.
+/// Decoded `pixels` are always canonicalized to row 0 = image top regardless of this value.
+/// 🧪️ F6: `dsl::DslScalar` — plain unit-variant enum binds as `DslField` directly (no
+/// `DslVariants`/`Statements` needed, see `f6-recon-report.md` §3a/§9 STEP-2a).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[serde(rename_all = "camelCase")]
+pub enum BmpRowOrder {
+    #[default]
+    BottomUp,
+    TopDown,
+}
+//#endregion 🔖️RowOrder
+
+//#region 🔖️PaletteEntry
+/// 🎨️ One BITMAPINFOHEADER color-table entry (present when `bits_per_pixel <= 8`), stored in
+/// the file's own on-disk field order — a weak/value entity, whole-value replaced in diffs.
+/// 🧪️ F6: `dsl::DslRecord` — gives this nested value type `DslField` so it can be embedded by
+/// `BmpSnapshot`'s `#[derive(dsl::DslRecord)]` and `BmpPaletteModified`/`BmpPaletteAdded`'s
+/// `#[derive(dsl::DslRecord)]` in the diff module.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct BmpPaletteEntry {
+    pub b: u8,
+    pub g: u8,
+    pub r: u8,
+    pub reserved: u8,
+}
+//#endregion 🔖️PaletteEntry
+
 //#region 🔖️Snapshot
-/// 🖼️ `pixels` is an 8-bit RGBA buffer (`width * height * 4` bytes, row 0 = image top) — see
-/// `engine::decode_bmp`/`engine::encode_bmp` for the real BITMAPFILEHEADER/BITMAPINFOHEADER codec.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+/// 🖼️ Complete per-spec BITMAPINFOHEADER model (11 real fields) + palette + decoded pixels.
+/// `pixels` is a canonical 8-bit RGBA buffer (`width * height * 4` bytes, row 0 = image top,
+/// regardless of `row_order`) — see `engine::decode_bmp`/`engine::encode_bmp` for the real
+/// BITMAPFILEHEADER/BITMAPINFOHEADER codec and its documented encode scope cut.
+/// 🧪️ F6: `dsl::DslRecord` — flat header + palette + rows, zero enum-in-tree, zero tri-state
+/// (`Option<Option<_>>`), so the whole snapshot binds cleanly (`f6-recon-report.md` §8 row 14
+/// confirmed). `#[dsl(block)]` on `palette`/`pixels` for readability (framework precedent);
+/// `#[dsl(base64)]` on the bare `Vec<u8>` `pixels` field for a compact grammar.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
 pub struct BmpSnapshot {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
+    pub header_size: u32,
+    #[state(persistent)]
     pub width: u32,
     #[state(persistent)]
     pub height: u32,
     #[state(persistent)]
+    pub row_order: BmpRowOrder,
+    #[state(persistent)]
+    pub planes: u16,
+    #[state(persistent)]
+    pub bits_per_pixel: u16,
+    #[state(persistent)]
+    pub compression: u32,
+    #[state(persistent)]
+    pub image_size: u32,
+    #[state(persistent)]
+    pub x_pixels_per_meter: i32,
+    #[state(persistent)]
+    pub y_pixels_per_meter: i32,
+    #[state(persistent)]
+    pub colors_used: u32,
+    #[state(persistent)]
+    pub colors_important: u32,
+    #[state(persistent)]
     #[serde(default)]
+    #[dsl(block)]
+    pub palette: Vec<BmpPaletteEntry>,
+    #[state(persistent)]
+    #[serde(default)]
+    #[dsl(base64)]
     pub pixels: Vec<u8>,
 }
 
 impl Default for BmpSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), width: 0, height: 0, pixels: Vec::new() }
+        Self {
+            schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+            header_size: 40,
+            width: 0,
+            height: 0,
+            row_order: BmpRowOrder::BottomUp,
+            planes: 1,
+            bits_per_pixel: 24,
+            compression: 0,
+            image_size: 0,
+            x_pixels_per_meter: 0,
+            y_pixels_per_meter: 0,
+            colors_used: 0,
+            colors_important: 0,
+            palette: Vec::new(),
+            pixels: Vec::new(),
+        }
     }
 }
 //#endregion 🔖️Snapshot

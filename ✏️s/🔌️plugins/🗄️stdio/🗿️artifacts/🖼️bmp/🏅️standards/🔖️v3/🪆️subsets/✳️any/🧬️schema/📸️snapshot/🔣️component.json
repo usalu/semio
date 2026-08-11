@@ -2,14 +2,50 @@
   "$id": "https://semio.tech/schema/s.stdio.bmp/snapshot.json",
   "title": "BmpSnapshot",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "headerSize", "width", "height", "rowOrder", "planes", "bitsPerPixel",
+    "compression", "imageSize", "xPixelsPerMeter", "yPixelsPerMeter", "colorsUsed",
+    "colorsImportant", "palette", "pixels"
+  ],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "headerSize": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "width": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "height": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "rowOrder": { "$ref": "#/$defs/BmpRowOrder", "x-semio-state": "persistent" },
+    "planes": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "bitsPerPixel": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "compression": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "imageSize": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "xPixelsPerMeter": { "type": "integer", "x-semio-state": "persistent" },
+    "yPixelsPerMeter": { "type": "integer", "x-semio-state": "persistent" },
+    "colorsUsed": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "colorsImportant": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "palette": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": { "$ref": "#/$defs/BmpPaletteEntry" }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "pixels": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "description": "Canonical 8-bit RGBA, width*height*4 bytes, row 0 = image top.",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+    }
+  },
+  "$defs": {
+    "BmpRowOrder": { "type": "string", "enum": ["bottomUp", "topDown"] },
+    "BmpPaletteEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["b", "g", "r", "reserved"],
+      "properties": {
+        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "reserved": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
     }
   }
 }

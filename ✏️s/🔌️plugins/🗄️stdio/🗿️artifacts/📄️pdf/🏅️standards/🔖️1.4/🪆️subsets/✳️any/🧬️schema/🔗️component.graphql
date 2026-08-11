@@ -1,8 +1,5 @@
-type PdfEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ PdfArtifact (1.4) schema -- see 📸️snapshot/🔗️component.graphql for PageDoc.
 type PdfArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [PdfEntry!]! @state(class: PERSISTENT)
+  page: PageDoc! @state(class: PERSISTENT)
 }

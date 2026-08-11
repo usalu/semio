@@ -4,7 +4,7 @@
 //! `🔺️mesh` (not `os`) so plugins and the OS product share one definition without an
 //! inverted dependency — same reasoning as `mesh::MediaFormat`.
 
-use dsl::Diagnostic;
+use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::RwLock;
@@ -14,7 +14,16 @@ use std::sync::RwLock;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct StandardId(pub &'static str);
 
-/// 🪆️ A subset id — the text materialized as `🪆️subsets/✳️<dir>/`. `ANY` is the only subset today.
+/// 🪆️ A subset id — the text materialized as `🪆️subsets/✳️<dir>/`. Real subset ids name an
+/// industry-defined conformance profile/class/view of the standard (e.g. `"a"` = PDF/A, `"cc6"` =
+/// STEP AP214 CC6 advanced B-Rep, `"rv"` = IFC4 Reference View) — never a version and never a
+/// conformance LEVEL (PDF/A-2 vs -3, level "b"/"u"): level is data the subset's own analyzer
+/// detects and reports, not part of the id (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
+/// `ANY` is the unconstrained base subset every standard carries (dir `✳️any`) — there is by
+/// definition nothing to validate against it. The vocabulary of real subsets a given standard
+/// declares lives in that standard's `🪆️subsets/🔣️component.json` manifest (checked by
+/// `policyStandardSubsetVocabularyBreaches` in script.ts and by each standard's own
+/// `composer_roster_matches_declared_subset_vocabulary` test), not in this type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SubsetId(pub &'static str);
 
@@ -354,21 +363,38 @@ pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) {
 
 /// 🛡️ The generic validate-on-build hook (D5): if `dialect.subset` is anything other than
 /// `SubsetId::ANY` and a validator is registered for that EXACT dialect, run it and fold its
-/// `Diagnostic`s onto `diagnostics`. Advisory only -- a missing validator (not every subset needs
-/// one immediately), or a validator that itself returns diagnostics, never fails composition;
-/// diagnostics are soft signals here exactly like `Composition<T>`/`Analysis<T>` already carry
-/// elsewhere in this file (a subset composer wanting a HARD gate enforces that itself, inside its
-/// own `compose`, before ever returning `Ok` -- see the PDF/A-2b pilot). Called from every generic
-/// compose-dispatch path in this module (`io_dispatch`, `wire_artifact_compose`) so every future
-/// subset gets this for free the moment it registers a validator -- no dispatch call site needs to
-/// change again. Never panics: a poisoned registry lock or absent entry both degrade to a no-op.
+/// `Diagnostic`s onto `diagnostics`. Advisory only -- a validator that itself returns diagnostics
+/// never fails composition; diagnostics are soft signals here exactly like `Composition<T>`/
+/// `Analysis<T>` already carry elsewhere in this file (a subset composer wanting a HARD gate
+/// enforces that itself, inside its own `compose`, before ever returning `Ok` -- see the PDF/A
+/// pilot). Called from every generic compose-dispatch path in this module (`io_dispatch`,
+/// `wire_artifact_compose`) so every future subset gets this for free the moment it registers a
+/// validator -- no dispatch call site needs to change again. Never panics: a poisoned registry
+/// lock degrades to a no-op.
+///
+/// `ANY` always short-circuits (nothing to validate against the unconstrained base subset). A
+/// real (non-`ANY`) dialect with NO registered validator is, since ticket
+/// 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES, treated as a defect rather than silence
+/// -- every real subset is expected to register one (`policyStandardSubsetVocabularyBreaches`
+/// checks this statically) -- and emits one `io.subset.validator-missing` Warning naming the
+/// coordinate. Still never hard-fails here: the receiving side of a cross-plugin wire compose may
+/// legitimately not host the owning plugin's validator locally, and a missing validator is exactly
+/// the kind of thing a diagnostic (not a dispatch error) exists to surface.
 fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostics: &mut Vec<Diagnostic>) {
     if dialect.subset == SubsetId::ANY {
         return;
     }
     let Ok(reg) = subset_validator_registry().read() else { return };
-    if let Some(entry) = reg.get(&dialect) {
-        diagnostics.extend((entry.validate)(payload));
+    match reg.get(&dialect) {
+        Some(entry) => diagnostics.extend((entry.validate)(payload)),
+        None => diagnostics.push(Diagnostic {
+            code: FaultCode::new("io.subset.validator-missing"),
+            severity: Severity::Warning,
+            span: TextSpan::at(1, 1),
+            message: format!("no SubsetValidator registered for {}@{}/{}", dialect.artifact_kind, dialect.standard.0, dialect.subset.0),
+            expected: None,
+            scope: FaultScope::default(),
+        }),
     }
 }
 //#endregion 🔖️SubsetValidator
@@ -410,6 +436,17 @@ impl From<ComposedArtifact> for WireComposedArtifact {
 /// interns each DISTINCT coordinate exactly once (a bounded, one-time leak per never-before-seen
 /// dialect string for the lifetime of the process, the same tradeoff any string-interning table
 /// makes) and reuses it for every subsequent occurrence of that coordinate.
+///
+/// Deliberately validates nothing against a subset vocabulary (ticket
+/// 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES considered and rejected adding a check
+/// here): this runs on the RECEIVING side of cross-plugin compose, where the local process by
+/// design has no way to know the producing plugin's subset vocabulary — hard-failing on an
+/// "unrecognized" subset here would break legitimate cross-plugin io for any dialect the receiver
+/// simply hasn't loaded a manifest for. Authority already lives at the right boundaries instead:
+/// `wire_artifact_compose` rejects source dialects the local `ComposerEntry.reads` doesn't declare,
+/// `run_subset_validation` reports (never fails on) a missing validator, and static "does this
+/// standard's on-disk subset vocabulary match its declared manifest" enforcement is
+/// `policyStandardSubsetVocabularyBreaches`'s job in script.ts, not runtime intern's.
 fn intern_dialect(dialect: &ArtifactDialect) -> Dialect {
     static INTERNED: std::sync::OnceLock<RwLock<HashMap<ArtifactDialect, Dialect>>> = std::sync::OnceLock::new();
     let table = INTERNED.get_or_init(|| RwLock::new(HashMap::new()));

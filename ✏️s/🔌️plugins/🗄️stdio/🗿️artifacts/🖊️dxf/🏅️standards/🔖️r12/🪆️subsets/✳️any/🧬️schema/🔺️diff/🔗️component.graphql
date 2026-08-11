@@ -1,2 +1,87 @@
-# diff facet
- type Placeholder { lines: String! }
+# 🔺️ DxfDiff schema facet — mirrors 🦀️component.rs field-for-field (camelCase). Name-keyed
+# removed/modified/added triples for headerVars/layers/styles/linetypes; index-keyed triples
+# for blocks/entities. No full-replace `snapshot` slot anywhere.
+
+type DxfHeaderVarDiff {
+  groupCode: Int
+  value: DxfValue
+  extraGroupCodes: [DxfGroupCode!]
+}
+type DxfHeaderVarModified { name: String! diff: DxfHeaderVarDiff! }
+type DxfHeaderVarAdded { index: Int! headerVar: DxfHeaderVar! }
+type DxfHeaderVarsDiff {
+  removed: [String!]
+  modified: [DxfHeaderVarModified!]
+  added: [DxfHeaderVarAdded!]
+}
+
+type DxfLayerDiff { color: Int linetype: String flags: Int unknownGroupCodes: [DxfGroupCode!] }
+type DxfLayerModified { name: String! diff: DxfLayerDiff! }
+type DxfLayerAdded { index: Int! layer: DxfLayer! }
+type DxfLayersDiff { removed: [String!] modified: [DxfLayerModified!] added: [DxfLayerAdded!] }
+
+type DxfStyleDiff { flags: Int fontName: String unknownGroupCodes: [DxfGroupCode!] }
+type DxfStyleModified { name: String! diff: DxfStyleDiff! }
+type DxfStyleAdded { index: Int! style: DxfStyle! }
+type DxfStylesDiff { removed: [String!] modified: [DxfStyleModified!] added: [DxfStyleAdded!] }
+
+type DxfLinetypeDiff { flags: Int description: String unknownGroupCodes: [DxfGroupCode!] }
+type DxfLinetypeModified { name: String! diff: DxfLinetypeDiff! }
+type DxfLinetypeAdded { index: Int! linetype: DxfLinetype! }
+type DxfLinetypesDiff { removed: [String!] modified: [DxfLinetypeModified!] added: [DxfLinetypeAdded!] }
+
+type DxfTablesDiff {
+  layers: DxfLayersDiff
+  styles: DxfStylesDiff
+  linetypes: DxfLinetypesDiff
+}
+
+enum DxfEntityDiffKind { REPLACE LINE CIRCLE ARC POLYLINE TEXT SOLID INSERT OTHER }
+
+"""🔺️ `REPLACE` fires when the entity KIND changes at this index; otherwise a kind-specific
+sparse field diff. Discriminated on `kind`; other fields null unless relevant."""
+type DxfEntityDiff {
+  kind: DxfEntityDiffKind!
+  replaceEntity: DxfEntity
+  start: [Float!]
+  end: [Float!]
+  center: [Float!]
+  radius: Float
+  startAngle: Float
+  endAngle: Float
+  vertices: [DxfVertex!]
+  closed: Boolean
+  position: [Float!]
+  height: Float
+  value: String
+  points: [[Float!]!]
+  blockName: String
+  scale: [Float!]
+  rotation: Float
+  layer: String
+  groupCodes: [DxfGroupCode!]
+  unknownGroupCodes: [DxfGroupCode!]
+}
+
+type DxfEntityModified { index: Int! diff: DxfEntityDiff! }
+type DxfEntityAdded { index: Int! entity: DxfEntity! }
+"""🔺️ Reused for both DxfSnapshot.entities and each DxfBlock.entities."""
+type DxfEntitiesDiff { removed: [Int!] modified: [DxfEntityModified!] added: [DxfEntityAdded!] }
+
+type DxfBlockDiff {
+  name: String
+  basePoint: [Float!]
+  entities: DxfEntitiesDiff
+  unknownGroupCodes: [DxfGroupCode!]
+}
+type DxfBlockModified { index: Int! diff: DxfBlockDiff! }
+type DxfBlockAdded { index: Int! block: DxfBlock! }
+type DxfBlocksDiff { removed: [Int!] modified: [DxfBlockModified!] added: [DxfBlockAdded!] }
+
+"""🔺️ Diff for stdio.dxf. `schema` is an identity field and never appears here."""
+type DxfDiff {
+  headerVars: DxfHeaderVarsDiff
+  tables: DxfTablesDiff
+  blocks: DxfBlocksDiff
+  entities: DxfEntitiesDiff
+}

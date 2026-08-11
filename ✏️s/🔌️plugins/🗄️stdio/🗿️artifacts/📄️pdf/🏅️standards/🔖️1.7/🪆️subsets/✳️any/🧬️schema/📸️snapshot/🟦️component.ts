@@ -1,9 +1,66 @@
-/** 🧬️ PdfSnapshot schema. */
-export interface PdfEntry {
-  name: string;
-  data: number[];
+/** 🧬️ PdfSnapshot (1.7) schema — real object-graph model mirroring the Rust `PdfSnapshot` shape
+ *  1:1. `objects` is the FULL raw indirect-object graph (lossless retention); `pages` is the
+ *  resolved, editable view; `trailer` is the trailer dictionary (same shape as a `Dict`). */
+
+/** 🔗️ An indirect-object reference `N G R` -- also the `objects` collection's diff key. */
+export interface ObjRef {
+  num: number;
+  gen: number;
 }
+
+/** 🧩 One `key`/`value` pair of a PDF dictionary (order-preserving array, not a map). */
+export interface PdfDictEntry {
+  key: string;
+  value: PdfObject;
+}
+
+/** 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including streams.
+ *  `str` is a byte string (not necessarily UTF-8), hence `number[]`. `stream.rawFilter` present
+ *  means `data` is still filter-encoded verbatim (an unsupported filter we deliberately don't
+ *  decode); absent means `data` has already been fully filter-decoded. */
+export type PdfObject =
+  | { kind: 'null' }
+  | { kind: 'bool'; value: boolean }
+  | { kind: 'int'; value: number }
+  | { kind: 'real'; value: number }
+  | { kind: 'str'; value: number[] }
+  | { kind: 'name'; value: string }
+  | { kind: 'array'; value: PdfObject[] }
+  | { kind: 'dict'; value: PdfDictEntry[] }
+  | { kind: 'ref'; value: ObjRef }
+  | { kind: 'stream'; dict: PdfDictEntry[]; data: number[]; rawFilter?: string };
+
+/** 🗄️ One `N G obj ... endobj` indirect object, keyed by `id`. */
+export interface PdfIndirectObject {
+  id: ObjRef;
+  value: PdfObject;
+}
+
+/** 📄️ One resolved page -- inherited `/Resources`/`/MediaBox`/`/CropBox`/`/Rotate` already
+ *  applied, text already extracted from its content stream(s). */
+export interface PdfPage {
+  mediaBox: [number, number, number, number];
+  cropBox?: [number, number, number, number];
+  rotate: number;
+  text: string;
+}
+
+/** 📇️ Document `/Info` dictionary. */
+export interface PdfInfo {
+  title?: string;
+  author?: string;
+  subject?: string;
+  keywords?: string;
+  creator?: string;
+  producer?: string;
+}
+
+/** 🧬️ `stdio.pdf` (1.7) persistent snapshot. */
 export interface PdfSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: PdfEntry[];
+  /** @state persistent */ declaredVersion: string;
+  /** @state persistent */ pages: PdfPage[];
+  /** @state persistent */ info: PdfInfo;
+  /** @state persistent */ objects: PdfIndirectObject[];
+  /** @state persistent */ trailer: PdfDictEntry[];
 }

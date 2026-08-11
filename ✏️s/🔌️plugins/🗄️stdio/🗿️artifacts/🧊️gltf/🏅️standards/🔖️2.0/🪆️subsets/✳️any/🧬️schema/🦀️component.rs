@@ -1,6 +1,6 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
-use crate::artifacts::gltf::schema::snapshot::GltfSourceForm;
+use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
 use crate::artifacts::gltf::GltfSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ pub struct GltfArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub document: serde_json::Value,
+    pub document: GltfDocument,
     #[state(persistent)]
     #[serde(default)]
     pub buffers: Vec<Vec<u8>>,

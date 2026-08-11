@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/stdio.ifc.2x3/snapshot/binary.json",
+  "title": "Ifc2x3SnapshotBinary",
+  "type": "object"
+}

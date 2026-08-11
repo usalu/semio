@@ -138,7 +138,7 @@ mod tests {
         let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Text(text)]);
         assert_eq!(analysis.confidence, IoConfidence::High);
         let snap = analysis.parts.snapshot.expect("snapshot");
-        assert_eq!(snap.document["asset"]["version"], "2.0");
+        assert_eq!(snap.document.asset.version, "2.0");
     }
 }
 //#endregion 🧪️Tests

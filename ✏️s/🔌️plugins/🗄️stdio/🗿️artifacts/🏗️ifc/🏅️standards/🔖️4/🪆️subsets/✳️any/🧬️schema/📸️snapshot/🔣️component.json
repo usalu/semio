@@ -2,14 +2,62 @@
   "$id": "https://semio.tech/schema/s.stdio.ifc/snapshot.json",
   "title": "IfcSnapshot",
   "type": "object",
+  "definitions": {
+    "IfcValue": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["unset", "derived", "integer", "real", "string", "enum", "reference", "aggregate", "typedValue"]
+        },
+        "value": {
+          "description": "present for every kind except unset/derived; integer/real are numbers, string/enum are strings, reference is a non-negative integer id, aggregate is IfcValue[], typedValue is a [string, IfcValue[]] tuple"
+        }
+      }
+    },
+    "IfcComplexType": {
+      "type": "object",
+      "required": ["name", "args"],
+      "properties": {
+        "name": { "type": "string" },
+        "args": { "type": "array", "items": { "$ref": "#/definitions/IfcValue" } }
+      }
+    },
+    "IfcEntity": {
+      "type": "object",
+      "required": ["id", "name", "args"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "args": { "type": "array", "items": { "$ref": "#/definitions/IfcValue" } },
+        "complex": { "type": "array", "items": { "$ref": "#/definitions/IfcComplexType" } }
+      }
+    },
+    "IfcHeader": {
+      "type": "object",
+      "required": ["fileDescription", "fileName", "fileSchema"],
+      "properties": {
+        "fileDescription": { "type": "array", "items": { "$ref": "#/definitions/IfcValue" } },
+        "fileName": { "type": "array", "items": { "$ref": "#/definitions/IfcValue" } },
+        "fileSchema": { "type": "array", "items": { "$ref": "#/definitions/IfcValue" } }
+      }
+    }
+  },
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "persistent"
     },
-    "text": {
-      "type": "string",
+    "header": {
+      "$ref": "#/definitions/IfcHeader",
+      "x-semio-state": "persistent"
+    },
+    "entities": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/IfcEntity" },
       "x-semio-state": "persistent"
     }
-  }
+  },
+  "required": ["schema", "header", "entities"]
 }

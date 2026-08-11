@@ -16,6 +16,10 @@ pub fn register() {
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️valid subset's SubsetValidator so
+    // the wire-level `io_dispatch`/`wire_artifact_compose` hook can re-check it. The ComposerEntry
+    // itself is registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::xml::standards::v1_0::subsets::valid::composer::register();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
@@ -347,11 +351,11 @@ mod tests {
         // Synthetic pairs.
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&DiffAlgebra::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&DiffAlgebra::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b), &a), b);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a), &b), a);
 
         let sample = sample_snapshot();
-        assert_eq!(MutationDiff::apply(&DiffAlgebra::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // Real fixture (the demo's `example.xml`) diffed against a mutated variant.
         let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/example.xml");
@@ -363,8 +367,8 @@ mod tests {
             &XmlMutation::SetAttribute { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) },
         );
         assert_ne!(fixture, mutated);
-        assert_eq!(MutationDiff::apply(&DiffAlgebra::between(&fixture, &mutated), &fixture), mutated);
-        assert_eq!(MutationDiff::apply(&DiffAlgebra::between(&mutated, &fixture), &mutated), fixture);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture), mutated);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated), fixture);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 

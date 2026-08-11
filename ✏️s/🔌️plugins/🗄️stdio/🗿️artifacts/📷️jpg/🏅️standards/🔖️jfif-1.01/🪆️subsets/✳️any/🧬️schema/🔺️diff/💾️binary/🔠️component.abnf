@@ -1,3 +1,4 @@
-; abnf stdio.jpg diff
-document = payload
-payload = *OCTET
+; abnf stdio.jpg diff (binary representation)
+document = json-payload
+; json-payload = UTF-8 JSON encoding of JpgDiff -- see the sibling JSON Schema facet.
+json-payload = *OCTET

@@ -7,7 +7,10 @@
 //! grayscale, SOF2 rejection) before landing here.
 
 use crate::artifacts::jpg::{
-    schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgScanComponent, RasterImage},
+    schema::snapshot::{
+        JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass,
+        JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment,
+    },
     JpgArtifact, JpgDiff, JpgMutation, JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA,
 };
 use std::collections::HashMap;
@@ -478,21 +481,51 @@ fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (V
     (out, dw, dh)
 }
 
+/// 🏷️ Builds a real `APP0`/`JFIF\0` segment (ITU-T T.871 §) from `snap.jfif_*`, including an
+/// embedded thumbnail when present.
+fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
+    let thumb = snap.jfif_thumbnail.as_ref();
+    let (tw, th, tdata): (u8, u8, &[u8]) = match thumb {
+        Some(t) => (t.width, t.height, &t.rgb_data),
+        None => (0, 0, &[]),
+    };
+    let len = 2 + 5 + 2 + 1 + 2 + 2 + 1 + 1 + tdata.len();
+    let mut out = vec![0xFFu8, 0xE0, (len >> 8) as u8, (len & 0xFF) as u8];
+    out.extend_from_slice(b"JFIF\0");
+    out.push(snap.jfif_version.0);
+    out.push(snap.jfif_version.1);
+    out.push(snap.jfif_density_units.to_u8());
+    out.push((snap.jfif_x_density >> 8) as u8);
+    out.push((snap.jfif_x_density & 0xFF) as u8);
+    out.push((snap.jfif_y_density >> 8) as u8);
+    out.push((snap.jfif_y_density & 0xFF) as u8);
+    out.push(tw);
+    out.push(th);
+    out.extend_from_slice(tdata);
+    out
+}
+
 /// 🖨️ Encodes an RGBA raster as baseline sequential JPEG, 3-component
-/// (Y/Cb/Cr, ids 1/2/3) 4:2:0 subsampled, Annex K example tables at quality 90
-/// — chosen so the round trip through our own decoder stays well under a
-/// visually-lossless error budget. Edges are replicated (not zero-padded) up
-/// to the next MCU (16x16) boundary to avoid ringing.
+/// (Y/Cb/Cr, ids 1/2/3) 4:2:0 subsampled, Annex K example tables scaled by
+/// `snap.re_encode_quality` (IJG convention, default 90) — chosen so the round trip through our
+/// own decoder stays well under a visually-lossless error budget. Edges are replicated (not
+/// zero-padded) up to the next MCU (16x16) boundary to avoid ringing. Writes a real JFIF APP0
+/// from `snap.jfif_*` and re-emits `snap.other_segments` verbatim right after it — always
+/// canonicalizes to fresh Annex K DQT/DHT tables at the chosen quality (documented normal form,
+/// matches png's pixel-canonicalization precedent: `quant_tables`/`huffman_tables` are typed
+/// RETENTION of a decoded file's actual tables, not necessarily what a subsequent re-encode
+/// emits) — `restart_interval` is retained but this encoder never emits `DRI`/restart markers
+/// (documented deviation, `## deviations`).
 pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
-    let img = &snap.image;
-    if img.width == 0 || img.height == 0 { return Err(JpgError::Malformed("empty image".into())); }
-    if img.rgba.len() != (img.width as usize) * (img.height as usize) * 4 {
-        return Err(JpgError::Malformed("rgba length mismatch".into()));
+    if snap.width == 0 || snap.height == 0 { return Err(JpgError::Malformed("empty image".into())); }
+    if snap.pixels.len() != (snap.width as usize) * (snap.height as usize) * 4 {
+        return Err(JpgError::Malformed("pixels length mismatch".into()));
     }
-    if img.width > u16::MAX as u32 || img.height > u16::MAX as u32 {
+    if snap.width > u16::MAX as u32 || snap.height > u16::MAX as u32 {
         return Err(JpgError::Unsupported("image dimensions exceed JPEG's 16-bit SOF0 width/height field".into()));
     }
-    let (width, height): (u16, u16) = (img.width as u16, img.height as u16);
+    let (width, height): (u16, u16) = (snap.width as u16, snap.height as u16);
+    let quality = snap.re_encode_quality.map(|q| q as i32).unwrap_or(90);
     let hmax = 2usize;
     let vmax = 2usize;
     let mcu_w = 8 * hmax;
@@ -510,7 +543,7 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
         for x in 0..pw {
             let sx = x.min(width as usize - 1);
             let idx = (sy * width as usize + sx) * 4;
-            let (yy, cb, cr) = rgb_to_ycbcr(img.rgba[idx], img.rgba[idx + 1], img.rgba[idx + 2]);
+            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]);
             yfull[y * pw + x] = yy;
             cbfull[y * pw + x] = cb;
             crfull[y * pw + x] = cr;
@@ -526,8 +559,8 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     ];
     let frame = JpgFrameHeader { precision: 8, width, height, components: comps.to_vec() };
 
-    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, 90));
-    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, 90));
+    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality));
+    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality));
     let dc_luma = build_huffman(&DC_LUMA_BITS, &dc_luma_values())?;
     let ac_luma = build_huffman(&AC_LUMA_BITS, &ac_luma_values())?;
     let dc_chroma = build_huffman(&DC_CHROMA_BITS, &dc_chroma_values())?;
@@ -535,7 +568,15 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
 
     let mut out = Vec::new();
     out.extend_from_slice(&[0xFF, 0xD8]); // SOI
-    out.extend_from_slice(&[0xFF, 0xE0, 0x00, 0x10, b'J', b'F', b'I', b'F', 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]); // APP0/JFIF
+    out.extend_from_slice(&encode_jfif_app0(snap));
+    for seg in &snap.other_segments {
+        out.push(0xFF);
+        out.push(seg.marker);
+        let len = seg.data.len() + 2;
+        out.push((len >> 8) as u8);
+        out.push((len & 0xFF) as u8);
+        out.extend_from_slice(&seg.data);
+    }
 
     let mut dqt0 = vec![0xFFu8, 0xDB, 0x00, 0x43, 0x00];
     dqt0.extend(luma_q.iter().map(|&v| v as u8));
@@ -634,6 +675,29 @@ fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8
 //#endregion Encode
 
 //#region Decode
+/// 🏷️ Attempts to parse `seg` (the APP0 segment body, i.e. everything after the 2-byte length
+/// field) as a real JFIF header (ITU-T T.871 §: 5-byte `"JFIF\0"` identifier + version + units +
+/// x/y density + thumbnail dims + optional embedded RGB thumbnail). `None` if the identifier
+/// doesn't match — a non-JFIF APP0 (e.g. a bare Exif/other APP0) is retained verbatim in
+/// `other_segments` instead by the caller.
+fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
+    if seg.len() < 14 || &seg[0..5] != b"JFIF\0" { return None; }
+    let version = (seg[5], seg[6]);
+    let units = JfifDensityUnits::from_u8(seg[7]).ok()?;
+    let x_density = ((seg[8] as u16) << 8) | seg[9] as u16;
+    let y_density = ((seg[10] as u16) << 8) | seg[11] as u16;
+    let tw = seg[12];
+    let th = seg[13];
+    let need = 3 * tw as usize * th as usize;
+    let thumbnail = if tw > 0 && th > 0 && seg.len() >= 14 + need {
+        Some(JfifThumbnail { width: tw, height: th, rgb_data: seg[14..14 + need].to_vec() })
+    } else {
+        None
+    };
+    Some((version, units, x_density, y_density, thumbnail))
+}
+type JfifVersion = (u8, u8);
+
 /// 📥 Decodes baseline sequential JPEG (SOF0 only) into an RGBA raster.
 /// Any other SOFn marker (progressive/extended/lossless/arithmetic) is a
 /// typed `JpgError::Unsupported` naming the exact variant — never decoded.
@@ -645,8 +709,18 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     let mut quant: HashMap<u8, [i32; 64]> = HashMap::new();
     let mut dc_tables: HashMap<u8, HuffTable> = HashMap::new();
     let mut ac_tables: HashMap<u8, HuffTable> = HashMap::new();
+    let mut quant_tables: Vec<JpgQuantTable> = Vec::new();
+    let mut huffman_tables: Vec<JpgHuffmanTable> = Vec::new();
+    let mut other_segments: Vec<JpgSegment> = Vec::new();
     let mut frame: Option<JpgFrameHeader> = None;
-    let mut restart_interval = 0u16;
+    let mut sof_marker: u8 = 0;
+    let mut restart_interval_raw = 0u16;
+    let mut restart_interval: Option<u16> = None;
+    let mut jfif_version: JfifVersion = (1, 1);
+    let mut jfif_density_units = JfifDensityUnits::Aspect;
+    let mut jfif_x_density: u16 = 1;
+    let mut jfif_y_density: u16 = 1;
+    let mut jfif_thumbnail: Option<JfifThumbnail> = None;
 
     loop {
         if i + 1 >= data.len() { return Err(JpgError::Malformed("truncated before EOI".into())); }
@@ -675,6 +749,7 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     });
                 }
                 frame = Some(JpgFrameHeader { precision: seg[0], width, height, components });
+                sof_marker = marker;
                 i += len;
             }
             0xC1 | 0xC2 | 0xC3 | 0xC5 | 0xC6 | 0xC7 | 0xC9 | 0xCA | 0xCB | 0xCD | 0xCE | 0xCF => {
@@ -704,18 +779,25 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     let tq = data[p] & 0x0F;
                     p += 1;
                     let mut tbl = [0i32; 64];
-                    for slot in tbl.iter_mut() {
+                    let mut tbl_u16 = [0u16; 64];
+                    for (z, slot) in tbl.iter_mut().enumerate() {
                         if pq == 0 {
-                            *slot = *data.get(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))? as i32;
+                            let v = *data.get(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
+                            *slot = v as i32;
+                            tbl_u16[z] = v as u16;
                             p += 1;
                         } else {
                             let hi = *data.get(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
                             let lo = *data.get(p + 1).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
-                            *slot = ((hi as i32) << 8) | lo as i32;
+                            let v = ((hi as u16) << 8) | lo as u16;
+                            *slot = v as i32;
+                            tbl_u16[z] = v;
                             p += 2;
                         }
                     }
                     quant.insert(tq, tbl);
+                    quant_tables.retain(|t| t.id != tq);
+                    quant_tables.push(JpgQuantTable { id: tq, precision: pq, values: tbl_u16 });
                 }
                 i += len;
             }
@@ -735,14 +817,29 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     let values = slice_at(data, p, count)?.to_vec();
                     p += count;
                     let table = build_huffman(&bits, &values)?;
+                    let huffman_class = JpgHuffmanClass::from_u8(class).map_err(JpgError::Malformed)?;
                     if class == 0 { dc_tables.insert(id, table); } else { ac_tables.insert(id, table); }
+                    huffman_tables.retain(|t| !(t.class == huffman_class && t.id == id));
+                    huffman_tables.push(JpgHuffmanTable { id, class: huffman_class, bits, values });
                 }
                 i += len;
+            }
+            0xCC => {
+                // 🚫 DAC (Define Arithmetic Coding conditioning) — its presence means the
+                // entropy-coded scan needs arithmetic decoding, which this Huffman-only decoder
+                // never implements (T.81 baseline sequential DCT is Huffman-only, Annex F). An
+                // explicit `Unsupported` here (rather than falling through to the generic
+                // "unhandled marker" `Malformed` case below) preserves the module's "never decode
+                // arithmetic-coded data as Huffman garbage" invariant with a precise error, and
+                // means `JpgSnapshot.arithmetic` is genuinely `false` for every snapshot this
+                // engine ever returns `Ok` for (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
+                return Err(JpgError::Unsupported("arithmetic coding conditioning (DAC present)".into()));
             }
             0xDD => {
                 let len = read_u16(data, i)?;
                 let seg = slice_at(data, i + 2, 2)?;
-                restart_interval = ((seg[0] as u16) << 8) | seg[1] as u16;
+                restart_interval_raw = ((seg[0] as u16) << 8) | seg[1] as u16;
+                restart_interval = Some(restart_interval_raw);
                 i += len;
             }
             0xDA => {
@@ -762,14 +859,55 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
                 }
                 i += len;
-                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval)?;
+                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw)?;
+                let (width, height) = (frame.width as u32, frame.height as u32);
+                // 🏅️ sof_marker/arithmetic: real data the decode loop above already computed
+                // transiently (the SOF0 marker byte, the DAC rejection above) — persisted here so
+                // `subsets::baseline::analyzer::check_baseline_conformance`
+                // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) has real fields
+                // to check instead of an unmodeled gap. `dc_huffman_table_count`/
+                // `ac_huffman_table_count` are now DERIVED from `huffman_tables` by the analyzer
+                // (ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION) —
+                // no longer separately persisted, one source of truth.
                 return Ok(JpgSnapshot {
                     schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-                    image: RasterImage { width: frame.width as u32, height: frame.height as u32, rgba },
+                    width,
+                    height,
+                    pixels: rgba,
+                    re_encode_quality: None,
+                    jfif_version,
+                    jfif_density_units,
+                    jfif_x_density,
+                    jfif_y_density,
+                    jfif_thumbnail,
+                    frame: Some(frame),
+                    sof_marker,
+                    arithmetic: false,
+                    quant_tables,
+                    huffman_tables,
+                    restart_interval,
+                    other_segments,
                 });
             }
-            0xE0..=0xEF | 0xFE => {
+            0xE0 => {
                 let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                match parse_jfif_app0(seg) {
+                    Some((version, units, xd, yd, thumb)) => {
+                        jfif_version = version;
+                        jfif_density_units = units;
+                        jfif_x_density = xd;
+                        jfif_y_density = yd;
+                        jfif_thumbnail = thumb;
+                    }
+                    None => other_segments.push(JpgSegment { marker, data: seg.to_vec() }),
+                }
+                i += len;
+            }
+            0xE1..=0xEF | 0xFE => {
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                other_segments.push(JpgSegment { marker, data: seg.to_vec() });
                 i += len;
             }
             0x01 | 0xD0..=0xD7 => {} // TEM / stray restart outside a scan: no length field, skip
@@ -898,6 +1036,11 @@ pub fn register() {
     crate::artifacts::jpg::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::jpg::schema::jpg_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️baseline subset's SubsetValidator
+    // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) so `io_dispatch`/
+    // `wire_artifact_compose` re-check it for free. The baseline ComposerEntry itself is
+    // registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::composer::register();
 }
 
 pub struct JpgEngine { artifact_state: JpgArtifact, snapshot_state: JpgSnapshot }
@@ -1007,14 +1150,14 @@ mod tests {
     fn gradient_round_trip_under_mae_threshold() {
         let (w, h) = (48u32, 40u32);
         let img = gradient_image(w, h);
-        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: img.clone() } };
+        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
         let bytes = encode_jpg(&snap).expect("encode");
         assert!(bytes.starts_with(&[0xFF, 0xD8]));
         assert!(bytes.ends_with(&[0xFF, 0xD9]));
         let decoded = decode_jpg(&bytes).expect("decode");
-        assert_eq!(decoded.image.width, w);
-        assert_eq!(decoded.image.height, h);
-        let err = mae(&img, &decoded.image.rgba);
+        assert_eq!(decoded.width, w);
+        assert_eq!(decoded.height, h);
+        let err = mae(&img, &decoded.pixels);
         println!("gradient round-trip MAE = {err}");
         assert!(err < 10.0, "gradient MAE too high: {err}");
     }
@@ -1025,10 +1168,10 @@ mod tests {
     fn checkerboard_round_trip_under_mae_threshold() {
         let (w, h) = (32u32, 32u32);
         let img = checkerboard_image(w, h);
-        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: img.clone() } };
+        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
         let bytes = encode_jpg(&snap).expect("encode");
         let decoded = decode_jpg(&bytes).expect("decode");
-        let err = mae(&img, &decoded.image.rgba);
+        let err = mae(&img, &decoded.pixels);
         println!("checkerboard round-trip MAE = {err}");
         assert!(err < 10.0, "checkerboard MAE too high: {err}");
     }
@@ -1038,10 +1181,10 @@ mod tests {
         let (w, h) = (16u32, 16u32);
         let mut img = vec![0u8; (w * h * 4) as usize];
         for px in img.chunks_mut(4) { px[0] = 200; px[1] = 100; px[2] = 50; px[3] = 255; }
-        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: RasterImage { width: w, height: h, rgba: img.clone() } };
+        let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
         let bytes = encode_jpg(&snap).expect("encode");
         let decoded = decode_jpg(&bytes).expect("decode");
-        let err = mae(&img, &decoded.image.rgba);
+        let err = mae(&img, &decoded.pixels);
         assert!(err < 5.0, "solid MAE too high: {err}");
     }
 

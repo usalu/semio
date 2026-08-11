@@ -2,14 +2,147 @@
   "$id": "https://semio.tech/schema/s.stdio.obj/diff.json",
   "title": "ObjDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "vertices": { "$ref": "#/$defs/ObjVerticesDiff" },
+    "texcoords": { "$ref": "#/$defs/ObjTexCoordsDiff" },
+    "normals": { "$ref": "#/$defs/ObjNormalsDiff" },
+    "faces": { "$ref": "#/$defs/ObjFacesDiff" },
+    "groups": { "$ref": "#/$defs/ObjGroupsDiff" },
+    "objects": { "$ref": "#/$defs/ObjObjectsDiff" },
+    "mtllib": { "type": ["string", "null"], "description": "tri-state: absent=unchanged, null=cleared, string=set" },
+    "usemtl": { "type": "array", "items": { "$ref": "#/$defs/ObjUsemtlRange" } },
+    "smoothingGroups": { "type": "array", "items": { "$ref": "#/$defs/ObjSmoothingRange" } },
+    "unknownStatements": { "type": "array", "items": { "$ref": "#/$defs/ObjUnknownStatement" } }
+  },
+  "$defs": {
+    "ObjFaceVertex": {
+      "type": "object", "additionalProperties": false, "required": ["vertex"],
+      "properties": { "vertex": { "type": "integer" }, "texcoord": { "type": "integer" }, "normal": { "type": "integer" } }
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "ObjUsemtlRange": {
+      "type": "object", "additionalProperties": false, "required": ["faceIndexFrom", "material"],
+      "properties": { "faceIndexFrom": { "type": "integer" }, "material": { "type": "string" } }
+    },
+    "ObjSmoothingRange": {
+      "type": "object", "additionalProperties": false, "required": ["faceIndexFrom"],
+      "properties": { "faceIndexFrom": { "type": "integer" }, "group": { "type": "integer" } }
+    },
+    "ObjUnknownStatement": {
+      "type": "object", "additionalProperties": false, "required": ["lineIndex", "raw"],
+      "properties": { "lineIndex": { "type": "integer" }, "raw": { "type": "string" } }
+    },
+    "ObjVertexDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "w": { "type": ["number", "null"] } }
+    },
+    "ObjVertexModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/ObjVertexDiff" } }
+    },
+    "ObjVertexAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "vertex"],
+      "properties": { "index": { "type": "integer" }, "vertex": { "type": "object" } }
+    },
+    "ObjVerticesDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjVertexModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjVertexAdded" } }
+      }
+    },
+    "ObjTexCoordDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "u": { "type": "number" }, "v": { "type": "number" }, "w": { "type": ["number", "null"] } }
+    },
+    "ObjTexCoordModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/ObjTexCoordDiff" } }
+    },
+    "ObjTexCoordAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "texcoord"],
+      "properties": { "index": { "type": "integer" }, "texcoord": { "type": "object" } }
+    },
+    "ObjTexCoordsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjTexCoordModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjTexCoordAdded" } }
+      }
+    },
+    "ObjNormalDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }
+    },
+    "ObjNormalModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/ObjNormalDiff" } }
+    },
+    "ObjNormalAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "normal"],
+      "properties": { "index": { "type": "integer" }, "normal": { "type": "object" } }
+    },
+    "ObjNormalsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjNormalModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjNormalAdded" } }
+      }
+    },
+    "ObjFaceDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "vertices": { "type": "array", "items": { "$ref": "#/$defs/ObjFaceVertex" } } }
+    },
+    "ObjFaceModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/ObjFaceDiff" } }
+    },
+    "ObjFaceAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "face"],
+      "properties": { "index": { "type": "integer" }, "face": { "type": "object" } }
+    },
+    "ObjFacesDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjFaceModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjFaceAdded" } }
+      }
+    },
+    "ObjGroupDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "faces": { "type": "array", "items": { "type": "integer" } } }
+    },
+    "ObjGroupModified": {
+      "type": "object", "additionalProperties": false, "required": ["name", "diff"],
+      "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/ObjGroupDiff" } }
+    },
+    "ObjGroupAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "group"],
+      "properties": { "index": { "type": "integer" }, "group": { "type": "object" } }
+    },
+    "ObjGroupsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjGroupModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjGroupAdded" } }
+      }
+    },
+    "ObjObjectAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "object"],
+      "properties": { "index": { "type": "integer" }, "object": { "type": "object" } }
+    },
+    "ObjObjectsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/ObjGroupModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/ObjObjectAdded" } }
+      }
     }
   }
 }

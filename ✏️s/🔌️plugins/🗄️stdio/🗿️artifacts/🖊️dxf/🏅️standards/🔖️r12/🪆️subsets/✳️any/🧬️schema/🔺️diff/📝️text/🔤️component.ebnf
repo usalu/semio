@@ -1,3 +1,11 @@
-(* ebnf stdio.dxf diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.dxf', newline ;
+(* DxfDiff's wire text IS its JSON serialization (protocol::OpText — serde_json), sparse
+   fields per 🦀️component.rs; this documents the real shape, not RFC 8259's JSON grammar. *)
+diff = "{", [ member, { ",", member } ], "}" ;
+member = '"headerVars"', ":", named diff
+       | '"tables"', ":", tables diff
+       | '"blocks"', ":", indexed diff
+       | '"entities"', ":", indexed diff ;
+tables diff = "{", [ tmember, { ",", tmember } ], "}" ;
+tmember = '"layers"', ":", named diff | '"styles"', ":", named diff | '"linetypes"', ":", named diff ;
+named diff = "{", [ json member, { ",", json member } ], "}" ;    (* removed/modified/added, string-keyed *)
+indexed diff = "{", [ json member, { ",", json member } ], "}" ;  (* removed/modified/added, index-keyed *)

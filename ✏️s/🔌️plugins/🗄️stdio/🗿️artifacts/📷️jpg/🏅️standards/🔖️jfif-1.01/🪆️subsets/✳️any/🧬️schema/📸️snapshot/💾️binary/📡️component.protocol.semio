@@ -1,3 +1,23 @@
 dialect protocol stdio.jpg.snapshot
-magic = %x00
-payload = *OCTET
+; 📡 Real pack encoding: semio binary envelope (magic "SEMI" + schema/component/version header,
+; see `store::semio_format::wrap_binary`/`unwrap_binary`) wrapping the ACTUAL JFIF byte stream
+; `engine::encode_jpg`/`decode_jpg` produce/consume — ITU-T T.81/ISO 10918-1 marker-segment
+; structure, not a raw octet blob.
+magic = %x53.45.4D.49                      ; "SEMI"
+envelope-header = 28OCTET                  ; schema id hash + component + version + length
+payload = jpeg-stream
+jpeg-stream = SOI segment* app0 segment* sof0 segment* sos entropy-data EOI
+SOI = %xFF.D8
+EOI = %xFF.D9
+segment = marker length body
+marker = %xFF octet-not-D8-D9-DA
+length = 2OCTET                            ; big-endian, includes itself
+body = *OCTET
+app0 = %xFF.E0 length "JFIF" %x00 version units x-density y-density thumb-w thumb-h thumb-rgb
+sof0 = %xFF.C0 length precision height width n-components component+
+dqt  = %xFF.DB length (table-id precision-tbl 64qk)+
+dht  = %xFF.C4 length (class-id 16-counts symbol*)+
+dri  = %xFF.DD length restart-interval
+sos  = %xFF.DA length n-scan-components scan-component+ Ss Se AhAl
+entropy-data = (byte-stuffed-octet / restart-marker)* ; %xFF followed by %x00 is a literal
+                                                        ; %xFF data byte (byte-stuffing, T.81 F.1.2.3)

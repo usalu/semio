@@ -7,9 +7,10 @@ use crate::artifacts::md::MdSnapshot;
 /// 🗂️ Register serializer hooks.
 pub fn register() {}
 
-/// 📤️ Encode md into a TxtSnapshot.
+/// 📤️ Encode md into a TxtSnapshot (rendered markdown text -- see `render_markdown_blocks`'s
+/// doc comment for the documented normal form this renders to).
 pub fn serialize(from: &MdSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    Ok(TxtSnapshot::from_body(&from.body))
+    Ok(TxtSnapshot::from_body(&crate::artifacts::md::engine::render_markdown_blocks(&from.blocks)))
 }
 
 /// 📤️ Encode as txt DSL.

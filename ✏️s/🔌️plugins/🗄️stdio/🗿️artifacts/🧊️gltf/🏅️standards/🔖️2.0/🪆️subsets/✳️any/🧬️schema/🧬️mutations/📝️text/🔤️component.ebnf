@@ -1,3 +1,7 @@
-(* ebnf stdio.gltf mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.gltf', newline ;
+(* ebnf stdio.gltf mutations -- internally tagged JSON on "mutation". *)
+document = ws , mutation object , ws ;
+mutation object = "{" , ws , "\"mutation\"" , ws , ":" , ws , variant tag , ( ws , "," , ws , member )* , ws , "}" ;
+variant tag = string ; (* one of the 24 GltfMutation variant names, camelCase *)
+member = string , ws , ":" , ws , value ;
+value = object | array | string | number | "true" | "false" | "null" ;
+ws = { " " | "\t" | "\n" | "\r" } ;

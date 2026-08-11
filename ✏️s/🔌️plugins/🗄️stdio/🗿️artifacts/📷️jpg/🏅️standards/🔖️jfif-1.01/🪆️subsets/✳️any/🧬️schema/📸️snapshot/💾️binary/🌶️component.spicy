@@ -1,4 +1,41 @@
 module Stdio_jpg_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+
+# 🌶️ Real pack encoding: semio binary envelope wrapping the ACTUAL JFIF byte stream
+# `engine::decode_jpg` parses (ITU-T T.81 marker-segment structure), not a raw byte blob.
+
+public type Envelope = unit {
+    magic: bytes &size=4;               # "SEMI"
+    header: bytes &size=28;             # schema id / component / version / payload length
+    jpeg: JpegStream;
+};
+
+type JpegStream = unit {
+    soi: bytes &size=2;                 # 0xFF 0xD8
+    segments: Segment[] &until($$.marker == 0xDA);
+    sos: SosSegment;
+    entropy_and_eoi: bytes &eod;        # byte-stuffed entropy-coded scan + trailing EOI (0xFFD9);
+                                         # a real entropy decoder must byte-destuff and watch for
+                                         # restart/EOI markers inline (this codec's `decode_scan`)
+};
+
+type Segment = unit {
+    prefix: uint8 &requires=(self.prefix == 0xFF);
+    marker: uint8;
+    length: uint16;
+    body: bytes &size=self.length - 2;
+};
+
+type SosSegment = unit {
+    prefix: bytes &size=2;              # 0xFF 0xDA
+    length: uint16;
+    num_components: uint8;
+    components: ScanComponent[self.num_components];
+    spectral_start: uint8;
+    spectral_end: uint8;
+    approx: uint8;
+};
+
+type ScanComponent = unit {
+    component_id: uint8;
+    dc_ac_table: uint8;
 };

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.forms.forms",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained forms 1"
+    }
+  }
+}

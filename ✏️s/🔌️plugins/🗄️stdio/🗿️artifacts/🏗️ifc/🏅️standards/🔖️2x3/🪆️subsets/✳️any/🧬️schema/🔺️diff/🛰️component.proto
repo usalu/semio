@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_ifc_2x3.diff;
+message Ifc2x3Diff {
+  string schema = 1;
+  bytes header = 2;
+  repeated uint64 removed_instances = 3;
+  repeated bytes upserted_instances = 4;
+}

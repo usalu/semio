@@ -1,0 +1,9 @@
+{
+  "artifact": "s.trinity.rewrite",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained rewrite 1"
+    }
+  }
+}

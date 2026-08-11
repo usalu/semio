@@ -1,6 +1,49 @@
 syntax = "proto3";
 package semio.s_stdio_gltf.mutation;
+
+import "snapshot.proto";
+
 message GltfMutation {
-  string schema = 1;
-  string value_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    semio.s_stdio_gltf.snapshot.GltfSnapshot set_snapshot = 2;
+    semio.s_stdio_gltf.snapshot.GltfAsset set_asset = 3;
+    GltfInsertScene insert_scene = 4;
+    GltfIndexOnly remove_scene = 5;
+    GltfSetScene set_scene = 6;
+    GltfInsertNode insert_node = 7;
+    GltfIndexOnly remove_node = 8;
+    GltfSetNode set_node = 9;
+    GltfInsertMesh insert_mesh = 10;
+    GltfIndexOnly remove_mesh = 11;
+    GltfSetMesh set_mesh = 12;
+    GltfInsertAccessor insert_accessor = 13;
+    GltfIndexOnly remove_accessor = 14;
+    GltfSetAccessor set_accessor = 15;
+    GltfInsertMaterial insert_material = 16;
+    GltfIndexOnly remove_material = 17;
+    GltfSetMaterial set_material = 18;
+    GltfInsertBuffer insert_buffer = 19;
+    GltfIndexOnly remove_buffer = 20;
+    GltfSetBuffer set_buffer = 21;
+    GltfInsertAnimation insert_animation = 22;
+    GltfIndexOnly remove_animation = 23;
+    GltfSetAnimation set_animation = 24;
+  }
 }
+
+message GltfIndexOnly { uint64 index = 1; }
+message GltfInsertScene { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfScene scene = 2; }
+message GltfSetScene { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfScene scene = 2; }
+message GltfInsertNode { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfNode node = 2; }
+message GltfSetNode { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfNode node = 2; }
+message GltfInsertMesh { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMesh mesh = 2; }
+message GltfSetMesh { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMesh mesh = 2; }
+message GltfInsertAccessor { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAccessor accessor = 2; }
+message GltfSetAccessor { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAccessor accessor = 2; }
+message GltfInsertMaterial { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMaterial material = 2; }
+message GltfSetMaterial { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMaterial material = 2; }
+message GltfInsertBuffer { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfBuffer buffer = 2; bytes bytes_payload = 3; }
+message GltfSetBuffer { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfBuffer buffer = 2; bytes bytes_payload = 3; }
+message GltfInsertAnimation { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAnimation animation = 2; }
+message GltfSetAnimation { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAnimation animation = 2; }

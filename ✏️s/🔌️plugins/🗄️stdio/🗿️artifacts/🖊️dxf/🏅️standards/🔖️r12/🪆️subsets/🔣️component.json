@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.dxf",
+  "standard": "r12",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained dxf r12"
+    }
+  }
+}

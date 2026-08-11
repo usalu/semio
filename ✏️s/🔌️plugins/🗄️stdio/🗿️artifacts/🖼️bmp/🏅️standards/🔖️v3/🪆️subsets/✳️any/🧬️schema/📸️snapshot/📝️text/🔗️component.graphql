@@ -1,3 +1,7 @@
-# stdio.bmp snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# stdio.bmp snapshot text grammar schema: a lowercase-hex dump of the real on-disk BMP
+# bytes (after the `semio ...` preamble line is stripped). See ../💾️binary/ for the same
+# bytes' field-by-field structure.
+type Document {
+  schema: String!
+  hexPayload: String!
+}

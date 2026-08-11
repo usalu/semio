@@ -18,8 +18,10 @@ use serde::{Deserialize, Serialize};
 pub const STDIO_PDF17_DOCUMENT_SCHEMA: &str = "stdio.pdf.1.7";
 
 //#region 🔖️ObjectModel
-/// 🔗️ An indirect-object reference `N G R`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+/// 🔗️ An indirect-object reference `N G R` — also the `objects` collection's diff KEY (the
+/// `(id,gen)` pair per the recipe's "numeric id" key kind; `Hash` is needed by the diff module's
+/// key-transport absorb maps).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ObjRef {
     pub num: u32,
@@ -150,10 +152,13 @@ pub struct PdfInfo {
 //#region 🔖️Snapshot
 /// 🧬️ `stdio.pdf` (1.7) persistent snapshot. `objects` is the FULL raw indirect-object graph as
 /// read (fonts, images, outlines, everything -- lossless retention per D2 ground rules); `pages`
-/// is the resolved, editable view the analyzer/builder/mutations actually work with. The writer
-/// regenerates a fresh minimal file from `pages`+`info` alone (requirement #7: "valid classic
-/// xref + trailer is sufficient") -- `objects` is NOT re-emitted, which is why the
-/// decode→encode→decode round trip is asserted structurally (page-level), not on `objects`.
+/// is the resolved, editable view the analyzer/builder/mutations actually work with; `trailer` is
+/// the trailer dictionary (`/Root`/`/Info`/`/Size`/… key-value pairs, same shape as a `Dict` --
+/// the diff module's `PdfDictDiff` triple is reused verbatim for it, per the recipe's "trailer is
+/// itself a Dict-shaped structure" guidance). The writer regenerates a fresh minimal file from
+/// `pages`+`info` alone (requirement #7: "valid classic xref + trailer is sufficient") --
+/// `objects`/`trailer` are NOT re-emitted, which is why the decode→encode→decode round trip is
+/// asserted structurally (page-level), not on `objects`/`trailer`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
@@ -172,6 +177,9 @@ pub struct PdfSnapshot {
     #[state(persistent)]
     #[serde(default)]
     pub objects: Vec<PdfIndirectObject>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub trailer: Vec<PdfDictEntry>,
 }
 
 impl Default for PdfSnapshot {
@@ -182,6 +190,7 @@ impl Default for PdfSnapshot {
             pages: Vec::new(),
             info: PdfInfo::default(),
             objects: Vec::new(),
+            trailer: Vec::new(),
         }
     }
 }

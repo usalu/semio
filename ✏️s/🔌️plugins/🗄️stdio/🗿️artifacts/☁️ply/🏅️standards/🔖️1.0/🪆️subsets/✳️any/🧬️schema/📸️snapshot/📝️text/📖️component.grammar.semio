@@ -1,6 +1,44 @@
 dialect grammar stdio.ply.snapshot
+; Real PLY 1.0 header grammar (spec-honest, per POLICY_GRAMMAR_HONESTY — no `*OCTET` placeholder).
+; A PLY file always opens with an ASCII header (even when `format` declares a binary body) that
+; walks the SAME generic element/property structure this artifact's `PlySnapshot` models: a
+; magic line, one `format` line, any number of `comment`/`obj_info` lines (order-preserving
+; among comments), then any number of `element` blocks, each introducing 0+ `property` lines
+; that are either a plain scalar or a `list <count-type> <value-type>` column.
 root = document
-document = header body
-header = 'schema' SP 'stdio.ply' NL
-body = payload NL?
-payload = *OCTET
+document = magic-line format-line header-body "end_header" NL body
+
+magic-line = "ply" NL
+format-line = "format" SP format-kind SP version NL
+format-kind = "ascii" / "binary_little_endian" / "binary_big_endian"
+version = "1.0"
+
+header-body = *( comment-line / obj-info-line / element-block )
+comment-line = "comment" [ SP *CHAR ] NL
+obj-info-line = "obj_info" [ SP *CHAR ] NL   ; 🕳️ not modeled on PlySnapshot (documented deviation)
+
+element-block = element-line *property-line
+element-line = "element" SP element-name SP element-count NL
+element-name = 1*( ALPHA / DIGIT / "_" )
+element-count = 1*DIGIT
+
+property-line = scalar-property-line / list-property-line
+scalar-property-line = "property" SP scalar-type SP property-name NL
+list-property-line = "property" SP "list" SP scalar-type SP scalar-type SP property-name NL
+property-name = 1*( ALPHA / DIGIT / "_" )
+scalar-type = "char" / "uchar" / "short" / "ushort" / "int" / "uint" / "float" / "double"
+            / "int8" / "uint8" / "int16" / "uint16" / "int32" / "uint32" / "float32" / "float64"
+
+; 📚 The body: one row per element instance, in declaration order, each row one value per
+; declared property IN ORDER — a plain scalar token, or (for a list property) a count token
+; followed by that many value tokens. This is the `ascii`-format shape; the two binary formats
+; encode the identical logical sequence at each scalar's real byte width instead of as text
+; tokens (see the sibling `💾️binary/📡️component.protocol.semio`).
+body = *element-rows
+element-rows = *row                          ; exactly the owning element's declared `count`
+row = *cell NL
+cell = scalar-cell / list-cell
+scalar-cell = number
+list-cell = count-token *( SP number )
+count-token = number
+number = ["-"] 1*DIGIT [ "." 1*DIGIT ]

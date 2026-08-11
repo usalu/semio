@@ -1,0 +1,30 @@
+    = note: this error originates in the derive macro `dsl::DslDiff` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `IfcEntitiesDiff: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:477:84
+    |
+477 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
+    |                                                                                    ^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `IfcEntitiesDiff`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:340:1
+    |
+340 | pub struct IfcEntitiesDiff {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              Vec<T>
+              [T; N]
+              artifacts::binary::standards::v_raw::subsets::any::schema::diff::component::ByteSplice
+              BinarySnapshot
+              bool
+              dsl::Wire
+            and 20 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-0460ab90f0d22e40.long-type-2108106883769603715.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the derive macro `dsl::DslDiff` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-stdio` (lib) generated 172 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 10 previous errors; 172 warnings emitted

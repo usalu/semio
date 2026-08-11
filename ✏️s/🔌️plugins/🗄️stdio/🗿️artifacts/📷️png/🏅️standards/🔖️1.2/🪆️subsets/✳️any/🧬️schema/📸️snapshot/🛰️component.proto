@@ -1,6 +1,134 @@
 syntax = "proto3";
 package semio.s_stdio_png.snapshot;
+
+// 🎨️ PNG §11.2.2 IHDR color type. PALETTE requires a PLTE chunk.
+enum PngColorType {
+  PNG_COLOR_TYPE_GRAYSCALE = 0;
+  PNG_COLOR_TYPE_RGB = 1;
+  PNG_COLOR_TYPE_PALETTE = 2;
+  PNG_COLOR_TYPE_GRAYSCALE_ALPHA = 3;
+  PNG_COLOR_TYPE_RGBA = 4;
+}
+
+// 🎨️ One PLTE entry — a weak value (whole-value replaced in diffs).
+message PngRgb {
+  uint32 r = 1;
+  uint32 g = 2;
+  uint32 b = 3;
+}
+
+// 👁️ Typed tRNS payload — shape depends on color_type (§11.3.3).
+message PngTransparency {
+  oneof value {
+    IndexedAlpha indexed = 1;
+    GrayAlpha grayscale = 2;
+    RgbAlpha rgb = 3;
+  }
+  message IndexedAlpha { bytes alpha = 1; }
+  message GrayAlpha { uint32 gray = 1; }
+  message RgbAlpha { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+}
+
+// 📐️ cHRM — CIE xy chromaticity coordinates, each value * 100000 (§11.3.5.2).
+message PngChromaticities {
+  uint32 white_x = 1;
+  uint32 white_y = 2;
+  uint32 red_x = 3;
+  uint32 red_y = 4;
+  uint32 green_x = 5;
+  uint32 green_y = 6;
+  uint32 blue_x = 7;
+  uint32 blue_y = 8;
+}
+
+// 🖌️ sRGB rendering intent (§11.3.5.3).
+enum PngSrgbIntent {
+  PNG_SRGB_INTENT_PERCEPTUAL = 0;
+  PNG_SRGB_INTENT_RELATIVE_COLORIMETRIC = 1;
+  PNG_SRGB_INTENT_SATURATION = 2;
+  PNG_SRGB_INTENT_ABSOLUTE_COLORIMETRIC = 3;
+}
+
+// 📏️ pHYs — pixel-per-unit density (§11.3.5.4).
+message PngPhysicalDims {
+  uint32 ppu_x = 1;
+  uint32 ppu_y = 2;
+  bool unit_is_meter = 3;
+}
+
+// 🕰️ tIME — last modification time, UTC (§11.3.6.1).
+message PngTimestamp {
+  uint32 year = 1;
+  uint32 month = 2;
+  uint32 day = 3;
+  uint32 hour = 4;
+  uint32 minute = 5;
+  uint32 second = 6;
+}
+
+// 🖼️ bKGD — default background color; shape depends on color_type (§11.3.5.1).
+message PngBackground {
+  oneof value {
+    GrayBg grayscale = 1;
+    RgbBg rgb = 2;
+    IndexedBg indexed = 3;
+  }
+  message GrayBg { uint32 gray = 1; }
+  message RgbBg { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+  message IndexedBg { uint32 index = 1; }
+}
+
+// 🔤 Which of tEXt/zTXt/iTXt (§11.3.4) a PngTextChunk came from.
+enum PngTextKind {
+  PNG_TEXT_KIND_TEXT = 0;
+  PNG_TEXT_KIND_Z_TEXT = 1;
+  PNG_TEXT_KIND_I_TEXT = 2;
+}
+
+// 💬️ One tEXt/zTXt/iTXt chunk. Index-keyed within PngSnapshot.text_chunks.
+message PngTextChunk {
+  string keyword = 1;
+  string value = 2;
+  bool compressed = 3;
+  PngTextKind kind = 4;
+  string language_tag = 5;
+  string translated_keyword = 6;
+}
+
+// 🗃️ A chunk the codec doesn't specifically model, retained verbatim.
+message PngChunk {
+  bytes kind = 1; // always 4 bytes
+  bytes data = 2;
+}
+
+// 🧭️ One slot in the file's real chunk sequence.
+message PngChunkMarker {
+  enum Kind {
+    IHDR = 0; PLTE = 1; TRNS = 2; GAMA = 3; CHRM = 4; SRGB = 5; PHYS = 6;
+    TIME = 7; BKGD = 8; IDAT = 9; IEND = 10; TEXT = 11; UNKNOWN = 12;
+  }
+  Kind chunk = 1;
+  optional uint64 index = 2; // set for TEXT/UNKNOWN
+}
+
+// 📸️ Complete stdio.png 1.2 semantic snapshot. schema is an identity field, never diffed.
 message PngSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 width = 2;
+  uint32 height = 3;
+  uint32 bit_depth = 4;
+  PngColorType color_type = 5;
+  bool interlace = 6;
+  repeated PngRgb plte = 7;
+  optional PngTransparency trns = 8;
+  optional uint32 gama = 9;
+  optional PngChromaticities chrm = 10;
+  optional PngSrgbIntent srgb = 11;
+  optional PngPhysicalDims phys = 12;
+  optional PngTimestamp time = 13;
+  optional PngBackground bkgd = 14;
+  repeated PngTextChunk text_chunks = 15;
+  bytes pixels = 16;
+  repeated PngChunkMarker chunk_order = 17;
+  repeated PngChunk unknown_chunks = 18;
 }

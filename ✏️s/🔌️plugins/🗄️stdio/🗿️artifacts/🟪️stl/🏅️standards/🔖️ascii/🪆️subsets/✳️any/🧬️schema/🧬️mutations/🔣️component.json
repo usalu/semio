@@ -1,15 +1,50 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.stl/mutation.json",
   "title": "StlMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "StlTriangle": {
+      "type": "object",
+      "required": ["normal", "vertices"],
+      "properties": {
+        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        }
+      }
     },
-    "text": {
+    "StlSnapshot": {
+      "type": "object",
+      "required": ["schema"],
+      "properties": {
+        "schema": { "type": "string" },
+        "solidName": { "type": "string" },
+        "triangles": { "type": "array", "items": { "$ref": "#/$defs/StlTriangle" } }
+      }
+    }
+  },
+  "type": "object",
+  "required": ["mutation"],
+  "properties": {
+    "mutation": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": [
+        "noMutation", "setSnapshot", "setSolidName", "insertTriangle", "removeTriangle",
+        "setTriangleNormal", "setTriangleVertices"
+      ]
+    },
+    "snapshot": { "$ref": "#/$defs/StlSnapshot", "description": "present when mutation = setSnapshot" },
+    "name": { "type": "string", "description": "present when mutation = setSolidName" },
+    "index": { "type": "integer", "minimum": 0 },
+    "triangle": { "$ref": "#/$defs/StlTriangle", "description": "present when mutation = insertTriangle" },
+    "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "vertices": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
     }
   }
 }

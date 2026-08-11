@@ -1,7 +1,31 @@
 //! ⚙️ ObjEngine — owns a real `ObjArtifact` + the real Wavefront OBJ 3.0 text codec.
+//!
+//! 📐 Documented normal form (codec_retention_law): `encode_obj` always emits, in this fixed
+//! order, `mtllib` (if any), the `v`/`vt`/`vn` blocks, then one `f` line per face preceded by
+//! whichever of `o`/`g`/`usemtl`/`s` changed since the previous face (transition-only, exactly
+//! like the pre-migration encoder), then a trailer of every retained `unknown_statements` entry
+//! (comments and any line the codec doesn't otherwise model) in their original relative order.
+//! `unknown_statements[].line_index` is informational (the line number AT THE TIME OF THAT
+//! DECODE) and is NOT preserved byte-for-byte across a decode→encode cycle — re-encoding always
+//! relocates retained comments/unknown lines into the trailer, so a fresh decode of the
+//! re-encoded text renumbers them to their new trailer position. Every other field (geometry,
+//! `groups`/`objects`/`usemtl`/`smoothing_groups` membership, `mtllib`, and the unknown
+//! statements' own text/relative order) is fully retained, and from the SECOND generation
+//! onward decode/encode is a true fixed point (see `codec_retention_law` below). A second,
+//! narrower limitation: `groups`/`objects`/`usemtl`/`smoothing_groups` reconstruction assumes
+//! the "sticky range" shape real parsing always produces (once a name/material/group becomes
+//! active it stays active until explicitly changed) — every real `.obj` file has this shape by
+//! construction; a hand-built snapshot with genuinely disjoint/non-contiguous membership for the
+//! SAME name is a synthetic case this text codec doesn't attempt to round-trip (diff/mutation
+//! semantics are unaffected either way, since those operate on the snapshot directly, never
+//! through the text codec).
 
-use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjNormal, ObjTexCoord, ObjVertex};
+use crate::artifacts::obj::schema::snapshot::{
+    ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord,
+    ObjUnknownStatement, ObjUsemtlRange, ObjVertex,
+};
 use crate::artifacts::obj::{ObjArtifact, ObjDiff, ObjMutation, ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+use std::collections::HashMap;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
@@ -51,41 +75,57 @@ fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, no
 //#endregion 🔖️IndexResolution
 
 //#region 🔖️Decode
-/// 📥 Parses a real Wavefront OBJ text body: `v`/`vt`/`vn`, `f` (v, v/vt, v//vn, v/vt/vn,
-/// negative-relative indices), `o`/`g`/`usemtl`/`s`.
+/// 📥 Parses a real Wavefront OBJ text body: `v`/`vt`/`vn` (incl. optional `w`), `f` (v, v/vt,
+/// v//vn, v/vt/vn, negative-relative indices, n-gons), `o`/`g` (multi-name)/`usemtl`/`mtllib`/`s`,
+/// with every comment and unrecognized statement retained in `unknown_statements`.
 pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
     let mut vertices = Vec::new();
     let mut texcoords = Vec::new();
     let mut normals = Vec::new();
-    let mut faces = Vec::new();
+    let mut faces: Vec<ObjFace> = Vec::new();
+    let mut groups: Vec<ObjGroup> = Vec::new();
+    let mut group_index: HashMap<String, usize> = HashMap::new();
+    let mut objects: Vec<ObjObject> = Vec::new();
+    let mut object_index: HashMap<String, usize> = HashMap::new();
+    let mut mtllib: Option<String> = None;
+    let mut usemtl: Vec<ObjUsemtlRange> = Vec::new();
+    let mut smoothing_groups: Vec<ObjSmoothingRange> = Vec::new();
+    let mut unknown_statements: Vec<ObjUnknownStatement> = Vec::new();
 
-    let mut cur_object: Option<String> = None;
-    let mut cur_group: Option<String> = None;
+    let mut cur_active_groups: Vec<String> = Vec::new();
+    let mut cur_active_object: Option<String> = None;
     let mut cur_material: Option<String> = None;
     let mut cur_smoothing: Option<u32> = None;
+    let mut have_smoothing = false;
 
-    for raw_line in text.lines() {
+    for (line_index, raw_line) in text.lines().enumerate() {
         let line = raw_line.trim();
-        if line.is_empty() || line.starts_with('#') {
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with('#') {
+            unknown_statements.push(ObjUnknownStatement { line_index, raw: line.to_string() });
             continue;
         }
         let mut parts = line.split_whitespace();
         match parts.next() {
             Some("v") => {
-                let x: f32 = parts.next().ok_or("v x")?.parse().map_err(|e| format!("{e}"))?;
-                let y: f32 = parts.next().ok_or("v y")?.parse().map_err(|e| format!("{e}"))?;
-                let z: f32 = parts.next().ok_or("v z")?.parse().map_err(|e| format!("{e}"))?;
-                vertices.push(ObjVertex { x, y, z });
+                let x: f64 = parts.next().ok_or("v x")?.parse().map_err(|e| format!("{e}"))?;
+                let y: f64 = parts.next().ok_or("v y")?.parse().map_err(|e| format!("{e}"))?;
+                let z: f64 = parts.next().ok_or("v z")?.parse().map_err(|e| format!("{e}"))?;
+                let w = parts.next().map(str::parse::<f64>).transpose().map_err(|e| format!("{e}"))?;
+                vertices.push(ObjVertex { x, y, z, w });
             }
             Some("vt") => {
-                let u: f32 = parts.next().ok_or("vt u")?.parse().map_err(|e| format!("{e}"))?;
-                let v: f32 = parts.next().unwrap_or("0").parse().map_err(|e| format!("{e}"))?;
-                texcoords.push(ObjTexCoord { u, v });
+                let u: f64 = parts.next().ok_or("vt u")?.parse().map_err(|e| format!("{e}"))?;
+                let v: f64 = parts.next().unwrap_or("0").parse().map_err(|e| format!("{e}"))?;
+                let w = parts.next().map(str::parse::<f64>).transpose().map_err(|e| format!("{e}"))?;
+                texcoords.push(ObjTexCoord { u, v, w });
             }
             Some("vn") => {
-                let x: f32 = parts.next().ok_or("vn x")?.parse().map_err(|e| format!("{e}"))?;
-                let y: f32 = parts.next().ok_or("vn y")?.parse().map_err(|e| format!("{e}"))?;
-                let z: f32 = parts.next().ok_or("vn z")?.parse().map_err(|e| format!("{e}"))?;
+                let x: f64 = parts.next().ok_or("vn x")?.parse().map_err(|e| format!("{e}"))?;
+                let y: f64 = parts.next().ok_or("vn y")?.parse().map_err(|e| format!("{e}"))?;
+                let z: f64 = parts.next().ok_or("vn z")?.parse().map_err(|e| format!("{e}"))?;
                 normals.push(ObjNormal { x, y, z });
             }
             Some("f") => {
@@ -96,35 +136,82 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
                 if face_vertices.len() < 3 {
                     return Err(format!("face has fewer than 3 vertices: {line}"));
                 }
-                faces.push(ObjFace {
-                    vertices: face_vertices,
-                    object: cur_object.clone(),
-                    group: cur_group.clone(),
-                    material: cur_material.clone(),
-                    smoothing_group: cur_smoothing,
-                });
+                let face_index = faces.len();
+                faces.push(ObjFace { vertices: face_vertices });
+                for name in &cur_active_groups {
+                    let gi = if let Some(&gi) = group_index.get(name) {
+                        gi
+                    } else {
+                        groups.push(ObjGroup { name: name.clone(), faces: Vec::new() });
+                        let gi = groups.len() - 1;
+                        group_index.insert(name.clone(), gi);
+                        gi
+                    };
+                    groups[gi].faces.push(face_index);
+                }
+                if let Some(name) = &cur_active_object {
+                    let oi = if let Some(&oi) = object_index.get(name) {
+                        oi
+                    } else {
+                        objects.push(ObjObject { name: name.clone(), faces: Vec::new() });
+                        let oi = objects.len() - 1;
+                        object_index.insert(name.clone(), oi);
+                        oi
+                    };
+                    objects[oi].faces.push(face_index);
+                }
             }
             Some("o") => {
-                cur_object = parts.next().map(|s| s.to_string());
+                cur_active_object = parts.next().map(|s| s.to_string());
             }
             Some("g") => {
-                let rest: Vec<&str> = parts.collect();
-                cur_group = if rest.is_empty() { None } else { Some(rest.join(" ")) };
+                cur_active_groups = parts.map(|s| s.to_string()).collect();
             }
             Some("usemtl") => {
-                cur_material = parts.next().map(|s| s.to_string());
+                let name = parts.next().map(|s| s.to_string());
+                if name != cur_material {
+                    if let Some(m) = &name {
+                        usemtl.push(ObjUsemtlRange { face_index_from: faces.len(), material: m.clone() });
+                    }
+                    cur_material = name;
+                }
+            }
+            Some("mtllib") => {
+                let rest: Vec<&str> = parts.collect();
+                if !rest.is_empty() {
+                    mtllib = Some(rest.join(" "));
+                }
             }
             Some("s") => {
-                cur_smoothing = match parts.next() {
+                let next = match parts.next() {
                     Some("off") | None => None,
                     Some(v) => v.parse::<u32>().ok(),
                 };
+                if !have_smoothing || next != cur_smoothing {
+                    smoothing_groups.push(ObjSmoothingRange { face_index_from: faces.len(), group: next });
+                    cur_smoothing = next;
+                    have_smoothing = true;
+                }
             }
-            _ => {}
+            _ => {
+                unknown_statements.push(ObjUnknownStatement { line_index, raw: line.to_string() });
+            }
         }
     }
 
-    Ok(ObjSnapshot { schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(), vertices, texcoords, normals, faces })
+    Ok(ObjSnapshot {
+        schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
+        vertices,
+        texcoords,
+        normals,
+        faces,
+        groups,
+        objects,
+        mtllib,
+        usemtl,
+        smoothing_groups,
+        unknown_statements,
+    })
 }
 //#endregion 🔖️Decode
 
@@ -138,62 +225,96 @@ fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
     }
 }
 
-/// 📤 Writes a real Wavefront OBJ 3.0 text body, re-emitting `o`/`g`/`usemtl`/`s` whenever
-/// they change between consecutive faces.
+/// 📤 Writes a real Wavefront OBJ 3.0 text body per this module's documented normal form.
 pub fn encode_obj(snap: &ObjSnapshot) -> String {
-    let mut out = String::from("# Wavefront OBJ\n");
+    let mut out = String::new();
+    if let Some(lib) = &snap.mtllib {
+        out.push_str(&format!("mtllib {lib}\n"));
+    }
     for v in &snap.vertices {
-        out.push_str(&format!("v {} {} {}\n", v.x, v.y, v.z));
+        match v.w {
+            Some(w) => out.push_str(&format!("v {} {} {} {}\n", v.x, v.y, v.z, w)),
+            None => out.push_str(&format!("v {} {} {}\n", v.x, v.y, v.z)),
+        }
     }
     for vt in &snap.texcoords {
-        out.push_str(&format!("vt {} {}\n", vt.u, vt.v));
+        match vt.w {
+            Some(w) => out.push_str(&format!("vt {} {} {}\n", vt.u, vt.v, w)),
+            None => out.push_str(&format!("vt {} {}\n", vt.u, vt.v)),
+        }
     }
     for vn in &snap.normals {
         out.push_str(&format!("vn {} {} {}\n", vn.x, vn.y, vn.z));
     }
 
-    let mut cur_object: Option<&str> = None;
-    let mut cur_group: Option<&str> = None;
-    let mut cur_material: Option<&str> = None;
-    let mut cur_smoothing: Option<u32> = None;
+    let object_at = |i: usize| -> Option<&str> {
+        snap.objects.iter().find(|o| o.faces.contains(&i)).map(|o| o.name.as_str())
+    };
+    let groups_at = |i: usize| -> Vec<&str> {
+        snap.groups.iter().filter(|g| g.faces.contains(&i)).map(|g| g.name.as_str()).collect()
+    };
+    let material_at = |i: usize| -> Option<&str> {
+        snap.usemtl.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.material.as_str())
+    };
+    let smoothing_at = |i: usize| -> Option<Option<u32>> {
+        snap.smoothing_groups.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.group)
+    };
+
+    let mut prev_object: Option<&str> = None;
+    let mut prev_groups: Vec<&str> = Vec::new();
+    let mut prev_material: Option<&str> = None;
+    let mut prev_smoothing_emitted = false;
+    let mut prev_smoothing: Option<u32> = None;
     let mut started = false;
 
-    for f in &snap.faces {
-        let object = f.object.as_deref();
-        let group = f.group.as_deref();
-        let material = f.material.as_deref();
-        if !started || object != cur_object {
-            if let Some(o) = object {
-                out.push_str(&format!("o {o}\n"));
+    for (i, face) in snap.faces.iter().enumerate() {
+        let object = object_at(i);
+        if !started || object != prev_object {
+            if let Some(name) = object {
+                out.push_str(&format!("o {name}\n"));
             }
-            cur_object = object;
+            prev_object = object;
         }
-        if !started || group != cur_group {
-            if let Some(g) = group {
-                out.push_str(&format!("g {g}\n"));
+        let groups = groups_at(i);
+        if !started || groups != prev_groups {
+            if groups.is_empty() {
+                if !prev_groups.is_empty() {
+                    out.push_str("g\n");
+                }
+            } else {
+                out.push_str(&format!("g {}\n", groups.join(" ")));
             }
-            cur_group = group;
+            prev_groups = groups;
         }
-        if !started || material != cur_material {
+        let material = material_at(i);
+        if !started || material != prev_material {
             if let Some(m) = material {
                 out.push_str(&format!("usemtl {m}\n"));
             }
-            cur_material = material;
+            prev_material = material;
         }
-        if !started || f.smoothing_group != cur_smoothing {
-            match f.smoothing_group {
-                Some(s) => out.push_str(&format!("s {s}\n")),
-                None => out.push_str("s off\n"),
+        if let Some(s) = smoothing_at(i) {
+            if !prev_smoothing_emitted || s != prev_smoothing {
+                match s {
+                    Some(n) => out.push_str(&format!("s {n}\n")),
+                    None => out.push_str("s off\n"),
+                }
+                prev_smoothing = s;
+                prev_smoothing_emitted = true;
             }
-            cur_smoothing = f.smoothing_group;
         }
         started = true;
 
         out.push('f');
-        for fv in &f.vertices {
+        for fv in &face.vertices {
             out.push(' ');
             write_face_vertex(&mut out, fv);
         }
+        out.push('\n');
+    }
+
+    for u in &snap.unknown_statements {
+        out.push_str(&u.raw);
         out.push('\n');
     }
     out
@@ -315,21 +436,94 @@ mod tests {
         assert_eq!(snap.texcoords.len(), 3);
         assert_eq!(snap.normals.len(), 2);
         assert_eq!(snap.faces.len(), 4);
-        assert_eq!(snap.faces[0].object.as_deref(), Some("Cube"));
-        assert_eq!(snap.faces[0].group.as_deref(), Some("Front"));
-        assert_eq!(snap.faces[0].material.as_deref(), Some("Red"));
-        assert_eq!(snap.faces[0].smoothing_group, Some(1));
+
+        assert_eq!(snap.objects.len(), 1);
+        assert_eq!(snap.objects[0].name, "Cube");
+        assert_eq!(snap.objects[0].faces, vec![0, 1, 2, 3]);
+
+        assert_eq!(snap.groups.len(), 2);
+        assert_eq!(snap.groups[0], ObjGroup { name: "Front".into(), faces: vec![0, 1] });
+        assert_eq!(snap.groups[1], ObjGroup { name: "Back".into(), faces: vec![2, 3] });
+
+        assert_eq!(snap.usemtl, vec![
+            ObjUsemtlRange { face_index_from: 0, material: "Red".into() },
+            ObjUsemtlRange { face_index_from: 2, material: "Blue".into() },
+        ]);
+        assert_eq!(snap.smoothing_groups, vec![
+            ObjSmoothingRange { face_index_from: 0, group: Some(1) },
+            ObjSmoothingRange { face_index_from: 2, group: None },
+        ]);
+
         assert_eq!(snap.faces[1].vertices[0].vertex, 2);
         assert_eq!(snap.faces[1].vertices[0].texcoord, Some(0));
         assert_eq!(snap.faces[1].vertices[0].normal, Some(0));
-        assert_eq!(snap.faces[2].group.as_deref(), Some("Back"));
-        assert_eq!(snap.faces[2].material.as_deref(), Some("Blue"));
-        assert_eq!(snap.faces[2].smoothing_group, None);
         assert_eq!(snap.faces[3].vertices[0].vertex, 0);
 
         let text2 = encode_obj(&snap);
         let snap2 = decode_obj(&text2).expect("re-parse");
         assert_eq!(snap2, snap, "round trip through encode/decode must be lossless");
     }
+
+    #[test]
+    fn optional_w_components_retained() {
+        let text = "v 0 0 0 1.5\nv 1 0 0\nvt 0.1 0.2 0.3\nvt 0.5 0.5\nvn 0 0 1\nf 1/1/1 2/2/1 1/1/1\n";
+        let snap = decode_obj(text).expect("parse");
+        assert_eq!(snap.vertices[0].w, Some(1.5));
+        assert_eq!(snap.vertices[1].w, None);
+        assert_eq!(snap.texcoords[0].w, Some(0.3));
+        assert_eq!(snap.texcoords[1].w, None);
+    }
+
+    #[test]
+    fn mtllib_last_occurrence_wins() {
+        let text = "mtllib a.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nmtllib b.mtl c.mtl\nf 1 2 3\n";
+        let snap = decode_obj(text).expect("parse");
+        assert_eq!(snap.mtllib.as_deref(), Some("b.mtl c.mtl"));
+    }
+
+    //#region 🔖️CodecRetentionLaw
+    /// 🔁️ decode→encode retains every field (geometry, group/object/usemtl/smoothing
+    /// membership, mtllib, and unknown-statement content+relative order); per this module's
+    /// documented normal form, `unknown_statements[].line_index` is renumbered on re-encode
+    /// (comments/unrecognized lines move into a trailer), so from the SECOND generation onward
+    /// decode/encode is a true fixed point.
+    #[test]
+    fn codec_retention_law() {
+        let fixture = "# leading comment\nmtllib materials.mtl\n\
+                        v 0 0 0\nv 1 0 0\nv 0 1 0 1\n\
+                        vt 0 0\nvt 1 0 0.5\nvn 0 0 1\n\
+                        o Cube\ng Front\nusemtl Red\ns 1\n\
+                        f 1/1/1 2/2/1 3/1/1\n\
+                        # trailing comment\nweird_directive foo bar\n";
+        let snap1 = decode_obj(fixture).expect("decode");
+        assert_eq!(snap1.mtllib.as_deref(), Some("materials.mtl"));
+        assert_eq!(snap1.vertices[2].w, Some(1.0));
+        assert_eq!(snap1.texcoords[1].w, Some(0.5));
+        assert_eq!(snap1.unknown_statements.len(), 3, "leading comment + trailing comment + weird_directive");
+
+        let text2 = encode_obj(&snap1);
+        let snap2 = decode_obj(&text2).expect("re-decode");
+
+        assert_eq!(snap1.vertices, snap2.vertices);
+        assert_eq!(snap1.texcoords, snap2.texcoords);
+        assert_eq!(snap1.normals, snap2.normals);
+        assert_eq!(snap1.faces, snap2.faces);
+        assert_eq!(snap1.groups, snap2.groups);
+        assert_eq!(snap1.objects, snap2.objects);
+        assert_eq!(snap1.mtllib, snap2.mtllib);
+        assert_eq!(snap1.usemtl, snap2.usemtl);
+        assert_eq!(snap1.smoothing_groups, snap2.smoothing_groups);
+        assert_eq!(
+            snap1.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(),
+            snap2.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(),
+            "unknown-statement content and relative order must be retained"
+        );
+
+        // 🔁 second-generation stability: a true fixed point from here on.
+        let text3 = encode_obj(&snap2);
+        let snap3 = decode_obj(&text3).expect("re-decode 2");
+        assert_eq!(snap2, snap3, "decode/encode must be a fixed point from the second generation onward");
+    }
+    //#endregion 🔖️CodecRetentionLaw
 }
 //#endregion 🧪️Tests

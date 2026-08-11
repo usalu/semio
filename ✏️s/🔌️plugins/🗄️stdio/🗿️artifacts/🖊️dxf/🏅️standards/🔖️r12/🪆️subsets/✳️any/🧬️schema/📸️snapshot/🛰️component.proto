@@ -1,6 +1,113 @@
 syntax = "proto3";
 package semio.s_stdio_dxf.snapshot;
+
+// 🧬️ DxfSnapshot schema facet — mirrors 🦀️component.rs field-for-field (camelCase field
+// names become proto snake_case per proto3 convention; `DxfEntity` is a flattened oneof-style
+// message since proto3 message-typed oneofs need one wrapper message per variant).
+
+message DxfValue {
+  enum Kind { STR = 0; INT = 1; DOUBLE = 2; POINT = 3; }
+  Kind kind = 1;
+  string str_value = 2;
+  int64 int_value = 3;
+  double double_value = 4;
+  repeated double point_value = 5; // exactly 3 when kind == POINT
+}
+
+message DxfGroupCode {
+  int32 code = 1;
+  DxfValue value = 2;
+}
+
+message DxfTag {
+  int32 code = 1;
+  string value = 2;
+}
+
+message DxfHeaderVar {
+  string name = 1;
+  int32 group_code = 2;
+  DxfValue value = 3;
+  repeated DxfGroupCode extra_group_codes = 4;
+}
+
+message DxfLayer {
+  string name = 1;
+  int32 color = 2;
+  string linetype = 3;
+  int32 flags = 4;
+  repeated DxfGroupCode unknown_group_codes = 5;
+}
+
+message DxfStyle {
+  string name = 1;
+  int32 flags = 2;
+  string font_name = 3;
+  repeated DxfGroupCode unknown_group_codes = 4;
+}
+
+message DxfLinetype {
+  string name = 1;
+  int32 flags = 2;
+  string description = 3;
+  repeated DxfGroupCode unknown_group_codes = 4;
+}
+
+message DxfTables {
+  repeated DxfLayer layers = 1;
+  repeated DxfStyle styles = 2;
+  repeated DxfLinetype linetypes = 3;
+}
+
+message DxfOtherTable {
+  string name = 1;
+  repeated DxfTag tags = 2;
+}
+
+message DxfVertex {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double bulge = 4;
+  repeated DxfGroupCode unknown_group_codes = 5;
+}
+
+message DxfEntity {
+  enum Kind { LINE = 0; CIRCLE = 1; ARC = 2; POLYLINE = 3; TEXT = 4; SOLID = 5; INSERT = 6; OTHER = 7; }
+  Kind kind = 1;
+  repeated double start = 2;
+  repeated double end = 3;
+  repeated double center = 4;
+  double radius = 5;
+  double start_angle = 6;
+  double end_angle = 7;
+  repeated DxfVertex vertices = 8;
+  bool closed = 9;
+  repeated double position = 10;
+  double height = 11;
+  string value = 12;
+  repeated double points = 13; // 4 * 3 flattened when kind == SOLID
+  string block_name = 14;
+  repeated double scale = 15;
+  double rotation = 16;
+  string layer = 17;
+  string other_kind = 18;
+  repeated DxfGroupCode group_codes = 19;
+  repeated DxfGroupCode unknown_group_codes = 20;
+}
+
+message DxfBlock {
+  string name = 1;
+  repeated double base_point = 2;
+  repeated DxfEntity entities = 3;
+  repeated DxfGroupCode unknown_group_codes = 4;
+}
+
 message DxfSnapshot {
   string schema = 1;
-  string text_wire = 2;
+  repeated DxfHeaderVar header_vars = 2;
+  DxfTables tables = 3;
+  repeated DxfOtherTable other_tables = 4;
+  repeated DxfBlock blocks = 5;
+  repeated DxfEntity entities = 6;
 }

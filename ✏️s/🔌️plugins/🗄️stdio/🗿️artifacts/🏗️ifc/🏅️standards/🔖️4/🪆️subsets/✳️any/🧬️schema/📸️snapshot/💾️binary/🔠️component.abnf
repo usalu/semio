@@ -1,3 +1,8 @@
-; abnf stdio.ifc snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.ifc snapshot (pack encoding) — real semio binary envelope wrapping the
+; ISO 10303-21 exchange-structure text (see ../📝️text/ for the wrapped grammar itself) —
+; matches `semio::wrap_binary`/`unwrap_binary`.
+document      = magic token-len token payload
+magic         = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A  ; 0x89 'S' 'E' 'M' \r \n \x1A \n
+token-len     = 4OCTET                                    ; u32 LE byte length of token
+token         = *OCTET                                    ; UTF-8 "stdio.ifc.pack vN", token-len bytes
+payload       = *OCTET                                    ; UTF-8 ISO-10303-21 exchange-structure text

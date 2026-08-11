@@ -1,0 +1,9 @@
+{
+  "artifact": "s.draw.draw",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained draw 1"
+    }
+  }
+}

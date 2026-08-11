@@ -1,0 +1,72 @@
+{
+  "unit": "pptx",
+  "standards": [
+    {
+      "std": "ecma-376",
+      "subsets": [
+        {
+          "id": "strict",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "🧐️analyzer: conforming_strict_snapshot_reports_nothing, transitional_main_ns_on_root_part_is_hard, transitional_namespace_anywhere_in_package_is_hard, vml_markup_is_hard, transitional_relationship_base_is_hard, missing_conformance_attribute_is_soft, alternate_content_markup_is_soft, missing_office_document_relationship_is_hard",
+            "🎹️composer: conforming_strict_package_composes_and_stamps_strict, transitional_document_fails_compose_with_real_diagnostic, subset_validator_recheck_flags_clean_document_as_clean",
+            "🏗️builder: empty_builder_has_no_office_document_relationship_and_fails_build, conforming_strict_snapshot_builds_clean, hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        },
+        {
+          "id": "transitional",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "🧐️analyzer: conforming_transitional_snapshot_reports_nothing, strict_main_ns_on_root_part_is_hard, strict_namespace_anywhere_in_package_is_hard, strict_relationship_base_is_hard, explicit_strict_conformance_attribute_is_soft, missing_office_document_relationship_is_hard",
+            "🎹️composer: conforming_transitional_package_composes_and_stamps_transitional, strict_document_fails_compose_with_real_diagnostic, subset_validator_recheck_flags_clean_document_as_clean",
+            "🏗️builder: empty_builder_has_no_office_document_relationship_and_fails_build, conforming_transitional_snapshot_builds_clean, hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "standard_level_files_updated": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs -- entries() now aggregates PptxStrictComposer + PptxTransitionalComposer alongside the existing PptxRawAnyComposer",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs -- register() now calls both new subsets' composer::register() (SubsetValidator registration); also gained resolve_office_document_relationship (tries Transitional then Strict officeDocument relationship type) used by decode_pptx/sniff_pptx_bytes AND by both new subsets' analyzers, plus one new #[cfg(test)] case (decode_resolves_strict_office_document_relationship_too) -- a real pre-existing engine gap: the shared decode path only recognized the Transitional officeDocument relationship type, so a genuine ISO/IEC 29500-1 Strict-relationship-typed package could never even decode far enough for the strict subset's analyzer to see it. In-scope fix since I own the whole standard's engine this wave; NOT touched: zip/opc/component.rs (owned by the zip artifact, out of scope) or encode_pptx/regenerate_presentation_parts (still hardcoded to emit Transitional markup on write -- a separate, larger gap noted below, worked around in tests via opc::encode_opc directly rather than PptxSnapshot::encode_pack).",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔣️component.json -- added \"strict\"/\"transitional\" entries alongside the existing \"*\" entry (not overwritten)"
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/pptx-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "preexisting_breakage_noted": [
+    "⚙️engine::encode_pptx (via regenerate_presentation_parts) unconditionally rewrites ppt/presentation.xml and synthesizes slideMaster/slideLayout/theme boilerplate using hardcoded Transitional (schemas.openxmlformats.org) namespace constants regardless of target subset -- means a round trip through PptxSnapshot::ArtifactPack::encode_pack can never itself produce genuine Strict-namespaced bytes today. Not fixed (out of this ticket's scope, a real writer-side feature gap, not a conformance-check gap) -- composer/builder tests for ✳️strict instead build real OPC bytes directly via zip::opc::encode_opc (bypassing encode_pptx) and feed them through AnalyzeSource::Text, the same technique the pdf 1.7 ✳️a pilot's own composer tests use for hand-crafted fixtures.",
+    "gltf 2.0 ✳️any export JSON serializer component.rs has a pre-existing E0308 (JsonValue vs Value type mismatch) -- unrelated to pptx, another artifact/session, not touched.",
+    "docx/xlsx (siblings this wave) show the identical 'cannot find strict/transitional in subsets' class of error for their own artifacts -- expected, their own glue-wiring gap, not mine to fix."
+  ],
+  "status": "done",
+  "blockers": [
+    "cargo check -p semio-s-plugin-stdio shows exactly 4 errors attributable to this unit, all E0433 'cannot find `strict`/`transitional` in `subsets`' -- 2 at ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs (entries()) and 2 at .../⚙️engine/🦀️component.rs (register()). These are exactly the expected glue.rs-wiring gap per the ticket protocol -- resolved once the orchestrator applies 🧩glue/pptx-glue.rs.txt. No other new errors were introduced; verified by diffing the full error list against unrelated artifacts (gltf E0308, docx/xlsx's own identical-shaped strict/transitional gaps)."
+  ]
+}

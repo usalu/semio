@@ -1,26 +1,22 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.pdf/mutation.json",
   "title": "PdfMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "PageDoc": {
+      "type": "object",
+      "required": ["width", "height", "text"],
+      "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "text": { "type": "string" } }
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
+    "PdfSnapshot": {
+      "type": "object",
+      "required": ["schema", "page"],
+      "properties": { "schema": { "type": "string" }, "page": { "$ref": "#/$defs/PageDoc" } }
     }
+  },
+  "type": "object",
+  "required": ["mutation"],
+  "properties": {
+    "mutation": { "type": "string", "enum": ["noMutation", "setSnapshot"] },
+    "snapshot": { "$ref": "#/$defs/PdfSnapshot" }
   }
 }

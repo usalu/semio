@@ -4,7 +4,11 @@
 
 use crate::artifacts::txt::schema::snapshot::LineEnding;
 use crate::artifacts::txt::TxtSnapshot;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::MutationDiff;
+// 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
+// trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
+// still-public `os_spr::command` path instead of touching that framework facade file.
+use protocol::os_spr::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
 use std::collections::HashSet;
@@ -13,7 +17,10 @@ use std::collections::HashSet;
 /// ➕️ One line added at `index` (a FINAL-state index, per the recipe's `CAdded{index,item}`
 /// shape) carrying its full text (lines are opaque strings -- a weak leaf value with no
 /// sub-fields of its own, so "diff" of a line is just its replacement text).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6: `dsl::DslRecord` — gives this `DslField` so `Vec<TxtLineAdded>` can sit inside a
+/// `#[derive(dsl::DslDiff)]` struct's list field (`TxtLinesDiff::added` below).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct TxtLineAdded {
     pub index: usize,
@@ -21,7 +28,9 @@ pub struct TxtLineAdded {
 }
 
 /// ✏️ Line at BASE index `index` whose text changed to `text`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6: `dsl::DslRecord` — see [`TxtLineAdded`]'s doc comment, same reason.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct TxtLineModified {
     pub index: usize,
@@ -31,7 +40,12 @@ pub struct TxtLineModified {
 /// 🧮 Index-keyed triple over `TxtSnapshot::lines`. `removed`/`modified` indices refer to the
 /// BASE array; `added` indices refer to the FINAL array (apply order: modified, then removed
 /// descending, then added ascending clamped to `min(index, len)` -- normative per the recipe).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6: `dsl::DslRecord` — gives this `DslField` so `Option<TxtLinesDiff>` can sit inside
+/// `TxtDiff` below (`Vec<usize>`/`Vec<TxtLineModified>`/`Vec<TxtLineAdded>` all bind via the
+/// `dsl` crate's blanket `Vec<T>` impl, `TxtLineModified`/`TxtLineAdded` via their own
+/// `DslRecord` derive just above).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct TxtLinesDiff {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -135,11 +149,18 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// entries survived `d2` (a `d2`-removal of a `d1`-added item "annihilates the add" -- it's
 /// simply absent from the walk, never re-emitted), and each survivor's final position.
 fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
-    let max_ref1 = d1.removed.iter().copied()
+    // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
+    // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
+    // elements when `d2` still references real base positions `d1` never touched (a real bug
+    // this exact formula had until byte-splice fuzz-testing caught its twin in `BinaryDiff`).
+    let max_ref = d1.removed.iter().copied()
         .chain(d1.modified.iter().map(|m| m.index))
         .chain(d1.added.iter().map(|a| a.index))
+        .chain(d2.removed.iter().copied())
+        .chain(d2.modified.iter().map(|m| m.index))
+        .chain(d2.added.iter().map(|a| a.index))
         .max();
-    let l1 = max_ref1.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
@@ -157,14 +178,9 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
         }
     }
 
-    let max_ref2 = d2.removed.iter().copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(d2.added.iter().map(|a| a.index))
-        .max();
-    let needed_len = max_ref2.map(|m| (m + 2).max(mid_labels.len())).unwrap_or(mid_labels.len());
-    // 📦 Pad is appended at the tail only -- `Vec::push` never disturbs earlier positions, so
-    // `mid_pos_of_*` recorded above stay valid.
-    while mid_labels.len() < needed_len {
+    // 📦 `l1` already covers `d2`'s own max reference (computed above); pad is appended at the
+    // tail only -- `Vec::push` never disturbs earlier positions, so `mid_pos_of_*` stay valid.
+    while mid_labels.len() < l1 {
         mid_labels.push(Lbl::Base(usize::MAX)); // inert padding index, never referenced by mid_pos_of_base
     }
 
@@ -216,7 +232,15 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.txt`. Every mutable field is `Option<T>` (present = changed); `lines`
 /// is the one owned collection, an `Option<TxtLinesDiff>` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+///
+/// 🧪️ F6: `dsl::DslDiff` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
+/// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. Classified
+/// DERIVE per `f6-recon-report.md` §3's unified decision rule: no field here is `Option<Option<
+/// _>>` (every field is a single-layer `Option<T>` meaning "changed", never a tri-state
+/// nullable — `lines` composes VIA a triple, it does not itself carry removal-vs-absence), and
+/// the only enum in the walk (`LineEnding`) is unit-variant-only, so it binds via `DslScalar`
+/// (see the snapshot module) rather than blocking the derive like a data-carrying enum would.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.diff")]
 pub struct TxtDiff {
@@ -306,7 +330,7 @@ mod tests {
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
-        let ld = merged.lines.expect("lines diff present");
+        let ld = merged.lines.clone().expect("lines diff present");
         assert_eq!(ld.removed, vec![0]);
         assert_eq!(ld.added, vec![TxtLineAdded { index: 1, text: "f".into() }]);
         assert!(ld.modified.is_empty());
@@ -349,7 +373,7 @@ mod tests {
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
-        let ld = merged.lines.expect("lines diff present");
+        let ld = merged.lines.clone().expect("lines diff present");
         assert_eq!(ld.removed, vec![0]);
         assert!(ld.modified.is_empty());
 
@@ -395,6 +419,46 @@ mod tests {
         let next = d.apply(&base);
         let inv = d.inverse(&base);
         assert_eq!(inv.apply(&next), base);
+    }
+
+    /// 🧪️ F6: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`) — exercises the empty
+    /// diff, scalar-only changes, and every one of `TxtLinesDiff`'s `removed`/`modified`/`added`
+    /// sections populated simultaneously (a real `between()` result can only ever populate
+    /// `modified`+`removed` OR `modified`+`added`, per `TxtLinesDiff::between`'s own base-tail/
+    /// other-tail algorithm above -- so this test also directly constructs one diff exercising
+    /// all three sections at once, plus a genuine `between()` result for good measure).
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        use protocol::DiffCodec;
+        let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
+        let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
+        let cases = vec![
+            TxtDiff::default(),
+            TxtDiff { trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf), lines: None },
+            TxtDiff {
+                trailing_newline: Some(false),
+                line_ending: Some(LineEnding::Lf),
+                lines: Some(TxtLinesDiff {
+                    removed: vec![0, 2],
+                    modified: vec![TxtLineModified { index: 1, text: "changed".into() }],
+                    added: vec![
+                        TxtLineAdded { index: 0, text: "new-head".into() },
+                        TxtLineAdded { index: 3, text: "new-tail".into() },
+                    ],
+                }),
+            },
+            TxtDiff::between(&a, &b),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = TxtDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch for {d:?} (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
+            let decoded = TxtDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
+        }
     }
 }
 //#endregion 🧪️Tests

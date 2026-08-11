@@ -1,4 +1,6 @@
-module Stdio_gltf_mutations;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_gltf_mutation_wire;
+# GltfMutation's binary wire form IS its own internally-tagged JSON text, UTF-8 encoded --
+# OpBinary delegates straight to serde_json; no separate binary framing exists.
+public type Document = unit {
+    json_utf8_text: bytes &eod;
 };

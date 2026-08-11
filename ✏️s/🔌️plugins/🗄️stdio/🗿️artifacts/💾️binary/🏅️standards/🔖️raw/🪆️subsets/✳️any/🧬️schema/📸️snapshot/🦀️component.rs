@@ -6,7 +6,12 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+///
+/// 🧪️ F6-PILOT: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
+/// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
+/// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot{snapshot}`),
+/// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary")]
 pub struct BinarySnapshot {
@@ -14,6 +19,7 @@ pub struct BinarySnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    #[dsl(base64)]
     pub bytes: Vec<u8>,
 }
 

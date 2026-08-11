@@ -2,14 +2,65 @@
   "$id": "https://semio.tech/schema/s.stdio.ply/snapshot.json",
   "title": "PlySnapshot",
   "type": "object",
-  "properties": {
-    "schema": {
+  "$defs": {
+    "PlyScalarType": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": ["char", "uChar", "short", "uShort", "int", "uInt", "float", "double"]
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "PlyProperty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["form", "name", "kind"],
+          "properties": {
+            "form": { "const": "scalar" },
+            "name": { "type": "string" },
+            "kind": { "$ref": "#/$defs/PlyScalarType" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["form", "name", "countKind", "valueKind"],
+          "properties": {
+            "form": { "const": "list" },
+            "name": { "type": "string" },
+            "countKind": { "$ref": "#/$defs/PlyScalarType" },
+            "valueKind": { "$ref": "#/$defs/PlyScalarType" }
+          }
+        }
+      ]
+    },
+    "PlyValue": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["char", "uChar", "short", "uShort", "int", "uInt", "float", "double", "list"] },
+        "value": {}
+      }
+    },
+    "PlyRow": {
+      "type": "object",
+      "required": ["values"],
+      "properties": {
+        "values": { "type": "array", "items": { "$ref": "#/$defs/PlyValue" } }
+      }
+    },
+    "PlyElement": {
+      "type": "object",
+      "required": ["name", "count", "properties", "rows"],
+      "properties": {
+        "name": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 },
+        "properties": { "type": "array", "items": { "$ref": "#/$defs/PlyProperty" } },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/PlyRow" } }
+      }
     }
+  },
+  "required": ["schema", "format", "comments", "elements"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"], "x-semio-state": "persistent" },
+    "comments": { "type": "array", "items": { "type": "string" }, "x-semio-state": "persistent" },
+    "elements": { "type": "array", "items": { "$ref": "#/$defs/PlyElement" }, "x-semio-state": "persistent" }
   }
 }

@@ -116,7 +116,8 @@ mod tests {
     /// is empty.
     #[test]
     fn field_sweep_covers_every_byte_level_change() {
-        use protocol::DiffAlgebra;
+        use protocol::os_spr::command::DiffAlgebra;
+        use protocol::MutationDiff;
         let a = sweep_a();
         let b = sweep_b();
 

@@ -1,3 +1,11 @@
-(* ebnf stdio.tiff mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.tiff', newline ;
+(* TiffMutation's wire text IS its JSON serialization (protocol::OpText — serde_json,
+   #[serde(tag = "mutation")]); this names the real 8 variant tags, not RFC 8259's own
+   JSON grammar. *)
+mutation = "{", '"mutation"', ":", variant tag, { ",", member }, "}" ;
+variant tag = '"noMutation"' | '"setSnapshot"' | '"setByteOrder"' | '"insertIfd"'
+            | '"removeIfd"' | '"setTag"' | '"removeTag"' | '"setPixels"' ;
+member = string, ":", json value ;
+json value = "{", [ member, { ",", member } ], "}"
+           | "[", { json value }, "]"
+           | string | integer | bool | "null" ;
+bool = "true" | "false" ;

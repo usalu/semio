@@ -3,7 +3,8 @@
 use crate::artifacts::obj::schema::diff::{ObjDiff, diff_set_snapshot};
 use crate::artifacts::obj::ObjSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot.
-pub fn diff(snapshot: &ObjSnapshot) -> ObjDiff {
-    diff_set_snapshot(snapshot)
+/// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, per the
+/// recipe's "no full-replace slot, even for SetSnapshot" rule.
+pub fn diff(base: &ObjSnapshot, snapshot: &ObjSnapshot) -> ObjDiff {
+    diff_set_snapshot(base, snapshot)
 }

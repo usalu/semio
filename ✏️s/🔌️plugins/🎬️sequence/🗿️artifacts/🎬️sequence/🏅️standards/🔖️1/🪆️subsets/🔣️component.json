@@ -1,0 +1,9 @@
+{
+  "artifact": "s.sequence.sequence",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained sequence 1"
+    }
+  }
+}

@@ -1,6 +1,10 @@
 dialect grammar stdio.bmp.snapshot
 root = document
-document = header body
-header = 'schema' SP 'stdio.bmp' NL
-body = payload NL?
-payload = *OCTET
+; the `semio stdio.bmp.dsl v1` preamble line + its trailing newline are stripped before
+; this grammar runs (store::semio_format::split_text_preamble); the remaining body IS a
+; lowercase-hex dump of the real on-disk BMP bytes — see ../💾️binary/🔠️component.abnf for
+; the field-by-field structure those bytes decode to (BITMAPFILEHEADER + BITMAPINFOHEADER +
+; optional masks/palette + pixel data).
+document = hex-body
+hex-body = *( HEXDIG HEXDIG )   ; each pair is one raw byte, no separators
+HEXDIG = %x30-39 / %x61-66      ; 0-9, a-f (lowercase, per engine::print_dsl's {b:02x})

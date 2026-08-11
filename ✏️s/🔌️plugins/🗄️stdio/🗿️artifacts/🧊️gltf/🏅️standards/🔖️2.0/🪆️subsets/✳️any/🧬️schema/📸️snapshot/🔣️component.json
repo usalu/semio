@@ -1,15 +1,63 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.gltf/snapshot.gltf",
+  "$id": "https://semio.tech/schema/s.stdio.gltf/snapshot.json",
   "title": "GltfSnapshot",
   "type": "object",
+  "required": ["schema", "document", "buffers", "sourceForm"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "document": {
+      "type": "object",
+      "x-semio-state": "persistent",
+      "required": ["asset"],
+      "properties": {
+        "asset": {
+          "type": "object",
+          "required": ["version"],
+          "properties": {
+            "version": { "type": "string" },
+            "generator": { "type": "string" },
+            "copyright": { "type": "string" },
+            "minVersion": { "type": "string" },
+            "extensions": { "$ref": "#/$defs/gltfJson" },
+            "extras": { "$ref": "#/$defs/gltfJson" }
+          }
+        },
+        "scene": { "type": "integer", "minimum": 0 },
+        "scenes": { "type": "array", "items": { "type": "object", "properties": { "nodes": { "type": "array", "items": { "type": "integer" } }, "name": { "type": "string" } } } },
+        "nodes": { "type": "array", "items": { "type": "object", "properties": { "children": { "type": "array", "items": { "type": "integer" } }, "mesh": { "type": "integer" }, "camera": { "type": "integer" }, "skin": { "type": "integer" }, "matrix": { "type": "array", "items": { "type": "number" }, "minItems": 16, "maxItems": 16 }, "translation": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }, "rotation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }, "scale": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }, "weights": { "type": "array", "items": { "type": "number" } }, "name": { "type": "string" } } } },
+        "meshes": { "type": "array", "items": { "type": "object", "properties": { "primitives": { "type": "array", "items": { "type": "object", "properties": { "attributes": { "type": "object", "additionalProperties": { "type": "integer" } }, "indices": { "type": "integer" }, "material": { "type": "integer" }, "mode": { "type": "integer" } } } }, "weights": { "type": "array", "items": { "type": "number" } }, "name": { "type": "string" } } } },
+        "accessors": { "type": "array", "items": { "type": "object", "required": ["componentType", "count", "type"], "properties": { "bufferView": { "type": "integer" }, "byteOffset": { "type": "integer" }, "componentType": { "enum": [5120, 5121, 5122, 5123, 5125, 5126] }, "normalized": { "type": "boolean" }, "count": { "type": "integer" }, "type": { "enum": ["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4"] }, "max": { "type": "array", "items": { "type": "number" } }, "min": { "type": "array", "items": { "type": "number" } }, "sparse": { "type": "object" }, "name": { "type": "string" } } } },
+        "bufferViews": { "type": "array", "items": { "type": "object", "required": ["buffer", "byteLength"], "properties": { "buffer": { "type": "integer" }, "byteOffset": { "type": "integer" }, "byteLength": { "type": "integer" }, "byteStride": { "type": "integer" }, "target": { "type": "integer" }, "name": { "type": "string" } } } },
+        "buffers": { "type": "array", "items": { "type": "object", "required": ["byteLength"], "properties": { "byteLength": { "type": "integer" }, "uri": { "type": "string" }, "name": { "type": "string" } } } },
+        "materials": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "pbrMetallicRoughness": { "type": "object" }, "normalTexture": { "type": "object" }, "occlusionTexture": { "type": "object" }, "emissiveTexture": { "type": "object" }, "emissiveFactor": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }, "alphaMode": { "enum": ["OPAQUE", "MASK", "BLEND"] }, "alphaCutoff": { "type": "number" }, "doubleSided": { "type": "boolean" } } } },
+        "textures": { "type": "array", "items": { "type": "object", "properties": { "sampler": { "type": "integer" }, "source": { "type": "integer" }, "name": { "type": "string" } } } },
+        "images": { "type": "array", "items": { "type": "object", "properties": { "uri": { "type": "string" }, "mimeType": { "type": "string" }, "bufferView": { "type": "integer" }, "name": { "type": "string" } } } },
+        "samplers": { "type": "array", "items": { "type": "object", "properties": { "magFilter": { "type": "integer" }, "minFilter": { "type": "integer" }, "wrapS": { "type": "integer" }, "wrapT": { "type": "integer" }, "name": { "type": "string" } } } },
+        "skins": { "type": "array", "items": { "type": "object", "properties": { "inverseBindMatrices": { "type": "integer" }, "skeleton": { "type": "integer" }, "joints": { "type": "array", "items": { "type": "integer" } }, "name": { "type": "string" } } } },
+        "animations": { "type": "array", "items": { "type": "object", "properties": { "channels": { "type": "array" }, "samplers": { "type": "array" }, "name": { "type": "string" } } } },
+        "cameras": { "type": "array", "items": { "type": "object", "required": ["type"], "properties": { "type": { "enum": ["perspective", "orthographic"] }, "perspective": { "type": "object" }, "orthographic": { "type": "object" }, "name": { "type": "string" } } } },
+        "extensionsUsed": { "type": "array", "items": { "type": "string" } },
+        "extensionsRequired": { "type": "array", "items": { "type": "string" } },
+        "extensions": { "$ref": "#/$defs/gltfJson" },
+        "extras": { "$ref": "#/$defs/gltfJson" }
+      }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "buffers": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "description": "Resolved raw payload bytes, index-aligned with document.buffers.",
+      "items": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+    },
+    "sourceForm": { "enum": ["json", "glb"], "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "gltfJson": {
+      "description": "This artifact's own JSON value enum (extras/extensions).",
+      "anyOf": [
+        { "type": "null" }, { "type": "boolean" }, { "type": "number" }, { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/gltfJson" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/gltfJson" } }
+      ]
     }
   }
 }

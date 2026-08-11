@@ -1,3 +1,23 @@
-(* ebnf stdio.md mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.md', newline ;
+(* ebnf stdio.md mutations -- wire-JSON shape of MdMutation, mirrors ../📖️component.grammar.semio *)
+md mutation = no mutation | set snapshot | insert block | remove block
+            | replace block | set inlines ;
+no mutation = "{" , mutation tag , '"noMutation"' , "}" ;
+set snapshot = "{" , mutation tag , '"setSnapshot"' , "," , '"snapshot"' , ":" , md snapshot , "}" ;
+insert block = "{" , mutation tag , '"insertBlock"' , "," , '"path"' , ":" , path array , "," ,
+                   '"index"' , ":" , index , "," , '"block"' , ":" , md block , "}" ;
+remove block = "{" , mutation tag , '"removeBlock"' , "," , '"path"' , ":" , path array , "," ,
+                   '"index"' , ":" , index , "}" ;
+replace block = "{" , mutation tag , '"replaceBlock"' , "," , '"path"' , ":" , path array , "," ,
+                    '"index"' , ":" , index , "," , '"block"' , ":" , md block , "}" ;
+set inlines = "{" , mutation tag , '"setInlines"' , "," , '"path"' , ":" , path array , "," ,
+                  '"index"' , ":" , index , "," , '"inlines"' , ":" , "[" , { md inline } , "]" , "}" ;
+path array = "[" , { path step , "," } , "]" ;
+path step = block quote step | list item step ;
+block quote step = "{" , '"step"' , ":" , '"blockQuote"' , "," , '"index"' , ":" , index , "}" ;
+list item step = "{" , '"step"' , ":" , '"listItem"' , "," , '"index"' , ":" , index , "," ,
+                      '"item"' , ":" , index , "}" ;
+mutation tag = '"mutation"' , ":" ;
+index = digit , { digit } ;
+md snapshot = string (* see ../../📸️snapshot/📝️text/🔤️component.ebnf *) ;
+md block = string ;
+md inline = string ;

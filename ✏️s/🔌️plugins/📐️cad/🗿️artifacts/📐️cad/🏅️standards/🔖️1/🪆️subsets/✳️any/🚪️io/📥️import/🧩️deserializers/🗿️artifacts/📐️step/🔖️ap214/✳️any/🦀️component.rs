@@ -10,7 +10,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &StepSnapshot) -> Result<CadSnapshot, store::TextError> {
     let _ = STDIO_STEP_DOCUMENT_SCHEMA;
-    let mesh = analyze_brep_mesh(&from.document).mesh;
+    let mesh = analyze_brep_mesh(&from.to_part21_document()).mesh;
     let mut bytes = Vec::with_capacity(mesh.vertices.len() * 12);
     for v in &mesh.vertices {
         bytes.extend_from_slice(&(v.x as f32).to_le_bytes());

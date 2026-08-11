@@ -5,20 +5,27 @@
 //! "collection" is raw byte ranges rather than typed items).
 
 use crate::artifacts::binary::BinarySnapshot;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::MutationDiff;
+// 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
+// trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
+// still-public `os_spr::command` path instead of touching that framework facade file.
+use protocol::os_spr::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
-use std::collections::HashMap;
 
 //#region 🔖️Splice
 /// ✂️ One byte-range edit against the BASE array: replace `[offset, offset+remove_len)` with
 /// `insert`. `offset`/`remove_len` are BASE-relative (never re-based against a prior splice in
 /// the same diff -- see [`apply`](BinaryDiff::apply)'s normative processing order).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6-PILOT: `dsl::DslRecord` — gives this `DslField` so `Vec<ByteSplice>` can sit inside a
+/// `#[derive(dsl::DslDiff)]` struct's list field (`BinaryDiff::splices` below).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ByteSplice {
     pub offset: usize,
     pub remove_len: usize,
+    #[dsl(base64)]
     pub insert: Vec<u8>,
 }
 //#endregion 🔖️Splice
@@ -32,7 +39,11 @@ pub struct ByteSplice {
 /// every splice's `offset` is still valid against the base at the moment it's applied --
 /// `offset`/`remove_len` are never re-interpreted against a partially-mutated buffer.
 /// Out-of-range offsets/lengths clamp to the buffer's current bounds (graceful, never panics).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+/// 🧪️ F6-PILOT: `dsl::DslDiff` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
+/// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. `BinaryDiff`
+/// is a plain struct with one `Vec<ByteSplice>` field (`ByteSplice` itself `DslRecord`-derived
+/// above) — the derive's struct-only restriction is satisfied trivially here.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.diff")]
 pub struct BinaryDiff {
@@ -119,53 +130,63 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
     survivors
 }
 
+/// 🗑️ All BASE-relative indices removed by a splice list (order-independent; each splice's
+/// range is always relative to the shared base, never to a prior splice's result in the same
+/// list -- that's the whole point of `apply`'s descending-offset processing order).
+fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
+    let mut out = Vec::new();
+    for s in splices {
+        for i in s.offset..(s.offset + s.remove_len) {
+            out.push(i);
+        }
+    }
+    out
+}
+
+/// ➕️ Per-byte insert targets in FINAL-space (positions in the array that results from applying
+/// every splice in `splices` to its base) -- NOT the raw `offset` values. Splices are walked
+/// ascending by offset, tracking a running `delta` (net length change from every EARLIER
+/// splice's `insert.len() - remove_len`) so a later splice's insert lands after everything an
+/// earlier sibling splice already inserted, exactly mirroring how `apply`'s own descending
+/// `Vec::splice` calls accumulate. Using bare `offset + k` here silently reorders sibling
+/// inserts within one absorbed diff whenever it has ≥2 splices (caught by fuzz-testing in the
+/// scratch crate this diff's tests were validated against — see `deviations` in the F1 report).
+fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
+    let mut sorted: Vec<&ByteSplice> = splices.iter().collect();
+    sorted.sort_by_key(|s| s.offset);
+    let mut out = Vec::new();
+    let mut delta: i64 = 0;
+    for s in sorted {
+        let base_target = (s.offset as i64 + delta).max(0) as usize;
+        for (k, byte) in s.insert.iter().enumerate() {
+            out.push((base_target + k, Lbl::New(*byte)));
+        }
+        delta += s.insert.len() as i64 - s.remove_len as i64;
+    }
+    out
+}
+
 /// ➕️ Absorbs `d1` (base→mid) then `d2` (mid→after) splice lists into a single base→after
-/// splice list. Each splice is decomposed into per-byte remove/insert label ops (a multi-byte
-/// insert at `offset` becomes `offset, offset+1, offset+2, …` targets so the bytes land in
-/// their original relative order -- inserting several items at literally the SAME target index
-/// would otherwise reverse them, the same subtlety `TxtLinesDiff`'s absorb documents for
-/// same-index inserts), simulated exactly like the line-diff case, then the resulting label
-/// array is run-length-encoded back into a minimal ordered `ByteSplice` list.
+/// splice list, simulated exactly like the line-diff case (per-byte instead of per-line
+/// labels), then the resulting label array is run-length-encoded back into a minimal ordered
+/// `ByteSplice` list.
 fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
-    let max_ref1 = d1.iter().map(|s| s.offset + s.remove_len.max(s.insert.len())).max();
-    let l1 = max_ref1.map(|m| m + 8).unwrap_or(0);
+    // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
+    // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
+    // elements when `d2` still references real base positions `d1` never touched.
+    let max_ref = d1.iter().chain(d2.iter()).map(|s| s.offset + s.remove_len.max(s.insert.len())).max();
+    let l1 = max_ref.map(|m| m + 8).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
-    let mut d1_removed = Vec::new();
-    let mut d1_added: Vec<(usize, Lbl)> = Vec::new();
-    for s in d1 {
-        for i in s.offset..(s.offset + s.remove_len) {
-            d1_removed.push(i);
-        }
-        for (k, byte) in s.insert.iter().enumerate() {
-            d1_added.push((s.offset + k, Lbl::New(*byte)));
-        }
-    }
+    let d1_removed = splice_removed_indices(d1);
+    let d1_added = splice_added_targets(d1);
     let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added);
-
-    let mut mid_pos_of_base: HashMap<usize, usize> = HashMap::new();
-    for (pos, l) in mid_labels.iter().enumerate() {
-        if let Lbl::Base(i) = l {
-            mid_pos_of_base.insert(*i, pos);
-        }
+    while mid_labels.len() < l1 {
+        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, tail-appended
     }
 
-    let max_ref2 = d2.iter().map(|s| s.offset + s.remove_len.max(s.insert.len())).max();
-    let needed_len = max_ref2.map(|m| (m + 8).max(mid_labels.len())).unwrap_or(mid_labels.len());
-    while mid_labels.len() < needed_len {
-        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, tail-appended, never in mid_pos_of_base
-    }
-
-    let mut d2_removed = Vec::new();
-    let mut d2_added: Vec<(usize, Lbl)> = Vec::new();
-    for s in d2 {
-        for i in s.offset..(s.offset + s.remove_len) {
-            d2_removed.push(i);
-        }
-        for (k, byte) in s.insert.iter().enumerate() {
-            d2_added.push((s.offset + k, Lbl::New(*byte)));
-        }
-    }
+    let d2_removed = splice_removed_indices(d2);
+    let d2_added = splice_added_targets(d2);
     let after_labels = simulate_labels(mid_labels, &d2_removed, &d2_added);
 
     // 🧵️ Run-length-encode the after-label array back into a minimal ordered splice list: walk
@@ -281,6 +302,27 @@ mod tests {
         let next = d.apply(&base);
         let inv = d.inverse(&base);
         assert_eq!(inv.apply(&next), base);
+    }
+
+    /// 🧪️ F6-PILOT: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`).
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        use protocol::DiffCodec;
+        let cases = vec![
+            BinaryDiff::default(),
+            BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },
+            BinaryDiff { splices: vec![ByteSplice { offset: 0, remove_len: 0, insert: vec![] }, ByteSplice { offset: 5, remove_len: 1, insert: vec![0xAA, 0xBB] }] },
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = BinaryDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch for {d:?} (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
+            let decoded = BinaryDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
+        }
     }
 }
 //#endregion 🧪️Tests

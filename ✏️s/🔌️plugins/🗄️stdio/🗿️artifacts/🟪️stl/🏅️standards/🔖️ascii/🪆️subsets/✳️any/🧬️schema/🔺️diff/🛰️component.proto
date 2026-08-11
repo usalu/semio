@@ -1,6 +1,39 @@
 syntax = "proto3";
 package semio.s_stdio_stl.diff;
+
+message StlTriangle {
+  repeated double normal = 1;
+  repeated double vertex0 = 2;
+  repeated double vertex1 = 3;
+  repeated double vertex2 = 4;
+}
+
+message StlTriangleDiff {
+  optional bool has_normal = 1;
+  repeated double normal = 2;
+  optional bool has_vertices = 3;
+  repeated double vertex0 = 4;
+  repeated double vertex1 = 5;
+  repeated double vertex2 = 6;
+}
+
+message StlTriangleModified {
+  uint64 index = 1;
+  StlTriangleDiff diff = 2;
+}
+
+message StlTriangleAdded {
+  uint64 index = 1;
+  StlTriangle triangle = 2;
+}
+
+message StlTrianglesDiff {
+  repeated uint64 removed = 1;
+  repeated StlTriangleModified modified = 2;
+  repeated StlTriangleAdded added = 3;
+}
+
 message StlDiff {
-  string schema = 1;
-  string text_wire = 2;
+  optional string solid_name = 1;
+  StlTrianglesDiff triangles = 2;
 }

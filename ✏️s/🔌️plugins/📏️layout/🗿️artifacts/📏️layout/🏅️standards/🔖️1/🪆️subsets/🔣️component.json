@@ -1,0 +1,9 @@
+{
+  "artifact": "s.layout.layout",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained layout 1"
+    }
+  }
+}

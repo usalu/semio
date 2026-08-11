@@ -1,6 +1,39 @@
 syntax = "proto3";
 package semio.s_stdio_tiff.diff;
+
+import "s_stdio_tiff/snapshot.proto";
+
+message TiffTagModified {
+  uint32 tag = 1;
+  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 2;
+  semio.s_stdio_tiff.snapshot.TiffValues values = 3;
+}
+message TiffTagAdded {
+  uint32 tag = 1;
+  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 2;
+  semio.s_stdio_tiff.snapshot.TiffValues values = 3;
+}
+
+// Tag-id-keyed entries triple for one IFD.
+message TiffTagsDiff {
+  repeated uint32 removed = 1;
+  repeated TiffTagModified modified = 2;
+  repeated TiffTagAdded added = 3;
+}
+
+message TiffIfdModified { uint64 index = 1; TiffTagsDiff diff = 2; }
+message TiffIfdAdded { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
+
+// Index-keyed ifds triple (TIFF's IFD chain is positional).
+message TiffIfdsDiff {
+  repeated uint64 removed = 1;
+  repeated TiffIfdModified modified = 2;
+  repeated TiffIfdAdded added = 3;
+}
+
+// 🔺️ Sparse diff for stdio.tiff. No tri-state fields at this level.
 message TiffDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional semio.s_stdio_tiff.snapshot.TiffByteOrder byte_order = 1;
+  optional TiffIfdsDiff ifds = 2;
+  optional bytes pixels = 3;
 }

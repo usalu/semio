@@ -1,26 +1,41 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.tiff/mutation.json",
   "title": "TiffMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"],
+      "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json" } }
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "byteOrder"],
+      "properties": { "mutation": { "const": "setByteOrder" }, "byteOrder": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffByteOrder" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index", "ifd"],
+      "properties": { "mutation": { "const": "insertIfd" }, "index": { "type": "integer", "minimum": 0 }, "ifd": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffIfd" } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "index"],
+      "properties": { "mutation": { "const": "removeIfd" }, "index": { "type": "integer", "minimum": 0 } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "ifdIndex", "tag", "kind", "values"],
+      "properties": {
+        "mutation": { "const": "setTag" },
+        "ifdIndex": { "type": "integer", "minimum": 0 },
+        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "kind": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffFieldType" },
+        "values": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffValues" }
       }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "ifdIndex", "tag"],
+      "properties": { "mutation": { "const": "removeTag" }, "ifdIndex": { "type": "integer", "minimum": 0 }, "tag": { "type": "integer", "minimum": 0, "maximum": 65535 } }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "pixels"],
+      "properties": { "mutation": { "const": "setPixels" }, "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
     }
-  }
+  ]
 }

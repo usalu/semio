@@ -1,4 +1,7 @@
-module Stdio_pdf_diff;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_pdf_1_7_Diff;
+
+# `PdfDiff` has no dedicated OpText/binary envelope yet (F6 wave, not this one) -- on the wire
+# this is plain UTF-8 JSON (RFC8259), tagged per ../📝️text/📖️component.grammar.semio.
+public type Document = unit {
+    utf8_json_text: bytes &eod;
 };

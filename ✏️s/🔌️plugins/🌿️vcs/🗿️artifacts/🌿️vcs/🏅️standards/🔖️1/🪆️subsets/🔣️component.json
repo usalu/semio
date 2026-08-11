@@ -1,0 +1,9 @@
+{
+  "artifact": "s.vcs.vcs",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained vcs 1"
+    }
+  }
+}

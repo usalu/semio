@@ -16,6 +16,12 @@ pub fn register() {
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA));
+    // 🛡️ D5's generic validate-on-build hook: registers the ✳️tiny/✳️basic subsets'
+    // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Each
+    // ComposerEntry itself is registered separately via this standard's own `composer::entries()`
+    // aggregation (called above via the artifact-level `composer::register()`).
+    crate::artifacts::svg::standards::v1_1::subsets::tiny::composer::register();
+    crate::artifacts::svg::standards::v1_1::subsets::basic::composer::register();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).

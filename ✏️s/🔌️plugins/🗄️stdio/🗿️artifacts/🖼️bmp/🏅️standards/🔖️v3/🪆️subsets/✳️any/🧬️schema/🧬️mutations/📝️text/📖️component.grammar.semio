@@ -1,6 +1,8 @@
 dialect grammar stdio.bmp.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.bmp' NL
-body = payload NL?
-payload = *OCTET
+root = mutation
+; wire text IS the JSON serialization of BmpMutation (protocol::OpText — serde_json),
+; tagged on "mutation" per 🦀️component.rs's enum
+mutation = "{" '"mutation"' ":" tag ("," member)* "}"
+tag = '"noMutation"' / '"setSnapshot"' / '"setHeaderFields"'
+    / '"insertPaletteEntry"' / '"removePaletteEntry"' / '"setPaletteEntry"' / '"setPixelData"'
+member = STRING ":" JSON_VALUE

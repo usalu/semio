@@ -1,8 +1,57 @@
-type PngEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ PngArtifact schema facet — full artifact state, mirrors PngSnapshot field-for-field.
+
+enum PngColorType { GRAYSCALE RGB PALETTE GRAYSCALE_ALPHA RGBA }
+enum PngSrgbIntent { PERCEPTUAL RELATIVE_COLORIMETRIC SATURATION ABSOLUTE_COLORIMETRIC }
+enum PngTextKind { TEXT Z_TEXT I_TEXT }
+
+type PngArtifactRgb { r: Int! g: Int! b: Int! }
+
+type PngArtifactTransparency {
+  colorType: String!
+  alpha: [Int!]
+  gray: Int
+  r: Int
+  g: Int
+  b: Int
 }
+
+type PngArtifactChromaticities {
+  whiteX: Int! whiteY: Int! redX: Int! redY: Int!
+  greenX: Int! greenY: Int! blueX: Int! blueY: Int!
+}
+
+type PngArtifactPhysicalDims { ppuX: Int! ppuY: Int! unitIsMeter: Boolean! }
+
+type PngArtifactTimestamp { year: Int! month: Int! day: Int! hour: Int! minute: Int! second: Int! }
+
+type PngArtifactBackground { colorType: String! gray: Int r: Int g: Int b: Int index: Int }
+
+type PngArtifactTextChunk {
+  keyword: String! value: String! compressed: Boolean! kind: PngTextKind!
+  languageTag: String! translatedKeyword: String!
+}
+
+type PngArtifactChunk { kind: [Int!]! data: [Int!]! }
+
+type PngArtifactChunkMarker { chunk: String! index: Int }
+
 type PngArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [PngEntry!]! @state(class: PERSISTENT)
+  width: Int! @state(class: PERSISTENT)
+  height: Int! @state(class: PERSISTENT)
+  bitDepth: Int! @state(class: PERSISTENT)
+  colorType: PngColorType! @state(class: PERSISTENT)
+  interlace: Boolean! @state(class: PERSISTENT)
+  plte: [PngArtifactRgb!] @state(class: PERSISTENT)
+  trns: PngArtifactTransparency @state(class: PERSISTENT)
+  gama: Int @state(class: PERSISTENT)
+  chrm: PngArtifactChromaticities @state(class: PERSISTENT)
+  srgb: PngSrgbIntent @state(class: PERSISTENT)
+  phys: PngArtifactPhysicalDims @state(class: PERSISTENT)
+  time: PngArtifactTimestamp @state(class: PERSISTENT)
+  bkgd: PngArtifactBackground @state(class: PERSISTENT)
+  textChunks: [PngArtifactTextChunk!]! @state(class: PERSISTENT)
+  pixels: [Int!]! @state(class: PERSISTENT)
+  chunkOrder: [PngArtifactChunkMarker!]! @state(class: PERSISTENT)
+  unknownChunks: [PngArtifactChunk!]! @state(class: PERSISTENT)
 }

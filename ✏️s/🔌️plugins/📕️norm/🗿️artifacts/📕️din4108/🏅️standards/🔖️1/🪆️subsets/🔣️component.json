@@ -1,0 +1,9 @@
+{
+  "artifact": "s.norm.din4108",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained din4108 1"
+    }
+  }
+}

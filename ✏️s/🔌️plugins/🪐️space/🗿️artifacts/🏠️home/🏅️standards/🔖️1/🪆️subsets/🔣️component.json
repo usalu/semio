@@ -1,0 +1,9 @@
+{
+  "artifact": "s.space.home",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained home 1"
+    }
+  }
+}

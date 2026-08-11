@@ -1,5 +1,26 @@
 # 🧬️ JsonArtifact
+type JsonMember {
+  key: String!
+  value: JsonValue!
+}
+type JsonValue {
+  kind: JsonValueKind!
+  boolValue: Boolean
+  numberLexeme: String
+  stringValue: String
+  arrayItems: [JsonValue!]
+  objectMembers: [JsonMember!]
+}
+enum JsonValueKind {
+  NULL
+  BOOL
+  NUMBER
+  STRING
+  ARRAY
+  OBJECT
+}
+
 type JsonArtifact {
   schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
+  value: JsonValue! @state(class: PERSISTENT)
 }

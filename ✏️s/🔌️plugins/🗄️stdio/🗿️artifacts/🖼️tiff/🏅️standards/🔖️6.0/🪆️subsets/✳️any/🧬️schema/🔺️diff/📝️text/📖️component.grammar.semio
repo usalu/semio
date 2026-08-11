@@ -1,6 +1,12 @@
 dialect grammar stdio.tiff.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.tiff' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of TiffDiff (serde camelCase, sparse fields); this
+; names the real top-level fields rather than restating RFC 8259's own JSON grammar
+diff = "{" (member ("," member)*)? "}"
+member = '"byteOrder"' ":" STRING
+       / '"ifds"' ":" ifds_triple
+       / '"pixels"' ":" "[" INT* "]"
+ifds_triple = "{" ('"removed"' ":" "[" INT* "]" ("," '"modified"' ":" "[" ifd_modified* "]")? ("," '"added"' ":" "[" json_value* "]")?)? "}"
+ifd_modified = "{" '"index"' ":" INT "," '"diff"' ":" tags_triple "}"
+tags_triple = "{" ('"removed"' ":" "[" INT* "]" ("," '"modified"' ":" "[" json_value* "]")? ("," '"added"' ":" "[" json_value* "]")?)? "}"
+BOOL = "true" / "false"

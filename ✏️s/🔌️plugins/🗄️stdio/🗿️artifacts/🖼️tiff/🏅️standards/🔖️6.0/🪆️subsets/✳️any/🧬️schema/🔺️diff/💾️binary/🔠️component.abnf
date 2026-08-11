@@ -1,3 +1,5 @@
-; abnf stdio.tiff diff
-document = payload
-payload = *OCTET
+; abnf stdio.tiff diff (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of TiffDiff,
+; NOT wrapped in the shared `.semio` envelope (contrast with ../../📸️snapshot/💾️binary/).
+; No length prefix: the entire op body IS the JSON document.
+document  = json-object
+json-object = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️component.grammar.semio

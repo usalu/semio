@@ -1,6 +1,49 @@
 syntax = "proto3";
 package semio.s_stdio_png.mutation;
+
+import "s_stdio_png/snapshot.proto";
+
+message SetSnapshot { semio.s_stdio_png.snapshot.PngSnapshot snapshot = 1; }
+message SetHeader {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 bit_depth = 3;
+  semio.s_stdio_png.snapshot.PngColorType color_type = 4;
+  bool interlace = 5;
+}
+message SetPalette { repeated semio.s_stdio_png.snapshot.PngRgb plte = 1; }
+message SetTransparency { optional semio.s_stdio_png.snapshot.PngTransparency trns = 1; }
+message SetGamma { optional uint32 gama = 1; }
+message SetChromaticities { optional semio.s_stdio_png.snapshot.PngChromaticities chrm = 1; }
+message SetSrgbIntent { optional semio.s_stdio_png.snapshot.PngSrgbIntent srgb = 1; }
+message SetPhysicalDims { optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 1; }
+message SetTimestamp { optional semio.s_stdio_png.snapshot.PngTimestamp time = 1; }
+message SetBackground { optional semio.s_stdio_png.snapshot.PngBackground bkgd = 1; }
+message InsertTextChunk { uint64 index = 1; semio.s_stdio_png.snapshot.PngTextChunk chunk = 2; }
+message RemoveTextChunk { uint64 index = 1; }
+message SetTextChunk { uint64 index = 1; semio.s_stdio_png.snapshot.PngTextChunk chunk = 2; }
+message SetPixels { bytes pixels = 1; }
+message InsertUnknownChunk { uint64 index = 1; semio.s_stdio_png.snapshot.PngChunk chunk = 2; }
+message RemoveUnknownChunk { uint64 index = 1; }
+
 message PngMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetHeader set_header = 3;
+    SetPalette set_palette = 4;
+    SetTransparency set_transparency = 5;
+    SetGamma set_gamma = 6;
+    SetChromaticities set_chromaticities = 7;
+    SetSrgbIntent set_srgb_intent = 8;
+    SetPhysicalDims set_physical_dims = 9;
+    SetTimestamp set_timestamp = 10;
+    SetBackground set_background = 11;
+    InsertTextChunk insert_text_chunk = 12;
+    RemoveTextChunk remove_text_chunk = 13;
+    SetTextChunk set_text_chunk = 14;
+    SetPixels set_pixels = 15;
+    InsertUnknownChunk insert_unknown_chunk = 16;
+    RemoveUnknownChunk remove_unknown_chunk = 17;
+  }
 }

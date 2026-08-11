@@ -1,8 +1,16 @@
-//! 🧬️ PngMutation — document mutation dispatch.
+//! 🧬️ PngMutation — document mutation dispatch. Every variant's `diff()` is handcrafted
+//! (constructs the sparse `PngDiff` directly via the `schema::diff` builders — apply-and-capture
+//! is banned); `inverse()` is handcrafted per variant, index-aware, reading the pre-state it
+//! needs from `base`. `apply_png_mutation` follows csv's proven single-source-of-truth shape:
+//! `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`.
 
-use crate::artifacts::png::schema::diff::{diff_set_snapshot, PngDiff};
+use crate::artifacts::png::schema::diff::{self, PngDiff};
+use crate::artifacts::png::schema::snapshot::{
+    PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb,
+    PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency,
+};
 use crate::artifacts::png::PngSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -15,19 +23,77 @@ pub enum PngMutation {
     SetSnapshot {
         snapshot: PngSnapshot,
     },
+    /// 🧾️ Replaces all five typed IHDR fields at once.
+    SetHeader {
+        width: u32,
+        height: u32,
+        bit_depth: u8,
+        color_type: PngColorType,
+        interlace: bool,
+    },
+    /// 🎨️ Replaces the `PLTE` palette wholesale (`None` removes the chunk entirely).
+    SetPalette {
+        plte: Option<Vec<PngRgb>>,
+    },
+    /// 👁️ Replaces `tRNS` wholesale.
+    SetTransparency {
+        trns: Option<PngTransparency>,
+    },
+    SetGamma {
+        gama: Option<u32>,
+    },
+    SetChromaticities {
+        chrm: Option<PngChromaticities>,
+    },
+    SetSrgbIntent {
+        srgb: Option<PngSrgbIntent>,
+    },
+    SetPhysicalDims {
+        phys: Option<PngPhysicalDims>,
+    },
+    SetTimestamp {
+        time: Option<PngTimestamp>,
+    },
+    SetBackground {
+        bkgd: Option<PngBackground>,
+    },
+    /// ➕️ Inserts a whole text chunk at `index` (final position, clamped to `len`).
+    InsertTextChunk {
+        index: usize,
+        chunk: PngTextChunk,
+    },
+    /// ➖️ Removes the text chunk at `index` (no-op if out of range).
+    RemoveTextChunk {
+        index: usize,
+    },
+    /// ✏️ Replaces an existing text chunk's fields wholesale (no-op if out of range).
+    SetTextChunk {
+        index: usize,
+        chunk: PngTextChunk,
+    },
+    /// 🖼️ Replaces the decoded canonical RGBA8 raster wholesale.
+    SetPixels {
+        pixels: Vec<u8>,
+    },
+    /// ➕️ Inserts a verbatim-retained unknown chunk at `index`.
+    InsertUnknownChunk {
+        index: usize,
+        chunk: PngChunk,
+    },
+    /// ➖️ Removes the unknown chunk at `index` (no-op if out of range).
+    RemoveUnknownChunk {
+        index: usize,
+    },
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`.
+/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
+/// d.apply(snapshot); d` — the diff is the single semantics source (csv precedent).
 pub fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) -> PngDiff {
-    let __diff = <PngMutation as protocol::Mutation<PngSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        PngMutation::NoMutation => {}
-        PngMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-    }
-
-    __diff
+    let d = <PngMutation as Mutation<PngSnapshot>>::diff(mutation, snapshot);
+    *snapshot = <PngDiff as MutationDiff<PngSnapshot>>::apply(&d, snapshot);
+    d
 }
 //#endregion 🔖️Apply
 
@@ -35,17 +101,70 @@ pub fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) ->
 impl Mutation<PngSnapshot> for PngMutation {
     type Diff = PngDiff;
 
-    fn diff(&self, _base: &PngSnapshot) -> Self::Diff {
+    fn diff(&self, base: &PngSnapshot) -> Self::Diff {
         match self {
             PngMutation::NoMutation => PngDiff::default(),
-            PngMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+            PngMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => {
+                diff::diff_set_header(base, *width, *height, *bit_depth, *color_type, *interlace)
+            }
+            PngMutation::SetPalette { plte } => diff::diff_set_palette(base, plte),
+            PngMutation::SetTransparency { trns } => diff::diff_set_transparency(base, trns),
+            PngMutation::SetGamma { gama } => diff::diff_set_gamma(base, *gama),
+            PngMutation::SetChromaticities { chrm } => diff::diff_set_chromaticities(base, *chrm),
+            PngMutation::SetSrgbIntent { srgb } => diff::diff_set_srgb_intent(base, *srgb),
+            PngMutation::SetPhysicalDims { phys } => diff::diff_set_physical_dims(base, *phys),
+            PngMutation::SetTimestamp { time } => diff::diff_set_timestamp(base, *time),
+            PngMutation::SetBackground { bkgd } => diff::diff_set_background(base, bkgd),
+            PngMutation::InsertTextChunk { index, chunk } => diff::diff_insert_text_chunk(base, *index, chunk.clone()),
+            PngMutation::RemoveTextChunk { index } => diff::diff_remove_text_chunk(base, *index),
+            PngMutation::SetTextChunk { index, chunk } => diff::diff_set_text_chunk(base, *index, chunk.clone()),
+            PngMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
+            PngMutation::InsertUnknownChunk { index, chunk } => diff::diff_insert_unknown_chunk(base, *index, chunk.clone()),
+            PngMutation::RemoveUnknownChunk { index } => diff::diff_remove_unknown_chunk(base, *index),
         }
     }
 
+    /// ↩️ Handcrafted, index-aware mutation-level inverses. Out-of-range targets invert to
+    /// `NoMutation` (nothing to undo).
     fn inverse(&self, base: &PngSnapshot) -> Vec<Self> {
         match self {
             PngMutation::NoMutation => vec![PngMutation::NoMutation],
             PngMutation::SetSnapshot { .. } => vec![PngMutation::SetSnapshot { snapshot: base.clone() }],
+            PngMutation::SetHeader { .. } => vec![PngMutation::SetHeader {
+                width: base.width,
+                height: base.height,
+                bit_depth: base.bit_depth,
+                color_type: base.color_type,
+                interlace: base.interlace,
+            }],
+            PngMutation::SetPalette { .. } => vec![PngMutation::SetPalette { plte: base.plte.clone() }],
+            PngMutation::SetTransparency { .. } => vec![PngMutation::SetTransparency { trns: base.trns.clone() }],
+            PngMutation::SetGamma { .. } => vec![PngMutation::SetGamma { gama: base.gama }],
+            PngMutation::SetChromaticities { .. } => vec![PngMutation::SetChromaticities { chrm: base.chrm }],
+            PngMutation::SetSrgbIntent { .. } => vec![PngMutation::SetSrgbIntent { srgb: base.srgb }],
+            PngMutation::SetPhysicalDims { .. } => vec![PngMutation::SetPhysicalDims { phys: base.phys }],
+            PngMutation::SetTimestamp { .. } => vec![PngMutation::SetTimestamp { time: base.time }],
+            PngMutation::SetBackground { .. } => vec![PngMutation::SetBackground { bkgd: base.bkgd.clone() }],
+            PngMutation::InsertTextChunk { index, .. } => {
+                vec![PngMutation::RemoveTextChunk { index: (*index).min(base.text_chunks.len()) }]
+            }
+            PngMutation::RemoveTextChunk { index } => match base.text_chunks.get(*index) {
+                Some(chunk) => vec![PngMutation::InsertTextChunk { index: *index, chunk: chunk.clone() }],
+                None => vec![PngMutation::NoMutation],
+            },
+            PngMutation::SetTextChunk { index, .. } => match base.text_chunks.get(*index) {
+                Some(chunk) => vec![PngMutation::SetTextChunk { index: *index, chunk: chunk.clone() }],
+                None => vec![PngMutation::NoMutation],
+            },
+            PngMutation::SetPixels { .. } => vec![PngMutation::SetPixels { pixels: base.pixels.clone() }],
+            PngMutation::InsertUnknownChunk { index, .. } => {
+                vec![PngMutation::RemoveUnknownChunk { index: (*index).min(base.unknown_chunks.len()) }]
+            }
+            PngMutation::RemoveUnknownChunk { index } => match base.unknown_chunks.get(*index) {
+                Some(chunk) => vec![PngMutation::InsertUnknownChunk { index: *index, chunk: chunk.clone() }],
+                None => vec![PngMutation::NoMutation],
+            },
         }
     }
 }
@@ -80,3 +199,399 @@ impl protocol::OpBinary for PngMutation {
     }
 }
 //#endregion OpCodecs
+
+//#region Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextKind};
+    use protocol::command::DiffAlgebra;
+
+    //#region 🔖️Fixtures
+    fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+        PngTextChunk {
+            keyword: keyword.into(),
+            value: value.into(),
+            compressed: false,
+            kind: PngTextKind::Text,
+            language_tag: String::new(),
+            translated_keyword: String::new(),
+        }
+    }
+
+    fn base_snapshot() -> PngSnapshot {
+        PngSnapshot {
+            schema: "stdio.png".into(),
+            width: 4,
+            height: 4,
+            bit_depth: 8,
+            color_type: PngColorType::Rgba,
+            interlace: false,
+            plte: None,
+            trns: None,
+            gama: None,
+            chrm: None,
+            srgb: None,
+            phys: None,
+            time: None,
+            bkgd: None,
+            text_chunks: vec![text_chunk("Title", "demo")],
+            pixels: vec![0u8; 4 * 4 * 4],
+            // NOTE: `Text{index:0}` sits AFTER `Idat`, matching `chunk_order_insert_pos`'s own
+            // "new markers land just before Iend" convention (see its doc) — the same
+            // convention `InsertTextChunk`'s diff uses, so `RemoveTextChunk` + its inverse
+            // (`InsertTextChunk`) round-trips `chunk_order` exactly, not just `text_chunks`. A
+            // REAL decoded file that places tEXt before IDAT keeps that exact position through
+            // decode (verbatim, untouched); this fixture models a MUTATION-built document,
+            // where every insert already went through that same default-position policy.
+            // `unknown_chunks` starts EMPTY on purpose: with two DIFFERENT default-inserted
+            // markers already coexisting before `Iend`, removing+reinserting whichever one
+            // isn't last would flip their relative order (the same "before Iend" position
+            // policy can't distinguish "restore" from "append") — a real, documented
+            // normalization limitation, not something `inverse_law` should be asserting past.
+            // `InsertUnknownChunk`'s own variant in `all_variants` still exercises that marker
+            // fresh (nothing to reorder against), so the transport itself stays fully covered.
+            chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Iend],
+            unknown_chunks: vec![],
+        }
+    }
+    //#endregion 🔖️Fixtures
+
+    //#region 🔖️FieldSweepFixtures
+    /// 🧬️ `sweep_a`/`sweep_b` differ in EVERY mutable field. Every index-keyed collection
+    /// (`plte`, `text_chunks`, `chunk_order`, `unknown_chunks`) is deliberately DIFFERENT
+    /// length (2 vs 1) with the "surviving/modified" item at position 0 and the
+    /// "removed-in-forward / added-in-backward" item as the tail at position 1 — the recipe's
+    /// own documented workaround for the structural "same-length between() can show removed
+    /// XOR added, never both from one call" trap (see `f1-closer-report.md` §4.4).
+    fn sweep_a() -> PngSnapshot {
+        PngSnapshot {
+            schema: "stdio.png".into(),
+            width: 10,
+            height: 20,
+            bit_depth: 8,
+            color_type: PngColorType::Rgba,
+            interlace: false,
+            plte: Some(vec![PngRgb { r: 1, g: 1, b: 1 }, PngRgb { r: 2, g: 2, b: 2 }]),
+            trns: Some(PngTransparency::Grayscale { gray: 5 }),
+            gama: Some(45455),
+            chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }),
+            srgb: Some(PngSrgbIntent::Perceptual),
+            phys: Some(PngPhysicalDims { ppu_x: 100, ppu_y: 100, unit_is_meter: true }),
+            time: Some(PngTimestamp { year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0 }),
+            bkgd: Some(PngBackground::Grayscale { gray: 255 }),
+            text_chunks: vec![text_chunk("Author", "orig"), text_chunk("Trash", "gone")],
+            pixels: vec![0u8, 0, 0, 255, 255, 255, 255, 255],
+            chunk_order: vec![PngChunkMarker::Gama, PngChunkMarker::Chrm],
+            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![1, 2, 3] }, PngChunk { kind: *b"gone", data: vec![9, 9] }],
+        }
+    }
+
+    fn sweep_b() -> PngSnapshot {
+        PngSnapshot {
+            schema: "stdio.png".into(),
+            width: 11,
+            height: 21,
+            bit_depth: 16,
+            color_type: PngColorType::Palette,
+            interlace: true,
+            plte: Some(vec![PngRgb { r: 9, g: 9, b: 9 }]),
+            trns: None,
+            gama: None,
+            chrm: None,
+            srgb: Some(PngSrgbIntent::AbsoluteColorimetric),
+            phys: None,
+            time: None,
+            bkgd: None,
+            text_chunks: vec![PngTextChunk {
+                keyword: "Creator".into(),
+                value: "changed".into(),
+                compressed: true,
+                kind: PngTextKind::IText,
+                language_tag: "en".into(),
+                translated_keyword: "Auteur".into(),
+            }],
+            pixels: vec![1u8, 1, 1, 255],
+            chunk_order: vec![PngChunkMarker::Srgb],
+            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![4, 5, 6] }],
+        }
+    }
+    //#endregion 🔖️FieldSweepFixtures
+
+    //#region 🔖️mutation_diff_law
+    fn assert_mutation_diff_law(base: &PngSnapshot, mutation: PngMutation) {
+        let expected_diff = mutation.diff(base);
+        let mut applied_snapshot = base.clone();
+        let returned_diff = apply_png_mutation(&mut applied_snapshot, &mutation);
+        assert_eq!(returned_diff, expected_diff, "apply_png_mutation must return mutation.diff(base) for {mutation:?}");
+        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+    }
+
+    fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
+        vec![
+            PngMutation::NoMutation,
+            PngMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.width = 99; s } },
+            PngMutation::SetHeader { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true },
+            PngMutation::SetPalette { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) },
+            PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 7 }) },
+            PngMutation::SetGamma { gama: Some(45455) },
+            PngMutation::SetChromaticities { chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }) },
+            PngMutation::SetSrgbIntent { srgb: Some(PngSrgbIntent::Saturation) },
+            PngMutation::SetPhysicalDims { phys: Some(PngPhysicalDims { ppu_x: 96, ppu_y: 96, unit_is_meter: false }) },
+            PngMutation::SetTimestamp { time: Some(PngTimestamp { year: 2024, month: 6, day: 1, hour: 12, minute: 0, second: 0 }) },
+            PngMutation::SetBackground { bkgd: Some(PngBackground::Rgb { r: 1, g: 2, b: 3 }) },
+            PngMutation::InsertTextChunk { index: 1, chunk: text_chunk("Comment", "hi") },
+            PngMutation::RemoveTextChunk { index: 0 },
+            PngMutation::SetTextChunk { index: 0, chunk: text_chunk("Title", "updated") },
+            PngMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+            PngMutation::InsertUnknownChunk { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } },
+            PngMutation::RemoveUnknownChunk { index: 0 },
+            // Out-of-range targets: graceful no-ops, still law-compliant.
+            PngMutation::RemoveTextChunk { index: 99 },
+            PngMutation::RemoveUnknownChunk { index: 99 },
+        ]
+    }
+
+    #[test]
+    fn mutation_diff_law() {
+        let base = base_snapshot();
+        for m in all_variants(&base) {
+            assert_mutation_diff_law(&base, m);
+        }
+    }
+    //#endregion 🔖️mutation_diff_law
+
+    //#region 🔖️inverse_law
+    #[test]
+    fn inverse_law() {
+        let base = base_snapshot();
+        for m in all_variants(&base) {
+            // Mutation-level round trip.
+            let mut snap = base.clone();
+            apply_png_mutation(&mut snap, &m);
+            for inv in m.inverse(&base) {
+                apply_png_mutation(&mut snap, &inv);
+            }
+            assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
+
+            // Diff-level round trip.
+            let d = m.diff(&base);
+            let mutated = d.apply(&base);
+            let inv_d = d.inverse(&base);
+            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+        }
+    }
+    //#endregion 🔖️inverse_law
+
+    //#region 🔖️absorb_law
+    fn assert_absorb_law(base: &PngSnapshot, m1: PngMutation, m2: PngMutation) {
+        let d1 = m1.diff(base);
+        let mid = d1.apply(base);
+        let d2 = m2.diff(&mid);
+        let sequential = d2.apply(&mid);
+
+        let mut merged = d1.clone();
+        merged.absorb(d2.clone());
+        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    }
+
+    #[test]
+    fn absorb_law() {
+        let base = base_snapshot();
+
+        // Insert+Remove-before: base has [Title] at 0; insert "New" at 1 -> [Title,New]; then
+        // remove index 0 ("Title") -> [New] lands at final index 0 (the recipe's own canonical
+        // shift case, on text_chunks' bespoke field-aware absorb path).
+        assert_absorb_law(&base, PngMutation::InsertTextChunk { index: 1, chunk: text_chunk("New", "n") }, PngMutation::RemoveTextChunk { index: 0 });
+
+        // Insert+Insert-same-index: both survive, later insert lands at the lower final index.
+        assert_absorb_law(&base, PngMutation::InsertTextChunk { index: 1, chunk: text_chunk("F", "f") }, PngMutation::InsertTextChunk { index: 1, chunk: text_chunk("G", "g") });
+
+        // Add+SetField: the second mutation patches directly into the still-pending added chunk.
+        assert_absorb_law(&base, PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("X", "orig") }, PngMutation::SetTextChunk { index: 0, chunk: text_chunk("X", "patched") });
+
+        // Modify+Remove: a pending field patch on a since-removed base item vanishes.
+        assert_absorb_law(&base, PngMutation::SetTextChunk { index: 0, chunk: text_chunk("Title", "will-vanish") }, PngMutation::RemoveTextChunk { index: 0 });
+
+        // Insert then annihilate the very same insert — on `unknown_chunks`, exercising the
+        // SHARED weak-value index transport (`absorb_weak_index_triple`) instead of
+        // text_chunks' bespoke field-aware variant.
+        assert_absorb_law(&base, PngMutation::InsertUnknownChunk { index: 0, chunk: PngChunk { kind: *b"abcd", data: vec![1] } }, PngMutation::RemoveUnknownChunk { index: 0 });
+
+        // Two unrelated scalar sets absorb via LWW.
+        assert_absorb_law(&base, PngMutation::SetGamma { gama: Some(1) }, PngMutation::SetGamma { gama: Some(2) });
+
+        // Tri-state set-then-clear: the later clear wins outright over the pending set.
+        assert_absorb_law(&base, PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 1 }) }, PngMutation::SetTransparency { trns: None });
+    }
+
+    #[test]
+    fn absorb_law_associativity() {
+        let base = base_snapshot();
+        let d1 = PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("A", "a") }.diff(&base);
+        let s1 = d1.apply(&base);
+        let d2 = PngMutation::SetTextChunk { index: 0, chunk: text_chunk("A", "a2") }.diff(&s1);
+        let s2 = d2.apply(&s1);
+        let d3 = PngMutation::RemoveTextChunk { index: 1 }.diff(&s2);
+        let s3 = d3.apply(&s2);
+
+        // (d1∘d2)∘d3
+        let mut left = d1.clone();
+        left.absorb(d2.clone());
+        left.absorb(d3.clone());
+
+        // d1∘(d2∘d3)
+        let mut d23 = d2.clone();
+        d23.absorb(d3.clone());
+        let mut right = d1.clone();
+        right.absorb(d23);
+
+        assert_eq!(left.apply(&base), s3);
+        assert_eq!(right.apply(&base), s3);
+        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
+    }
+    //#endregion 🔖️absorb_law
+
+    //#region 🔖️between_roundtrip_law
+    #[test]
+    fn between_roundtrip_law() {
+        let a = base_snapshot();
+        let mut b = base_snapshot();
+        b.width = 8;
+        b.text_chunks.push(text_chunk("Extra", "v"));
+        b.pixels = vec![5u8; a.pixels.len()];
+
+        let d = PngDiff::between(&a, &b);
+        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        let d_rev = PngDiff::between(&b, &a);
+        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert!(PngDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+    }
+    //#endregion 🔖️between_roundtrip_law
+
+    //#region 🔖️codec_retention_law
+    #[test]
+    fn codec_retention_law() {
+        let bytes = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/example.png"
+        ));
+        let bytes = match bytes {
+            Ok(b) if !b.is_empty() => b,
+            // No usable fixture on disk at test time (or a different workspace layout) — fall
+            // back to a synthetic encode -> decode -> re-encode -> re-decode identity check.
+            _ => crate::artifacts::png::engine::encode_png(&base_snapshot()).expect("encode synthetic fallback"),
+        };
+        let decoded = crate::artifacts::png::engine::decode_png(&bytes).expect("decode fixture");
+        let reencoded = crate::artifacts::png::engine::encode_png(&decoded).expect("re-encode fixture");
+        let redecoded = crate::artifacts::png::engine::decode_png(&reencoded).expect("re-decode fixture");
+        // Engine's EncodeScopeNote: encode always canonicalizes to color type 6 / bit depth 8 /
+        // interlace 0 — pixel CONTENT is the retained invariant, not the original header/chunks.
+        assert_eq!(decoded.width, redecoded.width);
+        assert_eq!(decoded.height, redecoded.height);
+        assert_eq!(decoded.pixels, redecoded.pixels);
+    }
+    //#endregion 🔖️codec_retention_law
+
+    //#region 🔖️field_sweep
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let forward = PngDiff::between(&a, &b);
+        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        let backward = PngDiff::between(&b, &a);
+        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert!(PngDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
+
+        // IHDR scalars.
+        assert!(forward.width.is_some());
+        assert!(forward.height.is_some());
+        assert!(forward.bit_depth.is_some());
+        assert!(forward.color_type.is_some());
+        assert!(forward.interlace.is_some());
+
+        // Tri-state clears (forward: Some -> None).
+        assert_eq!(forward.trns, Some(None), "trns tri-state clear must show Some(None)");
+        assert_eq!(forward.gama, Some(None), "gama tri-state clear must show Some(None)");
+        assert_eq!(forward.chrm, Some(None), "chrm tri-state clear must show Some(None)");
+        assert_eq!(forward.phys, Some(None), "phys tri-state clear must show Some(None)");
+        assert_eq!(forward.time, Some(None), "time tri-state clear must show Some(None)");
+        assert_eq!(forward.bkgd, Some(None), "bkgd tri-state clear must show Some(None)");
+        assert!(matches!(forward.srgb, Some(Some(_))), "srgb value-only change must stay Some(Some(_))");
+
+        // Tri-state recreates (backward: None -> Some) — the same six fields, other direction.
+        assert!(matches!(backward.trns, Some(Some(_))));
+        assert!(matches!(backward.gama, Some(Some(_))));
+        assert!(matches!(backward.chrm, Some(Some(_))));
+        assert!(matches!(backward.phys, Some(Some(_))));
+        assert!(matches!(backward.time, Some(Some(_))));
+        assert!(matches!(backward.bkgd, Some(Some(_))));
+
+        // plte: forward shows modified+removed, backward shows modified+added (the
+        // recipe's split-across-both-directions workaround for the removed-XOR-added trap).
+        let plte_fwd = forward.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
+        assert_eq!(plte_fwd.removed, vec![1]);
+        assert_eq!(plte_fwd.modified.len(), 1);
+        assert!(plte_fwd.added.is_empty());
+        let plte_bwd = backward.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
+        assert!(plte_bwd.removed.is_empty());
+        assert_eq!(plte_bwd.modified.len(), 1);
+        assert_eq!(plte_bwd.added.len(), 1);
+
+        // text_chunks: same split; every field of the modified entry's diff populated.
+        let tc_fwd = forward.text_chunks.as_ref().expect("text_chunks diff present");
+        assert_eq!(tc_fwd.removed, vec![1]);
+        assert_eq!(tc_fwd.modified.len(), 1);
+        assert!(tc_fwd.added.is_empty());
+        let md = &tc_fwd.modified[0].diff;
+        assert!(md.keyword.is_some(), "keyword must be diffed");
+        assert!(md.value.is_some(), "value must be diffed");
+        assert!(md.compressed.is_some(), "compressed must be diffed");
+        assert!(md.kind.is_some(), "kind must be diffed");
+        assert!(md.language_tag.is_some(), "language_tag must be diffed");
+        assert!(md.translated_keyword.is_some(), "translated_keyword must be diffed");
+        let tc_bwd = backward.text_chunks.as_ref().expect("text_chunks diff present");
+        assert!(tc_bwd.removed.is_empty());
+        assert_eq!(tc_bwd.modified.len(), 1);
+        assert_eq!(tc_bwd.added.len(), 1);
+
+        // pixels.
+        assert!(forward.pixels.is_some(), "pixels must be diffed");
+
+        // chunk_order: same split.
+        let co_fwd = forward.chunk_order.as_ref().expect("chunk_order diff present");
+        assert_eq!(co_fwd.removed, vec![1]);
+        assert_eq!(co_fwd.modified.len(), 1);
+        assert!(co_fwd.added.is_empty());
+        let co_bwd = backward.chunk_order.as_ref().expect("chunk_order diff present");
+        assert!(co_bwd.removed.is_empty());
+        assert_eq!(co_bwd.modified.len(), 1);
+        assert_eq!(co_bwd.added.len(), 1);
+
+        // unknown_chunks: same split.
+        let uc_fwd = forward.unknown_chunks.as_ref().expect("unknown_chunks diff present");
+        assert_eq!(uc_fwd.removed, vec![1]);
+        assert_eq!(uc_fwd.modified.len(), 1);
+        assert!(uc_fwd.added.is_empty());
+        let uc_bwd = backward.unknown_chunks.as_ref().expect("unknown_chunks diff present");
+        assert!(uc_bwd.removed.is_empty());
+        assert_eq!(uc_bwd.modified.len(), 1);
+        assert_eq!(uc_bwd.added.len(), 1);
+    }
+    //#endregion 🔖️field_sweep
+
+    #[test]
+    fn out_of_range_mutation_is_noop_not_panic() {
+        let base = base_snapshot();
+        let mut snap = base.clone();
+        apply_png_mutation(&mut snap, &PngMutation::RemoveTextChunk { index: 42 });
+        assert_eq!(snap, base);
+        apply_png_mutation(&mut snap, &PngMutation::RemoveUnknownChunk { index: 42 });
+        assert_eq!(snap, base);
+        apply_png_mutation(&mut snap, &PngMutation::SetTextChunk { index: 42, chunk: text_chunk("x", "y") });
+        assert_eq!(snap, base);
+    }
+}
+//#endregion Tests

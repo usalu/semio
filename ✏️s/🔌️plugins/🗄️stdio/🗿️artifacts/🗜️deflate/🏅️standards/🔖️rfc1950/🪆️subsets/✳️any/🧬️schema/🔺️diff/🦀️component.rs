@@ -115,6 +115,162 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 }
 //#endregion 🔖️Diff
 
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DeflateDiff` — the derive path
+/// (`#[derive(dsl::DslDiff)]`) is NOT usable here: `dict_id: Option<Option<u32>>` is a tri-state
+/// field (`f6-recon-report.md` §3b — `dsl_derive::classify_field` peels exactly one `Option<..>`
+/// layer before binding, and there is no `impl<T: DslField> DslField for Option<T>` anywhere in
+/// the `dsl` crate, so the REMAINING `Option<u32>` after that one peel is structurally
+/// unbindable). Confirmed via real `cargo check`:
+/// ```text
+/// error[E0277]: the trait bound `std::option::Option<u32>: DslField` is not satisfied
+///    --> …/🔺️diff/🦀️component.rs:37:17   (pub dict_id: Option<Option<u32>>)
+/// ```
+/// This is the SAME hand-rolled path `GifDiff` uses for its own tri-state fields (`gct`,
+/// `loop_count`, `GifFrameDiff`'s `lct`/`transparent_index`/`plain_text`) — the primitive set
+/// below (`hex_encode`/`hex_decode`/`split_top_level`/`strip_brackets`/`encode_option`/
+/// `decode_option`) is copied verbatim from that pilot's grammar template
+/// (`f6-recon-report.md` §5), since `DeflateDiff` needs no enum-tag or collection-triple
+/// machinery (no data-carrying enum, no keyed collection anywhere in this artifact).
+///
+/// **Grammar**: one space-separated `name=value` token per changed top-level field (a field
+/// absent from the line = unchanged). Bytes (`payload`) are lowercase hex — same local idiom
+/// `DeflateSnapshot`'s own `ArtifactDsl` impl above already uses, and the same reason `GifDiff`
+/// gives (no external base64 dep, no escaping needed at this grammar layer). `compression_level_hint`
+/// uses a single-letter tag (`f`/`a`/`d`/`m`, mirroring `GifDisposal`'s `enc_disposal` pattern).
+/// The tri-state `dict_id` and the plain-optional `payload` both use the uniform
+/// `[0]`=unchanged-inner-None / `[1,<T>]`=inner-Some(T) tag via `encode_option`/`decode_option`
+/// (note: `payload`'s own `Option<Vec<u8>>` is the DIFF's "field changed at all" wrapper, not a
+/// second tri-state — `DeflateSnapshot::payload` itself is a bare, never-nullable `Vec<u8>`, so
+/// `payload`'s token is only present when the field changed, and its value is always hex, never
+/// itself optional).
+///
+/// Worked example: `compression-method=9 window-bits=6 level=m dict-id=[1,3735928559] payload=` (empty
+/// payload prints as a zero-length hex string after `=`).
+//#region 🔖️Primitives
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+
+/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — needed even for this small a grammar
+/// because `decode_option`'s own `[0]`/`[1,<v>]` payload can itself contain a `,` (none here
+/// today, but the primitive is the shared grammar contract every hand-rolled codec in this repo
+/// uses, per `f6-recon-report.md` §5 -- kept verbatim rather than hand-simplified).
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️ValueCodecs
+fn enc_level_hint(h: DeflateLevelHint) -> char {
+    match h {
+        DeflateLevelHint::Fastest => 'f',
+        DeflateLevelHint::Fast => 'a',
+        DeflateLevelHint::Default => 'd',
+        DeflateLevelHint::Maximum => 'm',
+    }
+}
+fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
+    match s {
+        "f" => Ok(DeflateLevelHint::Fastest),
+        "a" => Ok(DeflateLevelHint::Fast),
+        "d" => Ok(DeflateLevelHint::Default),
+        "m" => Ok(DeflateLevelHint::Maximum),
+        other => Err(format!("bad level hint {other:?}")),
+    }
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️TopLevel
+fn print_deflate_diff(d: &DeflateDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = d.compression_method { tokens.push(format!("compression-method={v}")); }
+    if let Some(v) = d.window_bits { tokens.push(format!("window-bits={v}")); }
+    if let Some(v) = d.compression_level_hint { tokens.push(format!("level={}", enc_level_hint(v))); }
+    if let Some(v) = &d.dict_id { tokens.push(format!("dict-id={}", encode_option(v, |x| x.to_string()))); }
+    if let Some(v) = &d.payload { tokens.push(format!("payload={}", hex_encode(v))); }
+    tokens.join(" ")
+}
+fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
+    let mut d = DeflateDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("compression-method=") { d.compression_method = Some(parse_u8(rest)?); }
+        else if let Some(rest) = token.strip_prefix("window-bits=") { d.window_bits = Some(parse_u8(rest)?); }
+        else if let Some(rest) = token.strip_prefix("level=") { d.compression_level_hint = Some(dec_level_hint(rest)?); }
+        else if let Some(rest) = token.strip_prefix("dict-id=") { d.dict_id = Some(decode_option(rest, parse_u32)?); }
+        else if let Some(rest) = token.strip_prefix("payload=") { d.payload = Some(hex_decode(rest)?); }
+        else { return Err(format!("deflate diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for DeflateDiff {
+    fn print_diff(&self) -> String {
+        print_deflate_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_deflate_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim (same simplification `GifDiff`/`WriterDiff`'s
+    /// hand-rolled `DiffCodec` impls use): satisfies every `DiffCodec` law (round-trips,
+    /// deterministic) without inventing a second, denser wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
@@ -122,7 +278,7 @@ mod tests {
     use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, DeflateMutation};
     use crate::artifacts::deflate::engine::{decode_deflate_snapshot, encode_deflate_snapshot};
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-    use protocol::Mutation;
+    use protocol::{DiffCodec, Mutation};
 
     //#region Fixtures
     /// 🌱 A real RFC1950 zlib stream (CMF=0x78 CINFO=7/CM=8, FLG=0x9c FLEVEL=Default/FDICT=0,
@@ -334,5 +490,35 @@ mod tests {
         assert_eq!(re_decoded.payload, decoded.payload);
     }
     //#endregion codec_retention_law
+
+    //#region diff_codec_text_binary_roundtrip_law
+    /// 🧪️ F6: `DiffCodec::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip law —
+    /// exercises real `between()` results covering every field AND both `dict_id` tri-state
+    /// transitions (`Some(None)` = cleared, `Some(Some(_))` = set/changed), plus the empty diff.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        // 🪆️ `a.dict_id` is `None`, `b.dict_id` is `Some(_)` -- `between(a,b)` exercises the
+        // Some(Some(_)) arm, `between(b,a)` exercises the Some(None) arm.
+        let cases = vec![
+            DeflateDiff::default(),
+            DeflateDiff::between(&a, &b),
+            DeflateDiff::between(&b, &a),
+            diff_set_preset_dictionary(None),
+            diff_set_payload(Vec::new()),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = DeflateDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = DeflateDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+    //#endregion diff_codec_text_binary_roundtrip_law
 }
 //#endregion 🔖️Tests

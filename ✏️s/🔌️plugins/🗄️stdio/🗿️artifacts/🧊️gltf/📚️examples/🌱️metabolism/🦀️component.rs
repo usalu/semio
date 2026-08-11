@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn base_glb_decodes_to_a_nonempty_real_document() {
         let snapshot = decoded_snapshot();
-        assert_eq!(snapshot.document["asset"]["version"], "2.0");
+        assert_eq!(snapshot.document.asset.version, "2.0");
         assert!(!snapshot.buffers.is_empty());
     }
 

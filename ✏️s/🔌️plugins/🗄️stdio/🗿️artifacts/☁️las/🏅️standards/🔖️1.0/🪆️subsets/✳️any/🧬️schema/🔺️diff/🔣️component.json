@@ -2,14 +2,103 @@
   "$id": "https://semio.tech/schema/s.stdio.las/diff.json",
   "title": "LasDiff",
   "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "definitions": {
+    "LasVlrDiff": {
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "recordId": { "type": "integer" },
+        "description": { "type": "string" },
+        "data": { "type": "array", "items": { "type": "integer" } }
+      }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "LasVlrsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/definitions/LasVlrDiff" } }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "index": { "type": "integer" }, "vlr": { "type": "object" } }
+          }
+        }
+      }
+    },
+    "LasPointDiff": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" },
+        "intensity": { "type": "integer" },
+        "returnNumber": { "type": "integer" },
+        "numberOfReturns": { "type": "integer" },
+        "scanDirectionFlag": { "type": "boolean" },
+        "edgeOfFlightLine": { "type": "boolean" },
+        "classification": { "type": "integer" },
+        "scanAngleRank": { "type": "integer" },
+        "userData": { "type": "integer" },
+        "pointSourceId": { "type": "integer" },
+        "gpsTime": { "type": ["number", "null"] },
+        "rgb": { "type": ["array", "null"], "items": { "type": "integer" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "LasPointsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/definitions/LasPointDiff" } }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "index": { "type": "integer" }, "point": { "type": "object" } }
+          }
+        }
+      }
     }
+  },
+  "properties": {
+    "versionMajor": { "type": "integer", "x-semio-state": "persistent" },
+    "versionMinor": { "type": "integer", "x-semio-state": "persistent" },
+    "systemIdentifier": { "type": "string", "x-semio-state": "persistent" },
+    "generatingSoftware": { "type": "string", "x-semio-state": "persistent" },
+    "creationDayOfYear": { "type": "integer", "x-semio-state": "persistent" },
+    "creationYear": { "type": "integer", "x-semio-state": "persistent" },
+    "headerSize": { "type": "integer", "x-semio-state": "persistent" },
+    "offsetToPointData": { "type": "integer", "x-semio-state": "persistent" },
+    "numberOfVlrs": { "type": "integer", "x-semio-state": "persistent" },
+    "pointDataFormatId": { "type": "integer", "x-semio-state": "persistent" },
+    "pointDataRecordLength": { "type": "integer", "x-semio-state": "persistent" },
+    "numberOfPointRecords": { "type": "integer", "x-semio-state": "persistent" },
+    "pointsByReturn": { "type": "array", "items": { "type": "integer" }, "minItems": 5, "maxItems": 5, "x-semio-state": "persistent" },
+    "xScale": { "type": "number", "x-semio-state": "persistent" },
+    "yScale": { "type": "number", "x-semio-state": "persistent" },
+    "zScale": { "type": "number", "x-semio-state": "persistent" },
+    "xOffset": { "type": "number", "x-semio-state": "persistent" },
+    "yOffset": { "type": "number", "x-semio-state": "persistent" },
+    "zOffset": { "type": "number", "x-semio-state": "persistent" },
+    "maxX": { "type": "number", "x-semio-state": "persistent" },
+    "minX": { "type": "number", "x-semio-state": "persistent" },
+    "maxY": { "type": "number", "x-semio-state": "persistent" },
+    "minY": { "type": "number", "x-semio-state": "persistent" },
+    "maxZ": { "type": "number", "x-semio-state": "persistent" },
+    "minZ": { "type": "number", "x-semio-state": "persistent" },
+    "vlrs": { "$ref": "#/definitions/LasVlrsDiff", "x-semio-state": "persistent" },
+    "points": { "$ref": "#/definitions/LasPointsDiff", "x-semio-state": "persistent" }
   }
 }

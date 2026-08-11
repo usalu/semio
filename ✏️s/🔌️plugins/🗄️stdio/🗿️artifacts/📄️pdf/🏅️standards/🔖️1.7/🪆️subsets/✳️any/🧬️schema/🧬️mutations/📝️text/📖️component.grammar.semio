@@ -1,6 +1,33 @@
-dialect grammar stdio.pdf.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.pdf' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar pdf.1.7.mutations
+extension json
+start pdf-mutation
+
+; -- `PdfMutation::print_op` (OpText impl) is literally `serde_json::to_string(self)` -- ONE
+; -- top-level JSON object tagged by `"mutation"`, no header/envelope line. This grammar is the
+; -- REAL wire shape (matches ../🔣️component.json / ../🟦️component.ts field-for-field), not a
+; -- placeholder.
+pdf-mutation = "{" ws "\"mutation\"" ws ":" ws mutation-tag ( ws "," ws mutation-field )* ws "}"
+mutation-tag = "\"noMutation\"" / "\"setSnapshot\"" / "\"insertPage\"" / "\"removePage\""
+             / "\"setPageMediaBox\"" / "\"setPageCropBox\"" / "\"appendPageContent\"" / "\"setInfo\""
+             / "\"insertObject\"" / "\"removeObject\"" / "\"setObjectValue\""
+             / "\"setDictEntry\"" / "\"removeDictEntry\"" / "\"setTrailerEntry\"" / "\"removeTrailerEntry\""
+mutation-field = "\"snapshot\"" ws ":" ws json-object
+                / "\"index\"" ws ":" ws 1*digit
+                / "\"page\"" ws ":" ws json-object
+                / "\"mediaBox\"" ws ":" ws json-array
+                / "\"cropBox\"" ws ":" ws ( json-array / "null" )
+                / "\"text\"" ws ":" ws json-string
+                / "\"info\"" ws ":" ws json-object
+                / "\"id\"" ws ":" ws json-object
+                / "\"value\"" ws ":" ws json-value
+                / "\"path\"" ws ":" ws json-array
+                / "\"key\"" ws ":" ws json-string
+
+json-string = %x22 *( %x20-21 / %x23-5B / %x5D-10FFFF / "\" ( %x22 / "\" / "/" / "b" / "f" / "n" / "r" / "t" / ( "u" hexdig hexdig hexdig hexdig ) ) ) %x22
+json-array = "[" ws ( json-value ( ws "," ws json-value )* )? ws "]"
+json-object = "{" ws ( json-string ws ":" ws json-value ( ws "," ws json-string ws ":" ws json-value )* )? ws "}"
+json-value = json-object / json-array / json-string / 1*digit / "true" / "false" / "null"
+digit = %x30-39
+hexdig = digit / %x41-46 / %x61-66
+ws = *( %x20 / %x09 / %x0A / %x0D )

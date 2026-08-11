@@ -1,15 +1,90 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.step/snapshot.json",
   "title": "StepSnapshot",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "StepValue": {
+      "oneOf": [
+        { "const": "unset" },
+        { "const": "derived" },
+        { "type": "object", "required": ["integer"], "properties": { "integer": { "type": "integer" } } },
+        { "type": "object", "required": ["real"], "properties": { "real": { "type": "number" } } },
+        { "type": "object", "required": ["string"], "properties": { "string": { "type": "string" } } },
+        { "type": "object", "required": ["enum"], "properties": { "enum": { "type": "string" } } },
+        { "type": "object", "required": ["reference"], "properties": { "reference": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "required": ["aggregate"], "properties": { "aggregate": { "type": "array", "items": { "$ref": "#/$defs/StepValue" } } } },
+        {
+          "type": "object",
+          "required": ["typedValue"],
+          "properties": {
+            "typedValue": {
+              "type": "object",
+              "required": ["typeName", "value"],
+              "properties": {
+                "typeName": { "type": "string" },
+                "value": { "$ref": "#/$defs/StepValue" }
+              }
+            }
+          }
+        }
+      ]
     },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "StepFileDescription": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "array", "items": { "type": "string" } },
+        "implementationLevel": { "type": "string" }
+      }
+    },
+    "StepFileName": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "author": { "type": "array", "items": { "type": "string" } },
+        "organization": { "type": "array", "items": { "type": "string" } },
+        "preprocessorVersion": { "type": "string" },
+        "originatingSystem": { "type": "string" },
+        "authorization": { "type": "string" }
+      }
+    },
+    "StepFileSchema": {
+      "type": "object",
+      "properties": {
+        "schemas": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "StepHeader": {
+      "type": "object",
+      "properties": {
+        "fileDescription": { "$ref": "#/$defs/StepFileDescription" },
+        "fileName": { "$ref": "#/$defs/StepFileName" },
+        "fileSchema": { "$ref": "#/$defs/StepFileSchema" }
+      }
+    },
+    "StepComplexType": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "args": { "type": "array", "items": { "$ref": "#/$defs/StepValue" } }
+      }
+    },
+    "StepEntity": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "args": { "type": "array", "items": { "$ref": "#/$defs/StepValue" } },
+        "complex": { "type": "array", "items": { "$ref": "#/$defs/StepComplexType" } }
+      }
     }
+  },
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "header": { "$ref": "#/$defs/StepHeader", "x-semio-state": "persistent" },
+    "entities": { "type": "array", "items": { "$ref": "#/$defs/StepEntity" }, "x-semio-state": "persistent" }
   }
 }

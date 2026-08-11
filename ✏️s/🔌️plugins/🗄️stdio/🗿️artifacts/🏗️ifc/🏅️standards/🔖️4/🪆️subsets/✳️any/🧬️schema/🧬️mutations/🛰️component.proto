@@ -1,6 +1,33 @@
 syntax = "proto3";
-package semio.s_stdio_ifc.mutation;
+package semio.s_stdio_ifc.mutations;
+
+import "snapshot.proto";
+
+// 📐️ Typed content mutation for `stdio.ifc` — oneof over every named variant.
 message IfcMutation {
-  string schema = 1;
-  string text_wire = 2;
+  message NoMutation {}
+  message SetSnapshot { semio.s_stdio_ifc.snapshot.IfcSnapshot snapshot = 1; }
+  message SetFileDescription { repeated semio.s_stdio_ifc.snapshot.IfcValue values = 1; }
+  message SetFileName { repeated semio.s_stdio_ifc.snapshot.IfcValue values = 1; }
+  message SetFileSchema { repeated semio.s_stdio_ifc.snapshot.IfcValue values = 1; }
+  message InsertEntity { uint64 index = 1; semio.s_stdio_ifc.snapshot.IfcEntity entity = 2; }
+  message RemoveEntity { uint64 id = 1; }
+  message SetEntityName { uint64 id = 1; string name = 2; }
+  message SetEntityArg { uint64 id = 1; uint64 index = 2; semio.s_stdio_ifc.snapshot.IfcValue value = 3; }
+  message InsertEntityArg { uint64 id = 1; uint64 index = 2; semio.s_stdio_ifc.snapshot.IfcValue value = 3; }
+  message RemoveEntityArg { uint64 id = 1; uint64 index = 2; }
+
+  oneof mutation {
+    NoMutation no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetFileDescription set_file_description = 3;
+    SetFileName set_file_name = 4;
+    SetFileSchema set_file_schema = 5;
+    InsertEntity insert_entity = 6;
+    RemoveEntity remove_entity = 7;
+    SetEntityName set_entity_name = 8;
+    SetEntityArg set_entity_arg = 9;
+    InsertEntityArg insert_entity_arg = 10;
+    RemoveEntityArg remove_entity_arg = 11;
+  }
 }

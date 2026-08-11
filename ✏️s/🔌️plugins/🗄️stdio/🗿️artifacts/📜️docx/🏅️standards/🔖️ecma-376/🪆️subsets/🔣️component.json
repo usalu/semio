@@ -1,0 +1,15 @@
+{
+  "artifact": "s.stdio.docx",
+  "standard": "ecma-376",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained docx ecma-376"
+    },
+    "strict": {
+      "name": "ISO/IEC 29500-1:2016 Strict"
+    },
+    "transitional": {
+      "name": "ISO/IEC 29500-4:2016 Transitional"
+    }
+  }
+}

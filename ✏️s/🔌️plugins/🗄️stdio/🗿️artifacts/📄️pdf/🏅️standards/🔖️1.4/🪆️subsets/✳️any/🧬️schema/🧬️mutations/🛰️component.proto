@@ -1,6 +1,13 @@
 syntax = "proto3";
 package semio.s_stdio_pdf.mutation;
+
+import "s_stdio_pdf_snapshot.proto"; // PdfSnapshot
+
 message PdfMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  enum Kind {
+    NO_MUTATION = 0;
+    SET_SNAPSHOT = 1;
+  }
+  Kind mutation = 1;
+  semio.s_stdio_pdf.snapshot.PdfSnapshot snapshot = 2;
 }

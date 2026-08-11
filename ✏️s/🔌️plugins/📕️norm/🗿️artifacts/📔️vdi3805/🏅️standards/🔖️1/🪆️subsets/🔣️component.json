@@ -1,0 +1,9 @@
+{
+  "artifact": "s.norm.vdi3805",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained vdi3805 1"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.note.note",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained note 1"
+    }
+  }
+}

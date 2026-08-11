@@ -1,0 +1,6 @@
+/** 🧐️ PptxStrictAnalyzer (✳️strict subset) meta. */
+export const meta = {
+  artifactKind: "s.stdio.pptx",
+  standard: "ecma-376",
+  subset: "strict",
+} as const;

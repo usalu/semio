@@ -2,14 +2,101 @@
   "$id": "https://semio.tech/schema/s.stdio.png/diff.json",
   "title": "PngDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "width": { "type": "integer" },
+    "height": { "type": "integer" },
+    "bitDepth": { "type": "integer" },
+    "colorType": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngColorType" },
+    "interlace": { "type": "boolean" },
+    "plte": { "anyOf": [{ "$ref": "#/$defs/PngPlteDiff" }, { "type": "null" }] },
+    "trns": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTransparency" }, { "type": "null" }] },
+    "gama": { "anyOf": [{ "type": "integer" }, { "type": "null" }] },
+    "chrm": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChromaticities" }, { "type": "null" }] },
+    "srgb": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngSrgbIntent" }, { "type": "null" }] },
+    "phys": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" }, { "type": "null" }] },
+    "time": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTimestamp" }, { "type": "null" }] },
+    "bkgd": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngBackground" }, { "type": "null" }] },
+    "textChunks": { "$ref": "#/$defs/PngTextChunksDiff" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "chunkOrder": { "$ref": "#/$defs/PngChunkOrderDiff" },
+    "unknownChunks": { "$ref": "#/$defs/PngUnknownChunksDiff" }
+  },
+  "$defs": {
+    "PngPlteEntryModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "rgb"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "rgb": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngRgb" } }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "PngPlteEntryAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "rgb"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "rgb": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngRgb" } }
+    },
+    "PngPlteDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PngPlteEntryModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PngPlteEntryAdded" } }
+      }
+    },
+    "PngTextChunkDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "keyword": { "type": "string" },
+        "value": { "type": "string" },
+        "compressed": { "type": "boolean" },
+        "kind": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextKind" },
+        "languageTag": { "type": "string" },
+        "translatedKeyword": { "type": "string" }
+      }
+    },
+    "PngTextChunkModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/PngTextChunkDiff" } }
+    },
+    "PngTextChunkAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "chunk"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextChunk" } }
+    },
+    "PngTextChunksDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PngTextChunkModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PngTextChunkAdded" } }
+      }
+    },
+    "PngUnknownChunkModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "chunk"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunk" } }
+    },
+    "PngUnknownChunkAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "chunk"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "chunk": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunk" } }
+    },
+    "PngUnknownChunksDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PngUnknownChunkModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PngUnknownChunkAdded" } }
+      }
+    },
+    "PngChunkOrderModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "marker"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "marker": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunkMarker" } }
+    },
+    "PngChunkOrderAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "marker"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "marker": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunkMarker" } }
+    },
+    "PngChunkOrderDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/PngChunkOrderModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/PngChunkOrderAdded" } }
+      }
     }
   }
 }

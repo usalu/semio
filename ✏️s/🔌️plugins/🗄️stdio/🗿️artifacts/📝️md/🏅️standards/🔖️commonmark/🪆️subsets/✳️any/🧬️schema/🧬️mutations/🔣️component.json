@@ -1,15 +1,28 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.md/mutation.md",
+  "$id": "https://semio.tech/schema/s.stdio.md/mutations.json",
   "title": "MdMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index", "block"],
+      "properties": { "mutation": { "const": "insertBlock" }, "path": { "type": "array" }, "index": { "type": "integer", "minimum": 0 }, "block": { "type": "object" } }
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index"],
+      "properties": { "mutation": { "const": "removeBlock" }, "path": { "type": "array" }, "index": { "type": "integer", "minimum": 0 } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index", "block"],
+      "properties": { "mutation": { "const": "replaceBlock" }, "path": { "type": "array" }, "index": { "type": "integer", "minimum": 0 }, "block": { "type": "object" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "index", "inlines"],
+      "properties": { "mutation": { "const": "setInlines" }, "path": { "type": "array" }, "index": { "type": "integer", "minimum": 0 }, "inlines": { "type": "array" } }
     }
-  }
+  ]
 }

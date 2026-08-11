@@ -1,3 +1,18 @@
-(* ebnf stdio.gltf diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.gltf', newline ;
+(* ebnf stdio.gltf diff -- sparse JSON object, every member optional; collection members share the
+   generic {removed,modified,added} triple shape. *)
+document = ws , diff object , ws ;
+diff object = "{" , ws , ( member , ( ws , "," , ws , member )* )? , ws , "}" ;
+member = string , ws , ":" , ws , member value ;
+member value = collection diff | value ;
+collection diff = "{" , ws ,
+    [ "\"removed\"" , ws , ":" , ws , index array ] ,
+    [ ws , "," , ws , "\"modified\"" , ws , ":" , ws , modified array ] ,
+    [ ws , "," , ws , "\"added\"" , ws , ":" , ws , added array ] ,
+    ws , "}" ;
+index array = "[" , ws , ( number , ( ws , "," , ws , number )* )? , ws , "]" ;
+modified array = "[" , ws , ( modified entry , ( ws , "," , ws , modified entry )* )? , ws , "]" ;
+modified entry = "{" , ws , "\"index\"" , ws , ":" , ws , number , ws , "," , ws , "\"diff\"" , ws , ":" , ws , value , ws , "}" ;
+added array = "[" , ws , ( added entry , ( ws , "," , ws , added entry )* )? , ws , "]" ;
+added entry = "{" , ws , "\"index\"" , ws , ":" , ws , number , ws , "," , ws , "\"item\"" , ws , ":" , ws , value , ws , "}" ;
+value = object | array | string | number | "true" | "false" | "null" ;
+ws = { " " | "\t" | "\n" | "\r" } ;

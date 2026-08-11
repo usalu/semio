@@ -1,3 +1,17 @@
-; abnf stdio.json mutations
-document = payload
-payload = *OCTET
+; abnf stdio.json mutations (encode_op/decode_op payload)
+; payload is UTF-8 JSON text of the tagged JsonMutation struct -- same value grammar as
+; ../../📸️snapshot/💾️binary/🔠️component.abnf, restated for a self-contained reading.
+document = json-text
+json-text = ws value ws
+value = object / array / string / number / %s"true" / %s"false" / %s"null"
+object = %x7B ws [ member *( ws %x2C ws member ) ] ws %x7D
+member = string ws %x3A ws value
+array = %x5B ws [ value *( ws %x2C ws value ) ] ws %x5D
+string = DQUOTE *( unescaped / escape ) DQUOTE
+unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+escape = %x5C ( DQUOTE / %x5C / %x2F / %x62 / %x66 / %x6E / %x72 / %x74 / ( %x75 4HEXDIG ) )
+number = [ %x2D ] int [ frac ] [ exp ]
+int = %x30 / ( %x31-39 *DIGIT )
+frac = %x2E 1*DIGIT
+exp = ( %x65 / %x45 ) [ %x2B / %x2D ] 1*DIGIT
+ws = *( %x20 / %x09 / %x0A / %x0D )

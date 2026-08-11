@@ -1,3 +1,12 @@
-(* ebnf stdio.dxf snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.dxf', newline ;
+(* 🔤 EBNF (ISO/IEC 14977) for the DXF R12 ASCII group-code/value tag stream (📸️snapshot facet). *)
+document    = { section } , "0" , newline , "EOF" , newline ;
+section     = "0" , newline , "SECTION" , newline ,
+              "2" , newline , section name , newline ,
+              { entry } ,
+              "0" , newline , "ENDSEC" , newline ;
+section name = "HEADER" | "TABLES" | "BLOCKS" | "ENTITIES" ;
+entry       = tag ;                          (* header var, table entry, block, or top-level entity tag *)
+tag         = group code , newline , value , newline ;
+group code  = [ "-" ] , digit , { digit } ;
+value       = { character - newline } ;
+newline     = [ "\r" ] , "\n" ;

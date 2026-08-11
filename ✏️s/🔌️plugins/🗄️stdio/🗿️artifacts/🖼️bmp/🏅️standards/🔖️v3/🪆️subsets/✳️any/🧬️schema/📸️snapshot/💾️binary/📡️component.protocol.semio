@@ -1,3 +1,32 @@
 dialect protocol stdio.bmp.snapshot
-magic = %x00
-payload = *OCTET
+; shared `.semio` binary envelope (store::semio_format::wrap_binary)
+magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = *OCTET                       ; UTF-8 "stdio.bmp.pack v1", token-len bytes
+payload = bmp-file                   ; the real on-disk BMP bytes
+
+; --- real BMP byte layout (see ../📝️text/📖️component.grammar.semio for the wire-text hex
+; encoding of these SAME bytes, and ../../💾️binary/🔠️component.abnf for the field-by-field
+; ABNF this mirrors) ---
+bmp-file = file-header info-header [bitfield-masks] [palette] pixel-data
+file-header = %x42.4D file-size reserved1 reserved2 data-offset   ; "BM" + ...
+file-size = U32LE
+reserved1 = U16LE
+reserved2 = U16LE
+data-offset = U32LE
+info-header = header-size width height planes bits-per-pixel compression image-size
+              x-ppm y-ppm colors-used colors-important
+header-size = U32LE          ; >= 40 (only the 40-byte core is decoded field-by-field)
+width = I32LE
+height = I32LE               ; sign selects row order
+planes = U16LE
+bits-per-pixel = U16LE
+compression = U32LE          ; 0 = BI_RGB, 3 = BI_BITFIELDS
+image-size = U32LE
+x-ppm = I32LE
+y-ppm = I32LE
+colors-used = U32LE
+colors-important = U32LE
+bitfield-masks = 3*4( U32LE )                    ; present only when compression = BI_BITFIELDS
+palette = *( OCTET OCTET OCTET OCTET )           ; b,g,r,reserved entries; present only when bits-per-pixel <= 8
+pixel-data = *OCTET                              ; padded rows, order per height's sign

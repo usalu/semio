@@ -3,13 +3,30 @@
   "title": "LasMutation",
   "type": "object",
   "properties": {
-    "schema": {
+    "mutation": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "enum": [
+        "noMutation", "setSnapshot", "setVersion", "setSystemIdentifier", "setSoftwareInfo",
+        "setCreationDate", "setScaleAndOffset", "setBounds", "setPointsByReturn",
+        "insertVlr", "removeVlr", "setVlrData", "insertPoint", "removePoint", "setPoint"
+      ]
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+    "snapshot": { "type": "object" },
+    "major": { "type": "integer" },
+    "minor": { "type": "integer" },
+    "systemIdentifier": { "type": "string" },
+    "generatingSoftware": { "type": "string" },
+    "dayOfYear": { "type": "integer" },
+    "year": { "type": "integer" },
+    "scale": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "offset": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "counts": { "type": "array", "items": { "type": "integer" }, "minItems": 5, "maxItems": 5 },
+    "index": { "type": "integer" },
+    "vlr": { "type": "object" },
+    "data": { "type": "array", "items": { "type": "integer" } },
+    "point": { "type": "object" }
+  },
+  "required": ["mutation"]
 }

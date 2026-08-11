@@ -1,6 +1,30 @@
 syntax = "proto3";
 package semio.s_stdio_tiff.mutation;
+
+import "s_stdio_tiff/snapshot.proto";
+
+message SetSnapshot { semio.s_stdio_tiff.snapshot.TiffSnapshot snapshot = 1; }
+message SetByteOrder { semio.s_stdio_tiff.snapshot.TiffByteOrder byte_order = 1; }
+message InsertIfd { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
+message RemoveIfd { uint64 index = 1; }
+message SetTag {
+  uint64 ifd_index = 1;
+  uint32 tag = 2;
+  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 3;
+  semio.s_stdio_tiff.snapshot.TiffValues values = 4;
+}
+message RemoveTag { uint64 ifd_index = 1; uint32 tag = 2; }
+message SetPixels { bytes pixels = 1; }
+
 message TiffMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetByteOrder set_byte_order = 3;
+    InsertIfd insert_ifd = 4;
+    RemoveIfd remove_ifd = 5;
+    SetTag set_tag = 6;
+    RemoveTag remove_tag = 7;
+    SetPixels set_pixels = 8;
+  }
 }

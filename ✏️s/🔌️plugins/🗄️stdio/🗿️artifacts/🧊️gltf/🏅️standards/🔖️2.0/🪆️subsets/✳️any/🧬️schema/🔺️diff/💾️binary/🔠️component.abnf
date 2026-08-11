@@ -1,3 +1,5 @@
-; abnf stdio.gltf diff
-document = payload
-payload = *OCTET
+; abnf stdio.gltf diff -- binary wire form IS the diff's own JSON text (see 📝️text/component.ebnf
+; for the real JSON grammar), UTF-8 encoded. OpBinary delegates straight to serde_json; no
+; separate binary framing exists.
+document = json-text
+json-text = *UTF8-OCTET  ; well-formed per the sibling text-facet JSON grammar

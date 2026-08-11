@@ -1,3 +1,28 @@
-(* ebnf stdio.md diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.md', newline ;
+(* ebnf stdio.md diff -- wire-JSON shape of MdDiff, mirrors ../📖️component.grammar.semio *)
+md diff = "{" , [ '"blocks"' , ":" , blocks diff ] , "}" ;
+blocks diff = "{" , '"removed"' , ":" , index array , "," ,
+                    '"modified"' , ":" , "[" , { block modified } , "]" , "," ,
+                    '"added"' , ":" , "[" , { block added } , "]" , "}" ;
+block modified = "{" , '"index"' , ":" , index , "," , '"diff"' , ":" , block diff , "}" ;
+block added = "{" , '"index"' , ":" , index , "," , '"item"' , ":" , md block , "}" ;
+block diff = heading diff | paragraph diff | list diff | code block diff
+           | block quote diff | thematic break diff | html block diff | replace diff ;
+heading diff = "{" , kind tag , '"heading"' , [ level field ] , [ inlines field ] , "}" ;
+paragraph diff = "{" , kind tag , '"paragraph"' , [ inlines field ] , "}" ;
+list diff = "{" , kind tag , '"list"' , [ ordered field ] , [ start field ] ,
+                [ tight field ] , [ items field ] , "}" ;
+code block diff = "{" , kind tag , '"codeBlock"' , [ info field ] , [ literal field ] , "}" ;
+block quote diff = "{" , kind tag , '"blockQuote"' , [ blocks field ] , "}" ;
+thematic break diff = "{" , kind tag , '"thematicBreak"' , "}" ;
+html block diff = "{" , kind tag , '"htmlBlock"' , [ raw field ] , "}" ;
+replace diff = "{" , kind tag , '"replace"' , "," , '"block"' , ":" , md block , "}" ;
+list items diff = "{" , '"removed"' , ":" , index array , "," ,
+                        '"modified"' , ":" , "[" , { list item modified } , "]" , "," ,
+                        '"added"' , ":" , "[" , { list item added } , "]" , "}" ;
+list item modified = "{" , '"index"' , ":" , index , "," , '"diff"' , ":" , blocks diff , "}" ;
+list item added = "{" , '"index"' , ":" , index , "," , '"item"' , ":" ,
+                       "[" , { md block } , "]" , "}" ;
+index = digit , { digit } ;
+index array = "[" , { index , "," } , "]" ;
+kind tag = '"kind"' , ":" ;
+md block = string (* see ../../📸️snapshot/📝️text/🔤️component.ebnf for the real block grammar *) ;

@@ -5,5 +5,24 @@ start document
 
 document = header body
 header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+body = json-text NL?
+
+; -- The diff's wire text form is itself an RFC8259 JSON document (serde-tagged `JsonDiff`
+; -- struct) -- same value grammar as ../📸️snapshot/📝️text/📖️component.grammar.semio; restated
+; -- here so this leaf is self-contained.
+json-text = ws value ws
+value = object | array | string | number | "true" | "false" | "null"
+object = "{" ws ( member ( ws "," ws member )* )? ws "}"
+member = string ws ":" ws value
+array = "[" ws ( value ( ws "," ws value )* )? ws "]"
+string = quote ( unescaped | escape )* quote
+quote = %x22
+unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
+escape = "\" ( %x22 | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" hexdig hexdig hexdig hexdig ) )
+number = "-"? int frac? exp?
+int = "0" | ( %x31-39 digit* )
+frac = "." digit+
+exp = ( "e" | "E" ) ( "+" | "-" )? digit+
+digit = %x30-39
+hexdig = digit | %x41-46 | %x61-66
+ws = ( %x20 | %x09 | %x0A | %x0D )*

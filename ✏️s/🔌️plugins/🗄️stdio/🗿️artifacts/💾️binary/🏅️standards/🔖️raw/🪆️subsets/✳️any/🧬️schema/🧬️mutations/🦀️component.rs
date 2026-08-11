@@ -4,20 +4,38 @@
 use crate::artifacts::binary::schema::diff::{diff_set_snapshot, ByteSplice, BinaryDiff};
 use crate::artifacts::binary::BinarySnapshot;
 use protocol::Mutation;
+#[cfg(test)]
+use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.binary`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// 🧪️ F6-PILOT: `dsl::DslOps` derive added — emits `dsl::DslVariants` only (P6: `OpText`/
+/// `OpBinary` are always handcrafted, see the `OpCodecs` region below). `#[dsl(base64)]` on the
+/// two `Vec<u8>` payload fields keeps the printed op a compact one-liner instead of a bracketed
+/// list of decimal byte values.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum BinaryMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: BinarySnapshot },
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: BinarySnapshot,
+    },
     /// ✂️ Replaces `[offset, offset+remove_len)` with `insert`.
-    Splice { offset: usize, remove_len: usize, insert: Vec<u8> },
+    Splice {
+        offset: usize,
+        remove_len: usize,
+        #[dsl(base64)]
+        insert: Vec<u8>,
+    },
     /// ➕️ Appends `data` at the end of the buffer.
-    AppendBytes { data: Vec<u8> },
+    AppendBytes {
+        #[dsl(base64)]
+        data: Vec<u8>,
+    },
     /// ✂️ Drops everything at/after `offset` (a no-op if `offset >= len`).
     TruncateAt { offset: usize },
 }
@@ -83,31 +101,39 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
+/// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — one-line grammar via
+/// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
+/// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl` for the framework-side
+/// precedent this copies verbatim).
 impl protocol::OpText for BinaryMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
-    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
+/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
+/// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
+/// type. Zero per-artifact logic.
 impl protocol::OpBinary for BinaryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs
@@ -116,7 +142,8 @@ impl protocol::OpBinary for BinaryMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::{DiffAlgebra, MutationDiff};
+    use protocol::MutationDiff;
+    use protocol::os_spr::command::DiffAlgebra;
 
     fn base() -> BinarySnapshot {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }
@@ -177,6 +204,23 @@ mod tests {
                 merged.absorb(d2.clone());
                 assert_eq!(merged.apply(&b), after, "absorb({m1:?}, {m2:?}) mismatch");
             }
+        }
+    }
+
+    /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
+    /// `dsl::DslOps`-derived `DslVariants`).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let b = base();
+        for m in all_variants(&b) {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = BinaryMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = BinaryMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
 }

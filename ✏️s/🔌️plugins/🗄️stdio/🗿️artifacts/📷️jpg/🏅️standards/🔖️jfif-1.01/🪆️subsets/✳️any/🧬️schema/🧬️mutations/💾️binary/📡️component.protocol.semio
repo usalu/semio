@@ -1,3 +1,4 @@
 dialect protocol stdio.jpg.mutations
 magic = %x00
-payload = *OCTET
+payload = json-utf8 ; JSON-encoded JpgMutation (see ../🔣️component.json), not raw octets --
+                     ; `OpBinary` goes through `serde_json::to_vec`/`from_slice` directly.

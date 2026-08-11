@@ -10,6 +10,7 @@ field format_minor u16
 field flags u32
 field domain_tag u32
 field header_crc32 u32
+; payload bytes are UTF-8 JSON text of the tagged JsonMutation struct (compact form).
 segment payload varint bytes
 footer fixed 64
 field artifact_mark utf8

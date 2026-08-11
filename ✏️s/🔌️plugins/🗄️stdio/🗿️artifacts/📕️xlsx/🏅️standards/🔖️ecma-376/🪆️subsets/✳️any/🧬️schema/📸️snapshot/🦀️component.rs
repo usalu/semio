@@ -1,7 +1,11 @@
 //! 🧬️ XlsxSnapshot — an OPC package (every part verbatim, lossless) plus a typed semantic view
-//! of the workbook: sheets and cells, with shared-string references already resolved to literal
-//! text (never left as a raw index — the #1 xlsx decode gotcha). Unmodeled parts (`styles.xml`,
-//! themes, calc chain, …) stay verbatim inside `opc`.
+//! of the workbook: name-keyed sheets, each a sparse `(row, col)`-addressed cell list, plus the
+//! package's `shared_strings` table kept as its OWN index-keyed collection (never eagerly
+//! resolved into cell text — the #1 xlsx decode gotcha is precisely THAT eager resolution, since
+//! it silently collapses the `t="s"` shared-string-reference/`t="inlineStr"` literal distinction
+//! a real workbook depends on for lossless round-trip and for `SharedString`/`InlineString` to
+//! mean anything different in a diff). Unmodeled parts (`styles.xml`, themes, calc chain, …) stay
+//! verbatim inside `opc`.
 
 use crate::artifacts::xlsx::STDIO_XLSX_DOCUMENT_SCHEMA;
 use crate::artifacts::zip::opc::OpcPackage;
@@ -9,14 +13,26 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️XlsxModel
-/// 🔢️ A cell's decoded value — text is always the literal string, whether the source encoded it
-/// as a shared-string reference or an inline string.
+/// 🔢️ A cell's decoded value — a real typed union over every SpreadsheetML cell-type ECMA-376
+/// §18.3.1.4 (`t` attribute) distinguishes: `Number` (`t` absent, the numeric default),
+/// `SharedString` (`t="s"`, an index into `workbook.shared_strings` — kept as an index, never
+/// resolved here), `InlineString` (`t="inlineStr"`, literal `<is><t>` text; `t="str"`/`t="e"`
+/// non-formula cells normalize to this on decode — a documented normalization, see the engine),
+/// `Boolean` (`t="b"`), `Formula` (a `<f>` child present; `cached` is the cell's own `<v>`,
+/// re-typed by ITS `t` attribute, `None` when the workbook has no cached value), `Empty` (no
+/// `<v>` at all).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum XlsxCellValue {
     Number(f64),
-    Text(String),
-    Bool(bool),
+    SharedString(usize),
+    InlineString(String),
+    Boolean(bool),
+    Formula {
+        expr: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cached: Option<Box<XlsxCellValue>>,
+    },
     Empty,
 }
 
@@ -24,42 +40,43 @@ impl Default for XlsxCellValue {
     fn default() -> Self { Self::Empty }
 }
 
-/// 🧮 One worksheet cell.
+/// 🧮 One worksheet cell, addressed by `(row, col)` rather than an A1-style string — `row` is
+/// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches
+/// `engine::column_letter`'s `0 -> "A"` convention). `row`/`col` are this cell's IDENTITY (the
+/// key `XlsxCellsDiff` diffs by) and are never themselves diffed — only `value` is.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct XlsxCell {
-    /// 🏷️ A1-style cell reference, e.g. `"B2"`.
-    pub reference: String,
+    pub row: u32,
+    pub col: u32,
     #[serde(default)]
     pub value: XlsxCellValue,
 }
 
-/// ➡️ One worksheet row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct XlsxRow {
-    pub index: u32,
-    #[serde(default)]
-    pub cells: Vec<XlsxCell>,
-}
-
-/// 📄 One worksheet.
+/// 📄 One worksheet: a sparse `(row, col)`-addressed cell list (a real spreadsheet is mostly
+/// empty — no dense row/col grid is materialized). `name` is this sheet's IDENTITY (the key
+/// `XlsxSheetsDiff` diffs by, per the recipe's name-keyed-collection convention); renaming a
+/// sheet is therefore a remove-old-name + add-new-name at the diff level (documented — same
+/// category as docx's OPC-part-rename gotcha), never a `name` field mutation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct XlsxSheet {
     pub name: String,
     #[serde(default)]
-    pub rows: Vec<XlsxRow>,
+    pub cells: Vec<XlsxCell>,
 }
 
 /// 📘 Typed semantic view of the workbook: `xl/workbook.xml`'s sheet list, each resolved
-/// through `xl/_rels/workbook.xml.rels` to its `xl/worksheets/sheetN.xml` part, with `t="s"`
-/// cells resolved through `xl/sharedStrings.xml`.
+/// through `xl/_rels/workbook.xml.rels` to its `xl/worksheets/sheetN.xml` part, plus the SST
+/// (`xl/sharedStrings.xml`) kept as its own index-keyed `shared_strings` table — `t="s"` cells
+/// reference it by index (`XlsxCellValue::SharedString(usize)`), never resolved eagerly.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct XlsxWorkbook {
     #[serde(default)]
     pub sheets: Vec<XlsxSheet>,
+    #[serde(default)]
+    pub shared_strings: Vec<String>,
 }
 //#endregion 🔖️XlsxModel
 

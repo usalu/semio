@@ -1,4 +1,10 @@
 module Stdio_obj_snapshot;
+
+# Shared `.semio` binary envelope wrapping a stdio.obj payload: the UTF-8 bytes of the
+# same Wavefront OBJ document the text facet parses.
 type Document = unit {
-    payload: bytes &eod;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;   # UTF-8 "stdio.obj.pack v1"
+    payload: bytes &eod;                 # UTF-8 Wavefront OBJ text
 };

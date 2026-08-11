@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.txt",
+  "standard": "utf-8",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained txt utf-8"
+    }
+  }
+}

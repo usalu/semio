@@ -1,5 +1,161 @@
-# 🧬️ GltfSnapshot
+# 🧬️ GltfSnapshot — fully typed glTF 2.0 document model.
+scalar GltfJson
+
+type GltfAsset {
+  version: String!
+  generator: String
+  copyright: String
+  minVersion: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfScene {
+  nodes: [Int!]!
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfNode {
+  children: [Int!]!
+  mesh: Int
+  camera: Int
+  skin: Int
+  matrix: [Float!]
+  translation: [Float!]
+  rotation: [Float!]
+  scale: [Float!]
+  weights: [Float!]!
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfAttribute { semantic: String! accessor: Int! }
+type GltfPrimitive {
+  attributes: [GltfAttribute!]!
+  indices: Int
+  material: Int
+  mode: Int
+  extensions: GltfJson
+  extras: GltfJson
+}
+type GltfMesh {
+  primitives: [GltfPrimitive!]!
+  weights: [Float!]!
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfSparseIndices { bufferView: Int! byteOffset: Int! componentType: Int! }
+type GltfSparseValues { bufferView: Int! byteOffset: Int! }
+type GltfSparseAccessor { count: Int! indices: GltfSparseIndices! values: GltfSparseValues! }
+type GltfAccessor {
+  bufferView: Int
+  byteOffset: Int!
+  componentType: Int!
+  normalized: Boolean!
+  count: Int!
+  type: String!
+  max: [Float!]
+  min: [Float!]
+  sparse: GltfSparseAccessor
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfBufferView {
+  buffer: Int!
+  byteOffset: Int!
+  byteLength: Int!
+  byteStride: Int
+  target: Int
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfBuffer {
+  byteLength: Int!
+  uri: String
+  name: String
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfTextureInfo { index: Int! texCoord: Int! extensions: GltfJson extras: GltfJson }
+type GltfNormalTextureInfo { index: Int! texCoord: Int! scale: Float! extensions: GltfJson extras: GltfJson }
+type GltfOcclusionTextureInfo { index: Int! texCoord: Int! strength: Float! extensions: GltfJson extras: GltfJson }
+type GltfPbrMetallicRoughness {
+  baseColorFactor: [Float!]!
+  baseColorTexture: GltfTextureInfo
+  metallicFactor: Float!
+  roughnessFactor: Float!
+  metallicRoughnessTexture: GltfTextureInfo
+  extensions: GltfJson
+  extras: GltfJson
+}
+enum GltfAlphaMode { OPAQUE MASK BLEND }
+type GltfMaterial {
+  name: String
+  pbrMetallicRoughness: GltfPbrMetallicRoughness
+  normalTexture: GltfNormalTextureInfo
+  occlusionTexture: GltfOcclusionTextureInfo
+  emissiveTexture: GltfTextureInfo
+  emissiveFactor: [Float!]!
+  alphaMode: GltfAlphaMode!
+  alphaCutoff: Float!
+  doubleSided: Boolean!
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+type GltfTexture { sampler: Int source: Int name: String extensions: GltfJson extras: GltfJson }
+type GltfImage { uri: String mimeType: String bufferView: Int name: String extensions: GltfJson extras: GltfJson }
+type GltfSampler { magFilter: Int minFilter: Int wrapS: Int! wrapT: Int! name: String extensions: GltfJson extras: GltfJson }
+type GltfSkin { inverseBindMatrices: Int skeleton: Int joints: [Int!]! name: String extensions: GltfJson extras: GltfJson }
+
+enum GltfAnimationPath { translation rotation scale weights }
+type GltfAnimationChannelTarget { node: Int path: GltfAnimationPath! extensions: GltfJson extras: GltfJson }
+type GltfAnimationChannel { sampler: Int! target: GltfAnimationChannelTarget! extensions: GltfJson extras: GltfJson }
+enum GltfInterpolation { LINEAR STEP CUBICSPLINE }
+type GltfAnimationSampler { input: Int! interpolation: GltfInterpolation! output: Int! extensions: GltfJson extras: GltfJson }
+type GltfAnimation { channels: [GltfAnimationChannel!]! samplers: [GltfAnimationSampler!]! name: String extensions: GltfJson extras: GltfJson }
+
+type GltfOrthographic { xmag: Float! ymag: Float! zfar: Float! znear: Float! extensions: GltfJson extras: GltfJson }
+type GltfPerspective { aspectRatio: Float yfov: Float! zfar: Float znear: Float! extensions: GltfJson extras: GltfJson }
+type GltfCamera { type: String! perspective: GltfPerspective orthographic: GltfOrthographic name: String extensions: GltfJson extras: GltfJson }
+
+type GltfDocument {
+  asset: GltfAsset!
+  scene: Int
+  scenes: [GltfScene!]!
+  nodes: [GltfNode!]!
+  meshes: [GltfMesh!]!
+  accessors: [GltfAccessor!]!
+  bufferViews: [GltfBufferView!]!
+  buffers: [GltfBuffer!]!
+  materials: [GltfMaterial!]!
+  textures: [GltfTexture!]!
+  images: [GltfImage!]!
+  samplers: [GltfSampler!]!
+  skins: [GltfSkin!]!
+  animations: [GltfAnimation!]!
+  cameras: [GltfCamera!]!
+  extensionsUsed: [String!]!
+  extensionsRequired: [String!]!
+  extensions: GltfJson
+  extras: GltfJson
+}
+
+enum GltfSourceForm { JSON GLB }
+
 type GltfSnapshot {
   schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_VALUE_COLON String! @state(class: PERSISTENT)
+  document: GltfDocument! @state(class: PERSISTENT)
+  buffers: [[Int!]!]! @state(class: PERSISTENT)
+  sourceForm: GltfSourceForm! @state(class: PERSISTENT)
 }

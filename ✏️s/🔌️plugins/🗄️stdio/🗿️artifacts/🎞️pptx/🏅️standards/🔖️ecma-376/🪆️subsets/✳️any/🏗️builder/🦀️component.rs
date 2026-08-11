@@ -1,7 +1,7 @@
 //! 🏗️ PptxBuilder — local ArtifactBuilder until SDK Wave 3.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxSlide};
+use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
 use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
 
 //#region 🔖️Builder
@@ -52,10 +52,15 @@ impl PptxBuilder {
         self.rebuild()
     }
 
-    /// ➕️ Appends a paragraph to the active slide (the most recently added one).
+    /// ➕️ Appends a paragraph to the active slide's active `TextBox` shape (the most recently
+    /// added one), creating a fresh `TextBox` shape first if the slide has none yet or its last
+    /// shape isn't one.
     pub fn add_paragraph(mut self, paragraph: PptxParagraph) -> Self {
         if let Some(slide) = self.snapshot.presentation.slides.last_mut() {
-            slide.paragraphs.push(paragraph);
+            match slide.shapes.last_mut() {
+                Some(PptxShape::TextBox { text_frame, .. }) => text_frame.push(paragraph),
+                _ => slide.shapes.push(PptxShape::TextBox { text_frame: vec![paragraph], position: PptxTransform::default() }),
+            }
         }
         self.rebuild()
     }

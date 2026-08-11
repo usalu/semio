@@ -1,6 +1,55 @@
 syntax = "proto3";
 package semio.s_stdio_json.diff;
+
+import "s_stdio_json_snapshot.proto"; // JsonValue, JsonMember
+
+message JsonValueDiff {
+  enum Kind {
+    REPLACE = 0;
+    BOOL = 1;
+    NUMBER = 2;
+    STRING = 3;
+    ARRAY = 4;
+    OBJECT = 5;
+  }
+  Kind kind = 1;
+  semio.s_stdio_json.snapshot.JsonValue replace_value = 2;
+  bool bool_value = 3;
+  string number_lexeme = 4;
+  string string_value = 5;
+  JsonArrayDiff array_diff = 6;
+  JsonObjectDiff object_diff = 7;
+}
+
+message JsonArrayModified {
+  uint64 index = 1;
+  JsonValueDiff diff = 2;
+}
+message JsonArrayAdded {
+  uint64 index = 1;
+  semio.s_stdio_json.snapshot.JsonValue item = 2;
+}
+message JsonArrayDiff {
+  repeated uint64 removed = 1;
+  repeated JsonArrayModified modified = 2;
+  repeated JsonArrayAdded added = 3;
+}
+
+message JsonObjectModified {
+  string key = 1;
+  JsonValueDiff diff = 2;
+}
+message JsonObjectAdded {
+  uint64 index = 1;
+  string key = 2;
+  semio.s_stdio_json.snapshot.JsonValue item = 3;
+}
+message JsonObjectDiff {
+  repeated string removed = 1;
+  repeated JsonObjectModified modified = 2;
+  repeated JsonObjectAdded added = 3;
+}
+
 message JsonDiff {
-  string schema = 1;
-  string value_wire = 2;
+  JsonValueDiff value = 1;
 }

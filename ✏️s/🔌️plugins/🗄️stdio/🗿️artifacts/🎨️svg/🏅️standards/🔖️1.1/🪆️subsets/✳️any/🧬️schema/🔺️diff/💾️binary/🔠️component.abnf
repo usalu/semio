@@ -1,3 +1,4 @@
-; abnf stdio.svg diff
-document = payload
-payload = *OCTET
+; abnf stdio.svg diff (binary representation)
+document = json-payload
+; json-payload = UTF-8 JSON encoding of SvgDiff -- see the sibling JSON Schema facet.
+json-payload = *OCTET

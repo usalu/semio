@@ -1,3 +1,5 @@
 dialect protocol stdio.stl.diff
-magic = %x00
-payload = *OCTET
+; `StlDiff`'s binary op payload (DiffCodec, final wave of this program) is the UTF-8 byte
+; encoding of the sibling text grammar's `diff-line` (../📝️text/📖️component.grammar.semio) — no
+; separate framing or magic.
+payload = utf8-bytes-of(diff-line)

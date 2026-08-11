@@ -1,3 +1,15 @@
-(* ebnf stdio.png mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.png', newline ;
+(* PngMutation's wire text IS its JSON serialization (protocol::OpText — serde_json,
+   #[serde(tag = "mutation")]); this names the real 17 variant tags, not RFC 8259's own
+   JSON grammar. *)
+mutation = "{", '"mutation"', ":", variant tag, { ",", member }, "}" ;
+variant tag = '"noMutation"' | '"setSnapshot"' | '"setHeader"' | '"setPalette"'
+            | '"setTransparency"' | '"setGamma"' | '"setChromaticities"'
+            | '"setSrgbIntent"' | '"setPhysicalDims"' | '"setTimestamp"'
+            | '"setBackground"' | '"insertTextChunk"' | '"removeTextChunk"'
+            | '"setTextChunk"' | '"setPixels"' | '"insertUnknownChunk"'
+            | '"removeUnknownChunk"' ;
+member = string, ":", json value ;
+json value = "{", [ member, { ",", member } ], "}"
+           | "[", { json value }, "]"
+           | string | integer | bool | "null" ;
+bool = "true" | "false" ;

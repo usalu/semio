@@ -1,3 +1,7 @@
 dialect protocol stdio.xml.snapshot
-magic = %x00
-payload = *OCTET
+magic = SEMIO-ENVELOPE
+payload = json-utf8 ; the JSON serialization of XmlDocument (see ../📸️snapshot/🔣️component.json's
+                      ; XmlDocument $def), NOT the raw XML text -- ArtifactPack::encode_pack_with
+                      ; serializes `self.doc` via serde_json, then wraps that JSON in the semio
+                      ; binary envelope (header + body), matching ../🦀️component.rs's
+                      ; encode_pack_with/decode_pack_with.

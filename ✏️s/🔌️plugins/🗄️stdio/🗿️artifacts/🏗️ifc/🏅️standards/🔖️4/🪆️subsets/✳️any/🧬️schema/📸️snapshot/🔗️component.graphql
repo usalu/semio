@@ -1,5 +1,50 @@
+# 🔤️ One typed value in IFC4's Part-21 argument-list syntax (own type, mirrors STEP's shape).
+enum IfcValueKind {
+  UNSET
+  DERIVED
+  INTEGER
+  REAL
+  STRING
+  ENUM
+  REFERENCE
+  AGGREGATE
+  TYPED_VALUE
+}
+
+type IfcValue {
+  kind: IfcValueKind!
+  intValue: Int
+  realValue: Float
+  stringValue: String
+  aggregate: [IfcValue!]
+  typedName: String
+  typedArgs: [IfcValue!]
+}
+
+# 🧩️ One additional `(TYPE(args...) ...)` member of an IFC4 COMPLEX instance.
+type IfcComplexType {
+  name: String!
+  args: [IfcValue!]!
+}
+
+# 📦️ One `#N = TYPE(args...);` IFC4 instance — id-keyed strong entity.
+type IfcEntity {
+  id: Int!
+  name: String!
+  args: [IfcValue!]!
+  complex: [IfcComplexType!]!
+}
+
+# 📇️ The three standard `HEADER;` records, typed via `IfcValue`.
+type IfcHeader {
+  fileDescription: [IfcValue!]!
+  fileName: [IfcValue!]!
+  fileSchema: [IfcValue!]!
+}
+
 # 🧬️ IfcSnapshot
 type IfcSnapshot {
   schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_TEXT_COLON String! @state(class: PERSISTENT)
+  header: IfcHeader! @state(class: PERSISTENT)
+  entities: [IfcEntity!]! @state(class: PERSISTENT)
 }

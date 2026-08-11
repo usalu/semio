@@ -1,0 +1,50 @@
+{
+  "unit": "tiff",
+  "standards": [
+    {
+      "std": "6.0",
+      "subsets": [
+        {
+          "id": "baseline",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::schema_gap_diagnostic_always_fires",
+            "analyzer::tests::degenerate_zero_dimensions_are_flagged_soft",
+            "analyzer::tests::rgba_length_mismatch_is_flagged_soft",
+            "analyzer::tests::well_formed_raster_skips_the_degenerate_check",
+            "composer::tests::compose_always_carries_the_schema_gap_diagnostic",
+            "composer::tests::subset_validator_reports_the_schema_gap_diagnostic",
+            "builder::tests::pass_through_build_never_fails_on_conformance_grounds"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/tiff-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [
+    "BLOCKING, confirmed real: TiffSnapshot (6.0) retains only RasterImage{width,height,rgba}; the engine's decode_tiff parses Compression/PhotometricInterpretation/BitsPerSample/StripOffsets/StripByteCounts transiently but discards all of it once it produces the RGBA raster. Judged NOT a small purely-additive change (would require adding IFD/tag retention plus new RATIONAL(type 5)-tag parsing for XResolution/YResolution/ResolutionUnit, none of which entry_values currently handles, and Tile* tag reading which the codec never touches) -- implemented ✳️baseline as schema-gap-limited per the pattern doc's honest-schema-gap protocol instead of half-implementing IFD retention. Real check implemented: raster non-degenerate (width/height non-zero AND rgba.len() == width*height*4). Mandatory diagnostic: stdio.tiff.baseline.schema-gap-unverifiable, naming Compression/PhotometricInterpretation/BitsPerSample/StripOffsets IFD tags as the missing structure."
+  ],
+  "preexisting_breakage_noted": [
+    "cargo check -p semio-s-plugin-stdio shows an unrelated error `unresolved import crate::artifacts::ifc::standards::v2x3` at 🗿️artifacts/🏗️ifc/🎹️composer/🦀️component.rs:9 -- another concurrent W3 unit's (ifc) in-progress work, not touched by this session, not present in baseline-cargo-w0.txt (new since baseline, presumably mid-edit by the ifc session)."
+  ],
+  "status": "done",
+  "blockers": [
+    "Expected pre-glue state per the handoff protocol: cargo check shows exactly one root cause, `error[E0433]: cannot find baseline in subsets`, surfacing twice -- once at 🏅️standards/🔖️6.0/🎹️composer/🦀️component.rs:9 (the new composer_entry_of::<TiffBaselineComposer>() import) and once at 🏅️standards/🔖️6.0/⚙️engine/🦀️component.rs:378 (the new subsets::baseline::composer::register() call) -- both because glue.rs does not yet declare `pub mod baseline` under standards::v6_0::subsets. Resolves once the orchestrator applies 🧩glue/tiff-glue.rs.txt."
+  ]
+}

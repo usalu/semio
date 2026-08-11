@@ -1,26 +1,72 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pdf/snapshot.json",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/snapshot.json",
   "title": "PdfSnapshot",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "ObjRef": {
+      "type": "object",
+      "required": ["num", "gen"],
+      "properties": {
+        "num": { "type": "integer", "minimum": 0 },
+        "gen": { "type": "integer", "minimum": 0 }
+      }
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
+    "PdfDictEntry": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "$ref": "#/$defs/PdfObject" }
+      }
+    },
+    "PdfObject": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["null", "bool", "int", "real", "str", "name", "array", "dict", "ref", "stream"] },
+        "value": {},
+        "dict": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" } },
+        "data": { "type": "array", "items": { "type": "integer" } },
+        "rawFilter": { "type": "string" }
+      }
+    },
+    "PdfIndirectObject": {
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": { "$ref": "#/$defs/ObjRef" },
+        "value": { "$ref": "#/$defs/PdfObject" }
+      }
+    },
+    "PdfPage": {
+      "type": "object",
+      "required": ["mediaBox", "rotate", "text"],
+      "properties": {
+        "mediaBox": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+        "cropBox": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+        "rotate": { "type": "integer" },
+        "text": { "type": "string" }
+      }
+    },
+    "PdfInfo": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "subject": { "type": "string" },
+        "keywords": { "type": "string" },
+        "creator": { "type": "string" },
+        "producer": { "type": "string" }
       }
     }
+  },
+  "type": "object",
+  "required": ["schema", "declaredVersion", "pages", "info", "objects", "trailer"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "declaredVersion": { "type": "string", "x-semio-state": "persistent" },
+    "pages": { "type": "array", "items": { "$ref": "#/$defs/PdfPage" }, "x-semio-state": "persistent" },
+    "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "persistent" },
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/PdfIndirectObject" }, "x-semio-state": "persistent" },
+    "trailer": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" }, "x-semio-state": "persistent" }
   }
 }

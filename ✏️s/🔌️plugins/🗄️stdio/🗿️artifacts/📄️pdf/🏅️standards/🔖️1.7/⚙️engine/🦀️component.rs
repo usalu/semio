@@ -1279,8 +1279,9 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         .unwrap_or_default();
 
     let objects = resolver.resolve_all();
+    let trailer = xref.trailer.clone();
 
-    Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects })
+    Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
 }
 
 fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
@@ -1468,10 +1469,15 @@ pub fn register() {
         crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor(),
     );
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA));
-    // 🛡️ D5's generic validate-on-build hook: registers the ✳️a-2b subset's SubsetValidator so
-    // `io_dispatch`/`wire_artifact_compose` re-check it for free. The a-2b ComposerEntry itself
-    // is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::pdf::standards::v1_7::subsets::a2b::composer::register();
+    // 🛡️ D5's generic validate-on-build hook: registers each real subset's SubsetValidator so
+    // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each ComposerEntry itself is
+    // registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::pdf::standards::v1_7::subsets::a::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::x::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::e::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::ua::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::vt::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::h::composer::register();
 }
 //#endregion 🔖️Register
 
@@ -1534,6 +1540,7 @@ mod tests {
             ],
             info: PdfInfo { title: Some("Test Doc".into()), author: Some("Ueli".into()), ..Default::default() },
             objects: Vec::new(),
+            trailer: Vec::new(),
         }
     }
 

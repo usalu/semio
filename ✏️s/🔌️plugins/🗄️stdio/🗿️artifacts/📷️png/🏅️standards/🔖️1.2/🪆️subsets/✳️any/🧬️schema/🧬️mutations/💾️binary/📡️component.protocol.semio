@@ -1,3 +1,6 @@
-dialect protocol stdio.png.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.png.mutation
+; protocol::OpBinary raw JSON encoding of PngMutation (#[serde(tag = "mutation")]) — NOT
+; wrapped in the shared `.semio` binary envelope (contrast with
+; ../../📸️snapshot/💾️binary/component.protocol.semio). No length prefix: the entire op body
+; IS the JSON document; the "mutation" tag selects one of 17 real variants.
+json-object = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)

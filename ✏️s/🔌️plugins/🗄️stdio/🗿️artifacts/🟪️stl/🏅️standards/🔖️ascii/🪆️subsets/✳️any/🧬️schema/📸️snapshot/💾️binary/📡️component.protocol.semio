@@ -1,3 +1,10 @@
 dialect protocol stdio.stl.snapshot
-magic = %x00
-payload = *OCTET
+; Binary STL (https://en.wikipedia.org/wiki/STL_(file_format)) — auto-detected sibling of the
+; ASCII grammar (../📝️text/📖️component.grammar.semio); dispatched on triangle-count framing.
+header = 80OCTET ; used as solid_name (trailing NUL/whitespace trimmed)
+count = u32-le
+document = header count facet{count}
+facet = normal vertex vertex vertex attribute-byte-count
+normal = f32-le f32-le f32-le
+vertex = f32-le f32-le f32-le
+attribute-byte-count = u16-le

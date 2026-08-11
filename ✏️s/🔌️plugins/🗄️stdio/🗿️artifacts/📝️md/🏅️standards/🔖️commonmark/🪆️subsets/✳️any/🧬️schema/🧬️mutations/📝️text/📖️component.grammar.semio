@@ -1,6 +1,29 @@
 dialect grammar stdio.md.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.md' NL
-body = payload NL?
-payload = *OCTET
+; 🧬️ Wire-text (JSON) shape of `MdMutation` -- mirrors 🦀️component.rs's
+; `serde(tag = "mutation")` discriminated union exactly.
+
+root = md-mutation
+md-mutation = no-mutation / set-snapshot / insert-block / remove-block
+            / replace-block / set-inlines
+
+no-mutation = "{" %s"mutation" ":" %s"noMutation" "}"
+set-snapshot = "{" %s"mutation" ":" %s"setSnapshot" "," "snapshot" ":" md-snapshot "}"
+insert-block = "{" %s"mutation" ":" %s"insertBlock" ","
+                    "path" ":" path-array "," "index" ":" index "," "block" ":" md-block "}"
+remove-block = "{" %s"mutation" ":" %s"removeBlock" ","
+                    "path" ":" path-array "," "index" ":" index "}"
+replace-block = "{" %s"mutation" ":" %s"replaceBlock" ","
+                     "path" ":" path-array "," "index" ":" index "," "block" ":" md-block "}"
+set-inlines = "{" %s"mutation" ":" %s"setInlines" ","
+                   "path" ":" path-array "," "index" ":" index "," "inlines" ":" inline-array "}"
+
+path-array = "[" *( path-step "," ) "]"
+path-step = block-quote-step / list-item-step
+block-quote-step = "{" %s"step" ":" %s"blockQuote" "," "index" ":" index "}"
+list-item-step = "{" %s"step" ":" %s"listItem" "," "index" ":" index "," "item" ":" index "}"
+
+index = 1*DIGIT
+inline-array = "[" *( md-inline "," ) "]"
+md-snapshot = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>
+md-block = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>
+md-inline = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>

@@ -2,14 +2,70 @@
   "$id": "https://semio.tech/schema/s.stdio.las/snapshot.json",
   "title": "LasSnapshot",
   "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "definitions": {
+    "LasHeader": {
+      "type": "object",
+      "properties": {
+        "versionMajor": { "type": "integer" },
+        "versionMinor": { "type": "integer" },
+        "systemIdentifier": { "type": "string" },
+        "generatingSoftware": { "type": "string" },
+        "creationDayOfYear": { "type": "integer" },
+        "creationYear": { "type": "integer" },
+        "headerSize": { "type": "integer" },
+        "offsetToPointData": { "type": "integer" },
+        "numberOfVlrs": { "type": "integer" },
+        "pointDataFormatId": { "type": "integer" },
+        "pointDataRecordLength": { "type": "integer" },
+        "numberOfPointRecords": { "type": "integer" },
+        "pointsByReturn": { "type": "array", "items": { "type": "integer" }, "minItems": 5, "maxItems": 5 },
+        "xScale": { "type": "number" },
+        "yScale": { "type": "number" },
+        "zScale": { "type": "number" },
+        "xOffset": { "type": "number" },
+        "yOffset": { "type": "number" },
+        "zOffset": { "type": "number" },
+        "maxX": { "type": "number" },
+        "minX": { "type": "number" },
+        "maxY": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxZ": { "type": "number" },
+        "minZ": { "type": "number" }
+      }
     },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    "LasVlr": {
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "recordId": { "type": "integer" },
+        "description": { "type": "string" },
+        "data": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "LasPoint": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" },
+        "intensity": { "type": "integer" },
+        "returnNumber": { "type": "integer" },
+        "numberOfReturns": { "type": "integer" },
+        "scanDirectionFlag": { "type": "boolean" },
+        "edgeOfFlightLine": { "type": "boolean" },
+        "classification": { "type": "integer" },
+        "scanAngleRank": { "type": "integer" },
+        "userData": { "type": "integer" },
+        "pointSourceId": { "type": "integer" },
+        "gpsTime": { "type": "number" },
+        "rgb": { "type": "array", "items": { "type": "integer" }, "minItems": 3, "maxItems": 3 }
+      }
     }
+  },
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "header": { "$ref": "#/definitions/LasHeader", "x-semio-state": "persistent" },
+    "vlrs": { "type": "array", "items": { "$ref": "#/definitions/LasVlr" }, "x-semio-state": "persistent" },
+    "points": { "type": "array", "items": { "$ref": "#/definitions/LasPoint" }, "x-semio-state": "persistent" }
   }
 }

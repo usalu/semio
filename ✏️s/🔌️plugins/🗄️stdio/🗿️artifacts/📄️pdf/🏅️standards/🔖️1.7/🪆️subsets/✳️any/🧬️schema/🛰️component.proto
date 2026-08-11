@@ -1,6 +1,13 @@
 syntax = "proto3";
-package semio.s_stdio_pdf.artifact;
+package semio.s_stdio_pdf_1_7.artifact;
+
+import "s_stdio_pdf_1_7_snapshot.proto"; // PdfPage, PdfInfo, PdfIndirectObject, PdfDictEntry
+
 message PdfArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  string declared_version = 2;
+  repeated semio.s_stdio_pdf_1_7.snapshot.PdfPage pages = 3;
+  semio.s_stdio_pdf_1_7.snapshot.PdfInfo info = 4;
+  repeated semio.s_stdio_pdf_1_7.snapshot.PdfIndirectObject objects = 5;
+  repeated semio.s_stdio_pdf_1_7.snapshot.PdfDictEntry trailer = 6;
 }

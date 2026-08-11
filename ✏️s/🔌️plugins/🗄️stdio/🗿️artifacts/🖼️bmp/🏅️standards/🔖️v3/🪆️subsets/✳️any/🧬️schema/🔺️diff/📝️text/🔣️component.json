@@ -1,5 +1,6 @@
 {
   "$id": "https://semio.tech/schema/stdio.bmp/diff/text.json",
   "title": "BmpDiffText",
-  "type": "object"
+  "type": "object",
+  "description": "The wire-text container for a serialized BmpDiff — the real sparse-field shape is documented in ../📖️component.grammar.semio and mirrored in full at ../../🔣️component.json."
 }

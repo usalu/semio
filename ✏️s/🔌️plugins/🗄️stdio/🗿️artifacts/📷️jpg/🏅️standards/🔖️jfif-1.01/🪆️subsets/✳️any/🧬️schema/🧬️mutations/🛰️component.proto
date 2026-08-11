@@ -1,6 +1,40 @@
 syntax = "proto3";
-package semio.s_stdio_jpg.mutation;
+package semio.s_stdio_jpg.mutations;
+import "snapshot.proto";
+import "diff.proto";
+
 message JpgMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  oneof mutation {
+    NoMutation no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetJfifHeader set_jfif_header = 3;
+    SetQuantTable set_quant_table = 4;
+    RemoveQuantTable remove_quant_table = 5;
+    SetHuffmanTable set_huffman_table = 6;
+    RemoveHuffmanTable remove_huffman_table = 7;
+    SetRestartInterval set_restart_interval = 8;
+    InsertOtherSegment insert_other_segment = 9;
+    RemoveOtherSegment remove_other_segment = 10;
+    SetPixels set_pixels = 11;
+    SetReEncodeQuality set_re_encode_quality = 12;
+  }
+  message NoMutation {}
+  message SetSnapshot { semio.s_stdio_jpg.snapshot.JpgSnapshot snapshot = 1; }
+  message SetJfifHeader {
+    uint32 version_major = 1;
+    uint32 version_minor = 2;
+    semio.s_stdio_jpg.snapshot.JfifDensityUnits density_units = 3;
+    uint32 x_density = 4;
+    uint32 y_density = 5;
+    semio.s_stdio_jpg.snapshot.JfifThumbnail thumbnail = 6;
+  }
+  message SetQuantTable { semio.s_stdio_jpg.snapshot.JpgQuantTable table = 1; }
+  message RemoveQuantTable { uint32 id = 1; }
+  message SetHuffmanTable { semio.s_stdio_jpg.snapshot.JpgHuffmanTable table = 1; }
+  message RemoveHuffmanTable { semio.s_stdio_jpg.diff.JpgHuffmanTableKey key = 1; }
+  message SetRestartInterval { optional uint32 restart_interval = 1; }
+  message InsertOtherSegment { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgSegment segment = 2; }
+  message RemoveOtherSegment { uint32 index = 1; }
+  message SetPixels { bytes pixels = 1; }
+  message SetReEncodeQuality { optional uint32 quality = 1; }
 }

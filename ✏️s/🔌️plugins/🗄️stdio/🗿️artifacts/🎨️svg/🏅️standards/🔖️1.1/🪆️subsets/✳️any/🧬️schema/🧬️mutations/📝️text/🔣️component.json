@@ -1,5 +1,6 @@
 {
   "$id": "https://semio.tech/schema/stdio.svg/mutations/text.svg",
-  "title": "SvgMutationsText",
-  "type": "object"
+  "title": "SvgMutationText",
+  "description": "JSON text per the sibling ../🔣️component.json SvgMutation shape.",
+  "type": "string"
 }

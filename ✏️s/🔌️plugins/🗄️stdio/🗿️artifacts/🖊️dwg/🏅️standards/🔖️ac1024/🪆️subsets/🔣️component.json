@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.dwg",
+  "standard": "ac1024",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained dwg ac1024"
+    }
+  }
+}

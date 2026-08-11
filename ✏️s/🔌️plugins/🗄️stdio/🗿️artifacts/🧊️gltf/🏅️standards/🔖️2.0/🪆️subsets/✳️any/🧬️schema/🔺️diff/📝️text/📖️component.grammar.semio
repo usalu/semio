@@ -1,6 +1,21 @@
 dialect grammar stdio.gltf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.gltf' NL
-body = payload NL?
-payload = *OCTET
+; The wire form of `GltfDiff` -- RFC8259 JSON text, a sparse object whose members are ALL
+; optional (present iff that field changed). Collection fields are the generic
+; `{removed:[usize], modified:[{index,diff}], added:[{index,item}]}` triple.
+root = ws diff_object ws
+diff_object = '{' ( member ( ',' member )* )? '}'
+member = 'asset' ':' object
+       | 'scene' ':' ( number | 'null' )
+       | ( 'scenes' | 'nodes' | 'meshes' | 'accessors' | 'bufferViews' | 'buffers' | 'bufferBytes'
+         | 'materials' | 'textures' | 'images' | 'samplers' | 'skins' | 'animations' | 'cameras' ) ':' collection_diff
+       | ( 'extensionsUsed' | 'extensionsRequired' ) ':' array
+       | ( 'extensions' | 'extras' ) ':' ( object | 'null' )
+       | 'sourceForm' ':' ( '"json"' | '"glb"' )
+collection_diff = '{' ( 'removed' ':' array_of_index )? ( ',' 'modified' ':' array_of_modified )? ( ',' 'added' ':' array_of_added )? '}'
+array_of_index = '[' ( number ( ',' number )* )? ']'
+array_of_modified = '[' ( modified_entry ( ',' modified_entry )* )? ']'
+modified_entry = '{' 'index' ':' number ',' 'diff' ':' value '}'
+array_of_added = '[' ( added_entry ( ',' added_entry )* )? ']'
+added_entry = '{' 'index' ':' number ',' 'item' ':' value '}'
+value = object | array | string | number | 'true' | 'false' | 'null'
+ws = ( ' ' | TAB | NL | CR )*

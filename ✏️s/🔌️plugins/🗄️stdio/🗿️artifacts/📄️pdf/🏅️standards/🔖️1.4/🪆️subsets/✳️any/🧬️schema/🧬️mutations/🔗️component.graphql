@@ -1,8 +1,10 @@
-type PdfEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ PdfMutation (1.4) union — see ../📸️snapshot/🔗️component.graphql for PageDoc/PdfSnapshot.
 type PdfMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [PdfEntry!]! @state(class: PERSISTENT)
+  mutation: PdfMutationKind!
+  snapshot: PdfSnapshot
+}
+
+enum PdfMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
 }

@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.bmp",
+  "standard": "v3",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained bmp v3"
+    }
+  }
+}

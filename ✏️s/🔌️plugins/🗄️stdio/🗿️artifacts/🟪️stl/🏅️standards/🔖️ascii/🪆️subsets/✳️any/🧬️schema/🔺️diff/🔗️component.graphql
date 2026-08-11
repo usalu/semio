@@ -1,2 +1,32 @@
-# diff facet
- type Placeholder { vertices: String! }
+# 🔺️ StlDiff — handcrafted sparse diff.
+
+type StlTriangle {
+  normal: [Float!]!
+  vertices: [[Float!]!]!
+}
+
+type StlTriangleDiff {
+  normal: [Float!]
+  vertices: [[Float!]!]
+}
+
+type StlTriangleModified {
+  index: Int!
+  diff: StlTriangleDiff!
+}
+
+type StlTriangleAdded {
+  index: Int!
+  triangle: StlTriangle!
+}
+
+type StlTrianglesDiff {
+  removed: [Int!]!
+  modified: [StlTriangleModified!]!
+  added: [StlTriangleAdded!]!
+}
+
+type StlDiff {
+  solidName: String
+  triangles: StlTrianglesDiff
+}

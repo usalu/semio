@@ -1,5 +1,37 @@
-# 🧬️ GltfMutation
-type GltfMutation {
-  schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_VALUE_COLON String! @state(class: PERSISTENT)
-}
+# 🧬️ GltfMutation union.
+union GltfMutation =
+    GltfNoMutation
+  | GltfSetSnapshot
+  | GltfSetAsset
+  | GltfInsertScene | GltfRemoveScene | GltfSetScene
+  | GltfInsertNode | GltfRemoveNode | GltfSetNode
+  | GltfInsertMesh | GltfRemoveMesh | GltfSetMesh
+  | GltfInsertAccessor | GltfRemoveAccessor | GltfSetAccessor
+  | GltfInsertMaterial | GltfRemoveMaterial | GltfSetMaterial
+  | GltfInsertBuffer | GltfRemoveBuffer | GltfSetBuffer
+  | GltfInsertAnimation | GltfRemoveAnimation | GltfSetAnimation
+
+type GltfNoMutation { mutation: String! }
+type GltfSetSnapshot { mutation: String! snapshot: GltfSnapshot! }
+type GltfSetAsset { mutation: String! asset: GltfAsset! }
+type GltfInsertScene { mutation: String! index: Int! scene: GltfScene! }
+type GltfRemoveScene { mutation: String! index: Int! }
+type GltfSetScene { mutation: String! index: Int! scene: GltfScene! }
+type GltfInsertNode { mutation: String! index: Int! node: GltfNode! }
+type GltfRemoveNode { mutation: String! index: Int! }
+type GltfSetNode { mutation: String! index: Int! node: GltfNode! }
+type GltfInsertMesh { mutation: String! index: Int! mesh: GltfMesh! }
+type GltfRemoveMesh { mutation: String! index: Int! }
+type GltfSetMesh { mutation: String! index: Int! mesh: GltfMesh! }
+type GltfInsertAccessor { mutation: String! index: Int! accessor: GltfAccessor! }
+type GltfRemoveAccessor { mutation: String! index: Int! }
+type GltfSetAccessor { mutation: String! index: Int! accessor: GltfAccessor! }
+type GltfInsertMaterial { mutation: String! index: Int! material: GltfMaterial! }
+type GltfRemoveMaterial { mutation: String! index: Int! }
+type GltfSetMaterial { mutation: String! index: Int! material: GltfMaterial! }
+type GltfInsertBuffer { mutation: String! index: Int! buffer: GltfBuffer! bytes: [Int!]! }
+type GltfRemoveBuffer { mutation: String! index: Int! }
+type GltfSetBuffer { mutation: String! index: Int! buffer: GltfBuffer! bytes: [Int!]! }
+type GltfInsertAnimation { mutation: String! index: Int! animation: GltfAnimation! }
+type GltfRemoveAnimation { mutation: String! index: Int! }
+type GltfSetAnimation { mutation: String! index: Int! animation: GltfAnimation! }

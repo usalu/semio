@@ -1,3 +1,31 @@
-dialect protocol stdio.pdf.snapshot
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.pdf.1.7.snapshot
+
+; -- ISO 32000-1 §7.5.2 file header -- the real byte-level magic this artifact's `sniff_pdf`
+; -- checks (not a placeholder single-byte magic).
+magic = "%PDF-"
+version-major = DIGIT
+version-dot = "."
+version-minor = DIGIT
+
+; -- The remainder is offset-indexed (via the trailing xref table's byte offsets, or `startxref`)
+; -- rather than a fixed sequential frame -- `⚙️engine::build_xref`/`Resolver::resolve` walk it by
+; -- offset, not by scanning forward field-by-field, so this protocol description names the real
+; -- top-level frames (indirect objects, xref table, trailer) without over-claiming a fixed order.
+indirect-object = obj-num SP obj-gen SP "obj" EOL object EOL "endobj" EOL
+object-stream-payload = *OCTET ; the format's payload IS bytes at this leaf (§7.4 filters)
+xref-table = "xref" EOL *xref-subsection
+xref-entry = offset-10digit SP gen-5digit SP in-use-flag SP EOL
+trailer-dict-and-pointer = "trailer" EOL trailer-dict EOL "startxref" EOL byte-offset EOL "%%EOF"
+
+DIGIT = %x30-39
+SP = %x20
+EOL = %x0A / %x0D.0A
+obj-num = 1*DIGIT
+obj-gen = 1*DIGIT
+offset-10digit = 10DIGIT
+gen-5digit = 5DIGIT
+in-use-flag = "n" / "f"
+byte-offset = 1*DIGIT
+object = 1*OCTET ; see the sibling ../📝️text/📖️component.grammar.semio for the full COS grammar
+trailer-dict = 1*OCTET
+xref-subsection = 1*OCTET

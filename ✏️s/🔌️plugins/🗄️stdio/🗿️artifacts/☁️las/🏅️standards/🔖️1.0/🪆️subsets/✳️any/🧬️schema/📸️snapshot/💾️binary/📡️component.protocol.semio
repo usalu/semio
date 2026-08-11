@@ -1,3 +1,72 @@
 dialect protocol stdio.las.snapshot
-magic = %x00
-payload = *OCTET
+; §LAS 1.0 public header block (227 bytes) + Variable Length Records + point data records.
+; Matches engine::{encode_las, decode_las} exactly (offsets in the `off`/`vlr_off` modules).
+magic = %x4C.41.53.46 ; "LASF"
+document = header vlr-list point-list
+header = file-source-id global-encoding project-id-guid
+         version-major version-minor system-identifier generating-software
+         creation-day-of-year creation-year header-size offset-to-point-data
+         number-of-vlrs point-data-format-id point-data-record-length
+         number-of-point-records points-by-return
+         x-scale y-scale z-scale x-offset y-offset z-offset
+         max-x min-x max-y min-y max-z min-z
+file-source-id          = 2OCTET                    ; spec-real, out of contracted scope, unmodeled
+global-encoding         = 2OCTET                    ; spec-real, out of contracted scope, unmodeled
+project-id-guid         = 16OCTET                   ; spec-real, out of contracted scope, unmodeled
+version-major           = OCTET
+version-minor           = OCTET
+system-identifier       = 32OCTET                   ; ASCII, null/space-padded
+generating-software     = 32OCTET                   ; ASCII, null/space-padded
+creation-day-of-year    = 2OCTET                    ; u16 LE
+creation-year           = 2OCTET                    ; u16 LE
+header-size             = 2OCTET                    ; u16 LE, structural (see LasHeader doc)
+offset-to-point-data    = 4OCTET                    ; u32 LE, structural
+number-of-vlrs          = 4OCTET                    ; u32 LE, structural (== vlr-list length)
+point-data-format-id    = OCTET                     ; structural, 0-3 supported
+point-data-record-length = 2OCTET                   ; u16 LE, structural
+number-of-point-records = 4OCTET                    ; u32 LE, structural (== point-list length)
+points-by-return        = 5(4OCTET)                 ; 5x u32 LE, return channels 1..=5
+x-scale                 = 8OCTET                    ; f64 LE
+y-scale                 = 8OCTET
+z-scale                 = 8OCTET
+x-offset                = 8OCTET
+y-offset                = 8OCTET
+z-offset                = 8OCTET
+max-x                   = 8OCTET
+min-x                   = 8OCTET
+max-y                   = 8OCTET
+min-y                   = 8OCTET
+max-z                   = 8OCTET
+min-z                   = 8OCTET
+vlr-list                = *vlr                      ; number-of-vlrs entries, starting at header-size
+vlr                     = vlr-reserved vlr-user-id vlr-record-id vlr-record-length
+                           vlr-description vlr-data
+vlr-reserved            = 2OCTET                    ; must be 0
+vlr-user-id             = 16OCTET                   ; ASCII, null/space-padded
+vlr-record-id           = 2OCTET                    ; u16 LE
+vlr-record-length       = 2OCTET                    ; u16 LE, byte length of vlr-data
+vlr-description         = 32OCTET                   ; ASCII, null/space-padded
+vlr-data                = *OCTET                    ; vlr-record-length bytes, proprietary/opaque
+                                                      ; per-(user-id,record-id), the recipe's typed
+                                                      ; raw-retention exception
+point-list               = *point-record             ; number-of-point-records entries
+point-record              = point-record-format-0 / point-record-format-1
+                            / point-record-format-2 / point-record-format-3
+point-record-format-0    = x y z intensity return-flags classification
+                            scan-angle-rank user-data point-source-id
+point-record-format-1    = point-record-format-0 gps-time
+point-record-format-2    = point-record-format-0 red green blue
+point-record-format-3    = point-record-format-1 red green blue
+x                         = 4OCTET                   ; i32 LE, real-world x = x*x-scale+x-offset
+y                         = 4OCTET
+z                         = 4OCTET
+intensity                 = 2OCTET                   ; u16 LE
+return-flags              = OCTET                    ; bits 0-2 return#, 3-5 #returns, 6 scan-dir, 7 edge
+classification             = OCTET
+scan-angle-rank            = OCTET                    ; i8
+user-data                  = OCTET
+point-source-id            = 2OCTET                   ; u16 LE
+gps-time                   = 8OCTET                   ; f64 LE
+red                         = 2OCTET                   ; u16 LE
+green                       = 2OCTET
+blue                        = 2OCTET

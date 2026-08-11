@@ -1,6 +1,81 @@
 syntax = "proto3";
 package semio.s_stdio_md.diff;
+
+import "s_stdio_md/snapshot.proto";
+
 message MdDiff {
-  string schema = 1;
-  string value_wire = 2;
+  optional MdBlocksDiff blocks = 1;
 }
+
+message MdBlocksDiff {
+  repeated uint64 removed = 1;
+  repeated MdBlockModified modified = 2;
+  repeated MdBlockAdded added = 3;
+}
+
+message MdBlockModified {
+  uint64 index = 1;
+  MdBlockDiff diff = 2;
+}
+
+message MdBlockAdded {
+  uint64 index = 1;
+  semio.s_stdio_md.snapshot.MdBlock item = 2;
+}
+
+// 🏳️ Tri-state wrapper: unset field on the parent message = unchanged; present with
+// `is_null = true` = cleared; present with `value` set = set to that value.
+message NullableUint32 { bool is_null = 1; uint32 value = 2; }
+message NullableString { bool is_null = 1; string value = 2; }
+
+message MdBlockDiff {
+  oneof diff {
+    MdHeadingDiff heading = 1;
+    MdParagraphDiff paragraph = 2;
+    MdListDiff list = 3;
+    MdCodeBlockDiff code_block = 4;
+    MdBlockQuoteDiff block_quote = 5;
+    MdThematicBreakDiff thematic_break = 6;
+    MdHtmlBlockDiff html_block = 7;
+    MdReplaceDiff replace = 8;
+  }
+}
+
+message MdHeadingDiff { optional uint32 level = 1; repeated semio.s_stdio_md.snapshot.MdInline inlines = 2; }
+message MdParagraphDiff { repeated semio.s_stdio_md.snapshot.MdInline inlines = 1; }
+message MdListDiff {
+  optional bool ordered = 1;
+  optional NullableUint32 start = 2;
+  optional bool tight = 3;
+  optional MdListItemsDiff items = 4;
+}
+message MdCodeBlockDiff { optional NullableString info = 1; optional string literal = 2; }
+message MdBlockQuoteDiff { optional MdBlocksDiff blocks = 1; }
+message MdThematicBreakDiff {}
+message MdHtmlBlockDiff { optional string raw = 1; }
+message MdReplaceDiff { semio.s_stdio_md.snapshot.MdBlock block = 1; }
+
+message MdListItemsDiff {
+  repeated uint64 removed = 1;
+  repeated MdListItemModified modified = 2;
+  repeated MdListItemAdded added = 3;
+}
+
+message MdListItemModified {
+  uint64 index = 1;
+  MdBlocksDiff diff = 2;
+}
+
+message MdListItemAdded {
+  uint64 index = 1;
+  repeated semio.s_stdio_md.snapshot.MdBlock item = 2;
+}
+
+message MdPathStep {
+  oneof step {
+    MdPathStepBlockQuote block_quote = 1;
+    MdPathStepListItem list_item = 2;
+  }
+}
+message MdPathStepBlockQuote { uint64 index = 1; }
+message MdPathStepListItem { uint64 index = 1; uint64 item = 2; }

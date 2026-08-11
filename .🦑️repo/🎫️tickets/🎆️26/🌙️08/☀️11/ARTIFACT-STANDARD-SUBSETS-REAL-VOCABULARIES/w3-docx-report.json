@@ -1,0 +1,89 @@
+{
+  "unit": "s.stdio.docx",
+  "standards": [
+    {
+      "std": "ecma-376",
+      "subsets": [
+        {
+          "id": "strict",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_strict_document_has_no_hard_diagnostics",
+            "analyzer::tests::missing_strict_namespace_is_hard",
+            "analyzer::tests::transitional_namespace_anywhere_is_hard",
+            "analyzer::tests::vml_namespace_anywhere_is_hard",
+            "analyzer::tests::transitional_relationship_base_is_hard",
+            "analyzer::tests::missing_conformance_attr_is_soft",
+            "analyzer::tests::alternate_content_anywhere_is_soft",
+            "analyzer::tests::missing_officedocument_relationship_is_hard",
+            "composer::tests::conforming_snapshot_composes_and_stamps_strict",
+            "composer::tests::transitional_relationship_base_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_rechecks_wire_payload",
+            "builder::tests::empty_builder_is_strict_conformant",
+            "builder::tests::add_paragraph_stays_strict_conformant",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        },
+        {
+          "id": "transitional",
+          "files_created": [
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧐️analyzer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🏗️builder/🟦️component.ts",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs",
+            "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🟦️component.ts"
+          ],
+          "tests": [
+            "analyzer::tests::conforming_transitional_document_has_no_hard_diagnostics",
+            "analyzer::tests::missing_transitional_namespace_is_hard",
+            "analyzer::tests::strict_namespace_anywhere_is_hard",
+            "analyzer::tests::strict_relationship_base_anywhere_is_hard",
+            "analyzer::tests::conformance_strict_attribute_present_is_soft",
+            "composer::tests::conforming_snapshot_composes_and_stamps_transitional",
+            "composer::tests::strict_namespace_present_fails_compose_with_real_diagnostic",
+            "composer::tests::subset_validator_rechecks_wire_payload",
+            "builder::tests::empty_builder_is_transitional_conformant",
+            "builder::tests::add_paragraph_stays_transitional_conformant",
+            "builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build"
+          ],
+          "validator_registered": true
+        }
+      ]
+    }
+  ],
+  "standard_level_files_updated": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔣️component.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🎹️composer/🦀️component.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"
+  ],
+  "glue_snippet_paths": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES/🧩glue/docx-glue.rs.txt"
+  ],
+  "allowlist_removals": [],
+  "cargo_dep_requests": [],
+  "schema_gaps": [],
+  "preexisting_breakage_noted": [
+    "step ap214 cc1-cc6, svg tiny/basic, tiff baseline: E0433 'cannot find X in subsets' -- other W3 units' glue snippets not yet applied by orchestrator (documented in baseline-cargo-w0.txt as expected mid-wave state)",
+    "gltf 2.0 -> json rfc8259 any export serializer: E0308 JsonValue/Value mismatch -- pre-existing, unrelated to docx (documented in baseline-cargo-w0.txt)"
+  ],
+  "status": "done",
+  "blockers": [],
+  "note": "glue.rs wiring for docx strict/transitional was already applied live by the orchestrator during this session (glue.rs's docx block, originally lines 4413-4589, now includes pub mod strict{...}/pub mod transitional{...} at ~4762-4787) -- cargo check -p semio-s-plugin-stdio confirms zero docx-related errors; only the two documented pre-existing/concurrent-unit error classes above remain. A duplicate full glue snippet is still on disk at the glue_snippet_paths location in case it's needed for reference/rollback."
+}

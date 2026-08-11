@@ -1,6 +1,15 @@
-dialect grammar stdio.png.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.png' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar stdio.png.mutation
+root = mutation
+; wire text IS the JSON serialization of PngMutation (protocol::OpText — serde_json,
+; #[serde(tag = "mutation")]); this names the real 17 variant tags, not RFC 8259's own
+; JSON grammar
+mutation = "{" '"mutation"' ":" variant_tag ("," member)* "}"
+variant_tag = '"noMutation"' / '"setSnapshot"' / '"setHeader"' / '"setPalette"'
+            / '"setTransparency"' / '"setGamma"' / '"setChromaticities"'
+            / '"setSrgbIntent"' / '"setPhysicalDims"' / '"setTimestamp"'
+            / '"setBackground"' / '"insertTextChunk"' / '"removeTextChunk"'
+            / '"setTextChunk"' / '"setPixels"' / '"insertUnknownChunk"'
+            / '"removeUnknownChunk"'
+member = STRING ":" json_value
+json_value = "{" (member ("," member)*)? "}" / "[" json_value* "]" / STRING / INT / BOOL / "null"
+BOOL = "true" / "false"

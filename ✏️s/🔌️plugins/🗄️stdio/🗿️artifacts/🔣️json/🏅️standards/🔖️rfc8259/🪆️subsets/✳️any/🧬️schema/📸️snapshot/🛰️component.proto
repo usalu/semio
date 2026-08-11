@@ -1,6 +1,31 @@
 syntax = "proto3";
 package semio.s_stdio_json.snapshot;
+
+message JsonMember {
+  string key = 1;
+  JsonValue value = 2;
+}
+
+// RFC8259 JSON value. `number_lexeme` carries the ORIGINAL source text verbatim (never a double)
+// so arbitrary-precision numbers round-trip losslessly.
+message JsonValue {
+  enum Kind {
+    NULL = 0;
+    BOOL = 1;
+    NUMBER = 2;
+    STRING = 3;
+    ARRAY = 4;
+    OBJECT = 5;
+  }
+  Kind kind = 1;
+  bool bool_value = 2;
+  string number_lexeme = 3;
+  string string_value = 4;
+  repeated JsonValue array_items = 5;
+  repeated JsonMember object_members = 6; // insertion order preserved
+}
+
 message JsonSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  JsonValue value = 2;
 }

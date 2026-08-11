@@ -1,4 +1,5 @@
 module Stdio_svg_mutations;
+# UTF-8 JSON encoding of SvgMutation -- see the sibling ../🔣️component.json shape.
 type Document = unit {
-    payload: bytes &eod;
+    json_payload: bytes &eod;
 };

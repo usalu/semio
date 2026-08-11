@@ -58,3 +58,66 @@ note: attribute also specified here
 For more information about this error, try `rustc --explain E0432`.
 warning: `semio-s-plugin-stdio` (lib) generated 150 warnings
 error: could not compile `semio-s-plugin-stdio` (lib) due to 4 previous errors; 150 warnings emitted
+
+=== NOTE (W0, orchestrator) ===
+The 4 E0432 "unresolved import protocol::DiffAlgebra" errors above (in
+binary/raw, txt/utf-8, json/rfc8259 ✳️any schema/diff + mutations) are PRE-EXISTING
+breakage from another session's in-flight work, NOT introduced by this ticket.
+Evidence: `git status --porcelain` shows dozens of currently-uncommitted modified
+files across exactly this churn zone (zip/pptx/svg/ifc/bcf/binary engine trees),
+matching ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's
+S1 spine wave which relocated `DiffAlgebra<P>` next to `MutationDiff` in
+📡️spr/🎮️command/component.rs (now reachable as crate::dsl::command::DiffAlgebra) --
+these 6 files (json rfc8259 diff+mutations, txt utf-8 diff+mutations, binary raw
+diff+mutations) simply haven't been swept to the new import path yet by that
+session. Per repo policy (poll, don't chase another session's in-progress refactor),
+this ticket treats this as the compile baseline and will not fix these imports
+itself. json/rfc8259 is one of THIS ticket's own targets (i-json subset) -- the
+i-json subset's schema will delegate via `pub use ...::subsets::any::schema`, so
+it inherits this breakage until the other session lands its fix; this is noted as
+a cross-ticket dependency, not a defect of this ticket's own work.
+
+=== W1 UPDATE (orchestrator) ===
+Re-ran `cargo check -p semio-s-plugin-stdio` after landing W1's mechanism changes
+(taxonomy.json, io/component.rs, script.ts, 85 new 🔣️component.json manifests --
+zero Rust edits inside the stdio crate itself). Error set has CHANGED from baseline
+but is still entirely pre-existing/concurrent, not caused by this ticket:
+- The original 4 E0432 protocol::DiffAlgebra errors are GONE (that session's fix landed).
+- 4 NEW errors appeared in 🗜️deflate/🔖️rfc1950 (DeflateSnapshot.bytes -> payload field
+  rename, mid-sweep: diff/mutations call site + binary import/export serializers) and
+  one in 🧊️gltf's json export serializer (JsonValue vs serde_json::Value mismatch) --
+  none of these files were touched by this ticket.
+- W1's own verification instead used `cargo check -p semio-framework -p
+  semio-framework-os-kernel` (the two crates that actually wire io/component.rs) --
+  both clean, zero errors -- plus a direct probe of the two new policy rule functions
+  (policyStandardSubsetVocabularyBreaches, policyStandardsCoverageBreaches's new
+  subset-prefix/slug checks) against the live tree: 0 breaches each.
+- Conclusion: cargo state in ✏️s/🔌️plugins/🗄️stdio remains a moving target due to
+  live concurrent editing outside this ticket's scope (confirmed via git status
+  showing dozens of uncommitted files in exactly the zip/deflate/json churn zone).
+  W3/W4 fan-out agents should re-check against the CURRENT error set at dispatch
+  time, not this file, when self-verifying their own artifact's compile state.
+
+=== W2 P1 (pdf) applied by orchestrator ===
+Applied pdf-glue.rs.txt to stdio glue.rs (lines 3407-3761 replaced). Result:
+`cargo check -p semio-s-plugin-stdio` -> 1 error, unrelated (gltf json export
+JsonValue/Value mismatch, pre-existing/concurrent). pdf's own new subsets
+(1.7 ✳️a restructured from ✳️a-2b, 1.4 ✳️a/✳️x new) compile clean.
+`cargo test -p semio-s-plugin-stdio --lib pdf::` could not run: the whole test
+binary fails to compile due to an ACTIVELY MID-EDIT file elsewhere
+(📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs,
+confirmed uncommitted via git status, borrow-checker errors in a diff-merge test --
+not this ticket's file, not touched by this ticket). Will retry cargo test at W5
+once that concurrent edit lands. cargo check (compile-only, not full test binary)
+remains green for pdf's own code.
+
+=== W2/W3 glue applications so far (orchestrator) ===
+Applied: pdf-glue.rs.txt (P1), ifc-2x3-glue.rs.txt (P2, + one small real bugfix in
+ifc2x3's diff component.rs: Part21Instance comparison needed a deref, *b != *i not
+*b != i), tiff-glue.rs.txt (W3), docx-glue.rs.txt (W3). All four compile clean now
+(zero errors attributable to pdf/ifc/tiff/docx). Remaining W3 units still in flight
+as of this checkpoint (their standard-level composer/engine files already reference
+subset modules glue.rs doesn't know about yet -- expected E0433 "cannot find X in
+subsets" for cc1-6 (step), basic/tiny (svg) -- waiting for their glue snippets).
+Only unrelated pre-existing error remaining: gltf json export JsonValue/Value
+mismatch (exogenous, noted since W1).

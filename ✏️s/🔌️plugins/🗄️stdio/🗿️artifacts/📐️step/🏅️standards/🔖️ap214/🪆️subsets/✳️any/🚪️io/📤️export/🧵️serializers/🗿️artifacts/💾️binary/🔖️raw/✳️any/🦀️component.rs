@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// UTF-8 encode text into a BinarySnapshot.
 pub fn serialize(from: &StepSnapshot) -> BinarySnapshot {
-    let text = crate::artifacts::step::engine::part21::write_part21(&from.document);
+    let text = crate::artifacts::step::engine::part21::write_part21(&from.to_part21_document());
     BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         bytes: text.into_bytes(),

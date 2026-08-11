@@ -1,3 +1,6 @@
-dialect protocol stdio.pdf.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol stdio.pdf.1.7.mutations
+
+; -- No dedicated wire magic -- `OpBinary::encode_op` is `serde_json::to_vec(self)`, the UTF-8
+; -- bytes of the SAME JSON text ../📝️text/📖️component.grammar.semio describes (tagged by
+; -- "mutation").
+utf8-json-text = 1*OCTET

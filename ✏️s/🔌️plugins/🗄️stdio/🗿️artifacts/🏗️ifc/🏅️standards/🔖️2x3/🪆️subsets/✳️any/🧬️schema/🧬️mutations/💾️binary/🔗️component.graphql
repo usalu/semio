@@ -1,0 +1,3 @@
+# stdio.ifc.2x3 mutations binary grammar schema
+scalar Bytes
+type Document { schema: String! payload: Bytes! }

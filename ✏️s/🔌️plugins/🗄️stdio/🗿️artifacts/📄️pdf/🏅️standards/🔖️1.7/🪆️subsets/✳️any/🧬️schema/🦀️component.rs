@@ -1,6 +1,6 @@
 //! 🧬️ PdfArtifact schema (1.7) — full artifact state.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfIndirectObject, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfDictEntry, PdfInfo, PdfIndirectObject, PdfPage, PdfSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +22,9 @@ pub struct PdfArtifact {
     #[state(persistent)]
     #[serde(default)]
     pub objects: Vec<PdfIndirectObject>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub trailer: Vec<PdfDictEntry>,
 }
 
 impl Default for PdfArtifact {
@@ -36,6 +39,7 @@ impl PdfArtifact {
             pages: self.pages.clone(),
             info: self.info.clone(),
             objects: self.objects.clone(),
+            trailer: self.trailer.clone(),
         }
     }
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
@@ -45,6 +49,7 @@ impl PdfArtifact {
             pages: snapshot.pages,
             info: snapshot.info,
             objects: snapshot.objects,
+            trailer: snapshot.trailer,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
@@ -53,6 +58,7 @@ impl PdfArtifact {
         self.pages = snapshot.pages;
         self.info = snapshot.info;
         self.objects = snapshot.objects;
+        self.trailer = snapshot.trailer;
     }
 }
 

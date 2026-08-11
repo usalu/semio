@@ -1,15 +1,30 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.gltf/mutation.gltf",
+  "$id": "https://semio.tech/schema/s.stdio.gltf/mutation.json",
   "title": "GltfMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
-  }
+  "oneOf": [
+    { "properties": { "mutation": { "const": "noMutation" } } },
+    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": {} } },
+    { "properties": { "mutation": { "const": "setAsset" }, "asset": {} } },
+    { "properties": { "mutation": { "const": "insertScene" }, "index": { "type": "integer" }, "scene": {} } },
+    { "properties": { "mutation": { "const": "removeScene" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setScene" }, "index": { "type": "integer" }, "scene": {} } },
+    { "properties": { "mutation": { "const": "insertNode" }, "index": { "type": "integer" }, "node": {} } },
+    { "properties": { "mutation": { "const": "removeNode" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setNode" }, "index": { "type": "integer" }, "node": {} } },
+    { "properties": { "mutation": { "const": "insertMesh" }, "index": { "type": "integer" }, "mesh": {} } },
+    { "properties": { "mutation": { "const": "removeMesh" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setMesh" }, "index": { "type": "integer" }, "mesh": {} } },
+    { "properties": { "mutation": { "const": "insertAccessor" }, "index": { "type": "integer" }, "accessor": {} } },
+    { "properties": { "mutation": { "const": "removeAccessor" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setAccessor" }, "index": { "type": "integer" }, "accessor": {} } },
+    { "properties": { "mutation": { "const": "insertMaterial" }, "index": { "type": "integer" }, "material": {} } },
+    { "properties": { "mutation": { "const": "removeMaterial" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setMaterial" }, "index": { "type": "integer" }, "material": {} } },
+    { "properties": { "mutation": { "const": "insertBuffer" }, "index": { "type": "integer" }, "buffer": {}, "bytes": { "type": "array", "items": { "type": "integer" } } } },
+    { "properties": { "mutation": { "const": "removeBuffer" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setBuffer" }, "index": { "type": "integer" }, "buffer": {}, "bytes": { "type": "array", "items": { "type": "integer" } } } },
+    { "properties": { "mutation": { "const": "insertAnimation" }, "index": { "type": "integer" }, "animation": {} } },
+    { "properties": { "mutation": { "const": "removeAnimation" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setAnimation" }, "index": { "type": "integer" }, "animation": {} } }
+  ]
 }

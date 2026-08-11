@@ -1,6 +1,40 @@
 dialect grammar stdio.md.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.md' NL
-body = payload NL?
-payload = *OCTET
+; 🔺️ Wire-text (JSON) shape of `MdDiff` -- mirrors 🦀️component.rs's `serde(tag = "kind")`
+; discriminated union exactly.
+
+root = md-diff
+md-diff = "{" [ %s"blocks" ":" blocks-diff ] "}"
+blocks-diff = "{" "removed" ":" index-array ","
+                   "modified" ":" "[" *( block-modified "," ) "]" ","
+                   "added" ":" "[" *( block-added "," ) "]" "}"
+block-modified = "{" "index" ":" index "," "diff" ":" block-diff "}"
+block-added = "{" "index" ":" index "," "item" ":" md-block "}"
+
+block-diff = heading-diff / paragraph-diff / list-diff / code-block-diff
+           / block-quote-diff / thematic-break-diff / html-block-diff / replace-diff
+heading-diff = "{" %s"kind" ":" %s"heading" [ "," "level" ":" level ] [ "," "inlines" ":" inline-array ] "}"
+paragraph-diff = "{" %s"kind" ":" %s"paragraph" [ "," "inlines" ":" inline-array ] "}"
+list-diff = "{" %s"kind" ":" %s"list" [ "," "ordered" ":" boolean ]
+                [ "," "start" ":" ( "null" / index ) ] [ "," "tight" ":" boolean ]
+                [ "," "items" ":" list-items-diff ] "}"
+code-block-diff = "{" %s"kind" ":" %s"codeBlock" [ "," "info" ":" ( "null" / string ) ]
+                      [ "," "literal" ":" string ] "}"
+block-quote-diff = "{" %s"kind" ":" %s"blockQuote" [ "," "blocks" ":" blocks-diff ] "}"
+thematic-break-diff = "{" %s"kind" ":" %s"thematicBreak" "}"
+html-block-diff = "{" %s"kind" ":" %s"htmlBlock" [ "," "raw" ":" string ] "}"
+replace-diff = "{" %s"kind" ":" %s"replace" "," "block" ":" md-block "}"
+
+list-items-diff = "{" "removed" ":" index-array ","
+                       "modified" ":" "[" *( list-item-modified "," ) "]" ","
+                       "added" ":" "[" *( list-item-added "," ) "]" "}"
+list-item-modified = "{" "index" ":" index "," "diff" ":" blocks-diff "}"
+list-item-added = "{" "index" ":" index "," "item" ":" "[" *( md-block "," ) "]" "}"
+
+index = 1*DIGIT
+index-array = "[" *( index "," ) "]"
+inline-array = "[" *( md-inline "," ) "]"
+level = %x31-36 ; 1..6
+boolean = %s"true" / %s"false"
+string = DQUOTE *CHAR DQUOTE
+md-block = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>
+md-inline = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>

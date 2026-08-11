@@ -1,3 +1,2 @@
-(* ebnf stdio.jpg diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.jpg', newline ;
+(* ebnf stdio.jpg diff -- JSON per the sibling JSON Schema facet, no custom textual grammar *)
+document = jsonValue ;

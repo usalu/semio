@@ -1,0 +1,9 @@
+{
+  "artifact": "s.gis.gisterrain",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained gisterrain 1"
+    }
+  }
+}

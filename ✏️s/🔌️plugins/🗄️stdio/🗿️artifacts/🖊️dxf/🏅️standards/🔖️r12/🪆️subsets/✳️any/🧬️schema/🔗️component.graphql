@@ -1,2 +1,11 @@
-# schema facet
- type Placeholder { lines: String! }
+# 🧬️ DxfArtifact schema facet — full artifact state, same persisted fields as DxfSnapshot
+# (see 📸️snapshot/🔗️component.graphql for the shared subtype definitions).
+
+type DxfArtifact {
+  schema: String!
+  headerVars: [DxfHeaderVar!]!
+  tables: DxfTables!
+  otherTables: [DxfOtherTable!]!
+  blocks: [DxfBlock!]!
+  entities: [DxfEntity!]!
+}

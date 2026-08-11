@@ -1,6 +1,72 @@
 syntax = "proto3";
 package semio.s_stdio_jpg.snapshot;
+
+message JfifThumbnail {
+  uint32 width = 1;
+  uint32 height = 2;
+  bytes rgb_data = 3;
+}
+
+message JpgFrameComponent {
+  uint32 id = 1;
+  uint32 h_sampling = 2;
+  uint32 v_sampling = 3;
+  uint32 quant_table_id = 4;
+}
+
+message JpgFrameHeader {
+  uint32 precision = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  repeated JpgFrameComponent components = 4;
+}
+
+message JpgQuantTable {
+  uint32 id = 1;
+  uint32 precision = 2;
+  repeated uint32 values = 3; // exactly 64, zigzag scan order
+}
+
+enum JpgHuffmanClass {
+  DC = 0;
+  AC = 1;
+}
+
+message JpgHuffmanTable {
+  uint32 id = 1;
+  JpgHuffmanClass class = 2;
+  bytes bits = 3; // exactly 16
+  bytes values = 4;
+}
+
+message JpgSegment {
+  uint32 marker = 1;
+  bytes data = 2;
+}
+
+enum JfifDensityUnits {
+  ASPECT = 0;
+  PIXELS_PER_INCH = 1;
+  PIXELS_PER_CM = 2;
+}
+
 message JpgSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 width = 2;
+  uint32 height = 3;
+  bytes pixels = 4;
+  optional uint32 re_encode_quality = 5;
+  uint32 jfif_version_major = 6;
+  uint32 jfif_version_minor = 7;
+  JfifDensityUnits jfif_density_units = 8;
+  uint32 jfif_x_density = 9;
+  uint32 jfif_y_density = 10;
+  optional JfifThumbnail jfif_thumbnail = 11;
+  optional JpgFrameHeader frame = 12;
+  uint32 sof_marker = 13;
+  bool arithmetic = 14;
+  repeated JpgQuantTable quant_tables = 15;
+  repeated JpgHuffmanTable huffman_tables = 16;
+  optional uint32 restart_interval = 17;
+  repeated JpgSegment other_segments = 18;
 }

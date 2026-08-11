@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s_stdio_ifc_2x3.mutation;
+message Ifc2x3Mutation {
+  oneof kind {
+    bool no_mutation = 1;
+    bytes set_snapshot = 2;
+    bytes upsert_instance = 3;
+    uint64 remove_instance = 4;
+    bytes set_header = 5;
+  }
+}

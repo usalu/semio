@@ -1,6 +1,7 @@
-//! 🧬️ TiffArtifact schema — full artifact state.
+//! 🧬️ TiffArtifact schema — full artifact state (mirrors `TiffSnapshot` field-for-field; see
+//! `png_artifact_schema_descriptor`/`PngArtifact` for the established repo pattern this follows).
 
-use crate::artifacts::tiff::schema::snapshot::RasterImage;
+use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffIfd};
 use crate::artifacts::tiff::TiffSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -12,8 +13,13 @@ pub struct TiffArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
+    pub byte_order: TiffByteOrder,
+    #[state(persistent)]
     #[serde(default)]
-    pub image: RasterImage,
+    pub ifds: Vec<TiffIfd>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub pixels: Vec<u8>,
 }
 
 impl Default for TiffArtifact {
@@ -22,14 +28,13 @@ impl Default for TiffArtifact {
 
 impl TiffArtifact {
     pub fn to_snapshot(&self) -> TiffSnapshot {
-        TiffSnapshot { schema: self.schema.clone(), image: self.image.clone() }
+        TiffSnapshot { schema: self.schema.clone(), byte_order: self.byte_order, ifds: self.ifds.clone(), pixels: self.pixels.clone() }
     }
     pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
-        Self { schema: snapshot.schema, image: snapshot.image }
+        Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds, pixels: snapshot.pixels }
     }
     pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
-        self.schema = snapshot.schema;
-        self.image = snapshot.image;
+        *self = Self::from_snapshot(snapshot);
     }
 }
 

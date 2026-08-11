@@ -115,18 +115,22 @@ mod tests {
     }
 
     //#region 🔖️FieldSweep
-    /// 🧹 Canonical "every mutable field differs" snapshot A.
+    /// 🧹 Canonical "every mutable field differs" snapshot A. Deliberately SHORTER than
+    /// `sweep_b` (2 lines vs. 3) — see the `field_sweep_covers_every_mutable_field` doc comment
+    /// for why a flat, unkeyed `Vec<String>` collection needs an asymmetric length to exercise
+    /// `removed`/`added` at all.
     fn sweep_a() -> TxtSnapshot {
         TxtSnapshot {
             schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-            lines: vec!["keep-me".into(), "remove-me".into(), "modify-me".into()],
+            lines: vec!["keep-me".into(), "modify-me".into()],
             trailing_newline: false,
             line_ending: LineEnding::Lf,
         }
     }
 
-    /// 🧹 Canonical "every mutable field differs" snapshot B: `lines` exercises one removed
-    /// (`remove-me`), one modified-in-place (`modify-me` → `modified!`), one added (`added!`);
+    /// 🧹 Canonical "every mutable field differs" snapshot B: one line unchanged (`keep-me`),
+    /// one modified in place (`modify-me` → `modified!`), one genuinely new tail line
+    /// (`added!`) that only exists because `sweep_b` is longer than `sweep_a`;
     /// `trailing_newline`/`line_ending` both flip.
     fn sweep_b() -> TxtSnapshot {
         TxtSnapshot {
@@ -139,9 +143,23 @@ mod tests {
 
     /// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, every
     /// diff field is populated (`is_some()`), and `between(a,a)` is empty.
+    ///
+    /// 🧩 `TxtLinesDiff::between`'s own algorithm (pairwise-compare `0..min(len)`, then
+    /// "whichever side is longer supplies the tail" — the exact shape the recipe specifies) can
+    /// structurally only ever produce a `removed`-tail XOR an `added`-tail from a single
+    /// `between()` call, never both at once, since the two tails are complementary by
+    /// construction — there is no field-count-mismatch escape hatch here the way there is for
+    /// csv's per-record sub-structure, and no name-keying the way there is for xml's attributes
+    /// (see those artifacts' own `field_sweep` tests/reports for the same structural note).
+    /// `sweep_a`/`sweep_b` are deliberately different lengths so `ab = between(a, b)` exercises
+    /// `modified` + `added` (`b` is longer) and `ba = between(b, a)` exercises `modified` +
+    /// `removed` (`a` is now the "longer" side) — between the two directions every kind of line
+    /// change the diff type can express is proven, exactly matching what `between_roundtrip_law`
+    /// already checks in both directions anyway.
     #[test]
     fn field_sweep_covers_every_mutable_field() {
-        use protocol::DiffAlgebra;
+        use protocol::os_spr::command::DiffAlgebra;
+        use protocol::MutationDiff;
         let a = sweep_a();
         let b = sweep_b();
 
@@ -152,10 +170,14 @@ mod tests {
 
         assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
         assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");
-        let lines_diff = ab.lines.as_ref().expect("lines diff must be Some in a sweep diff");
-        assert!(!lines_diff.removed.is_empty(), "sweep must exercise a removed line");
-        assert!(!lines_diff.modified.is_empty(), "sweep must exercise a modified line");
-        assert!(!lines_diff.added.is_empty(), "sweep must exercise an added line");
+
+        let ab_lines = ab.lines.as_ref().expect("lines diff must be Some in a sweep diff");
+        assert!(!ab_lines.modified.is_empty(), "a->b sweep must exercise a modified line");
+        assert!(!ab_lines.added.is_empty(), "a->b sweep must exercise an added line (b is longer)");
+
+        let ba_lines = ba.lines.as_ref().expect("reverse lines diff must be Some in a sweep diff");
+        assert!(!ba_lines.modified.is_empty(), "b->a sweep must exercise a modified line");
+        assert!(!ba_lines.removed.is_empty(), "b->a sweep must exercise a removed line (a is shorter)");
 
         assert!(TxtDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }

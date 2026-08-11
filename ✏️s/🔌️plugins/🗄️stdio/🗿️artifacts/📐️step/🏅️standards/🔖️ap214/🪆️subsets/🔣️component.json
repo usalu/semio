@@ -1,0 +1,27 @@
+{
+  "artifact": "s.stdio.step",
+  "standard": "ap214",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained step ap214"
+    },
+    "cc1": {
+      "name": "ISO 10303-214 CC1 (config data only, https://www.iso.org/standard/63339.html)"
+    },
+    "cc2": {
+      "name": "ISO 10303-214 CC2 (bounded wireframe/basic surfaces, https://www.iso.org/standard/63339.html)"
+    },
+    "cc3": {
+      "name": "ISO 10303-214 CC3 (wireframe with topology, https://www.iso.org/standard/63339.html)"
+    },
+    "cc4": {
+      "name": "ISO 10303-214 CC4 (manifold surfaces with topology, https://www.iso.org/standard/63339.html)"
+    },
+    "cc5": {
+      "name": "ISO 10303-214 CC5 (faceted B-Rep, https://www.iso.org/standard/63339.html)"
+    },
+    "cc6": {
+      "name": "ISO 10303-214 CC6 (advanced B-Rep, https://www.iso.org/standard/63339.html)"
+    }
+  }
+}

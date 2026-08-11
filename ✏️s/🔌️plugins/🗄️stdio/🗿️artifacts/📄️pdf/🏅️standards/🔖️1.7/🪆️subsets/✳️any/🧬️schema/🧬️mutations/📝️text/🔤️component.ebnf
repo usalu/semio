@@ -1,3 +1,23 @@
-(* ebnf stdio.pdf mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.pdf', newline ;
+(* ISO-14977 EBNF for the real wire shape of PdfMutation (1.7): OpText::print_op is literally
+   serde_json::to_string(self) -- one JSON object tagged by "mutation". Matches
+   ../🔣️component.json. *)
+pdf mutation = '{', '"mutation"', ':', mutation tag, { ',', field }, '}' ;
+mutation tag = '"noMutation"' | '"setSnapshot"' | '"insertPage"' | '"removePage"'
+             | '"setPageMediaBox"' | '"setPageCropBox"' | '"appendPageContent"' | '"setInfo"'
+             | '"insertObject"' | '"removeObject"' | '"setObjectValue"'
+             | '"setDictEntry"' | '"removeDictEntry"' | '"setTrailerEntry"' | '"removeTrailerEntry"' ;
+field = '"snapshot"', ':', json object
+      | '"index"', ':', number
+      | '"page"', ':', json object
+      | '"mediaBox"', ':', json array
+      | '"cropBox"', ':', ( json array | 'null' )
+      | '"text"', ':', json string
+      | '"info"', ':', json object
+      | '"id"', ':', json object
+      | '"value"', ':', json value
+      | '"path"', ':', json array
+      | '"key"', ':', json string ;
+json value = json object | json array | json string | number | 'true' | 'false' | 'null' ;
+json object = '{', [ json string, ':', json value, { ',', json string, ':', json value } ], '}' ;
+json array = '[', [ json value, { ',', json value } ], ']' ;
+json string = '"', { ? any char except '"' or '\' ? | '\', escape }, '"' ;

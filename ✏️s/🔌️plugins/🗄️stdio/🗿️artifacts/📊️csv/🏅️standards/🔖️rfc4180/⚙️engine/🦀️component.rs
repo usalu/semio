@@ -256,5 +256,22 @@ mod tests {
         let reparsed = decode_csv_with(&crlf_text, true);
         assert_eq!(reparsed, snap);
     }
+
+    //#region 🔖️CodecRetentionLaw
+    /// 🔁️ decode→encode is byte-preserving on a fixture exercising every retention-sensitive
+    /// case at once: unquoted fields, a field quoted only because it's structurally required
+    /// (embedded comma), a field quoted despite NOT being structurally required (pure
+    /// retention), an empty field, and an embedded-newline field spanning lines.
+    #[test]
+    fn codec_retention_law() {
+        let fixture = "name,note,tag,blank\n\"Doe, John\",\"He said \"\"hi\"\"\",\"kept-quoted\",\n\"multi\nline\",x,y,z\n";
+        let snap = decode_csv_with(fixture, true);
+        let reencoded = encode_csv(&snap);
+        assert_eq!(reencoded, fixture, "decode->encode must be byte-preserving on this fixture");
+
+        let reparsed = decode_csv_with(&reencoded, true);
+        assert_eq!(reparsed, snap, "re-parsing the re-encoded text must yield the identical snapshot");
+    }
+    //#endregion 🔖️CodecRetentionLaw
 }
 //#endregion 🧪️Tests

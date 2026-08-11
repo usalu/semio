@@ -1,0 +1,9 @@
+{
+  "artifact": "s.reasoning.wires",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained wires 1"
+    }
+  }
+}

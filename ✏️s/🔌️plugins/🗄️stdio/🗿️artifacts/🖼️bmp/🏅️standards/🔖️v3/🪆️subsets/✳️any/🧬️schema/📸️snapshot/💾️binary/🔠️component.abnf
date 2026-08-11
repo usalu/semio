@@ -1,3 +1,39 @@
-; abnf stdio.bmp snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.bmp snapshot (binary) — the shared `.semio` binary envelope
+; (store::semio_format::wrap_binary) wrapping the REAL on-disk BMP bytes: BITMAPFILEHEADER +
+; core BITMAPINFOHEADER + optional BI_BITFIELDS masks + optional palette + pixel data — see
+; engine::decode_bmp / engine::encode_bmp for the authoritative reader/writer.
+document          = magic token-len token payload
+magic             = %x89.53.45.4D.0D.0A.1A.0A    ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len         = 4OCTET                       ; u32, little-endian
+token             = *OCTET                       ; UTF-8 "stdio.bmp.pack v1", token-len bytes
+payload           = bmp-file                     ; the real on-disk BMP bytes
+
+; --- real BMP byte layout ---
+bmp-file          = file-header info-header [bitfield-masks] [palette] pixel-data
+file-header       = magic-bm file-size reserved1 reserved2 data-offset
+magic-bm          = %x42.4D                      ; "BM"
+file-size         = 4OCTET                       ; u32 LE, total file length
+reserved1         = 2OCTET
+reserved2         = 2OCTET
+data-offset       = 4OCTET                       ; u32 LE, byte offset of pixel-data
+info-header       = header-size width height planes bits-per-pixel compression
+                     image-size x-ppm y-ppm colors-used colors-important
+header-size       = 4OCTET                       ; u32 LE, >= 40 (only the 40-byte core BITMAPINFOHEADER is decoded field-by-field; larger V2-V5 headers are read for header-size and BI_BITFIELDS masks only, per the documented decode scope)
+width             = 4OCTET                       ; i32 LE, > 0
+height            = 4OCTET                       ; i32 LE; sign selects row order (negative = top-down, positive = bottom-up)
+planes            = 2OCTET                       ; u16 LE
+bits-per-pixel    = 2OCTET                       ; u16 LE (1, 4, 8, 16, 24, or 32)
+compression       = 4OCTET                       ; u32 LE (0 = BI_RGB, 3 = BI_BITFIELDS; other values rejected)
+image-size        = 4OCTET                       ; u32 LE
+x-ppm             = 4OCTET                       ; i32 LE, x_pixels_per_meter
+y-ppm             = 4OCTET                       ; i32 LE, y_pixels_per_meter
+colors-used       = 4OCTET                       ; u32 LE
+colors-important  = 4OCTET                       ; u32 LE
+bitfield-masks    = 3*4( 4OCTET )                ; r,g,b[,a] channel masks — present only when compression = BI_BITFIELDS
+palette           = *palette-entry               ; present only when bits-per-pixel <= 8; entry count = colors-used (if nonzero) or 2^bits-per-pixel
+palette-entry     = pal-b pal-g pal-r pal-reserved
+pal-b             = OCTET
+pal-g             = OCTET
+pal-r             = OCTET
+pal-reserved      = OCTET
+pixel-data        = *OCTET                       ; `height` rows, each row padded to a 4-byte boundary (row_bytes = ((width*bits-per-pixel+31)/32)*4); on-disk row order per height's sign

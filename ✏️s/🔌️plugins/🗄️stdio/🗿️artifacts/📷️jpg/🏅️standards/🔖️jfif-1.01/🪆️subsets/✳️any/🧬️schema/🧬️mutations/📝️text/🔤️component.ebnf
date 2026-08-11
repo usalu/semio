@@ -1,3 +1,3 @@
-(* ebnf stdio.jpg mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.jpg', newline ;
+(* ebnf stdio.jpg mutations -- JSON per the sibling JSON Schema facet, no custom textual grammar
+   (OpText::print_op/parse_op both go through serde_json directly) *)
+document = jsonValue ;

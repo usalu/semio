@@ -1,0 +1,9 @@
+{
+  "artifact": "s.remodel.remodel",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained remodel 1"
+    }
+  }
+}

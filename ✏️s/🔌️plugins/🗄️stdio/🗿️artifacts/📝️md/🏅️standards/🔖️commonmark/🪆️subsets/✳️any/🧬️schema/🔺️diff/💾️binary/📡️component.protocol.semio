@@ -1,3 +1,7 @@
 dialect protocol stdio.md.diff
-magic = %x00
-payload = *OCTET
+; 🔺️ Binary op-log encoding of `MdDiff`: length-prefixed UTF-8 JSON matching the sibling
+; ../📝️text/📖️component.grammar.semio (real `OpBinary::encode_op`/`decode_op` shape --
+; `serde_json::to_vec`/`from_slice` over the same `MdDiff` wire form, framed with a length).
+diff-frame = length json-payload
+length = u32-le
+json-payload = utf8-bytes ; conforms to ../📝️text/📖️component.grammar.semio `md-diff`

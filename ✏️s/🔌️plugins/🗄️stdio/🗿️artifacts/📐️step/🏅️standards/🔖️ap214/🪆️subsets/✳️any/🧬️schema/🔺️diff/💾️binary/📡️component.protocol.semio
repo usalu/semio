@@ -1,3 +1,7 @@
 dialect protocol stdio.step.diff
-magic = %x00
-payload = *OCTET
+; `StepDiff`'s binary wire form (wherever this facet is serialized as bytes, e.g. persistence) is
+; UTF-8 JSON bytes matching the sibling text grammar (`../📝️text/📖️component.grammar.semio`)
+; exactly — no packed binary layout, no magic/length-prefix framing, documented here rather than
+; hidden behind a placeholder (same rationale as zip's own diff protocol leaf, this ticket's
+; precedent).
+payload = utf8-bytes-of(diff-line) ; `diff-line` per the sibling text grammar

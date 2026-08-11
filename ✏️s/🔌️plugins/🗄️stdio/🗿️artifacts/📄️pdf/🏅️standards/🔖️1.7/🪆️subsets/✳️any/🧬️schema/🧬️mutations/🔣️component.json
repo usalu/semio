@@ -1,26 +1,53 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pdf/mutation.json",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/mutation.json",
   "title": "PdfMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "persistent",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
+  "$defs": {
+    "ObjRef": { "type": "object", "required": ["num", "gen"], "properties": { "num": { "type": "integer" }, "gen": { "type": "integer" } } },
+    "PdfObject": { "type": "object", "required": ["kind"] },
+    "PdfInfo": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" }, "author": { "type": "string" }, "subject": { "type": "string" },
+        "keywords": { "type": "string" }, "creator": { "type": "string" }, "producer": { "type": "string" }
       }
+    },
+    "PdfPage": {
+      "type": "object",
+      "properties": {
+        "mediaBox": { "type": "array", "items": { "type": "number" } },
+        "cropBox": { "type": "array", "items": { "type": "number" } },
+        "rotate": { "type": "integer" },
+        "text": { "type": "string" }
+      }
+    },
+    "PdfSnapshot": { "type": "object" },
+    "PdfPathSegment": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "type": "string", "enum": ["arrayIndex", "dictKey"] }, "index": { "type": "integer" }, "key": { "type": "string" } }
     }
+  },
+  "type": "object",
+  "required": ["mutation"],
+  "properties": {
+    "mutation": {
+      "type": "string",
+      "enum": [
+        "noMutation", "setSnapshot", "insertPage", "removePage", "setPageMediaBox", "setPageCropBox",
+        "appendPageContent", "setInfo", "insertObject", "removeObject", "setObjectValue",
+        "setDictEntry", "removeDictEntry", "setTrailerEntry", "removeTrailerEntry"
+      ]
+    },
+    "snapshot": { "$ref": "#/$defs/PdfSnapshot" },
+    "index": { "type": "integer" },
+    "page": { "$ref": "#/$defs/PdfPage" },
+    "mediaBox": { "type": "array", "items": { "type": "number" } },
+    "cropBox": { "type": ["array", "null"], "items": { "type": "number" } },
+    "text": { "type": "string" },
+    "info": { "$ref": "#/$defs/PdfInfo" },
+    "id": { "$ref": "#/$defs/ObjRef" },
+    "value": { "$ref": "#/$defs/PdfObject" },
+    "path": { "type": "array", "items": { "$ref": "#/$defs/PdfPathSegment" } },
+    "key": { "type": "string" }
   }
 }

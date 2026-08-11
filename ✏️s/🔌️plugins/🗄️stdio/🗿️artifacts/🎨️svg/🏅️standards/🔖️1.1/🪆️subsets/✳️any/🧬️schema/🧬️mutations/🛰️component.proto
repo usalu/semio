@@ -1,6 +1,107 @@
 syntax = "proto3";
 package semio.s_stdio_svg.mutation;
+
+import "s_stdio_xml/snapshot.proto";
+
+message NodePath {
+  repeated uint64 segments = 1;
+}
+
+message ViewBox {
+  double min_x = 1;
+  double min_y = 2;
+  double width = 3;
+  double height = 4;
+}
+
+message TransformOp {
+  oneof op {
+    Translate translate = 1;
+    Scale scale = 2;
+    Rotate rotate = 3;
+    SkewX skew_x = 4;
+    SkewY skew_y = 5;
+    Matrix matrix = 6;
+  }
+  message Translate { double x = 1; optional double y = 2; }
+  message Scale { double x = 1; optional double y = 2; }
+  message Rotate { double angle = 1; optional double center_x = 2; optional double center_y = 3; }
+  message SkewX { double angle = 1; }
+  message SkewY { double angle = 1; }
+  message Matrix { double a = 1; double b = 2; double c = 3; double d = 4; double e = 5; double f = 6; }
+}
+
 message SvgMutation {
-  string schema = 1;
-  string value_wire = 2;
+  oneof mutation {
+    NoMutation no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetDeclaration set_declaration = 3;
+    SetDoctype set_doctype = 4;
+    InsertElement insert_element = 5;
+    RemoveElement remove_element = 6;
+    SetElementName set_element_name = 7;
+    SetAttribute set_attribute = 8;
+    SetText set_text = 9;
+    SetViewBox set_view_box = 10;
+    SetTransform set_transform = 11;
+  }
+}
+
+message NoMutation {}
+
+// 📸️ `snapshot`'s real shape lives in the sibling `../📸️snapshot/🛰️component.proto`.
+message SetSnapshot {
+  bytes snapshot = 1;
+}
+
+message SetDeclaration {
+  optional semio.s_stdio_xml.snapshot.XmlDeclaration declaration = 1;
+}
+
+message SetDoctype {
+  optional string doctype = 1;
+}
+
+// ➕️ Inserts `node` at `index` among the children of the element addressed by `parent`.
+message InsertElement {
+  NodePath parent = 1;
+  uint64 index = 2;
+  semio.s_stdio_xml.snapshot.XmlNode node = 3;
+}
+
+// ➖️ Removes the child at `index` among the children of the element addressed by `parent`.
+message RemoveElement {
+  NodePath parent = 1;
+  uint64 index = 2;
+}
+
+// 🏷️ Renames the element addressed by `path`.
+message SetElementName {
+  NodePath path = 1;
+  string name = 2;
+}
+
+// 🏷️ Sets (or, if `value` is unset, removes) attribute `name` on the element addressed by `path`.
+message SetAttribute {
+  NodePath path = 1;
+  string name = 2;
+  optional string value = 3;
+}
+
+// 🔤️ Sets the literal text of the `Text` node addressed by `path`.
+message SetText {
+  NodePath path = 1;
+  string text = 2;
+}
+
+// 🖼️ Sets (or, if unset, clears) the typed `viewBox` of the element addressed by `path`.
+message SetViewBox {
+  NodePath path = 1;
+  optional ViewBox view_box = 2;
+}
+
+// 🔄 Sets (or, if empty, clears) the typed `transform` list of the element addressed by `path`.
+message SetTransform {
+  NodePath path = 1;
+  repeated TransformOp transform = 2;
 }

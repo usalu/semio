@@ -13,6 +13,12 @@ pub struct LasArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    pub header: crate::artifacts::las::schema::snapshot::LasHeader,
+    #[state(persistent)]
+    #[serde(default)]
+    pub vlrs: Vec<crate::artifacts::las::schema::snapshot::LasVlr>,
+    #[state(persistent)]
+    #[serde(default)]
     pub points: Vec<crate::artifacts::las::schema::snapshot::LasPoint>,
 }
 //#endregion 🔖️Artifact
@@ -28,6 +34,8 @@ impl LasArtifact {
     pub fn to_snapshot(&self) -> LasSnapshot {
         LasSnapshot {
             schema: self.schema.clone(),
+            header: self.header.clone(),
+            vlrs: self.vlrs.clone(),
             points: self.points.clone(),
         }
     }
@@ -35,12 +43,16 @@ impl LasArtifact {
     pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
+            header: snapshot.header,
+            vlrs: snapshot.vlrs,
             points: snapshot.points,
         }
     }
 
     pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
         self.schema = snapshot.schema;
+        self.header = snapshot.header;
+        self.vlrs = snapshot.vlrs;
         self.points = snapshot.points;
     }
 }

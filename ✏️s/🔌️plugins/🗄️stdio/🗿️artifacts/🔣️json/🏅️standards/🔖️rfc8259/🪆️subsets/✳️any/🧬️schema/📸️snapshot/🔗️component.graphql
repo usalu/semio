@@ -1,5 +1,29 @@
-# 🧬️ JsonSnapshot
+# 🧬️ JsonSnapshot schema — own JsonValue model (insertion-order + number-lexeme preserving).
+type JsonMember {
+  key: String!
+  value: JsonValue!
+}
+
+"""RFC8259 JSON value. Exactly one of the kind-specific fields is populated, matching `kind`."""
+type JsonValue {
+  kind: JsonValueKind!
+  boolValue: Boolean
+  numberLexeme: String
+  stringValue: String
+  arrayItems: [JsonValue!]
+  objectMembers: [JsonMember!]
+}
+
+enum JsonValueKind {
+  NULL
+  BOOL
+  NUMBER
+  STRING
+  ARRAY
+  OBJECT
+}
+
 type JsonSnapshot {
   schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
+  value: JsonValue! @state(class: PERSISTENT)
 }

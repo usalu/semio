@@ -1,6 +1,31 @@
 dialect grammar stdio.ifc.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.ifc' NL
-body = payload NL?
-payload = *OCTET
+; 📐️ Real ISO 10303-21 (Part-21) exchange-structure grammar — the actual syntax
+; `step::engine::part21::parse_part21`/`write_part21` implement. IFC4 rides this same
+; container grammar with a different EXPRESS schema layered on top (own `IfcEntity`/`IfcValue`
+; types in 🦀️component.rs), matching STEP's own snapshot text grammar shape.
+root = exchange_file
+exchange_file = 'ISO-10303-21;' header data end
+header = 'HEADER;' file_description file_name file_schema 'ENDSEC;'
+file_description = 'FILE_DESCRIPTION' '(' value_list ')' ';'
+file_name = 'FILE_NAME' '(' value_list ')' ';'
+file_schema = 'FILE_SCHEMA' '(' value_list ')' ';'
+data = 'DATA;' instance* 'ENDSEC;'
+end = 'END-ISO-10303-21;'
+instance = '#' id '=' instance_body ';'
+id = DIGIT+
+instance_body = simple_record | complex_record
+simple_record = keyword '(' value_list? ')'
+complex_record = '(' simple_record+ ')'
+keyword = UPPER (UPPER | DIGIT | '_')*
+value_list = value (',' value)*
+value = unset | derived | reference | string | enum | real | integer | aggregate | typed_value
+unset = '$'
+derived = '*'
+reference = '#' id
+string = "'" (SAFE_CHAR | "''" | escape)* "'"
+escape = '\' 'X' (HEX HEX | '2' '\' (HEX HEX HEX HEX)+ '\' 'X0' '\')
+enum = '.' (UPPER | DIGIT | '_')* '.'
+integer = '-'? DIGIT+
+real = '-'? DIGIT+ '.' DIGIT* (('E'|'e') ('+'|'-')? DIGIT+)?
+aggregate = '(' value_list? ')'
+typed_value = keyword '(' value_list? ')'

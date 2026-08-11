@@ -5,7 +5,12 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+/// 🧪️ F6: `dsl::DslRecord` added — gives this type `DslField` so `DwgMutation::SetSnapshot`'s
+/// payload can be `#[derive(dsl::DslOps)]`-derived (ac1018's `DwgSnapshot` has zero enums, zero
+/// tri-state fields — cleanly DERIVE-eligible, see `f6-recon-report.md` §3's decision rule and
+/// this ticket's `f6-dwg-ac1018-report.md` for the verification trail). Does not touch the
+/// existing hand-rolled `store::ArtifactDsl`/`store::ArtifactPack` envelope codecs below.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgSnapshot {
@@ -13,9 +18,27 @@ pub struct DwgSnapshot {
     pub schema: String,
     #[state(persistent)]
     pub version: String,
+    /// 🗓️ `maint_version` (RC, plain preamble byte 0x12) — cross-checked against LibreDWG's
+    /// `header.spec` (`FIELD_RC (maint_version, 0);` right after `dwg_version` at 0x11) and
+    /// verified on the real `architectural.dwg` fixture (byte 0x12 == 0x02, matching the
+    /// redundant `zero_one_or_three`-adjacent byte at 0x0B for the same file).
     #[state(persistent)]
     #[serde(default)]
+    pub maintenance_version: u8,
+    /// 🌐 `codepage` (RS, plain preamble bytes 0x13-0x14, little-endian) — LibreDWG's
+    /// `header.spec` documents this exact offset with `//@0x13: 29/30 for ANSI_1252`; the real
+    /// `architectural.dwg` fixture reads `30` there (AC1024, ANSI_1252), an exact match.
+    #[state(persistent)]
+    #[serde(default)]
+    pub codepage: u16,
+    #[state(persistent)]
+    #[serde(default)]
+    #[dsl(base64)]
     pub bytes: Vec<u8>,
+    /// 🗂️ Names of sections detected in the raw bytes (substring scan, or -- as a fallback -- a
+    /// fixed-offset label table read). Opaque by design: ac1018 is a deliberately frozen legacy
+    /// shim (Decision #5, see `DwgArtifact::to_snapshot`) that never determined per-section byte
+    /// ranges, so there is no honest `data` payload to carry per name -- do not expand this.
     #[state(persistent)]
     #[serde(default)]
     pub section_names: Vec<String>,
@@ -26,6 +49,8 @@ impl Default for DwgSnapshot {
         Self {
             schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
             version: String::new(),
+            maintenance_version: 0,
+            codepage: 0,
             bytes: Vec::new(),
             section_names: Vec::new(),
         }
@@ -55,6 +80,21 @@ fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
         return Err("invalid AC10xx version digits".into());
     }
     Ok(String::from_utf8_lossy(head).into_owned())
+}
+
+/// 🗓️🌐 Reads `maint_version` (offset 0x12) and `codepage` (offset 0x13-0x14 LE) from the plain
+/// (unencrypted) file-header preamble shared by every AC1015+ DWG file, per LibreDWG's own
+/// `header.spec` field order (`zero_one_or_three@0x0B`, `thumbnail_address@0x0D`,
+/// `dwg_version@0x11`, `maint_version@0x12`, `codepage@0x13`). Graceful zero-defaults when
+/// `bytes` is too short to reach these offsets -- never a hard error, matching the codec's own
+/// "never fabricate, degrade honestly" convention.
+fn parse_version_header_fields(bytes: &[u8]) -> (u8, u16) {
+    let maintenance_version = bytes.get(0x12).copied().unwrap_or(0);
+    let codepage = bytes
+        .get(0x13..0x15)
+        .map(|s| u16::from_le_bytes([s[0], s[1]]))
+        .unwrap_or(0);
+    (maintenance_version, codepage)
 }
 
 fn parse_section_names(bytes: &[u8]) -> Vec<String> {
@@ -90,10 +130,13 @@ fn parse_section_names(bytes: &[u8]) -> Vec<String> {
 
 pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let version = dwg_version_sentinel(bytes)?;
+    let (maintenance_version, codepage) = parse_version_header_fields(bytes);
     let section_names = parse_section_names(bytes);
     Ok(DwgSnapshot {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         version,
+        maintenance_version,
+        codepage,
         bytes: bytes.to_vec(),
         section_names,
     })

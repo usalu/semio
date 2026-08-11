@@ -1,6 +1,68 @@
 syntax = "proto3";
 package semio.s_stdio_step.snapshot;
+
+message StepTypedValue {
+  string type_name = 1;
+  StepValue value = 2;
+}
+
+message StepValue {
+  oneof kind {
+    bool unset = 1;
+    bool derived = 2;
+    int64 integer = 3;
+    double real = 4;
+    string string_value = 5;
+    string enum_value = 6;
+    uint64 reference = 7;
+    StepValueList aggregate = 8;
+    StepTypedValue typed_value = 9;
+  }
+}
+
+message StepValueList {
+  repeated StepValue items = 1;
+}
+
+message StepFileDescription {
+  repeated string description = 1;
+  string implementation_level = 2;
+}
+
+message StepFileName {
+  string name = 1;
+  string timestamp = 2;
+  repeated string author = 3;
+  repeated string organization = 4;
+  string preprocessor_version = 5;
+  string originating_system = 6;
+  string authorization = 7;
+}
+
+message StepFileSchema {
+  repeated string schemas = 1;
+}
+
+message StepHeader {
+  StepFileDescription file_description = 1;
+  StepFileName file_name = 2;
+  StepFileSchema file_schema = 3;
+}
+
+message StepComplexType {
+  string name = 1;
+  repeated StepValue args = 2;
+}
+
+message StepEntity {
+  uint64 id = 1;
+  string name = 2;
+  repeated StepValue args = 3;
+  repeated StepComplexType complex = 4;
+}
+
 message StepSnapshot {
   string schema = 1;
-  string text_wire = 2;
+  StepHeader header = 2;
+  repeated StepEntity entities = 3;
 }

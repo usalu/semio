@@ -1,3 +1,19 @@
-; abnf stdio.pdf snapshot
-document = payload
-payload = *OCTET
+; abnf stdio.pdf.1.7 snapshot -- ISO 32000-1 §7.5 byte-level file structure (real grammar, not a
+; placeholder; the snapshot's own text-side leaves under ../📝️text/ carry the full COS object
+; grammar these bytes decode into).
+pdf-file = header *indirect-object xref-table trailer
+header = "%PDF-" 1DIGIT "." 1DIGIT EOL
+indirect-object = 1*DIGIT SP 1*DIGIT SP "obj" EOL object EOL "endobj" EOL
+object = dict [SP "stream" EOL stream-data EOL "endstream"] / array / string / scalar
+array = "[" *(SP object) SP "]"
+string = "(" *OCTET ")" / "<" *(%x30-39 / %x41-46 / %x61-66) ">"
+scalar = 1*(%x21-27 / %x2A-3B / %x3D-7E) ; number / name / true / false / null / R-reference
+dict = "<<" *(SP name SP object) SP ">>"
+name = "/" *(%x21-2E / %x30-7E)
+stream-data = *OCTET ; the format's payload IS bytes at this leaf (filter-encoded or decoded)
+xref-table = "xref" EOL *xref-subsection
+xref-subsection = 1*DIGIT SP 1*DIGIT EOL *xref-entry
+xref-entry = 10DIGIT SP 5DIGIT SP ("n" / "f") SP EOL
+trailer = "trailer" EOL dict EOL "startxref" EOL 1*DIGIT EOL "%%EOF"
+EOL = %x0D.0A / %x0A / %x0D
+SP = 1*(%x20 / %x09)

@@ -1,6 +1,32 @@
 syntax = "proto3";
 package semio.s_stdio_bmp.artifact;
+
+enum BmpArtifactRowOrder {
+  BMP_ARTIFACT_ROW_ORDER_BOTTOM_UP = 0;
+  BMP_ARTIFACT_ROW_ORDER_TOP_DOWN = 1;
+}
+
+message BmpArtifactPaletteEntry {
+  uint32 b = 1;
+  uint32 g = 2;
+  uint32 r = 3;
+  uint32 reserved = 4;
+}
+
 message BmpArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 header_size = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  BmpArtifactRowOrder row_order = 5;
+  uint32 planes = 6;
+  uint32 bits_per_pixel = 7;
+  uint32 compression = 8;
+  uint32 image_size = 9;
+  int32 x_pixels_per_meter = 10;
+  int32 y_pixels_per_meter = 11;
+  uint32 colors_used = 12;
+  uint32 colors_important = 13;
+  repeated BmpArtifactPaletteEntry palette = 14;
+  bytes pixels = 15;
 }

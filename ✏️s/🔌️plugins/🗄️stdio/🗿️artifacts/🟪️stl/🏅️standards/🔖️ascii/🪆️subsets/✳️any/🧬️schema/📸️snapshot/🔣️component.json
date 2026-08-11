@@ -1,15 +1,26 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.stl/snapshot.json",
   "title": "StlSnapshot",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "text": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "StlTriangle": {
+      "type": "object",
+      "required": ["normal", "vertices"],
+      "properties": {
+        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        }
+      }
     }
+  },
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "solidName": { "type": "string", "x-semio-state": "persistent" },
+    "triangles": { "type": "array", "items": { "$ref": "#/$defs/StlTriangle" }, "x-semio-state": "persistent" }
   }
 }

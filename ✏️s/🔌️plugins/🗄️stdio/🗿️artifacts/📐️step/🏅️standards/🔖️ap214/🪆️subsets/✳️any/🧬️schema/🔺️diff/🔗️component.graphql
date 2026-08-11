@@ -1,5 +1,44 @@
-# 🧬️ StepDiff
+# 🔺️ StepDiff — handcrafted sparse diff mirroring the Rust `StepDiff` shape. `entities` is an
+# id-keyed triple; `entities.modified[].diff.args` is a SEPARATE index-keyed triple (Part-21
+# argument lists are positional).
+
+type StepArgModified {
+  index: Int!
+  value: StepValue!
+}
+type StepArgAdded {
+  index: Int!
+  value: StepValue!
+}
+type StepArgsDiff {
+  removed: [Int!]
+  modified: [StepArgModified!]
+  added: [StepArgAdded!]
+}
+
+type StepEntityDiff {
+  name: String
+  args: StepArgsDiff
+  complex: [StepComplexType!]
+}
+
+type StepEntityModified {
+  id: Int!
+  diff: StepEntityDiff!
+}
+type StepEntityAdded {
+  index: Int!
+  entity: StepEntity!
+}
+type StepEntitiesDiff {
+  removed: [Int!]
+  modified: [StepEntityModified!]
+  added: [StepEntityAdded!]
+}
+
 type StepDiff {
-  schema: String
-  PLACEHOLDER_TEXT_COLON String
+  fileDescription: StepFileDescription
+  fileName: StepFileName
+  fileSchema: StepFileSchema
+  entities: StepEntitiesDiff
 }

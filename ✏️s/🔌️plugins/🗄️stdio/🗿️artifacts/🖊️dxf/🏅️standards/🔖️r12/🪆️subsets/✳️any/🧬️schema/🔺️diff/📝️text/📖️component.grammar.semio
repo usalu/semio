@@ -1,6 +1,31 @@
 dialect grammar stdio.dxf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.dxf' NL
-body = payload NL?
-payload = *OCTET
+root = diff
+; wire text IS the JSON serialization of DxfDiff (protocol::OpText — serde_json); this
+; names the real sparse fields rather than restating RFC 8259's own JSON grammar
+diff = "{" (member ("," member)*)? "}"
+member = '"headerVars"' ":" named_diff
+       / '"tables"' ":" tables_diff
+       / '"blocks"' ":" indexed_diff
+       / '"entities"' ":" indexed_diff
+
+tables_diff = "{" (tmember ("," tmember)*)? "}"
+tmember = '"layers"' ":" named_diff
+        / '"styles"' ":" named_diff
+        / '"linetypes"' ":" named_diff
+
+named_diff = "{" (nmember ("," nmember)*)? "}"                     ; headerVars/layers/styles/linetypes
+nmember = '"removed"' ":" "[" STRING* "]"
+        / '"modified"' ":" "[" named_modified* "]"
+        / '"added"' ":" "[" named_added* "]"
+named_modified = "{" '"name"' ":" STRING "," '"diff"' ":" JSON_OBJECT "}"
+named_added = "{" '"index"' ":" INT "," ("\"headerVar\"" / "\"layer\"" / "\"style\"" / "\"linetype\"") ":" JSON_OBJECT "}"
+
+indexed_diff = "{" (imember ("," imember)*)? "}"                   ; blocks/entities
+imember = '"removed"' ":" "[" INT* "]"
+        / '"modified"' ":" "[" index_modified* "]"
+        / '"added"' ":" "[" index_added* "]"
+index_modified = "{" '"index"' ":" INT "," '"diff"' ":" entity_or_block_diff "}"
+index_added = "{" '"index"' ":" INT "," ("\"block\"" / "\"entity\"") ":" JSON_OBJECT "}"
+; a block's diff nests its own "entities": indexed_diff; an entity's diff is either
+; {"replace":{"entity":...}} (kind change) or one kind-tagged field-diff object
+entity_or_block_diff = JSON_OBJECT

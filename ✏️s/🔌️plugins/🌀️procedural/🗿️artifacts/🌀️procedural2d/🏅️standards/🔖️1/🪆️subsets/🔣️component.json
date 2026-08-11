@@ -1,0 +1,9 @@
+{
+  "artifact": "s.procedural.procedural2d",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained procedural2d 1"
+    }
+  }
+}

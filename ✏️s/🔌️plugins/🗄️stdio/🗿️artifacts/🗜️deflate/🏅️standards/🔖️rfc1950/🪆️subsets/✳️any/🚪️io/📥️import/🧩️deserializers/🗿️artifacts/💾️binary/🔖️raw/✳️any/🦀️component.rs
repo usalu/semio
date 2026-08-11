@@ -9,11 +9,12 @@ pub fn register() {}
 
 /// 🗜️ Zlib-compress binary payload into a DeflateSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<DeflateSnapshot, store::PackError> {
-    let bytes = crate::artifacts::deflate::engine::zlib_compress(&from.bytes)
+    let payload = crate::artifacts::deflate::engine::zlib_compress(&from.bytes)
         .map_err(|e| store::PackError::Schema(e))?;
     Ok(DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        bytes,
+        payload,
+        ..Default::default()
     })
 }
 

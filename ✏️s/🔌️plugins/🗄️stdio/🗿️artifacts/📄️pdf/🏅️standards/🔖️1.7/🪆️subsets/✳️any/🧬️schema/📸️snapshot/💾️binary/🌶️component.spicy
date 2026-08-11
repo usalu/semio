@@ -1,4 +1,23 @@
-module Stdio_pdf_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+module Stdio_pdf_1_7_Snapshot;
+
+# ISO 32000-1 §7.5.2 file header -- the real bytes `sniff_pdf` checks (not a placeholder).
+type Header = unit {
+    magic: bytes &size=5;      # "%PDF-"
+    major: bytes &size=1;
+    dot: bytes &size=1;
+    minor: bytes &size=1;
+};
+
+# Everything past the header is offset-indexed via the trailing xref table (`⚙️engine::build_xref`
+# walks it by byte offset, not sequential field decoding), so the remainder is described
+# structurally (indirect objects / xref table / trailer) rather than force-fit into a fixed
+# sequential Spicy unit -- see the sibling ../📝️text/📖️component.grammar.semio for the full COS
+# object grammar those offset-addressed regions decode into.
+type IndirectObjectFraming = unit {
+    body: bytes &eod;
+};
+
+public type Document = unit {
+    header: Header;
+    rest: IndirectObjectFraming;
 };

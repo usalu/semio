@@ -1,7 +1,7 @@
 //! 🏗️ XlsxBuilder — local ArtifactBuilder until SDK Wave 3.
 
 use semio_framework_plugin::ArtifactBuilder;
-use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxRow, XlsxSheet};
+use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation, XlsxSnapshot};
 
 //#region 🔖️Builder
@@ -44,24 +44,19 @@ impl ArtifactBuilder for XlsxBuilder {
 
 //#region 🔖️TypedConstructors
 /// 🧱️ Typed content constructors — build a workbook from sheets and rows of cell values,
-/// auto-assigning A1-style references (`crate::artifacts::xlsx::engine::column_letter`).
+/// auto-assigning `(row, col)` coordinates left-to-right (`col` 0-based).
 impl XlsxBuilder {
     /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
     pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
-        self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), rows: Vec::new() });
+        self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
         self.rebuild()
     }
 
     /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
-    /// A1-style references left-to-right for the given `index`.
+    /// `(row: index, col: 0..)` coordinates left-to-right.
     pub fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
         if let Some(sheet) = self.snapshot.workbook.sheets.last_mut() {
-            let cells = values
-                .into_iter()
-                .enumerate()
-                .map(|(col, value)| XlsxCell { reference: format!("{}{index}", crate::artifacts::xlsx::engine::column_letter(col as u32)), value })
-                .collect();
-            sheet.rows.push(XlsxRow { index, cells });
+            sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
         }
         self.rebuild()
     }

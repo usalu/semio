@@ -1,5 +1,7 @@
 # 🧬️ LasArtifact
 type LasArtifact {
   schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_BYTES_COLON String! @state(class: PERSISTENT)
+  header: LasHeader! @state(class: PERSISTENT)
+  vlrs: [LasVlr!]! @state(class: PERSISTENT)
+  points: [LasPoint!]! @state(class: PERSISTENT)
 }

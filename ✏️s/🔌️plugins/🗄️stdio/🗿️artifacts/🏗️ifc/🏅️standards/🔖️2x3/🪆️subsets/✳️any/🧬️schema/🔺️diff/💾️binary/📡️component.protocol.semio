@@ -1,0 +1,3 @@
+dialect protocol stdio.ifc.2x3.diff
+magic = %x00
+payload = *OCTET

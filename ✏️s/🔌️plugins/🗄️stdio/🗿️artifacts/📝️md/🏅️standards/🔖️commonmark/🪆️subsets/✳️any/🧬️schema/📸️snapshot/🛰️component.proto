@@ -1,6 +1,57 @@
 syntax = "proto3";
 package semio.s_stdio_md.snapshot;
+
+message MdInline {
+  oneof node {
+    MdText text = 1;
+    MdEmphasis emphasis = 2;
+    MdStrong strong = 3;
+    MdCode code = 4;
+    MdLink link = 5;
+    MdImage image = 6;
+    MdSoftBreak soft_break = 7;
+    MdHardBreak hard_break = 8;
+    MdHtmlInline html_inline = 9;
+  }
+}
+
+message MdText { string text = 1; }
+message MdEmphasis { repeated MdInline inlines = 1; }
+message MdStrong { repeated MdInline inlines = 1; }
+message MdCode { string literal = 1; }
+message MdLink { repeated MdInline text = 1; string url = 2; optional string title = 3; }
+message MdImage { string alt = 1; string url = 2; optional string title = 3; }
+message MdSoftBreak {}
+message MdHardBreak {}
+message MdHtmlInline { string raw = 1; }
+
+message MdBlock {
+  oneof node {
+    MdHeading heading = 1;
+    MdParagraph paragraph = 2;
+    MdList list = 3;
+    MdCodeBlock code_block = 4;
+    MdBlockQuote block_quote = 5;
+    MdThematicBreak thematic_break = 6;
+    MdHtmlBlock html_block = 7;
+  }
+}
+
+message MdHeading { uint32 level = 1; repeated MdInline inlines = 2; }
+message MdParagraph { repeated MdInline inlines = 1; }
+message MdList {
+  bool ordered = 1;
+  optional uint32 start = 2;
+  bool tight = 3;
+  repeated MdBlockList items = 4;
+}
+message MdBlockList { repeated MdBlock blocks = 1; }
+message MdCodeBlock { optional string info = 1; string literal = 2; }
+message MdBlockQuote { repeated MdBlock blocks = 1; }
+message MdThematicBreak {}
+message MdHtmlBlock { string raw = 1; }
+
 message MdSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  repeated MdBlock blocks = 2;
 }

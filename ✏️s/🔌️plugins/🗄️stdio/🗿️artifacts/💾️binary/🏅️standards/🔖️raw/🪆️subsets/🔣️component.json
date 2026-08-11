@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.binary",
+  "standard": "raw",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained binary raw"
+    }
+  }
+}

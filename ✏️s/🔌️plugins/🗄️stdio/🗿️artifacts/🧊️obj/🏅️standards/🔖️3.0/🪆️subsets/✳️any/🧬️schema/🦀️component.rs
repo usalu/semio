@@ -1,4 +1,4 @@
-//! 🧬️ ObjArtifact schema — full artifact state.
+//! 🧬️ ObjArtifact schema — full artifact state, mirrors `ObjSnapshot` field-for-field.
 
 use crate::artifacts::obj::ObjSnapshot;
 use schema::ArtifactSchema;
@@ -24,6 +24,24 @@ pub struct ObjArtifact {
     #[state(persistent)]
     #[serde(default)]
     pub faces: Vec<crate::artifacts::obj::schema::snapshot::ObjFace>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub groups: Vec<crate::artifacts::obj::schema::snapshot::ObjGroup>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub objects: Vec<crate::artifacts::obj::schema::snapshot::ObjObject>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtllib: Option<String>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub usemtl: Vec<crate::artifacts::obj::schema::snapshot::ObjUsemtlRange>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub smoothing_groups: Vec<crate::artifacts::obj::schema::snapshot::ObjSmoothingRange>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub unknown_statements: Vec<crate::artifacts::obj::schema::snapshot::ObjUnknownStatement>,
 }
 //#endregion 🔖️Artifact
 
@@ -43,6 +61,12 @@ impl ObjArtifact {
             texcoords: self.texcoords.clone(),
             normals: self.normals.clone(),
             faces: self.faces.clone(),
+            groups: self.groups.clone(),
+            objects: self.objects.clone(),
+            mtllib: self.mtllib.clone(),
+            usemtl: self.usemtl.clone(),
+            smoothing_groups: self.smoothing_groups.clone(),
+            unknown_statements: self.unknown_statements.clone(),
         }
     }
 
@@ -54,6 +78,12 @@ impl ObjArtifact {
             texcoords: snapshot.texcoords,
             normals: snapshot.normals,
             faces: snapshot.faces,
+            groups: snapshot.groups,
+            objects: snapshot.objects,
+            mtllib: snapshot.mtllib,
+            usemtl: snapshot.usemtl,
+            smoothing_groups: snapshot.smoothing_groups,
+            unknown_statements: snapshot.unknown_statements,
         }
     }
 
@@ -64,6 +94,12 @@ impl ObjArtifact {
         self.texcoords = snapshot.texcoords;
         self.normals = snapshot.normals;
         self.faces = snapshot.faces;
+        self.groups = snapshot.groups;
+        self.objects = snapshot.objects;
+        self.mtllib = snapshot.mtllib;
+        self.usemtl = snapshot.usemtl;
+        self.smoothing_groups = snapshot.smoothing_groups;
+        self.unknown_statements = snapshot.unknown_statements;
     }
 }
 //#endregion 🔖️Conversions

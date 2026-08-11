@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.deflate",
+  "standard": "rfc1950",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained deflate rfc1950"
+    }
+  }
+}

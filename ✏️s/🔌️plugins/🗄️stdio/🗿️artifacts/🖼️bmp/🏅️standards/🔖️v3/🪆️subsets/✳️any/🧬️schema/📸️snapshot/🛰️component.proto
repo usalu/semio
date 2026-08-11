@@ -1,6 +1,35 @@
 syntax = "proto3";
 package semio.s_stdio_bmp.snapshot;
+
+// BITMAPINFOHEADER's signed height field: BOTTOM_UP (positive) or TOP_DOWN (negative).
+enum BmpRowOrder {
+  BMP_ROW_ORDER_BOTTOM_UP = 0;
+  BMP_ROW_ORDER_TOP_DOWN = 1;
+}
+
+// One BITMAPINFOHEADER color-table entry, on-disk field order (present when bits_per_pixel <= 8).
+message BmpPaletteEntry {
+  uint32 b = 1;
+  uint32 g = 2;
+  uint32 r = 3;
+  uint32 reserved = 4;
+}
+
+// Persisted stdio.bmp snapshot: full BITMAPINFOHEADER + palette + decoded canonical RGBA pixels.
 message BmpSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  uint32 header_size = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  BmpRowOrder row_order = 5;
+  uint32 planes = 6;
+  uint32 bits_per_pixel = 7;
+  uint32 compression = 8;
+  uint32 image_size = 9;
+  int32 x_pixels_per_meter = 10;
+  int32 y_pixels_per_meter = 11;
+  uint32 colors_used = 12;
+  uint32 colors_important = 13;
+  repeated BmpPaletteEntry palette = 14;
+  bytes pixels = 15;
 }

@@ -1,3 +1,4 @@
 dialect protocol stdio.bmp.mutations
-magic = %x00
-payload = *OCTET
+; protocol::OpBinary raw JSON encoding of BmpMutation — NOT wrapped in the shared `.semio`
+; binary envelope
+payload = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)

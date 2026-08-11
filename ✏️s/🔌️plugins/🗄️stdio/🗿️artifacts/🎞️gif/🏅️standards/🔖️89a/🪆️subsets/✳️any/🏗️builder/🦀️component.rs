@@ -8,7 +8,7 @@
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::GifDiff;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifFrame, GifSnapshot};
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
 
 //#region 🔖️Builder
 #[derive(Clone, Debug, Default)]
@@ -31,6 +31,31 @@ impl GifBuilder {
     /// 🏗️ Sets the NETSCAPE2.0 loop count (`None` = no loop extension, plays once).
     pub fn set_loop_count(mut self, loop_count: Option<u16>) -> Self {
         self.snapshot.loop_count = loop_count;
+        self
+    }
+    /// 🏗️ Sets the Global Color Table.
+    pub fn set_global_color_table(mut self, gct: Option<GifColorTable>) -> Self {
+        self.snapshot.gct = gct;
+        self
+    }
+    /// 🏗️ Sets the logical screen's background color index.
+    pub fn set_background_color_index(mut self, index: u8) -> Self {
+        self.snapshot.background_color_index = index;
+        self
+    }
+    /// 🏗️ Sets the logical screen's pixel aspect ratio byte.
+    pub fn set_pixel_aspect_ratio(mut self, ratio: u8) -> Self {
+        self.snapshot.pixel_aspect_ratio = ratio;
+        self
+    }
+    /// 🏗️ Appends one comment extension.
+    pub fn add_comment(mut self, text: String) -> Self {
+        self.snapshot.comments.push(text);
+        self
+    }
+    /// 🏗️ Appends one non-NETSCAPE application extension verbatim.
+    pub fn add_app_extension(mut self, extension: GifAppExtension) -> Self {
+        self.snapshot.app_extensions.push(extension);
         self
     }
 }

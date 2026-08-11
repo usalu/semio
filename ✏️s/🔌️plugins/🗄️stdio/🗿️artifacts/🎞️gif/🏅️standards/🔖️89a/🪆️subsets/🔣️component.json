@@ -1,0 +1,9 @@
+{
+  "artifact": "s.stdio.gif",
+  "standard": "89a",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained gif 89a"
+    }
+  }
+}

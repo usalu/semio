@@ -1,6 +1,44 @@
 syntax = "proto3";
 package semio.s_stdio_ifc.diff;
+
+import "snapshot.proto";
+
+message IfcArgModified {
+  uint64 index = 1;
+  semio.s_stdio_ifc.snapshot.IfcValue value = 2;
+}
+message IfcArgAdded {
+  uint64 index = 1;
+  semio.s_stdio_ifc.snapshot.IfcValue value = 2;
+}
+message IfcArgsDiff {
+  repeated uint64 removed = 1;
+  repeated IfcArgModified modified = 2;
+  repeated IfcArgAdded added = 3;
+}
+
+message IfcEntityDiff {
+  string name = 1;
+  IfcArgsDiff args = 2;
+  repeated semio.s_stdio_ifc.snapshot.IfcComplexType complex = 3;
+}
+message IfcEntityModified {
+  uint64 id = 1;
+  IfcEntityDiff diff = 2;
+}
+message IfcEntityAdded {
+  uint64 index = 1;
+  semio.s_stdio_ifc.snapshot.IfcEntity entity = 2;
+}
+message IfcEntitiesDiff {
+  repeated uint64 removed = 1;
+  repeated IfcEntityModified modified = 2;
+  repeated IfcEntityAdded added = 3;
+}
+
 message IfcDiff {
-  string schema = 1;
-  string text_wire = 2;
+  repeated semio.s_stdio_ifc.snapshot.IfcValue file_description = 1;
+  repeated semio.s_stdio_ifc.snapshot.IfcValue file_name = 2;
+  repeated semio.s_stdio_ifc.snapshot.IfcValue file_schema = 3;
+  IfcEntitiesDiff entities = 4;
 }

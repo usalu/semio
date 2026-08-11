@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s_stdio_pdf.diff;
+
 message PdfDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional double width = 1;
+  optional double height = 2;
+  optional string text = 3;
 }

@@ -1,6 +1,48 @@
 dialect grammar stdio.step.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.step' NL
-body = payload NL?
-payload = *OCTET
+; A `StepDiff` op-text line is the exact `serde_json::to_string` of the Rust struct — a single-line
+; JSON object, camelCase keys, absent fields omitted (never emitted as `null`). `StepValue` is
+; serde's default externally-tagged shape: unit variants (`unset`/`derived`) serialize as a bare
+; string; tuple/struct variants as a single-key object (see `📸️snapshot/🟦️component.ts` for the
+; exact TS union this mirrors).
+root = diff-line
+diff-line = diff-object NL?
+diff-object = '{' [ header-member *( ',' header-member ) ] [ entities-member ] '}'
+header-member = '"fileDescription"' ':' file-description-object
+              / '"fileName"' ':' file-name-object
+              / '"fileSchema"' ':' file-schema-object
+entities-member = '"entities"' ':' entities-object
+entities-object = '{' [ removed-member ',' ] [ modified-member ',' ] [ added-member ] '}'
+removed-member = '"removed"' ':' '[' *( json-number ',' ) ']'
+modified-member = '"modified"' ':' '[' *( entity-modified ',' ) ']'
+entity-modified = '{' '"id"' ':' json-number ',' '"diff"' ':' entity-diff-object '}'
+added-member = '"added"' ':' '[' *( entity-added ',' ) ']'
+entity-added = '{' '"index"' ':' json-number ',' '"entity"' ':' entity-object '}'
+entity-diff-object = '{' *( entity-diff-member ',' ) '}'
+entity-diff-member = '"name"' ':' json-string
+                    / '"args"' ':' args-diff-object
+                    / '"complex"' ':' complex-array
+; `args` is a SEPARATE index-keyed triple (Part-21 argument lists are positional); its items are
+; `StepValue` directly — the "diff" IS the whole new value (weak collection, no sub-diff).
+args-diff-object = '{' [ args-removed ',' ] [ args-modified ',' ] [ args-added ] '}'
+args-removed = '"removed"' ':' '[' *( json-number ',' ) ']'
+args-modified = '"modified"' ':' '[' *( arg-modified ',' ) ']'
+arg-modified = '{' '"index"' ':' json-number ',' '"value"' ':' step-value '}'
+args-added = '"added"' ':' '[' *( arg-added ',' ) ']'
+arg-added = '{' '"index"' ':' json-number ',' '"value"' ':' step-value '}'
+step-value = 'unset' / 'derived'
+           / '{' '"integer"' ':' json-integer '}'
+           / '{' '"real"' ':' json-number '}'
+           / '{' '"string"' ':' json-string '}'
+           / '{' '"enum"' ':' json-string '}'
+           / '{' '"reference"' ':' json-number '}'
+           / '{' '"aggregate"' ':' '[' *( step-value ',' ) ']' '}'
+           / '{' '"typedValue"' ':' '{' '"typeName"' ':' json-string ',' '"value"' ':' step-value '}' '}'
+entity-object = '{' '"id"' ':' json-number ',' '"name"' ':' json-string ',' *( entity-diff-member ',' ) '}'
+complex-array = '[' *( complex-object ',' ) ']'
+complex-object = '{' '"name"' ':' json-string ',' '"args"' ':' '[' *( step-value ',' ) ']' '}'
+file-description-object = '{' '"description"' ':' '[' *( json-string ',' ) ']' ',' '"implementationLevel"' ':' json-string '}'
+file-name-object = '{' *( json-string ) '}' ; seven string/string-array members, see snapshot facet
+file-schema-object = '{' '"schemas"' ':' '[' *( json-string ',' ) ']' '}'
+json-string = DQUOTE *CHAR DQUOTE
+json-number = [ '-' ] 1*DIGIT [ '.' 1*DIGIT ]
+json-integer = [ '-' ] 1*DIGIT

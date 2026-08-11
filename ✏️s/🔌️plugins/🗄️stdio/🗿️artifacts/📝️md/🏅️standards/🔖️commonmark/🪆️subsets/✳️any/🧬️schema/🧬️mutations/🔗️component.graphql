@@ -1,2 +1,19 @@
-# schema facet
- type Placeholder { body: String! }
+enum MdMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  INSERT_BLOCK
+  REMOVE_BLOCK
+  REPLACE_BLOCK
+  SET_INLINES
+}
+
+""" 🧬️ MdMutation union, tagged-union flattened. Every `path`-carrying variant addresses the
+CONTAINER `index` lives in (`path: []` = the top-level document blocks). """
+type MdMutation {
+  mutation: MdMutationKind!
+  snapshot: MdSnapshot
+  path: [MdPathStep!]
+  index: Int
+  block: MdBlock
+  inlines: [MdInline!]
+}
