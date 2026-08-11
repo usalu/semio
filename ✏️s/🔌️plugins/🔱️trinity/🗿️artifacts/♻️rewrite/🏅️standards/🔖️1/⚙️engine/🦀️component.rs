@@ -490,6 +490,7 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
+    crate::apps::rewrite::config::schema::register_app_schema();
 }
 //#endregion 🔖️Register
 

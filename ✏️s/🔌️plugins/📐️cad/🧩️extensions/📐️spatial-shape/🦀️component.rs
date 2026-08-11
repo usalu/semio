@@ -1,6 +1,5 @@
 //! 🧩️ CAD spatial-shape extension — contributes shape stat/property computers to `cad-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 
@@ -34,13 +33,16 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", "0.1.0")
         .extends("cad")
-        .contributes(Contribution::CadComputer {
-            app_id: HOST_APP_ID.into(),
-            module_id: MODULE_ID.into(),
-            label: "Spatial Shape".into(),
-            icon_id: "box".into(),
-            computers_json: serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "cad.computer",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": MODULE_ID,
+                "label": "Spatial Shape",
+                "iconId": "box",
+                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -55,12 +57,12 @@ mod tests {
     fn bundle_contributes_spatial_shape_for_cad_play() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extends, "cad");
-        assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::CadComputer { app_id, module_id, computers_json, .. } = &manifest.contributions[0] else {
-            panic!("expected CadComputer");
-        };
-        assert_eq!(app_id, HOST_APP_ID);
-        assert_eq!(module_id, MODULE_ID);
+        assert_eq!(manifest.topic_contributions.len(), 1);
+        let topic_contribution = &manifest.topic_contributions[0];
+        assert_eq!(topic_contribution.topic, "cad.computer");
+        assert_eq!(topic_contribution.payload["appId"], HOST_APP_ID);
+        assert_eq!(topic_contribution.payload["moduleId"], MODULE_ID);
+        let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
         let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("computers_json");
         assert_eq!(parsed["statComputers"], serde_json::json!(["spatial.shape.geometry"]));
     }

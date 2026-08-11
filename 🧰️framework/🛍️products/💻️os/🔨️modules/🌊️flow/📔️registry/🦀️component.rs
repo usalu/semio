@@ -177,8 +177,18 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) {
     let _ = (spec.name, spec.version);
 }
 
+/// 🗂️ `flow.extension` topic payload shape carried by the open `TopicContribution`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FlowExtensionTopicPayload {
+    manifest_json: String,
+}
+
+const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
+
 /// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
 /// 🔌️ Installs or refreshes contributed flow.extension manifests from host-pushed contributionsJson.
+/// 🗂️ Reads the open `TopicContribution` (`"flow.extension"` topic) shape per entry.
 pub fn sync_host_flow_extension_contributions(contributions_json: &str) {
     use std::sync::Mutex;
     static LAST: Mutex<String> = Mutex::new(String::new());
@@ -191,7 +201,13 @@ pub fn sync_host_flow_extension_contributions(contributions_json: &str) {
     }
     if let Ok(entries) = serde_json::from_str::<Vec<semio_framework::ProgramContributionEntry>>(contributions_json) {
         for entry in entries {
-            if let semio_framework::Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
+            let topic_manifest_json = entry
+                .topic_contribution
+                .as_ref()
+                .filter(|topic_contribution| topic_contribution.topic == FLOW_EXTENSION_TOPIC)
+                .and_then(|topic_contribution| topic_contribution.decode::<FlowExtensionTopicPayload>().ok())
+                .map(|payload| payload.manifest_json);
+            if let Some(manifest_json) = topic_manifest_json {
                 install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
             }
         }

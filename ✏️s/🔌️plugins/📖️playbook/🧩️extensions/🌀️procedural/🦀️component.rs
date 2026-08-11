@@ -7,7 +7,7 @@ use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
-    Contribution, ArtifactApp, ArtifactView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
+    ArtifactApp, ArtifactView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -843,15 +843,18 @@ fn module_plugin_bundle() -> Plugin {
 fn module_extension_bundle() -> ExtensionBundle {
     ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
         .extends("playbook")
-        .contributes(Contribution::PlaybookBlockKind {
-            app_id: "playbook-play".into(),
-            block_kind: "buildingComponent".into(),
-            label: "Building Component".into(),
-            icon_id: "building".into(),
-            default_value_json: r#"{"height":6,"radius":0.5,"sides":6}"#.into(),
-            params_body_key: BODY_PARAMS.into(),
-            preview_body_key: BODY_PREVIEW.into(),
-        })
+        .contributes_topic(
+            "playbook.blockKind",
+            serde_json::json!({
+                "appId": "playbook-play",
+                "blockKind": "buildingComponent",
+                "label": "Building Component",
+                "iconId": "building",
+                "defaultValueJson": r#"{"height":6,"radius":0.5,"sides":6}"#,
+                "paramsBodyKey": BODY_PARAMS,
+                "previewBodyKey": BODY_PREVIEW,
+            }),
+        )
 }
 
 semio_framework_plugin::plugin_exports!(module_plugin_bundle);
@@ -898,13 +901,13 @@ mod tests {
     fn module_manifest_contributes_building_component() {
         let bundle = module_extension_bundle();
         let manifest = bundle.manifest;
-        assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::PlaybookBlockKind { block_kind, params_body_key, preview_body_key, .. } = &manifest.contributions[0] else {
-            panic!("expected a PlaybookBlockKind contribution");
-        };
-        assert_eq!(block_kind, "buildingComponent");
-        assert_eq!(params_body_key, BODY_PARAMS);
-        assert_eq!(preview_body_key, BODY_PREVIEW);
+        assert_eq!(manifest.topic_contributions.len(), 1);
+        let topic = &manifest.topic_contributions[0];
+        assert_eq!(topic.topic, "playbook.blockKind");
+        let payload = topic.payload.as_object().expect("object payload");
+        assert_eq!(payload["blockKind"], "buildingComponent");
+        assert_eq!(payload["paramsBodyKey"], BODY_PARAMS);
+        assert_eq!(payload["previewBodyKey"], BODY_PREVIEW);
     }
 
     #[test]

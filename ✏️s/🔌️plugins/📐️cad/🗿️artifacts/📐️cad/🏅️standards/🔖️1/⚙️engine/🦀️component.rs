@@ -14,7 +14,7 @@ use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, 
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_framework_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_framework_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
-use semio_framework::{parse_contributions, Contribution, MeshImporter};
+use semio_framework::{parse_contributions, MeshImporter};
 use std::sync::{Mutex, OnceLock};
 use semio_framework_plugin::{mesh_from_kind, MeshData, MediaFormat, WorldProjectionConfig};
 use serde_json::Value;
@@ -692,6 +692,27 @@ fn last_cad_computer_contributions_json() -> &'static Mutex<String> {
     SLOT.get_or_init(|| Mutex::new(String::new()))
 }
 
+const CAD_COMPUTER_TOPIC: &str = "cad.computer";
+
+/// 🗂️ `cad.computer` topic payload shape (`TopicContribution` counterpart, ex `Contribution::CadComputer`).
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CadComputerTopicPayload {
+    app_id: String,
+    module_id: String,
+    computers_json: String,
+}
+
+/// 🗂️ Reads the open `TopicContribution` (`"cad.computer"` topic) shape per entry.
+fn cad_computer_fields(entry: &semio_framework::ProgramContributionEntry) -> Option<(String, String, String)> {
+    let topic_contribution = entry.topic_contribution.as_ref()?;
+    if topic_contribution.topic != CAD_COMPUTER_TOPIC {
+        return None;
+    }
+    let payload = topic_contribution.decode::<CadComputerTopicPayload>().ok()?;
+    Some((payload.app_id, payload.module_id, payload.computers_json))
+}
+
 /// 🧩️ Parses and tracks host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
 pub fn sync_cad_computer_contributions(contributions_json: &str) {
     let Ok(mut last) = last_cad_computer_contributions_json().lock() else {
@@ -701,7 +722,7 @@ pub fn sync_cad_computer_contributions(contributions_json: &str) {
         return;
     }
     for entry in parse_contributions(contributions_json) {
-        let Contribution::CadComputer { app_id, module_id, computers_json, .. } = entry.contribution else {
+        let Some((app_id, module_id, computers_json)) = cad_computer_fields(&entry) else {
             continue;
         };
         if app_id != "cad-play" {

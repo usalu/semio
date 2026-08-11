@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.epw",
+  "standard": "energyplus",
+  "subsets": {
+    "*": { "name": "Unconstrained epw energyplus" }
+  }
+}

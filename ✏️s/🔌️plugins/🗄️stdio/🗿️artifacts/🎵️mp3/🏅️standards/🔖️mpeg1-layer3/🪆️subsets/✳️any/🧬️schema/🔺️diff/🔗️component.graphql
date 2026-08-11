@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type Mp3DiffEntry {
+  key: String!
+  value: String!
+}
+type Mp3Diff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [Mp3DiffEntry!]! @state(class: PERSISTENT)
+}

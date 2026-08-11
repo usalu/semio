@@ -29,7 +29,8 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
-    
+    crate::apps::fem3d::config::schema::register_app_schema();
+
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::artifacts::fem3d::FEM_3D_SCHEMA);
 }
 

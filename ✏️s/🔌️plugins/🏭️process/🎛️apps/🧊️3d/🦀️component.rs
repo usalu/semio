@@ -413,7 +413,7 @@ pub(crate) mod testkit {
     /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
     fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
         use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
-        use semio_framework::{Contribution, ProgramContributionEntry};
+        use semio_framework::{ProgramContributionEntry, TopicContribution};
         fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
             CapabilityParameter { id: id.into(), label: label.into(), value }
         }
@@ -467,23 +467,29 @@ pub(crate) mod testkit {
         let entries = vec![
             ProgramContributionEntry {
                 plugin_id: "process-wood".into(),
-                contribution: Contribution::ProcessMachines {
-                    app_id: "process3d-play".into(),
-                    module_id: "wood".into(),
-                    label: "Wood".into(),
-                    icon_id: "beam".into(),
-                    machines_json: serde_json::to_string(&wood_machines).unwrap(),
-                },
+                topic_contribution: Some(TopicContribution::new(
+                    "process.machines",
+                    serde_json::json!({
+                        "appId": "process3d-play",
+                        "moduleId": "wood",
+                        "label": "Wood",
+                        "iconId": "beam",
+                        "machinesJson": serde_json::to_string(&wood_machines).unwrap(),
+                    }),
+                )),
             },
             ProgramContributionEntry {
                 plugin_id: "process-metal".into(),
-                contribution: Contribution::ProcessMachines {
-                    app_id: "process3d-play".into(),
-                    module_id: "metal".into(),
-                    label: "Metal".into(),
-                    icon_id: "wrench".into(),
-                    machines_json: serde_json::to_string(&metal_machines).unwrap(),
-                },
+                topic_contribution: Some(TopicContribution::new(
+                    "process.machines",
+                    serde_json::json!({
+                        "appId": "process3d-play",
+                        "moduleId": "metal",
+                        "label": "Metal",
+                        "iconId": "wrench",
+                        "machinesJson": serde_json::to_string(&metal_machines).unwrap(),
+                    }),
+                )),
             },
         ];
         let json = serde_json::to_string(&entries).unwrap();

@@ -1,11 +1,9 @@
 #!/usr/bin/env bun
-/** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/board-2d/terrain/node-graph/tiled-map surface family. */
+/** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/terrain/node-graph/tiled-map surface family (puzzle's `board-2d` surface now lives in the puzzle plugin crate itself). */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
-    // 🧩 `board-2d` (default feature) depends on the puzzle plugin crate; keep the browser pkg
-    // buildable for GIS/terrain/node-graph/paint while puzzle 3d play-app sources are repaired.
     runWasmPackWebBuild({
       rsDir: this.root,
       skipEnvVar: "FRAMEWORK_SURFACE_RS_SKIP_WASM_BUILD",

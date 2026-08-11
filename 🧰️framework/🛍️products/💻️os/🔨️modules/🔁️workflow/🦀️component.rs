@@ -14,19 +14,19 @@ use std::collections::{HashMap, HashSet};
 
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
 
-/// 🪶️ W3 "the inversion" document schema — the persisted `s.workflow` artifact (graph + parameters +
+/// 🪶️ W3 "the inversion" document schema — the persisted `os.workflow` artifact (graph + parameters +
 /// inputs/bindings, see [`WorkflowSnapshot`]), distinct from `WORKFLOW_SCHEMA` (the bare graph-only
 /// sub-shape still embedded as `WorkflowSnapshot.graph`). Registered as a builtin artifact kind by
 /// os-core's `seed_builtin_artifact_kinds`.
-pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
+pub const S_WORKFLOW_SCHEMA: &str = "os.workflow";
 
-/// 🚧️ W5/W6: `s.run`/`s.automation` schema ids are reserved here (the plan's schema lattice puts
+/// 🚧️ W5/W6: `os.run`/`os.automation` schema ids are reserved here (the plan's schema lattice puts
 /// `RunArtifact`/`AutomationDocument` in this crate, execution in `🏃️run`) — full bodies are
 /// deliberately NOT built in W3 (SpaceRunner rework is W5, automation dispatcher is W6); inventing a
 /// shape now without the runner rework driving it risks rework. See
 /// `.claude/plans/the-final-goal-for-jolly-spindle.md` `### Workflow / Run / Automation (Track C)`.
-pub const S_RUN_SCHEMA: &str = "s.run";
-pub const S_AUTOMATION_SCHEMA: &str = "s.automation";
+pub const S_RUN_SCHEMA: &str = "os.run";
+pub const S_AUTOMATION_SCHEMA: &str = "os.automation";
 
 //#region 🔖️MediaContract
 /// 🤝️ A connect-time negotiated wire contract between two `WorkflowMediaPort`s — stored on
@@ -1011,12 +1011,12 @@ pub struct WorkflowOutputBinding {
     pub path_template: String,
 }
 
-/// 🕸️ The `s.workflow` persisted artifact — a non-destructive pipeline of connected apps (`graph`),
+/// 🕸️ The `os.workflow` persisted artifact — a non-destructive pipeline of connected apps (`graph`),
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[dsl(id = "s.workflow")]
+#[dsl(id = "os.workflow")]
 pub struct WorkflowSnapshot {
     pub schema: String,
     #[dsl(block)]
@@ -1711,7 +1711,7 @@ impl dsl::DslField for RunNodeStatus {
 }
 
 /// 🎬️ Who/what started a run — `Manual` (a dev/CLI invocation; `actor` mirrors `AppCommand::Hello`'s
-/// own actor string) or `Automation` (W6's dispatcher, referencing the triggering `s.automation`
+/// own actor string) or `Automation` (W6's dispatcher, referencing the triggering `os.automation`
 /// artifact + the event fingerprint that fired it — not built this wave, field carried for forward
 /// compat only). Hand-crafted `dsl::DslField` (`Shape::Record`) mirroring `MediaContract`'s own
 /// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
@@ -1866,7 +1866,7 @@ pub struct RunLogLine {
 //#endregion 🔖️RunRecords
 
 //#region 🔖️RunArtifactBody
-/// 🏃️ The `s.run` persisted artifact (W5 Lane A) — one headless workflow execution's full record:
+/// 🏃️ The `os.run` persisted artifact (W5 Lane A) — one headless workflow execution's full record:
 /// which workflow/checkpoint/input snapshot it ran against, its resolved parameter overlay, where its
 /// outputs landed, per-node `RunNodeRecord`s (the new memoization ground truth), and a `sealed` flag
 /// that — once set by `RunMutation::Seal` — makes the document immutable (`RunMutation::validate`
@@ -2538,7 +2538,7 @@ mod tests {
             input_snapshot_id: "snap-1".into(),
             parameter_values: Vec::new(),
             output_collection_ref: "collections/out".into(),
-            trigger: RunTrigger::Automation { automation_ref: "s.automation/a1".into(), event_fingerprint: "evt-1".into() },
+            trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
         });
         store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
         store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });

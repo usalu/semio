@@ -5,6 +5,7 @@
 /// `ArtifactPack` codec so `.pack`/`.ops` sync/storage paths can encode/decode `LowpolySnapshot`.
 pub fn register_lowpoly_exports() {
     crate::artifacts::lowpoly::engine::register();
+    crate::apps::lowpoly::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::lowpoly::LowpolyPlayApp>(crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", crate::artifacts::lowpoly::engine::lowpoly_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", crate::artifacts::lowpoly::engine::lowpoly_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));

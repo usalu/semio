@@ -1502,6 +1502,10 @@ pub fn register_block_exports() {
     crate::artifacts::block2d::engine::register();
     crate::artifacts::block3d::engine::register();
     crate::artifacts::block5d::engine::register();
+
+    crate::apps::block2d::config::schema::register_app_schema();
+    crate::apps::block3d::config::schema::register_app_schema();
+    crate::apps::block5d::config::schema::register_app_schema();
 }
 
 semio_framework_plugin::plugin_exports!(plugin::plugin);

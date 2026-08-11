@@ -18,6 +18,7 @@ pub fn register() {
 
     register_artifact_schema();
     register_pilot_languages();
+    crate::apps::vcs::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
 }
 

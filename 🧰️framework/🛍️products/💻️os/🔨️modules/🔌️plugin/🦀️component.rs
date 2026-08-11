@@ -188,7 +188,7 @@ pub mod app {
             KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, Contribution, DialogDefinition, ExampleDefinition,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, DialogDefinition, ExampleDefinition,
         IconName, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef,
         TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         SET_HISTORY_COMMAND_FILTER_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
@@ -386,7 +386,7 @@ pub mod app {
     /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
     /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
     /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
-    pub use semio_framework::mesh::{Media, MediaError, MediaFingerprint, MediaPayload};
+    pub use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
     /// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
     /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
     /// without a direct `semio-framework-core` dependency.
@@ -477,6 +477,101 @@ pub mod app {
             })
         }
         ComposerEntry { writes: C::WRITES, reads: C::reads(), compose: erased_compose::<C> }
+    }
+
+    /// 🧩️ Erases a typed `ArtifactDeserializer` into a `ComposerEntry` row, same shape as
+    /// `composer_entry_of` but single-read (exactly one source — unlike a composer's multi-source
+    /// union, a directed conversion has exactly one origin dialect) and via `Dialect`-typed
+    /// snapshots rather than raw text/binary: the source payload is decoded as `D::From` (its own
+    /// `store::ArtifactPack` codec), `D::deserialize` runs the typed conversion, and the result is
+    /// re-packed as `D::Into` the same way `composer_entry_of` re-packs its `Composition::snapshot`.
+    /// Registered through a subset composer's `register()` into the same `IoKey → ComposerEntry`
+    /// registry composer entries already use.
+    pub fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
+    where
+        D::From: store::ArtifactPack,
+        D::Into: store::ArtifactPack,
+    {
+        fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        where
+            D::From: store::ArtifactPack,
+            D::Into: store::ArtifactPack,
+        {
+            let source = match sources {
+                [one] => one,
+                other => {
+                    return Err(ComposeError {
+                        message: format!("deserializer {}->{} needs exactly 1 source, got {}", D::FROM.artifact_kind, D::INTO.artifact_kind, other.len()),
+                        diagnostics: Vec::new(),
+                    });
+                }
+            };
+            let bytes = match &source.payload {
+                IoPayload::Binary(b) => b.as_slice(),
+                IoPayload::Text(_) => {
+                    return Err(ComposeError {
+                        message: format!("deserializer {}->{} source must be Binary (ArtifactPack-encoded)", D::FROM.artifact_kind, D::INTO.artifact_kind),
+                        diagnostics: Vec::new(),
+                    });
+                }
+            };
+            let from = <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+                message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind),
+                diagnostics: Vec::new(),
+            })?;
+            let into = D::deserialize(&from).map_err(|e| ComposeError {
+                message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind),
+                diagnostics: Vec::new(),
+            })?;
+            let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+            Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+        }
+        ComposerEntry { writes: D::INTO, reads: &[D::FROM], compose: erased_compose::<D> }
+    }
+
+    /// 🧵️ Erases a typed `ArtifactSerializer` into a `ComposerEntry` row — mirror image of
+    /// `deserializer_entry_of`: writes `S::INTO`, reads exactly `[S::FROM]`, decodes the single
+    /// source as `S::From`, runs `S::serialize`, re-packs the result as `S::Into`.
+    pub fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
+    where
+        S::From: store::ArtifactPack,
+        S::Into: store::ArtifactPack,
+    {
+        fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        where
+            S::From: store::ArtifactPack,
+            S::Into: store::ArtifactPack,
+        {
+            let source = match sources {
+                [one] => one,
+                other => {
+                    return Err(ComposeError {
+                        message: format!("serializer {}->{} needs exactly 1 source, got {}", S::FROM.artifact_kind, S::INTO.artifact_kind, other.len()),
+                        diagnostics: Vec::new(),
+                    });
+                }
+            };
+            let bytes = match &source.payload {
+                IoPayload::Binary(b) => b.as_slice(),
+                IoPayload::Text(_) => {
+                    return Err(ComposeError {
+                        message: format!("serializer {}->{} source must be Binary (ArtifactPack-encoded)", S::FROM.artifact_kind, S::INTO.artifact_kind),
+                        diagnostics: Vec::new(),
+                    });
+                }
+            };
+            let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+                message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind),
+                diagnostics: Vec::new(),
+            })?;
+            let into = S::serialize(&from).map_err(|e| ComposeError {
+                message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind),
+                diagnostics: Vec::new(),
+            })?;
+            let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+            Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+        }
+        ComposerEntry { writes: S::INTO, reads: &[S::FROM], compose: erased_compose::<S> }
     }
     //#endregion 🔖️Dialect
 
@@ -5881,7 +5976,7 @@ pub mod app {
     impl Plugin {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
-                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
+                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
                 apps: HashMap::new(),
             }
         }
@@ -5898,11 +5993,6 @@ pub mod app {
             if !self.manifest.capabilities.contains(&capability) {
                 self.manifest.capabilities.push(capability);
             }
-            self
-        }
-
-        pub fn contributes(mut self, contribution: Contribution) -> Self {
-            self.manifest.contributions.push(contribution);
             self
         }
 
@@ -5963,7 +6053,7 @@ pub mod plugin_runtime {
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::{
         kernel::{CapabilityRequirement, HostEffect, InvocationResult},
-        Contribution, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewModel,
+        TopicContribution, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewModel,
     };
     use std::collections::HashMap;
     use serde::de::DeserializeOwned;
@@ -6124,7 +6214,6 @@ pub mod plugin_runtime {
                 apps: vec![],
                 examples: vec![],
                 capabilities: vec![],
-                contributions: vec![],
                 topic_contributions: vec![],
                 commands: vec![],
              artifact_kinds: vec![] })
@@ -6919,7 +7008,7 @@ pub mod plugin_runtime {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub capabilities: Vec<CapabilityRequirement>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub contributions: Vec<Contribution>,
+        pub topic_contributions: Vec<TopicContribution>,
     }
 
     impl ExtensionBundle {
@@ -6932,7 +7021,7 @@ pub mod plugin_runtime {
                     version: version.into(),
                     extends: String::new(),
                     capabilities: Vec::new(),
-                    contributions: Vec::new(),
+                    topic_contributions: Vec::new(),
                 },
                 handlers: HashMap::new(),
             }
@@ -6952,9 +7041,10 @@ pub mod plugin_runtime {
             self
         }
 
-        /// 🧩️ Adds a contribution declaration to the extension manifest.
-        pub fn contributes(mut self, contribution: Contribution) -> Self {
-            self.manifest.contributions.push(contribution);
+        /// 🗂️ Adds an open topic contribution to the extension manifest; `topic` reuses this crate's
+        /// own `contributes`/`consumes` metadata vocabulary (e.g. `"cad.computer"`).
+        pub fn contributes_topic(mut self, topic: impl Into<String>, payload: Value) -> Self {
+            self.manifest.topic_contributions.push(TopicContribution::new(topic, payload));
             self
         }
 
@@ -7008,7 +7098,7 @@ pub mod plugin_runtime {
                     version: String::new(),
                     extends: String::new(),
                     capabilities: Vec::new(),
-                    contributions: Vec::new(),
+                    topic_contributions: Vec::new(),
                 })
         })
     }
@@ -7095,6 +7185,7 @@ pub mod plugin_runtime {
 
         use super::ContextMenuWireRequest;
         use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, VcsArtifactApp};
+        use crate::app::{ArtifactSerializer, ArtifactDeserializer, serializer_entry_of, deserializer_entry_of, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
         use store::EngineHandles;
         use semio_framework::Fault;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
@@ -7138,6 +7229,65 @@ pub mod plugin_runtime {
                 }
                 serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
             }
+        }
+
+        /// 🧪️ Trivial dummy `ArtifactSerializer`/`ArtifactDeserializer` pair, round-tripping
+        /// `TestSnapshot` to itself, for `serializer_entry_of`/`deserializer_entry_of` smoke tests.
+        struct DummySerializer;
+        impl ArtifactSerializer for DummySerializer {
+            type From = TestSnapshot;
+            type Into = TestSnapshot;
+            const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
+            const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
+            fn serialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
+                Ok(from.clone())
+            }
+        }
+
+        struct DummyDeserializer;
+        impl ArtifactDeserializer for DummyDeserializer {
+            type From = TestSnapshot;
+            type Into = TestSnapshot;
+            const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
+            const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
+            fn deserialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
+                Ok(from.clone())
+            }
+        }
+
+        #[test]
+        fn serializer_entry_of_and_deserializer_entry_of_erase_correctly() {
+            let ser = serializer_entry_of::<DummySerializer>();
+            assert_eq!(ser.writes, DummySerializer::INTO);
+            assert_eq!(ser.reads.to_vec(), vec![DummySerializer::FROM]);
+            let de = deserializer_entry_of::<DummyDeserializer>();
+            assert_eq!(de.writes, DummyDeserializer::INTO);
+            assert_eq!(de.reads.to_vec(), vec![DummyDeserializer::FROM]);
+
+            let seed = TestSnapshot { count: 7, label: "x".into() };
+            let bytes = store::ArtifactPack::encode_pack(&seed);
+            let composed = (ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])
+                .expect("serializer_entry_of erased compose should succeed with exactly 1 source");
+            assert_eq!(composed.dialect, DummySerializer::INTO);
+            match composed.payload {
+                IoPayload::Binary(out) => assert_eq!(<TestSnapshot as store::ArtifactPack>::decode_pack(&out).unwrap(), seed),
+                IoPayload::Text(_) => panic!("expected Binary payload"),
+            }
+
+            let zero_sources_err = match (de.compose)(&[]) {
+                Err(err) => err,
+                Ok(_) => panic!("deserializer_entry_of erased compose should reject 0 sources"),
+            };
+            assert!(zero_sources_err.message.contains("needs exactly 1 source"), "{}", zero_sources_err.message);
+            let two_sources = [
+                ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) },
+                ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) },
+            ];
+            let two_sources_err = match (de.compose)(&two_sources) {
+                Err(err) => err,
+                Ok(_) => panic!("deserializer_entry_of erased compose should reject 2 sources"),
+            };
+            assert!(two_sources_err.message.contains("needs exactly 1 source"), "{}", two_sources_err.message);
         }
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -9288,7 +9438,7 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
     WindowKindSpec,
 };

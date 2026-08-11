@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type Semio_epw_mutationsEntry {
+  key: String!
+  value: String!
+}
+type Semio_epw_mutations {
+  schema: String! @state(class: PERSISTENT)
+  entries: [Semio_epw_mutationsEntry!]! @state(class: PERSISTENT)
+}

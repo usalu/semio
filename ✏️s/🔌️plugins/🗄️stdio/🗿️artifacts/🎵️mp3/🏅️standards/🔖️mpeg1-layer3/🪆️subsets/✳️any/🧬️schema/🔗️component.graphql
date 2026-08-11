@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type Mp3ArtifactEntry {
+  key: String!
+  value: String!
+}
+type Mp3Artifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [Mp3ArtifactEntry!]! @state(class: PERSISTENT)
+}

@@ -1,0 +1,6 @@
+id	name	qty	unit_price	note
+1	Oak Panel	12	18.50	in stock
+2	Steel Bracket L-90	48	2.05	backordered
+3	Glass Pane 4mm	6	44.99	fragile;handle with care
+4	Cable Tie 200mm	500	0.03	bag of 100 -> qty is bags
+5	Weathering Test\tSample	1	0.00	literal backslash-t, NOT a real tab -- see NOTES.md

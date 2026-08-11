@@ -1,0 +1,5 @@
+dialect grammar stdio.wav.diff
+; 🚧 scaffolded by W1b — full production rules land in W2/W3
+root = document
+document = marker
+marker = "stdio.wav.diff"

@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type HtmlMutationEntry {
+  key: String!
+  value: String!
+}
+type HtmlMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [HtmlMutationEntry!]! @state(class: PERSISTENT)
+}

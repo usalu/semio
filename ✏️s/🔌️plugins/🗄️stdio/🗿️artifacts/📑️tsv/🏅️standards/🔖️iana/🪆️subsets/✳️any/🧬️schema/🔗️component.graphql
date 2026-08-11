@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type TsvArtifactEntry {
+  key: String!
+  value: String!
+}
+type TsvArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [TsvArtifactEntry!]! @state(class: PERSISTENT)
+}

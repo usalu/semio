@@ -1005,9 +1005,12 @@ impl ShellState {
         #[serde(rename_all = "camelCase")]
         struct ProgramContributionEntry<'a> {
             plugin_id: &'a str,
-            contribution: &'a semio_framework::Contribution,
+            topic_contribution: &'a semio_framework::TopicContribution,
         }
-        let entries: Vec<ProgramContributionEntry<'_>> = plugins.iter().flat_map(|program| program.manifest.contributions.iter().map(|contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), contribution })).collect();
+        let entries: Vec<ProgramContributionEntry<'_>> = plugins
+            .iter()
+            .flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution }))
+            .collect();
         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
     }
 
@@ -5470,7 +5473,6 @@ mod command_registry_tests {
             apps: vec![],
             examples: vec![],
             capabilities: vec![],
-            contributions: vec![],
             topic_contributions: vec![],
             commands: vec![CommandDefinition::new_catalog("plugin.doThing", LocalizedLabel::data("Do Thing"), CommandScope::Plugin, "plugin")],
          artifact_kinds: vec![] };

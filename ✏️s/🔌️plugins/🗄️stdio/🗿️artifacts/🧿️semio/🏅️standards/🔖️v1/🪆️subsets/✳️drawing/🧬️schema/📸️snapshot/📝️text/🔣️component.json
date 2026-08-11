@@ -1,0 +1,10 @@
+{
+  "$id": "https://semio.tech/schema/stdio.semio.drawing.snapshot/text.json",
+  "title": "Semio_semio_drawing_snapshot",
+  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "type": "object",
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+  }
+}

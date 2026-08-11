@@ -1,0 +1,3037 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ArtifactId`, `ArtifactVersion`, `ConflictRule`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `Serialize`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:679:44
+    |
+679 |     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    |                                            ^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+275 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:280:9
+    |
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:281:25
+    |
+281 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21
+    |
+333 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2350:19
+     |
+2244 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+2245 | | where
+2246 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+2247 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2350 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 46 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 23 suggestions)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3530:20
+     |
+3530 |         let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
+     |                    ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3530:39
+     |
+3530 |         let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
+     |                                       ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3530:65
+     |
+3530 |         let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
+     |                                                                 ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3530 |         let brep = MediaType { class: MediaClass::ThreeD, form: MediaFormat::Brep };
+     |                                                                          ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3531:25
+     |
+3531 |         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
+     |                         ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3531:44
+     |
+3531 |         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
+     |                                            ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3531:70
+     |
+3531 |         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
+     |                                                                      ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3531 |         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaFormat::Mesh };
+     |                                                                               ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3532:22
+     |
+3532 |         let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaForm::Any };
+     |                      ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3532:41
+     |
+3532 |         let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaForm::Any };
+     |                                         ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3532:67
+     |
+3532 |         let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaForm::Any };
+     |                                                                   ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3532 |         let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaFormat::Any };
+     |                                                                            ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3533:22
+     |
+3533 |         let vector = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
+     |                      ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3533:41
+     |
+3533 |         let vector = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
+     |                                         ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3533:65
+     |
+3533 |         let vector = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
+     |                                                                 ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3533 |         let vector = MediaType { class: MediaClass::TwoD, form: MediaFormat::Vector };
+     |                                                                          ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3534:22
+     |
+3534 |         let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
+     |                      ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3534:41
+     |
+3534 |         let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
+     |                                         ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3534:65
+     |
+3534 |         let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
+     |                                                                 ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3534 |         let raster = MediaType { class: MediaClass::TwoD, form: MediaFormat::Raster };
+     |                                                                          ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3535:20
+     |
+3535 |         let text = MediaType { class: MediaClass::Text, form: MediaForm::Document };
+     |                    ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3535:39
+     |
+3535 |         let text = MediaType { class: MediaClass::Text, form: MediaForm::Document };
+     |                                       ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3535:63
+     |
+3535 |         let text = MediaType { class: MediaClass::Text, form: MediaForm::Document };
+     |                                                               ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3535 |         let text = MediaType { class: MediaClass::Text, form: MediaFormat::Document };
+     |                                                                        ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3537:20
+     |
+3537 |         assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3537:58
+     |
+3537 |         assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+     |                                                          ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3537 -         assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+3537 +         assert_eq!(media_types_compatible(&brep, &brep), MediaFormat::Direct);
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3538:20
+     |
+3538 | ...   assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the...
+     |                  ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3538:60
+     |
+3538 | ...   assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the...
+     |                                                          ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3538 -         assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the class");
+3538 +         assert_eq!(media_types_compatible(&brep, &any_3d), MediaFormat::Direct, "Any on the accepting side takes anything within the class");
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3539:26
+     |
+3539 | ...   assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mes...
+     |                        ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3539:69
+     |
+3539 | ...   assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mes...
+     |                                                                   ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3539 -         assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+3539 +         assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaFormat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3539:98
+     |
+3539 | ...mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+     |                                             ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3539 |         assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaFormat::Brep, to: MediaForm::Mesh }));
+     |                                                                                                           ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3539:119
+     |
+3539 | ...at::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+     |                                             ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3539 |         assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaFormat::Mesh }));
+     |                                                                                                                                ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3540:26
+     |
+3540 | ...   assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Ra...
+     |                        ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3540:68
+     |
+3540 | ...   assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Ra...
+     |                                                                  ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3540 -         assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+3540 +         assert!(matches!(media_types_compatible(&vector, &raster), MediaFormat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3540:97
+     |
+3540 | ..., &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+     |                                             ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3540 |         assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaFormat::Vector, to: MediaForm::Raster }));
+     |                                                                                                          ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3540:120
+     |
+3540 | ...::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+     |                                             ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3540 |         assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaFormat::Raster }));
+     |                                                                                                                                 ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3541:20
+     |
+3541 |         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+     |                    ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3541:63
+     |
+3541 |         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+     |                                                               ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3541 -         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+3541 +         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaFormat::Reject, "mesh->brep has no registered conversion");
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0425]: cannot find function `media_types_compatible` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3542:20
+     |
+3542 |         assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+     |                    ^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this function through its public re-export
+     |
+3143 +     use crate::media_types_compatible;
+     |
+
+error[E0433]: cannot find type `MediaCompat` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3542:58
+     |
+3542 |         assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+     |                                                          ^^^^^^^^^^^ use of undeclared type `MediaCompat`
+     |
+help: an enum with a similar name exists
+     |
+3542 -         assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+3542 +         assert_eq!(media_types_compatible(&brep, &text), MediaFormat::Reject, "class mismatch always rejects");
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaCompat;
+     |
+
+error[E0422]: cannot find struct, variant or union type `Media` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3547:26
+     |
+3547 |         let structured = Media {
+     |                          ^^^^^ not found in this scope
+     |
+help: consider importing one of these items
+     |
+3143 +     use crate::Media;
+     |
+3143 +     use crate::protocol_core::AppFrame::Media;
+     |
+3143 +     use semio_framework_os_kernel::AppFrame::Media;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3548:25
+     |
+3548 |             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+     |                         ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3548:44
+     |
+3548 |             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+     |                                            ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3548:68
+     |
+3548 |             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+     |                                                                    ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3548 |             media_type: MediaType { class: MediaClass::Data, form: MediaFormat::Value },
+     |                                                                             ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0433]: cannot find type `MediaPayload` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3549:22
+     |
+3549 |             payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
+     |                      ^^^^^^^^^^^^ use of undeclared type `MediaPayload`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaPayload;
+     |
+
+error[E0433]: cannot find type `MediaFingerprint` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3551:27
+     |
+3551 |         let fingerprint = MediaFingerprint::of(&structured);
+     |                           ^^^^^^^^^^^^^^^^ use of undeclared type `MediaFingerprint`
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaFingerprint;
+     |
+
+error[E0433]: cannot find type `MediaFingerprint` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3552:33
+     |
+3552 |         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+     |                                 ^^^^^^^^^^^^^^^^ use of undeclared type `MediaFingerprint`
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaFingerprint;
+     |
+
+error[E0433]: cannot find type `MediaPayload` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3555:16
+     |
+3555 |         if let MediaPayload::Structured { json, .. } = &mut changed.payload {
+     |                ^^^^^^^^^^^^ use of undeclared type `MediaPayload`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaPayload;
+     |
+
+error[E0433]: cannot find type `MediaFingerprint` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3558:20
+     |
+3558 |         assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+     |                    ^^^^^^^^^^^^^^^^ use of undeclared type `MediaFingerprint`
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaFingerprint;
+     |
+
+error[E0422]: cannot find struct, variant or union type `Media` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3560:22
+     |
+3560 |         let binary = Media {
+     |                      ^^^^^ not found in this scope
+     |
+help: consider importing one of these items
+     |
+3143 +     use crate::Media;
+     |
+3143 +     use crate::protocol_core::AppFrame::Media;
+     |
+3143 +     use semio_framework_os_kernel::AppFrame::Media;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3561:25
+     |
+3561 |             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                         ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3561:44
+     |
+3561 |             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                                            ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3561:70
+     |
+3561 |             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                                                                      ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3561 |             media_type: MediaType { class: MediaClass::ThreeD, form: MediaFormat::Mesh },
+     |                                                                               ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0433]: cannot find type `MediaPayload` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3562:22
+     |
+3562 |             payload: MediaPayload::Binary { format: MediaFormat::Glb, blob_hash: "abc123".into() },
+     |                      ^^^^^^^^^^^^ use of undeclared type `MediaPayload`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaPayload;
+     |
+
+error[E0433]: cannot find type `MediaFingerprint` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3564:20
+     |
+3564 |         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+     |                    ^^^^^^^^^^^^^^^^ use of undeclared type `MediaFingerprint`
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaFingerprint;
+     |
+
+error[E0425]: cannot find function, tuple struct or tuple variant `MediaFingerprint` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3564:51
+     |
+3564 |         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+     |                                                   ^^^^^^^^^^^^^^^^ not found in this scope
+     |
+help: consider importing this tuple struct through its public re-export
+     |
+3143 +     use crate::MediaFingerprint;
+     |
+
+error[E0433]: cannot find type `MediaError` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3612:20
+     |
+3612 |         assert_eq!(MediaError::UnknownPort("in".into()).to_string(), "unknown media port `in`");
+     |                    ^^^^^^^^^^ use of undeclared type `MediaError`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaError;
+     |
+
+error[E0433]: cannot find type `MediaError` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3613:28
+     |
+3613 |         let incompatible = MediaError::Incompatible {
+     |                            ^^^^^^^^^^ use of undeclared type `MediaError`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaError;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3615:23
+     |
+3615 |             produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+     |                       ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3615:42
+     |
+3615 |             produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+     |                                          ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3615:68
+     |
+3615 |             produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+     |                                                                    ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3615 |             produced: MediaType { class: MediaClass::ThreeD, form: MediaFormat::Brep },
+     |                                                                             ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0422]: cannot find struct, variant or union type `MediaType` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3616:23
+     |
+3616 |             accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                       ^^^^^^^^^ not found in this scope
+     |
+help: consider importing this struct through its public re-export
+     |
+3143 +     use crate::MediaType;
+     |
+
+error[E0433]: cannot find type `MediaClass` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3616:42
+     |
+3616 |             accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                                          ^^^^^^^^^^ use of undeclared type `MediaClass`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaClass;
+     |
+
+error[E0433]: cannot find type `MediaForm` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3616:68
+     |
+3616 |             accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+     |                                                                    ^^^^^^^^^ use of undeclared type `MediaForm`
+     |
+help: an enum with a similar name exists
+     |
+3616 |             accepted: MediaType { class: MediaClass::ThreeD, form: MediaFormat::Mesh },
+     |                                                                             ++
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaForm;
+     |
+
+error[E0433]: cannot find type `MediaError` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3619:20
+     |
+3619 |         assert_eq!(MediaError::Payload("p".into(), "bad".into()).to_string(), "media payload error on port `p`: bad");
+     |                    ^^^^^^^^^^ use of undeclared type `MediaError`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaError;
+     |
+
+error[E0433]: cannot find type `MediaError` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:3620:20
+     |
+3620 |         assert_eq!(MediaError::NotImplemented.to_string(), "media ports are not implemented for this app");
+     |                    ^^^^^^^^^^ use of undeclared type `MediaError`
+     |
+help: consider importing this enum through its public re-export
+     |
+3143 +     use crate::MediaError;
+     |
+
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2361:30
+     |
+2361 |         store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `store::test_support`
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+help: if you import `assert_dsl_pack_equivalence`, refer to it directly
+     |
+2361 -         store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+2361 +         assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+     |
+
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2362:30
+     |
+2362 |         store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `store::test_support`
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+help: if you import `assert_dsl_pack_equivalence`, refer to it directly
+     |
+2362 -         store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
+2362 +         assert_dsl_pack_equivalence(&empty_workflow_snapshot());
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2367:30
+     |
+2367 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2367 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+2367 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2367 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+2367 +         assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2368:30
+     |
+2368 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2368 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+2368 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2368 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+2368 +         assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2369:30
+     |
+2369 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", ...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2369 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+2369 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2369 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+2369 +         assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2370:30
+     |
+2370 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2370 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+2370 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2370 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+2370 +         assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2371:30
+     |
+2371 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2371 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+2371 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2371 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+2371 +         assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2372:30
+     |
+2372 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2372 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+2372 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2372 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+2372 +         assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2373:30
+     |
+2373 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id:...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2373 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+2373 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2373 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+2373 +         assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2374:30
+     |
+2374 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2374 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+2374 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2374 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+2374 +         assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2375:30
+     |
+2375 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: Wor...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2375 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+2375 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2375 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+2375 +         assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2376:30
+     |
+2376 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { p...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2376 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+2376 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2376 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+2376 +         assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2377:30
+     |
+2377 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2377 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+2377 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2377 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+2377 +         assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2378:30
+     |
+2378 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2378 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+2378 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::SyncNodePorts);
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2378 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+2378 +         assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2379:30
+     |
+2379 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), k...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2379 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+2379 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2379 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+2379 +         assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2380:30
+     |
+2380 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2380 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+2380 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2380 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+2380 +         assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2381:30
+     |
+2381 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2381 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+2381 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2381 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+2381 +         assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2382:30
+     |
+2382 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2382 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+2382 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2382 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+2382 +         assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2383:30
+     |
+2383 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2383 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+2383 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2383 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+2383 +         assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2384:30
+     |
+2384 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out"...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2384 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+2384 +         store::test_support::assert_schema_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2384 -         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+2384 +         assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2396:30
+     |
+2396 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(),...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2396 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+2396 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2396 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+2396 +         assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2397:30
+     |
+2397 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2397 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+2397 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2397 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+2397 +         assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2398:30
+     |
+2398 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::T...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2398 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+2398 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2398 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+2398 +         assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2399:30
+     |
+2399 |         store::test_support::assert_operation_round_trip(
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2399 -         store::test_support::assert_operation_round_trip(
+2399 +         store::test_support::assert_schema_round_trip(
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2399 -         store::test_support::assert_operation_round_trip(
+2399 +         assert_operation_round_trip(
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2403:30
+     |
+2403 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { in...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2403 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+2403 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2403 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+2403 +         assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2404:30
+     |
+2404 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { ...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2404 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+2404 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2404 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+2404 +         assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2405:30
+     |
+2405 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2405 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+2405 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2405 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+2405 +         assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2416:30
+     |
+2416 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2416 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+2416 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2416 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+2416 +         assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2422:30
+     |
+2422 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2422 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+2422 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2422 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+2422 +         assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+     |
+
+error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2425:30
+     |
+2425 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2425 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+2425 +         store::test_support::assert_schema_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_operation_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_operation_round_trip;
+     |
+help: if you import `assert_operation_round_trip`, refer to it directly
+     |
+2425 -         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+2425 +         assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |
+
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2519:30
+     |
+2519 |         store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `store::test_support`
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+help: if you import `assert_dsl_pack_equivalence`, refer to it directly
+     |
+2519 -         store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
+2519 +         assert_dsl_pack_equivalence(&sample_run_document());
+     |
+
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2520:30
+     |
+2520 |         store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `store::test_support`
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+help: if you import `assert_dsl_pack_equivalence`, refer to it directly
+     |
+2520 -         store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
+2520 +         assert_dsl_pack_equivalence(&empty_run_document());
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2525:30
+     |
+2525 |         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2525 -         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+2525 +         store::test_support::assert_schema_round_trip(&RunMutation::Start {
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2525 -         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+2525 +         assert_op_line_round_trip(&RunMutation::Start {
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2534:30
+     |
+2534 |         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2534 -         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+2534 +         store::test_support::assert_schema_round_trip(&RunMutation::Start {
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2534 -         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+2534 +         assert_op_line_round_trip(&RunMutation::Start {
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2543:30
+     |
+2543 |         store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2543 -         store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+2543 +         store::test_support::assert_schema_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2543 -         store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+2543 +         assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2544:30
+     |
+2544 | ...   store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNode...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2544 -         store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+2544 +         store::test_support::assert_schema_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2544 -         store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+2544 +         assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2545:30
+     |
+2545 | ...   store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "comp...
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2545 -         store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+2545 +         store::test_support::assert_schema_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2545 -         store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+2545 +         assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+     |
+
+error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2546:30
+     |
+2546 |         store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:580:5
+     |
+ 580 |     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+     |     ----------------------------------------------------------------------- similarly named function `assert_schema_round_trip` defined here
+     |
+help: a function with a similar name exists
+     |
+2546 -         store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+2546 +         store::test_support::assert_schema_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_op_line_round_trip;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip;
+     |
+help: if you import `assert_op_line_round_trip`, refer to it directly
+     |
+2546 -         store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+2546 +         assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+     |
+
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2580:30
+     |
+2580 |         store::test_support::assert_dsl_pack_equivalence(&document);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `store::test_support`
+     |
+help: consider importing one of these functions
+     |
+2175 +     use crate::protocol_core::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+2175 +     use semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence;
+     |
+help: if you import `assert_dsl_pack_equivalence`, refer to it directly
+     |
+2580 -         store::test_support::assert_dsl_pack_equivalence(&document);
+2580 +         assert_dsl_pack_equivalence(&document);
+     |
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2361:16
+     |
+2361 |         store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+     = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+     = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2362:16
+     |
+2362 |         store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2367:16
+     |
+2367 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2368:16
+     |
+2368 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2369:16
+     |
+2369 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", ...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2370:16
+     |
+2370 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2371:16
+     |
+2371 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2372:16
+     |
+2372 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2373:16
+     |
+2373 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id:...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2374:16
+     |
+2374 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2375:16
+     |
+2375 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: Wor...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2376:16
+     |
+2376 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { p...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2377:16
+     |
+2377 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2378:16
+     |
+2378 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2379:16
+     |
+2379 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), k...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2380:16
+     |
+2380 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2381:16
+     |
+2381 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2382:16
+     |
+2382 |         store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2383:16
+     |
+2383 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2384:16
+     |
+2384 | ...   store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out"...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2396:16
+     |
+2396 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(),...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2397:16
+     |
+2397 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2398:16
+     |
+2398 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::T...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2399:16
+     |
+2399 |         store::test_support::assert_operation_round_trip(
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2403:16
+     |
+2403 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { in...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2404:16
+     |
+2404 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { ...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2405:16
+     |
+2405 | ...   store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2416:16
+     |
+2416 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2422:16
+     |
+2422 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2425:16
+     |
+2425 |         store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2519:16
+     |
+2519 |         store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2520:16
+     |
+2520 |         store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2525:16
+     |
+2525 |         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2534:16
+     |
+2534 |         store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2543:16
+     |
+2543 |         store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2544:16
+     |
+2544 | ...   store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNode...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2545:16
+     |
+2545 | ...   store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "comp...
+     |              ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2546:16
+     |
+2546 |         store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `test_support` is ambiguous
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2580:16
+     |
+2580 |         store::test_support::assert_dsl_pack_equivalence(&document);
+     |                ^^^^^^^^^^^^ ambiguous name
+     |
+     = note: ambiguous because of multiple glob imports of a name in the same module
+note: `test_support` could refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+     |
+ 263 | pub use crate::os_dsl::*;
+     |         ^^^^^^^^^^^^^
+     = help: consider updating this dependency to resolve this error
+     = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `test_support` could also refer to the module defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:264:9
+     |
+ 264 | pub use crate::os_store::*;
+     |         ^^^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+Some errors have detailed explanations: E0422, E0425, E0433.
+For more information about an error, try `rustc --explain E0422`.
+warning: `semio-framework` (lib test) generated 39 warnings
+error: could not compile `semio-framework` (lib test) due to 99 previous errors; 78 warnings emitted

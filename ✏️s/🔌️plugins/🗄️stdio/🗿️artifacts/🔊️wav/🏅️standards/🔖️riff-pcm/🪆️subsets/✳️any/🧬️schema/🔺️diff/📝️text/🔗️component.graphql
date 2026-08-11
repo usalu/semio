@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type Semio_wav_diffEntry {
+  key: String!
+  value: String!
+}
+type Semio_wav_diff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [Semio_wav_diffEntry!]! @state(class: PERSISTENT)
+}

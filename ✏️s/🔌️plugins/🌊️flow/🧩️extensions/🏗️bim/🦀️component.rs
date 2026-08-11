@@ -709,26 +709,31 @@ mod tests {
 
     #[test]
     fn extension_bundle_extends_flow_and_evaluates() {
-        use semio_framework::Contribution;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         let bundle = ExtensionBundle::new("bim", "Bim", "0.1.0")
             .extends("flow")
-            .contributes(Contribution::FlowExtension {
-                app_id: "flow-play".into(),
-                extension_id: "bim".into(),
-                label: "Bim".into(),
-                icon_id: "bim".into(),
-                manifest_json: manifest_json.clone(),
-            })
-            .contributes(Contribution::FlowExtension {
-                app_id: "procedural3d-play".into(),
-                extension_id: "bim".into(),
-                label: "Bim".into(),
-                icon_id: "bim".into(),
-                manifest_json,
-            })
+            .contributes_topic(
+                "flow.extension",
+                serde_json::json!({
+                    "appId": "flow-play",
+                    "extensionId": "bim",
+                    "label": "Bim",
+                    "iconId": "bim",
+                    "manifestJson": &manifest_json,
+                }),
+            )
+            .contributes_topic(
+                "flow.extension",
+                serde_json::json!({
+                    "appId": "procedural3d-play",
+                    "extensionId": "bim",
+                    "label": "Bim",
+                    "iconId": "bim",
+                    "manifestJson": &manifest_json,
+                }),
+            )
             .handler("evaluate", |req| {
                 #[derive(serde::Deserialize)]
                 #[serde(rename_all = "camelCase")]
@@ -744,8 +749,8 @@ mod tests {
         let installed = extension_manifest();
         assert_eq!(installed.extension_id, "bim");
         assert_eq!(installed.extends, "flow");
-        assert_eq!(installed.contributions.len(), 2);
-        assert!(matches!(installed.contributions[0], Contribution::FlowExtension { .. }));
+        assert_eq!(installed.topic_contributions.len(), 2);
+        assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
         let input = Dictionary::new()
             .insert("length", Value::Dictionary(number_dictionary(4.0)))
             .insert("height", Value::Dictionary(number_dictionary(2.8)))
@@ -766,7 +771,7 @@ mod tests {
 mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
-    use semio_framework::{Contribution, Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;
 
@@ -780,22 +785,28 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> Contribution {
-        Contribution::FlowExtension {
-            app_id: app_id.into(),
-            extension_id: "bim".into(),
-            label: "Bim".into(),
-            icon_id: "bim".into(),
-            manifest_json,
-        }
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+        let extension_id = "bim";
+        let label = "Bim";
+        let icon_id = "bim";
+        let topic_payload = serde_json::json!({
+            "appId": app_id,
+            "extensionId": extension_id,
+            "label": label,
+            "iconId": icon_id,
+            "manifestJson": &manifest_json,
+        });
+        topic_payload
     }
 
     fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
+        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
         ExtensionBundle::new("bim", "Bim", "0.1.0")
             .extends("flow")
-            .contributes(flow_extension_contribution(FLOW_APP_ID, manifest_json.clone()))
-            .contributes(flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json))
+            .contributes_topic("flow.extension", flow_topic_payload)
+            .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {
                 let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
                     Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())

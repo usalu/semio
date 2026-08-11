@@ -108,7 +108,10 @@ export type UiTranslationSchema = {
         readonly panels: UiLabelValue;
         readonly windows: UiLabelValue;
         readonly catalogue: UiLabelValue;
-        readonly studio: UiLabelValue;
+        /** 🏠️ Host-app-neutral label slot for the search category naming the embedding host application
+         * (was `studio`, hardcoded to the s-plugin's "Space" identity — see ticket
+         * `CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`). */
+        readonly hostApp: UiLabelValue;
         readonly navigation: UiLabelValue;
       };
     };

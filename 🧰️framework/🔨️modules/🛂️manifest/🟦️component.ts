@@ -813,79 +813,15 @@ export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> |
   };
 }
 
-export type PluginContribution =
-  | {
-      readonly kind: "playbookBlockKind";
-      readonly appId: string;
-      readonly blockKind: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly defaultValueJson?: string;
-      readonly paramsBodyKey: string;
-      readonly previewBodyKey: string;
-    }
-  | {
-      readonly kind: "sourcingModule";
-      readonly appId: string;
-      readonly moduleId: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly typologyJson: string;
-      readonly kindsJson: string;
-    }
-  | {
-      readonly kind: "processMachines";
-      readonly appId: string;
-      readonly moduleId: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly machinesJson: string;
-    }
-  | {
-      readonly kind: "flowExtension";
-      readonly appId: string;
-      readonly extensionId: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly manifestJson: string;
-    }
-  | {
-      readonly kind: "formsQuestionKind";
-      readonly appId: string;
-      readonly questionKind: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly defaultValueJson?: string;
-      readonly paramsBodyKey: string;
-      readonly previewBodyKey: string;
-    }
-  | {
-      readonly kind: "cadComputer";
-      readonly appId: string;
-      readonly moduleId: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly computersJson: string;
-    }
-  | {
-      readonly kind: "imperativeModule";
-      readonly appId: string;
-      readonly moduleId: string;
-      readonly label: string;
-      readonly iconId: IconName;
-      readonly manifestJson: string;
-    };
-
 export type ProgramContributionEntry = {
   readonly pluginId: string;
-  readonly contribution: PluginContribution;
+  readonly topicContribution?: TopicContribution;
 };
 
-/** 🗂️ Open replacement for `PluginContribution`'s closed `kind` union — see Rust `TopicContribution`
- * (`🦀️component.rs`) for the full rationale. `topic` reuses the same dot-namespaced vocabulary as a
- * crate's existing `contributes`/`consumes` metadata (e.g. `"flow.extension"`, `"playbook.blockKind"`,
- * `"cad.computer"`); this type does not enumerate topics, each future producer/consumer wave picks its
- * own. Coexists with `PluginContribution`/`contributions` during the migration. */
+/** 🗂️ Open plugin contribution shape — see Rust `TopicContribution` (`🦀️component.rs`) for the full
+ * rationale. `topic` reuses the same dot-namespaced vocabulary as a crate's existing
+ * `contributes`/`consumes` metadata (e.g. `"flow.extension"`, `"playbook.blockKind"`,
+ * `"cad.computer"`); this type does not enumerate topics, each producer/consumer picks its own. */
 export type TopicContribution = {
   readonly topic: string;
   readonly payload: unknown;
@@ -904,9 +840,7 @@ export type PluginManifest = {
     readonly yields: string;
   }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
-  readonly contributions?: readonly PluginContribution[];
-  /** 🗂️ Open counterpart of `contributions` — see `TopicContribution`. Additive: coexists with the
-   * closed `contributions` field until every producer/consumer has migrated. */
+  /** 🗂️ Open plugin contributions — see `TopicContribution`. */
   readonly topicContributions?: readonly TopicContribution[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
   readonly commands?: readonly CommandDefinition[];

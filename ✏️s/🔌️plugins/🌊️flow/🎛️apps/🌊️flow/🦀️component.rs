@@ -370,20 +370,34 @@ pub(crate) mod testkit {
 
     pub type FlowApp = VcsArtifactApp<FlowPlayApp>;
 
+    /// 🧪️ Installs a hand-authored `flow.extension` manifest fixture (a "math" module contributing the
+    /// `math.add` operator) so tests exercising the catalogue/extension surfaces have something real
+    /// installed — deliberately NOT the production `flow-extension-*` crates: flow-core must not
+    /// dev-depend on its own extensions (audit finding C1, see ticket
+    /// `CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`'s `w3-flow.md`). Each real extension crate already
+    /// exhaustively tests its own manifest/operator content in its own `#[cfg(test)] mod tests` (e.g.
+    /// `flow-extension-math`'s `manifest_lists_math_operators_and_schemas`); this fixture only covers
+    /// what flow-core's own tests assert on (`catalogue_lists_module_operators`).
     fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
-            for (plugin_id, manifest) in [
-                ("flow-extension-primitive", semio_s_plugin_flow_extension_primitive::extension_manifest_json()),
-                ("flow-extension-math", semio_s_plugin_flow_extension_math::extension_manifest_json()),
-                ("flow-extension-text", semio_s_plugin_flow_extension_text::extension_manifest_json()),
-                ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
-                ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
-                ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
-            ] {
-                flow::install_flow_extension_manifest(plugin_id, &manifest);
-            }
+            let manifest = flow::FlowExtensionManifest {
+                schema: "flow.extension".into(),
+                id: "math".into(),
+                name: "Math".into(),
+                version: "0.0.0-test-fixture".into(),
+                activation_events: vec!["onStartup".into()],
+                contributes: flow::FlowExtensionContributes {
+                    schemas: vec![],
+                    operators: vec![flow::neural::OperatorInfo { id: "math.add".into(), extension: "math".into(), name: "Add".into(), abbreviation: "Add".into(), ..Default::default() }],
+                    widgets: vec![],
+                    commands: vec![],
+                    settings: vec![],
+                },
+            };
+            let manifest_json = serde_json::to_string(&manifest).expect("serialize test fixture manifest");
+            flow::install_flow_extension_manifest("flow-core-test-fixture", &manifest_json);
         });
     }
 

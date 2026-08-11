@@ -1,0 +1,3 @@
+dialect protocol stdio.semio.video.mutations
+; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
+magic = "stdio.semio.video.mutations"

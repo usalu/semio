@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 🚧 scaffolded by W1b — generic facet mirror.
+package semio.s_stdio_semio_document.diff;
+message SemioDocumentDiff {
+  string schema = 1;
+  string entries_wire = 2;
+}

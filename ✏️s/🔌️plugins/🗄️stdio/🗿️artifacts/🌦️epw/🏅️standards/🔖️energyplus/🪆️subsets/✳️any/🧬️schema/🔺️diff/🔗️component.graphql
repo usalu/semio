@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type EpwDiffEntry {
+  key: String!
+  value: String!
+}
+type EpwDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [EpwDiffEntry!]! @state(class: PERSISTENT)
+}

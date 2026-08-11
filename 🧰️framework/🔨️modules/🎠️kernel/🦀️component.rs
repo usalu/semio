@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
 use dsl::DslValue;
 use ui_wgpu::wgpu::UiNode;
-use crate::mesh::MediaType;
+use crate::manifest::MediaType;
 
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type HtmlArtifactEntry {
+  key: String!
+  value: String!
+}
+type HtmlArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [HtmlArtifactEntry!]! @state(class: PERSISTENT)
+}

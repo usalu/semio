@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type TsvMutationEntry {
+  key: String!
+  value: String!
+}
+type TsvMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [TsvMutationEntry!]! @state(class: PERSISTENT)
+}

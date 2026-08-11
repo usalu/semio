@@ -2355,6 +2355,30 @@ const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
   "draw/op",
   "playbook/procedural",
   "lowpoly/op",
+  // seeded by W1b scaffold, burn down as W2/W3 land real 🧰️triples-backed sparse diffs (see
+  // w1b-scaffold-manifest.md §6 "Diff/Mutation shape" — a full-replace scaffold Diff today, all
+  // 8 laws pass, but no real DiffCodec impl yet). Keys computed via policyNormalizeRelPath.
+  "stdio/html/standards#5-subsets-any-schema-diff-component",
+  "stdio/epw/standards#energyplus-subsets-any-schema-diff-component",
+  "stdio/mp4/standards#isobmff-subsets-any-schema-diff-component",
+  "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-diff-component",
+  "stdio/tsv/standards#iana-subsets-any-schema-diff-component",
+  "stdio/avi/standards#1.0-subsets-any-schema-diff-component",
+  "stdio/wav/standards#riff-pcm-subsets-any-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-animation-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-any-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-audio-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-brep-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-cad-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-document-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-drawing-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-image-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-mesh-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-model-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-object-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-presentation-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-video-schema-diff-component",
+  "stdio/semio/standards#v1-subsets-workflow-schema-diff-component",
 ]);
 
 /**
@@ -7022,7 +7046,7 @@ function policyStdioFacetRsTsBreaches(
   return breaches;
 }
 
-/** ⚖️Twenty-nine stdio codec artifacts exist under 🗄️stdio with required completeness facets. */
+/** ⚖️Thirty-six stdio codec artifacts exist under 🗄️stdio with required completeness facets. */
 export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
@@ -7038,7 +7062,7 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
     });
     return breaches;
   }
-  const expectedCount = table.counts?.stdio_artifacts ?? 29;
+  const expectedCount = table.counts?.stdio_artifacts ?? 36;
   const rosterIds = Object.keys(table.stdio_roster ?? {});
   if (rosterIds.length !== expectedCount) {
     breaches.push({
@@ -7047,7 +7071,7 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
       kind: "stdio-artifacts/catalog",
       scope: POLICY_STDIO_PLUGIN_REL,
       priority: "high",
-      reason: "The closed stdio catalog must list exactly 29 format artifacts.",
+      reason: "The closed stdio catalog must list exactly 36 format artifacts.",
       solution: `Fix stdio_roster in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
     });
   }
@@ -7255,7 +7279,7 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
         kind: "stdio-artifacts/standards-coverage",
         scope: dialect.artRel,
         priority: "high",
-        reason: "Real subset ids are normalized lowercase identifiers naming an industry conformance profile/class/view (✳️a, ✳️cc6, ✳️rv, …), never a version or a conformance level.",
+        reason: "Real subset ids are normalized lowercase identifiers naming an industry conformance profile/class/view or semantic type (✳️a, ✳️cc6, ✳️rv, ✳️brep, ✳️mesh, …), never a version or a conformance level.",
         solution: `Rename ${dialect.subsetRel} to match the slug pattern.`,
       });
     }
@@ -7623,8 +7647,44 @@ function policyArtifactSchemaRoots(repoRoot: string, artRel: string, schemaFacet
     .map((d) => ({ scope: artRel, schemaRoot: `${d.subsetRel}/${schemaFacet}` }));
 }
 
+/** 🔎️True when `schemaRoot` is exactly the delegating re-export pair — `🦀️component.rs` (`pub use
+ * …::any::schema::*;`) + `🟦️component.ts` (either a literal `export * from ".../✳️any/.../🟦️component"`
+ * re-export, or a `meta` stamp with no own `interface`/`type`/`enum` — both shapes are attested on
+ * disk, ifc ✳️cv20/✳️sav/✳️cobie use the former, pdf/step/zip's conformance subsets use the latter)
+ * and NOTHING else. A subset in this shape is a validation-gated conformance STAMP on top of its
+ * standard's schema-owning subset — it never duplicates the schema, so it never carries facet
+ * mirrors/grammar leaves/diff/mutations trees. Structural, not name-based: a delegating subset
+ * never needs an allowlist/filter edit. */
+function policySchemaIsDelegatingPair(repoRoot: string, schemaRoot: string): boolean {
+  const entries = policyReaddirSafe(repoRoot, schemaRoot);
+  if (entries.length !== 2) return false;
+  if (entries.some((e) => e.isDirectory)) return false;
+  const names = new Set(entries.map((e) => e.name));
+  if (!names.has(POLICY_RS_COMPONENT_LEAF) || !names.has(POLICY_TS_COMPONENT_LEAF)) return false;
+  const rs = readFileSync(join(repoRoot, schemaRoot, POLICY_RS_COMPONENT_LEAF), "utf8");
+  const ts = readFileSync(join(repoRoot, schemaRoot, POLICY_TS_COMPONENT_LEAF), "utf8");
+  const rsReexports = /pub\s+use\s+[\w:]+::any::schema::\*\s*;/.test(policyStripRustCommentsAndStrings(rs));
+  const tsHasOwnType = /export\s+(interface|type|enum)\s+\w+/.test(ts);
+  if (tsHasOwnType) return false;
+  const tsLiteralReexport = /export\s+\*\s+from\s+["'][^"']*✳️any\/🧬️schema\/🟦️component["']\s*;/.test(ts);
+  const tsHasMetaStamp = /export\s+const\s+meta\s*=\s*\{[^}]*artifactKind\s*:[^}]*\}/.test(ts);
+  return rsReexports && (tsLiteralReexport || tsHasMetaStamp);
+}
+
+/** 🏅 True when `schemaRoot` owns its schema (has a real `📸️snapshot/` on disk) — the generalized
+ * form of `policyListStdioSchemaOwningEntries`'s filter, inlined here because this rule also covers
+ * unmigrated (pre-dialect) artifacts, which are always schema-owning by construction (no subset
+ * concept to delegate from). See `policySchemaIsDelegatingPair` for the sibling shape. */
+function policySchemaRootIsOwning(repoRoot: string, schemaRoot: string, migrated: boolean): boolean {
+  if (!migrated) return true;
+  return existsSync(join(repoRoot, schemaRoot, "📸️snapshot"));
+}
+
 /** ⚖️Schema tree under 🧬️schema with representation text/binary spec leaves (ticket STDIO-ARTIFACTS-AND-IO).
- * Migrated artifacts are checked at their 🏅️standards/🔖️.../🪆️subsets/✳️.../🧬️schema location instead. */
+ * Migrated artifacts are checked at their 🏅️standards/🔖️.../🪆️subsets/✳️.../🧬️schema location instead —
+ * and, per ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1, only a
+ * SCHEMA-OWNING subset (has its own `📸️snapshot/`) is held to the full tree; a DELEGATING subset (see
+ * `policySchemaIsDelegatingPair`) needs only the rs+ts re-export pair. */
 export function policySchemaRepresentationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const taxonomy = loadTaxonomy();
@@ -7632,6 +7692,7 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
   const representationDirs = policyStdioRepresentationDirs(taxonomy);
   const schemaFacet = "🧬️schema";
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+   const migrated = policyArtifactIsMigrated(repoRoot, artRel);
    for (const { schemaRoot } of policyArtifactSchemaRoots(repoRoot, artRel, schemaFacet)) {
     if (!existsSync(join(repoRoot, schemaRoot))) {
       breaches.push({
@@ -7642,6 +7703,19 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
         priority: "high",
         reason: "Artifact-level schema facet is required; snapshot/diff/mutations nest beneath it.",
         solution: `Create ${schemaRoot}/ per normative spec §1.`,
+      });
+      continue;
+    }
+    if (!policySchemaRootIsOwning(repoRoot, schemaRoot, migrated)) {
+      if (policySchemaIsDelegatingPair(repoRoot, schemaRoot)) continue;
+      breaches.push({
+        id: `stdio-schema-delegating-${schemaRoot}`,
+        summary: `"${schemaRoot}" is neither schema-owning (no 📸️snapshot/) nor a valid delegating re-export pair`,
+        kind: "stdio-artifacts/schema-representation",
+        scope: artRel,
+        priority: "high",
+        reason: "A delegating subset (validation-gated conformance stamp on an existing schema-owning subset, e.g. step ✳️cc1, pdf ✳️a, zip ✳️iso21320) carries ONLY 🦀️component.rs (`pub use …::any::schema::*;`) + 🟦️component.ts (a meta stamp) — no facet mirrors, grammar leaves, or diff/mutations trees.",
+        solution: `Replace ${schemaRoot}'s contents with exactly ${POLICY_RS_COMPONENT_LEAF} (re-exporting the standard's schema-owning subset) + ${POLICY_TS_COMPONENT_LEAF} (a meta stamp), or add its own 📸️snapshot/ to make it schema-owning and satisfy the full tree below instead.`,
       });
       continue;
     }
@@ -8042,6 +8116,76 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
+ * 🎫 Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT, W1 Task 4
+ * blocking finding: `store::register_document_codec` (🧰️framework/…/🏪️store/🦀️component.rs) is a
+ * plain `HashMap::insert` keyed by the codec's schema id string — registering two DIFFERENT codecs
+ * under the SAME id does not panic, it silently overwrites (last-registered-wins), with zero
+ * runtime diagnostic (empirically confirmed by W1's own regression test). This is a real risk once
+ * many parallel agents each mint their own schema-id constant (13 semio subsets + 7 new formats +
+ * 28 pre-existing artifacts, all sharing one process-wide registry) — a typo'd copy-paste collision
+ * would silently load the wrong codec at runtime with zero build or test signal. This rule
+ * statically resolves every `register_document_codec(store::ArtifactCodec::of::<…>(<id-expr>))`
+ * call site's id expression — a string literal, or a `const _: &str` referenced bare or fully
+ * path-qualified (both forms are used across the crate) — across the WHOLE stdio crate, and flags
+ * any resolved id string claimed by more than one call site. Mirrors `policyDialectLiteralPathBreaches`
+ * above: same two-pass grep-then-cross-reference shape, same `policyAllRustFiles` file source.
+ */
+function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const pluginRoot = join(repoRoot, POLICY_STDIO_PLUGIN_REL);
+  if (!existsSync(pluginRoot)) return breaches;
+  const artifactsPrefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
+  const files = policyAllRustFiles(repoRoot).filter((relPath) => relPath.startsWith(artifactsPrefix));
+
+  // Pass 1: crate-wide `const NAME: &str = "value";` map, keyed by the identifier's *last path
+  // segment* — call sites reference a schema-id const either bare or fully `crate::…::`-qualified.
+  const constValue = new Map<string, string>();
+  const CONST_RE = /(?:pub\s+)?const\s+([A-Z0-9_]+)\s*:\s*&str\s*=\s*"([^"]*)"\s*;/g;
+  for (const relPath of files) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    CONST_RE.lastIndex = 0;
+    let cm: RegExpExecArray | null;
+    while ((cm = CONST_RE.exec(content))) constValue.set(cm[1], cm[2]);
+  }
+
+  // Pass 2: every register_document_codec call site's id expression, resolved to a literal value.
+  const CALL_RE = /register_document_codec\(\s*store::ArtifactCodec::of::<[\s\S]*?>\(\s*([\w:]+|"[^"]*")\s*\)\s*\)/g;
+  const claims = new Map<string, { relPath: string; line: number }[]>();
+  for (const relPath of files) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    CALL_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = CALL_RE.exec(content))) {
+      const raw = m[1]!;
+      const value = raw.startsWith('"') ? raw.slice(1, -1) : constValue.get(raw.split("::").pop()!);
+      if (!value) continue; // unresolved id expression — not guessed at, silently skipped
+      const line = content.slice(0, m.index).split("\n").length;
+      const list = claims.get(value) ?? [];
+      list.push({ relPath, line });
+      claims.set(value, list);
+    }
+  }
+
+  for (const [id, sites] of claims) {
+    if (sites.length <= 1) continue;
+    const locations = sites.map((s) => `${s.relPath}:${s.line}`).join(", ");
+    for (const site of sites) {
+      breaches.push({
+        id: `stdio-codec-id-duplicate-${id}-${site.relPath}-${site.line}`,
+        summary: `schema id "${id}" is claimed by ${sites.length} register_document_codec call sites: ${locations}`,
+        kind: "stdio-artifacts/codec-id-uniqueness",
+        scope: site.relPath,
+        priority: "high",
+        reason:
+          "store::register_document_codec silently overwrites on a duplicate id (plain HashMap::insert, no panic) — two codecs sharing an id means the second-registered one silently and invisibly wins at runtime, with zero build or test signal.",
+        solution: `Give each of ${locations} its own distinct schema id constant/value.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
  * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 8:
  * replaces the old `policyCodecFidelityBreaches` (a 5-string banned-marker grep — "does this file
  * avoid saying SRAS/IFCCARTOONMESH", a purely negative signal) with a positive one: every
@@ -8101,6 +8245,18 @@ const POLICY_ROUND_TRIP_TEST_ALLOWLIST = new Set<string>([
   "fem/3d/standards#1-engine-component",
   "playbook/standards#1-engine-component",
   "energy/model/standards#1-engine-component",
+  // seeded by W1b scaffold, burn down as W3 rewires each format's ArtifactPack off JSON-passthrough
+  // onto its own engine's real encoder (see w1b-scaffold-manifest.md §6 — sniff/minimal-parse is
+  // already real+tested for all 7, this is specifically the missing decode→encode→decode test) and
+  // as W2 adds semio v1's own round-trip test alongside geometry/triples' existing 9. Keys computed
+  // via policyNormalizeRelPath.
+  "stdio/html/standards#5-engine-component",
+  "stdio/epw/standards#energyplus-engine-component",
+  "stdio/mp4/standards#isobmff-engine-component",
+  "stdio/mp3/standards#mpeg1-layer3-engine-component",
+  "stdio/avi/standards#1.0-engine-component",
+  "stdio/wav/standards#riff-pcm-engine-component",
+  "stdio/semio/standards#v1-engine-component",
 ]);
 
 const POLICY_ROUND_TRIP_SIGNAL_RE = /round_trip|roundtrip|decode_encode|encode_decode|lossless/i;
@@ -8315,6 +8471,7 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyArtifactAnalyzerBreaches(repoRoot),
     ...policyArtifactComposerBreaches(repoRoot),
     ...policyDialectLiteralPathBreaches(repoRoot),
+    ...policyStdioCodecIdUniquenessBreaches(repoRoot),
     ...policyMutationVocabularyBreaches(repoRoot),
     ...policyRoundTripTestBreaches(repoRoot),
     ...policyComposerDependencyBreaches(repoRoot),
@@ -8588,30 +8745,40 @@ function policyStdioStandardKey(artifactId: string, standardSlug: string): strin
   return `stdio/${artifactId}/standards#${standardSlug}`;
 }
 
+/** 🗝️Per-SUBSET field-sweep key (widened from `policyStdioStandardKey`'s per-standard form, ticket
+ * 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1): a standard with
+ * multiple schema-owning subsets (e.g. semio v1's 13) needs its OWN field_sweep test per subset —
+ * one sweep anywhere under the standard must never silently cover sibling subsets. */
+function policyStdioSubsetKey(artifactId: string, standardSlug: string, subsetId: string): string {
+  return `${policyStdioStandardKey(artifactId, standardSlug)}/subsets#${subsetId}`;
+}
+
 function policyFieldSweepPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const fieldSweepRe = /fn\s+\w*field_sweep\w*\s*\(/;
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     const standardRel = entry.subsetRel.split("/🪆️subsets/")[0]!;
-    const rsFiles = policyWalkRelFiles(repoRoot, [standardRel], (_p, name) => name.endsWith(".rs"));
+    // 🔒 Scoped to the subset's OWN tree, not the whole standard — a standard with several
+    // schema-owning subsets (semio v1's 13) must not let one subset's sweep cover its siblings.
+    const rsFiles = policyWalkRelFiles(repoRoot, [entry.subsetRel], (_p, name) => name.endsWith(".rs"));
     const found = rsFiles.some((f) => fieldSweepRe.test(readFileSync(join(repoRoot, f), "utf8")));
-    const key = policyStdioStandardKey(entry.artifactId, entry.standardSlug);
+    const key = policyStdioSubsetKey(entry.artifactId, entry.standardSlug, entry.subsetId);
     const allowlisted = POLICY_FIELD_SWEEP_ALLOWLIST.has(key);
     if (!found) {
       if (allowlisted) continue;
       breaches.push({
         id: `field-sweep-missing-${key}`,
-        summary: `"${standardRel}" has no test function matching field_sweep`,
+        summary: `"${entry.subsetRel}" has no test function matching field_sweep`,
         kind: "stdio-artifacts/field-sweep-presence",
         scope: entry.artRel,
         priority: "medium",
-        reason: "field_sweep is the plan's law #6, the acceptance criterion that a diff can change every field of a snapshot (see 🧬️schema-design.md's Test laws section).",
-        solution: `Add a field_sweep test under ${standardRel} (sweep_a()/sweep_b() differing in every mutable field, asserting between(a,b).apply(a)==b), or if this standard hasn't been reached yet, add "${key}" to POLICY_FIELD_SWEEP_ALLOWLIST citing this ticket.`,
+        reason: "field_sweep is the plan's law #6, the acceptance criterion that a diff can change every field of a snapshot (see 🧬️schema-design.md's Test laws section) — required per schema-owning subset, not once per standard.",
+        solution: `Add a field_sweep test under ${entry.subsetRel} (sweep_a()/sweep_b() differing in every mutable field, asserting between(a,b).apply(a)==b), or if this subset hasn't been reached yet, add "${key}" to POLICY_FIELD_SWEEP_ALLOWLIST citing this ticket.`,
       });
     } else if (allowlisted) {
       breaches.push({
         id: `field-sweep-stale-${key}`,
-        summary: `"${standardRel}" is allowlisted in POLICY_FIELD_SWEEP_ALLOWLIST but already has a field_sweep test`,
+        summary: `"${entry.subsetRel}" is allowlisted in POLICY_FIELD_SWEEP_ALLOWLIST but already has a field_sweep test`,
         kind: "stdio-artifacts/field-sweep-presence",
         scope: entry.artRel,
         priority: "low",

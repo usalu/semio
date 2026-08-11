@@ -1985,7 +1985,10 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Fenster", beginner: "Fenster" } },
             catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
-            studio: { label: { normal: "Space", beginner: "Space" } },
+            // 🏠️ TODO(follow-up): "Space" is still a literal here — should come from the host plugin's own
+            // manifest label rather than being hardcoded framework-side (see hostApp rename, ticket
+            // CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT).
+            hostApp: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
         },
@@ -2713,7 +2716,10 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Windows", beginner: "Windows" } },
             catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
-            studio: { label: { normal: "Space", beginner: "Space" } },
+            // 🏠️ TODO(follow-up): "Space" is still a literal here — should come from the host plugin's own
+            // manifest label rather than being hardcoded framework-side (see hostApp rename, ticket
+            // CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT).
+            hostApp: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
         },

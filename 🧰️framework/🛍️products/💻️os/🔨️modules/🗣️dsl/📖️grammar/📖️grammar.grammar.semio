@@ -3,9 +3,11 @@ grammar grammar
 start file
 
 file = header production*
-header = dialect-line? "grammar" IDENT extension-line? use-line* "start" IDENT
+header = dialect-line? "grammar" IDENT extension-line? comment-line* string-line* use-line* "start" IDENT
 dialect-line = "dialect" IDENT
 extension-line = "extension" IDENT
+comment-line = "comment" "none" | "comment" "line" TEXT | "comment" "line" "none" | "comment" "block" TEXT TEXT
+string-line = "string" IDENT IDENT
 use-line = "use" IDENT
 production = IDENT "=" alternatives
 alternatives = sequence {"|" sequence}*

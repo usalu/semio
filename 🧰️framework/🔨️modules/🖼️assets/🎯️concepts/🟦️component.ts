@@ -1,37 +1,10 @@
 /** @emoji 🎯️ Canonical concept → catalog icon assignments — each distinct meaning maps to exactly one icon. */
 import type { IconName } from "../🔣️icons/🤖️generated/🟦️icons.ts";
 
+// #region FrameworkIconConcepts
+/** @emoji 🧰️ Domain-neutral icon concepts owned by the framework itself (chrome, generic graph shapes,
+ * projection kinds, generic tools, generic utilities) — none of these name a specific plugin/app. */
 export const ICON_CONCEPT_ASSIGNMENTS = {
-  "app.animate": "animate",
-  "app.architect": "architect",
-  "app.cad": "box",
-  "app.draw": "draw",
-  "app.fem": "fem-app",
-  "app.flow": "flow",
-  "app.forms": "forms",
-  "app.gis2d": "gis2d",
-  "app.gis3d": "gis3d",
-  "app.imperative": "imperative",
-  "app.layout": "layout",
-  "app.lowpoly": "shapes",
-  "app.mathematical": "math-app",
-  "app.note": "note",
-  "app.process": "hammer",
-  "app.procedural2d": "procedural2d",
-  "app.procedural3d": "workflow",
-  "app.puzzle": "puzzle",
-  "app.reasoning": "reasoning-wires",
-  "app.remodel": "remodel-app",
-  "app.sequence": "sequence",
-  "app.shooting": "camera",
-  "app.sourcing": "library",
-  "app.s": "s",
-  "app.trinity": "trinity",
-  "app.trinity-rewrite": "trinity-rewrite",
-  "app.vcs": "git-branch",
-  "app.writer": "writer",
-  "app.raster": "raster",
-  "app.dag": "dag",
   "chrome.delete": "trash-2",
   "chrome.display-windows": "display-windows",
   "chrome.hud": "hud-overlay",
@@ -71,6 +44,48 @@ export const ICON_CONCEPT_ASSIGNMENTS = {
   "utility.relocate-3d": "relocate-3d",
   "utility.transform-3d": "transform-3d",
   "utility.volume-brush": "volume-brush",
+} as const satisfies Record<string, IconName>;
+
+export type IconConceptId = keyof typeof ICON_CONCEPT_ASSIGNMENTS;
+// #endregion FrameworkIconConcepts
+
+// #region PluginDomainIconConcepts
+/** @emoji 🔌️ TODO(follow-up): should be plugin-declared metadata (each plugin's own manifest/catalog
+ * contributing its own `app.<id>`/`window.<id>.<sub>` icon), not hardcoded here — the framework should not
+ * need to know the full roster of installed apps/windows to assign their icons. Isolated here, separate
+ * from {@link ICON_CONCEPT_ASSIGNMENTS}, so the layering violation is visible rather than mixed into
+ * genuinely generic framework data. See ticket `CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`. */
+export const PLUGIN_DOMAIN_ICON_CONCEPTS = {
+  "app.animate": "animate",
+  "app.architect": "architect",
+  "app.cad": "box",
+  "app.draw": "draw",
+  "app.fem": "fem-app",
+  "app.flow": "flow",
+  "app.forms": "forms",
+  "app.gis2d": "gis2d",
+  "app.gis3d": "gis3d",
+  "app.imperative": "imperative",
+  "app.layout": "layout",
+  "app.lowpoly": "shapes",
+  "app.mathematical": "math-app",
+  "app.note": "note",
+  "app.process": "hammer",
+  "app.procedural2d": "procedural2d",
+  "app.procedural3d": "workflow",
+  "app.puzzle": "puzzle",
+  "app.reasoning": "reasoning-wires",
+  "app.remodel": "remodel-app",
+  "app.sequence": "sequence",
+  "app.shooting": "camera",
+  "app.sourcing": "library",
+  "app.s": "s",
+  "app.trinity": "trinity",
+  "app.trinity-rewrite": "trinity-rewrite",
+  "app.vcs": "git-branch",
+  "app.writer": "writer",
+  "app.raster": "raster",
+  "app.dag": "dag",
   "window.cad.energy": "sun",
   "window.cad.shape": "cad-shape",
   "window.cad.structure": "component",
@@ -90,7 +105,8 @@ export const ICON_CONCEPT_ASSIGNMENTS = {
   "window.trinity.rhs": "trinity-rhs",
 } as const satisfies Record<string, IconName>;
 
-export type IconConceptId = keyof typeof ICON_CONCEPT_ASSIGNMENTS;
+export type PluginDomainIconConceptId = keyof typeof PLUGIN_DOMAIN_ICON_CONCEPTS;
+// #endregion PluginDomainIconConcepts
 
 /** @emoji 🔍️ Ensures no two distinct concepts share the same icon id. */
 export function assertUniqueIconConceptAssignments(assignments: Record<string, IconName> = ICON_CONCEPT_ASSIGNMENTS): void {

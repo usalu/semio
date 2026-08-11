@@ -25,8 +25,8 @@ use crate::artifacts::forms::op::FormMutation;
 // artifact's `⚙️engine/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, ArtifactApp, ArtifactView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ArtifactApp, ArtifactView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
 };
 use store::EngineHandles;
@@ -89,20 +89,42 @@ pub fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributio
 
 pub use forms_parse_contributions as parse_contributions;
 
-fn question_kind_match<'a>(contribution: &'a Contribution, kind: &str) -> Option<(&'a str, &'a str, &'a str)> {
-    match contribution {
-        Contribution::FormsQuestionKind { question_kind, app_id, params_body_key, preview_body_key, .. } if question_kind == kind => {
-            Some((app_id, params_body_key, preview_body_key))
-        }
-        Contribution::PlaybookBlockKind { block_kind, app_id, params_body_key, preview_body_key, .. } if block_kind == kind => {
-            Some((app_id, params_body_key, preview_body_key))
-        }
-        _ => None,
-    }
+/// 🗂️ `forms.questionKind` topic payload shape, decoded from the open `TopicContribution`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FormsQuestionKindTopicPayload {
+    app_id: String,
+    question_kind: String,
+    label: String,
+    icon_id: IconName,
+    params_body_key: String,
+    preview_body_key: String,
 }
 
-pub fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, &'a Contribution)> {
-    contributions.iter().find_map(|entry| question_kind_match(&entry.contribution, kind).map(|_| (entry.plugin_id.as_str(), &entry.contribution)))
+const FORMS_QUESTION_KIND_TOPIC: &str = "forms.questionKind";
+
+/// 🎯️ A resolved question-kind contribution's routing fields, sourced from the open `forms.questionKind`
+/// topic shape.
+struct QuestionKindRoute {
+    app_id: String,
+    params_body_key: String,
+    preview_body_key: String,
+}
+
+fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::TopicContribution, kind: &str) -> Option<QuestionKindRoute> {
+    if topic_contribution.topic != FORMS_QUESTION_KIND_TOPIC {
+        return None;
+    }
+    let payload = topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok()?;
+    (payload.question_kind == kind).then(|| QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
+}
+
+/// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
+pub fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
+    contributions.iter().find_map(|entry| {
+        let route = entry.topic_contribution.as_ref().and_then(|topic_contribution| question_kind_route_from_topic(topic_contribution, kind))?;
+        Some((entry.plugin_id.as_str(), route))
+    })
 }
 
 fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) -> Value {
@@ -125,17 +147,14 @@ fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &s
 /// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
 /// by the try wizard and the inspection panel's kind-specific editor fields.
 pub fn render_extension_question(question: &FormQuestion, values: &Map<String, Value>, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> UiNode {
-    let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
-    };
-    let Some((app_id, params_body_key, preview_body_key)) = question_kind_match(contribution, &question.kind) else {
+    let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
         return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
     let params = extension_params_value(question, values);
     let payload = extension_render_payload(question, &params, surface, interactive);
     semio_framework_plugin::ui_stack_vertical(vec![
-        semio_framework_plugin::ui_external_slot(plugin_id, app_id, params_body_key, &payload),
-        semio_framework_plugin::ui_external_slot(plugin_id, app_id, preview_body_key, &payload),
+        semio_framework_plugin::ui_external_slot(plugin_id, route.app_id.as_str(), route.params_body_key.as_str(), &payload),
+        semio_framework_plugin::ui_external_slot(plugin_id, route.app_id.as_str(), route.preview_body_key.as_str(), &payload),
     ])
 }
 
@@ -166,14 +185,14 @@ pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &Form
         })
         .collect();
     for entry in contributions {
-        match &entry.contribution {
-            Contribution::FormsQuestionKind { question_kind, label, icon_id, .. } => {
-                kinds.push((question_kind.clone(), label.clone(), *icon_id));
-            }
-            Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } => {
-                kinds.push((block_kind.clone(), label.clone(), *icon_id));
-            }
-            _ => {}
+        let topic_kind = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic_contribution| topic_contribution.topic == FORMS_QUESTION_KIND_TOPIC)
+            .and_then(|topic_contribution| topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok())
+            .map(|payload| (payload.question_kind, payload.label, payload.icon_id));
+        if let Some(kind) = topic_kind {
+            kinds.push(kind);
         }
     }
     kinds
@@ -443,15 +462,17 @@ pub(crate) mod testkit {
     pub fn building_component_contributions() -> Vec<ProgramContributionEntry> {
         vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
-            contribution: Contribution::FormsQuestionKind {
-                app_id: "forms-module-procedural".into(),
-                question_kind: "buildingComponent".into(),
-                label: "Building Component".into(),
-                icon_id: "building".into(),
-                default_value_json: "{}".into(),
-                params_body_key: "params".into(),
-                preview_body_key: "preview".into(),
-            },
+            topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+                "forms.questionKind",
+                json!({
+                    "appId": "forms-module-procedural",
+                    "questionKind": "buildingComponent",
+                    "label": "Building Component",
+                    "iconId": "building",
+                    "paramsBodyKey": "params",
+                    "previewBodyKey": "preview",
+                }),
+            )),
         }]
     }
 
@@ -606,30 +627,56 @@ mod tests {
     }
 
     #[test]
-    fn extension_question_accepts_legacy_playbook_block_kind_contributions() {
-        let legacy = vec![ProgramContributionEntry {
-            plugin_id: "forms-module-procedural".into(),
-            contribution: Contribution::PlaybookBlockKind {
-                app_id: "forms-module-procedural".into(),
-                block_kind: "buildingComponent".into(),
-                label: "Building Component".into(),
-                icon_id: "building".into(),
-                default_value_json: "{}".into(),
-                params_body_key: "params".into(),
-                preview_body_key: "preview".into(),
-            },
-        }];
-        let node = render_extension_question(&building_component_question(), &Map::new(), &legacy, "try", true);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("externalSlot"));
-    }
-
-    #[test]
     fn extension_question_emits_external_slot_when_contribution_registered() {
         let node = render_extension_question(&building_component_question(), &Map::new(), &building_component_contributions(), "try", true);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
+    }
+
+    /// 🗂️ The open `forms.questionKind` topic shape must resolve the extension question.
+    #[test]
+    fn extension_question_emits_external_slot_when_topic_contribution_registered() {
+        let topic_only = vec![ProgramContributionEntry {
+            plugin_id: "forms-module-procedural".into(),
+            topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+                "forms.questionKind",
+                json!({
+                    "appId": "forms-module-procedural",
+                    "questionKind": "buildingComponent",
+                    "label": "Building Component",
+                    "iconId": "building",
+                    "paramsBodyKey": "params",
+                    "previewBodyKey": "preview",
+                }),
+            )),
+        }];
+        let node = render_extension_question(&building_component_question(), &Map::new(), &topic_only, "try", true);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("externalSlot"));
+        assert!(json.contains("forms-module-procedural"));
+    }
+
+    /// 🗂️ `catalogue_kinds` must surface topic-contributed kinds.
+    #[test]
+    fn catalogue_kinds_includes_topic_contributed_kinds() {
+        let contributions = vec![ProgramContributionEntry {
+            plugin_id: "forms-module-procedural".into(),
+            topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+                "forms.questionKind",
+                json!({
+                    "appId": "forms-module-procedural",
+                    "questionKind": "buildingComponent",
+                    "label": "Building Component",
+                    "iconId": "building",
+                    "paramsBodyKey": "params",
+                    "previewBodyKey": "preview",
+                }),
+            )),
+        }];
+        let labels = forms_play_labels(&FormsConfig::default());
+        let kinds = catalogue_kinds(&contributions, labels);
+        assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
     }
 
     #[test]

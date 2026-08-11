@@ -34,6 +34,14 @@ pub fn plugin() -> Plugin {
     crate::artifacts::ply::engine::register();
     crate::artifacts::stl::engine::register();
     crate::artifacts::obj::engine::register();
+    crate::artifacts::semio::standards::v1::engine::register();
+    crate::artifacts::mp4::standards::isobmff::engine::register();
+    crate::artifacts::avi::standards::v1_0::engine::register();
+    crate::artifacts::mp3::standards::mpeg1_layer3::engine::register();
+    crate::artifacts::wav::standards::riff_pcm::engine::register();
+    crate::artifacts::epw::standards::energyplus::engine::register();
+    crate::artifacts::tsv::standards::iana::engine::register();
+    crate::artifacts::html::standards::v5::engine::register();
     Plugin::builder("stdio")
         .label("Stdio")
         .version("0.1.0")
@@ -65,5 +73,13 @@ pub fn plugin() -> Plugin {
         .artifact_kind(crate::artifacts::ply::artifact_kind())
         .artifact_kind(crate::artifacts::stl::artifact_kind())
         .artifact_kind(crate::artifacts::obj::artifact_kind())
+        .artifact_kind(crate::artifacts::semio::artifact_kind())
+        .artifact_kind(crate::artifacts::mp4::artifact_kind())
+        .artifact_kind(crate::artifacts::avi::artifact_kind())
+        .artifact_kind(crate::artifacts::mp3::artifact_kind())
+        .artifact_kind(crate::artifacts::wav::artifact_kind())
+        .artifact_kind(crate::artifacts::epw::artifact_kind())
+        .artifact_kind(crate::artifacts::tsv::artifact_kind())
+        .artifact_kind(crate::artifacts::html::artifact_kind())
         .library()
 }

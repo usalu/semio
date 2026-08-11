@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/puzzle-5d-react",
+  "version": "0.1.0",
+  "description": "puzzle · 5d react compose + flatten bridge for sketchpad topology",
+  "type": "module",
+  "private": true,
+  "bundleKind": "library",
+  "exports": {
+    ".": "./📦️index.tsx"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/puzzle-5d-react:test"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

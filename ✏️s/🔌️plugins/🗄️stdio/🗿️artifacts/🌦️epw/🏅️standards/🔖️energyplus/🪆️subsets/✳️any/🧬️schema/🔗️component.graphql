@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type EpwArtifactEntry {
+  key: String!
+  value: String!
+}
+type EpwArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [EpwArtifactEntry!]! @state(class: PERSISTENT)
+}

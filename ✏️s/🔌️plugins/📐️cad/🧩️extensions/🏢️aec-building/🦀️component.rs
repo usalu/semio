@@ -1,6 +1,5 @@
 //! 🧩️ CAD aec-building extension — contributes building STEP import profile to `cad-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -84,13 +83,16 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
         .extends("cad")
-        .contributes(Contribution::CadComputer {
-            app_id: HOST_APP_ID.into(),
-            module_id: MODULE_ID.into(),
-            label: "AEC Building".into(),
-            icon_id: "building".into(),
-            computers_json: serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "cad.computer",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": MODULE_ID,
+                "label": "AEC Building",
+                "iconId": "building",
+                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -103,10 +105,11 @@ mod tests {
 
     #[test]
     fn bundle_contributes_building_import_profile() {
-        let Contribution::CadComputer { module_id, computers_json, .. } = &bundle().manifest.contributions[0] else {
-            panic!("expected CadComputer");
-        };
-        assert_eq!(module_id, MODULE_ID);
+        let manifest = bundle().manifest;
+        let topic_contribution = &manifest.topic_contributions[0];
+        assert_eq!(topic_contribution.topic, "cad.computer");
+        assert_eq!(topic_contribution.payload["moduleId"], MODULE_ID);
+        let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
         let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("parse");
         assert!(parsed["importProfiles"][0]["layerTypology"]["beam"].as_str().is_some());
     }

@@ -1,0 +1,3 @@
+dialect protocol stdio.avi.snapshot
+; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
+magic = "stdio.avi.snapshot"

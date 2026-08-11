@@ -144,7 +144,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 }
 
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
-    let entry = imperative_module_contribution();
+    let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Core", MODULE_VERSION)
         .extends("imperative")
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
@@ -152,7 +152,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
                 semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message)
             })
         })
-        .contributes(entry.contribution)
+        .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -167,12 +167,12 @@ mod tests {
     fn bundle_contributes_core_module_for_imperative_play() {
         let entry = imperative_module_contribution();
         assert_eq!(entry.plugin_id, EXTENSION_ID);
-        let semio_framework::Contribution::ImperativeModule { app_id, module_id, manifest_json, .. } = entry.contribution else {
-            panic!("expected ImperativeModule");
-        };
-        assert_eq!(app_id, imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID);
-        assert_eq!(module_id, "core");
-        assert!(manifest_json.contains("imperative.extension"));
+        let topic_contribution = entry.topic_contribution.expect("imperative module topic contribution");
+        assert_eq!(topic_contribution.topic, "imperative.module");
+        let payload = topic_contribution.payload;
+        assert_eq!(payload["appId"], imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID);
+        assert_eq!(payload["moduleId"], "core");
+        assert!(payload["manifestJson"].as_str().unwrap_or_default().contains("imperative.extension"));
     }
 
     #[test]

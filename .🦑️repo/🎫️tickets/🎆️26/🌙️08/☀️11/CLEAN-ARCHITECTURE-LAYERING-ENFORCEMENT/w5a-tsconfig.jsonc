@@ -1,0 +1,10 @@
+{
+  "extends": "../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "skipLibCheck": true },
+  "include": [
+    "../../../../../../🧰️framework/🔨️modules/🖼️assets/🎯️concepts/🟦️component.ts",
+    "../../../../../../🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_concepts.ts",
+    "../../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️component.tsx",
+    "../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"
+  ]
+}

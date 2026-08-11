@@ -1,0 +1,5 @@
+dialect grammar stdio.tsv.diff
+; 🚧 scaffolded by W1b — full production rules land in W2/W3
+root = document
+document = marker
+marker = "stdio.tsv.diff"

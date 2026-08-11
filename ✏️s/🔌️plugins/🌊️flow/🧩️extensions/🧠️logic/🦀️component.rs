@@ -127,7 +127,7 @@ mod tests {
 mod extension_guest {
     use super::{extension_manifest_json, module_registry};
     use flow_extension_sdk::evaluate_json;
-    use semio_framework::{Contribution, Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;
 
@@ -143,22 +143,26 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> Contribution {
-        Contribution::FlowExtension {
-            app_id: app_id.into(),
-            extension_id: EXTENSION_ID.into(),
-            label: EXTENSION_LABEL.into(),
-            icon_id: "logic".into(),
-            manifest_json,
-        }
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+        let icon_id = "logic";
+        let topic_payload = serde_json::json!({
+            "appId": app_id,
+            "extensionId": EXTENSION_ID,
+            "label": EXTENSION_LABEL,
+            "iconId": icon_id,
+            "manifestJson": &manifest_json,
+        });
+        topic_payload
     }
 
     fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
+        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
+        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
         ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.1.0")
             .extends("flow")
-            .contributes(flow_extension_contribution(FLOW_APP_ID, manifest_json.clone()))
-            .contributes(flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json))
+            .contributes_topic("flow.extension", flow_topic_payload)
+            .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {
                 let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
                     Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())

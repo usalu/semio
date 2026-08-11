@@ -1,6 +1,5 @@
 //! 🧩️ CAD aec-building-energy extension — contributes energy computers and STEP import to `cad-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -68,13 +67,16 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", "0.1.0")
         .extends("cad")
-        .contributes(Contribution::CadComputer {
-            app_id: HOST_APP_ID.into(),
-            module_id: MODULE_ID.into(),
-            label: "AEC Building Energy".into(),
-            icon_id: "zap".into(),
-            computers_json: serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "cad.computer",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": MODULE_ID,
+                "label": "AEC Building Energy",
+                "iconId": "zap",
+                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -87,9 +89,10 @@ mod tests {
 
     #[test]
     fn bundle_contributes_energy_computers() {
-        let Contribution::CadComputer { computers_json, .. } = &bundle().manifest.contributions[0] else {
-            panic!("expected CadComputer");
-        };
+        let manifest = bundle().manifest;
+        let topic_contribution = &manifest.topic_contributions[0];
+        assert_eq!(topic_contribution.topic, "cad.computer");
+        let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
         let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("parse");
         assert_eq!(parsed["statComputers"], serde_json::json!(["energy.demand"]));
         assert_eq!(parsed["propertyComputers"], serde_json::json!(["energy.heatedvolume"]));

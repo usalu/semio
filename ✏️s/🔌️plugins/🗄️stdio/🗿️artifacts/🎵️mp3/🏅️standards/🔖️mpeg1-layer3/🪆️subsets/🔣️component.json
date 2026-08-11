@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.mp3",
+  "standard": "mpeg1-layer3",
+  "subsets": {
+    "*": { "name": "Unconstrained mp3 mpeg1-layer3" }
+  }
+}

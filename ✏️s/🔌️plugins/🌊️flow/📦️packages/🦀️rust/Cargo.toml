@@ -34,11 +34,3 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true
-
-[dev-dependencies]
-semio-s-plugin-flow-extension-primitive = { path = "../../🧩️extensions/🔤️primitive/📦️packages/🦀️rust" }
-semio-s-plugin-flow-extension-math = { path = "../../🧩️extensions/🧮️math/📦️packages/🦀️rust" }
-semio-s-plugin-flow-extension-text = { path = "../../🧩️extensions/📝️text/📦️packages/🦀️rust" }
-semio-s-plugin-flow-extension-logic = { path = "../../🧩️extensions/🧠️logic/📦️packages/🦀️rust" }
-semio-s-plugin-flow-extension-dictionary = { path = "../../🧩️extensions/📖️dictionary/📦️packages/🦀️rust" }
-semio-s-plugin-flow-extension-list = { path = "../../🧩️extensions/📃️list/📦️packages/🦀️rust" }

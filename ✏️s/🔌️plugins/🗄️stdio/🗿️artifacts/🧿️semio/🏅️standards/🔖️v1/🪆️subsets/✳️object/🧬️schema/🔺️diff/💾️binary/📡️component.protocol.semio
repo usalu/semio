@@ -1,0 +1,3 @@
+dialect protocol stdio.semio.object.diff
+; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
+magic = "stdio.semio.object.diff"

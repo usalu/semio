@@ -9,10 +9,6 @@ pub use dsl::os_dsl;
 #[path = "../../🎨️paint/🦀️component.rs"]
 pub mod paint;
 
-#[cfg(feature = "board-2d")]
-#[path = "../../🎲️board-2d/🦀️component.rs"]
-pub mod board_2d;
-
 #[path = "../../🏔️terrain/🦀️component.rs"]
 pub mod terrain;
 

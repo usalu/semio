@@ -871,7 +871,9 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             // delegating a segment, kept only for defensive completeness.
             crate::os_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
-            // character" treatment as an outright `os_dsl::TokenKind::Error` below.
+            // character" treatment as an outright `os_dsl::TokenKind::Error` below. P2-M1's
+            // promoted `< > & $ ;` tokens and STEP's `DotEnum` literal join this bucket too —
+            // Jack has no grammar concept for any of them either.
             crate::os_dsl::TokenKind::EdgeArrow
             | crate::os_dsl::TokenKind::LBrace
             | crate::os_dsl::TokenKind::RBrace
@@ -882,6 +884,12 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             | crate::os_dsl::TokenKind::Star
             | crate::os_dsl::TokenKind::Slash
             | crate::os_dsl::TokenKind::Fence
+            | crate::os_dsl::TokenKind::Lt
+            | crate::os_dsl::TokenKind::Gt
+            | crate::os_dsl::TokenKind::Amp
+            | crate::os_dsl::TokenKind::Dollar
+            | crate::os_dsl::TokenKind::Semicolon
+            | crate::os_dsl::TokenKind::DotEnum
             | crate::os_dsl::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);

@@ -2,7 +2,7 @@
 
 use crate::apps::playbook::config::PlaybookConfig;
 use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
-use semio_framework::{parse_contributions, Contribution};
+use semio_framework::parse_contributions;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -37,14 +37,25 @@ fn builtin_palette_tuples() -> Vec<(&'static str, &'static str, &'static str)> {
     PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| (*kind, *kind, "circle")).collect()
 }
 
+/// 🗂️ `playbook.blockKind` topic payload shape (see `TopicContribution` in `semio-framework-manifest`).
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlaybookBlockKindTopicPayload {
+    block_kind: String,
+    label: String,
+    icon_id: semio_framework::IconName,
+}
+
+const PLAYBOOK_BLOCK_KIND_TOPIC: &str = "playbook.blockKind";
+
+/// 🗂️ Reads the open `TopicContribution` (`"playbook.blockKind"` topic) shape per entry.
 fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, String)> {
     parse_contributions(&config.contributions_json)
         .into_iter()
         .filter_map(|entry| {
-            let Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } = entry.contribution else {
-                return None;
-            };
-            Some((block_kind, label, icon_id.to_string()))
+            let topic_contribution = entry.topic_contribution.as_ref().filter(|topic_contribution| topic_contribution.topic == PLAYBOOK_BLOCK_KIND_TOPIC)?;
+            let payload = topic_contribution.decode::<PlaybookBlockKindTopicPayload>().ok()?;
+            Some((payload.block_kind, payload.label, payload.icon_id.to_string()))
         })
         .collect()
 }
@@ -78,22 +89,18 @@ mod tests {
         assert!(matches!(definition.surface_kind, SurfaceKind::BlockList));
     }
 
+    /// 🗂️ The open `playbook.blockKind` topic shape must surface the palette entry.
     #[test]
-    fn render_builder_palette_includes_contributed_block_kinds() {
+    fn render_builder_palette_includes_topic_contributed_block_kinds() {
         use crate::apps::playbook::config::PlaybookConfig;
-        use semio_framework::{Contribution, ProgramContributionEntry};
+        use semio_framework::{ProgramContributionEntry, TopicContribution};
         let mut config = PlaybookConfig::default();
         let entry = ProgramContributionEntry {
             plugin_id: "playbook-module-procedural".into(),
-            contribution: Contribution::PlaybookBlockKind {
-                app_id: "playbook-module-procedural".into(),
-                block_kind: "buildingComponent".into(),
-                label: "Building Component".into(),
-                icon_id: "building".into(),
-                default_value_json: "{}".into(),
-                params_body_key: "params".into(),
-                preview_body_key: "preview".into(),
-            },
+            topic_contribution: Some(TopicContribution::new(
+                "playbook.blockKind",
+                serde_json::json!({ "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building" }),
+            )),
         };
         config.contributions_json = serde_json::to_string(&vec![entry]).unwrap();
         let palette = build_palette(&config);

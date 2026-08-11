@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioModelArtifactEntry {
+  key: String!
+  value: String!
+}
+type SemioModelArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioModelArtifactEntry!]! @state(class: PERSISTENT)
+}

@@ -2232,7 +2232,7 @@ if (import.meta.vitest) {
 
     it("plans a single delivery across one dirty edge", () => {
       const graph: OsWorkflow = {
-        schema: "s.workflow",
+        schema: "os.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
         edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in", contract: mediaContract() }],
       };
@@ -2242,7 +2242,7 @@ if (import.meta.vitest) {
 
     it("plans a chain in topological order when only the root is dirty", () => {
       const graph: OsWorkflow = {
-        schema: "s.workflow",
+        schema: "os.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2"), mediaNode("node-3", "app-3")],
         edges: [
           { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in", contract: mediaContract() },
@@ -2255,7 +2255,7 @@ if (import.meta.vitest) {
 
     it("plans a diamond with one delivery per incoming edge", () => {
       const graph: OsWorkflow = {
-        schema: "s.workflow",
+        schema: "os.workflow",
         nodes: [mediaNode("node-1", "app-a"), mediaNode("node-2", "app-b"), mediaNode("node-3", "app-c"), mediaNode("node-4", "app-d")],
         edges: [
           { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-a:out", targetNodeId: "node-2", targetPortId: "app-b:in", contract: mediaContract() },
@@ -2273,7 +2273,7 @@ if (import.meta.vitest) {
 
     it("plans nothing when no instance is dirty", () => {
       const graph: OsWorkflow = {
-        schema: "s.workflow",
+        schema: "os.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
         edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in", contract: mediaContract() }],
       };
@@ -2281,7 +2281,7 @@ if (import.meta.vitest) {
     });
 
     it("plans nothing for a dirty node with no outgoing edges", () => {
-      const graph: OsWorkflow = { schema: "s.workflow", nodes: [mediaNode("node-1", "app-1")], edges: [] };
+      const graph: OsWorkflow = { schema: "os.workflow", nodes: [mediaNode("node-1", "app-1")], edges: [] };
       expect(planWorkflow(graph, new Set(["app-1"]))).toEqual([]);
     });
 

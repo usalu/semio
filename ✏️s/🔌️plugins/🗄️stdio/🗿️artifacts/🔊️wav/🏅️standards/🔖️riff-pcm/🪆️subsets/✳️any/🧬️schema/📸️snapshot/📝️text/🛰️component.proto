@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 🚧 scaffolded by W1b — generic facet mirror.
+package semio.stdio_wav_snapshot.text;
+message Semio_wav_snapshot {
+  string schema = 1;
+  string entries_wire = 2;
+}

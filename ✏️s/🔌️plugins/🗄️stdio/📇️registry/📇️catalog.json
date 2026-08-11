@@ -4,8 +4,7 @@
       "dir": "💾️binary",
       "mime": "application/octet-stream",
       "ext": ".bin",
-      "depends": [],
-      "neutral": "Bytes"
+      "depends": []
     },
     "txt": {
       "dir": "📄txt",
@@ -13,8 +12,7 @@
       "ext": ".txt",
       "depends": [
         "binary"
-      ],
-      "neutral": "TextDoc"
+      ]
     },
     "xml": {
       "dir": "📰xml",
@@ -22,8 +20,7 @@
       "ext": ".xml",
       "depends": [
         "txt"
-      ],
-      "neutral": "XmlDoc"
+      ]
     },
     "deflate": {
       "dir": "🗜️deflate",
@@ -31,8 +28,7 @@
       "ext": ".zz",
       "depends": [
         "binary"
-      ],
-      "neutral": "DeflateStream"
+      ]
     },
     "zip": {
       "dir": "🎒️zip",
@@ -41,8 +37,7 @@
       "depends": [
         "binary",
         "deflate"
-      ],
-      "neutral": "Archive"
+      ]
     },
     "json": {
       "dir": "🔣️json",
@@ -50,8 +45,7 @@
       "ext": ".json",
       "depends": [
         "txt"
-      ],
-      "neutral": "Value"
+      ]
     },
     "csv": {
       "dir": "📊️csv",
@@ -59,8 +53,7 @@
       "ext": ".csv",
       "depends": [
         "txt"
-      ],
-      "neutral": "TableDoc"
+      ]
     },
     "md": {
       "dir": "📝️md",
@@ -68,8 +61,7 @@
       "ext": ".md",
       "depends": [
         "txt"
-      ],
-      "neutral": "TextDoc"
+      ]
     },
     "gltf": {
       "dir": "🧊️gltf",
@@ -77,8 +69,7 @@
       "ext": ".gltf",
       "depends": [
         "json"
-      ],
-      "neutral": "MeshData"
+      ]
     },
     "obj": {
       "dir": "🧊️obj",
@@ -86,8 +77,7 @@
       "ext": ".obj",
       "depends": [
         "txt"
-      ],
-      "neutral": "MeshData"
+      ]
     },
     "stl": {
       "dir": "🟪️stl",
@@ -96,8 +86,7 @@
       "depends": [
         "txt",
         "binary"
-      ],
-      "neutral": "MeshData"
+      ]
     },
     "ply": {
       "dir": "☁️ply",
@@ -105,8 +94,7 @@
       "ext": ".ply",
       "depends": [
         "txt"
-      ],
-      "neutral": "MeshData"
+      ]
     },
     "las": {
       "dir": "☁️las",
@@ -114,8 +102,7 @@
       "ext": ".las",
       "depends": [
         "binary"
-      ],
-      "neutral": "MeshData"
+      ]
     },
     "step": {
       "dir": "📐️step",
@@ -123,8 +110,7 @@
       "ext": ".step",
       "depends": [
         "txt"
-      ],
-      "neutral": "Brep"
+      ]
     },
     "ifc": {
       "dir": "🏗️ifc",
@@ -132,8 +118,7 @@
       "ext": ".ifc",
       "depends": [
         "txt"
-      ],
-      "neutral": "Brep"
+      ]
     },
     "dwg": {
       "dir": "🖊️dwg",
@@ -141,8 +126,7 @@
       "ext": ".dwg",
       "depends": [
         "binary"
-      ],
-      "neutral": "DwgDrawing"
+      ]
     },
     "dxf": {
       "dir": "🖊️dxf",
@@ -150,8 +134,7 @@
       "ext": ".dxf",
       "depends": [
         "txt"
-      ],
-      "neutral": "DwgDrawing"
+      ]
     },
     "svg": {
       "dir": "🎨️svg",
@@ -159,8 +142,7 @@
       "ext": ".svg",
       "depends": [
         "xml"
-      ],
-      "neutral": "DwgDrawing"
+      ]
     },
     "png": {
       "dir": "📷️png",
@@ -169,8 +151,7 @@
       "depends": [
         "binary",
         "deflate"
-      ],
-      "neutral": "RasterImage"
+      ]
     },
     "jpg": {
       "dir": "📷️jpg",
@@ -178,8 +159,7 @@
       "ext": ".jpg",
       "depends": [
         "binary"
-      ],
-      "neutral": "RasterImage"
+      ]
     },
     "gif": {
       "dir": "🎞️gif",
@@ -187,8 +167,7 @@
       "ext": ".gif",
       "depends": [
         "binary"
-      ],
-      "neutral": "RasterImage"
+      ]
     },
     "bmp": {
       "dir": "🖼️bmp",
@@ -196,8 +175,7 @@
       "ext": ".bmp",
       "depends": [
         "binary"
-      ],
-      "neutral": "RasterImage"
+      ]
     },
     "tiff": {
       "dir": "🖼️tiff",
@@ -205,8 +183,7 @@
       "ext": ".tiff",
       "depends": [
         "binary"
-      ],
-      "neutral": "RasterImage"
+      ]
     },
     "pdf": {
       "dir": "📄️pdf",
@@ -215,8 +192,7 @@
       "depends": [
         "binary",
         "deflate"
-      ],
-      "neutral": "PageDoc"
+      ]
     },
     "docx": {
       "dir": "📜️docx",
@@ -225,8 +201,7 @@
       "depends": [
         "zip",
         "xml"
-      ],
-      "neutral": "PageDoc"
+      ]
     },
     "pptx": {
       "dir": "🎞️pptx",
@@ -235,8 +210,7 @@
       "depends": [
         "zip",
         "xml"
-      ],
-      "neutral": "PageDoc"
+      ]
     },
     "xlsx": {
       "dir": "📕️xlsx",
@@ -245,8 +219,7 @@
       "depends": [
         "zip",
         "xml"
-      ],
-      "neutral": "TableDoc"
+      ]
     },
     "bcf": {
       "dir": "💬️bcf",
@@ -255,8 +228,98 @@
       "depends": [
         "zip",
         "xml"
-      ],
-      "neutral": "Archive"
+      ]
+    },
+    "semio": {
+      "dir": "🧿️semio",
+      "mime": "application/vnd.semio",
+      "ext": ".semio",
+      "depends": [
+        "txt",
+        "xml",
+        "json",
+        "csv",
+        "md",
+        "gltf",
+        "obj",
+        "stl",
+        "ply",
+        "las",
+        "step",
+        "ifc",
+        "dwg",
+        "dxf",
+        "svg",
+        "png",
+        "jpg",
+        "gif",
+        "bmp",
+        "tiff",
+        "pdf",
+        "docx",
+        "pptx",
+        "bcf",
+        "mp4",
+        "avi",
+        "mp3",
+        "wav"
+      ]
+    },
+    "mp4": {
+      "dir": "🎥️mp4",
+      "mime": "video/mp4",
+      "ext": ".mp4",
+      "depends": [
+        "binary"
+      ]
+    },
+    "avi": {
+      "dir": "📼️avi",
+      "mime": "video/x-msvideo",
+      "ext": ".avi",
+      "depends": [
+        "binary"
+      ]
+    },
+    "mp3": {
+      "dir": "🎵️mp3",
+      "mime": "audio/mpeg",
+      "ext": ".mp3",
+      "depends": [
+        "binary"
+      ]
+    },
+    "wav": {
+      "dir": "🔊️wav",
+      "mime": "audio/wav",
+      "ext": ".wav",
+      "depends": [
+        "binary"
+      ]
+    },
+    "epw": {
+      "dir": "🌦️epw",
+      "mime": "text/plain",
+      "ext": ".epw",
+      "depends": [
+        "txt"
+      ]
+    },
+    "tsv": {
+      "dir": "📑️tsv",
+      "mime": "text/tab-separated-values",
+      "ext": ".tsv",
+      "depends": [
+        "txt"
+      ]
+    },
+    "html": {
+      "dir": "🌐️html",
+      "mime": "text/html",
+      "ext": ".html",
+      "depends": [
+        "txt"
+      ]
     }
   },
   "stdio_dag_edges": [
@@ -399,6 +462,146 @@
     {
       "from": "bcf",
       "to": "xml"
+    },
+    {
+      "from": "semio",
+      "to": "txt"
+    },
+    {
+      "from": "semio",
+      "to": "xml"
+    },
+    {
+      "from": "semio",
+      "to": "json"
+    },
+    {
+      "from": "semio",
+      "to": "csv"
+    },
+    {
+      "from": "semio",
+      "to": "md"
+    },
+    {
+      "from": "semio",
+      "to": "gltf"
+    },
+    {
+      "from": "semio",
+      "to": "obj"
+    },
+    {
+      "from": "semio",
+      "to": "stl"
+    },
+    {
+      "from": "semio",
+      "to": "ply"
+    },
+    {
+      "from": "semio",
+      "to": "las"
+    },
+    {
+      "from": "semio",
+      "to": "step"
+    },
+    {
+      "from": "semio",
+      "to": "ifc"
+    },
+    {
+      "from": "semio",
+      "to": "dwg"
+    },
+    {
+      "from": "semio",
+      "to": "dxf"
+    },
+    {
+      "from": "semio",
+      "to": "svg"
+    },
+    {
+      "from": "semio",
+      "to": "png"
+    },
+    {
+      "from": "semio",
+      "to": "jpg"
+    },
+    {
+      "from": "semio",
+      "to": "gif"
+    },
+    {
+      "from": "semio",
+      "to": "bmp"
+    },
+    {
+      "from": "semio",
+      "to": "tiff"
+    },
+    {
+      "from": "semio",
+      "to": "pdf"
+    },
+    {
+      "from": "semio",
+      "to": "docx"
+    },
+    {
+      "from": "semio",
+      "to": "pptx"
+    },
+    {
+      "from": "semio",
+      "to": "bcf"
+    },
+    {
+      "from": "semio",
+      "to": "mp4"
+    },
+    {
+      "from": "semio",
+      "to": "avi"
+    },
+    {
+      "from": "semio",
+      "to": "mp3"
+    },
+    {
+      "from": "semio",
+      "to": "wav"
+    },
+    {
+      "from": "mp4",
+      "to": "binary"
+    },
+    {
+      "from": "avi",
+      "to": "binary"
+    },
+    {
+      "from": "mp3",
+      "to": "binary"
+    },
+    {
+      "from": "wav",
+      "to": "binary"
+    },
+    {
+      "from": "epw",
+      "to": "txt"
+    },
+    {
+      "from": "tsv",
+      "to": "txt"
+    },
+    {
+      "from": "html",
+      "to": "txt"
     }
   ],
   "owners": [
@@ -1868,11 +2071,50 @@
         "stl",
         "zip"
       ]
+    },
+    {
+      "plugin": "🗄️stdio",
+      "artifact": "🧿️semio",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+      "kind_id": "s.stdio.semio",
+      "stdio_artifacts": [
+        "txt",
+        "xml",
+        "json",
+        "csv",
+        "md",
+        "gltf",
+        "obj",
+        "stl",
+        "ply",
+        "las",
+        "step",
+        "ifc",
+        "dwg",
+        "dxf",
+        "svg",
+        "png",
+        "jpg",
+        "gif",
+        "bmp",
+        "tiff",
+        "pdf",
+        "docx",
+        "pptx",
+        "bcf",
+        "mp4",
+        "avi",
+        "mp3",
+        "wav"
+      ],
+      "import": [],
+      "export": []
     }
   ],
   "counts": {
-    "stdio_artifacts": 28,
+    "stdio_artifacts": 36,
     "domain_artifacts": 54,
-    "curated_io_pairs": 273
+    "curated_io_pairs": 273,
+    "curated_io_pairs_note": "273 is hand-maintained (not mechanically recomputed by this file/script.ts) — left unchanged by W1b; W4 adds the semio+7-format owner/leaf pairs and should recompute this number then, not fabricate it here."
   }
 }

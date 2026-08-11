@@ -2172,7 +2172,7 @@
     "animate": {
       "namePrefix": "🎬️animateplay",
       "order": 170,
-      "command": "bun run dev:animate",
+      "command": "bun ./📜️script.ts dev animate",
       "reactEnv": {
         "PRESENTATION_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2194,7 +2194,7 @@
     "architect": {
       "namePrefix": "🏛️architect",
       "order": 142,
-      "command": "bun run dev:architect",
+      "command": "bun ./📜️script.ts dev architect",
       "reactEnv": {
         "ARCHITECT_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2216,7 +2216,7 @@
     "aussuchen": {
       "namePrefix": "🏚️mitbestand🪵️aussuchen",
       "order": 216,
-      "command": "bun run dev:mit-bestand:aussuchen",
+      "command": "bun ./📜️script.ts dev aussuchen",
       "reactEnv": {
         "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2229,7 +2229,7 @@
     "bearbeiten": {
       "namePrefix": "🏚️mitbestand🏭️bearbeiten",
       "order": 217,
-      "command": "bun run dev:mit-bestand:bearbeiten",
+      "command": "bun ./📜️script.ts dev bearbeiten",
       "reactEnv": {
         "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2330,7 +2330,7 @@
     "dag": {
       "namePrefix": "🌳️dag",
       "order": 140,
-      "command": "bun run dev:dag",
+      "command": "bun ./📜️script.ts dev dag",
       "reactEnv": {
         "DAG_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2464,7 +2464,7 @@
     "generator": {
       "namePrefix": "🏚️mitbestand⚙️generator",
       "order": 214,
-      "command": "bun run dev:mit-bestand:generator",
+      "command": "bun ./📜️script.ts dev generator",
       "reactEnv": {
         "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2477,7 +2477,7 @@
     "gis2d": {
       "namePrefix": "🌐️gis📍️2d",
       "order": 160,
-      "command": "bun run dev:gis:2d",
+      "command": "bun ./📜️script.ts dev gis 2d",
       "reactEnv": {
         "GIS_2D_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2499,7 +2499,7 @@
     "gis3d": {
       "namePrefix": "🌐️gis⛰️3d",
       "order": 160.3,
-      "command": "bun run dev:gis:3d",
+      "command": "bun ./📜️script.ts dev gis 3d",
       "reactEnv": {
         "GIS_3D_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2521,7 +2521,7 @@
     "imperative": {
       "namePrefix": "⚙️imperative",
       "order": 155,
-      "command": "bun run dev:imperative",
+      "command": "bun ./📜️script.ts dev imperative",
       "reactEnv": {
         "IMPERATIVE_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2543,7 +2543,7 @@
     "koordinator": {
       "namePrefix": "🏚️mitbestand🧭️koordinator",
       "order": 215,
-      "command": "bun run dev:mit-bestand:koordinator",
+      "command": "bun ./📜️script.ts dev koordinator",
       "reactEnv": {
         "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2601,7 +2601,7 @@
     "mathematical": {
       "namePrefix": "🧮️mathematical",
       "order": 141,
-      "command": "bun run dev:mathematical",
+      "command": "bun ./📜️script.ts dev mathematical",
       "reactEnv": {
         "MATHEMATICAL_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2645,7 +2645,7 @@
     "procedural2d": {
       "namePrefix": "🔧️procedural🩻️2d",
       "order": 180,
-      "command": "bun run dev:procedural:2d",
+      "command": "bun ./📜️script.ts dev procedural 2d",
       "reactEnv": {
         "PROCEDURAL_2D_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2799,7 +2799,7 @@
     "reasoning-wires": {
       "namePrefix": "🧠️reasoning🔗️wires",
       "order": 270,
-      "command": "bun run dev:reasoning:wires",
+      "command": "bun ./📜️script.ts dev wires",
       "reactEnv": {
         "WIRES_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2867,7 +2867,7 @@
     "sequence": {
       "namePrefix": "📜️sequence",
       "order": 156,
-      "command": "bun run dev:sequence",
+      "command": "bun ./📜️script.ts dev sequence",
       "reactEnv": {
         "SEQUENCE_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
@@ -2999,7 +2999,7 @@
     "verfolgen": {
       "namePrefix": "🏚️mitbestand🌍️verfolgen",
       "order": 218,
-      "command": "bun run dev:mit-bestand:verfolgen",
+      "command": "bun ./📜️script.ts dev verfolgen",
       "reactEnv": {
         "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"

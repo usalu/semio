@@ -34,6 +34,7 @@ pub fn register() {
 
     register_writer_languages();
     register_artifact_schema();
+    crate::apps::writer::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::writer::WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
 }
 

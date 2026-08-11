@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 🚧 scaffolded by W1b — generic facet mirror.
+package semio.stdio_epw_mutations.text;
+message Semio_epw_mutations {
+  string schema = 1;
+  string entries_wire = 2;
+}

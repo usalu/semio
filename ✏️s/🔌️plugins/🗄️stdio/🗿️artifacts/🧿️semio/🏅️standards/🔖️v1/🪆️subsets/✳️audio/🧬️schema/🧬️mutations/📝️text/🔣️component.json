@@ -1,0 +1,10 @@
+{
+  "$id": "https://semio.tech/schema/stdio.semio.audio.mutations/text.json",
+  "title": "Semio_semio_audio_mutations",
+  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "type": "object",
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+  }
+}

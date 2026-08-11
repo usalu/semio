@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type TsvDiffEntry {
+  key: String!
+  value: String!
+}
+type TsvDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [TsvDiffEntry!]! @state(class: PERSISTENT)
+}

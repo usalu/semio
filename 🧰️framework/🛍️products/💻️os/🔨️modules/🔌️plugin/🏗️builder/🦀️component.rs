@@ -1,7 +1,7 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{App, ArtifactApp, Plugin, PluginApp};
-use semio_framework::{kernel::CapabilityRequirement, CommandDefinition, Contribution};
+use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -19,7 +19,6 @@ pub struct PluginBuilder<State> {
     version: Option<String>,
     setup: Option<fn()>,
     capabilities: Vec<CapabilityRequirement>,
-    contributions: Vec<Contribution>,
     commands: Vec<CommandDefinition>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
@@ -36,7 +35,6 @@ impl PluginBuilder<NeedsLabel> {
             version: None,
             setup: None,
             capabilities: Vec::new(),
-            contributions: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
             apps: HashMap::new(),
@@ -53,7 +51,6 @@ impl PluginBuilder<NeedsLabel> {
             version: None,
             setup: self.setup,
             capabilities: self.capabilities,
-            contributions: self.contributions,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
             apps: self.apps,
@@ -72,7 +69,6 @@ impl PluginBuilder<NeedsVersion> {
             version: Some(version.into()),
             setup: self.setup,
             capabilities: self.capabilities,
-            contributions: self.contributions,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
             apps: self.apps,
@@ -110,12 +106,6 @@ impl PluginBuilder<Ready> {
             rights: Rights::Write,
             scope: Scope::Plugin,
         })
-    }
-
-    /// 🧩️ Adds a contribution declaration.
-    pub fn contributes(mut self, contribution: Contribution) -> Self {
-        self.contributions.push(contribution);
-        self
     }
 
     /// 🎮️ Declares a plugin-scope command.
@@ -161,9 +151,6 @@ impl PluginBuilder<Ready> {
         );
         for capability in self.capabilities {
             plugin = plugin.capability(capability);
-        }
-        for contribution in self.contributions {
-            plugin = plugin.contributes(contribution);
         }
         for command in self.commands {
             plugin = plugin.plugin_command(command);

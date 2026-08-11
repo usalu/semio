@@ -1,0 +1,5 @@
+module Semio_semio_video_mutations;
+# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+type Document = unit {
+    magic: bytes &size=27;
+};

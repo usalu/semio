@@ -9,7 +9,7 @@
 //! `build_filter_bar`/`build_pool_table`, used only by the pool window).
 
 use crate::artifacts::curate::{CurateSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, SOURCING_CURATE_SCHEMA};
-use semio_framework::{parse_contributions, Contribution};
+use semio_framework::parse_contributions;
 use serde_json::{json, Value};
 use std::sync::Mutex;
 
@@ -511,7 +511,7 @@ fn leak_str(value: String) -> &'static str {
     Box::leak(value.into_boxed_str())
 }
 
-/// 🧩️ One hot-installed sourcing module deserialized from `Contribution::SourcingModule`.
+/// 🧩️ One hot-installed sourcing module deserialized from the `"sourcing.module"` topic contribution.
 #[derive(Clone)]
 struct ContributedSourcingModule {
     module_id: &'static str,
@@ -544,6 +544,20 @@ static LAST_SOURCING_CONTRIBUTIONS_JSON: Mutex<String> = Mutex::new(String::new(
 const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
 
 /// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
+//#region 🔖️SourcingModuleTopicPayload
+/// 🗂️ `topic_contribution.payload` shape for the `"sourcing.module"` topic.
+/// See `TopicContribution` in `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SourcingModuleTopicPayload {
+    app_id: String,
+    module_id: String,
+    label: String,
+    typology_json: String,
+    kinds_json: String,
+}
+//#endregion 🔖️SourcingModuleTopicPayload
+
 pub fn sync_sourcing_module_contributions(contributions_json: &str) {
     let mut last = LAST_SOURCING_CONTRIBUTIONS_JSON.lock().expect("sourcing contributions lock");
     if *last == contributions_json {
@@ -551,9 +565,16 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
     }
     let mut modules = Vec::new();
     for entry in parse_contributions(contributions_json) {
-        let Contribution::SourcingModule { app_id, module_id, label, typology_json, kinds_json, .. } = entry.contribution else {
+        let Some(payload) = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic| topic.topic == "sourcing.module")
+            .and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok())
+        else {
             continue;
         };
+        let (app_id, module_id, label, typology_json, kinds_json) =
+            (payload.app_id, payload.module_id, payload.label, payload.typology_json, payload.kinds_json);
         if app_id != SOURCING_CURATE_APP_ID {
             continue;
         }
@@ -809,14 +830,17 @@ mod tests {
         let beams = beams::BeamsModule;
         let entry = semio_framework::ProgramContributionEntry {
             plugin_id: "sourcing-module-beams".into(),
-            contribution: semio_framework::Contribution::SourcingModule {
-                app_id: SOURCING_CURATE_APP_ID.into(),
-                module_id: beams.module_id().into(),
-                label: beams.label().into(),
-                icon_id: "beam".into(),
-                typology_json: serde_json::to_string(&beams.typology()).unwrap(),
-                kinds_json: serde_json::to_string(&beams.demo_kinds()).unwrap(),
-            },
+            topic_contribution: Some(semio_framework::TopicContribution::new(
+                "sourcing.module",
+                serde_json::json!({
+                    "appId": SOURCING_CURATE_APP_ID,
+                    "moduleId": beams.module_id(),
+                    "label": beams.label(),
+                    "iconId": "beam",
+                    "typologyJson": serde_json::to_string(&beams.typology()).unwrap(),
+                    "kindsJson": serde_json::to_string(&beams.demo_kinds()).unwrap(),
+                }),
+            )),
         };
         sync_sourcing_module_contributions(&serde_json::to_string(&vec![entry]).unwrap());
         let modules = available_modules();
@@ -827,17 +851,20 @@ mod tests {
 
     #[test]
     fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
-        use semio_framework::{Contribution, ProgramContributionEntry};
+        use semio_framework::{ProgramContributionEntry, TopicContribution};
         let entry = ProgramContributionEntry {
             plugin_id: "sourcing-module-test".into(),
-            contribution: Contribution::SourcingModule {
-                app_id: "sourcing-curate".into(),
-                module_id: "hot-test".into(),
-                label: "Hot Test".into(),
-                icon_id: "box".into(),
-                typology_json: serde_json::to_string(&TypologyNode::new("hot-test", "Hot Test", vec![])).unwrap(),
-                kinds_json: "[]".into(),
-            },
+            topic_contribution: Some(TopicContribution::new(
+                "sourcing.module",
+                serde_json::json!({
+                    "appId": "sourcing-curate",
+                    "moduleId": "hot-test",
+                    "label": "Hot Test",
+                    "iconId": "box",
+                    "typologyJson": serde_json::to_string(&TypologyNode::new("hot-test", "Hot Test", vec![])).unwrap(),
+                    "kindsJson": "[]",
+                }),
+            )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();
         sync_sourcing_module_contributions(&json);

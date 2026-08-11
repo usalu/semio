@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.wav",
+  "standard": "riff-pcm",
+  "subsets": {
+    "*": { "name": "Unconstrained wav riff-pcm" }
+  }
+}

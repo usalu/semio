@@ -3570,14 +3570,14 @@ pub struct SpaceAlternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-/// @emoji 🏷️ Schema id of the space-wide history meta-document — `"s.space.history"`, under the
-/// unified `s.` schema lattice alongside `space::S_SPACE_SCHEMA`/`space::S_COLLECTION_SCHEMA` (this
-/// crate sits below `space` in the dependency graph, so it declares its own constant rather than
-/// depending on that crate's). Renamed from `"os.space.history"` — the `.spr` extension
-/// (`SpaceHistorySnapshot::EXTENSION`, `"space-history"`) is unchanged.
-pub const S_SPACE_HISTORY_SCHEMA: &str = "s.space.history";
+/// @emoji 🏷️ Schema id of the space-wide history meta-document — `"os.space.history"`, under the
+/// `os.` schema lattice (a generic os-shell abstraction, not the `s.` product lattice), separate
+/// from `space::S_SPACE_SCHEMA`/`space::S_COLLECTION_SCHEMA` (this crate sits below `space` in the
+/// dependency graph, so it declares its own constant rather than depending on that crate's). The
+/// `.spr` extension (`SpaceHistorySnapshot::EXTENSION`, `"space-history"`) is unchanged.
+pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 
-/// @emoji 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`) meta-document: itself
+/// @emoji 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`) meta-document: itself
 /// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
@@ -3767,7 +3767,7 @@ impl ArtifactPack for SpaceHistorySnapshot {
 
 //#region SpaceHost
 /// @emoji 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
-/// timeline, itself stored in a dogfooded `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`)
+/// timeline, itself stored in a dogfooded `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`)
 /// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
 /// it satisfies `SpaceMember`.
 pub struct SpaceHost {
@@ -4701,6 +4701,27 @@ impl OpBinary for DemoMutation {
         register_document_codec(codec);
         assert!(document_codec("demo/v1").is_some(), "registered codec is discoverable by schema string");
         assert!(document_codec("no-such-schema").is_none());
+    }
+
+    /// 🔎️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1 Task
+    /// 4: confirms `register_document_codec`'s ACTUAL collision behavior for a later wave's
+    /// load-bearing "13 subsets, 13 distinct ids, same artifact_kind+standard" design — the
+    /// registry is a plain `HashMap<schema, ArtifactCodec>` and `register_document_codec` is
+    /// documented "idempotent, safe to call repeatedly", i.e. a SECOND registration under the SAME
+    /// id silently overwrites the first (last-registered-wins) rather than panicking. Distinct ids
+    /// (the semio artifact's actual design) never collide and are unaffected either way; this test
+    /// only documents what happens if two subsets' ids ever accidentally coincide (a typo, not by
+    /// design) — currently: silent data loss of the first codec, not a loud panic.
+    #[test]
+    fn register_document_codec_same_id_twice_overwrites_silently_not_panics() {
+        let first = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
+        let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
+        assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
+
+        register_document_codec(first);
+        register_document_codec(second.clone()); // must not panic — see doc comment above
+        let resolved = document_codec("test.duplicate-id-probe/v1").expect("still registered after the second call");
+        assert_eq!(resolved.pack_schema_hash, second.pack_schema_hash, "second registration silently won — no panic, no error, no side channel signaling the collision");
     }
 
     #[test]

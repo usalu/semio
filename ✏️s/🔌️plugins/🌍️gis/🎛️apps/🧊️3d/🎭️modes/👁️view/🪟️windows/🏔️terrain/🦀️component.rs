@@ -8,7 +8,8 @@ use crate::apps::gis3d::config::Gis3dConfig;
 use crate::apps::gis3d::GIS3D_PLAY_APP_ID;
 use crate::artifacts::gisterrain::engine::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use framework_surface::terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
+use crate::modules::terrain::{build_terrain_scene_json, TerrainDescriptorJson};
+use framework_surface::terrain::projection;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 

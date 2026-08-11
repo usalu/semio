@@ -10,7 +10,7 @@ pub mod host {
     use crate::instance::{create_os_id, OsInstanceState};
     use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
     use protocol::Mutation;
-    use semio_framework::{AppDefinition, Contribution, PluginManifest, ViewModel};
+    use semio_framework::{AppDefinition, PluginManifest, TopicContribution, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
@@ -38,7 +38,7 @@ pub mod host {
     #[serde(rename_all = "camelCase")]
     pub struct ProgramContributionEntry {
         pub plugin_id: String,
-        pub contribution: Contribution,
+        pub topic_contribution: TopicContribution,
     }
 
     //#region 🔖️ProgramSupervisorState
@@ -157,8 +157,8 @@ pub mod host {
         pub fn contributions(&self) -> Vec<ProgramContributionEntry> {
             let mut entries = Vec::new();
             for loaded in self.programs.values() {
-                for contribution in &loaded.manifest.contributions {
-                    entries.push(ProgramContributionEntry { plugin_id: loaded.plugin_id.clone(), contribution: contribution.clone() });
+                for topic_contribution in &loaded.manifest.topic_contributions {
+                    entries.push(ProgramContributionEntry { plugin_id: loaded.plugin_id.clone(), topic_contribution: topic_contribution.clone() });
                 }
             }
             entries
@@ -1016,7 +1016,7 @@ pub mod host {
                     tutorials: Vec::new(),
                 }],
                 capabilities: vec![],
-                contributions: vec![],
+                topic_contributions: vec![],
                 examples: vec![],
                 commands: vec![],
             };
@@ -1115,14 +1115,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1181,14 +1181,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -1202,15 +1202,18 @@ pub mod host {
         #[test]
         fn contributions_track_plugin_load_and_hot_swap() {
             let mut host = PluginHost::new();
-            let contribution = Contribution::PlaybookBlockKind {
-                app_id: "playbook-module-procedural".into(),
-                block_kind: "buildingComponent".into(),
-                label: "Building Component".into(),
-                icon_id: "building".into(),
-                default_value_json: "{}".into(),
-                params_body_key: "params".into(),
-                preview_body_key: "preview".into(),
-            };
+            let topic_contribution = TopicContribution::new(
+                "playbook.blockKind",
+                serde_json::json!({
+                    "appId": "playbook-module-procedural",
+                    "blockKind": "buildingComponent",
+                    "label": "Building Component",
+                    "iconId": "building",
+                    "defaultValueJson": "{}",
+                    "paramsBodyKey": "params",
+                    "previewBodyKey": "preview",
+                }),
+            );
             host.load_plugin(LoadedProgram {
                 plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
@@ -1219,7 +1222,7 @@ pub mod host {
                     version: "0.1.0".into(),
                     apps: vec![],
                     capabilities: vec![],
-                    contributions: vec![contribution.clone()],
+                    topic_contributions: vec![topic_contribution.clone()],
                     examples: vec![],
                     commands: vec![],
                  artifact_kinds: vec![] },
@@ -1235,7 +1238,7 @@ pub mod host {
                     version: "0.2.0".into(),
                     apps: vec![],
                     capabilities: vec![],
-                    contributions: vec![],
+                    topic_contributions: vec![],
                     examples: vec![],
                     commands: vec![],
                  artifact_kinds: vec![] },
@@ -2908,7 +2911,7 @@ pub mod workflow {
     use std::collections::{HashMap, HashSet};
     use std::sync::{Mutex, OnceLock};
 
-    pub const OS_SPACE_SCHEMA: &str = "s.space";
+    pub const OS_SPACE_SCHEMA: &str = "os.space";
     pub const OS_WORKFLOW_VFS_ROOT_ID: &str = "os-workflow-root";
     pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
 

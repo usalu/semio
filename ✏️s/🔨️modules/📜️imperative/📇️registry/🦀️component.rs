@@ -2,9 +2,35 @@
 
 use imperative_extension_sdk::ImperativeExtensionManifest;
 use neural_engine::{node_hash, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry};
-use semio_framework::{parse_contributions, Contribution, ProgramContributionEntry};
+use semio_framework::{parse_contributions, ProgramContributionEntry};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
+
+//#region 🗂️TopicContribution
+/// 🗂️ Topic string `imperative.extension_sdk::imperative_module_topic_contribution` builds its
+/// `TopicContribution` under.
+const IMPERATIVE_MODULE_TOPIC: &str = "imperative.module";
+
+/// 🗂️ The two fields actually read here from `imperative_module_topic_contribution`'s `payload`
+/// shape, camelCase over the wire.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ImperativeModuleTopicPayload {
+    app_id: String,
+    manifest_json: String,
+}
+
+/// 🔎️ Extracts `(app_id, manifest_json)` from one contribution entry's open `topic_contribution`
+/// (topic `"imperative.module"`), if present and decodable.
+fn imperative_module_fields(entry: &ProgramContributionEntry) -> Option<(String, String)> {
+    let topic_contribution = entry.topic_contribution.as_ref()?;
+    if topic_contribution.topic != IMPERATIVE_MODULE_TOPIC {
+        return None;
+    }
+    let payload = topic_contribution.decode::<ImperativeModuleTopicPayload>().ok()?;
+    Some((payload.app_id, payload.manifest_json))
+}
+//#endregion 🗂️TopicContribution
 
 // #region 🔖️ModuleRegistry
 type NativeRegistrar = fn(&mut Registry);
@@ -93,7 +119,7 @@ fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Valu
     let mut catalogue_sections = Vec::new();
     let registrars = native_registrars().lock().expect("native imperative registrars lock");
     for entry in parse_contributions(contributions_json) {
-        let Contribution::ImperativeModule { app_id, manifest_json, .. } = entry.contribution else {
+        let Some((app_id, manifest_json)) = imperative_module_fields(&entry) else {
             continue;
         };
         if app_id != imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID {

@@ -7,7 +7,7 @@
 
 use crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
-use framework_surface::terrain::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
+use crate::modules::terrain::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
 use serde_json::Value;
 
 //#region 🔖️DocumentHelpers

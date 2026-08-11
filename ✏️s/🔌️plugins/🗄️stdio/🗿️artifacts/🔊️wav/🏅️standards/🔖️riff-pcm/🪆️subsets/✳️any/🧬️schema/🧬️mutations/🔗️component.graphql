@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type WavMutationEntry {
+  key: String!
+  value: String!
+}
+type WavMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [WavMutationEntry!]! @state(class: PERSISTENT)
+}

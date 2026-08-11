@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type AviSnapshotEntry {
+  key: String!
+  value: String!
+}
+type AviSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  entries: [AviSnapshotEntry!]! @state(class: PERSISTENT)
+}

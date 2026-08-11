@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type AviDiffEntry {
+  key: String!
+  value: String!
+}
+type AviDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [AviDiffEntry!]! @state(class: PERSISTENT)
+}

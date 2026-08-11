@@ -1,0 +1,7 @@
+{
+  "extends": "../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "skipLibCheck": true },
+  "include": [
+    "/private/tmp/claude-501/-Users-ueli-Documents-semio/9aab7911-976f-4f65-8d12-1fcd4d6fd73b/scratchpad/w5a-category-check.ts"
+  ]
+}

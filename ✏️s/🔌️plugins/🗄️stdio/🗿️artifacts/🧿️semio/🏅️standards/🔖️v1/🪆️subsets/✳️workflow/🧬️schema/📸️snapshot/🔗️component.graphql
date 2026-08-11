@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioWorkflowSnapshotEntry {
+  key: String!
+  value: String!
+}
+type SemioWorkflowSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioWorkflowSnapshotEntry!]! @state(class: PERSISTENT)
+}

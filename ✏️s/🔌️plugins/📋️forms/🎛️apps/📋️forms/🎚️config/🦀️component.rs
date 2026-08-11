@@ -6,10 +6,10 @@
 //! content. B1: absorbs every field that used to live on `forms_ui::FormsPlayApp`'s
 //! `RefCell<FormsPlayRuntime>` (blueprint selection, the Try wizard's active step, its in-progress answer
 //! values) plus `locale` (was read off `view_state.locale`) and `contributions_json` (was read off
-//! `view_state.contributions_json` — the host-declared `Contribution::FormsQuestionKind` (legacy:
-//! `PlaybookBlockKind`) list backing extension question kinds in the blueprint builder, try wizard, and
-//! extension question rendering; the host now pushes contributions into config via
-//! `SetContributions`, mirroring how it now pushes locale via `SetLocale`).
+//! `view_state.contributions_json` — the host-declared `ProgramContributionEntry` list, each entry
+//! carrying the open `TopicContribution` (`"forms.questionKind"` topic) shape, backing extension question
+//! kinds in the blueprint builder, try wizard, and extension question rendering; the host now pushes
+//! contributions into config via `SetContributions`, mirroring how it now pushes locale via `SetLocale`).
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ `FormsPlayApp::Config` — the pure-trait `ArtifactApp::Config` for the forms app.
 /// `try_values_json`/`contributions_json` are both heterogeneous JSON (per-question-kind value shapes; an
-/// arbitrary `Contribution` list) with no single concrete `dsl`-typed shape, so both stay JSON-blob
-/// strings — the same idiom `layout_engine::LayoutConfig`'s port-recipe sibling
+/// arbitrary `ProgramContributionEntry` list) with no single concrete `dsl`-typed shape, so both stay
+/// JSON-blob strings — the same idiom `layout_engine::LayoutConfig`'s port-recipe sibling
 /// (`LayoutDocument::data_fields_json`) and `shooting_protocol::ShootingCommand::SetFixtureJson` use for
 /// "opaque JSON payload, never a document/config field type of its own" data.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
@@ -36,8 +36,8 @@ pub struct FormsConfig {
     pub try_values_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
-    /// 🧩️ Host-declared plugin contributions (JSON array of `{pluginId, contribution}`, only
-    /// `Contribution::FormsQuestionKind` entries matter; legacy `PlaybookBlockKind` still accepted) — was read off `view_state.contributions_json`.
+    /// 🧩️ Host-declared plugin contributions (JSON array of `{pluginId, topicContribution}` — only the
+    /// `"forms.questionKind"` topic matters) — was read off `view_state.contributions_json`.
     pub contributions_json: String,
 }
 

@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type Mp4MutationEntry {
+  key: String!
+  value: String!
+}
+type Mp4Mutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [Mp4MutationEntry!]! @state(class: PERSISTENT)
+}

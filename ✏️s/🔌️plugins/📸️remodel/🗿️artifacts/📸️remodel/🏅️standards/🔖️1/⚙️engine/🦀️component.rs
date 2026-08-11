@@ -25,6 +25,7 @@ pub fn register() {
 
     register_artifact_schema();
     register_pilot_languages();
+    crate::apps::remodel::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::remodel::RemodelPlayApp>(REMODEL_DOCUMENT_SCHEMA);
 }
 

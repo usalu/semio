@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type HtmlDiffEntry {
+  key: String!
+  value: String!
+}
+type HtmlDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [HtmlDiffEntry!]! @state(class: PERSISTENT)
+}

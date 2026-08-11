@@ -83,6 +83,18 @@ pub enum TokenKind {
     RBracket,
     LParen,
     RParen,
+    /// @emoji 🅰️ Promoted single-char tokens (P2-M1): bare `<`/`>` (XML/SVG tags, never fused into
+    /// `<-`/`->`/edge-arrow forms — those are checked first and `continue` before this token can be
+    /// produced), `&` (XML entity refs), `$` (STEP unset sigil / DXF header var names), `;` (STEP
+    /// statement terminators). Previously every one of these was an "unknown character" `Error`.
+    Lt,
+    Gt,
+    Amp,
+    Dollar,
+    Semicolon,
+    /// @emoji 🔵️ STEP Part 21 dot-delimited enum literal (`.T.` / `.UNSPECIFIED.`) — a leading dot,
+    /// an ident-shaped run, a closing dot, captured as one token (text includes both dots).
+    DotEnum,
     Comment,
     Whitespace,
     Newline,

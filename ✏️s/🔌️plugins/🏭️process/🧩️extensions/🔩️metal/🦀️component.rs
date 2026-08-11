@@ -1,6 +1,5 @@
 //! 🧩️ Process metal machine catalog extension — contributes metal-shop machines to `process3d-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use semio_s_plugin_process::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
 
@@ -159,13 +158,16 @@ fn bundle() -> ExtensionBundle {
     let catalog = MetalCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Metal Machines", "0.1.0")
         .extends("process")
-        .contributes(Contribution::ProcessMachines {
-            app_id: HOST_APP_ID.into(),
-            module_id: catalog.catalog_id().into(),
-            label: catalog.label().into(),
-            icon_id: catalog.icon_id().into(),
-            machines_json: serde_json::to_string(&catalog.machines()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "process.machines",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": catalog.catalog_id(),
+                "label": catalog.label(),
+                "iconId": catalog.icon_id(),
+                "machinesJson": serde_json::to_string(&catalog.machines()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);

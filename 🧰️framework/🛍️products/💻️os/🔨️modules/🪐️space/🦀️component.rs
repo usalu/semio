@@ -81,10 +81,10 @@ impl From<&SpaceUser> for vcs::Author {
 //#endregion 🔖️Roles
 
 //#region 🔖️Space
-pub const S_SPACE_SCHEMA: &str = "s.space";
+pub const S_SPACE_SCHEMA: &str = "os.space";
 
 /// 🔗️ One entry in `SpaceSnapshot.collections` — the collection's identity, display name, and the
-/// `s.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
+/// `os.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
 /// artifact id == ArtifactEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -100,7 +100,7 @@ pub struct CollectionRef {
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[dsl(id = "s.space")]
+#[dsl(id = "os.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
     pub name: String,
@@ -481,7 +481,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
 //#endregion 🔖️Space
 
 //#region 🔖️Collection
-pub const S_COLLECTION_SCHEMA: &str = "s.collection";
+pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -590,7 +590,7 @@ pub struct CollectionEntry {
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[dsl(id = "s.collection")]
+#[dsl(id = "os.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
     pub name: String,
@@ -1717,7 +1717,7 @@ mod tests {
             folder_id: Some("f1".into()),
             name: "sketch".into(),
             kind_id: "puzzle.2d".into(),
-            body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e1".into() }),
+            body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e1".into() }),
         });
         collection.entries.push(CollectionEntry {
             id: "e2".into(),
@@ -1770,7 +1770,7 @@ mod tests {
     #[test]
     fn collection_envelope_id_is_two_dot_segments() {
         let id = <CollectionSnapshot as store::ArtifactDsl>::envelope_id();
-        assert_eq!(id, "s.collection");
+        assert_eq!(id, "os.collection");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
         let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test")).expect("encode");
         let decoded = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
@@ -1780,7 +1780,7 @@ mod tests {
     #[test]
     fn space_envelope_id_is_two_dot_segments() {
         let id = <SpaceSnapshot as store::ArtifactDsl>::envelope_id();
-        assert_eq!(id, "s.space");
+        assert_eq!(id, "os.space");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
         let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private)).expect("encode");
         let decoded = <SpaceSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
@@ -1887,7 +1887,7 @@ mod tests {
     #[test]
     fn collection_operation_op_text_round_trips_every_variant() {
         let folder = CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() };
-        let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e3".into() }) };
+        let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
         store::test_support::assert_op_line_round_trip(&CollectionMutation::SetName { name: "Renamed".into() });
         store::test_support::assert_op_line_round_trip(&CollectionMutation::AddFolder { folder: folder.clone(), at: 0 });
         store::test_support::assert_op_line_round_trip(&CollectionMutation::RemoveFolder { folder_id: "f1".into() });
@@ -1904,7 +1904,7 @@ mod tests {
     #[test]
     fn collection_operation_binary_matches_text() {
         store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::SetName { name: "Renamed".into() });
-        let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e3".into() }) };
+        let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
         store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::AddEntry { entry, at: 0 });
     }
 
@@ -2010,7 +2010,7 @@ mod tests {
             folder_id: Some("missing".into()),
             name: "sketch".into(),
             kind_id: "puzzle.2d".into(),
-            body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e1".into() }),
+            body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e1".into() }),
         });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
         assert!(reports.iter().any(|r| r.id == "collection/entry-folder-missing"));
@@ -2057,8 +2057,8 @@ mod tests {
     fn draft_create_list_expire_lifecycle() {
         let catalog = DraftCatalog::new();
         let port = memory_draft_port();
-        let draft_a = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch-a", 1_000, Some(500));
-        let draft_b = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch-b", 1_000, None);
+        let draft_a = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-a", 1_000, Some(500));
+        let draft_b = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-b", 1_000, None);
         assert_eq!(draft_a.expires_at_ms, Some(1_500));
         assert_eq!(draft_b.expires_at_ms, None, "None ttl means pinned");
 
@@ -2076,7 +2076,7 @@ mod tests {
     fn list_drafts_sweeping_expired_removes_stale_entries_first() {
         let catalog = DraftCatalog::new();
         let port = memory_draft_port();
-        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "stale", 0, Some(100));
+        let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "stale", 0, Some(100));
         assert_eq!(catalog.list_drafts_sweeping_expired(50, &port).len(), 1, "not yet expired");
         assert!(catalog.list_drafts_sweeping_expired(200, &port).is_empty(), "swept before listing");
         assert!(catalog.list_drafts().iter().all(|entry| entry.artifact_id != draft.artifact_id));
@@ -2086,7 +2086,7 @@ mod tests {
     fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
         let catalog = DraftCatalog::new();
         let port = memory_draft_port();
-        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "scratch", 0, None);
+        let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "scratch", 0, None);
         port.write(&draft_uri(&draft.artifact_id), b"draft-bytes").expect("seed draft bytes");
 
         let removed = catalog.discard_draft(&port, &draft.artifact_id).expect("discard");
@@ -2104,7 +2104,7 @@ mod tests {
     fn draft_promote_moves_envelope_bytes_byte_identical() {
         let catalog = DraftCatalog::new();
         let port = memory_draft_port();
-        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch", 0, None);
+        let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None);
         let original_bytes = b"pretend-pack-plus-spr-envelope-bytes-with-full-vcs-history".to_vec();
         port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
@@ -2133,14 +2133,14 @@ mod tests {
     fn demote_asset_moves_bytes_back_and_reregisters_draft_bookkeeping() {
         let catalog = DraftCatalog::new();
         let port = memory_draft_port();
-        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch", 0, None);
+        let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None);
         let original_bytes = b"envelope-bytes-round-tripping-through-promote-then-demote".to_vec();
         port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
         let (_, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, None).expect("promote");
         let CollectionMutation::AddEntry { entry, .. } = operation else { panic!("expected AddEntry") };
 
-        let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "s.puzzle2d", 2_000, Some(1_000)).expect("demote");
+        let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "test.puzzle2d", 2_000, Some(1_000)).expect("demote");
         assert_eq!(demote_operation, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
 
         let restored_bytes = port.read(&draft_uri(&entry.id)).expect("read demoted draft bytes");
@@ -2169,7 +2169,7 @@ mod tests {
         let port_b = memory_draft_port();
 
         let catalog_a1 = draft_catalog_for(&port_a);
-        let catalog_a1_created = catalog_a1.create_draft("puzzle.2d", "s.puzzle2d", "shared", 0, None);
+        let catalog_a1_created = catalog_a1.create_draft("puzzle.2d", "test.puzzle2d", "shared", 0, None);
         let catalog_a2 = draft_catalog_for(&port_a);
         assert_eq!(catalog_a2.list_drafts().iter().map(|entry| entry.artifact_id.clone()).collect::<Vec<_>>(), vec![catalog_a1_created.artifact_id.clone()], "same port identity shares one catalog");
 
@@ -2279,7 +2279,7 @@ mod tests {
             id: "art-nested-space".into(),
             folder_id: None,
             name: "nested-space".into(),
-            kind_id: "s.space".into(),
+            kind_id: "os.space".into(),
             body: Box::new(ArtifactBody::Document { schema: S_SPACE_SCHEMA.into(), document_id: "art-nested-space".into() }),
         });
         collection.entries.push(CollectionEntry { id: "blob-1".into(), folder_id: None, name: "note.txt".into(), kind_id: "file.blob".into(), body: Box::new(ArtifactBody::Blob { blob: blob_ref.clone() }) });

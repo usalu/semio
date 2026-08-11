@@ -3,7 +3,7 @@
 //! A strict, ordered list of steps containing typed blocks — a Blockly-like
 //! visual editor for generating code/data that is list-based, not canvas-based.
 //! Block `kind`s beyond [`PLAYBOOK_BUILTIN_KINDS`] are module-contributed
-//! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
+//! (see the `"playbook.blockKind"` topic contribution in `semio-framework-manifest`).
 
 use dsl::DslValue;
 use protocol::{Mutation, MutationDiff};
@@ -1192,6 +1192,8 @@ pub mod builder_kit {
     //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
     use super::{PlaybookBlock, PlaybookMutation, PlaybookSpec, PlaybookStep};
+    use semio_framework::ProgramContributionEntry;
+    use serde::Deserialize;
     use serde_json::Value;
     use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
@@ -1252,8 +1254,36 @@ pub mod builder_kit {
         ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
     }
 
+    //#region 🔖️ContributionResolution
+    /// 🗂️ Payload shape decoded from an open `topic_contributions` entry tagged `"playbook.blockKind"` —
+    /// carries the `block_kind`/`label`/`icon_id` fields [`build_palette`]'s `extensions` parameter
+    /// expects (see `semio-framework-manifest`'s `component.rs`).
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct BlockKindPayload {
+        block_kind: String,
+        label: String,
+        icon_id: String,
+    }
+
+    /// 🧩️ Resolves a plugin's playbook block-kind palette entries from its manifest contributions'
+    /// open `topic_contributions` entries tagged `"playbook.blockKind"` — decodes into the same
+    /// `(block_kind, label, icon_id)` triple [`build_palette`]'s `extensions` parameter expects.
+    pub fn resolve_block_kind_extensions(contributions: &[ProgramContributionEntry]) -> Vec<(String, String, String)> {
+        contributions
+            .iter()
+            .filter_map(|entry| {
+                let topic = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "playbook.blockKind")?;
+                let payload = topic.decode::<BlockKindPayload>().ok()?;
+                Some((payload.block_kind, payload.label, payload.icon_id))
+            })
+            .collect()
+    }
+    //#endregion 🔖️ContributionResolution
+
     /// 🧩️ Builds the palette of insertable block kinds from a host app's built-in kinds plus any
-    /// `Contribution::PlaybookBlockKind` modules already resolved by the caller into label/icon pairs.
+    /// open `"playbook.blockKind"` topic-contributed modules — pass [`resolve_block_kind_extensions`]'s
+    /// output, or a caller-resolved equivalent, as `extensions`.
     pub fn build_palette(builtin: &[(&str, &str, &str)], extensions: &[(String, String, String)]) -> Vec<BlockPaletteEntry> {
         let mut entries: Vec<BlockPaletteEntry> = builtin.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: (*kind).into(), label: (*label).into(), icon_id: (*icon_id).into() }).collect();
         entries.extend(extensions.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind.clone(), label: label.clone(), icon_id: IconName::from(icon_id.as_str()) }));
@@ -1318,6 +1348,30 @@ pub mod builder_kit {
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("\"componentKind\":\"block-list\""));
             assert!(json.contains("\"blockList\""));
+        }
+
+        fn open_topic_entry() -> ProgramContributionEntry {
+            ProgramContributionEntry {
+                plugin_id: "playbook-module-procedural".into(),
+                topic_contribution: Some(semio_framework::TopicContribution::new(
+                    "playbook.blockKind",
+                    serde_json::json!({ "appId": "playbook-module-procedural", "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building", "defaultValueJson": "{}", "paramsBodyKey": "params", "previewBodyKey": "preview" }),
+                )),
+            }
+        }
+
+        #[test]
+        fn resolve_block_kind_extensions_reads_open_topic_contribution() {
+            let extensions = resolve_block_kind_extensions(&[open_topic_entry()]);
+            assert_eq!(extensions, vec![("buildingComponent".to_string(), "Building Component".to_string(), "building".to_string())]);
+        }
+
+        #[test]
+        fn resolve_block_kind_extensions_ignores_unrelated_topics() {
+            let mut entry = open_topic_entry();
+            entry.topic_contribution = Some(semio_framework::TopicContribution::new("cad.computer", serde_json::json!({ "unrelated": true })));
+            let extensions = resolve_block_kind_extensions(&[entry]);
+            assert!(extensions.is_empty());
         }
     }
 }

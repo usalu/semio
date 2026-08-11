@@ -23,7 +23,7 @@ export default defineConfig({
       "@semio-tech/puzzle-2d-react": resolve(root, "../../../../../puzzle/2d/react/index.tsx"),
       "@semio-tech/puzzle-5d-react": resolve(
         root,
-        "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️puzzle-5d-react/📦️index.tsx",
+        "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react/📦️index.tsx",
       ),
     },
   },

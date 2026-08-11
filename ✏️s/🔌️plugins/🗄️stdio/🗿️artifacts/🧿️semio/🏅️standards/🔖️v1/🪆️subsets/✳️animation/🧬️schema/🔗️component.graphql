@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioAnimationArtifactEntry {
+  key: String!
+  value: String!
+}
+type SemioAnimationArtifact {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioAnimationArtifactEntry!]! @state(class: PERSISTENT)
+}

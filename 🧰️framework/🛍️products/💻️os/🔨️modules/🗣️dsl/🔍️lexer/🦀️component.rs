@@ -4,6 +4,127 @@ use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
 use crate::os_dsl::token::*;
 use crate::os_dsl::trust::Sanitized;
 
+//#region 🔖️Dialect
+/// @emoji 🎛️ How a quoted-string region decodes its escapes once the lexer commits to using
+/// `quote` as its delimiter — the P2-M1 generalized string/text mechanism serving json's
+/// `\uXXXX`, csv's `""`, and step's `''`-doubling uniformly instead of four bespoke fixes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StringEscape {
+    /// `\` + any char is copied verbatim into the token text (both chars kept, undecoded) — the
+    /// lexer's only behavior before P2-M1, kept as the default so every grammar that doesn't
+    /// declare a `string` header directive lexes byte-identically to before this type existed.
+    Raw,
+    /// Standard backslash decode: `\" \\ \/ \b \f \n \r \t` plus `\uXXXX` (4 hex digits, with
+    /// UTF-16 surrogate-pair combination for astral codepoints) — JSON's escape grammar
+    /// (RFC 8259 §7). An unrecognized escape is a strict-mode error / kept literal when forgiving.
+    Backslash,
+    /// The delimiter doubled (`""` / `''`) decodes to one literal delimiter char inside the
+    /// string; `\` has no special meaning. CSV's RFC 4180 quoted-field escape / STEP Part 21's
+    /// `''`-doubled strings.
+    Doubled,
+}
+
+/// @emoji 🔤️ One configured quote delimiter + the escape scheme active while scanning it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StringMode {
+    pub quote: char,
+    pub escape: StringEscape,
+}
+
+/// @emoji 💬️ Per-grammar comment syntax — `#`-to-EOL is the shared default; a grammar dialect
+/// header can swap/disable the line marker or add a block form. Exists because STEP/IFC's `#` is
+/// the entity-reference sigil (`#123=...`), not a comment — it directly collides with the shared
+/// lexer's old hardcoded-global `#`-comment rule.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CommentDialect {
+    pub line: Option<String>,
+    pub block: Option<(String, String)>,
+}
+
+impl Default for CommentDialect {
+    fn default() -> Self {
+        Self { line: Some("#".to_string()), block: None }
+    }
+}
+
+/// @emoji 🧬️ Full per-grammar lexer configuration. `Default` reproduces the fixed alphabet exactly
+/// as it existed before P2-M1 (single `"`-delimited `Raw` string, `#`-to-EOL comment, no block
+/// comment) — every grammar that doesn't declare `string`/`comment` header directives is
+/// unaffected, byte-for-byte, by this type's existence (the plan's "extension-only" gate).
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct LexOptions {
+    pub strings: Vec<StringMode>,
+    pub comment: CommentDialect,
+}
+
+impl LexOptions {
+    fn string_mode(&self, c: char) -> Option<StringMode> {
+        if self.strings.is_empty() {
+            return (c == '"').then_some(StringMode { quote: '"', escape: StringEscape::Raw });
+        }
+        self.strings.iter().copied().find(|m| m.quote == c)
+    }
+}
+
+/// @emoji 🔓️ Decodes one backslash escape unit starting at `chars[j] == '\\'` under
+/// [`StringEscape::Backslash`] — JSON's scheme (RFC 8259 §7) incl. `\uXXXX` surrogate-pair
+/// combination. Returns the decoded text plus the index just past the consumed escape, or `None`
+/// if `chars[j..]` isn't a recognized escape (caller decides raw-fallback vs. strict error).
+fn decode_backslash_unit(chars: &[char], j: usize) -> Option<(String, usize)> {
+    let next = *chars.get(j + 1)?;
+    match next {
+        '"' => Some(("\"".to_string(), j + 2)),
+        '\'' => Some(("'".to_string(), j + 2)),
+        '\\' => Some(("\\".to_string(), j + 2)),
+        '/' => Some(("/".to_string(), j + 2)),
+        'b' => Some(("\u{8}".to_string(), j + 2)),
+        'f' => Some(("\u{c}".to_string(), j + 2)),
+        'n' => Some(("\n".to_string(), j + 2)),
+        'r' => Some(("\r".to_string(), j + 2)),
+        't' => Some(("\t".to_string(), j + 2)),
+        'u' => {
+            let (hi, after_hi) = read_hex4(chars, j + 2)?;
+            if (0xD800..=0xDBFF).contains(&hi) {
+                if chars.get(after_hi) == Some(&'\\') && chars.get(after_hi + 1) == Some(&'u') {
+                    if let Some((lo, after_lo)) = read_hex4(chars, after_hi + 2) {
+                        if (0xDC00..=0xDFFF).contains(&lo) {
+                            let scalar = 0x10000u32 + ((hi - 0xD800) << 10) + (lo - 0xDC00);
+                            if let Some(ch) = char::from_u32(scalar) {
+                                return Some((ch.to_string(), after_lo));
+                            }
+                        }
+                    }
+                }
+                Some((char::REPLACEMENT_CHARACTER.to_string(), after_hi))
+            } else if (0xDC00..=0xDFFF).contains(&hi) {
+                Some((char::REPLACEMENT_CHARACTER.to_string(), after_hi))
+            } else {
+                char::from_u32(hi).map(|ch| (ch.to_string(), after_hi))
+            }
+        }
+        _ => None,
+    }
+}
+
+fn read_hex4(chars: &[char], start: usize) -> Option<(u32, usize)> {
+    if start + 4 > chars.len() {
+        return None;
+    }
+    let text: String = chars[start..start + 4].iter().collect();
+    u32::from_str_radix(&text, 16).ok().map(|v| (v, start + 4))
+}
+
+/// @emoji 🔎️ True iff `chars[i..]` begins with `needle`'s chars — the multi-char-marker match
+/// used by both configurable comment forms (line marker, block open/close).
+fn chars_start_with(chars: &[char], i: usize, needle: &str) -> bool {
+    let needle_chars: Vec<char> = needle.chars().collect();
+    if i + needle_chars.len() > chars.len() {
+        return false;
+    }
+    chars[i..i + needle_chars.len()] == needle_chars[..]
+}
+//#endregion 🔖️Dialect
+
 //#region 🔖️Lexer
 fn is_ident_start(c: char) -> bool {
     c.is_alphabetic() || c == '_'
@@ -60,8 +181,16 @@ fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
 /// @emoji 🔬️ Grammar-independent lexer for the fixed token alphabet shared by every DSL grammar
 /// declared on this engine. `forgiving = true` never fails (malformed regions become `Error`
 /// tokens instead), which is what editor/completion mode needs; `forgiving = false` is strict
-/// parse mode and returns the first lexical error.
+/// parse mode and returns the first lexical error. The fixed-alphabet default entry point — every
+/// pre-P2-M1 caller keeps this exact 3-arg signature; equivalent to
+/// `lex_with(text, limits, forgiving, &LexOptions::default())`.
 pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedToken>, TextError> {
+    lex_with(text, limits, forgiving, &LexOptions::default())
+}
+
+/// @emoji 🎛️ P2-M1: same lexer, parameterized by a per-grammar [`LexOptions`] (string quote+escape
+/// modes, comment syntax). `lex` is the fixed-default entry point every pre-M1 caller still uses.
+pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions) -> Result<Vec<SpannedToken>, TextError> {
     limits.check_bytes(text.len())?;
     let chars: Vec<char> = text.chars().collect();
     let mut tokens = Vec::new();
@@ -108,52 +237,171 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(TokenKind::Whitespace, start_line, start_col, start_byte, buf);
             continue;
         }
-        if c == '#' {
-            let mut j = i;
-            let mut buf = String::new();
-            while j < chars.len() && chars[j] != '\n' {
-                buf.push(chars[j]);
-                byte_offset += chars[j].len_utf8() as u32;
-                column += 1;
-                j += 1;
+        // Line comment: marker is a configurable string (default "#"), `None` disables it
+        // entirely — STEP/IFC declare `comment line none` because `#` is their entity-ref sigil.
+        if let Some(marker) = opts.comment.line.as_deref() {
+            if chars_start_with(&chars, i, marker) {
+                let mut j = i;
+                let mut buf = String::new();
+                while j < chars.len() && chars[j] != '\n' {
+                    buf.push(chars[j]);
+                    byte_offset += chars[j].len_utf8() as u32;
+                    column += 1;
+                    j += 1;
+                }
+                i = j;
+                push!(TokenKind::Comment, start_line, start_col, start_byte, buf);
+                continue;
             }
-            i = j;
-            push!(TokenKind::Comment, start_line, start_col, start_byte, buf);
-            continue;
         }
-        if c == '"' {
+        // Block comment: configurable `(open, close)` pair, disabled by default. May span lines —
+        // line/column tracked through the body like the Fence token below. An unterminated block
+        // comment falls through unconsumed in forgiving mode (its open-marker chars — e.g. `/*`'s
+        // `/` and `*` — are each already ordinary single-char tokens) instead of looping forever.
+        if let Some((open, close)) = &opts.comment.block {
+            if chars_start_with(&chars, i, open) {
+                let open_len = open.chars().count();
+                let mut k = i + open_len;
+                let mut found_end: Option<usize> = None;
+                while k < chars.len() {
+                    if chars_start_with(&chars, k, close) {
+                        found_end = Some(k + close.chars().count());
+                        break;
+                    }
+                    k += 1;
+                }
+                if let Some(end) = found_end {
+                    let buf: String = chars[i..end].iter().collect();
+                    for idx in i..end {
+                        if chars[idx] == '\n' {
+                            line += 1;
+                            column = 1;
+                        } else {
+                            byte_offset += chars[idx].len_utf8() as u32;
+                            column += 1;
+                        }
+                    }
+                    i = end;
+                    push!(TokenKind::Comment, start_line, start_col, start_byte, buf);
+                    continue;
+                }
+                if !forgiving {
+                    return Err(TextError::new("unterminated block comment (no closing marker)", TextSpan::at(start_line, start_col)));
+                }
+                // forgiving: fall through — the open marker's own chars lex as ordinary tokens.
+            }
+        }
+        if let Some(mode) = opts.string_mode(c) {
+            let quote = mode.quote;
             let mut j = i + 1;
             let mut buf = String::new();
             let mut closed = false;
             byte_offset += c.len_utf8() as u32;
             column += 1;
-            while j < chars.len() {
-                let cj = chars[j];
-                if cj == '\\' && j + 1 < chars.len() {
-                    buf.push(cj);
-                    buf.push(chars[j + 1]);
-                    byte_offset += cj.len_utf8() as u32 + chars[j + 1].len_utf8() as u32;
-                    column += 2;
-                    j += 2;
-                    continue;
-                }
-                if cj == '"' {
-                    byte_offset += cj.len_utf8() as u32;
-                    column += 1;
-                    j += 1;
-                    closed = true;
-                    break;
-                }
-                if cj == '\n' {
-                    if forgiving {
-                        break;
+            match mode.escape {
+                StringEscape::Raw => {
+                    while j < chars.len() {
+                        let cj = chars[j];
+                        if cj == '\\' && j + 1 < chars.len() {
+                            buf.push(cj);
+                            buf.push(chars[j + 1]);
+                            byte_offset += cj.len_utf8() as u32 + chars[j + 1].len_utf8() as u32;
+                            column += 2;
+                            j += 2;
+                            continue;
+                        }
+                        if cj == quote {
+                            byte_offset += cj.len_utf8() as u32;
+                            column += 1;
+                            j += 1;
+                            closed = true;
+                            break;
+                        }
+                        if cj == '\n' {
+                            if forgiving {
+                                break;
+                            }
+                            return Err(TextError::new("unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                        }
+                        buf.push(cj);
+                        byte_offset += cj.len_utf8() as u32;
+                        column += 1;
+                        j += 1;
                     }
-                    return Err(TextError::new("unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
                 }
-                buf.push(cj);
-                byte_offset += cj.len_utf8() as u32;
-                column += 1;
-                j += 1;
+                StringEscape::Backslash => {
+                    while j < chars.len() {
+                        let cj = chars[j];
+                        if cj == quote {
+                            byte_offset += cj.len_utf8() as u32;
+                            column += 1;
+                            j += 1;
+                            closed = true;
+                            break;
+                        }
+                        if cj == '\n' {
+                            if forgiving {
+                                break;
+                            }
+                            return Err(TextError::new("unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                        }
+                        if cj == '\\' {
+                            match decode_backslash_unit(&chars, j) {
+                                Some((decoded, next_j)) => {
+                                    buf.push_str(&decoded);
+                                    for k in j..next_j {
+                                        byte_offset += chars[k].len_utf8() as u32;
+                                        column += 1;
+                                    }
+                                    j = next_j;
+                                }
+                                None if forgiving || j + 1 >= chars.len() => {
+                                    buf.push('\\');
+                                    byte_offset += cj.len_utf8() as u32;
+                                    column += 1;
+                                    j += 1;
+                                }
+                                None => {
+                                    return Err(TextError::new("unknown backslash escape in string literal", TextSpan::at(start_line, start_col)));
+                                }
+                            }
+                            continue;
+                        }
+                        buf.push(cj);
+                        byte_offset += cj.len_utf8() as u32;
+                        column += 1;
+                        j += 1;
+                    }
+                }
+                StringEscape::Doubled => {
+                    while j < chars.len() {
+                        let cj = chars[j];
+                        if cj == quote {
+                            if chars.get(j + 1) == Some(&quote) {
+                                buf.push(quote);
+                                byte_offset += quote.len_utf8() as u32 * 2;
+                                column += 2;
+                                j += 2;
+                                continue;
+                            }
+                            byte_offset += cj.len_utf8() as u32;
+                            column += 1;
+                            j += 1;
+                            closed = true;
+                            break;
+                        }
+                        if cj == '\n' {
+                            if forgiving {
+                                break;
+                            }
+                            return Err(TextError::new("unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                        }
+                        buf.push(cj);
+                        byte_offset += cj.len_utf8() as u32;
+                        column += 1;
+                        j += 1;
+                    }
+                }
             }
             i = j;
             if !closed && !forgiving {
@@ -247,7 +495,11 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
                 column += 1;
                 j += 1;
             }
-            if j < chars.len() && chars[j] == '.' && j + 1 < chars.len() && chars[j + 1].is_ascii_digit() {
+            // Trailing-dot floats (P2-M1): `0.` / `10.` — STEP Part 21's `read_number` accepts a
+            // dot with no following digit. The one case that must NOT be swallowed here is a `.`
+            // immediately followed by another `.` (the Range literal `0..10`) — anything else
+            // after the dot (digit, letter, whitespace, EOF) commits to a trailing-dot float.
+            if j < chars.len() && chars[j] == '.' && chars.get(j + 1) != Some(&'.') {
                 is_float = true;
                 buf.push('.');
                 byte_offset += 1;
@@ -354,6 +606,31 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(TokenKind::DotDot, start_line, start_col, start_byte, "..".to_string());
             continue;
         }
+        // Leading-dot enum literal (P2-M1): STEP Part 21's `.T.` / `.UNSPECIFIED.` — a dot, an
+        // ident-shaped run, a closing dot, captured as one `DotEnum` token (text keeps both dots).
+        // Checked after `..` (so a bare `..` still wins) and only commits when the closing dot is
+        // actually found; otherwise falls through untouched, leaving today's behavior (a lone `.`
+        // becomes "unknown character") unchanged for every format that never used this shape.
+        if c == '.' && chars.get(i + 1).is_some_and(|next| is_ident_start(*next)) {
+            let mut j = i + 1;
+            // Deliberately narrower than `is_ident_continue` (which allows '.'/'-'/'/' so ordinary
+            // idents like "a..b" or "hexagonal-mushroom-column" stay one token) — a dot-enum body
+            // must stop AT its own closing dot rather than swallowing it as if it continued.
+            while j < chars.len() && (chars[j].is_alphanumeric() || chars[j] == '_') {
+                j += 1;
+            }
+            if chars.get(j) == Some(&'.') {
+                let end = j + 1;
+                let text: String = chars[i..end].iter().collect();
+                for k in i..end {
+                    byte_offset += chars[k].len_utf8() as u32;
+                    column += 1;
+                }
+                i = end;
+                push!(TokenKind::DotEnum, start_line, start_col, start_byte, text);
+                continue;
+            }
+        }
         let single = match c {
             '=' => Some(TokenKind::Equals),
             ',' => Some(TokenKind::Comma),
@@ -369,6 +646,15 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             ']' => Some(TokenKind::RBracket),
             '(' => Some(TokenKind::LParen),
             ')' => Some(TokenKind::RParen),
+            // Promoted single-char tokens (P2-M1 item 3). `<` only reaches here when it wasn't the
+            // start of `<-` (checked earlier and `continue`s on match), so no collision with
+            // BackArrow; `>` is only ever swallowed by `lex_fused_edge_arrow` from a leading `-`,
+            // never checked standalone before this table, so no collision there either.
+            '<' => Some(TokenKind::Lt),
+            '>' => Some(TokenKind::Gt),
+            '&' => Some(TokenKind::Amp),
+            '$' => Some(TokenKind::Dollar),
+            ';' => Some(TokenKind::Semicolon),
             _ => None,
         };
         if let Some(kind) = single {
@@ -417,7 +703,7 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
                 }
                 TokenKind::Int | TokenKind::Float => TokenClass::Number,
                 TokenKind::Text => TokenClass::String,
-                TokenKind::Placeholder => TokenClass::Ident,
+                TokenKind::Placeholder | TokenKind::DotEnum => TokenClass::Ident,
                 TokenKind::Equals
                 | TokenKind::Arrow
                 | TokenKind::DashArrow
@@ -430,8 +716,13 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
                 | TokenKind::Plus
                 | TokenKind::Minus
                 | TokenKind::Star
-                | TokenKind::Slash => TokenClass::Operator,
+                | TokenKind::Slash
+                | TokenKind::Lt
+                | TokenKind::Gt
+                | TokenKind::Amp
+                | TokenKind::Dollar => TokenClass::Operator,
                 TokenKind::Fence => TokenClass::String,
+                TokenKind::Semicolon => TokenClass::Punctuation,
                 TokenKind::Comma | TokenKind::LBrace | TokenKind::RBrace | TokenKind::LBracket | TokenKind::RBracket | TokenKind::LParen | TokenKind::RParen => TokenClass::Punctuation,
                 TokenKind::Comment => TokenClass::Comment,
                 TokenKind::Error => TokenClass::Error,
@@ -794,4 +1085,172 @@ mod tests {
             assert_eq!(restored, s, "generative round trip failed for {s:?}");
         }
     }
+
+    //#region 🔖️P2M1Dialect
+    // P2-M1 item 1: generalized string/text token — configurable quote+escape modes.
+    #[test]
+    fn default_lex_options_is_byte_identical_to_pre_m1_raw_double_quote_behavior() {
+        let opts = LexOptions::default();
+        let tokens = lex_with(r#"label="a \"b\" c""#, &Limits::default(), false, &opts).expect("lex_with default");
+        let text = tokens.iter().find(|t| t.kind == TokenKind::Text).expect("Text token");
+        // Raw mode: backslash pairs stay undecoded in the token text, exactly like `lex` always did.
+        assert_eq!(text.text.as_str().as_ref(), r#"a \"b\" c"#);
+    }
+
+    #[test]
+    fn json_style_backslash_mode_decodes_standard_escapes_and_u_xxxx_surrogate_pairs() {
+        let opts = LexOptions { strings: vec![StringMode { quote: '"', escape: StringEscape::Backslash }], comment: CommentDialect::default() };
+        // Raw Rust string so `\n`/`\t`/`\uD83D`/`\uDE00` reach the lexer as literal backslash
+        // sequences (not pre-decoded by Rust itself) — `😀` is U+1F600's UTF-16
+        // surrogate pair, the exact shape RFC 8259 §7 requires for astral codepoints.
+        let tokens = lex_with(r#""line1\nline2\ttabA\uD83D\uDE00""#, &Limits::default(), false, &opts).expect("lex_with json backslash");
+        let text = tokens.iter().find(|t| t.kind == TokenKind::Text).expect("Text token");
+        assert_eq!(text.text.as_str().as_ref(), "line1\nline2\ttabA\u{1F600}");
+    }
+
+    #[test]
+    fn csv_style_doubled_quote_mode_decodes_doubled_delimiter_and_ignores_backslash() {
+        let opts = LexOptions { strings: vec![StringMode { quote: '"', escape: StringEscape::Doubled }], comment: CommentDialect::default() };
+        let tokens = lex_with(r#""a""b",backslash="\not-an-escape""#, &Limits::default(), false, &opts).expect("lex_with csv doubled");
+        let texts: Vec<String> = tokens.iter().filter(|t| t.kind == TokenKind::Text).map(|t| t.text.as_str().to_string()).collect();
+        assert_eq!(texts[0], "a\"b", "doubled `\"\"` decodes to one literal quote");
+        assert_eq!(texts[1], r#"\not-an-escape"#, "backslash has no special meaning under Doubled");
+    }
+
+    #[test]
+    fn single_quote_strings_work_alongside_double_quote_xml_style() {
+        let opts = LexOptions { strings: vec![StringMode { quote: '"', escape: StringEscape::Raw }, StringMode { quote: '\'', escape: StringEscape::Raw }], comment: CommentDialect::default() };
+        let tokens = lex_with(r#"a="1" b='2'"#, &Limits::default(), false, &opts).expect("lex_with xml quotes");
+        let texts: Vec<(TokenKind, String)> = tokens.iter().filter(|t| t.kind == TokenKind::Text).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(texts, vec![(TokenKind::Text, "1".to_string()), (TokenKind::Text, "2".to_string())]);
+    }
+
+    #[test]
+    fn step_style_single_quote_doubled_mode_decodes_doubled_apostrophe() {
+        let opts = LexOptions { strings: vec![StringMode { quote: '\'', escape: StringEscape::Doubled }], comment: CommentDialect::default() };
+        let tokens = lex_with(r#"'it''s a beam'"#, &Limits::default(), false, &opts).expect("lex_with step doubled");
+        let text = tokens.iter().find(|t| t.kind == TokenKind::Text).expect("Text token");
+        assert_eq!(text.text.as_str().as_ref(), "it's a beam");
+    }
+
+    // P2-M1 item 3: promoted single-char tokens `< > & $ ;`, non-colliding with arrow forms.
+    #[test]
+    fn promoted_tokens_lex_standalone_without_breaking_arrow_forms() {
+        let tokens = lex("<tag a=\"1\" & $VAR ; b<-c d->e f--g", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Lt, "<".to_string()),
+                (TokenKind::Ident, "tag".to_string()),
+                (TokenKind::Ident, "a".to_string()),
+                (TokenKind::Equals, "=".to_string()),
+                (TokenKind::Text, "1".to_string()),
+                (TokenKind::Amp, "&".to_string()),
+                (TokenKind::Dollar, "$".to_string()),
+                (TokenKind::Ident, "VAR".to_string()),
+                (TokenKind::Semicolon, ";".to_string()),
+                (TokenKind::Ident, "b".to_string()),
+                (TokenKind::BackArrow, "<-".to_string()),
+                (TokenKind::Ident, "c".to_string()),
+                (TokenKind::Ident, "d".to_string()),
+                (TokenKind::Arrow, "->".to_string()),
+                (TokenKind::Ident, "e".to_string()),
+                (TokenKind::Ident, "f".to_string()),
+                (TokenKind::DashArrow, "--".to_string()),
+                (TokenKind::Ident, "g".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn bare_gt_lexes_standalone_outside_fused_edge_arrow_context() {
+        let tokens = lex("a > b", &Limits::default(), false).expect("lex");
+        let significant: Vec<TokenKind> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| t.kind).collect();
+        assert_eq!(significant, vec![TokenKind::Ident, TokenKind::Gt, TokenKind::Ident]);
+    }
+
+    // P2-M1 item 4: per-grammar comment dialect (custom line marker, disabled, block comment).
+    #[test]
+    fn comment_line_marker_is_configurable_and_disableable() {
+        let slash_slash = LexOptions { strings: vec![], comment: CommentDialect { line: Some("//".to_string()), block: None } };
+        let tokens = lex_with("a // not a hash comment\n# still data now b", &Limits::default(), true, &slash_slash).expect("lex_with //");
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        // "//..." is a comment (dropped as trivia, stops at the real newline); "#" is no longer
+        // special under this dialect and falls through to "unknown character" (Error, forgiving),
+        // then "still"/"data"/"now"/"b" lex as ordinary idents on the next line.
+        assert_eq!(significant[0], (TokenKind::Ident, "a".to_string()));
+        assert!(significant.iter().any(|(k, t)| *k == TokenKind::Error && t == "#"), "'#' must no longer be swallowed as a comment marker");
+        assert!(significant.iter().any(|(_, t)| t == "still"), "text after the real newline must still lex, comment stopped at EOL");
+
+        let none = LexOptions { strings: vec![], comment: CommentDialect { line: None, block: None } };
+        let entity_like = lex_with("#123=WALL;", &Limits::default(), true, &none).expect("lex_with comment none");
+        let kinds: Vec<(TokenKind, String)> = entity_like.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        // With line comments off, '#' is no longer swallowed into a Comment token — the entity
+        // number "123" lexes as a real Int and ";" as a real Semicolon, not eaten by a comment.
+        assert!(kinds.iter().any(|(k, t)| *k == TokenKind::Int && t == "123"), "the entity number 123 must lex as a real Int, not be eaten by a comment");
+        assert!(kinds.iter().any(|(k, _)| *k == TokenKind::Semicolon), "';' must lex as a real Semicolon token");
+    }
+
+    #[test]
+    fn block_comment_step_style_spans_lines_and_does_not_consume_entity_hash() {
+        let step_opts = LexOptions { strings: vec![StringMode { quote: '\'', escape: StringEscape::Doubled }], comment: CommentDialect { line: None, block: Some(("/*".to_string(), "*/".to_string())) } };
+        let source = "#10=IFCWALL('a''b')\n/* a block\ncomment spanning lines */\n#20=IFCSLAB('c');";
+        let tokens = lex_with(source, &Limits::default(), true, &step_opts).expect("lex_with step block comment");
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        // `#` isn't a comment marker here (comment.line = None) — both entity lines' `#NN` sigils
+        // lex as Dollar-less Error/Int pairs, i.e. the numbers 10/20 are real Int tokens, not eaten.
+        assert!(significant.iter().any(|(k, t)| *k == TokenKind::Int && t == "10"));
+        assert!(significant.iter().any(|(k, t)| *k == TokenKind::Int && t == "20"));
+        // The doubled-quote string decodes "a''b" -> "a'b".
+        assert!(significant.iter().any(|(k, t)| *k == TokenKind::Text && t == "a'b"));
+        // The block comment's own content (the words "block"/"comment"/"spanning"/"lines") must
+        // NOT appear as separate tokens — it was consumed whole as one Comment (trivia).
+        assert!(!significant.iter().any(|(_, t)| t == "spanning"));
+    }
+
+    // P2-M1 item 5: trailing-dot floats + leading-dot enum literals.
+    #[test]
+    fn trailing_dot_floats_lex_while_range_dotdot_still_wins() {
+        let tokens = lex("0. 10. 3.5 0..10 10..", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Float, "0.".to_string()),
+                (TokenKind::Float, "10.".to_string()),
+                (TokenKind::Float, "3.5".to_string()),
+                (TokenKind::Int, "0".to_string()),
+                (TokenKind::DotDot, "..".to_string()),
+                (TokenKind::Int, "10".to_string()),
+                (TokenKind::Int, "10".to_string()),
+                (TokenKind::DotDot, "..".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn leading_dot_enum_literals_lex_as_dotenum_step_style() {
+        let tokens = lex(".T. .F. .UNSPECIFIED. plain", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::DotEnum, ".T.".to_string()),
+                (TokenKind::DotEnum, ".F.".to_string()),
+                (TokenKind::DotEnum, ".UNSPECIFIED.".to_string()),
+                (TokenKind::Ident, "plain".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn lone_leading_dot_without_closing_dot_is_unaffected_by_dotenum() {
+        // ".foo" (no closing dot) must NOT become DotEnum — falls through exactly like before
+        // this feature existed: an "unknown character" '.' (forgiving -> Error) then an Ident.
+        let tokens = lex(".foo", &Limits::default(), true).expect("lex forgiving");
+        let significant: Vec<TokenKind> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| t.kind).collect();
+        assert_eq!(significant, vec![TokenKind::Error, TokenKind::Ident]);
+    }
+    //#endregion 🔖️P2M1Dialect
 }

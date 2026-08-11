@@ -1,6 +1,5 @@
 //! 🧩️ CAD aec-building-structure extension — contributes structure computers, transforms, and STEP import to `cad-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -83,13 +82,16 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Structure", "0.1.0")
         .extends("cad")
-        .contributes(Contribution::CadComputer {
-            app_id: HOST_APP_ID.into(),
-            module_id: MODULE_ID.into(),
-            label: "AEC Building Structure".into(),
-            icon_id: "landmark".into(),
-            computers_json: serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "cad.computer",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": MODULE_ID,
+                "label": "AEC Building Structure",
+                "iconId": "landmark",
+                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -102,9 +104,10 @@ mod tests {
 
     #[test]
     fn bundle_contributes_structure_manifest() {
-        let Contribution::CadComputer { computers_json, .. } = &bundle().manifest.contributions[0] else {
-            panic!("expected CadComputer");
-        };
+        let manifest = bundle().manifest;
+        let topic_contribution = &manifest.topic_contributions[0];
+        assert_eq!(topic_contribution.topic, "cad.computer");
+        let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
         let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("parse");
         assert_eq!(parsed["importProfiles"].as_array().map(|rows| rows.len()), Some(5));
         assert_eq!(parsed["transformationAppliers"], serde_json::json!(["aec.building.structure/from_building"]));

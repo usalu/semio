@@ -1,6 +1,5 @@
 //! 🧩️ Process wood machine catalog extension — contributes wood-shop machines to `process3d-play`.
 
-use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use semio_s_plugin_process::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
 
@@ -173,13 +172,16 @@ fn bundle() -> ExtensionBundle {
     let catalog = WoodCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", "0.1.0")
         .extends("process")
-        .contributes(Contribution::ProcessMachines {
-            app_id: HOST_APP_ID.into(),
-            module_id: catalog.catalog_id().into(),
-            label: catalog.label().into(),
-            icon_id: catalog.icon_id().into(),
-            machines_json: serde_json::to_string(&catalog.machines()).unwrap_or_default(),
-        })
+        .contributes_topic(
+            "process.machines",
+            serde_json::json!({
+                "appId": HOST_APP_ID,
+                "moduleId": catalog.catalog_id(),
+                "label": catalog.label(),
+                "iconId": catalog.icon_id(),
+                "machinesJson": serde_json::to_string(&catalog.machines()).unwrap_or_default(),
+            }),
+        )
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -252,14 +254,14 @@ mod tests {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, "process-extension-wood");
         assert_eq!(manifest.extends, "process");
-        assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::ProcessMachines { app_id, module_id, label, machines_json, .. } = &manifest.contributions[0] else {
-            panic!("expected ProcessMachines contribution");
-        };
-        assert_eq!(app_id, "process3d-play");
-        assert_eq!(module_id, "wood");
-        assert_eq!(label, "Wood");
-        assert!(serde_json::from_str::<Vec<WorkshopMachine>>(machines_json).is_ok());
+        assert_eq!(manifest.topic_contributions.len(), 1);
+        let topic_contribution = &manifest.topic_contributions[0];
+        assert_eq!(topic_contribution.topic, "process.machines");
+        let payload = topic_contribution.payload.as_object().expect("object payload");
+        assert_eq!(payload["appId"], "process3d-play");
+        assert_eq!(payload["moduleId"], "wood");
+        assert_eq!(payload["label"], "Wood");
+        assert!(serde_json::from_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string")).is_ok());
     }
 }
 //#endregion 🧪️Tests

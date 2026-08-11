@@ -1,0 +1,8 @@
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+use protocol::Mutation;
+
+/// ↩️ Inverse of set-snapshot.
+pub fn inverse(base: &Mp3Snapshot, mutation: &Mp3Mutation) -> Vec<Mp3Mutation> {
+    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base)
+}

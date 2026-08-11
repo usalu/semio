@@ -3459,7 +3459,7 @@ pub mod ui {
     }
 
     /** @emoji 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
-     * either by the host app's own built-ins or by a `Contribution::PlaybookBlockKind` module. */
+     * either by the host app's own built-ins or by a `"playbook.blockKind"` topic contribution. */
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct BlockPaletteEntry {

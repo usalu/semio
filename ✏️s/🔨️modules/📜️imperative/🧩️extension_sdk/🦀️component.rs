@@ -1,11 +1,12 @@
 //! 🔌️ Shared manifest + evaluate helpers for imperative path extensions.
 
 use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry};
-use semio_framework::{Contribution, ProgramContributionEntry, TopicContribution};
+use semio_framework::{ProgramContributionEntry, TopicContribution};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Manifest
-/// 📋️ `imperative.extension` manifest document embedded in `Contribution::ImperativeModule::manifest_json`.
+/// 📋️ `imperative.extension` manifest document embedded in the `"imperative.module"` topic
+/// contribution's `manifestJson` field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImperativeExtensionManifest {
@@ -75,13 +76,13 @@ pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, S
 // #endregion 🔖️Evaluate
 
 // #region 🔖️Constants
-/// 🎯️ Imperative play host app id for `Contribution::ImperativeModule::app_id`.
+/// 🎯️ Imperative play host app id for the `"imperative.module"` topic contribution's `appId` field.
 pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
 
 /// 🔀️ Capability topic handled by extension bundles for operator dispatch.
 pub const IMPERATIVE_MODULE_EVALUATE_CAPABILITY: &str = "imperative.module/evaluate";
 
-/// 🧩️ Builds one `ProgramContributionEntry` for `Contribution::ImperativeModule`.
+/// 🧩️ Builds one `ProgramContributionEntry` carrying the `"imperative.module"` topic contribution.
 pub fn imperative_module_contribution(
     extension_id: &str,
     module_id: &str,
@@ -93,26 +94,16 @@ pub fn imperative_module_contribution(
     registry: &Registry,
     catalogue_json: Option<&str>,
 ) -> ProgramContributionEntry {
-    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
     ProgramContributionEntry {
         plugin_id: extension_id.into(),
-        contribution: Contribution::ImperativeModule {
-            app_id: IMPERATIVE_PLAY_APP_ID.into(),
-            module_id: module_id.into(),
-            label: label.into(),
-            icon_id: icon_id.into(),
-            manifest_json,
-        },
+        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)),
     }
 }
 // #endregion 🔖️Constants
 
 // #region 🔖️TopicContribution
-/// 🗺️ Open-registry twin of [`imperative_module_contribution`] — builds the same data under the
-/// `"imperative.module"` topic (reuses this crate's own `contributes = ["imperative.module"]` Cargo
-/// metadata vocabulary) instead of the closed `Contribution::ImperativeModule` variant. Additive: the
-/// closed-enum producer above is unchanged and still the one wired into `ProgramContributionEntry`;
-/// this sibling exists for open-registry consumers to adopt going forward — see
+/// 🗺️ Builds the `"imperative.module"` `TopicContribution` payload consumed by
+/// [`imperative_module_contribution`] — see
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
 pub fn imperative_module_topic_contribution(
     module_id: &str,

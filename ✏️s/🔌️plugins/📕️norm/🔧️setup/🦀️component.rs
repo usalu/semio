@@ -2,6 +2,7 @@
 
 /// 🔌️ Registers every norm artifact language + schema descriptor.
 pub fn register_norm_exports() {
+    crate::config::schema::register_app_schema();
     crate::artifacts::din4108::engine::register_pilot_languages();
     crate::artifacts::din16798::engine::register_pilot_languages();
     crate::artifacts::din18599::engine::register_pilot_languages();

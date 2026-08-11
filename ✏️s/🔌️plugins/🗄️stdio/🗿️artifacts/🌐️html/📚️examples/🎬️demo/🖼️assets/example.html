@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Semio Fixture: HTML5 Example</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    .highlight { color: #b45309; }
+  </style>
+</head>
+<body>
+  <!-- top-level structural fixture for the semio "html" format artifact (W0) -->
+  <div id="content" class="wrapper">
+    <p>This is a handcrafted <span class="highlight">HTML5</span> fixture with a void element right after it: <br> the line above ends with a line break.</p>
+    <ul>
+      <li>First item</li>
+      <li>Second item with a link: <a href="https://example.org/semio" target="_blank">semio project</a></li>
+      <li>Third item, an image (void element): <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="1x1 placeholder pixel"></li>
+    </ul>
+    <p disabled>A paragraph with a valueless boolean attribute on itself for edge-case coverage.</p>
+    <script>
+      // inline script block: no external requests, pure structural fixture
+      console.log("[DEBUG] semio html fixture loaded");
+    </script>
+  </div>
+</body>
+</html>

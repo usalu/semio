@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.tsv",
+  "standard": "iana",
+  "subsets": {
+    "*": { "name": "Unconstrained tsv iana" }
+  }
+}

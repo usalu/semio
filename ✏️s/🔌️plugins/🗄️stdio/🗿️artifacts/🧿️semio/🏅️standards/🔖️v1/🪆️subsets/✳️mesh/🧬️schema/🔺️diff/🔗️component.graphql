@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioMeshDiffEntry {
+  key: String!
+  value: String!
+}
+type SemioMeshDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioMeshDiffEntry!]! @state(class: PERSISTENT)
+}

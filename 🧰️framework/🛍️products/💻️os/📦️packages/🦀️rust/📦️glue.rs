@@ -217,6 +217,17 @@ pub mod os_spr {
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
 pub mod os_vcs;
 
+// 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `🔁️workflow/🦀️component.rs`
+// is NOT mounted here (tried, reverted — see this file's own header comment "pending dep-DAG
+// cleanup"): its `use semio_framework::{AppDefinition, MediaClass, MediaType, ConfigSpec,
+// Terminology, Locale, …}` lines need the FULL framework crate's surface, which this wasm-safe
+// kernel crate cannot depend on without an actual `semio-framework` → `semio-framework-os-kernel`
+// →(back to)→ `semio-framework` cargo dependency CYCLE (`semio-framework` already depends on this
+// crate — see its Cargo.toml). It is mounted in `🧰️framework/📦️packages/🦀️rust/📦️glue.rs`
+// (the `semio-framework` crate) instead, where all of those symbols already live — see that
+// file's own `os_workflow` mount for the real fix, and the run crate's glue.rs for the matching
+// `extern crate semio_framework as workflow;` alias change.
+
 // 🚪️ `io`'s `ArtifactDialect`/`Dialect` vocabulary is mounted independently in every crate that
 // needs it (`semio-framework`, each plugin's own glue.rs) rather than depended on, because
 // `semio-framework` itself depends on `semio-framework-os-kernel` — a kernel-side dependency on

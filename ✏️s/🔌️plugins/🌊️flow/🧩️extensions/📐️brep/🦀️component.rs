@@ -1794,7 +1794,6 @@ mod tests {
     #[test]
     fn extension_bundle_extends_flow_and_evaluates_box() {
         use flow_extension_sdk::evaluate_json;
-        use semio_framework::Contribution;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let _serial = test_serial();
@@ -1802,20 +1801,26 @@ mod tests {
         let manifest_json = super::extension_manifest_json();
         let bundle = ExtensionBundle::new("brep", "Brep", "0.3.0")
             .extends("flow")
-            .contributes(Contribution::FlowExtension {
-                app_id: "flow-play".into(),
-                extension_id: "brep".into(),
-                label: "Brep".into(),
-                icon_id: "brep".into(),
-                manifest_json: manifest_json.clone(),
-            })
-            .contributes(Contribution::FlowExtension {
-                app_id: "procedural3d-play".into(),
-                extension_id: "brep".into(),
-                label: "Brep".into(),
-                icon_id: "brep".into(),
-                manifest_json,
-            })
+            .contributes_topic(
+                "flow.extension",
+                serde_json::json!({
+                    "appId": "flow-play",
+                    "extensionId": "brep",
+                    "label": "Brep",
+                    "iconId": "brep",
+                    "manifestJson": &manifest_json,
+                }),
+            )
+            .contributes_topic(
+                "flow.extension",
+                serde_json::json!({
+                    "appId": "procedural3d-play",
+                    "extensionId": "brep",
+                    "label": "Brep",
+                    "iconId": "brep",
+                    "manifestJson": &manifest_json,
+                }),
+            )
             .handler("evaluate", |req| {
                 #[derive(serde::Deserialize)]
                 #[serde(rename_all = "camelCase")]
@@ -1850,7 +1855,7 @@ mod tests {
 mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
-    use semio_framework::{Contribution, Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;
 
@@ -1864,14 +1869,18 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> Contribution {
-        Contribution::FlowExtension {
-            app_id: app_id.into(),
-            extension_id: "brep".into(),
-            label: "Brep".into(),
-            icon_id: "brep".into(),
-            manifest_json,
-        }
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+        let extension_id = "brep";
+        let label = "Brep";
+        let icon_id = "brep";
+        let topic_payload = serde_json::json!({
+            "appId": app_id,
+            "extensionId": extension_id,
+            "label": label,
+            "iconId": icon_id,
+            "manifestJson": &manifest_json,
+        });
+        topic_payload
     }
 
     #[derive(Deserialize)]
@@ -1888,10 +1897,12 @@ mod extension_guest {
 
     fn bundle() -> ExtensionBundle {
         let manifest_json = super::extension_manifest_json();
+        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
+        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
         ExtensionBundle::new("brep", "Brep", "0.3.0")
             .extends("flow")
-            .contributes(flow_extension_contribution(FLOW_APP_ID, manifest_json.clone()))
-            .contributes(flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json))
+            .contributes_topic("flow.extension", flow_topic_payload)
+            .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {
                 let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
                     Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())

@@ -1,0 +1,3 @@
+dialect protocol stdio.mp4.diff
+; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
+magic = "stdio.mp4.diff"

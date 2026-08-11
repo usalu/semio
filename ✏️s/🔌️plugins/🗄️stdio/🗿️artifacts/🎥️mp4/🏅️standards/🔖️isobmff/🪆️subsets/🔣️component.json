@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.mp4",
+  "standard": "isobmff",
+  "subsets": {
+    "*": { "name": "Unconstrained mp4 isobmff" }
+  }
+}

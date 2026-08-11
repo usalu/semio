@@ -10,7 +10,7 @@ use semio_framework_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandl
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
-use semio_framework::{parse_contributions, Contribution};
+use semio_framework::{parse_contributions, IconName};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -106,7 +106,7 @@ fn leak_str(value: String) -> &'static str {
     Box::leak(value.into_boxed_str())
 }
 
-/// 🧩️ One hot-installed machine catalog deserialized from `Contribution::ProcessMachines`.
+/// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
 #[derive(Clone)]
 struct ContributedMachineCatalog {
     catalog_id: &'static str,
@@ -139,6 +139,21 @@ static LAST_PROCESS_CONTRIBUTIONS_JSON: Mutex<String> = Mutex::new(String::new()
 const PROCESS3D_PLAY_APP_ID: &str = "process3d-play";
 
 /// 🔌️ Refreshes contributed `process.machines` catalogs when the host pushes a new catalogue.
+//#region 🔖️ProcessMachinesTopicPayload
+/// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
+/// `sync_process_machine_contributions` decodes. See `TopicContribution` in
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProcessMachinesTopicPayload {
+    app_id: String,
+    module_id: String,
+    label: String,
+    icon_id: IconName,
+    machines_json: String,
+}
+//#endregion 🔖️ProcessMachinesTopicPayload
+
 pub fn sync_process_machine_contributions(contributions_json: &str) {
     let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
     if *last == contributions_json {
@@ -146,9 +161,15 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
     }
     let mut catalogs = Vec::new();
     for entry in parse_contributions(contributions_json) {
-        let Contribution::ProcessMachines { app_id, module_id, label, icon_id, machines_json, .. } = entry.contribution else {
+        let Some(payload) = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic| topic.topic == "process.machines")
+            .and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok())
+        else {
             continue;
         };
+        let (app_id, module_id, label, icon_id, machines_json) = (payload.app_id, payload.module_id, payload.label, payload.icon_id, payload.machines_json);
         if app_id != PROCESS3D_PLAY_APP_ID {
             continue;
         }
@@ -790,7 +811,7 @@ mod tests {
 
     #[test]
     fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
-        use semio_framework::{Contribution, ProgramContributionEntry};
+        use semio_framework::{ProgramContributionEntry, TopicContribution};
         let machine = WorkshopMachine {
             id: "hot-saw".into(),
             label: "Hot Saw".into(),
@@ -800,13 +821,16 @@ mod tests {
         };
         let entry = ProgramContributionEntry {
             plugin_id: "process-module-test".into(),
-            contribution: Contribution::ProcessMachines {
-                app_id: "process3d-play".into(),
-                module_id: "hot-catalog".into(),
-                label: "Hot Catalog".into(),
-                icon_id: "wrench".into(),
-                machines_json: serde_json::to_string(&vec![machine]).unwrap(),
-            },
+            topic_contribution: Some(TopicContribution::new(
+                "process.machines",
+                serde_json::json!({
+                    "appId": "process3d-play",
+                    "moduleId": "hot-catalog",
+                    "label": "Hot Catalog",
+                    "iconId": "wrench",
+                    "machinesJson": serde_json::to_string(&vec![machine]).unwrap(),
+                }),
+            )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();
         sync_process_machine_contributions(&json);

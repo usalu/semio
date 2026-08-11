@@ -5,6 +5,14 @@
 //! `runs/<RUN_ID>.run.pack|.spr` (sealed on success, sealed `Failed` if the run itself errored) — it
 //! never mutates a node's source `artifacts/<artifact_ref>`/`artifacts/<config_ref>` bytes.
 
+// 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: a `[[bin]]`
+// target is its own separate crate root — it does NOT inherit the `extern crate ... as store;`/
+// `as workflow;` aliases the lib's own `📦️glue.rs` declares, so this binary needs its own copies
+// (this was always true; it was only ever masked because the lib itself failed to compile first,
+// so cargo never got far enough to check this file — see the lib's own W1 fix history).
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework as workflow;
+
 use semio_framework_os_run::{plan, register_builtin_converters, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -131,15 +139,15 @@ fn main() {
     }
 }
 
-/// 🔒️ Replays `sink.operations` through a fresh `store::ArtifactStore` (the same "build an envelope,
+/// 🔒️ Replays `sink.mutations` through a fresh `store::ArtifactStore` (the same "build an envelope,
 /// `Apply`, `snapshot_pack`" pattern every other document in this codebase persists through) and
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
     let envelope = store::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
     let mut document_store = store::ArtifactStore::new(envelope);
-    if !sink.operations.is_empty() {
-        document_store.dispatch(store::ArtifactCommand::Apply { mutations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
+    if !sink.mutations.is_empty() {
+        document_store.dispatch(store::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).map_err(|error| error.to_string())?;
     }
     let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;

@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.html",
+  "standard": "5",
+  "subsets": {
+    "*": { "name": "Unconstrained html 5" }
+  }
+}

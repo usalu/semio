@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioPresentationDiffEntry {
+  key: String!
+  value: String!
+}
+type SemioPresentationDiff {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioPresentationDiffEntry!]! @state(class: PERSISTENT)
+}

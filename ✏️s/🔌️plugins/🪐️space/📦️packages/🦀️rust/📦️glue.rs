@@ -477,6 +477,8 @@ pub mod apps {
 /// documents without depending on this crate's concrete `Projection`/`Mutation` types.
 fn register_s_exports() {
     crate::artifacts::home::register_pilot_languages();
+    apps::home::config::schema::register_app_schema();
+    apps::space::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::home::HomeApp>("s.home");
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::space::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
 }

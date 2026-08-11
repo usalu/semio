@@ -1,0 +1,878 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ArtifactId`, `ArtifactVersion`, `ConflictRule`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `Serialize`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:679:44
+    |
+679 |     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    |                                            ^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+275 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:280:9
+    |
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:281:25
+    |
+281 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21
+    |
+333 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2350:19
+     |
+2244 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+2245 | | where
+2246 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+2247 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2350 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 46 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 23 suggestions)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+error[E0433]: cannot find `store` in the crate root
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:454:59
+    |
+454 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+    |                                                           ^^^^^^^^^^^^^^^^ could not find `store` in the list of imported crates
+    |
+    = note: this error originates in the derive macro `dsl::DslArtifact` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find `store` in the crate root
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:628:59
+    |
+628 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+    |                                                           ^^^^^^^^^^^^^^^^ could not find `store` in the list of imported crates
+    |
+    = note: this error originates in the derive macro `dsl::DslArtifact` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find `store` in the crate root
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1018:59
+     |
+1018 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+     |                                                           ^^^^^^^^^^^^^^^^ could not find `store` in the list of imported crates
+     |
+     = note: this error originates in the derive macro `dsl::DslArtifact` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find `store` in the crate root
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1876:59
+     |
+1876 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+     |                                                           ^^^^^^^^^^^^^^^^ could not find `store` in the list of imported crates
+     |
+     = note: this error originates in the derive macro `dsl::DslArtifact` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1053:26
+     |
+1053 |         let body = match store::semio_format::split_text_preamble(text) {
+     |                          ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+  10 + use crate::protocol_core::os_store::semio_format;
+     |
+  10 + use crate::protocol_core::semio_format;
+     |
+  10 + use semio_framework_os_kernel::os_store::semio_format;
+     |
+  10 + use semio_framework_os_kernel::semio_format;
+     |
+help: if you import `semio_format`, refer to it directly
+     |
+1053 -         let body = match store::semio_format::split_text_preamble(text) {
+1053 +         let body = match semio_format::split_text_preamble(text) {
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1066:24
+     |
+1066 |         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+     |                        ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these structs
+     |
+  10 + use crate::protocol_core::SemioEnvelope;
+     |
+  10 + use semio_framework_os_kernel::SemioEnvelope;
+     |
+help: if you import `SemioEnvelope`, refer to it directly
+     |
+1066 -         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+1066 +         let envelope = SemioEnvelope::from_envelope_id(
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1068:13
+     |
+1068 |             store::semio_format::Component::Dsl,
+     |             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these enums
+     |
+  10 + use crate::protocol_core::Component;
+     |
+  10 + use std::path::Component;
+     |
+  10 + use semio_framework_os_kernel::Component;
+     |
+help: if you import `Component`, refer to it directly
+     |
+1068 -             store::semio_format::Component::Dsl,
+1068 +             Component::Dsl,
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1072:9
+     |
+1072 |         store::semio_format::wrap_text(&envelope, &body)
+     |         ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+  10 + use crate::protocol_core::os_store::semio_format;
+     |
+  10 + use crate::protocol_core::semio_format;
+     |
+  10 + use semio_framework_os_kernel::os_store::semio_format;
+     |
+  10 + use semio_framework_os_kernel::semio_format;
+     |
+help: if you import `semio_format`, refer to it directly
+     |
+1072 -         store::semio_format::wrap_text(&envelope, &body)
+1072 +         semio_format::wrap_text(&envelope, &body)
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1079:21
+     |
+1079 |         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+     |                     ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these modules
+     |
+  10 + use crate::protocol_core::pack_rt;
+     |
+  10 + use semio_framework_os_kernel::pack_rt;
+     |
+help: if you import `pack_rt`, refer to it directly
+     |
+1079 -         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+1079 +         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1080:24
+     |
+1080 |         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+     |                        ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these structs
+     |
+  10 + use crate::protocol_core::SemioEnvelope;
+     |
+  10 + use semio_framework_os_kernel::SemioEnvelope;
+     |
+help: if you import `SemioEnvelope`, refer to it directly
+     |
+1080 -         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+1080 +         let envelope = SemioEnvelope::from_envelope_id(
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1082:13
+     |
+1082 |             store::semio_format::Component::Pack,
+     |             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these enums
+     |
+  10 + use crate::protocol_core::Component;
+     |
+  10 + use std::path::Component;
+     |
+  10 + use semio_framework_os_kernel::Component;
+     |
+help: if you import `Component`, refer to it directly
+     |
+1082 -             store::semio_format::Component::Pack,
+1082 +             Component::Pack,
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1085:22
+     |
+1085 |         .map_err(|e| store::PackError::Schema(e.to_string()))?;
+     |                      ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these enums
+     |
+  10 + use crate::protocol_core::PackError;
+     |
+  10 + use semio_framework_os_kernel::PackError;
+     |
+help: if you import `PackError`, refer to it directly
+     |
+1085 -         .map_err(|e| store::PackError::Schema(e.to_string()))?;
+1085 +         .map_err(|e| PackError::Schema(e.to_string()))?;
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1086:12
+     |
+1086 |         Ok(store::semio_format::wrap_binary(&envelope, &inner))
+     |            ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+  10 + use crate::protocol_core::os_store::semio_format;
+     |
+  10 + use crate::protocol_core::semio_format;
+     |
+  10 + use semio_framework_os_kernel::os_store::semio_format;
+     |
+  10 + use semio_framework_os_kernel::semio_format;
+     |
+help: if you import `semio_format`, refer to it directly
+     |
+1086 -         Ok(store::semio_format::wrap_binary(&envelope, &inner))
+1086 +         Ok(semio_format::wrap_binary(&envelope, &inner))
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1089:33
+     |
+1089 |         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+     |                                 ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+  10 + use crate::protocol_core::os_store::semio_format;
+     |
+  10 + use crate::protocol_core::semio_format;
+     |
+  10 + use semio_framework_os_kernel::os_store::semio_format;
+     |
+  10 + use semio_framework_os_kernel::semio_format;
+     |
+help: if you import `semio_format`, refer to it directly
+     |
+1089 -         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+1089 +         let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1089:87
+     |
+1089 |         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+     |                                                                                       ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these enums
+     |
+  10 + use crate::protocol_core::PackError;
+     |
+  10 + use semio_framework_os_kernel::PackError;
+     |
+help: if you import `PackError`, refer to it directly
+     |
+1089 -         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+1089 +         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1091:24
+     |
+1091 |             return Err(store::PackError::Schema(format!(
+     |                        ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these enums
+     |
+  10 + use crate::protocol_core::PackError;
+     |
+  10 + use semio_framework_os_kernel::PackError;
+     |
+help: if you import `PackError`, refer to it directly
+     |
+1091 -             return Err(store::PackError::Schema(format!(
+1091 +             return Err(PackError::Schema(format!(
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1097:33
+     |
+1097 |         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+     |                                 ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+help: consider importing one of these modules
+     |
+  10 + use crate::protocol_core::pack_rt;
+     |
+  10 + use semio_framework_os_kernel::pack_rt;
+     |
+help: if you import `pack_rt`, refer to it directly
+     |
+1097 -         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+1097 +         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+     |
+
+error[E0433]: cannot find module or crate `store` in this scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:211:83
+    |
+211 | fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, store::TextError> {
+    |                                                                                   ^^^^^ use of unresolved module or unlinked crate `store`
+    |
+    = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:358:92
+    |
+358 | fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<WorkflowMediaPort, store::TextError> {
+    |                                                                                            ^^^^^ use of unresolved module or unlinked crate `store`
+    |
+    = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:840:184
+    |
+840 | ...ramework::ConfigSpec) -> Result<(), store::SpaceConflict> {
+    |                                        ^^^^^ use of unresolved module or unlinked crate `store`
+    |
+    = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:843:20
+    |
+843 | ...   return Err(store::SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("binding targets c...
+    |                  ^^^^^ use of unresolved module or unlinked crate `store`
+    |
+    = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:855:13
+    |
+855 | ...   Err(store::SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("parameter type {paramete...
+    |           ^^^^^ use of unresolved module or unlinked crate `store`
+    |
+    = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1047:6
+     |
+1047 | impl store::ArtifactDsl for WorkflowSnapshot {
+     |      ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1052:46
+     |
+1052 |     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+     |                                              ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1067:22
+     |
+1067 |             <Self as store::ArtifactDsl>::envelope_id(),
+     |                      ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1077:6
+     |
+1077 | impl store::ArtifactPack for WorkflowSnapshot {
+     |      ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1078:42
+     |
+1078 |     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+     |                                          ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1078:87
+     |
+1078 |     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+     |                                                                                       ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1081:22
+     |
+1081 |             <Self as store::ArtifactDsl>::envelope_id(),
+     |                      ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1088:49
+     |
+1088 |     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+     |                                                 ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1088:91
+     |
+1088 |     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+     |                                                                                           ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1090:47
+     |
+1090 |         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+     |                                               ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1093:26
+     |
+1093 |                 <Self as store::ArtifactDsl>::envelope_id(),
+     |                          ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1098:50
+     |
+1098 |         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+     |                                                  ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1512:45
+     |
+1512 |     fn parse_op(line: &str) -> Result<Self, store::TextError> {
+     |                                             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1546:45
+     |
+1546 |     fn parse_op(line: &str) -> Result<Self, store::TextError> {
+     |                                             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1758:77
+     |
+1758 | fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
+     |                                                                             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1951:31
+     |
+1951 |             next.started_at = store::now_iso();
+     |                               ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1954:125
+     |
+1954 | ...essage: "node started".into(), at: store::now_iso() });
+     |                                       ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1965:37
+     |
+1965 |             next.finished_at = Some(store::now_iso());
+     |                                     ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2118:45
+     |
+2118 |     fn parse_op(line: &str) -> Result<Self, store::TextError> {
+     |                                             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `store` in this scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2152:45
+     |
+2152 |     fn parse_op(line: &str) -> Result<Self, store::TextError> {
+     |                                             ^^^^^ use of unresolved module or unlinked crate `store`
+     |
+     = help: if you wanted to use a crate named `store`, use `cargo add store` to add it to your `Cargo.toml`
+
+For more information about this error, try `rustc --explain E0433`.
+error: could not compile `semio-framework` (lib) due to 42 previous errors

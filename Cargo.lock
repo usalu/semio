@@ -6927,7 +6927,6 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
- "semio-s-plugin-puzzle",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -7262,12 +7261,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
- "semio-s-plugin-flow-extension-dictionary",
- "semio-s-plugin-flow-extension-list",
- "semio-s-plugin-flow-extension-logic",
- "semio-s-plugin-flow-extension-math",
- "semio-s-plugin-flow-extension-primitive",
- "semio-s-plugin-flow-extension-text",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -7707,6 +7700,7 @@ name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "js-sys",
  "nalgebra 0.33.3",
  "parry3d",
  "semio-framework",
@@ -7722,6 +7716,8 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

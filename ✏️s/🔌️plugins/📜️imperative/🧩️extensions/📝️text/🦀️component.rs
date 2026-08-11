@@ -121,7 +121,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 }
 
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
-    let entry = imperative_module_contribution();
+    let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Text", MODULE_VERSION)
         .extends("imperative")
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
@@ -129,7 +129,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
                 semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message)
             })
         })
-        .contributes(entry.contribution)
+        .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 
 #[cfg(target_arch = "wasm32")]

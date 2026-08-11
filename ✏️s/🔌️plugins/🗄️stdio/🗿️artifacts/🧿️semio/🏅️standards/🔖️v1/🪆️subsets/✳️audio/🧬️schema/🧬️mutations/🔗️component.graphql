@@ -1,0 +1,9 @@
+# 🚧 scaffolded by W1b — generic facet mirror.
+type SemioAudioMutationEntry {
+  key: String!
+  value: String!
+}
+type SemioAudioMutation {
+  schema: String! @state(class: PERSISTENT)
+  entries: [SemioAudioMutationEntry!]! @state(class: PERSISTENT)
+}

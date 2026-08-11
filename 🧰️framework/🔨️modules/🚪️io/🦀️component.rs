@@ -314,6 +314,27 @@ pub fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<Compo
         },
     }
 }
+
+/// 🌉️🌉️ Two-hop compose: resolve+compose `hub` from `sources` via `io_dispatch`, then feed that
+/// hop's `ComposedArtifact` as the SINGLE source for resolving+composing `target`, also via
+/// `io_dispatch` (so both hops get the fallback dispatcher and subset validation `io_dispatch`
+/// already gives a single-hop compose, for free). Built for the domain-plugin hub-and-spoke shape
+/// (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT): a domain
+/// artifact composes into a semio subset (the hub), then the semio subset composes into the real
+/// target format — never more than 2 hops.
+///
+/// **Max-2-hops invariant**: `hub` MUST be resolvable directly from `sources` (hop 1), and `target`
+/// MUST be resolvable from hub's OWN composed output alone (hop 2) — never from `sources` again and
+/// never chained through a third key. This is a deliberate ceiling, not an oversight: an unbounded
+/// transitive walk over the registry can cycle (A resolves via B resolves via A) or blow up
+/// combinatorially as more dialects register, and neither failure mode is diagnosable from a single
+/// stack frame the way a fixed 2-hop call is. Callers that need a longer chain compose it themselves
+/// as repeated `io_compose_via`/`io_dispatch` calls, each one an explicit, auditable hop.
+pub fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    let hub_composed = io_dispatch(hub, sources)?;
+    let hop_source = ErasedComposeSource { dialect: hub_composed.dialect, payload: hub_composed.payload };
+    io_dispatch(target, std::slice::from_ref(&hop_source))
+}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️SubsetValidator
@@ -611,4 +632,84 @@ pub fn formats_csv() -> String {
 }
 //#endregion 🔖️FormatCatalog
 //#endregion 🔖️ErasedRegistry
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    //! 🧪️ `io_compose_via`'s own unit test (this file had no prior `#[cfg(test)]` region — this
+    //! module has no stdio dependency to borrow a real chain from, so this registers a minimal
+    //! synthetic 2-hop chain through the SAME `register_composer_entries`/`io_dispatch` machinery
+    //! every real chain (e.g. stdio's png↔deflate↔binary) goes through, proving the mechanism
+    //! against the real registry rather than a hand-simulated call graph.
+    use super::*;
+
+    const HOP1_FROM: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop1.from", standard: StandardId("1"), subset: SubsetId("*") };
+    const HOP1_INTO: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop1.into", standard: StandardId("1"), subset: SubsetId("*") };
+    const HOP2_INTO: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop2.into", standard: StandardId("1"), subset: SubsetId("*") };
+
+    fn hop_text(sources: &[ErasedComposeSource]) -> Result<String, ComposeError> {
+        match sources {
+            [one] => Ok(match &one.payload {
+                IoPayload::Text(t) => t.clone(),
+                IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
+            }),
+            other => Err(ComposeError { message: format!("expected exactly 1 source, got {}", other.len()), diagnostics: Vec::new() }),
+        }
+    }
+
+    fn compose_hop1(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let text = hop_text(sources)?;
+        Ok(ComposedArtifact { dialect: HOP1_INTO, payload: IoPayload::Text(format!("hop1({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+    }
+
+    fn compose_hop2(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let text = hop_text(sources)?;
+        Ok(ComposedArtifact { dialect: HOP2_INTO, payload: IoPayload::Text(format!("hop2({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+    }
+
+    static HOP1_READS: [Dialect; 1] = [HOP1_FROM];
+    static HOP2_READS: [Dialect; 1] = [HOP1_INTO];
+
+    static ENTRIES: [ComposerEntry; 2] = [
+        ComposerEntry { writes: HOP1_INTO, reads: &HOP1_READS, compose: compose_hop1 },
+        ComposerEntry { writes: HOP2_INTO, reads: &HOP2_READS, compose: compose_hop2 },
+    ];
+
+    /// 🌉️🌉️ hub = HOP1_INTO (resolved directly from the seed source), target = HOP2_INTO
+    /// (resolved from hub's own composed output alone) — the exact 2-hop shape `io_compose_via`'s
+    /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
+    #[test]
+    fn io_compose_via_chains_two_registered_hops() {
+        register_composer_entries(&ENTRIES);
+        let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import);
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
+        let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
+
+        let result = io_compose_via(&hub_key, &target_key, &sources).expect("2-hop compose over real registered entries should succeed");
+        assert_eq!(result.dialect, HOP2_INTO);
+        match result.payload {
+            IoPayload::Text(t) => assert_eq!(t, "hop2(hop1(seed))"),
+            IoPayload::Binary(_) => panic!("expected Text payload"),
+        }
+    }
+
+    /// ⚠️ The hub hop itself failing (no registered entry) must surface as the hub's own
+    /// `ComposeError`, never silently attempt the target hop with stale/absent data.
+    #[test]
+    fn io_compose_via_surfaces_hub_resolve_failure() {
+        let unregistered_hub = IoKey::from_owner_counterpart(
+            Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") },
+            HOP1_FROM,
+            IoDirection::Import,
+        );
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
+        let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
+        let err = match io_compose_via(&unregistered_hub, &target_key, &sources) {
+            Err(err) => err,
+            Ok(_) => panic!("unregistered hub key must fail hop 1"),
+        };
+        assert!(err.message.contains("no composer registered"), "{}", err.message);
+    }
+}
+//#endregion 🔖️Tests
 // #endregion io

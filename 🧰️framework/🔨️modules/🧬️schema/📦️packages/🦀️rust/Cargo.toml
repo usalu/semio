@@ -17,8 +17,6 @@ path = "📦️glue.rs"
 
 [features]
 default = []
-# Artifact CatalogIntegration still needs a cycle-free registration path (A3 parked plugin deps).
-catalog-integration = []
 
 [dependencies]
 # Default features enable resolve-http/resolve-file, which fail to compile on wasm32.

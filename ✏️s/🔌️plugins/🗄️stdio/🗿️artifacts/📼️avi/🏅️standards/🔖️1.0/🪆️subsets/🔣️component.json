@@ -1,0 +1,7 @@
+{
+  "artifact": "s.stdio.avi",
+  "standard": "1.0",
+  "subsets": {
+    "*": { "name": "Unconstrained avi 1.0" }
+  }
+}

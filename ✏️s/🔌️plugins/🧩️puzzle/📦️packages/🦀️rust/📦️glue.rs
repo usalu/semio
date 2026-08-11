@@ -1660,6 +1660,14 @@ pub mod apps {
 }
 //#endregion 🎛️Apps
 
+//#region 🔨️Modules
+#[path = "."]
+pub mod modules {
+    #[path = "../../🔨️modules/🎲️board-2d/🦀️component.rs"]
+    pub mod board_2d;
+}
+//#endregion 🔨️Modules
+
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;

@@ -282,6 +282,8 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Error { in_reply_to, .. } => *in_reply_to,
         AppFrame::Welcome { .. } | AppFrame::DocumentChanged { .. } | AppFrame::ConfigChanged { .. } => None,
         AppFrame::Config { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::Emit { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::Draft { in_reply_to, .. } => Some(*in_reply_to),
     }
 }
 
@@ -294,12 +296,12 @@ fn decode_fingerprint_wire(bytes: &[u8]) -> Result<String, RunError> {
 }
 
 fn app_frame_fault_summary(fault: &[u8]) -> String {
-    let fault = os_dsl::decode_fault_bytes(fault);
+    let fault = dsl::decode_fault_bytes(fault);
     format!("{}: {}", fault.code.0, fault.message)
 }
 
 fn run_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
-    os_dsl::encode_fault_bytes(&os_dsl::Fault::new(os_dsl::FaultOrigin::Os, os_dsl::FaultCode::new(code.into()), message))
+    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code.into()), message))
 }
 //#endregion 🔖️MediaArtifact
 
@@ -404,7 +406,7 @@ impl RunSink {
 
     pub fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
         self.document = workflow::apply_run_operation_checked(&self.document, operation.clone()).map_err(RunError::Sealed)?;
-        self.operations.push(operation);
+        self.mutations.push(operation);
         Ok(())
     }
 
@@ -523,17 +525,6 @@ impl SpaceBundle {
 
     pub fn artifact_spr_path(&self, artifact_id: &str) -> PathBuf {
         self.root.join("artifacts").join(format!("{artifact_id}.spr"))
-    }
-
-    /// 🔖️ `artifact_ref` is itself already a valid `artifact_id` (see this region's doc comment) —
-    /// this is a thin, name-preserving alias so existing callers (`read_artifact`/`write_artifact`)
-    /// don't need to change.
-    pub fn artifact_pack_path(&self, artifact_ref: &str) -> PathBuf {
-        self.artifact_pack_path(artifact_ref)
-    }
-
-    pub fn artifact_spr_path(&self, artifact_ref: &str) -> PathBuf {
-        self.artifact_spr_path(artifact_ref)
     }
 
     /// 🔖️ Config counterpart of `artifact_pack_path` — same alias-over-`artifact_pack_path`

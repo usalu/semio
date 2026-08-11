@@ -13,7 +13,7 @@
 //! crate's lexer pre-scans those two characters itself and hands every other run of characters to
 //! `crate::os_dsl::lex` unchanged.
 
-use crate::os_dsl::{lex as core_lex, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use crate::os_dsl::{lex as core_lex, lex_with as core_lex_with, CommentDialect, Limits, StringEscape, StringMode, LexOptions, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,6 +23,9 @@ pub enum SemioDialect {
 }
 
 /// @emoji 📄️ One parsed `.grammar.semio` / `.protocol.semio` file: header directives + productions.
+/// `lex` (P2-M1) is the per-grammar string-quote/escape + comment dialect declared by `string`/
+/// `comment` header directives — `LexOptions::default()` when the grammar declares neither,
+/// reproducing the fixed pre-M1 alphabet exactly.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GrammarFile {
     pub dialect: SemioDialect,
@@ -31,6 +34,7 @@ pub struct GrammarFile {
     pub uses: Vec<String>,
     pub start: String,
     pub productions: Vec<Production>,
+    pub lex: LexOptions,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -86,21 +90,91 @@ pub enum Framing {
     Chunked,
 }
 
+/// @emoji 🔀️ P2-M2 item 4: guard gating a field's (or a whole segment's) presence on an
+/// EARLIER-decoded field's value — bmp's BITFIELDS masks (`if compression eq 3`), palette
+/// (`if bits_per_pixel le 8`). Evaluated against the walk-wide field env (item 3), so the guarded
+/// field can reference a value decoded in ANY earlier block, not just the same one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cond {
+    pub field: String,
+    pub op: CondOp,
+    pub value: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CondOp {
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+}
+
+/// @emoji 🔁️ P2-M2 item 1: one "repeated tag-dispatched block" — read a discriminator (+ optional
+/// length), branch into a known arm's fields or skip an unrecognized discriminator's declared
+/// length as opaque bytes, repeat until EOF or a declared sentinel discriminator value (`until`).
+/// `order` controls whether `length` is read before or after `discriminator` each iteration (GLB/
+/// PNG read length-then-tag; GIF/JPG read tag-first with no per-iteration length at all).
+#[derive(Clone, Debug, PartialEq)]
+pub struct RepeatDispatch {
+    pub discriminator: Prim,
+    pub length: Option<Prim>,
+    pub order: DispatchOrder,
+    pub trailer: Option<Prim>,
+    pub until: Option<Vec<u8>>,
+    pub arms: Vec<RepeatArm>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DispatchOrder {
+    TagFirst,
+    LengthFirst,
+}
+
+/// @emoji 🌿️ One recognized discriminator value's field-set. `nested` supports the GIF 89a
+/// two-level case (an extension-introducer arm dispatches AGAIN on the label byte) — recursive via
+/// `NestedDispatch`'s own `Vec<RepeatArm>`, so nesting depth is not artificially capped at two.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RepeatArm {
+    pub tag: Vec<u8>,
+    pub fields: Vec<Field>,
+    pub nested: Option<NestedDispatch>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct NestedDispatch {
+    pub name: String,
+    pub discriminator: Prim,
+    pub arms: Vec<RepeatArm>,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Block {
     Header(Vec<Field>),
-    Segment { name: String, kind: Option<u8>, fields: Vec<Field> },
+    Segment { name: String, kind: Option<u8>, fields: Vec<Field>, cond: Option<Cond> },
     Record { name: String, tag: Option<u64>, fields: Vec<Field> },
     Struct { name: String, fields: Vec<Field> },
     Enum { name: String, variants: Vec<(String, u64)> },
     Footer(usize),
     Chain(Prim),
+    /// P2-M2 item 1.
+    Repeat { name: String, dispatch: RepeatDispatch },
+    /// P2-M2 item 5a: scan BACKWARD from EOF for `magic`'s exact byte pattern (ZIP's EOCD, whose
+    /// preceding comment field is 0-65535 bytes — its start is unknowable except by finding the
+    /// EOCD itself first), jump `pos` directly to the match, then walk `fields` forward from there.
+    BackwardScan { name: String, magic: Vec<u8>, fields: Vec<Field> },
+    /// P2-M2 item 5b: jump `pos` to the ABSOLUTE offset held in `offset_field` (decoded by an
+    /// earlier block — ZIP's EOCD `cd_offset`), then walk `fields` forward from there. A genuine,
+    /// deliberate exception to "position only increases" — see `walk_protocol`'s `jumped` handling.
+    JumpTo { name: String, offset_field: String, fields: Vec<Field> },
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Field {
     pub name: String,
     pub ty: Prim,
+    pub cond: Option<Cond>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -113,6 +187,17 @@ pub enum Prim {
     I64,
     F32,
     F64,
+    /// P2-M2 item 2: ALWAYS big-endian regardless of the walker's runtime endian mode (png/jpg/
+    /// deflate's trailer/ply's BE variant/pdf 1.7's xref rows — formats with a static, author-time-
+    /// known byte order). Distinct from plain `U16`/`U32`/... which obey the walker's current mode
+    /// (LE by default, flippable at runtime by a `Prim::Endian` field — P2-M2 item 6).
+    U16Be,
+    U32Be,
+    U64Be,
+    I32Be,
+    I64Be,
+    F32Be,
+    F64Be,
     Varint,
     Zigzag,
     Bytes,
@@ -121,6 +206,16 @@ pub enum Prim {
     Array(Box<Prim>, Count),
     Ref(String),
     Tag,
+    /// P2-M2 item 1c: scan forward past every `prefix` byte, then take the next byte as the
+    /// discriminator — JPG's marker-prefix scan (`0xFF` fill bytes before a real marker code),
+    /// distinct from a fixed-position tag read.
+    MarkerScan(u8),
+    /// P2-M2 item 6: TIFF-style runtime-selected endianness. Reads `key.len()` bytes (all keys
+    /// must share one width — TIFF's `II`/`MM` are both 2), matches against the declared
+    /// `(key, is_big_endian)` table, and MUTATES the walker's endian mode for every subsequent
+    /// plain (non-`Be`-suffixed) `Prim` read for the REMAINDER of the walk. A walker-state mutation,
+    /// not a value binding — distinct from `U16Be`/etc.'s static per-format choice (item 2).
+    Endian(Vec<(String, bool)>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -445,6 +540,13 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     let mut uses = Vec::new();
     let mut start = None;
     let mut productions = Vec::new();
+    // P2-M1 items 1 & 4: per-grammar string quote+escape modes and comment dialect, declared via
+    // optional `string`/`comment` header directives. Defaults (`comment_line = Some("#")`, no
+    // block comment, no `string` overrides) reproduce `LexOptions::default()` exactly, so a
+    // grammar that never declares either directive lexes byte-identically to before P2-M1.
+    let mut comment_line: Option<String> = CommentDialect::default().line;
+    let mut comment_block: Option<(String, String)> = None;
+    let mut strings: Vec<StringMode> = Vec::new();
 
     loop {
         if cursor.peek().kind == GKind::Eof {
@@ -464,6 +566,51 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                 start = Some(cursor.expect(GKind::Ident)?.text);
                 cursor.skip_newlines();
             }
+            // `comment none` / `comment line "MARKER"` / `comment line none` / `comment block "OPEN" "CLOSE"`
+            "comment" => {
+                let sub = cursor.expect(GKind::Ident)?.text;
+                match sub.as_str() {
+                    "none" => {
+                        comment_line = None;
+                        comment_block = None;
+                    }
+                    "line" => {
+                        if cursor.peek_ident("none") {
+                            cursor.advance();
+                            comment_line = None;
+                        } else {
+                            comment_line = Some(cursor.expect(GKind::Text)?.text);
+                        }
+                    }
+                    "block" => {
+                        let open = cursor.expect(GKind::Text)?.text;
+                        let close = cursor.expect(GKind::Text)?.text;
+                        comment_block = Some((open, close));
+                    }
+                    other => return Err(TextError::new(format!("unknown `comment` directive `{other}` (expected `none`/`line`/`block`)"), head.span.clone())),
+                }
+                cursor.skip_newlines();
+            }
+            // `string double|single raw|backslash|doubled` — declaring ANY `string` directive
+            // replaces the default double-quote-Raw quote set entirely (a grammar that wants both
+            // delimiters, e.g. xml, declares both explicitly).
+            "string" => {
+                let which = cursor.expect(GKind::Ident)?.text;
+                let quote = match which.as_str() {
+                    "double" => '"',
+                    "single" => '\'',
+                    other => return Err(TextError::new(format!("unknown `string` quote `{other}` (expected `double`/`single`)"), head.span.clone())),
+                };
+                let mode = cursor.expect(GKind::Ident)?.text;
+                let escape = match mode.as_str() {
+                    "raw" => StringEscape::Raw,
+                    "backslash" => StringEscape::Backslash,
+                    "doubled" => StringEscape::Doubled,
+                    other => return Err(TextError::new(format!("unknown `string` escape mode `{other}` (expected `raw`/`backslash`/`doubled`)"), head.span.clone())),
+                };
+                strings.push(StringMode { quote, escape });
+                cursor.skip_newlines();
+            }
             _ => {
                 cursor.pos -= 1;
                 productions.push(parse_production_line(&mut cursor)?);
@@ -474,7 +621,8 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
 
     let _ = dialect;
     let start = start.ok_or_else(|| TextError::new("`.grammar` file is missing a `start` directive", cursor.peek().span.clone()))?;
-    Ok(GrammarFile { dialect: SemioDialect::Grammar, id, extension, uses, start, productions })
+    let lex = LexOptions { strings, comment: CommentDialect { line: comment_line, block: comment_block } };
+    Ok(GrammarFile { dialect: SemioDialect::Grammar, id, extension, uses, start, productions, lex })
 }
 
 fn is_protocol_source(text: &str) -> bool {
@@ -499,6 +647,7 @@ fn project_protocol(protocol: ProtocolFile) -> GrammarFile {
         uses: protocol.uses,
         start: protocol.start,
         productions: Vec::new(),
+        lex: LexOptions::default(),
     }
 }
 
@@ -601,6 +750,42 @@ fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                     cursor.expect(GKind::RParen)?;
                     Ok(Prim::Ref(target))
                 }
+                // P2-M2 item 2: BE counterparts of the LE-hardcoded fixed-width numerics.
+                "u16be" => Ok(Prim::U16Be),
+                "u32be" => Ok(Prim::U32Be),
+                "u64be" => Ok(Prim::U64Be),
+                "i32be" => Ok(Prim::I32Be),
+                "i64be" => Ok(Prim::I64Be),
+                "f32be" => Ok(Prim::F32Be),
+                "f64be" => Ok(Prim::F64Be),
+                // P2-M2 item 1c: `marker(0xFF)` — scan past every 0xFF fill byte, then read the
+                // next byte as the discriminator (JPG's marker-prefix scan variant mode).
+                "marker" => {
+                    cursor.expect(GKind::LParen)?;
+                    let value = parse_u64_literal(cursor)?;
+                    cursor.expect(GKind::RParen)?;
+                    Ok(Prim::MarkerScan(value as u8))
+                }
+                // P2-M2 item 6: `endian { "II"=le "MM"=be }` — TIFF-style runtime endian marker.
+                "endian" => {
+                    cursor.expect(GKind::LBrace)?;
+                    cursor.skip_newlines();
+                    let mut arms = Vec::new();
+                    while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+                        let key = cursor.expect(GKind::Text)?.text;
+                        cursor.expect(GKind::Equals)?;
+                        let mode = cursor.expect(GKind::Ident)?.text;
+                        let be = match mode.as_str() {
+                            "be" => true,
+                            "le" => false,
+                            other => return Err(TextError::new(format!("unknown `endian` mode `{other}` (expected `le`/`be`)"), cursor.peek().span.clone())),
+                        };
+                        arms.push((key, be));
+                        cursor.skip_newlines();
+                    }
+                    cursor.expect(GKind::RBrace)?;
+                    Ok(Prim::Endian(arms))
+                }
                 other => Ok(Prim::Ref(other.to_string())),
             }
         }
@@ -608,10 +793,135 @@ fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
     }
 }
 
+/// @emoji 🔀️ P2-M2 item 4: `if <field> <op> <value>` guard, `<op>` one of `eq|ne|lt|le|gt|ge`
+/// (word-keyword operators rather than symbolic `==`/`<=` — this file's own local protocol lexer
+/// only ever whitelists a small fixed token set, see the module doc; word keywords need zero lexer
+/// changes and stay entirely inside this parser).
+fn parse_cond(cursor: &mut Cursor) -> Result<Cond, TextError> {
+    let field = cursor.expect(GKind::Ident)?.text;
+    let op_word = cursor.expect(GKind::Ident)?.text;
+    let op = match op_word.as_str() {
+        "eq" => CondOp::Eq,
+        "ne" => CondOp::Ne,
+        "lt" => CondOp::Lt,
+        "le" => CondOp::Le,
+        "gt" => CondOp::Gt,
+        "ge" => CondOp::Ge,
+        other => return Err(TextError::new(format!("unknown condition operator `{other}` (expected eq/ne/lt/le/gt/ge)"), cursor.peek().span.clone())),
+    };
+    let value = parse_u64_literal(cursor)?;
+    Ok(Cond { field, op, value })
+}
+
 fn parse_field_pair(cursor: &mut Cursor) -> Result<Field, TextError> {
     let name = cursor.expect(GKind::Ident)?.text;
     let ty = parse_prim(cursor)?;
-    Ok(Field { name, ty })
+    let cond = if cursor.peek_ident("if") {
+        cursor.advance();
+        Some(parse_cond(cursor)?)
+    } else {
+        None
+    };
+    Ok(Field { name, ty, cond })
+}
+
+/// @emoji 🏷️ P2-M2 item 1: an arm/`until` tag literal — a `TEXT` literal encodes to its raw ASCII
+/// bytes (PNG/GLB's 4-char chunk/type tags), an int/hex literal encodes big-endian, trimmed to the
+/// discriminator prim's own byte width (GIF/JPG's single-byte introducer/marker codes).
+fn parse_tag_value(cursor: &mut Cursor, discriminator: &Prim) -> Result<Vec<u8>, TextError> {
+    if cursor.peek().kind == GKind::Text {
+        Ok(cursor.advance().text.into_bytes())
+    } else {
+        let value = parse_u64_literal(cursor)?;
+        let width = prim_fixed_width(discriminator).unwrap_or(1).clamp(1, 8);
+        let be = value.to_be_bytes();
+        Ok(be[8 - width..].to_vec())
+    }
+}
+
+/// @emoji ✂️ Trims leading zero bytes off a `u64`'s big-endian representation (keeping at least one
+/// byte) — used for `backward <name> magic 0x...` directives, matching `framing magic`'s existing
+/// literal-to-bytes convention but without forcing a fixed 8-byte width.
+fn trim_be_bytes(value: u64) -> Vec<u8> {
+    let be = value.to_be_bytes();
+    let first_nonzero = be.iter().position(|&b| b != 0).unwrap_or(7);
+    be[first_nonzero..].to_vec()
+}
+
+/// @emoji 🌿️ Parses one `arm <tag> { field... | nested <name> <prim> { arm ... } }` body.
+fn parse_arm_body(cursor: &mut Cursor) -> Result<(Vec<Field>, Option<NestedDispatch>), TextError> {
+    cursor.expect(GKind::LBrace)?;
+    cursor.skip_newlines();
+    let mut fields = Vec::new();
+    let mut nested = None;
+    while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+        if cursor.peek_ident("nested") {
+            cursor.advance();
+            let name = cursor.expect(GKind::Ident)?.text;
+            let discriminator = parse_prim(cursor)?;
+            cursor.expect(GKind::LBrace)?;
+            cursor.skip_newlines();
+            let mut arms = Vec::new();
+            while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+                cursor.expect_ident("arm")?;
+                let tag = parse_tag_value(cursor, &discriminator)?;
+                let (afields, anested) = parse_arm_body(cursor)?;
+                arms.push(RepeatArm { tag, fields: afields, nested: anested });
+                cursor.skip_newlines();
+            }
+            cursor.expect(GKind::RBrace)?;
+            nested = Some(NestedDispatch { name, discriminator, arms });
+        } else {
+            fields.push(parse_field_pair(cursor)?);
+        }
+        cursor.skip_newlines();
+    }
+    cursor.expect(GKind::RBrace)?;
+    Ok((fields, nested))
+}
+
+/// @emoji 🔁️ P2-M2 item 1: `repeat <name> { tag <prim> length <prim>? order length-first?
+/// trailer <prim>? until <tag>? arm <tag> {...}* }`.
+fn parse_repeat_dispatch(cursor: &mut Cursor) -> Result<RepeatDispatch, TextError> {
+    cursor.expect(GKind::LBrace)?;
+    cursor.skip_newlines();
+    let mut discriminator: Option<Prim> = None;
+    let mut length: Option<Prim> = None;
+    let mut order = DispatchOrder::TagFirst;
+    let mut trailer: Option<Prim> = None;
+    let mut until: Option<Vec<u8>> = None;
+    let mut arms = Vec::new();
+    while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+        let head = cursor.expect(GKind::Ident)?;
+        match head.text.as_str() {
+            "tag" => discriminator = Some(parse_prim(cursor)?),
+            "length" => length = Some(parse_prim(cursor)?),
+            "order" => {
+                let word = cursor.expect(GKind::Ident)?.text;
+                order = match word.as_str() {
+                    "tag-first" => DispatchOrder::TagFirst,
+                    "length-first" => DispatchOrder::LengthFirst,
+                    other => return Err(TextError::new(format!("unknown `repeat` order `{other}` (expected `tag-first`/`length-first`)"), head.span.clone())),
+                };
+            }
+            "trailer" => trailer = Some(parse_prim(cursor)?),
+            "until" => {
+                let disc = discriminator.as_ref().ok_or_else(|| TextError::new("`until` must follow `tag` in a `repeat` block", head.span.clone()))?;
+                until = Some(parse_tag_value(cursor, disc)?);
+            }
+            "arm" => {
+                let disc = discriminator.as_ref().ok_or_else(|| TextError::new("`arm` must follow `tag` in a `repeat` block", head.span.clone()))?;
+                let tag = parse_tag_value(cursor, disc)?;
+                let (fields, nested) = parse_arm_body(cursor)?;
+                arms.push(RepeatArm { tag, fields, nested });
+            }
+            other => return Err(TextError::new(format!("unknown `repeat` directive `{other}`"), head.span.clone())),
+        }
+        cursor.skip_newlines();
+    }
+    cursor.expect(GKind::RBrace)?;
+    let discriminator = discriminator.ok_or_else(|| TextError::new("`repeat` block is missing a `tag` directive", cursor.peek().span.clone()))?;
+    Ok(RepeatDispatch { discriminator, length, order, trailer, until, arms })
 }
 
 fn parse_fields_until_break(cursor: &mut Cursor) -> Result<Vec<Field>, TextError> {
@@ -760,23 +1070,30 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 close_header(&mut blocks, &mut open_header);
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident)?.text;
+                // P2-M2 item 4: whole-segment presence guard — `segment palette if bpp le 8 {...}`.
+                let cond = if cursor.peek_ident("if") {
+                    cursor.advance();
+                    Some(parse_cond(&mut cursor)?)
+                } else {
+                    None
+                };
                 if cursor.peek_ident("kind") && cursor.tokens.get(cursor.pos + 1).is_some_and(|t| t.kind == GKind::Equals) {
                     flush_open_segment(&mut blocks, &mut open_segment);
                     cursor.expect_ident("kind")?;
                     cursor.expect(GKind::Equals)?;
                     let kind = parse_u64_literal(&mut cursor)? as u8;
                     let fields = if cursor.peek().kind == GKind::LBrace { parse_braced_fields(&mut cursor)? } else { Vec::new() };
-                    blocks.push(Block::Segment { name, kind: Some(kind), fields });
+                    blocks.push(Block::Segment { name, kind: Some(kind), fields, cond });
                 } else if cursor.peek().kind == GKind::LBrace {
                     flush_open_segment(&mut blocks, &mut open_segment);
                     let fields = parse_braced_fields(&mut cursor)?;
-                    blocks.push(Block::Segment { name, kind: None, fields });
+                    blocks.push(Block::Segment { name, kind: None, fields, cond });
                 } else {
                     let ty = parse_prim(&mut cursor)?;
                     match open_segment.as_mut() {
-                        Some(Block::Segment { fields, .. }) => fields.push(Field { name, ty }),
+                        Some(Block::Segment { fields, .. }) => fields.push(Field { name, ty, cond: None }),
                         _ => {
-                            open_segment = Some(Block::Segment { name: String::new(), kind: None, fields: vec![Field { name, ty }] });
+                            open_segment = Some(Block::Segment { name: String::new(), kind: None, fields: vec![Field { name, ty, cond: None }], cond: None });
                         }
                     }
                 }
@@ -841,6 +1158,40 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 }
                 let ty = parse_prim(&mut cursor)?;
                 blocks.push(Block::Chain(ty));
+                cursor.skip_newlines();
+            }
+            // P2-M2 item 1: `repeat <name> { tag <prim> ... arm <tag> {...} }`.
+            "repeat" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                let dispatch = parse_repeat_dispatch(&mut cursor)?;
+                blocks.push(Block::Repeat { name, dispatch });
+                cursor.skip_newlines();
+            }
+            // P2-M2 item 5a: `backward <name> magic 0x... {...}` — scan backward from EOF.
+            "backward" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                cursor.expect_ident("magic")?;
+                let magic = trim_be_bytes(parse_u64_literal(&mut cursor)?);
+                let fields = parse_braced_fields(&mut cursor)?;
+                blocks.push(Block::BackwardScan { name, magic, fields });
+                cursor.skip_newlines();
+            }
+            // P2-M2 item 5b: `jump <name> from <field> {...}` — absolute-offset jump.
+            "jump" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                cursor.expect_ident("from")?;
+                let offset_field = cursor.expect(GKind::Ident)?.text;
+                let fields = parse_braced_fields(&mut cursor)?;
+                blocks.push(Block::JumpTo { name, offset_field, fields });
                 cursor.skip_newlines();
             }
             other => return Err(TextError::new(format!("unknown protocol directive `{other}`"), head.span)),
@@ -942,6 +1293,43 @@ pub fn print_grammar(grammar: &GrammarFile) -> String {
         out.push_str(extension);
         out.push('\n');
     }
+    // P2-M1 items 1 & 4: only emitted when they differ from `LexOptions::default()`, so a grammar
+    // that never declared `comment`/`string` directives prints byte-identically to before P2-M1.
+    let default_comment = CommentDialect::default();
+    if grammar.lex.comment.line != default_comment.line {
+        match &grammar.lex.comment.line {
+            Some(marker) => {
+                out.push_str("comment line \"");
+                out.push_str(marker);
+                out.push_str("\"\n");
+            }
+            None => out.push_str("comment line none\n"),
+        }
+    }
+    if let Some((open, close)) = &grammar.lex.comment.block {
+        out.push_str("comment block \"");
+        out.push_str(open);
+        out.push_str("\" \"");
+        out.push_str(close);
+        out.push_str("\"\n");
+    }
+    for mode in &grammar.lex.strings {
+        let which = match mode.quote {
+            '"' => "double",
+            '\'' => "single",
+            _ => continue,
+        };
+        let escape = match mode.escape {
+            StringEscape::Raw => "raw",
+            StringEscape::Backslash => "backslash",
+            StringEscape::Doubled => "doubled",
+        };
+        out.push_str("string ");
+        out.push_str(which);
+        out.push(' ');
+        out.push_str(escape);
+        out.push('\n');
+    }
     for fragment in &grammar.uses {
         out.push_str("use ");
         out.push_str(fragment);
@@ -1009,13 +1397,100 @@ fn print_prim(prim: &Prim, out: &mut String) {
             }
         }
         Prim::Ref(name) => out.push_str(name),
+        Prim::U16Be => out.push_str("u16be"),
+        Prim::U32Be => out.push_str("u32be"),
+        Prim::U64Be => out.push_str("u64be"),
+        Prim::I32Be => out.push_str("i32be"),
+        Prim::I64Be => out.push_str("i64be"),
+        Prim::F32Be => out.push_str("f32be"),
+        Prim::F64Be => out.push_str("f64be"),
+        Prim::MarkerScan(prefix) => out.push_str(&format!("marker(0x{prefix:02X})")),
+        Prim::Endian(arms) => {
+            out.push_str("endian {");
+            for (i, (key, be)) in arms.iter().enumerate() {
+                if i > 0 {
+                    out.push(' ');
+                }
+                out.push('"');
+                out.push_str(key);
+                out.push_str("\"=");
+                out.push_str(if *be { "be" } else { "le" });
+            }
+            out.push('}');
+        }
     }
+}
+
+fn print_cond(cond: &Cond, out: &mut String) {
+    out.push_str(" if ");
+    out.push_str(&cond.field);
+    out.push(' ');
+    out.push_str(match cond.op {
+        CondOp::Eq => "eq",
+        CondOp::Ne => "ne",
+        CondOp::Lt => "lt",
+        CondOp::Le => "le",
+        CondOp::Gt => "gt",
+        CondOp::Ge => "ge",
+    });
+    out.push(' ');
+    out.push_str(&cond.value.to_string());
+}
+
+/// @emoji 🏷️ Prints raw discriminator/magic bytes back to source: printable multi-byte ASCII
+/// round-trips as a `TEXT` literal (PNG/GLB's 4-char tags stay readable), anything else as a hex
+/// integer literal — matches [`parse_tag_value`]'s two accepted input forms exactly.
+fn print_tag_bytes(tag: &[u8], out: &mut String) {
+    let printable = tag.len() > 1 && tag.iter().all(|b| b.is_ascii_graphic() || *b == b' ');
+    if printable {
+        out.push('"');
+        out.push_str(&String::from_utf8_lossy(tag));
+        out.push('"');
+    } else {
+        out.push_str("0x");
+        for b in tag {
+            out.push_str(&format!("{b:02X}"));
+        }
+    }
+}
+
+fn print_repeat_arm(arm: &RepeatArm, out: &mut String) {
+    out.push_str("arm ");
+    print_tag_bytes(&arm.tag, out);
+    out.push_str(" {");
+    for (i, field) in arm.fields.iter().enumerate() {
+        if i > 0 {
+            out.push(' ');
+        }
+        print_field(field, out);
+    }
+    if let Some(nested) = &arm.nested {
+        if !arm.fields.is_empty() {
+            out.push(' ');
+        }
+        out.push_str("nested ");
+        out.push_str(&nested.name);
+        out.push(' ');
+        print_prim(&nested.discriminator, out);
+        out.push_str(" {");
+        for (i, narm) in nested.arms.iter().enumerate() {
+            if i > 0 {
+                out.push(' ');
+            }
+            print_repeat_arm(narm, out);
+        }
+        out.push('}');
+    }
+    out.push_str("}\n");
 }
 
 fn print_field(field: &Field, out: &mut String) {
     out.push_str(&field.name);
     out.push(' ');
     print_prim(&field.ty, out);
+    if let Some(cond) = &field.cond {
+        print_cond(cond, out);
+    }
 }
 
 fn header_fixed_size(fields: &[Field]) -> usize {
@@ -1064,8 +1539,8 @@ pub fn print_protocol(protocol: &ProtocolFile) -> String {
                     out.push('\n');
                 }
             }
-            Block::Segment { name, kind, fields } => {
-                if name.is_empty() && kind.is_none() {
+            Block::Segment { name, kind, fields, cond } => {
+                if name.is_empty() && kind.is_none() && cond.is_none() {
                     for field in fields {
                         out.push_str("segment ");
                         print_field(field, &mut out);
@@ -1077,6 +1552,9 @@ pub fn print_protocol(protocol: &ProtocolFile) -> String {
                     if let Some(k) = kind {
                         out.push_str(" kind=");
                         out.push_str(&k.to_string());
+                    }
+                    if let Some(c) = cond {
+                        print_cond(c, &mut out);
                     }
                     out.push_str(" {");
                     for (i, field) in fields.iter().enumerate() {
@@ -1147,6 +1625,64 @@ pub fn print_protocol(protocol: &ProtocolFile) -> String {
                 out.push_str("chain ");
                 print_prim(prim, &mut out);
                 out.push('\n');
+            }
+            Block::Repeat { name, dispatch } => {
+                out.push_str("repeat ");
+                out.push_str(name);
+                out.push_str(" {\n");
+                out.push_str("tag ");
+                print_prim(&dispatch.discriminator, &mut out);
+                out.push('\n');
+                if let Some(length) = &dispatch.length {
+                    out.push_str("length ");
+                    print_prim(length, &mut out);
+                    out.push('\n');
+                }
+                if matches!(dispatch.order, DispatchOrder::LengthFirst) {
+                    out.push_str("order length-first\n");
+                }
+                if let Some(trailer) = &dispatch.trailer {
+                    out.push_str("trailer ");
+                    print_prim(trailer, &mut out);
+                    out.push('\n');
+                }
+                if let Some(until) = &dispatch.until {
+                    out.push_str("until ");
+                    print_tag_bytes(until, &mut out);
+                    out.push('\n');
+                }
+                for arm in &dispatch.arms {
+                    print_repeat_arm(arm, &mut out);
+                }
+                out.push_str("}\n");
+            }
+            Block::BackwardScan { name, magic, fields } => {
+                out.push_str("backward ");
+                out.push_str(name);
+                out.push_str(" magic ");
+                print_tag_bytes(magic, &mut out);
+                out.push_str(" {");
+                for (i, field) in fields.iter().enumerate() {
+                    if i > 0 {
+                        out.push(' ');
+                    }
+                    print_field(field, &mut out);
+                }
+                out.push_str("}\n");
+            }
+            Block::JumpTo { name, offset_field, fields } => {
+                out.push_str("jump ");
+                out.push_str(name);
+                out.push_str(" from ");
+                out.push_str(offset_field);
+                out.push_str(" {");
+                for (i, field) in fields.iter().enumerate() {
+                    if i > 0 {
+                        out.push(' ');
+                    }
+                    print_field(field, &mut out);
+                }
+                out.push_str("}\n");
             }
         }
     }
@@ -1257,9 +1793,18 @@ impl Recognizer {
         self.grammar.productions.iter().find(|p| p.name == name)
     }
 
-    /// @emoji ✅️ Recognizes text against the grammar start production.
+    /// @emoji ✅️ Recognizes text against the grammar start production. Lexes with this grammar's
+    /// own `lex` dialect (P2-M1: per-grammar string/comment configuration), so a grammar that
+    /// declared `comment`/`string` header directives recognizes text under ITS OWN alphabet.
+    /// Lexes forgivingly (P2-M1 item 2): a raw-span terminal (`LINE`/`REST`) exists precisely to
+    /// swallow content outside the fixed token alphabet (txt's arbitrary prose body) without the
+    /// WHOLE document failing to lex before the Recognizer ever sees a token stream to walk over —
+    /// resource-limit violations (`Limits`) still surface as a real `Err`, only lexical-shape
+    /// errors degrade to `Error` tokens. Behavior-identical to strict mode for any text that
+    /// already lexed cleanly (every pre-M1 pilot fixture), since forgiving vs. strict only differ
+    /// on inputs that would otherwise abort with a lex error.
     pub fn recognize(&self, text: &str) -> Result<bool, TextError> {
-        let raw = core_lex(text, &Limits::default(), false)?;
+        let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
         let tokens: Vec<_> = raw
             .into_iter()
             .filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof)
@@ -1270,15 +1815,16 @@ impl Recognizer {
                 TextSpan::at(1, 1),
             )
         })?;
-        match self.match_production(start, &tokens, 0) {
+        match self.match_production(start, &tokens, 0, text) {
             Some(pos) => Ok(pos == tokens.len()),
             None => Ok(false),
         }
     }
 
-    /// @emoji 📊️ Productions never reached while recognizing text.
+    /// @emoji 📊️ Productions never reached while recognizing text. Forgiving for the same reason
+    /// as [`Recognizer::recognize`] (P2-M1 raw-span support).
     pub fn uncovered_productions(&self, text: &str) -> Result<Vec<String>, TextError> {
-        let raw = core_lex(text, &Limits::default(), false)?;
+        let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
         let tokens: Vec<_> = raw
             .into_iter()
             .filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof)
@@ -1290,7 +1836,7 @@ impl Recognizer {
                 TextSpan::at(1, 1),
             )
         })?;
-        let _ = self.match_production_tracked(start, &tokens, 0, &mut covered);
+        let _ = self.match_production_tracked(start, &tokens, 0, &mut covered, text);
         Ok(self
             .grammar
             .productions
@@ -1305,9 +1851,10 @@ impl Recognizer {
         production: &Production,
         tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
+        text: &str,
     ) -> Option<usize> {
         let mut covered = std::collections::HashSet::new();
-        self.match_production_tracked(production, tokens, pos, &mut covered)
+        self.match_production_tracked(production, tokens, pos, &mut covered, text)
     }
 
     fn match_production_tracked(
@@ -1316,9 +1863,10 @@ impl Recognizer {
         tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
         covered: &mut std::collections::HashSet<String>,
+        text: &str,
     ) -> Option<usize> {
         for alt in &production.alternatives {
-            if let Some(next) = self.match_sequence_tracked(&alt.symbols, tokens, pos, covered) {
+            if let Some(next) = self.match_sequence_tracked(&alt.symbols, tokens, pos, covered, text) {
                 covered.insert(production.name.clone());
                 return Some(next);
             }
@@ -1332,9 +1880,10 @@ impl Recognizer {
         tokens: &[crate::os_dsl::SpannedToken],
         mut pos: usize,
         covered: &mut std::collections::HashSet<String>,
+        text: &str,
     ) -> Option<usize> {
         for symbol in symbols {
-            pos = self.match_symbol_tracked(symbol, tokens, pos, covered)?;
+            pos = self.match_symbol_tracked(symbol, tokens, pos, covered, text)?;
         }
         Some(pos)
     }
@@ -1345,11 +1894,24 @@ impl Recognizer {
         tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
         covered: &mut std::collections::HashSet<String>,
+        text: &str,
     ) -> Option<usize> {
         match symbol {
-            Symbol::Literal(text) => {
+            Symbol::Literal(literal) => {
                 let token = tokens.get(pos)?;
-                (token.text.as_str().as_ref() == text.as_str()).then_some(pos + 1)
+                (token.text.as_str().as_ref() == literal.as_str()).then_some(pos + 1)
+            }
+            // P2-M1 item 2: the "raw span" terminal. `LINE`/`REST` don't match ONE token via
+            // `terminal_matches` — they consume a byte SPAN of the original source (read straight
+            // from `text`, not reassembled from tokens, so interior whitespace/punctuation the
+            // shared lexer would otherwise fragment is preserved verbatim) and skip forward past
+            // every already-lexed token that span swallowed, without attempting to re-tokenize it.
+            Symbol::Terminal(name) if matches!(name.to_uppercase().as_str(), "LINE" | "REST") => {
+                let end = match name.to_uppercase().as_str() {
+                    "LINE" => RawSpanEnd::Newline,
+                    _ => RawSpanEnd::Eof,
+                };
+                Some(match_raw_span(tokens, pos, text, end))
             }
             Symbol::Terminal(name) => {
                 let token = tokens.get(pos)?;
@@ -1357,7 +1919,7 @@ impl Recognizer {
             }
             Symbol::Ref(name) => {
                 if let Some(production) = self.find_production(name) {
-                    self.match_production_tracked(production, tokens, pos, covered)
+                    self.match_production_tracked(production, tokens, pos, covered, text)
                 } else if let Some(matcher) = self.macros.iter().find(|m| m.name == name) {
                     self.match_macro_span(matcher, tokens, pos)
                 } else {
@@ -1370,13 +1932,13 @@ impl Recognizer {
             }
             Symbol::Group(alts) => alts
                 .iter()
-                .find_map(|alt| self.match_sequence_tracked(&alt.symbols, tokens, pos, covered)),
+                .find_map(|alt| self.match_sequence_tracked(&alt.symbols, tokens, pos, covered, text)),
             Symbol::Optional(inner) => {
-                Some(self.match_symbol_tracked(inner, tokens, pos, covered).unwrap_or(pos))
+                Some(self.match_symbol_tracked(inner, tokens, pos, covered, text).unwrap_or(pos))
             }
             Symbol::Star(inner) => {
                 let mut cur = pos;
-                while let Some(next) = self.match_symbol_tracked(inner, tokens, cur, covered) {
+                while let Some(next) = self.match_symbol_tracked(inner, tokens, cur, covered, text) {
                     if next == cur {
                         break;
                     }
@@ -1385,10 +1947,10 @@ impl Recognizer {
                 Some(cur)
             }
             Symbol::Plus(inner) => {
-                let first = self.match_symbol_tracked(inner, tokens, pos, covered)?;
+                let first = self.match_symbol_tracked(inner, tokens, pos, covered, text)?;
                 let mut cur = first;
                 loop {
-                    match self.match_symbol_tracked(inner, tokens, cur, covered) {
+                    match self.match_symbol_tracked(inner, tokens, cur, covered, text) {
                         Some(next) if next != cur => cur = next,
                         _ => break,
                     }
@@ -1412,6 +1974,32 @@ impl Recognizer {
         }
         None
     }
+}
+
+/// @emoji 📏️ Which delimiter ends a P2-M1 "raw span" terminal capture.
+enum RawSpanEnd {
+    /// `LINE` — rest of the current physical line (up to the next `\n`, or EOF if none) — obj's
+    /// `o`/`g` names, stl's `solid <name>`/`endsolid <name>`, dxf's opaque group-code value lines.
+    Newline,
+    /// `REST` — everything remaining to end-of-document — txt's whole prose body.
+    Eof,
+}
+
+/// @emoji ✂️ Captures a raw byte span of the ORIGINAL source starting at `tokens[pos]`'s byte
+/// offset (or end-of-text if `pos` is already past the last token) through `end`, then returns the
+/// token index just past every token that span swallowed — the span's interior is never
+/// re-tokenized, matching the shared lexer's own token boundaries only at the far edge.
+fn match_raw_span(tokens: &[crate::os_dsl::SpannedToken], pos: usize, text: &str, end: RawSpanEnd) -> usize {
+    let start_byte = tokens.get(pos).map(|t| t.byte_range.0 as usize).unwrap_or(text.len());
+    let end_byte = match end {
+        RawSpanEnd::Newline => text.get(start_byte..).and_then(|rest| rest.find('\n')).map(|off| start_byte + off).unwrap_or(text.len()),
+        RawSpanEnd::Eof => text.len(),
+    };
+    let mut new_pos = pos;
+    while new_pos < tokens.len() && (tokens[new_pos].byte_range.0 as usize) < end_byte {
+        new_pos += 1;
+    }
+    new_pos
 }
 
 fn slice_source_text(tokens: &[crate::os_dsl::SpannedToken]) -> String {
@@ -1447,6 +2035,11 @@ fn terminal_matches(name: &str, token: &crate::os_dsl::SpannedToken) -> bool {
                 CoreKind::Ident | CoreKind::Float | CoreKind::Int | CoreKind::Text
             )
         }
+        // P2-M1 item 3/5: the promoted single-char tokens + STEP's leading-dot enum literal each
+        // get an explicit named terminal so a grammar can require them positionally (not just via
+        // the generic `other` token-kind-name fallback below, though that still works too since
+        // e.g. `Symbol::Terminal("LT")` already matches `format!("{:?}", TokenKind::Lt)`).
+        "DOTENUM" => matches!(token.kind, CoreKind::DotEnum),
         other => format!("{:?}", token.kind).to_uppercase() == other,
     }
 }
@@ -1492,15 +2085,45 @@ fn default_macros() -> Vec<MacroMatcher> {
 //#endregion 🔖️Recognizer
 
 //#region 📡️ProtocolWalk
+/// @emoji 🧮️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
+/// (every block, in order) — not reset per block/call as the pre-M2 `walk_fields`-local `HashMap`
+/// was. `env` makes a LATER block's `Count::Field`/`Cond` resolve against a value decoded by any
+/// EARLIER block (las's VLR/point-record repeat counts from the header; gif89a's GCE state carried
+/// to the next block; bmp's palette/row counts). `big_endian` is the runtime endian mode a
+/// `Prim::Endian` field can flip for the remainder of the walk (TIFF's `II`/`MM`); plain `U16`/
+/// `U32`/`U64`/`I32`/`I64`/`F32`/`F64` obey it, `*Be` variants (item 2) always ignore it.
+#[derive(Default)]
+struct WalkState {
+    env: std::collections::HashMap<String, u64>,
+    big_endian: bool,
+}
+
 fn prim_fixed_width(prim: &Prim) -> Option<usize> {
     match prim {
         Prim::U8 => Some(1),
-        Prim::U16 => Some(2),
-        Prim::U32 | Prim::I32 | Prim::F32 => Some(4),
-        Prim::U64 | Prim::I64 | Prim::F64 => Some(8),
+        Prim::U16 | Prim::U16Be => Some(2),
+        Prim::U32 | Prim::I32 | Prim::F32 | Prim::U32Be | Prim::I32Be | Prim::F32Be => Some(4),
+        Prim::U64 | Prim::I64 | Prim::F64 | Prim::U64Be | Prim::I64Be | Prim::F64Be => Some(8),
         Prim::Fixed(n) => Some(*n),
+        Prim::MarkerScan(_) => Some(1),
+        Prim::Endian(arms) => Some(arms.first().map(|(k, _)| k.len()).unwrap_or(0)),
         Prim::Varint | Prim::Zigzag | Prim::Tag | Prim::Bytes | Prim::Utf8 | Prim::Array(_, _) | Prim::Ref(_) => None,
     }
+}
+
+fn decode_u16(slice: &[u8], big_endian: bool) -> u16 {
+    let bytes = [slice[0], slice[1]];
+    if big_endian { u16::from_be_bytes(bytes) } else { u16::from_le_bytes(bytes) }
+}
+
+fn decode_u32(slice: &[u8], big_endian: bool) -> u32 {
+    let bytes: [u8; 4] = slice.try_into().unwrap();
+    if big_endian { u32::from_be_bytes(bytes) } else { u32::from_le_bytes(bytes) }
+}
+
+fn decode_u64(slice: &[u8], big_endian: bool) -> u64 {
+    let bytes: [u8; 8] = slice.try_into().unwrap();
+    if big_endian { u64::from_be_bytes(bytes) } else { u64::from_le_bytes(bytes) }
 }
 
 fn mismatch(offset: usize, message: impl Into<String>) -> ProtocolMismatch {
@@ -1541,7 +2164,7 @@ fn trailing_reserved(blocks: &[Block], from: usize) -> usize {
             Block::Footer(n) => reserved += *n,
             Block::Chain(prim) => reserved += prim_fixed_width(prim).unwrap_or(0),
             Block::Struct { .. } | Block::Enum { .. } => {}
-            Block::Header(_) | Block::Segment { .. } | Block::Record { .. } => break,
+            Block::Header(_) | Block::Segment { .. } | Block::Record { .. } | Block::Repeat { .. } | Block::BackwardScan { .. } | Block::JumpTo { .. } => break,
         }
     }
     reserved
@@ -1555,27 +2178,34 @@ fn resolve_count(count: &Count, env: &std::collections::HashMap<String, u64>, of
     }
 }
 
-fn walk_prim(
-    prim: &Prim,
-    bytes: &[u8],
-    pos: &mut usize,
-    env: &mut std::collections::HashMap<String, u64>,
-    reserved_tail: usize,
-) -> Result<(), ProtocolMismatch> {
+/// @emoji 🔀️ P2-M2 item 4: evaluate a field/segment presence guard against the walk-wide env.
+fn eval_cond(cond: &Cond, env: &std::collections::HashMap<String, u64>, offset: usize) -> Result<bool, ProtocolMismatch> {
+    let actual = *env.get(&cond.field).ok_or_else(|| mismatch(offset, format!("condition references unknown field `{}`", cond.field)))?;
+    Ok(match cond.op {
+        CondOp::Eq => actual == cond.value,
+        CondOp::Ne => actual != cond.value,
+        CondOp::Lt => actual < cond.value,
+        CondOp::Le => actual <= cond.value,
+        CondOp::Gt => actual > cond.value,
+        CondOp::Ge => actual >= cond.value,
+    })
+}
+
+fn walk_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &mut WalkState, reserved_tail: usize) -> Result<(), ProtocolMismatch> {
     match prim {
         Prim::U8 => {
             need(bytes, *pos, 1, "u8")?;
             *pos += 1;
         }
-        Prim::U16 => {
+        Prim::U16 | Prim::U16Be => {
             need(bytes, *pos, 2, "u16")?;
             *pos += 2;
         }
-        Prim::U32 | Prim::I32 | Prim::F32 => {
+        Prim::U32 | Prim::I32 | Prim::F32 | Prim::U32Be | Prim::I32Be | Prim::F32Be => {
             need(bytes, *pos, 4, "u32/i32/f32")?;
             *pos += 4;
         }
-        Prim::U64 | Prim::I64 | Prim::F64 => {
+        Prim::U64 | Prim::I64 | Prim::F64 | Prim::U64Be | Prim::I64Be | Prim::F64Be => {
             need(bytes, *pos, 8, "u64/i64/f64")?;
             *pos += 8;
         }
@@ -1596,25 +2226,136 @@ fn walk_prim(
         Prim::Array(inner, count) => {
             let n = match count {
                 Count::Varint => read_varint_u64(bytes, pos)? as usize,
-                other => resolve_count(other, env, *pos)?,
+                other => resolve_count(other, &state.env, *pos)?,
             };
             if matches!(inner.as_ref(), Prim::U8) {
                 need(bytes, *pos, n, "byte array")?;
                 *pos += n;
             } else {
                 for _ in 0..n {
-                    walk_prim(inner, bytes, pos, env, reserved_tail)?;
+                    walk_prim(inner, bytes, pos, state, reserved_tail)?;
                 }
             }
         }
         Prim::Ref(name) => return Err(mismatch(*pos, format!("unresolved protocol Ref({name}) during walk"))),
+        // P2-M2 item 1c.
+        Prim::MarkerScan(prefix) => {
+            while *pos < bytes.len() && bytes[*pos] == *prefix {
+                *pos += 1;
+            }
+            need(bytes, *pos, 1, "marker byte")?;
+            *pos += 1;
+        }
+        // P2-M2 item 6.
+        Prim::Endian(arms) => {
+            let width = arms.first().map(|(k, _)| k.len()).unwrap_or(0);
+            let slice = need(bytes, *pos, width, "endian marker")?;
+            match arms.iter().find(|(k, _)| k.as_bytes() == slice) {
+                Some((_, be)) => state.big_endian = *be,
+                None => return Err(mismatch(*pos, format!("unrecognized endianness marker bytes {slice:?}"))),
+            }
+            *pos += width;
+        }
     }
     Ok(())
 }
 
-fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, reserved_tail: usize) -> Result<(), ProtocolMismatch> {
-    let mut env = std::collections::HashMap::new();
+/// @emoji 🏷️ P2-M2 item 1: reads a discriminator's exact raw bytes (no numeric decode — arm tags
+/// are compared byte-for-byte, see [`parse_tag_value`]) and advances `pos` past them.
+fn read_raw_prim_bytes(prim: &Prim, bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, ProtocolMismatch> {
+    match prim {
+        Prim::MarkerScan(prefix) => {
+            while *pos < bytes.len() && bytes[*pos] == *prefix {
+                *pos += 1;
+            }
+            let slice = need(bytes, *pos, 1, "marker byte")?.to_vec();
+            *pos += 1;
+            Ok(slice)
+        }
+        Prim::Fixed(n) => {
+            let slice = need(bytes, *pos, *n, "fixed discriminator")?.to_vec();
+            *pos += n;
+            Ok(slice)
+        }
+        other => {
+            let width = prim_fixed_width(other).ok_or_else(|| mismatch(*pos, format!("{other:?} has no fixed width, cannot be used as a discriminator")))?;
+            let slice = need(bytes, *pos, width, "discriminator")?.to_vec();
+            *pos += width;
+            Ok(slice)
+        }
+    }
+}
+
+/// @emoji 🔢️ Reads a numeric scalar (length/count field) honoring [`WalkState::big_endian`] for
+/// the plain (non-`Be`) variants — used by `repeat`'s `length` directive and, via [`walk_fields`],
+/// for ordinary `Count::Field`-producing fields.
+fn read_scalar_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &WalkState) -> Result<u64, ProtocolMismatch> {
+    match prim {
+        Prim::U8 => {
+            let slice = need(bytes, *pos, 1, "u8")?;
+            let v = u64::from(slice[0]);
+            *pos += 1;
+            Ok(v)
+        }
+        Prim::U16 => {
+            let slice = need(bytes, *pos, 2, "u16")?;
+            let v = u64::from(decode_u16(slice, state.big_endian));
+            *pos += 2;
+            Ok(v)
+        }
+        Prim::U16Be => {
+            let slice = need(bytes, *pos, 2, "u16be")?;
+            let v = u64::from(decode_u16(slice, true));
+            *pos += 2;
+            Ok(v)
+        }
+        Prim::U32 => {
+            let slice = need(bytes, *pos, 4, "u32")?;
+            let v = u64::from(decode_u32(slice, state.big_endian));
+            *pos += 4;
+            Ok(v)
+        }
+        Prim::U32Be => {
+            let slice = need(bytes, *pos, 4, "u32be")?;
+            let v = u64::from(decode_u32(slice, true));
+            *pos += 4;
+            Ok(v)
+        }
+        Prim::U64 => {
+            let slice = need(bytes, *pos, 8, "u64")?;
+            let v = decode_u64(slice, state.big_endian);
+            *pos += 8;
+            Ok(v)
+        }
+        Prim::U64Be => {
+            let slice = need(bytes, *pos, 8, "u64be")?;
+            let v = decode_u64(slice, true);
+            *pos += 8;
+            Ok(v)
+        }
+        Prim::Varint | Prim::Tag | Prim::Zigzag => read_varint_u64(bytes, pos),
+        other => Err(mismatch(*pos, format!("{other:?} cannot be read as a scalar length/count"))),
+    }
+}
+
+/// @emoji 🔎️ P2-M2 item 5a: the rightmost occurrence of `pattern` in `bytes` — ZIP's EOCD is
+/// located by scanning BACKWARD from EOF because its preceding comment field is 0-65535 bytes, so
+/// its start is unknowable except by finding the EOCD's own magic first.
+fn find_last_occurrence(bytes: &[u8], pattern: &[u8]) -> Option<usize> {
+    if pattern.is_empty() || pattern.len() > bytes.len() {
+        return None;
+    }
+    (0..=bytes.len() - pattern.len()).rev().find(|&i| &bytes[i..i + pattern.len()] == pattern)
+}
+
+fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut WalkState, reserved_tail: usize) -> Result<(), ProtocolMismatch> {
     for (index, field) in fields.iter().enumerate() {
+        // P2-M2 item 4: a field absent under its guard is simply skipped — not read at all.
+        if let Some(cond) = &field.cond {
+            if !eval_cond(cond, &state.env, *pos)? {
+                continue;
+            }
+        }
         let field_reserved = if index + 1 == fields.len() {
             reserved_tail
         } else {
@@ -1627,29 +2368,143 @@ fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, reserved_tail: u
         match &field.ty {
             Prim::U8 => {
                 let slice = need(bytes, *pos, 1, &field.name)?;
-                env.insert(field.name.clone(), u64::from(slice[0]));
+                state.env.insert(field.name.clone(), u64::from(slice[0]));
                 *pos += 1;
             }
+            // P2-M2 item 6: plain U16/U32/U64 honor the walker's current runtime endian mode.
             Prim::U16 => {
                 let slice = need(bytes, *pos, 2, &field.name)?;
-                env.insert(field.name.clone(), u64::from(u16::from_le_bytes([slice[0], slice[1]])));
+                let value = u64::from(decode_u16(slice, state.big_endian));
+                state.env.insert(field.name.clone(), value);
                 *pos += 2;
             }
             Prim::U32 => {
                 let slice = need(bytes, *pos, 4, &field.name)?;
-                env.insert(field.name.clone(), u64::from(u32::from_le_bytes(slice.try_into().unwrap())));
+                let value = u64::from(decode_u32(slice, state.big_endian));
+                state.env.insert(field.name.clone(), value);
                 *pos += 4;
             }
             Prim::U64 => {
                 let slice = need(bytes, *pos, 8, &field.name)?;
-                env.insert(field.name.clone(), u64::from_le_bytes(slice.try_into().unwrap()));
+                let value = decode_u64(slice, state.big_endian);
+                state.env.insert(field.name.clone(), value);
+                *pos += 8;
+            }
+            // P2-M2 item 2: *Be variants are ALWAYS big-endian, regardless of the runtime mode.
+            Prim::U16Be => {
+                let slice = need(bytes, *pos, 2, &field.name)?;
+                state.env.insert(field.name.clone(), u64::from(decode_u16(slice, true)));
+                *pos += 2;
+            }
+            Prim::U32Be => {
+                let slice = need(bytes, *pos, 4, &field.name)?;
+                state.env.insert(field.name.clone(), u64::from(decode_u32(slice, true)));
+                *pos += 4;
+            }
+            Prim::U64Be => {
+                let slice = need(bytes, *pos, 8, &field.name)?;
+                state.env.insert(field.name.clone(), decode_u64(slice, true));
                 *pos += 8;
             }
             Prim::Varint | Prim::Tag | Prim::Zigzag => {
                 let value = read_varint_u64(bytes, pos)?;
-                env.insert(field.name.clone(), value);
+                state.env.insert(field.name.clone(), value);
             }
-            other => walk_prim(other, bytes, pos, &mut env, field_reserved)?,
+            // P2-M2 item 6: the endian-marker field itself — mutates walker state, binds no value.
+            Prim::Endian(arms) => {
+                let width = arms.first().map(|(k, _)| k.len()).unwrap_or(0);
+                let slice = need(bytes, *pos, width, "endian marker")?;
+                match arms.iter().find(|(k, _)| k.as_bytes() == slice) {
+                    Some((_, be)) => state.big_endian = *be,
+                    None => return Err(mismatch(*pos, format!("unrecognized endianness marker bytes {slice:?}"))),
+                }
+                *pos += width;
+            }
+            other => walk_prim(other, bytes, pos, state, field_reserved)?,
+        }
+    }
+    Ok(())
+}
+
+/// @emoji 🌿️ P2-M2 item 1b: single-shot (non-repeating) second-level dispatch — GIF 89a's
+/// extension-introducer arm dispatches again on the label byte.
+fn walk_nested_dispatch(nested: &NestedDispatch, bytes: &[u8], pos: &mut usize, state: &mut WalkState) -> Result<(), ProtocolMismatch> {
+    let tag = read_raw_prim_bytes(&nested.discriminator, bytes, pos)?;
+    match nested.arms.iter().find(|arm| arm.tag == tag) {
+        Some(arm) => {
+            walk_fields(&arm.fields, bytes, pos, state, 0)?;
+            if let Some(deeper) = &arm.nested {
+                walk_nested_dispatch(deeper, bytes, pos, state)?;
+            }
+            Ok(())
+        }
+        None => Err(mismatch(*pos, format!("unrecognized nested discriminator {tag:?} in `{}`", nested.name))),
+    }
+}
+
+/// @emoji 🔁️ P2-M2 item 1: read discriminator (+ optional length, per `order`), dispatch into a
+/// known arm's fields or skip an unrecognized discriminator's declared `length` as opaque bytes,
+/// repeat until EOF or `until`'s sentinel discriminator value is seen.
+fn walk_repeat(dispatch: &RepeatDispatch, bytes: &[u8], pos: &mut usize, state: &mut WalkState) -> Result<(), ProtocolMismatch> {
+    loop {
+        if *pos >= bytes.len() {
+            break;
+        }
+        let iter_start = *pos;
+        let (tag, length_value) = match dispatch.order {
+            DispatchOrder::LengthFirst => {
+                let len = match &dispatch.length {
+                    Some(p) => Some(read_scalar_prim(p, bytes, pos, state)?),
+                    None => None,
+                };
+                let tag = read_raw_prim_bytes(&dispatch.discriminator, bytes, pos)?;
+                (tag, len)
+            }
+            DispatchOrder::TagFirst => {
+                let tag = read_raw_prim_bytes(&dispatch.discriminator, bytes, pos)?;
+                let len = match &dispatch.length {
+                    Some(p) => Some(read_scalar_prim(p, bytes, pos, state)?),
+                    None => None,
+                };
+                (tag, len)
+            }
+        };
+        let is_sentinel = dispatch.until.as_deref() == Some(tag.as_slice());
+        let body_start = *pos;
+        match dispatch.arms.iter().find(|arm| arm.tag == tag) {
+            Some(arm) => {
+                walk_fields(&arm.fields, bytes, pos, state, 0)?;
+                if let Some(nested) = &arm.nested {
+                    walk_nested_dispatch(nested, bytes, pos, state)?;
+                }
+                if let Some(len) = length_value {
+                    let expected_end = body_start + len as usize;
+                    if expected_end > bytes.len() {
+                        return Err(mismatch(*pos, "repeat arm declared length exceeds buffer"));
+                    }
+                    if *pos > expected_end {
+                        return Err(mismatch(*pos, format!("repeat arm fields overran declared length ({} > {})", *pos, expected_end)));
+                    }
+                    *pos = expected_end;
+                }
+            }
+            // P2-M2 item 1a: unrecognized discriminator — skip its declared length as opaque bytes.
+            None => match length_value {
+                Some(len) => {
+                    need(bytes, *pos, len as usize, "repeat skip")?;
+                    *pos += len as usize;
+                }
+                None => return Err(mismatch(*pos, format!("unrecognized discriminator {tag:?} with no declared `length` to skip"))),
+            },
+        }
+        if let Some(trailer_prim) = &dispatch.trailer {
+            walk_prim(trailer_prim, bytes, pos, state, 0)?;
+        }
+        if is_sentinel {
+            break;
+        }
+        if *pos == iter_start {
+            return Err(mismatch(*pos, "repeat block made no forward progress"));
         }
     }
     Ok(())
@@ -1660,7 +2515,18 @@ fn definitions_only(block: &Block) -> bool {
 }
 
 /// @emoji 🧭️ Spec-driven byte walker — consumes every declared wire slot and must finish at
-/// exactly `bytes.len()`, else returns [`ProtocolMismatch`] with the failing offset.
+/// exactly `bytes.len()`, else returns [`ProtocolMismatch`] with the failing offset. **Exception**
+/// (P2-M2 item 5, documented precisely per the plan's own instruction): once ANY block has
+/// explicitly JUMPED `pos` (`Block::BackwardScan`/`Block::JumpTo`), the walk is no longer a pure
+/// linear forward accounting of every byte in the buffer — that is the whole point of a
+/// backward-scan/offset-jump (ZIP's EOCD sits at a position determined only by scanning backward
+/// from EOF, and its `cd_offset` field points at a position determined only by decoding the EOCD
+/// first; the bytes physically between a jump target and EOF, or before it, are validly described
+/// by OTHER blocks the walk already visited, not by "whatever's left after this one"). The final
+/// `pos == bytes.len()` law is therefore skipped for any walk that performed at least one jump; it
+/// holds EXACTLY as before for every protocol that declares neither block (the overwhelming
+/// majority). The walker still only ever reads FORWARD from a jump's landing point — jumps move
+/// `pos` directly, they never make the walker itself search or backtrack mid-block.
 pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace, ProtocolMismatch> {
     let mut pos = 0usize;
     match &spec.framing {
@@ -1677,6 +2543,10 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
     let skip_named_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);
     let record_body_as_rest = matches!(spec.framing, Framing::Record);
     let mut consumed_record_body = false;
+    // P2-M2 items 3+6: ONE state, shared across every block in this walk (see `WalkState` doc).
+    let mut state = WalkState::default();
+    // P2-M2 item 5: set once a BackwardScan/JumpTo block executes — relaxes the final EOF check.
+    let mut jumped = false;
 
     for (index, block) in spec.blocks.iter().enumerate() {
         if definitions_only(block) {
@@ -1684,8 +2554,16 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
         }
         let reserved = trailing_reserved(&spec.blocks, index + 1);
         match block {
-            Block::Header(fields) => walk_fields(fields, bytes, &mut pos, reserved)?,
-            Block::Segment { fields, .. } => walk_fields(fields, bytes, &mut pos, reserved)?,
+            Block::Header(fields) => walk_fields(fields, bytes, &mut pos, &mut state, reserved)?,
+            Block::Segment { fields, cond, .. } => {
+                let present = match cond {
+                    Some(c) => eval_cond(c, &state.env, pos)?,
+                    None => true,
+                };
+                if present {
+                    walk_fields(fields, bytes, &mut pos, &mut state, reserved)?;
+                }
+            }
             Block::Record { name, fields, .. } => {
                 if skip_named_records && !name.is_empty() {
                     continue;
@@ -1697,21 +2575,39 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
                     }
                     continue;
                 }
-                walk_fields(fields, bytes, &mut pos, reserved)?;
+                walk_fields(fields, bytes, &mut pos, &mut state, reserved)?;
             }
             Block::Footer(size) => {
                 need(bytes, pos, *size, "footer")?;
                 pos += *size;
             }
-            Block::Chain(prim) => {
-                let mut env = std::collections::HashMap::new();
-                walk_prim(prim, bytes, &mut pos, &mut env, 0)?;
+            Block::Chain(prim) => walk_prim(prim, bytes, &mut pos, &mut state, 0)?,
+            Block::Repeat { dispatch, .. } => walk_repeat(dispatch, bytes, &mut pos, &mut state)?,
+            Block::BackwardScan { magic, fields, .. } => {
+                let found = find_last_occurrence(bytes, magic).ok_or_else(|| mismatch(bytes.len(), "backward-scan magic not found in buffer"))?;
+                // `fields` describe what comes AFTER the magic pattern itself, not the magic bytes.
+                pos = found + magic.len();
+                jumped = true;
+                walk_fields(fields, bytes, &mut pos, &mut state, 0)?;
+            }
+            Block::JumpTo { offset_field, fields, .. } => {
+                let target = *state
+                    .env
+                    .get(offset_field)
+                    .ok_or_else(|| mismatch(pos, format!("jump target field `{offset_field}` was not decoded by an earlier block")))?;
+                let target = target as usize;
+                if target > bytes.len() {
+                    return Err(mismatch(target, "jump target offset exceeds buffer length"));
+                }
+                pos = target;
+                jumped = true;
+                walk_fields(fields, bytes, &mut pos, &mut state, 0)?;
             }
             Block::Struct { .. } | Block::Enum { .. } => {}
         }
     }
 
-    if pos != bytes.len() {
+    if !jumped && pos != bytes.len() {
         return Err(mismatch(pos, format!("trailing {} bytes after protocol walk", bytes.len() - pos)));
     }
     Ok(ProtocolTrace { consumed: pos })
@@ -2048,6 +2944,7 @@ field body bytes
             uses: vec![],
             start: "frame".into(),
             productions: vec![],
+            lex: LexOptions::default(),
         };
         let mut bytes = vec![0x89];
         bytes.extend(std::iter::repeat(0u8).take(31));
@@ -2061,10 +2958,471 @@ field body bytes
             uses: vec![],
             start: "record".into(),
             productions: vec![],
+            lex: LexOptions::default(),
         };
         verify_protocol_bytes(&spr, &[1u8]).expect("spr non-empty");
         assert!(verify_protocol_bytes(&spr, &[]).is_err());
     }
 
+    //#region 🔖️P2M1Grammar
+    // Item 1: `string`/`comment` header directives parse and drive the Recognizer's own lexing.
+    #[test]
+    fn string_header_directive_drives_backslash_decode_end_to_end() {
+        let g = parse_grammar("grammar jsontest\nstring double backslash\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        assert_eq!(g.lex.strings, vec![StringMode { quote: '"', escape: StringEscape::Backslash }]);
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize(r#""café""#).expect("recognize"), "the json-dialect grammar must recognize a \\uXXXX-escaped string");
+        // Prove real decoding happened (not just successful lexing) by relexing with the grammar's
+        // own compiled dialect and inspecting the Text token's content.
+        let tokens = core_lex_with(r#""café""#, &Limits::default(), false, &g.lex).expect("lex_with");
+        let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
+        assert_eq!(text.text.as_str().as_ref(), "café");
+    }
+
+    #[test]
+    fn string_header_directive_drives_csv_doubled_quote_decode() {
+        let g = parse_grammar("grammar csvtest\nstring double doubled\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize(r#""a""b""#).expect("recognize"));
+        let tokens = core_lex_with(r#""a""b""#, &Limits::default(), false, &g.lex).expect("lex_with");
+        let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
+        assert_eq!(text.text.as_str().as_ref(), "a\"b");
+    }
+
+    #[test]
+    fn string_header_directive_supports_single_and_double_quote_together_xml_style() {
+        let g = parse_grammar("grammar xmltest\nstring double raw\nstring single raw\nstart doc\ndoc = TEXT TEXT\n").expect("parse_grammar");
+        assert_eq!(g.lex.strings.len(), 2);
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize(r#""a" 'b'"#).expect("recognize a mix of both quote chars"));
+    }
+
+    #[test]
+    fn string_header_directive_supports_step_single_quote_doubling() {
+        let g = parse_grammar("grammar steptest\nstring single doubled\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize("'it''s a beam'").expect("recognize"));
+        let tokens = core_lex_with("'it''s a beam'", &Limits::default(), false, &g.lex).expect("lex_with");
+        let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
+        assert_eq!(text.text.as_str().as_ref(), "it's a beam");
+    }
+
+    #[test]
+    fn grammar_without_string_or_comment_directives_keeps_default_lex_options() {
+        let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").expect("parse_grammar");
+        assert_eq!(g.lex, LexOptions::default());
+        // print_grammar must NOT emit comment/string lines for the default case (round trip proof
+        // already covered by `round_trip_matrix_over_representative_grammars`; this asserts the
+        // specific absence).
+        let printed = print_grammar(&g);
+        assert!(!printed.contains("comment"), "default comment config must not be printed");
+        assert!(!printed.contains("\nstring "), "default string config must not be printed");
+    }
+
+    // Item 2: the "raw span" terminal — `LINE` (rest-of-physical-line) and `REST` (rest-of-EOF).
+    #[test]
+    fn line_terminal_captures_rest_of_physical_line_verbatim_stl_style() {
+        let g = parse_grammar("grammar stltest\nstart doc\ndoc = \"solid\" LINE\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        // "My Cube" is two Ident tokens with a space between them — LINE must swallow both AND
+        // the space, ending exactly at end-of-input since there's no trailing newline.
+        assert!(rec.recognize("solid My Cube").expect("recognize"), "LINE must capture the whole 'My Cube' rest-of-line as one span");
+        assert!(rec.recognize("solid").expect("recognize"), "a raw span may legitimately be empty (no name)");
+    }
+
+    #[test]
+    fn rest_terminal_captures_to_eof_txt_style_over_out_of_alphabet_characters() {
+        let g = parse_grammar("grammar txttest\nstart doc\ndoc = \"BODY\" REST\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        // `~` and `%` are still outside the fixed token alphabet even after P2-M1's promotions —
+        // REST must swallow them without the whole document failing to lex (forgiving mode) and
+        // without needing to re-tokenize the interior.
+        assert!(rec.recognize("BODY arbitrary prose with ~weird~ %chars% and trailing punctuation!!!").expect("recognize"));
+    }
+
+    // Item 3: promoted single-char tokens `< > & $ ;`, real Terminal matching through the Recognizer.
+    #[test]
+    fn promoted_tokens_are_real_terminals_the_recognizer_can_require_positionally() {
+        let g = parse_grammar("grammar xmlish\nstart tag\ntag = LT IDENT GT AMP IDENT SEMICOLON DOLLAR IDENT\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize("<tag>&amp;$VAR").expect("recognize"));
+        assert!(!rec.recognize("tag").expect("recognize"), "without the promoted LT/GT/AMP/SEMICOLON/DOLLAR tokens present, the sequence must not match");
+    }
+
+    // Item 4: per-grammar comment dialect — line marker override, disabled, block comment.
+    #[test]
+    fn comment_header_directive_disables_hash_and_enables_block_comment_step_style() {
+        // '#' isn't itself promoted to a token (it stays the DEFAULT line-comment marker unless a
+        // grammar overrides it), so a real STEP entity sigil needs `comment none`/`comment line
+        // none`; DOLLAR stands in for it here as a real promoted token (item 3) — the point of
+        // THIS test is the comment dialect (item 4), proven directly against `g.lex` below.
+        let g = parse_grammar("grammar steplike\ncomment none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = DOLLAR INT EQUALS IDENT LPAREN TEXT RPAREN SEMICOLON\n").expect("parse_grammar");
+        assert_eq!(g.lex.comment.line, None);
+        assert_eq!(g.lex.comment.block, Some(("/*".to_string(), "*/".to_string())));
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize("$10=IFCWALL('a');").expect("recognize"), "with comment.line=None, '$' must lex as a real Dollar token, not be eaten by a comment");
+        assert!(rec.recognize("/* a comment */\n$10=IFCWALL('a');").expect("recognize"), "a leading block comment must be trivia, not part of the document");
+    }
+
+    #[test]
+    fn print_grammar_round_trips_comment_and_string_header_directives() {
+        let source = "grammar steplike\ncomment line none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = TEXT\n";
+        let parsed = parse_grammar(source).expect("parse_grammar");
+        let printed = print_grammar(&parsed);
+        let reparsed = parse_grammar(&printed).expect("reparse printed steplike grammar");
+        assert_eq!(reparsed, parsed, "comment/string header directives must round trip through print_grammar");
+        assert_eq!(parsed.lex.comment.line, None);
+        assert_eq!(parsed.lex.comment.block, Some(("/*".to_string(), "*/".to_string())));
+        assert_eq!(parsed.lex.strings, vec![StringMode { quote: '\'', escape: StringEscape::Doubled }]);
+    }
+
+    // Item 5: trailing-dot floats + leading-dot enum literals, matched through real FLOAT/DOTENUM terminals.
+    #[test]
+    fn trailing_dot_float_and_leading_dot_enum_literal_terminals_match_through_recognizer() {
+        let g = parse_grammar("grammar stepvalues\nstart doc\ndoc = FLOAT DOTENUM\n").expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        assert!(rec.recognize("10. .T.").expect("recognize"), "a trailing-dot float and a leading-dot enum literal must each match their own terminal");
+        assert!(!rec.recognize("10 .T.").expect("recognize"), "a plain Int must NOT satisfy a FLOAT terminal");
+    }
+
+    // Item 6: `Ref` self-recursion — pptx's shape-tree shape (`grpSp` recursively contains more
+    // shapes, including itself), verified with a real 3-level-nested fixture, not assumed.
+    #[test]
+    fn ref_self_recursion_matches_a_three_level_nested_shape_tree_pptx_style() {
+        let source = "grammar shapetree\nstart tree\ntree = \"spTree\" group\ngroup = \"{\" node* \"}\"\nnode = leaf | nested\nleaf = \"sp\" IDENT\nnested = \"grpSp\" group\n";
+        let g = parse_grammar(source).expect("parse_grammar");
+        let rec = Recognizer::compile(&g);
+        // Level 0 (tree) -> level 1 group contains a leaf and a grpSp -> level 2 group contains a
+        // leaf and ANOTHER grpSp -> level 3 group contains one leaf. `nested` recursively refers
+        // back to `group`, which refers back to `node`, which refers back to `nested` — genuine
+        // mutual/self recursion through three real nesting levels, not a synthetic single hop.
+        let fixture = "spTree { sp a grpSp { sp b grpSp { sp c } sp d } }";
+        assert!(rec.recognize(fixture).expect("recognize"), "3-level self-recursive Ref chain must match a real nested fixture");
+        // A malformed variant (unclosed innermost group) must NOT spuriously match.
+        assert!(!rec.recognize("spTree { sp a grpSp { sp b grpSp { sp c } sp d }").expect("recognize"));
+        // Confirm every production in the recursive chain was actually exercised, not merely
+        // present — `uncovered_productions` must report none of them as unreached.
+        let uncovered = rec.uncovered_productions(fixture).expect("uncovered_productions");
+        assert!(uncovered.is_empty(), "every production in the recursive shape-tree grammar should be covered by the 3-level fixture, got uncovered: {uncovered:?}");
+    }
+    //#endregion 🔖️P2M1Grammar
+
+    //#region 🔖️P2M2Protocol
+    // Item 1a+1: repeated tag-dispatched block — length-first order, ASCII fixed(4) tag (PNG/GLB
+    // shape), unknown-type skip via declared length, repeat-until-sentinel-tag ("IEND").
+    #[test]
+    fn repeat_block_dispatches_png_shaped_chunks_and_skips_unknown_type() {
+        let source = r#"dialect protocol
+protocol demo.pngish
+version 1
+schema demo.pngish
+start frame
+framing record
+repeat chunks {
+tag fixed 4
+length u32be
+order length-first
+trailer u32be
+until "IEND"
+arm "IHDR" { width u32be height u32be }
+arm "IEND" { }
+}
+"#;
+        let spec = parse_protocol(source).expect("parse pngish");
+        let mut bytes = Vec::new();
+        // Known arm: IHDR, length=8, two u32be fields, then a crc32be trailer.
+        bytes.extend_from_slice(&8u32.to_be_bytes());
+        bytes.extend_from_slice(b"IHDR");
+        bytes.extend_from_slice(&100u32.to_be_bytes());
+        bytes.extend_from_slice(&200u32.to_be_bytes());
+        bytes.extend_from_slice(&0xDEAD_BEEFu32.to_be_bytes());
+        // Unknown chunk type ("tEXt"): must be skipped as opaque via its declared length.
+        bytes.extend_from_slice(&5u32.to_be_bytes());
+        bytes.extend_from_slice(b"tEXt");
+        bytes.extend_from_slice(&[1, 2, 3, 4, 5]);
+        bytes.extend_from_slice(&0x1234_5678u32.to_be_bytes());
+        // Sentinel: IEND, length=0, no fields, trailer crc, then the repeat block must stop.
+        bytes.extend_from_slice(&0u32.to_be_bytes());
+        bytes.extend_from_slice(b"IEND");
+        bytes.extend_from_slice(&0xCAFE_BABEu32.to_be_bytes());
+
+        let trace = walk_protocol(&spec, &bytes).expect("walk pngish");
+        assert_eq!(trace.consumed, bytes.len(), "every declared+skipped+trailer byte must be consumed exactly");
+
+        // Truncating the unknown chunk's declared payload must fail (proves the skip genuinely
+        // reads `length`, not a fixed/guessed amount).
+        let mut truncated = bytes.clone();
+        truncated.truncate(bytes.len() - 9);
+        assert!(walk_protocol(&spec, &truncated).is_err());
+    }
+
+    // Item 1b: two-level nested tag dispatch — GIF 89a shape (outer introducer byte, extension
+    // introducer's arm dispatches AGAIN on the label byte), tag-first order, no per-iteration
+    // length (all top-level introducers are known), repeat-until-trailer-byte (0x3B).
+    #[test]
+    fn repeat_block_two_level_nested_dispatch_gif89a_shaped() {
+        let source = r#"dialect protocol
+protocol demo.gifish
+version 1
+schema demo.gifish
+start frame
+framing record
+repeat blocks {
+tag u8
+until 0x3B
+arm 0x2C { left u16 top u16 }
+arm 0x21 {
+nested label u8 {
+arm 0xF9 { flags u8 delay u16 }
+arm 0xFE { }
+}
+}
+arm 0x3B { }
+}
+"#;
+        let spec = parse_protocol(source).expect("parse gifish");
+        let mut bytes = Vec::new();
+        // Image descriptor (0x2C): left/top u16 LE.
+        bytes.push(0x2C);
+        bytes.extend_from_slice(&10u16.to_le_bytes());
+        bytes.extend_from_slice(&20u16.to_le_bytes());
+        // Extension introducer (0x21) -> nested dispatch on label 0xF9 (GCE): flags u8, delay u16.
+        bytes.push(0x21);
+        bytes.push(0xF9);
+        bytes.push(0);
+        bytes.extend_from_slice(&100u16.to_le_bytes());
+        // Trailer (0x3B) — sentinel, empty fields, loop must stop right after.
+        bytes.push(0x3B);
+
+        let trace = walk_protocol(&spec, &bytes).expect("walk gifish");
+        assert_eq!(trace.consumed, bytes.len());
+
+        // An unrecognized nested label must fail (proves the second dispatch level is real, not a
+        // no-op fallthrough).
+        let mut bad = bytes.clone();
+        bad[5] = 0xAA; // corrupt the label byte inside the extension block
+        assert!(walk_protocol(&spec, &bad).is_err());
+    }
+
+    // Item 1c: marker-prefix scanning — JPG shape. `marker(0xFF)` skips fill bytes before reading
+    // the real marker code, distinct from a fixed-position tag read.
+    #[test]
+    fn marker_scan_prim_finds_next_marker_byte_over_fill_bytes_jpg_style() {
+        let source = r#"dialect protocol
+protocol demo.jpgish
+version 1
+schema demo.jpgish
+start frame
+framing record
+repeat segments {
+tag marker(0xFF)
+until 0xD9
+arm 0xD8 { }
+arm 0xE0 { version u16be }
+arm 0xD9 { }
+}
+"#;
+        let spec = parse_protocol(source).expect("parse jpgish");
+        let mut bytes = Vec::new();
+        // SOI preceded by an extra 0xFF fill byte — the scan must skip both leading 0xFFs and land
+        // on the real 0xD8 marker code.
+        bytes.extend_from_slice(&[0xFF, 0xFF, 0xD8]);
+        // APP0 (0xE0), ordinary single-prefix marker, with a u16be field.
+        bytes.extend_from_slice(&[0xFF, 0xE0]);
+        bytes.extend_from_slice(&5u16.to_be_bytes());
+        // EOI (0xD9) — sentinel.
+        bytes.extend_from_slice(&[0xFF, 0xD9]);
+
+        let trace = walk_protocol(&spec, &bytes).expect("walk jpgish");
+        assert_eq!(trace.consumed, bytes.len());
+    }
+
+    // Item 2: BE `Prim` variants — a real round trip (parse/print/reparse) AND proof the decode is
+    // genuinely big-endian (a `Field(count)`-driven Array only walks cleanly if `count` was decoded
+    // with the declared byte order; LE-misreading a BE 3 as 0x0300 would overrun the buffer).
+    #[test]
+    fn be_prim_variants_round_trip_and_decode_big_endian_for_real() {
+        let source = "dialect protocol\nprotocol demo.be\nversion 1\nschema demo.be\nstart frame\nframing record\nfield count u16be\nfield items Array(u8, Field(count))\n";
+        let spec = parse_protocol(source).expect("parse");
+        let printed = print_protocol(&spec);
+        assert!(printed.contains("u16be"), "u16be must round trip through the printer");
+        assert_eq!(parse_protocol(&printed).expect("reparse"), spec);
+
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&3u16.to_be_bytes());
+        bytes.extend_from_slice(&[9, 9, 9]);
+        let trace = walk_protocol(&spec, &bytes).expect("walk be-driven array");
+        assert_eq!(trace.consumed, bytes.len());
+
+        // The same 2 count bytes read as LE (0x0900 = 2304) must NOT satisfy the buffer — proves a
+        // real big-endian decode happened, not an accidental LE fallback.
+        let le_misread_would_want = u16::from_le_bytes([3u8.to_be_bytes()[0], 0]);
+        let _ = le_misread_would_want; // documentation only; the real proof is the failing walk below
+        let mut too_short = bytes.clone();
+        too_short.truncate(2); // count bytes only, no item bytes at all
+        assert!(walk_protocol(&spec, &too_short).is_err());
+    }
+
+    // Item 3: cross-block field-env threading — a HEADER block's field is consumed by a LATER,
+    // separate SEGMENT block's `Array(_, Field(name))`. Pre-M2, `walk_fields` created a fresh
+    // per-call-local env, so this would fail to resolve; post-M2 the env is walk-wide.
+    #[test]
+    fn cross_block_field_env_threads_header_field_into_a_later_segment_las_vlr_style() {
+        let source = r#"dialect protocol
+protocol demo.crossblock
+version 1
+schema demo.crossblock
+start frame
+framing record
+header fixed 2
+field count u16
+segment payload {
+items Array(u8, Field(count))
+}
+"#;
+        let spec = parse_protocol(source).expect("parse crossblock");
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&4u16.to_le_bytes());
+        bytes.extend_from_slice(&[1, 2, 3, 4]);
+        let trace = walk_protocol(&spec, &bytes).expect("segment must resolve `count` decoded by the earlier header block");
+        assert_eq!(trace.consumed, bytes.len());
+
+        // A `count` that doesn't match the actual trailing bytes must fail, proving the segment
+        // genuinely used the decoded value (not silently accepting anything).
+        let mut wrong = bytes.clone();
+        wrong[0] = 9; // count now claims 9 items but only 4 bytes of payload exist
+        assert!(walk_protocol(&spec, &wrong).is_err());
+    }
+
+    // Item 4: conditional field/segment presence — bmp shape (`if compression eq 3` gates one
+    // field, `if bpp le 8` gates a whole segment).
+    #[test]
+    fn conditional_field_and_segment_presence_gate_on_an_earlier_field_bmp_style() {
+        let source = r#"dialect protocol
+protocol demo.bmpish
+version 1
+schema demo.bmpish
+start frame
+framing record
+field compression u8
+field mask u32 if compression eq 3
+field bpp u8
+segment palette if bpp le 8 { colors u8 }
+field trailer u8
+"#;
+        let spec = parse_protocol(source).expect("parse bmpish");
+
+        // compression==3 -> mask present; bpp==8 -> palette present.
+        let mut present = Vec::new();
+        present.push(3u8);
+        present.extend_from_slice(&0x0000_00FFu32.to_le_bytes());
+        present.push(8u8);
+        present.push(200u8); // palette.colors
+        present.push(1u8); // trailer
+        let trace = walk_protocol(&spec, &present).expect("walk with mask+palette present");
+        assert_eq!(trace.consumed, present.len());
+
+        // compression==0 -> mask absent; bpp==24 -> palette absent.
+        let mut absent = Vec::new();
+        absent.push(0u8);
+        absent.push(24u8);
+        absent.push(1u8); // trailer
+        let trace2 = walk_protocol(&spec, &absent).expect("walk with mask+palette absent");
+        assert_eq!(trace2.consumed, absent.len());
+
+        // A buffer sized for the ABSENT shape must not satisfy the PRESENT shape's byte demands
+        // (proves presence genuinely changes how many bytes are consumed, not a no-op guard).
+        assert!(walk_protocol(&spec, &absent[..2]).is_err());
+    }
+
+    // Item 5: ZIP-shaped backward-scan (EOCD located by scanning backward from EOF for its magic)
+    // + absolute-offset jump (EOCD's `cd_offset` field -> central-directory-entry block).
+    #[test]
+    fn backward_scan_and_jump_to_resolve_zip_eocd_and_central_directory_offset() {
+        let source = r#"dialect protocol
+protocol demo.zipish
+version 1
+schema demo.zipish
+start frame
+framing record
+backward eocd magic 0x504B0506 {
+cd_offset u32
+entry_count u16
+}
+jump central from cd_offset {
+entry_tag u32
+entry_value u32
+}
+"#;
+        let spec = parse_protocol(source).expect("parse zipish");
+
+        let mut bytes = Vec::new();
+        // 16 bytes standing in for a "local header region" this protocol doesn't describe at all.
+        bytes.extend(std::iter::repeat(0xAAu8).take(16));
+        let central_dir_offset = bytes.len() as u32;
+        // Central-directory entry (jumped to via `cd_offset`).
+        bytes.extend_from_slice(&0xCAFE_BABEu32.to_le_bytes());
+        bytes.extend_from_slice(&42u32.to_le_bytes());
+        // EOCD: magic + cd_offset (points back at the entry above) + entry_count.
+        bytes.extend_from_slice(&[0x50, 0x4B, 0x05, 0x06]);
+        bytes.extend_from_slice(&central_dir_offset.to_le_bytes());
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+
+        let trace = walk_protocol(&spec, &bytes).expect("walk zipish");
+        // The walk's FINAL position is wherever the last-declared block (the jump) left `pos` —
+        // NOT bytes.len(), since a jump is a deliberate exception to linear forward accounting
+        // (see `walk_protocol`'s own doc comment). Here that's right after the jumped-to entry's
+        // two u32 fields.
+        assert_eq!(trace.consumed, central_dir_offset as usize + 8);
+
+        // Corrupting the EOCD magic must make the backward scan fail to find it at all.
+        let mut corrupt_magic = bytes.clone();
+        let magic_at = bytes.len() - 10;
+        corrupt_magic[magic_at] = 0x00;
+        assert!(walk_protocol(&spec, &corrupt_magic).is_err());
+
+        // Print/reparse round trip for the new block syntax itself.
+        let printed = print_protocol(&spec);
+        assert!(printed.contains("backward eocd magic"));
+        assert!(printed.contains("jump central from cd_offset"));
+        assert_eq!(parse_protocol(&printed).expect("reparse zipish"), spec);
+    }
+
+    // Item 6: TIFF-style runtime-selected endianness — a leading marker field's VALUE selects
+    // LE-vs-BE for every subsequent plain (non-`Be`-suffixed) `Prim` read for the rest of the walk.
+    #[test]
+    fn endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_walk_tiff_style() {
+        let source = "dialect protocol\nprotocol demo.tiffish\nversion 1\nschema demo.tiffish\nstart frame\nframing record\nfield byte_order endian { \"II\"=le \"MM\"=be }\nfield count u16\nfield items Array(u8, Field(count))\n";
+        let spec = parse_protocol(source).expect("parse tiffish");
+
+        // "II" -> little-endian mode for the rest of the walk.
+        let mut le_bytes = Vec::new();
+        le_bytes.extend_from_slice(b"II");
+        le_bytes.extend_from_slice(&2u16.to_le_bytes());
+        le_bytes.extend_from_slice(&[7, 8]);
+        let trace_le = walk_protocol(&spec, &le_bytes).expect("walk II/LE");
+        assert_eq!(trace_le.consumed, le_bytes.len());
+
+        // "MM" -> big-endian mode for the rest of the walk — the SAME declared field (`count u16`,
+        // no `Be` suffix) must now be read big-endian, proving the marker genuinely flips a runtime
+        // mode rather than being cosmetic.
+        let mut be_bytes = Vec::new();
+        be_bytes.extend_from_slice(b"MM");
+        be_bytes.extend_from_slice(&2u16.to_be_bytes());
+        be_bytes.extend_from_slice(&[7, 8]);
+        let trace_be = walk_protocol(&spec, &be_bytes).expect("walk MM/BE");
+        assert_eq!(trace_be.consumed, be_bytes.len());
+
+        // An unrecognized marker must be rejected outright.
+        let mut bad = le_bytes.clone();
+        bad[0] = b'X';
+        assert!(walk_protocol(&spec, &bad).is_err());
+
+        // Round trip the `endian {...}` syntax itself.
+        let printed = print_protocol(&spec);
+        assert!(printed.contains("endian {"));
+        assert_eq!(parse_protocol(&printed).expect("reparse tiffish"), spec);
+    }
+    //#endregion 🔖️P2M2Protocol
 }
 //#endregion 🔖️Tests

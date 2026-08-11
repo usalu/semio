@@ -22,6 +22,14 @@ extern crate semio_framework_os_kernel as vcs;
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
+//#region 🔨️Modules
+#[path = "."]
+pub mod modules {
+    #[path = "../../🔨️modules/🏔️terrain/🦀️component.rs"]
+    pub mod terrain;
+}
+//#endregion 🔨️Modules
+
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {

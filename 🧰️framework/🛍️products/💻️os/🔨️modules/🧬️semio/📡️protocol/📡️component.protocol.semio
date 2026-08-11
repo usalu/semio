@@ -1,0 +1,10 @@
+dialect protocol
+protocol semio.envelope
+version 1
+schema semio.envelope
+start envelope
+framing magic 0x8953454D0D0A1A0A
+header fixed 4
+field token_len u32
+segment token Array(u8, Field(token_len))
+chain bytes

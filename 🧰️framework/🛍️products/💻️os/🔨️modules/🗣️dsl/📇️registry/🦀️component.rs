@@ -5,23 +5,59 @@
 //! the one place in the workspace allowed to depend on many app `🗣️dsl`/`🔧️op` crates at once —
 //! every other crate in the `dsl_*`/`pack_*`/`protocol_*` family stays app-dependency-free by design.
 //!
-//! 🚧️ W1 scope: proves the mechanism on two apps (writer, note) — their document schema AND their
-//! `"<doc-schema>#diff"` diff schema (the first two real `#[derive(crate::os_dsl::DslDiff)]` types, see
-//! `writer::artifacts::writer::diff::WriterDiff`/`note_op::NoteDiff`). Full fan-in across every real app schema (the
-//! `🧪️fixture-sweep` crate's dev-dependency list is the template for what that eventually looks
-//! like) is deferred to a later wave — tracked as the W8 "dsl_registry completeness assertion" item
-//! in `.claude/plans/the-final-goal-for-jolly-spindle.md`. Add one app's `🗣️dsl`/`🔧️op` pair to
-//! `Cargo.toml` + [`full_resolver`] per follow-up; nothing else in this crate needs to change shape.
+//! 🌐️ P2-M3: the insertion API this module's own doc comment used to call missing —
+//! [`register_schema_spec`] is a process-global `OnceLock<Mutex<HashMap<...>>>` registry mirroring
+//! `crate::os_dsl::register_language`'s exact shape/thread-safety/hot-reload-overwrite semantics
+//! (`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs`'s `LANGUAGE_REGISTRY`). Any host or
+//! plugin — typically an artifact's `⚙️engine::register()` — calls it once per schema id at init,
+//! covering both a document's own schema id and its `"<doc-schema>#diff"` diff schema (design ruling
+//! B-R4), making that convention genuinely resolvable for the first time (previously zero live
+//! consumers per the P2-W0 recon). [`full_resolver`] now reads a live snapshot of that global
+//! registry instead of returning a hardcoded empty map. Full fan-in across every real app schema
+//! (the `🧪️fixture-sweep` crate's dev-dependency list is the template for what that eventually looks
+//! like) is still tracked as the W8 "dsl_registry completeness assertion" item in
+//! `.claude/plans/the-final-goal-for-jolly-spindle.md` — this wave builds the mechanism, not the
+//! full 32-standard fan-in.
 
 use crate::os_pack::cli::SchemaResolver;
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Registry
+/// @emoji 🌐️ Process-global `(schema id, RecordSpec constructor)` table — see module doc for the
+/// `register_language` precedent this mirrors. Not `pub`: reached only through
+/// [`register_schema_spec`] (write) and [`full_resolver`] (read-a-snapshot), same access shape as
+/// `crate::os_dsl`'s `LANGUAGE_REGISTRY`/`IDIOM_REGISTRY`.
+static SCHEMA_REGISTRY: OnceLock<Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>>> = OnceLock::new();
+
+fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>> {
+    SCHEMA_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// @emoji 📌️ Registers one schema id's `RecordSpec` constructor — called once per schema at
+/// host/plugin init (typically inside an artifact's `⚙️engine::register()`), for both a document's
+/// own schema id (`"stdio.gif"`) and its diff schema (`"stdio.gif#diff"`, B-R4). Overwrites on
+/// re-registration rather than erroring, matching `register_language`'s hot-reload-safe behavior —
+/// a re-run dev build never deadlocks or panics on re-registering the same id.
+pub fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl::schema::RecordSpec) {
+    let mut registry = schema_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.insert(id, spec);
+}
+
 /// @emoji 📇️ A `SchemaResolver` backed by a fixed table of `(schema id, RecordSpec constructor)`
-/// pairs — [`full_resolver`] is the only constructor real callers use; the struct itself stays
-/// public so a caller that wants a narrower/custom table (e.g. a test double) can build one by hand.
+/// pairs — [`full_resolver`] is the real-callers constructor (a live snapshot of the process-global
+/// registry); [`FullResolver::from_map`] stays available for a caller that wants a narrower/custom
+/// table (e.g. a test double) built by hand, independent of global registration state.
 pub struct FullResolver {
     schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>,
+}
+
+impl FullResolver {
+    /// @emoji 🧪️ Builds a resolver from an explicit table, bypassing the process-global registry
+    /// entirely — for tests/test-doubles that want an isolated, narrower set.
+    pub fn from_map(schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>) -> Self {
+        Self { schemas }
+    }
 }
 
 impl SchemaResolver for FullResolver {
@@ -36,14 +72,15 @@ impl SchemaResolver for FullResolver {
     }
 }
 
-/// @emoji 🏗️ Builds the real fan-in resolver — the schema ids follow the schema lattice's own
-/// convention (`"<doc-schema>"` for a document, `"<doc-schema>#diff"` for its diff, design ruling
-/// B-R4) so a future `dsl_registry`-driven `pack diff --schema writer.document#diff` (or similar)
-/// resolves the diff's own grammar, not the document's.
+/// @emoji 🏗️ Builds the real fan-in resolver as a live snapshot of everything registered via
+/// [`register_schema_spec`] so far (call again after new registrations to see them — this is a
+/// point-in-time copy of `&'static str`/`fn` pointers, not a live view). Schema ids follow the
+/// schema lattice's own convention (`"<doc-schema>"` for a document, `"<doc-schema>#diff"` for its
+/// diff, design ruling B-R4) so a future `dsl_registry`-driven `pack diff --schema
+/// writer.document#diff` (or similar) resolves the diff's own grammar, not the document's.
 pub fn full_resolver() -> FullResolver {
-    // Kernel stays app-dependency-free; hosts insert schema constructors into FullResolver.
-    let schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
-    FullResolver { schemas }
+    let registry = schema_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    FullResolver { schemas: registry.clone() }
 }
 //#endregion 🔖️Registry
 
@@ -51,21 +88,44 @@ pub fn full_resolver() -> FullResolver {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
 
-    #[test]
-    fn full_resolver_starts_empty_without_app_fan_in() {
-        let resolver = full_resolver();
-        assert!(resolver.names().is_empty());
-        assert!(resolver.resolve("writer.document").is_none());
-        assert!(resolver.resolve("never-registered").is_none());
+    /// @emoji 🧬️ A real (not mocked) minimal `RecordSpec` — one `Int` field under `Inline` layout.
+    fn sample_spec() -> RecordSpec {
+        RecordSpec::new(Some("p2m3-sample"), RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Int)])
     }
 
     #[test]
-    fn full_resolver_accepts_manual_schema_inserts() {
-        let mut schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
-        // Manual insert path used by hosts/plugins — constructor is a no-op placeholder type check only when empty.
-        let resolver = FullResolver { schemas };
-        assert!(resolver.names().is_empty());
+    fn full_resolver_resolves_a_registered_schema_and_none_for_an_unregistered_one() {
+        register_schema_spec("p2m3.registry-test.schema", sample_spec);
+        let resolver = full_resolver();
+        assert!(resolver.names().contains(&"p2m3.registry-test.schema".to_string()));
+        let resolved = resolver.resolve("p2m3.registry-test.schema").expect("registered schema must resolve");
+        assert_eq!(resolved.keyword.as_deref(), Some("p2m3-sample"));
+        assert_eq!(resolved.fields.len(), 1);
+        assert!(resolver.resolve("p2m3.registry-test.never-registered").is_none());
+    }
+
+    #[test]
+    fn full_resolver_resolves_the_diff_schema_id_separately_from_its_document_id() {
+        register_schema_spec("p2m3.diff-test.doc", sample_spec);
+        register_schema_spec("p2m3.diff-test.doc#diff", sample_spec);
+        let resolver = full_resolver();
+        assert!(resolver.resolve("p2m3.diff-test.doc").is_some());
+        assert!(resolver.resolve("p2m3.diff-test.doc#diff").is_some());
+        assert!(resolver.resolve("p2m3.diff-test.doc#nonsense").is_none());
+    }
+
+    #[test]
+    fn full_resolver_from_map_bypasses_the_global_registry() {
+        let mut schemas: HashMap<&'static str, fn() -> RecordSpec> = HashMap::new();
+        schemas.insert("p2m3.isolated.schema", sample_spec as fn() -> RecordSpec);
+        let resolver = FullResolver::from_map(schemas);
+        assert_eq!(resolver.names(), vec!["p2m3.isolated.schema".to_string()]);
+        assert!(resolver.resolve("p2m3.isolated.schema").is_some());
+        // Not in THIS table (even though another test registers it globally) — proves from_map
+        // is a genuinely isolated table, not a view into the process-global registry.
+        assert!(resolver.resolve("p2m3.registry-test.schema").is_none());
     }
 }
 //#endregion 🧪️Tests

@@ -95,6 +95,7 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
+    crate::apps::jack::config::schema::register_app_schema();
 }
 //#endregion 🔖️Register
 

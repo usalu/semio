@@ -25,7 +25,7 @@ pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️ExtensionContributions
-use semio_framework::Contribution;
+use semio_framework::TopicContribution;
 use std::sync::Mutex;
 
 /// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
@@ -33,7 +33,27 @@ use std::sync::Mutex;
 #[serde(rename_all = "camelCase")]
 struct ProgramContributionEntry {
     plugin_id: String,
-    contribution: Contribution}
+    #[serde(default)]
+    topic_contribution: Option<TopicContribution>,
+}
+
+const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
+
+/// 🗂️ `flow.extension` topic payload shape, decoded from the open `TopicContribution`.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FlowExtensionTopicPayload {
+    manifest_json: String,
+}
+
+/// 🗂️ Reads the open `TopicContribution` (`"flow.extension"` topic) shape per entry.
+fn flow_extension_manifest_json(entry: &ProgramContributionEntry) -> Option<String> {
+    let topic_contribution = entry.topic_contribution.as_ref()?;
+    if topic_contribution.topic != FLOW_EXTENSION_TOPIC {
+        return None;
+    }
+    topic_contribution.decode::<FlowExtensionTopicPayload>().ok().map(|payload| payload.manifest_json)
+}
 
 /// 🔌️ Installs or refreshes contributed `flow.extension` manifests when the host pushes a new catalogue.
 pub fn sync_flow_extension_contributions(contributions_json: &str) {
@@ -47,7 +67,7 @@ pub fn sync_flow_extension_contributions(contributions_json: &str) {
     }
     if let Ok(entries) = serde_json::from_str::<Vec<ProgramContributionEntry>>(contributions_json) {
         for entry in entries {
-            if let Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
+            if let Some(manifest_json) = flow_extension_manifest_json(&entry) {
                 flow::install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
             }
         }
